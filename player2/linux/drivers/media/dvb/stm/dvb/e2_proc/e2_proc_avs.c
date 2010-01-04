@@ -251,7 +251,7 @@ int proc_avs_0_input_write(struct file *file, const char __user *buf,
 
 		printk("%s\n", myString);
 		
-	    	if(!strncmp("encoder", myString, count))
+	    	if(!strncmp("encoder", myString, count - 1))
 	    	{
 			avs_command_kernel(SAAIOSSRCSEL, SAA_SRC_ENC);
 #if defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI_FTA) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(TF7700) || defined(UFS922) 
@@ -262,7 +262,7 @@ int proc_avs_0_input_write(struct file *file, const char __user *buf,
 			current_input = 0;
 		}
 		
-	    	if(!strncmp("scart", myString, count))
+	    	if(!strncmp("scart", myString, count - 1))
 	    	{
 	      		avs_command_kernel(SAAIOSSRCSEL, SAA_SRC_SCART);
 	      		avs_command_kernel(AVSIOSVOL, current_volume);
