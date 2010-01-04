@@ -592,7 +592,12 @@ void stm_tsm_init (int use_cimax)
       tsm_handle.tsm_swts = (unsigned long)ioremap (0x1A300000, 0x1000);
 
       /* Now lets get the SWTS info and setup an FDMA channel */
+#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX)
+			//nit2005, ufs910 use dma request id 30 für swts, do'nt know what other boxes use
+      tsm_handle.fdma_reqline = 30;
+#else
       tsm_handle.fdma_reqline = 28;
+#endif
       tsm_handle.fdma_channel = request_dma_bycap(fdmac_id, fdma_cap_hb, "swts0");  
       tsm_handle.fdma_req     = dma_req_config(tsm_handle.fdma_channel,tsm_handle.fdma_reqline,&fdma_req_config);
 
