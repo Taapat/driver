@@ -43,7 +43,7 @@
 int debug ;
 #define dprintk(x...) do { if (debug) printk(KERN_WARNING x); } while (0)
 
-#define TAG_COUNT 3
+#define TAG_COUNT 4
 #define AUX_COUNT 20
 
 struct tSlot
@@ -308,8 +308,8 @@ static int stream_injector(void *user_data)
 	{
 	  u8 *pFrom = &internal->back_buffer[offset];
 	  static u8 auxbuf[TAG_COUNT][(PACKET_SIZE - HEADER_SIZE) * AUX_COUNT];
-	  u8 *pTo[TAG_COUNT] = {auxbuf[0],auxbuf[1],auxbuf[2]};
-	  int count1[TAG_COUNT] = {0, 0, 0};
+	  u8 *pTo[TAG_COUNT] = {auxbuf[0],auxbuf[1],auxbuf[2],auxbuf[3]};
+	  int count1[TAG_COUNT] = {0, 0, 0, 0};
 	  int n;
 
 	  /* sort the packets according to the tag,
@@ -321,7 +321,8 @@ static int stream_injector(void *user_data)
 	       The lower two bits of the tag ID are as follows:
 	       00 - TS0
 	       01 - TS1
-	       10 - TS2 */
+	       10 - TS2 
+				 11 - SWTS0 */
 	    int tag = (pFrom[0] >> 2) & 0xf;
 	    /* only copy if the demux exists */
 	    if((tag < TAG_COUNT) &&
