@@ -262,6 +262,20 @@ static int stream_injector(void *user_data)
 {
   int offset, count;
   int overflow = 0;
+  
+//aktivate STREAMCHECK for debug
+//#define STREAMCHECK
+#ifdef STREAMCHECK
+	u8 vpidhigh=0; //high byte of the video stream to check
+  u8 vpidlow=0x65; //low byte of the video stream to check
+	u8 apidhigh=0; //high byte of the audio stream to check 
+	u8 vpidlow=0x67; //low byte of the audio stream to check
+	int vc=99; //video count
+	int ac=99; //audio count
+	u8 tc; //temp count
+	unsigned long prv=30000; //print video output after xxxx counts
+	unsigned long pra=30000; //print audio autput after xxxx counts
+#endif
 
   daemonize ("ts-injector");
 
@@ -328,6 +342,56 @@ static int stream_injector(void *user_data)
 	    if((tag < TAG_COUNT) &&
 	       (internal->demux[tag] != NULL))
 	    {
+	    
+#ifdef STREAMCHECK
+				//check for startbyte of all paket
+				if (pFrom[6] != 0x47) 
+					printk("[STREAMCHECK] first byte of packet not 0x47\n");
+					
+				//check count of the choised videostream
+				if((pFrom[7]&0x00011111)==vpidhigh && pFrom[8]==vpidlow) {
+					prv++;
+					if(prv>20000) {
+						printk("[STREAMCHECK] 20000 video PIDs found 0x%x%x\n",(pFrom[7]&0x00011111),pFrom[8]);
+  					prv=0;
+					}
+					tc=pFrom[9];
+					tc=(tc<<4);
+					tc=(tc>>4);
+					if(vc==99)
+						vc=tc;
+					else {
+						vc++;
+						if(vc>15) vc=0;
+						if(vc!=tc) {
+							printk("[STREAMCHECK] invalide video count - count=%d, packetcount=%d, pid=0x%x%x\n",vc,tc,(pFrom[7]&0x00011111),pFrom[8]);
+							vc=tc;
+						}
+					}
+				}
+				
+				//check count of the choised audiostream
+				if((pFrom[7]&0x00011111)==apidhigh && pFrom[8]==apidlow) {
+					pra++;
+					if(pra>20000) {
+						printk("[STREAMCHECK] 20000 audio PID found 0x%x%x\n",(pFrom[7]&0x00011111),pFrom[8]);
+						pra=0;
+					}
+					tc=pFrom[9];
+					tc=(tc<<4);
+					tc=(tc>>4);
+					if(ac==99)
+  					ac=tc;
+					else {
+						ac++;
+						if(ac>15) ac=0;
+						if(ac!=tc) {
+							printk("[STREAMCHECK] invalide audio count - count=%d, packetcount=%d, pid=0x%x%x\n",ac,tc,(pFrom[7]&0x00011111),pFrom[8]);
+							ac=tc;
+						}
+					}
+				}
+#endif
 	      memmove(pTo[tag], pFrom + HEADER_SIZE,
 		      PACKET_SIZE - HEADER_SIZE);
 	      pTo[tag] += PACKET_SIZE - HEADER_SIZE;
