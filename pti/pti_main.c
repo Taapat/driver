@@ -269,7 +269,7 @@ static int stream_injector(void *user_data)
 	u8 vpidhigh=0; //high byte of the video stream to check
   u8 vpidlow=0x65; //low byte of the video stream to check
 	u8 apidhigh=0; //high byte of the audio stream to check 
-	u8 vpidlow=0x67; //low byte of the audio stream to check
+	u8 vpidlow=0x66; //low byte of the audio stream to check
 	int vc=99; //video count
 	int ac=99; //audio count
 	u8 tc; //temp count
@@ -349,10 +349,10 @@ static int stream_injector(void *user_data)
 					printk("[STREAMCHECK] first byte of packet not 0x47\n");
 					
 				//check count of the choised videostream
-				if((pFrom[7]&0x00011111)==vpidhigh && pFrom[8]==vpidlow) {
+				if((pFrom[7]&0x1f)==vpidhigh && pFrom[8]==vpidlow) {
 					prv++;
 					if(prv>20000) {
-						printk("[STREAMCHECK] 20000 video PIDs found 0x%x%x\n",(pFrom[7]&0x00011111),pFrom[8]);
+						printk("[STREAMCHECK] 20000 video PIDs found 0x%x%x\n",(pFrom[7]&0x1f),pFrom[8]);
   					prv=0;
 					}
 					tc=pFrom[9];
@@ -364,17 +364,17 @@ static int stream_injector(void *user_data)
 						vc++;
 						if(vc>15) vc=0;
 						if(vc!=tc) {
-							printk("[STREAMCHECK] invalide video count - count=%d, packetcount=%d, pid=0x%x%x\n",vc,tc,(pFrom[7]&0x00011111),pFrom[8]);
+							printk("[STREAMCHECK] invalide video count - count=%d, packetcount=%d, pid=0x%x%x\n",vc,tc,(pFrom[7]&0x1f),pFrom[8]);
 							vc=tc;
 						}
 					}
 				}
 				
 				//check count of the choised audiostream
-				if((pFrom[7]&0x00011111)==apidhigh && pFrom[8]==apidlow) {
+				if((pFrom[7]&0x1f)==apidhigh && pFrom[8]==apidlow) {
 					pra++;
 					if(pra>20000) {
-						printk("[STREAMCHECK] 20000 audio PID found 0x%x%x\n",(pFrom[7]&0x00011111),pFrom[8]);
+						printk("[STREAMCHECK] 20000 audio PID found 0x%x%x\n",(pFrom[7]&0x1f),pFrom[8]);
 						pra=0;
 					}
 					tc=pFrom[9];
@@ -386,7 +386,7 @@ static int stream_injector(void *user_data)
 						ac++;
 						if(ac>15) ac=0;
 						if(ac!=tc) {
-							printk("[STREAMCHECK] invalide audio count - count=%d, packetcount=%d, pid=0x%x%x\n",ac,tc,(pFrom[7]&0x00011111),pFrom[8]);
+							printk("[STREAMCHECK] invalide audio count - count=%d, packetcount=%d, pid=0x%x%x\n",ac,tc,(pFrom[7]&0x1f),pFrom[8]);
 							ac=tc;
 						}
 					}
