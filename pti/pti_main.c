@@ -43,6 +43,10 @@
 int debug ;
 #define dprintk(x...) do { if (debug) printk(KERN_WARNING x); } while (0)
 
+#ifdef __TDT__
+unsigned int dma_0_buffer_base;
+#endif
+
 #define TAG_COUNT 4
 #define AUX_COUNT 20
 
@@ -170,6 +174,9 @@ static void stpti_setup_dma(struct pti_internal *pti)
   writel( virt_to_phys(pti->back_buffer), pti->pti_io + PTI_DMA_0_WRITE);
   writel( virt_to_phys(pti->back_buffer), pti->pti_io + PTI_DMA_0_READ );
   writel( virt_to_phys(pti->back_buffer + PTI_BUFFER_SIZE - 1), pti->pti_io + PTI_DMA_0_TOP );
+#ifdef __TDT__
+	dma_0_buffer_base = virt_to_phys(pti->back_buffer);
+#endif
 
   writel( 0x8, pti->pti_io + PTI_DMA_0_SETUP ); /* 8 word burst */
 }
@@ -441,7 +448,11 @@ static void process_pti_dma(unsigned long data)
 	  /* Load the read and write pointers, so we know where we are in the buffers */
 	  pti_rp   = readl(internal->pti_io + PTI_DMA_0_READ);
 	  pti_wp   = readl(internal->pti_io + PTI_DMA_0_WRITE);
+#ifdef __TDT__
+	  pti_base = dma_0_buffer_base;
+#else
 	  pti_base = readl(internal->pti_io + PTI_DMA_0_BASE);
+#endif
 	  pti_top  = pti_base + PTI_BUFFER_SIZE;
 	  
 	  /* Read status registers */
