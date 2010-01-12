@@ -45,6 +45,7 @@ int debug ;
 
 #ifdef __TDT__
 unsigned int dma_0_buffer_base;
+unsigned int dma_0_buffer_top;
 #endif
 
 #define TAG_COUNT 4
@@ -438,6 +439,104 @@ static int stream_injector(void *user_data)
    lots of packets (presumably > 500) even if the buffer is not full.
    Therefore, it is important that the polling process always does its work
    on time. */
+#ifdef __TDT__
+static void process_pti_dma(unsigned long data)
+{
+  unsigned int pti_rp, pti_wp, size_first, num_packets,
+	new_rp, pti_status;
+        
+	/* Load the read and write pointers, so we know where we are in the buffers */
+	pti_rp   = readl(internal->pti_io + PTI_DMA_0_READ);
+	pti_wp   = readl(internal->pti_io + PTI_DMA_0_WRITE);
+	  
+	/* Read status registers */
+	pti_status = readl(internal->pti_io + PTI_IIF_FIFO_COUNT);
+	
+	/* Error if we overflow */
+	if (pti_status & PTI_IIF_FIFO_FULL) 
+	{
+		internal->err_count++;
+		printk(KERN_WARNING "%s: IIF Overflow\n",__FUNCTION__);
+	}
+	  
+	/* If the PTI had to drop packets because we couldn't process in time error */
+	if (*internal->discard) 
+	{ 
+		printk(KERN_WARNING "%s: PTI had to discard %u packets %u %u\n",__func__,
+			*internal->discard,*internal->pread,*internal->pwrite);
+	
+		internal->err_count++;
+		stpti_reset_dma(internal);
+		stpti_start_dma(internal);
+	} else
+	{	  
+		/* If we get to the bottom of the buffer wrap the pointer back to the top */
+		if ((pti_rp & ~0xf) == (dma_0_buffer_top & ~0xf)) pti_rp = dma_0_buffer_base;
+	
+		/* Calculate the amount of bytes used in the buffer */
+		if (pti_rp <= pti_wp) size_first = pti_wp - pti_rp;
+		else size_first = dma_0_buffer_top - pti_rp;
+	  
+		/* Calculate the number of packets in the buffer */
+		num_packets = size_first / PACKET_SIZE;
+	
+		/* If we have some packets */
+		if (num_packets)
+		{
+			/* And the PTI has acknowledged the updated the packets */
+			if (!*internal->pread)
+			{
+				int start_offset = pti_rp - dma_0_buffer_base;
+
+				/* Increment the loop counter */
+				internal->loop_count++;
+	
+				/* The read pointer should always be a multiple of the packet size */
+				if ((pti_rp - dma_0_buffer_base) % PACKET_SIZE) 
+					printk(KERN_WARNING "%s: 0x%x not multiple of %d\n",__FUNCTION__,(pti_rp - dma_0_buffer_base),PACKET_SIZE);
+	
+				/* Update the read pointer based on the number of packets we have processed */
+				new_rp = pti_rp + num_packets * PACKET_SIZE;
+	
+				/* Increment the packet_count, by the number of packets we have processed */
+				internal->packet_count+=num_packets;
+		
+				/* If we have gone round the buffer */
+				if (new_rp >= dma_0_buffer_top) 
+				{ 
+					/* Update the read pointer so it now points back to the top */
+					new_rp = dma_0_buffer_base + (new_rp - dma_0_buffer_top); internal->loop_count2++; 
+	
+					/* Print out some useful debug information when debugging is on */
+					dprintk("%s: round the buffer %u times %u=pwrite %u=packet_count %u=num_packets %lu=jiffies %u %u\n",__FUNCTION__, 
+						internal->loop_count2,*internal->pwrite,internal->packet_count,num_packets,jiffies,pti_rp,pti_wp); 
+	
+					/* Update the packet count */
+					internal->packet_count = 0; 
+				}
+	
+				/* Now update the read pointer in the DMA engine */
+				writel(new_rp, internal->pti_io + PTI_DMA_0_READ );
+	
+				/* Now tell the firmware how many packets we have read */
+				PtiWrite(internal->pread,num_packets);
+
+				/* notify the injector thread */
+				workQueue[writeIndex].offset = start_offset;
+				workQueue[writeIndex].count = num_packets;
+				writeIndex = (writeIndex + 1) % QUEUE_SIZE;
+				up(&workSem);
+			} // not read
+		} // num_packet
+	} // discard	  
+
+	/* reschedule the timer */
+	ptiTimer.expires = jiffies + DMA_POLLING_INTERVAL;
+	add_timer(&ptiTimer);
+}
+
+#else  
+ 
 static void process_pti_dma(unsigned long data)
 {
     unsigned int pti_rp, pti_wp, pti_base, pti_top, size_first, num_packets,
@@ -448,11 +547,7 @@ static void process_pti_dma(unsigned long data)
 	  /* Load the read and write pointers, so we know where we are in the buffers */
 	  pti_rp   = readl(internal->pti_io + PTI_DMA_0_READ);
 	  pti_wp   = readl(internal->pti_io + PTI_DMA_0_WRITE);
-#ifdef __TDT__
-	  pti_base = dma_0_buffer_base;
-#else
 	  pti_base = readl(internal->pti_io + PTI_DMA_0_BASE);
-#endif
 	  pti_top  = pti_base + PTI_BUFFER_SIZE;
 	  
 	  /* Read status registers */
@@ -553,6 +648,7 @@ static void process_pti_dma(unsigned long data)
 	ptiTimer.expires = jiffies + DMA_POLLING_INTERVAL;
 	add_timer(&ptiTimer);
 }
+#endif
 
 /********************************************************/
 
