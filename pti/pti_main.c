@@ -282,7 +282,7 @@ static int stream_injector(void *user_data)
 	u8 vpidhigh=0; //high byte of the video stream to check
   u8 vpidlow=0x65; //low byte of the video stream to check
 	u8 apidhigh=0; //high byte of the audio stream to check 
-	u8 vpidlow=0x66; //low byte of the audio stream to check
+	u8 apidlow=0x66; //low byte of the audio stream to check
 	int vc=99; //video count
 	int ac=99; //audio count
 	u8 tc; //temp count
