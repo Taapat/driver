@@ -95,6 +95,10 @@ static void (*demultiplex_dvb_packets)(struct dvb_demux* demux, const u8 *buf, i
 #define HEADER_SIZE (6)
 #define PACKET_SIZE (188+HEADER_SIZE)
 
+#ifdef __TDT__
+#define PACKET_SIZE_WO_HEADER (188)
+#endif
+
 #define PTI_BUFFER_SIZE (PACKET_SIZE * 4096) /*(188*1024)*/
 
 static struct timer_list ptiTimer;
@@ -177,6 +181,7 @@ static void stpti_setup_dma(struct pti_internal *pti)
   writel( virt_to_phys(pti->back_buffer + PTI_BUFFER_SIZE - 1), pti->pti_io + PTI_DMA_0_TOP );
 #ifdef __TDT__
 	dma_0_buffer_base = virt_to_phys(pti->back_buffer);
+	dma_0_buffer_top = virt_to_phys(pti->back_buffer) + PTI_BUFFER_SIZE;
 #endif
 
   writel( 0x8, pti->pti_io + PTI_DMA_0_SETUP ); /* 8 word burst */
@@ -329,7 +334,11 @@ static int stream_injector(void *user_data)
 	if(demultiplex_dvb_packets != NULL)
 	{
 	  u8 *pFrom = &internal->back_buffer[offset];
-	  static u8 auxbuf[TAG_COUNT][(PACKET_SIZE - HEADER_SIZE) * AUX_COUNT];
+#ifdef __TDT__
+	  static u8 auxbuf[TAG_COUNT][PACKET_SIZE_WO_HEADER * AUX_COUNT];
+#else
+		static u8 auxbuf[TAG_COUNT][(PACKET_SIZE - HEADER_SIZE) * AUX_COUNT];
+#endif
 	  u8 *pTo[TAG_COUNT] = {auxbuf[0],auxbuf[1],auxbuf[2],auxbuf[3]};
 	  int count1[TAG_COUNT] = {0, 0, 0, 0};
 	  int n;
@@ -400,9 +409,14 @@ static int stream_injector(void *user_data)
 					}
 				}
 #endif
-	      memmove(pTo[tag], pFrom + HEADER_SIZE,
+#ifdef __TDT__
+	      memmove(pTo[tag], pFrom + HEADER_SIZE, PACKET_SIZE_WO_HEADER);
+	      pTo[tag] += PACKET_SIZE_WO_HEADER;
+#else
+				memmove(pTo[tag], pFrom + HEADER_SIZE,
 		      PACKET_SIZE - HEADER_SIZE);
 	      pTo[tag] += PACKET_SIZE - HEADER_SIZE;
+#endif
 	      count1[tag]++;
 	      if(count1[tag] >= AUX_COUNT)
 	      {
