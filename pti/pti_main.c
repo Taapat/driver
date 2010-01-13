@@ -536,6 +536,7 @@ static void process_pti_dma(unsigned long data)
 					workQueue[writeIndex].count = num_packets;
 					writeIndex = (writeIndex + 1) % QUEUE_SIZE;
 					up(&workSem);
+				}
 			} // not read
 		} // num_packet
 	} // discard	  
