@@ -456,12 +456,15 @@ static int stream_injector(void *user_data)
 #ifdef __TDT__
 static void process_pti_dma(unsigned long data)
 {
-  unsigned int pti_rp, pti_wp, size_first, num_packets,
-	new_rp, pti_status;
+  unsigned int pti_rp, pti_wp, num_packets, pti_status;
+  bool buffer_round=0;
         
 	/* Load the read and write pointers, so we know where we are in the buffers */
 	pti_rp   = readl(internal->pti_io + PTI_DMA_0_READ);
 	pti_wp   = readl(internal->pti_io + PTI_DMA_0_WRITE);
+	
+	//align dma write pointer to packet size
+	pti_wp = pti_wp - ((pti_wp - dma_0_buffer_base) % PACKET_SIZE);
 	  
 	/* Read status registers */
 	pti_status = readl(internal->pti_io + PTI_IIF_FIFO_COUNT);
@@ -488,11 +491,14 @@ static void process_pti_dma(unsigned long data)
 		if ((pti_rp & ~0xf) == (dma_0_buffer_top & ~0xf)) pti_rp = dma_0_buffer_base;
 	
 		/* Calculate the amount of bytes used in the buffer */
-		if (pti_rp <= pti_wp) size_first = pti_wp - pti_rp;
-		else size_first = dma_0_buffer_top - pti_rp;
-	  
-		/* Calculate the number of packets in the buffer */
-		num_packets = size_first / PACKET_SIZE;
+		if (pti_rp <= pti_wp) num_packets = (pti_wp - pti_rp) / PACKET_SIZE;
+		else 
+		{
+			num_packets = ((dma_0_buffer_top - pti_rp) + (pti_wp - dma_0_buffer_base)) / PACKET_SIZE;
+			internal->loop_count2++;
+			internal->packet_count = 0;
+			buffer_round=1;
+		}
 	
 		/* If we have some packets */
 		if (num_packets)
@@ -500,46 +506,36 @@ static void process_pti_dma(unsigned long data)
 			/* And the PTI has acknowledged the updated the packets */
 			if (!*internal->pread)
 			{
-				int start_offset = pti_rp - dma_0_buffer_base;
-
 				/* Increment the loop counter */
 				internal->loop_count++;
 	
-				/* The read pointer should always be a multiple of the packet size */
-				if ((pti_rp - dma_0_buffer_base) % PACKET_SIZE) 
-					printk(KERN_WARNING "%s: 0x%x not multiple of %d\n",__FUNCTION__,(pti_rp - dma_0_buffer_base),PACKET_SIZE);
-	
-				/* Update the read pointer based on the number of packets we have processed */
-				new_rp = pti_rp + num_packets * PACKET_SIZE;
-	
 				/* Increment the packet_count, by the number of packets we have processed */
 				internal->packet_count+=num_packets;
-		
-				/* If we have gone round the buffer */
-				if (new_rp >= dma_0_buffer_top) 
-				{ 
-					/* Update the read pointer so it now points back to the top */
-					new_rp = dma_0_buffer_base + (new_rp - dma_0_buffer_top); internal->loop_count2++; 
-	
-					/* Print out some useful debug information when debugging is on */
-					dprintk("%s: round the buffer %u times %u=pwrite %u=packet_count %u=num_packets %lu=jiffies %u %u\n",__FUNCTION__, 
-						internal->loop_count2,*internal->pwrite,internal->packet_count,num_packets,jiffies,pti_rp,pti_wp); 
-	
-					/* Update the packet count */
-					internal->packet_count = 0; 
-				}
 	
 				/* Now update the read pointer in the DMA engine */
-				writel(new_rp, internal->pti_io + PTI_DMA_0_READ );
+				writel(pti_wp, internal->pti_io + PTI_DMA_0_READ );
 	
 				/* Now tell the firmware how many packets we have read */
 				PtiWrite(internal->pread,num_packets);
 
 				/* notify the injector thread */
-				workQueue[writeIndex].offset = start_offset;
-				workQueue[writeIndex].count = num_packets;
-				writeIndex = (writeIndex + 1) % QUEUE_SIZE;
-				up(&workSem);
+				if(buffer_round) {
+					unsigned int num_packets1 = (dma_0_buffer_top - pti_rp) / PACKET_SIZE;
+					workQueue[writeIndex].offset = pti_rp - dma_0_buffer_base;
+					workQueue[writeIndex].count = num_packets1;
+					writeIndex = (writeIndex + 1) % QUEUE_SIZE;
+					up(&workSem);
+
+					workQueue[writeIndex].offset = 0;
+					workQueue[writeIndex].count = num_packets-num_packets1;
+					writeIndex = (writeIndex + 1) % QUEUE_SIZE;
+					up(&workSem);
+				}
+				else {
+					workQueue[writeIndex].offset = pti_rp - dma_0_buffer_base;
+					workQueue[writeIndex].count = num_packets;
+					writeIndex = (writeIndex + 1) % QUEUE_SIZE;
+					up(&workSem);
 			} // not read
 		} // num_packet
 	} // discard	  
