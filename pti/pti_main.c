@@ -440,6 +440,15 @@ static int stream_injector(void *user_data)
 	  }
 	}
 
+#ifdef __TDT__
+	/* when we update the pointer her, the firmware and dma can detect an buffer overrun
+	/* Now update the read pointer in the DMA engine */
+	writel(dma_0_buffer_base + offset + (count * PACKET_SIZE), internal->pti_io + PTI_DMA_0_READ );
+	
+	/* Now tell the firmware how many packets we have read */
+	PtiWrite(internal->pread, count);
+#endif
+	
 	/* increment the readIndex */
 	readIndex = (readIndex + 1) % QUEUE_SIZE;
   }
@@ -462,7 +471,7 @@ static void process_pti_dma(unsigned long data)
   bool buffer_round=0;
         
 	/* Load the write pointers, so we know where we are in the buffers */
-	pti_wp   = readl(internal->pti_io + PTI_DMA_0_WRITE);
+	pti_wp = readl(internal->pti_io + PTI_DMA_0_WRITE);
 	
 	//align dma write pointer to packet size
 	pti_wp = pti_wp - ((pti_wp - dma_0_buffer_base) % PACKET_SIZE);
@@ -485,6 +494,9 @@ static void process_pti_dma(unsigned long data)
 	
 		internal->err_count++;
 		stpti_reset_dma(internal);
+		writeIndex = 0;
+		readIndex = 0;
+		//the semaphore must by also resetet to 0, fix later
 		stpti_start_dma(internal);
 	} else
 	{	  
@@ -512,12 +524,6 @@ static void process_pti_dma(unsigned long data)
 	
 				/* Increment the packet_count, by the number of packets we have processed */
 				internal->packet_count+=num_packets;
-	
-				/* Now update the read pointer in the DMA engine */
-				writel(pti_wp, internal->pti_io + PTI_DMA_0_READ );
-	
-				/* Now tell the firmware how many packets we have read */
-				PtiWrite(internal->pread,num_packets);
 
 				/* notify the injector thread */
 				if(buffer_round) {
