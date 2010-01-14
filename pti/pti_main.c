@@ -741,7 +741,11 @@ void pti_hal_init ( struct stpti *pti , struct dvb_demux* demux, void (*_demulti
   stpti_reset_dma(internal);
   
   /* Enable the DMA of data */
-  writel( readl(internal->pti_io + PTI_DMA_ENABLE) | 0x1, internal->pti_io + PTI_DMA_ENABLE );  
+#ifdef __TDT__
+	stpti_start_dma(internal);
+#else
+  writel( readl(internal->pti_io + PTI_DMA_ENABLE) | 0x1, internal->pti_io + PTI_DMA_ENABLE ); 
+#endif 
 
   internal->vSlots =
       kmalloc ( sizeof ( struct tSlot * ) * 32,	GFP_KERNEL );
