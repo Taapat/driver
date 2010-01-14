@@ -46,6 +46,7 @@ int debug ;
 #ifdef __TDT__
 unsigned int dma_0_buffer_base;
 unsigned int dma_0_buffer_top;
+unsigned int dma_0_buffer_rp;
 #endif
 
 #define TAG_COUNT 4
@@ -182,6 +183,7 @@ static void stpti_setup_dma(struct pti_internal *pti)
 #ifdef __TDT__
 	dma_0_buffer_base = virt_to_phys(pti->back_buffer);
 	dma_0_buffer_top = virt_to_phys(pti->back_buffer) + PTI_BUFFER_SIZE;
+	dma_0_buffer_rp = dma_0_buffer_base;
 #endif
 
   writel( 0x8, pti->pti_io + PTI_DMA_0_SETUP ); /* 8 word burst */
@@ -456,11 +458,10 @@ static int stream_injector(void *user_data)
 #ifdef __TDT__
 static void process_pti_dma(unsigned long data)
 {
-  unsigned int pti_rp, pti_wp, num_packets, pti_status;
+  unsigned int pti_wp, num_packets, pti_status;
   bool buffer_round=0;
         
-	/* Load the read and write pointers, so we know where we are in the buffers */
-	pti_rp   = readl(internal->pti_io + PTI_DMA_0_READ);
+	/* Load the write pointers, so we know where we are in the buffers */
 	pti_wp   = readl(internal->pti_io + PTI_DMA_0_WRITE);
 	
 	//align dma write pointer to packet size
@@ -488,13 +489,13 @@ static void process_pti_dma(unsigned long data)
 	} else
 	{	  
 		/* If we get to the bottom of the buffer wrap the pointer back to the top */
-		if ((pti_rp & ~0xf) == (dma_0_buffer_top & ~0xf)) pti_rp = dma_0_buffer_base;
+		if ((dma_0_buffer_rp & ~0xf) == (dma_0_buffer_top & ~0xf)) dma_0_buffer_rp = dma_0_buffer_base;
 	
 		/* Calculate the amount of bytes used in the buffer */
-		if (pti_rp <= pti_wp) num_packets = (pti_wp - pti_rp) / PACKET_SIZE;
+		if (dma_0_buffer_rp <= pti_wp) num_packets = (pti_wp - dma_0_buffer_rp) / PACKET_SIZE;
 		else 
 		{
-			num_packets = ((dma_0_buffer_top - pti_rp) + (pti_wp - dma_0_buffer_base)) / PACKET_SIZE;
+			num_packets = ((dma_0_buffer_top - dma_0_buffer_rp) + (pti_wp - dma_0_buffer_base)) / PACKET_SIZE;
 			internal->loop_count2++;
 			internal->packet_count = 0;
 			buffer_round=1;
@@ -520,8 +521,8 @@ static void process_pti_dma(unsigned long data)
 
 				/* notify the injector thread */
 				if(buffer_round) {
-					unsigned int num_packets1 = (dma_0_buffer_top - pti_rp) / PACKET_SIZE;
-					workQueue[writeIndex].offset = pti_rp - dma_0_buffer_base;
+					unsigned int num_packets1 = (dma_0_buffer_top - dma_0_buffer_rp) / PACKET_SIZE;
+					workQueue[writeIndex].offset = dma_0_buffer_rp - dma_0_buffer_base;
 					workQueue[writeIndex].count = num_packets1;
 					writeIndex = (writeIndex + 1) % QUEUE_SIZE;
 					up(&workSem);
@@ -532,11 +533,12 @@ static void process_pti_dma(unsigned long data)
 					up(&workSem);
 				}
 				else {
-					workQueue[writeIndex].offset = pti_rp - dma_0_buffer_base;
+					workQueue[writeIndex].offset = dma_0_buffer_rp - dma_0_buffer_base;
 					workQueue[writeIndex].count = num_packets;
 					writeIndex = (writeIndex + 1) % QUEUE_SIZE;
 					up(&workSem);
 				}
+				dma_0_buffer_rp = pti_wp;
 			} // not read
 		} // num_packet
 	} // discard	  
