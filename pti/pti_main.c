@@ -296,6 +296,9 @@ static int stream_injector(void *user_data)
 
   allow_signal(SIGKILL);
   allow_signal(SIGTERM);
+  
+  //set hight thread priority
+  set_user_nice(current, -20);
 
   while(1)
   {
@@ -325,11 +328,13 @@ static int stream_injector(void *user_data)
 	/* invalidate the cache */
 	dma_cache_inv((void*)&internal->back_buffer[offset],
 			count * PACKET_SIZE);
-      
+
+#ifdef STREAMCHECK
 	/* The first bytes of the packet after the header should
 	   always be a 0x47 if not we got problems */
 	if (internal->back_buffer[offset + HEADER_SIZE] != 0x47) 
 		printk("\n!0x47\n");
+#endif
 
 	/* Now go through each packet, check it's tag and
            place it in the correct demux buffer */
