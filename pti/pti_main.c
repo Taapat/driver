@@ -297,7 +297,7 @@ static int stream_injector(void *user_data)
   allow_signal(SIGKILL);
   allow_signal(SIGTERM);
   
-  //set hight thread priority
+  //set high thread priority
   set_user_nice(current, -20);
 
   while(1)
