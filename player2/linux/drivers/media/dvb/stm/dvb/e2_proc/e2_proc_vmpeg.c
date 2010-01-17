@@ -18,8 +18,6 @@
 
 extern struct stmfb_info* stmfb_get_fbinfo_ptr(void);
 
-extern struct DeviceContext_s* ProcDeviceContext;
-
 int proc_vmpeg_0_dst_left_write(struct file *file, const char __user *buf,
                            unsigned long count, void *data)
 {
@@ -30,10 +28,9 @@ int proc_vmpeg_0_dst_left_write(struct file *file, const char __user *buf,
         struct fb_info  *info;
 	struct fb_var_screeninfo screen_info;
 	char* myString = kmalloc(count + 1, GFP_KERNEL);
+	struct DeviceContext_s *pContext = (struct DeviceContext_s*)data;
 
 	printk("%s %d - ", __FUNCTION__, (unsigned int)count);
-
-    	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
         fb =  stmfb_get_fbinfo_ptr();
 			
@@ -54,6 +51,7 @@ int proc_vmpeg_0_dst_left_write(struct file *file, const char __user *buf,
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
 	{
+		int l,t,w,h;
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
 			goto out;
@@ -64,10 +62,11 @@ int proc_vmpeg_0_dst_left_write(struct file *file, const char __user *buf,
 		printk("%s\n", myString);
 		sscanf(myString, "%x", &value);
 
-		if (ProcDeviceContext != NULL)
+		if(pContext != NULL)
 		{
-			int l,t,w,h;
-			err = StreamGetOutputWindow(ProcDeviceContext->VideoStream, &l,&t,&w,&h);
+			mutex_lock (&(pContext->DvbContext->Lock));
+
+			err = StreamGetOutputWindow(pContext->VideoStream, &l,&t,&w,&h);
 			if (err != 0)
 				printk("failed to get output window %d\n", err);
 			else	
@@ -75,14 +74,15 @@ int proc_vmpeg_0_dst_left_write(struct file *file, const char __user *buf,
 
 			l = x*value/720;
 
-		    	err = StreamSetOutputWindow(ProcDeviceContext->VideoStream, l, t, w, h);
+			err = StreamSetOutputWindow(pContext->VideoStream, l, t, w, h);
 				
 			if (err != 0)
 				printk("failed to set output window %d\n", err);
 			else	
 				printk("set output window ok %d %d %d %d\n", l, t, w, h);
+			mutex_unlock (&(pContext->DvbContext->Lock));
 		}
-		
+
 		/* always return count to avoid endless loop */
 		ret = count;	
 	}
@@ -90,13 +90,12 @@ int proc_vmpeg_0_dst_left_write(struct file *file, const char __user *buf,
 out:
 	free_page((unsigned long)page);
 	kfree(myString);
-    	mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
 	return ret;
 }
 
 
 int proc_vmpeg_0_dst_left_read (char *page, char **start, off_t off, int count,
-			  int *eof, void *data_unused)
+			  int *eof, void *data)
 {
 	int    len = 0;
 	int    l,t,w,h;
@@ -104,11 +103,10 @@ int proc_vmpeg_0_dst_left_read (char *page, char **start, off_t off, int count,
         void   *fb;
         struct fb_info *info;
 	struct fb_var_screeninfo screen_info;
+	struct DeviceContext_s *pContext = (struct DeviceContext_s*)data;
 	
 	printk("%s\n", __FUNCTION__);
 	
-	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
-
 	fb =  stmfb_get_fbinfo_ptr();
 			
 	info = (struct fb_info*) fb;
@@ -125,17 +123,19 @@ int proc_vmpeg_0_dst_left_read (char *page, char **start, off_t off, int count,
 		x=720;
         }
 
-	if (ProcDeviceContext != NULL)
+	if (pContext != NULL)
 	{
-		err = StreamGetOutputWindow(ProcDeviceContext->VideoStream, &l,&t,&w,&h);
+		mutex_lock (&(pContext->DvbContext->Lock));
+
+		err = StreamGetOutputWindow(pContext->VideoStream, &l,&t,&w,&h);
 		if (err != 0)
 			printk("failed to get output window %d\n", err);
 		else	
 			printk("get output window to %d %d %d, %d ok\n",  l,  t, w, h);
+
+		mutex_unlock (&(pContext->DvbContext->Lock));
 	}
 	len = sprintf(page, "%x\n", 720*l/x);
-
-	mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
 
         return len;
 }
@@ -150,10 +150,9 @@ int proc_vmpeg_0_dst_top_write(struct file *file, const char __user *buf,
         struct fb_info  *info;
 	struct fb_var_screeninfo screen_info;
 	char* myString = kmalloc(count + 1, GFP_KERNEL);
+	struct DeviceContext_s *pContext = (struct DeviceContext_s*)data;
 
 	printk("%s %d - ", __FUNCTION__, (unsigned int)count);
-
-    	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	fb =  stmfb_get_fbinfo_ptr();
 			
@@ -184,10 +183,12 @@ int proc_vmpeg_0_dst_top_write(struct file *file, const char __user *buf,
 		printk("%s\n", myString);
 		sscanf(myString, "%x", &value);
 
-		if (ProcDeviceContext != NULL)
+		if (pContext != NULL)
 		{
 			int l,t,w,h;
-			err = StreamGetOutputWindow(ProcDeviceContext->VideoStream, &l,&t,&w,&h);
+			mutex_lock (&(pContext->DvbContext->Lock));
+
+			err = StreamGetOutputWindow(pContext->VideoStream, &l,&t,&w,&h);
 			if (err != 0)
 				printk("failed to get output window %d\n", err);
 			else	
@@ -195,12 +196,13 @@ int proc_vmpeg_0_dst_top_write(struct file *file, const char __user *buf,
 
 			t = y*value/576;
 
-		    	err = StreamSetOutputWindow(ProcDeviceContext->VideoStream, l, t, w, h);
+		    	err = StreamSetOutputWindow(pContext->VideoStream, l, t, w, h);
 				
 			if (err != 0)
 				printk("failed to set output window %d\n", err);
 			else	
 				printk("set output window ok %d %d %d %d\n", l, t, w, h);
+			mutex_unlock (&(pContext->DvbContext->Lock));
 		}
 		
 		/* always return count to avoid endless loop */
@@ -210,13 +212,12 @@ int proc_vmpeg_0_dst_top_write(struct file *file, const char __user *buf,
 out:
 	free_page((unsigned long)page);
 	kfree(myString);
-    	mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
 	return ret;
 }
 
 
 int proc_vmpeg_0_dst_top_read (char *page, char **start, off_t off, int count,
-			  int *eof, void *data_unused)
+			  int *eof, void *data)
 {
 	int len = 0;
 	int l,t,w,h;
@@ -224,10 +225,9 @@ int proc_vmpeg_0_dst_top_read (char *page, char **start, off_t off, int count,
         void*           fb;
         struct fb_info  *info;
 	struct fb_var_screeninfo screen_info;
+	struct DeviceContext_s *pContext = (struct DeviceContext_s*)data;
 
 	printk("%s\n", __FUNCTION__);
-
-	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	fb =  stmfb_get_fbinfo_ptr();
 			
@@ -245,17 +245,19 @@ int proc_vmpeg_0_dst_top_read (char *page, char **start, off_t off, int count,
 		x=720;
         }
 
-	if (ProcDeviceContext != NULL)
+	if (pContext != NULL)
 	{
-		err = StreamGetOutputWindow(ProcDeviceContext->VideoStream, &l,&t,&w,&h);
+		mutex_lock (&(pContext->DvbContext->Lock));
+
+		err = StreamGetOutputWindow(pContext->VideoStream, &l,&t,&w,&h);
 		if (err != 0)
 			printk("failed to get output window %d\n", err);
 		else	
 			printk("get output window to %d %d %d, %d ok\n",  l,  t, w, h);
+
+		mutex_unlock (&(pContext->DvbContext->Lock));
 	}
 	len = sprintf(page, "%x\n", 576*t/y);
-
-	mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
 
         return len;
 }
@@ -270,12 +272,11 @@ int proc_vmpeg_0_dst_width_write(struct file *file, const char __user *buf,
         void*           fb;
         struct fb_info  *info;
 	struct fb_var_screeninfo screen_info;
+	struct DeviceContext_s *pContext = (struct DeviceContext_s*)data;
 
 	char* myString = kmalloc(count + 1, GFP_KERNEL);
 
 	printk("%s %d - ", __FUNCTION__, (unsigned int)count);
-
-    	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	fb =  stmfb_get_fbinfo_ptr();
 			
@@ -306,10 +307,12 @@ int proc_vmpeg_0_dst_width_write(struct file *file, const char __user *buf,
 		printk("%s\n", myString);
 		sscanf(myString, "%x", &value);
 
-		if (ProcDeviceContext != NULL)
+		if (pContext != NULL)
 		{
 			int l,t,w,h;
-			err = StreamGetOutputWindow(ProcDeviceContext->VideoStream, &l,&t,&w,&h);
+			mutex_lock (&(pContext->DvbContext->Lock));
+
+			err = StreamGetOutputWindow(pContext->VideoStream, &l,&t,&w,&h);
 			if (err != 0)
 				printk("failed to get output window %d\n", err);
 			else	
@@ -317,12 +320,13 @@ int proc_vmpeg_0_dst_width_write(struct file *file, const char __user *buf,
 
 			w = x*value/720;
 
-		    	err = StreamSetOutputWindow(ProcDeviceContext->VideoStream, l, t, w, h);
+		    	err = StreamSetOutputWindow(pContext->VideoStream, l, t, w, h);
 				
 			if (err != 0)
 				printk("failed to set output window %d\n", err);
 			else	
 				printk("set output window ok %d %d %d %d\n", l, t, w, h);
+			mutex_unlock (&(pContext->DvbContext->Lock));
 		}
 		
 		/* always return count to avoid endless loop */
@@ -332,13 +336,12 @@ int proc_vmpeg_0_dst_width_write(struct file *file, const char __user *buf,
 out:
 	free_page((unsigned long)page);
 	kfree(myString);
-    	mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
 	return ret;
 }
 
 
 int proc_vmpeg_0_dst_width_read (char *page, char **start, off_t off, int count,
-			  int *eof, void *data_unused)
+			  int *eof, void *data)
 {
 	int len = 0;
 	int l,t,w,h;
@@ -346,9 +349,9 @@ int proc_vmpeg_0_dst_width_read (char *page, char **start, off_t off, int count,
         void*           fb;
         struct fb_info  *info;
 	struct fb_var_screeninfo screen_info;
+	struct DeviceContext_s *pContext = (struct DeviceContext_s*)data;
 
 	printk("%s\n", __FUNCTION__);
-	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	fb =  stmfb_get_fbinfo_ptr();
 			
@@ -366,17 +369,19 @@ int proc_vmpeg_0_dst_width_read (char *page, char **start, off_t off, int count,
 		x=720;
         }
 
-	if (ProcDeviceContext != NULL)
+	if (pContext != NULL)
 	{
-		err = StreamGetOutputWindow(ProcDeviceContext->VideoStream, &l,&t,&w,&h);
+		mutex_lock (&(pContext->DvbContext->Lock));
+		err = StreamGetOutputWindow(pContext->VideoStream, &l,&t,&w,&h);
 		if (err != 0)
 			printk("failed to get output window %d\n", err);
 		else	
 			printk("get output window to %d %d %d, %d ok\n",  l,  t, w, h);
-	}
-	len = sprintf(page, "%x\n", 720*w/x);
 
-	mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
+		mutex_unlock (&(pContext->DvbContext->Lock));
+	}
+
+	len = sprintf(page, "%x\n", 720*w/x);
 
         return len;
 }
@@ -390,12 +395,11 @@ int proc_vmpeg_0_dst_height_write(struct file *file, const char __user *buf,
         void*           fb;
         struct fb_info  *info;
 	struct fb_var_screeninfo screen_info;
+	struct DeviceContext_s *pContext = (struct DeviceContext_s*)data;
 
 	char* myString = kmalloc(count + 1, GFP_KERNEL);
 
 	printk("%s %d - ", __FUNCTION__, (unsigned int)count);
-
-    	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	fb =  stmfb_get_fbinfo_ptr();
 			
@@ -426,10 +430,12 @@ int proc_vmpeg_0_dst_height_write(struct file *file, const char __user *buf,
 		printk("%s\n", myString);
 		sscanf(myString, "%x", &value);
 
-		if (ProcDeviceContext != NULL)
+		if (pContext != NULL)
 		{
 			int l,t,w,h;
-			err = StreamGetOutputWindow(ProcDeviceContext->VideoStream, &l,&t,&w,&h);
+			mutex_lock (&(pContext->DvbContext->Lock));
+
+			err = StreamGetOutputWindow(pContext->VideoStream, &l,&t,&w,&h);
 			if (err != 0)
 				printk("failed to get output window %d\n", err);
 			else	
@@ -437,12 +443,13 @@ int proc_vmpeg_0_dst_height_write(struct file *file, const char __user *buf,
 
 			h = y*value/576;
 
-		    	err = StreamSetOutputWindow(ProcDeviceContext->VideoStream, l, t, w, h);
+		    	err = StreamSetOutputWindow(pContext->VideoStream, l, t, w, h);
 				
 			if (err != 0)
 				printk("failed to set output window %d\n", err);
 			else	
 				printk("set output window ok %d %d %d %d\n", l, t, w, h);
+			mutex_unlock (&(pContext->DvbContext->Lock));
 		}
 		
 		/* always return count to avoid endless loop */
@@ -452,13 +459,12 @@ int proc_vmpeg_0_dst_height_write(struct file *file, const char __user *buf,
 out:
 	free_page((unsigned long)page);
 	kfree(myString);
-    	mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
 	return ret;
 }
 
 
 int proc_vmpeg_0_dst_height_read (char *page, char **start, off_t off, int count,
-			  int *eof, void *data_unused)
+			  int *eof, void *data)
 {
 	int len = 0;
 	int l,t,w,h;
@@ -466,10 +472,9 @@ int proc_vmpeg_0_dst_height_read (char *page, char **start, off_t off, int count
         void*           fb;
         struct fb_info  *info;
 	struct fb_var_screeninfo screen_info;
+	struct DeviceContext_s *pContext = (struct DeviceContext_s*)data;
 
 	printk("%s\n", __FUNCTION__);
-
-	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	fb =  stmfb_get_fbinfo_ptr();
 			
@@ -487,81 +492,99 @@ int proc_vmpeg_0_dst_height_read (char *page, char **start, off_t off, int count
 		x=720;
         }
 
-	if (ProcDeviceContext != NULL)
+	if (pContext != NULL)
 	{
-		err = StreamGetOutputWindow(ProcDeviceContext->VideoStream, &l,&t,&w,&h);
+		mutex_lock (&(pContext->DvbContext->Lock));
+
+		err = StreamGetOutputWindow(pContext->VideoStream, &l,&t,&w,&h);
 		if (err != 0)
 			printk("failed to get output window %d\n", err);
 		else	
 			printk("get output window to %d %d %d, %d ok\n",  l,  t, w, h);
+
+		mutex_unlock (&(pContext->DvbContext->Lock));
 	}
 	len = sprintf(page, "%x\n", 576*h/y);
-
-	mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
 
         return len;
 }
 
 int proc_vmpeg_0_yres_read (char *page, char **start, off_t off, int count,
-			  int *eof, void *data_unused)
+			  int *eof, void *data)
 {
     int len = 0;
+    struct DeviceContext_s *pContext = (struct DeviceContext_s*)data;
     
     printk("%s\n", __FUNCTION__);
 
-    mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
+    if(pContext != NULL)
+    {
+	mutex_lock (&(pContext->DvbContext->Lock));
 
-    len = sprintf(page, "%x\n", ProcDeviceContext->VideoSize.h);
+	len = sprintf(page, "%x\n", pContext->VideoSize.h);
 
-    mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
+	mutex_unlock (&(pContext->DvbContext->Lock));
+    }
 
     return len;
 }
 
 int proc_vmpeg_0_xres_read (char *page, char **start, off_t off, int count,
-			  int *eof, void *data_unused)
+			  int *eof, void *data)
 {
     int len = 0;
+    struct DeviceContext_s *pContext = (struct DeviceContext_s*)data;
     
     printk("%s\n", __FUNCTION__);
 
-    mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
+    if(pContext != NULL)
+    {
+	mutex_lock (&(pContext->DvbContext->Lock));
 
-    len = sprintf(page, "%x\n", ProcDeviceContext->VideoSize.w);
+	len = sprintf(page, "%x\n", pContext->VideoSize.w);
 
-    mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
+	mutex_unlock (&(pContext->DvbContext->Lock));
+    }
 
     return len;
 }
 
 int proc_vmpeg_0_framerate_read (char *page, char **start, off_t off, int count,
-			  int *eof, void *data_unused)
+			  int *eof, void *data)
 {
     int len = 0;
+    struct DeviceContext_s *pContext = (struct DeviceContext_s*)data;
     
     printk("%s\n", __FUNCTION__);
 
-    mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
+    if(pContext != NULL)
+    {
+	mutex_lock (&(pContext->DvbContext->Lock));
 
-    len = sprintf(page, "%x\n", ProcDeviceContext->FrameRate);
+	len = sprintf(page, "%x\n", pContext->FrameRate);
 
-    mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
+	mutex_unlock (&(pContext->DvbContext->Lock));
+    }
 
     return len;
 }
 
 int proc_vmpeg_0_aspect_read (char *page, char **start, off_t off, int count,
-			  int *eof, void *data_unused)
+			  int *eof, void *data)
 {
     int len = 0;
+    struct DeviceContext_s *pContext = (struct DeviceContext_s*)data;
     
     printk("%s\n", __FUNCTION__);
 
-    mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
+    if(pContext != NULL)
+    {
+	mutex_lock (&(pContext->DvbContext->Lock));
 
-    len = sprintf(page, "%x\n", ProcDeviceContext->VideoSize.aspect_ratio);
+	len = sprintf(page, "%x\n", pContext->VideoSize.aspect_ratio);
 
-    mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
+	mutex_unlock (&(pContext->DvbContext->Lock));
+    }
 
     return len;
 }
@@ -576,10 +599,9 @@ int proc_vmpeg_0_dst_all_write(struct file *file, const char __user *buf,
         struct fb_info  *info;
 	struct fb_var_screeninfo screen_info;
 	char* myString = kmalloc(count + 1, GFP_KERNEL);
+	struct DeviceContext_s *pContext = (struct DeviceContext_s*)data;
 
 	printk("%s %d - ", __FUNCTION__, (unsigned int)count);
-
-    	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	fb =  stmfb_get_fbinfo_ptr();
 			
@@ -614,8 +636,10 @@ int proc_vmpeg_0_dst_all_write(struct file *file, const char __user *buf,
 
                 printk("%x, %x, %x, %x\n", l, t, w, h);
 
-		if (ProcDeviceContext != NULL)
+		if (pContext != NULL)
 		{
+			mutex_lock (&(pContext->DvbContext->Lock));
+
 			h = y*h/576;
 			w = x*w/720;
 			l = x*l/720;
@@ -623,12 +647,13 @@ int proc_vmpeg_0_dst_all_write(struct file *file, const char __user *buf,
 
                         printk("%x, %x, %x, %x\n", l, t, w, h);
 
-		    	err = StreamSetOutputWindow(ProcDeviceContext->VideoStream, l, t, w, h);
+		    	err = StreamSetOutputWindow(pContext->VideoStream, l, t, w, h);
 				
 			if (err != 0)
 				printk("failed to set output window %d\n", err);
 			else	
 				printk("set output window ok %d %d %d %d\n", l, t, w, h);
+			mutex_unlock (&(pContext->DvbContext->Lock));
 		}
 		
 		/* always return count to avoid endless loop */
@@ -638,7 +663,6 @@ int proc_vmpeg_0_dst_all_write(struct file *file, const char __user *buf,
 out:
 	free_page((unsigned long)page);
 	kfree(myString);
-    	mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
 	return ret;
 }
 

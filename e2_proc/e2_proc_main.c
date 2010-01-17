@@ -162,7 +162,7 @@
  *  |
  *  ---------- vmpeg
  *  |           |
- *  |           --------- 0
+ *  |           --------- 0/1
  *  |               |
  *  |               --------- dst_left   \
  *  |               |                     |
@@ -339,11 +339,21 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/vmpeg/0/dst_width"                                            , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/vmpeg/0/dst_height"                                           , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/vmpeg/0/dst_all"                                              , NULL, NULL, NULL, NULL, ""},
-
 	{cProcEntry, "stb/vmpeg/0/yres"                                                 , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/vmpeg/0/xres"                                                 , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/vmpeg/0/aspect"                                               , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/vmpeg/0/framerate"                                            , NULL, NULL, NULL, NULL, ""},
+
+	{cProcDir  , "stb/vmpeg/1"                                                      , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/vmpeg/1/dst_left"                                             , NULL, NULL, NULL, NULL, ""}, 
+	{cProcEntry, "stb/vmpeg/1/dst_top"                                              , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/vmpeg/1/dst_width"                                            , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/vmpeg/1/dst_height"                                           , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/vmpeg/1/dst_all"                                              , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/vmpeg/1/yres"                                                 , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/vmpeg/1/xres"                                                 , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/vmpeg/1/aspect"                                               , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/vmpeg/1/framerate"                                            , NULL, NULL, NULL, NULL, ""},
 
 	{cProcDir  , "stb/hdmi"                                                         , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/hdmi/bypass_edid_checking"                                    , NULL, NULL, NULL, NULL, ""},
@@ -498,7 +508,7 @@ char * basename(char * name)
   return name + pos;
 }
 
-int install_e2_procs(char *path, read_proc_t *read_func, write_proc_t *write_func)
+int install_e2_procs(char *path, read_proc_t *read_func, write_proc_t *write_func, void *data)
 {
   int i;
 
@@ -525,6 +535,7 @@ int install_e2_procs(char *path, read_proc_t *read_func, write_proc_t *write_fun
 	  /* install the provided functions */
 	  e2Proc[i].entry->read_proc = read_func;
 	  e2Proc[i].entry->write_proc = write_func;
+	  e2Proc[i].entry->data = data;
         }
       }
       break;

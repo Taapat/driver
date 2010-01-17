@@ -43,7 +43,7 @@
  *             +--- was_timer_wakeup (rw)
 */
 
-extern int install_e2_procs(char *name, read_proc_t *read_proc, write_proc_t *write_proc);
+extern int install_e2_procs(char *name, read_proc_t *read_proc, write_proc_t *write_proc, void *data);
 extern int remove_e2_procs(char *name, read_proc_t *read_proc, write_proc_t *write_proc);
 
 #if 0
@@ -150,7 +150,6 @@ static int wakeup_time_write(struct file *file, const char __user *buf,
   char *page;
   int ret = -ENOMEM;
   long seconds;
-  frontpanel_ioctl_time *pTime;
 
   //printk("%s(%ld, ", __FUNCTION__, count);
 
@@ -247,7 +246,7 @@ void create_proc_fp(void)
   for(i = 0; i < sizeof(fp_procs)/sizeof(fp_procs[0]); i++)
   {
     install_e2_procs(fp_procs[i].name, fp_procs[i].read_proc,
-			fp_procs[i].write_proc);
+			fp_procs[i].write_proc, NULL);
   }
 }
 

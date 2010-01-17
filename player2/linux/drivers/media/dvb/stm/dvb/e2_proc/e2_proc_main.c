@@ -145,7 +145,7 @@
  *  |
  *  ---------- vmpeg
  *  |           |
- *  |           --------- 0
+ *  |           --------- 0/1
  *  |               |
  *  |               --------- dst_left   \
  *  |               |                     |
@@ -189,7 +189,7 @@ Offen:
 #include "linux/dvb/stm_ioctls.h"
 
 /* external functions provided by the module e2_procfs */
-extern int install_e2_procs(char *name, read_proc_t *read_proc, write_proc_t *write_proc);
+extern int install_e2_procs(char *name, read_proc_t *read_proc, write_proc_t *write_proc, void *data);
 extern int remove_e2_procs(char *name, read_proc_t *read_proc, write_proc_t *write_proc);
 
 
@@ -334,89 +334,98 @@ struct e2_procs
   char *name;
   read_proc_t *read_proc;
   write_proc_t *write_proc;
+  int context;
 } e2_procs[] =
 {
-  {"progress",                          proc_progress_read,                     proc_progress_write},
+  {"progress",                          proc_progress_read,                     proc_progress_write, 0},
 
-  {"bus/nim_sockets",                   proc_bus_nim_sockets_read,              NULL},
-  {"stb/audio/ac3",                     proc_audio_ac3_read,                    proc_audio_ac3_write},
-  {"stb/audio/audio_delay_pcm",         proc_audio_delay_pcm_read,              proc_audio_delay_pcm_write},
-  {"stb/audio/audio_delay_bitstream",   proc_audio_delay_bitstream_read,        proc_audio_delay_bitstream_write},
-  {"stb/audio/j1_mute",                 proc_audio_j1_mute_read,                proc_audio_j1_mute_write},
-  {"stb/audio/ac3_choices",             proc_audio_ac3_choices_read,            NULL},
+  {"bus/nim_sockets",                   proc_bus_nim_sockets_read,              NULL, 0},
+  {"stb/audio/ac3",                     proc_audio_ac3_read,                    proc_audio_ac3_write, 0},
+  {"stb/audio/audio_delay_pcm",         proc_audio_delay_pcm_read,              proc_audio_delay_pcm_write, 0},
+  {"stb/audio/audio_delay_bitstream",   proc_audio_delay_bitstream_read,        proc_audio_delay_bitstream_write, 0},
+  {"stb/audio/j1_mute",                 proc_audio_j1_mute_read,                proc_audio_j1_mute_write, 0},
+  {"stb/audio/ac3_choices",             proc_audio_ac3_choices_read,            NULL, 0},
 
-  {"stb/video/alpha",                   proc_video_alpha_read,                  proc_video_alpha_write},
-  {"stb/video/aspect",                  proc_video_aspect_read,                 proc_video_aspect_write},
-  {"stb/video/aspect_choices",          proc_video_aspect_choices_read,         NULL},
+  {"stb/video/alpha",                   proc_video_alpha_read,                  proc_video_alpha_write, 0},
+  {"stb/video/aspect",                  proc_video_aspect_read,                 proc_video_aspect_write, 0},
+  {"stb/video/aspect_choices",          proc_video_aspect_choices_read,         NULL, 0},
 /*
-  {"stb/video/force_dvi", NULL, NULL},
+  {"stb/video/force_dvi", NULL, NULL, 0},
 */
-  {"stb/video/policy",                  proc_video_policy_read,                 proc_video_policy_write},
-  {"stb/video/policy_choices",          proc_video_policy_choices_read,         NULL},
-  {"stb/video/videomode",               proc_video_videomode_read,              proc_video_videomode_write},
-  {"stb/video/videomode_50hz",          proc_video_videomode_read,              proc_video_videomode_write},
-  {"stb/video/videomode_60hz",          proc_video_videomode_read,              proc_video_videomode_write},
-  {"stb/video/videomode_choices",       proc_video_videomode_choices_read,      NULL},
-  {"stb/video/videomode_preferred",     proc_video_videomode_preferred_read,    proc_video_videomode_preferred_write},
-  {"stb/video/pal_v_start",     	proc_video_pal_v_start_read,    	proc_video_pal_v_start_write},
-  {"stb/video/pal_v_end",     		proc_video_pal_v_end_read,    		proc_video_pal_v_end_write},
-  {"stb/video/pal_h_start",     	proc_video_pal_h_start_read,    	proc_video_pal_h_start_write},
-  {"stb/video/pal_h_end",     		proc_video_pal_h_end_read,    		proc_video_pal_h_end_write},
+  {"stb/video/policy",                  proc_video_policy_read,                 proc_video_policy_write, 0},
+  {"stb/video/policy_choices",          proc_video_policy_choices_read,         NULL, 0},
+  {"stb/video/videomode",               proc_video_videomode_read,              proc_video_videomode_write, 0},
+  {"stb/video/videomode_50hz",          proc_video_videomode_read,              proc_video_videomode_write, 0},
+  {"stb/video/videomode_60hz",          proc_video_videomode_read,              proc_video_videomode_write, 0},
+  {"stb/video/videomode_choices",       proc_video_videomode_choices_read,      NULL, 0},
+  {"stb/video/videomode_preferred",     proc_video_videomode_preferred_read,    proc_video_videomode_preferred_write, 0},
+  {"stb/video/pal_v_start",     	proc_video_pal_v_start_read,    	proc_video_pal_v_start_write, 0},
+  {"stb/video/pal_v_end",     		proc_video_pal_v_end_read,    		proc_video_pal_v_end_write, 0},
+  {"stb/video/pal_h_start",     	proc_video_pal_h_start_read,    	proc_video_pal_h_start_write, 0},
+  {"stb/video/pal_h_end",     		proc_video_pal_h_end_read,    		proc_video_pal_h_end_write, 0},
 
-  {"stb/avs/0/colorformat",             proc_avs_0_colorformat_read,            proc_avs_0_colorformat_write},
-  {"stb/avs/0/colorformat_choices",     proc_avs_0_colorformat_choices_read,    NULL},
-  {"stb/avs/0/fb",                      proc_avs_0_fb_read,                     proc_avs_0_fb_write},
-  {"stb/avs/0/input",                   proc_avs_0_input_read,                  proc_avs_0_input_write},
-  {"stb/avs/0/sb",                      proc_avs_0_sb_read,                     proc_avs_0_sb_write},
-  {"stb/avs/0/volume",                  proc_avs_0_volume_read,                 proc_avs_0_volume_write},
-  {"stb/avs/0/input_choices",           proc_avs_0_input_choices_read,          NULL},
-  {"stb/avs/0/standby",                 proc_avs_0_standby_read,                proc_avs_0_standby_write},
+  {"stb/avs/0/colorformat",             proc_avs_0_colorformat_read,            proc_avs_0_colorformat_write, 0},
+  {"stb/avs/0/colorformat_choices",     proc_avs_0_colorformat_choices_read,    NULL, 0},
+  {"stb/avs/0/fb",                      proc_avs_0_fb_read,                     proc_avs_0_fb_write, 0},
+  {"stb/avs/0/input",                   proc_avs_0_input_read,                  proc_avs_0_input_write, 0},
+  {"stb/avs/0/sb",                      proc_avs_0_sb_read,                     proc_avs_0_sb_write, 0},
+  {"stb/avs/0/volume",                  proc_avs_0_volume_read,                 proc_avs_0_volume_write, 0},
+  {"stb/avs/0/input_choices",           proc_avs_0_input_choices_read,          NULL, 0},
+  {"stb/avs/0/standby",                 proc_avs_0_standby_read,                proc_avs_0_standby_write, 0},
 
-  {"stb/denc/0/wss",                    proc_denc_0_wss_read,                   proc_denc_0_wss_write},
+  {"stb/denc/0/wss",                    proc_denc_0_wss_read,                   proc_denc_0_wss_write, 0},
 
-  {"stb/tsmux/input0",                  proc_tsmux_input0_read,                 proc_tsmux_input0_write},
-  {"stb/tsmux/input1",                  proc_tsmux_input1_read,                 proc_tsmux_input1_write},
-  {"stb/tsmux/ci0_input",               proc_tsmux_ci0_input_read,              proc_tsmux_ci0_input_write},
-  {"stb/tsmux/ci1_input",               proc_tsmux_ci1_input_read,              proc_tsmux_ci1_input_write},
-  {"stb/tsmux/lnb_b_input",             proc_tsmux_lnb_b_input_read,            proc_tsmux_lnb_b_input_write},
-  {"stb/misc/12V_output",               proc_misc_12V_output_read,              proc_misc_12V_output_write},
+  {"stb/tsmux/input0",                  proc_tsmux_input0_read,                 proc_tsmux_input0_write, 0},
+  {"stb/tsmux/input1",                  proc_tsmux_input1_read,                 proc_tsmux_input1_write, 0},
+  {"stb/tsmux/ci0_input",               proc_tsmux_ci0_input_read,              proc_tsmux_ci0_input_write, 0},
+  {"stb/tsmux/ci1_input",               proc_tsmux_ci1_input_read,              proc_tsmux_ci1_input_write, 0},
+  {"stb/tsmux/lnb_b_input",             proc_tsmux_lnb_b_input_read,            proc_tsmux_lnb_b_input_write, 0},
+  {"stb/misc/12V_output",               proc_misc_12V_output_read,              proc_misc_12V_output_write, 0},
 
-  {"stb/vmpeg/0/dst_left",              proc_vmpeg_0_dst_left_read,             proc_vmpeg_0_dst_left_write},
-  {"stb/vmpeg/0/dst_top",               proc_vmpeg_0_dst_top_read,              proc_vmpeg_0_dst_top_write},
-  {"stb/vmpeg/0/dst_width",             proc_vmpeg_0_dst_width_read,            proc_vmpeg_0_dst_width_write},
-  {"stb/vmpeg/0/dst_height",            proc_vmpeg_0_dst_height_read,           proc_vmpeg_0_dst_height_write},
-  {"stb/vmpeg/0/dst_all",               NULL,                                   proc_vmpeg_0_dst_all_write},
+  {"stb/vmpeg/0/dst_left",              proc_vmpeg_0_dst_left_read,             proc_vmpeg_0_dst_left_write, 0},
+  {"stb/vmpeg/0/dst_top",               proc_vmpeg_0_dst_top_read,              proc_vmpeg_0_dst_top_write, 0},
+  {"stb/vmpeg/0/dst_width",             proc_vmpeg_0_dst_width_read,            proc_vmpeg_0_dst_width_write, 0},
+  {"stb/vmpeg/0/dst_height",            proc_vmpeg_0_dst_height_read,           proc_vmpeg_0_dst_height_write, 0},
+  {"stb/vmpeg/0/dst_all",               NULL,                                   proc_vmpeg_0_dst_all_write, 0},
+  {"stb/vmpeg/0/yres",                  proc_vmpeg_0_yres_read,                 NULL, 0},
+  {"stb/vmpeg/0/xres",                  proc_vmpeg_0_xres_read,                 NULL, 0},
+  {"stb/vmpeg/0/aspect",                proc_vmpeg_0_aspect_read,               NULL, 0},
+  {"stb/vmpeg/0/framerate",             proc_vmpeg_0_framerate_read,            NULL, 0},
 
-  {"stb/vmpeg/0/yres",                  proc_vmpeg_0_yres_read,                 NULL},
-  {"stb/vmpeg/0/xres",                  proc_vmpeg_0_xres_read,                 NULL},
-  {"stb/vmpeg/0/aspect",                proc_vmpeg_0_aspect_read,               NULL},
-  {"stb/vmpeg/0/framerate",             proc_vmpeg_0_framerate_read,            NULL},
+  {"stb/vmpeg/1/dst_left",              proc_vmpeg_0_dst_left_read,             proc_vmpeg_0_dst_left_write, 1},
+  {"stb/vmpeg/1/dst_top",               proc_vmpeg_0_dst_top_read,              proc_vmpeg_0_dst_top_write, 1},
+  {"stb/vmpeg/1/dst_width",             proc_vmpeg_0_dst_width_read,            proc_vmpeg_0_dst_width_write, 1},
+  {"stb/vmpeg/1/dst_height",            proc_vmpeg_0_dst_height_read,           proc_vmpeg_0_dst_height_write, 1},
+  {"stb/vmpeg/1/dst_all",               NULL,                                   proc_vmpeg_0_dst_all_write, 1},
+  {"stb/vmpeg/1/yres",                  proc_vmpeg_0_yres_read,                 NULL, 1},
+  {"stb/vmpeg/1/xres",                  proc_vmpeg_0_xres_read,                 NULL, 1},
+  {"stb/vmpeg/1/aspect",                proc_vmpeg_0_aspect_read,               NULL, 1},
+  {"stb/vmpeg/1/framerate",             proc_vmpeg_0_framerate_read,            NULL, 1},
 
-
-  {"stb/hdmi/bypass_edid_checking",     proc_hdmi_edid_handling_read,           proc_hdmi_edid_handling_write},
+  {"stb/hdmi/bypass_edid_checking",     proc_hdmi_edid_handling_read,           proc_hdmi_edid_handling_write, 0},
 /*
-  {"stb/hdmi/enable_hdmi_resets", NULL, NULL},
+  {"stb/hdmi/enable_hdmi_resets", NULL, NULL, 0},
 */
-  {"stb/hdmi/audio_source",             proc_hdmi_audio_source_read,            proc_hdmi_audio_source_write},
-  {"stb/hdmi/audio_source_choices",     proc_hdmi_audio_source_choices_read,    NULL},
+  {"stb/hdmi/audio_source",             proc_hdmi_audio_source_read,            proc_hdmi_audio_source_write, 0},
+  {"stb/hdmi/audio_source_choices",     proc_hdmi_audio_source_choices_read,    NULL, 0},
 
-  {"stb/stream/policy/AV_SYNC"                                        , proc_stream_AV_SYNC_read, proc_stream_AV_SYNC_write},
-  {"stb/stream/policy/TRICK_MODE_AUDIO"                               , proc_stream_TRICK_MODE_AUDIO_read, proc_stream_TRICK_MODE_AUDIO_write},
-  {"stb/stream/policy/PLAY_24FPS_VIDEO_AT_25FPS"                      , proc_stream_PLAY_24FPS_VIDEO_AT_25FPS_read, proc_stream_PLAY_24FPS_VIDEO_AT_25FPS_write},
-  {"stb/stream/policy/MASTER_CLOCK"                                   , proc_stream_MASTER_CLOCK_read, proc_stream_MASTER_CLOCK_write},
-  {"stb/stream/policy/EXTERNAL_TIME_MAPPING"                          , proc_stream_EXTERNAL_TIME_MAPPING_read, proc_stream_EXTERNAL_TIME_MAPPING_write},
-  {"stb/stream/policy/DISPLAY_FIRST_FRAME_EARLY"                      , proc_stream_DISPLAY_FIRST_FRAME_EARLY_read, proc_stream_DISPLAY_FIRST_FRAME_EARLY_write},
-  {"stb/stream/policy/STREAM_ONLY_KEY_FRAMES"                         , proc_stream_STREAM_ONLY_KEY_FRAMES_read, proc_stream_STREAM_ONLY_KEY_FRAMES_write},
-  {"stb/stream/policy/STREAM_SINGLE_GROUP_BETWEEN_DISCONTINUITIES"    , proc_stream_STREAM_SINGLE_GROUP_BETWEEN_DISCONTINUITIES_read, proc_stream_STREAM_SINGLE_GROUP_BETWEEN_DISCONTINUITIES_write},
-  {"stb/stream/policy/PLAYOUT_ON_TERMINATE"                           , proc_stream_PLAYOUT_ON_TERMINATE_read, proc_stream_PLAYOUT_ON_TERMINATE_write},
-  {"stb/stream/policy/PLAYOUT_ON_SWITCH"                              , proc_stream_PLAYOUT_ON_SWITCH_read, proc_stream_PLAYOUT_ON_SWITCH_write},
-  {"stb/stream/policy/PLAYOUT_ON_DRAIN"                               , proc_stream_PLAYOUT_ON_DRAIN_read, proc_stream_PLAYOUT_ON_DRAIN_write},
-  {"stb/stream/policy/TRICK_MODE_DOMAIN"                              , proc_stream_TRICK_MODE_DOMAIN_read, proc_stream_TRICK_MODE_DOMAIN_write},
-  {"stb/stream/policy/DISCARD_LATE_FRAMES"                            , proc_stream_DISCARD_LATE_FRAMES_read, proc_stream_DISCARD_LATE_FRAMES_write},
-  {"stb/stream/policy/REBASE_ON_DATA_DELIVERY_LATE"                   , proc_stream_REBASE_ON_DATA_DELIVERY_LATE_read, proc_stream_REBASE_ON_DATA_DELIVERY_LATE_write},
-  {"stb/stream/policy/REBASE_ON_FRAME_DECODE_LATE"                    , proc_stream_REBASE_ON_FRAME_DECODE_LATE_read, proc_stream_REBASE_ON_FRAME_DECODE_LATE_write},
-  {"stb/stream/policy/LOWER_CODEC_DECODE_LIMITS_ON_FRAME_DECODE_LATE" , proc_stream_LOWER_CODEC_DECODE_LIMITS_ON_FRAME_DECODE_LATE_read, proc_stream_LOWER_CODEC_DECODE_LIMITS_ON_FRAME_DECODE_LATE_write},
-  {"stb/stream/policy/H264_ALLOW_NON_IDR_RESYNCHRONIZATION"           , proc_stream_H264_ALLOW_NON_IDR_RESYNCHRONIZATION_read, proc_stream_H264_ALLOW_NON_IDR_RESYNCHRONIZATION_write},
+  {"stb/stream/policy/AV_SYNC"                                        , proc_stream_AV_SYNC_read, proc_stream_AV_SYNC_write, 0},
+  {"stb/stream/policy/TRICK_MODE_AUDIO"                               , proc_stream_TRICK_MODE_AUDIO_read, proc_stream_TRICK_MODE_AUDIO_write, 0},
+  {"stb/stream/policy/PLAY_24FPS_VIDEO_AT_25FPS"                      , proc_stream_PLAY_24FPS_VIDEO_AT_25FPS_read, proc_stream_PLAY_24FPS_VIDEO_AT_25FPS_write, 0},
+  {"stb/stream/policy/MASTER_CLOCK"                                   , proc_stream_MASTER_CLOCK_read, proc_stream_MASTER_CLOCK_write, 0},
+  {"stb/stream/policy/EXTERNAL_TIME_MAPPING"                          , proc_stream_EXTERNAL_TIME_MAPPING_read, proc_stream_EXTERNAL_TIME_MAPPING_write, 0},
+  {"stb/stream/policy/DISPLAY_FIRST_FRAME_EARLY"                      , proc_stream_DISPLAY_FIRST_FRAME_EARLY_read, proc_stream_DISPLAY_FIRST_FRAME_EARLY_write, 0},
+  {"stb/stream/policy/STREAM_ONLY_KEY_FRAMES"                         , proc_stream_STREAM_ONLY_KEY_FRAMES_read, proc_stream_STREAM_ONLY_KEY_FRAMES_write, 0},
+  {"stb/stream/policy/STREAM_SINGLE_GROUP_BETWEEN_DISCONTINUITIES"    , proc_stream_STREAM_SINGLE_GROUP_BETWEEN_DISCONTINUITIES_read, proc_stream_STREAM_SINGLE_GROUP_BETWEEN_DISCONTINUITIES_write, 0},
+  {"stb/stream/policy/PLAYOUT_ON_TERMINATE"                           , proc_stream_PLAYOUT_ON_TERMINATE_read, proc_stream_PLAYOUT_ON_TERMINATE_write, 0},
+  {"stb/stream/policy/PLAYOUT_ON_SWITCH"                              , proc_stream_PLAYOUT_ON_SWITCH_read, proc_stream_PLAYOUT_ON_SWITCH_write, 0},
+  {"stb/stream/policy/PLAYOUT_ON_DRAIN"                               , proc_stream_PLAYOUT_ON_DRAIN_read, proc_stream_PLAYOUT_ON_DRAIN_write, 0},
+  {"stb/stream/policy/TRICK_MODE_DOMAIN"                              , proc_stream_TRICK_MODE_DOMAIN_read, proc_stream_TRICK_MODE_DOMAIN_write, 0},
+  {"stb/stream/policy/DISCARD_LATE_FRAMES"                            , proc_stream_DISCARD_LATE_FRAMES_read, proc_stream_DISCARD_LATE_FRAMES_write, 0},
+  {"stb/stream/policy/REBASE_ON_DATA_DELIVERY_LATE"                   , proc_stream_REBASE_ON_DATA_DELIVERY_LATE_read, proc_stream_REBASE_ON_DATA_DELIVERY_LATE_write, 0},
+  {"stb/stream/policy/REBASE_ON_FRAME_DECODE_LATE"                    , proc_stream_REBASE_ON_FRAME_DECODE_LATE_read, proc_stream_REBASE_ON_FRAME_DECODE_LATE_write, 0},
+  {"stb/stream/policy/LOWER_CODEC_DECODE_LIMITS_ON_FRAME_DECODE_LATE" , proc_stream_LOWER_CODEC_DECODE_LIMITS_ON_FRAME_DECODE_LATE_read, proc_stream_LOWER_CODEC_DECODE_LIMITS_ON_FRAME_DECODE_LATE_write, 0},
+  {"stb/stream/policy/H264_ALLOW_NON_IDR_RESYNCHRONIZATION"           , proc_stream_H264_ALLOW_NON_IDR_RESYNCHRONIZATION_read, proc_stream_H264_ALLOW_NON_IDR_RESYNCHRONIZATION_write, 0},
   {"stb/stream/policy/MPEG2_IGNORE_PROGESSIVE_FRAME_FLAG"             , proc_stream_MPEG2_IGNORE_PROGESSIVE_FRAME_FLAG_read, proc_stream_MPEG2_IGNORE_PROGESSIVE_FRAME_FLAG_write}
 
 };
@@ -430,7 +439,8 @@ void init_e2_proc(struct DeviceContext_s* DC)
   for(i = 0; i < sizeof(e2_procs)/sizeof(e2_procs[0]); i++)
   {
     install_e2_procs(e2_procs[i].name, e2_procs[i].read_proc,
-                        e2_procs[i].write_proc);
+                        e2_procs[i].write_proc,
+			&DC->DvbContext->DeviceContext[e2_procs[i].context]);
   }
 
   /* save players device context */

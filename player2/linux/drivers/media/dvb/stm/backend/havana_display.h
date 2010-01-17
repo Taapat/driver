@@ -18,42 +18,45 @@ Date        Modification                                    Name
 
 #define FACTORY_ANY_ID                  "*"
 
-#ifdef __TDT__
-#define AUDIO_BUFFER_MEMORY                     0x00100000       // 1/2   mb
+#if defined(__TDT__)
+
+#if defined(FORTIS_HDBOX) || defined(TF7700)
+#define AUDIO_BUFFER_MEMORY                     0x00180000
 #else
-#define AUDIO_BUFFER_MEMORY                     0x00080000       // 1/2   mb
+#define AUDIO_BUFFER_MEMORY                     0x00100000       // 1 mb
 #endif
 
-#if defined(__TDT__) && !defined(UFS922)
+/* When having 64 MB in the LMI_VID the upper limit for the primary
+   video buffer seems to be 29.5 MB (enough for 9.9 full HD 4:2:0).
+   However, then all memory in LMI_VID is used by the primary video
+   buffer & co. The lower limit for HD display is 15 MB. Below that
+   value the playback is frequently disturbed. The secondary video
+   buffer can be used for PiP. The firmware (transformers) seems to
+   support PiP with MPEG2 (SD) sources only. Therefore, the secondary
+   buffer does not need much memory.
+   The total amount of memory allocated for the primary and secondary
+   buffers should be 1-2 MB less than the maximum described above
+   because of memory fragmentation. Otherwise the player cannot get
+   memory for auxiliary buffers. */
+#if defined(UFS922) || defined(TF7700) || defined(FORTIS_HDBOX)
 
-//TODO: Check if this can be increased.
+#define PRIMARY_VIDEO_BUFFER_MEMORY             0x01500000       // 21 mb or enough for 7 full HD 4:2:0
+#define SECONDARY_VIDEO_BUFFER_MEMORY           0x00300000       // 3 mb
+#define AVR_VIDEO_BUFFER_MEMORY                 0x00000000       // 0 mb
+#define MAX_VIDEO_DECODE_BUFFERS                32
+
+#else /* UFS910 and others */
+
 #define PRIMARY_VIDEO_BUFFER_MEMORY             0x01B00000       // 27 mb or enough for 9 full HD 4:2:0
 #define SECONDARY_VIDEO_BUFFER_MEMORY           0x00000000       // 0 mb
 #define AVR_VIDEO_BUFFER_MEMORY                 0x00000000       // 0 mb
 #define MAX_VIDEO_DECODE_BUFFERS                32
 
-#elif defined(__TDT__) && defined(UFS922)
+#endif
 
-//Dagobert: 0x02700000: leads to no picture on
-//HD Channels on ufs922
-//0x01D80000 seems to be the maximum. wenn using 0x00100000
-//for audio. mysterious, why on wyplay we can have so much more? 
-//We must compile bpa2 with debug (see stm23) to get more details of
-//memory usage.
-#define PRIMARY_VIDEO_BUFFER_MEMORY             0x01D80000       // 39 mb or enough for 13 full HD 4:2:0
+#else /* not __TDT__ */
 
-//Dagobert: So with the value above it will
-//be hard to get a PIP running on lmi_vid
-//but maybe it is possible to get it run via
-//lmi_sys there must be enough mem on ufs922
-//and topfi (mod in havana_display.cpp) needed!
-//#define SECONDARY_VIDEO_BUFFER_MEMORY           0x00800000       // 0 mb or enough for 6 full HD 4:2:0 
-#define SECONDARY_VIDEO_BUFFER_MEMORY           0x00000000       // 0 mb or enough for 6 full HD 4:2:0 
-
-#define AVR_VIDEO_BUFFER_MEMORY                 0x00000000
-#define MAX_VIDEO_DECODE_BUFFERS                32
-
-#else
+#define AUDIO_BUFFER_MEMORY                     0x00080000       // 1/2   mb
 
 #if defined (CONFIG_CPU_SUBTYPE_STX7200) && defined (CONFIG_32BIT)
 

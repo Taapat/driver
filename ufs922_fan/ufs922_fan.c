@@ -46,7 +46,7 @@
 
 
 int remove_e2_procs(char *path, read_proc_t *read_func, write_proc_t *write_func);
-int install_e2_procs(char *path, read_proc_t *read_func, write_proc_t *write_func);
+int install_e2_procs(char *path, read_proc_t *read_func, write_proc_t *write_func, void *data);
 
 unsigned long fan_registers;
 struct stpio_pin* fan_pin;
@@ -121,7 +121,7 @@ struct e2_procs
 
 static int __init init_fan_module(void)
 {
-  install_e2_procs(e2_procs[0].name, e2_procs[0].read_proc, e2_procs[0].write_proc);
+  install_e2_procs(e2_procs[0].name, e2_procs[0].read_proc, e2_procs[0].write_proc, NULL);
 
   fan_registers = (unsigned long) ioremap(0x18010000, 0x100);
   printk("fan_registers = 0x%.8lx\n", fan_registers);

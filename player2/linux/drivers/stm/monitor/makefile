@@ -1,25 +1,14 @@
-############################################################
-#
-# File    : makefile
-# Synopsis: Top level makefile to build the server
-#
-# Copyright 2001 STMicroelectronics, all right reserved.
-#
-############################################################
+CFLAGS += -I$(TREE_ROOT)/linux/include/linux/stm/
 
-include $(SRC_DIR)/modrules.mak
+CONFIG_MONITOR_HAVANA=m
 
-CDEFS                   = -I$(LINUX_KERNEL_ROOT)/drivers/media/dvb/dvb-core -I$(CONFIG_PLAYER2_LOCATION)/linux/drivers/media/video/stm/ -DDEBUG_DVB
-MODULE                  = linuxdvb
-EXPORTED_HEADERS        = dvb_stm.h
-HEADERS                 = $(EXPORTED_HEADERS) backend.h
-OBJECTS                 = dvb_player.o dvb_audio.o dvb_video.o dvb_dvr.o dvb_dvp.o dvb_demux.o backend.o \
-DEPENDS                 =
-LIBRARIES               = -L$(LIB_DIR)
+CFLAGS += -DDEBUG_MONITOR
 
-#
 
-all:    $(LIBRARY_OR_MODULE) headers
+obj-$(CONFIG_MONITOR_HAVANA)+= stm_monitor.o
 
-include $(SRC_DIR)/make$(LIBRARY_OR_MODULE)
+stm_monitor-objs:=      monitor_module.o \
+			monitor_device.o \
+			monitor_mme.o
+
 
