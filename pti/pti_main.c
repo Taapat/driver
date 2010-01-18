@@ -47,10 +47,12 @@ int debug ;
 unsigned int dma_0_buffer_base;
 unsigned int dma_0_buffer_top;
 unsigned int dma_0_buffer_rp;
-#endif
-
 #define TAG_COUNT 4
 #define AUX_COUNT 20
+#else
+#define TAG_COUNT 3
+#define AUX_COUNT 20
+#endif
 
 struct tSlot
 {
@@ -297,8 +299,10 @@ static int stream_injector(void *user_data)
   allow_signal(SIGKILL);
   allow_signal(SIGTERM);
   
+#ifdef __TDT__
   //set high thread priority
   set_user_nice(current, -20);
+#endif
 
   while(1)
   {
@@ -343,11 +347,13 @@ static int stream_injector(void *user_data)
 	  u8 *pFrom = &internal->back_buffer[offset];
 #ifdef __TDT__
 	  static u8 auxbuf[TAG_COUNT][PACKET_SIZE_WO_HEADER * AUX_COUNT];
-#else
-		static u8 auxbuf[TAG_COUNT][(PACKET_SIZE - HEADER_SIZE) * AUX_COUNT];
-#endif
 	  u8 *pTo[TAG_COUNT] = {auxbuf[0],auxbuf[1],auxbuf[2],auxbuf[3]};
 	  int count1[TAG_COUNT] = {0, 0, 0, 0};
+#else
+		static u8 auxbuf[TAG_COUNT][(PACKET_SIZE - HEADER_SIZE) * AUX_COUNT];
+		u8 *pTo[TAG_COUNT] = {auxbuf[0],auxbuf[1],auxbuf[2]};
+	  int count1[TAG_COUNT] = {0, 0, 0};
+#endif
 	  int n;
 
 	  /* sort the packets according to the tag,
@@ -499,8 +505,8 @@ static void process_pti_dma(unsigned long data)
 	
 		internal->err_count++;
 		stpti_reset_dma(internal);
-		writeIndex = 0;
-		readIndex = 0;
+		//writeIndex = 0;
+		//readIndex = 0;
 		//the semaphore must by also resetet to 0, fix later
 		stpti_start_dma(internal);
 	} else
