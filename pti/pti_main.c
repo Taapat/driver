@@ -94,7 +94,11 @@ static struct stpti *external = NULL;
 static struct pti_internal *internal = NULL;
 static void (*demultiplex_dvb_packets)(struct dvb_demux* demux, const u8 *buf, int count) = NULL;
 
+#ifdef __TDT__
+#define DMA_POLLING_INTERVAL (1)
+#else
 #define DMA_POLLING_INTERVAL msecs_to_jiffies(2)
+#endif
 #define HEADER_SIZE (6)
 #define PACKET_SIZE (188+HEADER_SIZE)
 
@@ -284,7 +288,7 @@ static int stream_injector(void *user_data)
 //#define STREAMCHECK
 #ifdef STREAMCHECK
 	u8 vpidhigh=0; //high byte of the video stream to check
-  u8 vpidlow=0x65; //low byte of the video stream to check
+	u8 vpidlow=0x65; //low byte of the video stream to check
 	u8 apidhigh=0; //high byte of the audio stream to check 
 	u8 apidlow=0x66; //low byte of the audio stream to check
 	int vc=99; //video count
@@ -450,15 +454,6 @@ static int stream_injector(void *user_data)
 	      demultiplex_dvb_packets(internal->demux[n], auxbuf[n], count1[n]);
 	  }
 	}
-
-#ifdef __TDT__
-	/* when we update the pointer her, the firmware and dma can detect an buffer overrun
-	/* Now update the read pointer in the DMA engine */
-	writel(dma_0_buffer_base + offset + (count * PACKET_SIZE), internal->pti_io + PTI_DMA_0_READ );
-	
-	/* Now tell the firmware how many packets we have read */
-	PtiWrite(internal->pread, count);
-#endif
 	
 	/* increment the readIndex */
 	readIndex = (readIndex + 1) % QUEUE_SIZE;
@@ -535,6 +530,12 @@ static void process_pti_dma(unsigned long data)
 	
 				/* Increment the packet_count, by the number of packets we have processed */
 				internal->packet_count+=num_packets;
+				
+				/* Now update the read pointer in the DMA engine */
+				writel(pti_wp, internal->pti_io + PTI_DMA_0_READ );
+	
+				/* Now tell the firmware how many packets we have read */
+				PtiWrite(internal->pread, num_packets);
 
 				/* notify the injector thread */
 				if(buffer_round) {
