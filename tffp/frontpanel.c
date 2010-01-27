@@ -1544,6 +1544,8 @@ static void FPCommandInterpreter (void)
     case FPKEYPRESS:
     case FPKEYPRESSFP:
     {
+      /* reset the bootreason to disable autoshutdown if a key was pressed */
+      fpbootreason.reason = 0;
       InterpretKeyPresses();
       break;
     }
