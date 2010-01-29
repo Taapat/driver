@@ -34,6 +34,12 @@ MODULE_DESCRIPTION              ("Player2 backend implementation for STM streami
 MODULE_AUTHOR                   ("Julian Wilson");
 MODULE_LICENSE                  ("GPL");
 
+#ifdef __TDT__
+int noaudiosync = 0;
+module_param(noaudiosync, int, 0444); 
+MODULE_PARM_DESC(noaudiosync, "Workaround, if there are problems with audio dropouts set it to 1.");
+#endif
+
 static struct dvb_backend_operations            DvbBackendOps        =
 {
     .owner                                      = THIS_MODULE,

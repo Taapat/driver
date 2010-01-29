@@ -19,6 +19,10 @@ Date        Modification                                    Name
 
 #include "output_timer_audio.h"
 
+#ifdef __TDT__
+extern int noaudiosync;
+#endif
+
 // /////////////////////////////////////////////////////////////////////////
 //
 // Locally defined constants
@@ -348,6 +352,11 @@ long long	CorrectionUnitSize;
 long long	CorrectionUnits;
 
 //
+
+#ifdef __TDT__
+    if(noaudiosync == 1)
+      return OutputTimerNoError;
+#endif
 
     ErrorSign		= (SynchronizationError < 0) ? -1 : 1;
 
