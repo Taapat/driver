@@ -20,7 +20,7 @@ Date        Modification                                    Name
 
 #if defined(__TDT__)
 
-#if defined(FORTIS_HDBOX) || defined(TF7700)
+#if defined(FORTIS_HDBOX) || defined(TF7700) || defined(UFS922) 
 #define AUDIO_BUFFER_MEMORY                     0x00180000
 #else
 #define AUDIO_BUFFER_MEMORY                     0x00100000       // 1 mb

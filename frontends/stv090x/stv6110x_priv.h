@@ -29,23 +29,6 @@
 #define FE_DEBUG				3
 #define FE_DEBUGREG				4
 
-#define dprintk(__y, __z, format, arg...) do {						\
-	if (__z) {									\
-		if	((verbose > FE_ERROR) && (verbose > __y))			\
-			printk(KERN_ERR "%s: " format "\n", __func__ , ##arg);		\
-		else if	((verbose > FE_NOTICE) && (verbose > __y))			\
-			printk(KERN_NOTICE "%s: " format "\n", __func__ , ##arg);	\
-		else if ((verbose > FE_INFO) && (verbose > __y))			\
-			printk(KERN_INFO "%s: " format "\n", __func__ , ##arg);		\
-		else if ((verbose > FE_DEBUG) && (verbose > __y))			\
-			printk(KERN_DEBUG "%s: " format "\n", __func__ , ##arg);	\
-	} else {									\
-		if (verbose > __y)							\
-			printk(format, ##arg);						\
-	}										\
-} while (0)
-
-
 #define STV6110x_SETFIELD(mask, bitf, val)				\
 	(mask = (mask & (~(((1 << STV6110x_WIDTH_##bitf) - 1) <<	\
 				  STV6110x_OFFST_##bitf))) | 		\

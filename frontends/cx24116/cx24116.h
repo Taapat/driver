@@ -62,6 +62,8 @@ struct cx24116_tuning
 	u8 			fec_val;
 	u8 			fec_mask;
 	u8 			inversion_val;
+	u8			fec_numb;
+	u8			U1[6];
 };
 
 struct cx24116_config

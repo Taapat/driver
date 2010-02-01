@@ -27,12 +27,7 @@
  *	- /dev/rc  (reading of key events)
  *
  * BUGS:
- * - exiting the rcS leads to no data receiving in from ttyAS0 ?!?!?
- * - visual feedback of keypress does not work. I think it must work
- * automatically. One I have a state where the fp stays on while the
- * receiver was off and on every keypress the visual feedback comes up.
- * So I think it is an intialization issue. Ok we could fake some other
- * thinks for visual feedback.
+ * - exiting the rcS leads to no data receiving from ttyAS0 ?!?!?
  * - some Icons are missing
  * - buttons (see evremote)
  * - GetWakeUpMode not tested (dont know the meaning of the mode ;) )
@@ -69,8 +64,13 @@
 
 #include "nuvoton.h"
 #include "../vfd/utf.h"
-int debug = 1;
-#define dprintk(x...) do { if (debug) printk(KERN_WARNING x); } while (0)
+
+static short paramDebug = 0;
+#define TAGDEBUG "[nuvoton] "
+
+#define dprintk(level, x...) do { \
+if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
+} while (0)
 
 #define BUFFERSIZE                256     //must be 2 ^ n
 
@@ -81,14 +81,14 @@ int debug = 1;
 struct transmit_s
 {
 	unsigned char 	buffer[BUFFERSIZE];
-	int		      len;
-	int  		      needAck; /* should we increase ackCounter? */
+	int		len;
+	int  		needAck; /* should we increase ackCounter? */
 
-   int            ack_len; /* len of complete acknowledge sequence */
-   int            ack_len_header; /* len of ack header ->contained in ack_buffer */
+   int      ack_len; /* len of complete acknowledge sequence */
+   int      ack_len_header; /* len of ack header ->contained in ack_buffer */
 	unsigned char 	ack_buffer[BUFFERSIZE]; /* the ack sequence we wait for */
 
-	int		      requeueCount;
+	int		requeueCount;
 };
 
 #define cMaxTransQueue	100
@@ -104,7 +104,7 @@ static int transmitCount = 0;
 struct receive_s
 {
    int           len;
-	unsigned char buffer[BUFFERSIZE];
+   unsigned char buffer[BUFFERSIZE];
 };
 
 #define cMaxReceiveQueue	100
@@ -234,11 +234,54 @@ struct iconToInternal {
 #define cLenFPCommand         6
 #define cLenStandByCommand    5
 
-#define cCommandRCU	   0x63
-#define cCommandFP      0x51
-#define cCommandStandby	0x80
+/* to the fp */
+#define cCommandGetMJD           0x10
+#define cCommandSetTimeFormat    0x11
+#define cCommandSetMJD           0x15
 
-void nuvotonWriteString(unsigned char* aBuf, int len);
+#define cCommandSetPowerOff      0x20
+
+#define cCommandPowerOffReplay   0x31
+#define cCommandSetBootOn        0x40
+#define cCommandSetBootOnExt     0x41
+
+#define cCommandSetWakeupTime    0x72
+#define cCommandSetWakeupMJD     0x74
+
+#define cCommandGetPowerOnSrc    0x80
+
+#define cCommandGetIrCode        0xa0
+#define cCommandGetIrCodeExt     0xa1
+#define cCommandSetIrCode        0xa5
+
+#define cCommandGetPort          0xb2
+#define cCommandSetPort          0xb3
+
+#define cCommandSetIcon          0xc2
+
+#define cCommandSetVFD           0xce /* 0xc0 */
+#define cCommandSetVFDBrightness 0xd2
+
+#define cCommandGetFrontInfo     0xe0
+
+
+/* from the fp */
+#define cEventFP           0x51 /* fp buttons */
+#define cEventRCU	   0x63 /* rcu keys */
+#define cEventStandby	   0x80 /* power off selected; disabled in our case */
+
+/* from the fp */
+#define cAnswerGetMJD        0x15
+#define cAnswerGetPowerOnSrc 0x81
+#define cAnswerGetFrontInfo  0xe4
+#define cAnswerGetGetIrCode  0xa5
+#define cAnswerGetPort       0xb3
+
+/* general */
+#define SOP 2
+#define EOP 3
+
+int nuvotonWriteString(unsigned char* aBuf, int len);
 
 
 /* ************************************************** */
@@ -313,7 +356,7 @@ static int serial2_putc (char Data)
   
   if (Counter == 0)
   {
-  	dprintk("Error writing char (%c) \n", Data);
+  	dprintk(1, "Error writing char (%c) \n", Data);
 //  	*(unsigned int*)(ASC2BaseAddress + ASC_TX_RST)   = 1;
 //	return 0;
   }
@@ -331,12 +374,13 @@ static u16 serial2_getc(void)
   
   while (((*ASC_2_INT_STA & ASC_INT_STA_RBF) == 0) && --Counter);
   
+  /* return an error code for timeout in the MSB */
   if (Counter == 0)
       result = 0x01 << 8;
   else
       result = 0x00 << 8 | *ASC_2_RX_BUFF;
 		
-  //printk("0x%04x\n", result);		
+  dprintk(100, "0x%04x\n", result);		
   return result;
 }
 
@@ -369,24 +413,24 @@ int processDataAck(char* data, int count)
 {
 
    if (count == transmit[0].ack_len - transmit[0].ack_len_header)
-	{
-		 /* 0. claim semaphore */
-		 down_interruptible(&receive_sem);
+   {
+	    /* 0. claim semaphore */
+	    down_interruptible(&receive_sem);
 
-		 /* 1. copy data */
-		 memcpy(ioctl_data, data, transmit[0].ack_len);
+	    /* 1. copy data */
+	    memcpy(ioctl_data, data, transmit[0].ack_len);
 
-		 /* 2. free semaphore */
-		 up(&receive_sem);
+	    /* 2. free semaphore */
+	    up(&receive_sem);
 
-		 /* 3. wake up thread */
-	  	 dataReady = 1;
-		 wake_up_interruptible(&ioctl_wq);
-        
-		 return 1;
-	}
-	
-	return 0;
+	    /* 3. wake up thread */
+	    dataReady = 1;
+	    wake_up_interruptible(&ioctl_wq);
+
+	    return 1;
+   }
+
+   return 0;
 }
 
 /* process event data from frontcontroller. An event is
@@ -395,17 +439,35 @@ int processDataAck(char* data, int count)
  */
 int processEvent(unsigned char* data, int count)
 {
+   int i;
+	
+	dprintk(100, "data[0] = 0x%02x, c = %d, maxLen %d\n", data[0], count, cLenRCUCommand - cLenHeader + 1);
+	
 	switch (data[0])
 	{
-		case cCommandRCU:  /* rcu */
-			if (count != cLenRCUCommand - cLenHeader)
+		case cEventRCU:  /* rcu */
+
+         if ((data[count - 1] == EOP) && (count - 1 != 5) && (count != cLenRCUCommand - cLenHeader + 1))
+         {
+		      /* there seems to be sometimes an EOP in the middle, which is 
+				 * really ment as stopping the reception. but an EOP (0x03) is
+				 * also the key left code. :-/
+				 */
+		      return 2;
+			}
+
+			if (count != cLenRCUCommand - cLenHeader + 1)
 			    return 0;
 			    
 			/* 0. claim semaphore */
 			down_interruptible(&receive_sem);
 			
-			dprintk("command RCU complete (count = %d)\n", count);
+			dprintk(20, "command RCU complete (count = %d)\n", count);
 
+         for (i = 0; i < count; i++)
+			   dprintk(100, "0x%02x ", data[i]);
+		   dprintk(100, "\n");
+ 
 			/* 1. copy data */
 			
 			if (receiveCount == cMaxReceiveQueue)
@@ -428,14 +490,17 @@ int processEvent(unsigned char* data, int count)
 			wake_up_interruptible(&wq);
 			return 1;
 		break;
-		case cCommandFP:  /* fp button */
-			if (count != cLenFPCommand - cLenHeader)
+		case cEventFP:  /* fp button */
+
+/* fixme: also respect the EOP here */
+             
+			if (count != cLenFPCommand - cLenHeader + 1)
 			    return 0;
 			    
 			/* 0. claim semaphore */
 			down_interruptible(&receive_sem);
 			
-			dprintk("command FP Button complete\n");
+			dprintk(20, "command FP Button complete\n");
 
 			/* 1. copy data */
 			
@@ -459,15 +524,15 @@ int processEvent(unsigned char* data, int count)
 			wake_up_interruptible(&wq);
 			return 1;
 		break;
-		case cCommandStandby:  /* rcu & fp */
+		case cEventStandby:  /* rcu & fp */
 
-			if (count != cLenStandByCommand - cLenHeader)
+			if (count != cLenStandByCommand - cLenHeader + 1)
 			    return 0;
 			    
 			/* 0. claim semaphore */
 			down_interruptible(&receive_sem);
 			
-			dprintk("command standby complete\n");
+			dprintk(20, "command standby complete\n");
 
 			/* 1. copy data */
 			
@@ -490,7 +555,7 @@ int processEvent(unsigned char* data, int count)
 			/* 3. wake up threads */
 			wake_up_interruptible(&wq);
 			return 1;
-	   break;
+	      break;
 	}
 	
 	return 0;
@@ -501,23 +566,23 @@ int detectEvent(unsigned char c[], int count)
 {
    int vLoop;
 	
-   for (vLoop = 0; vLoop < count; vLoop++)
-	{
-   	if ((c[vLoop] == 0x00) && (c[vLoop + 1] == 0x02))
-		{
-			switch (c[vLoop + 2])
-			{
-      		case cCommandRCU:
-				case cCommandFP:
-				case cCommandStandby:
-				   dprintk("detect start\n");
-					return 1;
-				break;				
-			}
-   	}
+   for (vLoop = 0; vLoop < count - 1; vLoop++)
+   {
+       if (c[vLoop] == SOP)
+       {
+          switch (c[vLoop + 1])
+          {
+              case cEventRCU:
+              case cEventFP:
+              case cEventStandby:
+                 dprintk(10, "detect start\n");
+                 return 1;
+              break;				
+          }
+       }
    }
 			
-	return 0;
+   return 0;
 }
 
 
@@ -529,17 +594,17 @@ int searchAnswerStart(unsigned char c[], int count)
 {
    int vLoop, found;
 	
-	found = 1;
+   found = 1;
    for (vLoop = 0; vLoop < count; vLoop++)
-	{
-	   if (c[vLoop] != transmit[0].ack_buffer[vLoop])
-	   {
-		   found = 0;
-			break;
-		}
+   {
+       if (c[vLoop] != transmit[0].ack_buffer[vLoop])
+       {
+           found = 0;
+           break;
+       }
    }
 			
-	return found;
+   return found;
 }
 
 /* if the frontcontroller has returned an error code
@@ -549,22 +614,19 @@ int searchAnswerStart(unsigned char c[], int count)
  */
 void requeueData(void)
 {
-      dprintk("requeue data %d\n", state);
+      dprintk(10, "requeue data %d\n", state);
       transmit[0].requeueCount++;
 
       if (transmit[0].requeueCount == cMaxQueueCount)
       {
 	      printk("max requeueCount reached aborting transmission %d\n", state);
-	      down_interruptible(&transmit_sem);
 
 	      transmitCount--;
 
 	      memmove(&transmit[0], &transmit[1], (cMaxTransQueue - 1) * sizeof(struct transmit_s));	
 
 	      if (transmitCount != 0)		  
-     	     dprintk("next command will be 0x%x\n", transmit[0].buffer[1]);
-
-	      up(&transmit_sem);
+     	         dprintk(10, "next command will be 0x%x\n", transmit[0].buffer[1]);
 
 	      dataReady = 0;
 	      timeoutOccured = 1;
@@ -581,6 +643,8 @@ int fpReceiverTask(void* dummy)
   unsigned char c;
   int count = 0;
   unsigned char receivedData[BUFFERSIZE];
+  int timeout = 0;
+  u16 res;
   
   daemonize("fp_rcv");
 
@@ -591,36 +655,52 @@ int fpReceiverTask(void* dummy)
 
   while(1)
   {
-     if (state != cStateTransmission)
-     {
-	     u16 res = serial2_getc();
+	    dprintk(200, "w ");
+	  
+       down(&transmit_sem);
+
+	    res = serial2_getc();
 		  
-		  //printk("res 0x%04x\n", res);
-		  
-       if ((res & 0xff00) != 0)
+   	 /* timeout ? */
+   	 if ((res & 0xff00) != 0)
 		 {
-			 msleep(100);
+           timeout = 1;
+		 } else
+           timeout = 0;
+
+		 c = res & 0x00ff; 
+		  
+	    if ((timeout) && ((state == cStateIdle) || (state == cStateWaitEvent)))
+		 {
+		    dprintk(150, "t ");
+          up(&transmit_sem);
+			 
+			 msleep(150);
 		    continue;
 		 }
 		  
-		 c = res & 0x00ff; 
-	
-	    dprintk("(0x%x) ", c);  
+	    dprintk(100, "(0x%x) ", c);  
 	
 	    /* process our state-machine */
 	    switch (state)
 	    {
      	    case cStateIdle: /* nothing do to, search for command start */
 
-             dprintk("cStateIdle: count %d, 0x%02x\n", count, c);
+             dprintk(20, "cStateIdle: count %d, 0x%02x\n", count, c);
         		 receivedData[count++] = c;
      		    
-				 if (count < cLenHeader)
-				    continue;
-
+				 if (c == EOP)
+				 {
+                   printk("receiving unexpected EOP - resetting\n");
+						 count = 0;
+                   state = cStateIdle;
+				 }
+				 else
 				 if (detectEvent(receivedData, count))
      		    {
 				    count = 0;
+					 
+					 dprintk(20, "receive[%d]: 0x%02x\n", count, c);
         		    receivedData[count++] = c;
 			       state = cStateWaitEvent;
      		    } else
@@ -631,64 +711,92 @@ int fpReceiverTask(void* dummy)
 	       {
 		       int err;
 
-             receivedData[count++] = c;
-		       err = processDataAck(receivedData, count);
-
+				 if (timeout)
+				   err = 0;
+			    else
+				 {
+            	 receivedData[count++] = c;
+		      	 err = processDataAck(receivedData, count);
+             }
+				 
 		       if (err == 1)
 		       {
 	    	       /* data is processed remove it from queue */
-
-		          down_interruptible(&transmit_sem);
-
 		          transmitCount--;
 
 	             memmove(&transmit[0], &transmit[1], (cMaxTransQueue - 1) * sizeof(struct transmit_s));	
 
 	             if (transmitCount != 0)		  
-     	  		       dprintk("next command will be 0x%x\n", transmit[0].buffer[0]);
-
-		          up(&transmit_sem);
+     	  		       dprintk(10, "next command will be 0x%x\n", transmit[0].buffer[0]);
 
 	 	          waitAckCounter = 0;
-     	 	       dprintk("detect ACK %d\n", state);
+     	 	       dprintk(20, "detect ACK %d\n", state);
 		          state = cStateIdle;
 		          count = 0;
 		       }
 	       }
 	       break;
      	    case cStateWaitEvent: /* rcu, button or other event */
-         	 dprintk("cStateWaitEvent: count %d, 0x%02x\n", count, c);
+		   	if (receiveCount < cMaxReceiveQueue)
+		   	{
+				   int err;
+					
+					dprintk(20, "receive[%d]: 0x%02x\n", count, c);
 
-		   	 if (receiveCount < cMaxReceiveQueue)
-		   	 {
-			   	 if (processEvent(receivedData, count))
-			   	 {
-			   		 /* command completed */
-     	   			 count = 0;
-				   	 state = cStateIdle;
-			   	 } else
-			   	 {
-			   		 /* command not completed */
-        				 receivedData[count++] = c;
-			   	 }
+        	   	receivedData[count++] = c;
+                
+					err = processEvent(receivedData, count);
 
-		   	 } else
-		   	 {
-			   	 /* noop: wait that someone reads data */
-		   		 dprintk("overflow, wait for readers\n");
-		   	 }
+					if (err == 1)
+			   	{
+			   	   	/* command completed */
+                  	count = 0;
+                  	state = cStateIdle;
+			   	} else
+					if (err == 2)
+					{
+                   printk("receiving unexpected EOP - resetting\n");
+						 count = 0;
+                   state = cStateIdle;
+					}
+					
+               if (count >= cLenRCUCommand)
+					{
+                     /* something went wrong ! */
+                  	count = 0;
+                  	state = cStateIdle;
+/* fixme: we must change in a new state and wait
+ * until we've got the EOP, otherwise we are not
+ * clear!
+ */							
+							printk("event overflow - resetting\n");
+					}
+
+		   	} else
+		   	{
+			   	/* noop: wait that someone reads data */
+            	dprintk(1, "overflow, wait for readers\n");
+		   	}
 	       break;
      	    case cStateWaitStartOfAnswer: /* each getter */
 	       {
              int err;
 				 
-             //printk("count %d, 0x%02x\n", count, c);
-        		 receivedData[count++] = c;
+				 if (timeout)
+				    err = 0;
+			    else
+             {
+            	 dprintk(100, "count %d, 0x%02x\n", count, c);
+        			 receivedData[count++] = c;
 
-				 if (count < transmit[0].ack_len_header)
-				    continue;
+					 if (count < transmit[0].ack_len_header)
+					 {
+	                up(&transmit_sem);
+				   	 continue;
+                }
+		      	 err = searchAnswerStart(receivedData, count);
+             }
 
-		       err = searchAnswerStart(receivedData, count);
 
 		       if (err == 1)
 		       {
@@ -701,11 +809,11 @@ int fpReceiverTask(void* dummy)
 	 	          udelay(1);
 	             waitAckCounter--;
 
-		          dprintk("2. %d\n", waitAckCounter);
+		          dprintk(10, "2. %d\n", waitAckCounter);
 
 			       if (waitAckCounter <= 0)
 			       {
-			          dprintk("missing ACK from micom ->requeue data %d\n", state);
+			          dprintk(10, "missing ACK from micom ->requeue data %d\n", state);
 			          requeueData();
 
 			          count = 0;
@@ -720,12 +828,16 @@ int fpReceiverTask(void* dummy)
 	       }
 	       break;
 	       case cStateTransmission:
-		   	/* we currently transmit data so ignore all */
+		   	/* we currently transmit data so ignore all 
+				 * ->should not happen because we use semaphore!
+				 */
 	       break;
 
 	    }
-     }
+	    up(&transmit_sem);
   }
+
+  printk("fpReceiverTask died !!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 
   return 0;
 }
@@ -754,7 +866,16 @@ int fpTransmitterTask(void* dummy)
      	  /* 0. claim sema */
 	     down_interruptible(&transmit_sem);
      
-     	  dprintk("send data to fp (0x%x)\n", transmit[0].buffer[0]);
+	     /* fixme: the state may have changed while we sleep ...
+		   * I'm not sure if this is a proper solution?!?!
+			*/
+	     if (state != cStateIdle)
+		  {
+		      up(&transmit_sem);
+				continue;
+		  }
+	  
+     	  dprintk(1, "send data to fp (0x%x)\n", transmit[0].buffer[0]);
 
 		  /* 1. send it to the frontpanel */
 		  memset(nuvoton_cmd, 0, 128);
@@ -773,10 +894,8 @@ int fpTransmitterTask(void* dummy)
 			     sendFailed = 1;
 			     break;
 		     } else
-		   	  dprintk("<0x%x> ", nuvoton_cmd[vLoop]);
+		   	  dprintk(100, "<0x%x> ", nuvoton_cmd[vLoop]);
 		  }
-
-		  state = cStateIdle;
 
 		  if (sendFailed == 0)
 		  {
@@ -794,8 +913,9 @@ int fpTransmitterTask(void* dummy)
 	           memmove(&transmit[0], &transmit[1], (cMaxTransQueue - 1) * sizeof(struct transmit_s));	
 
 	           if (transmitCount != 0)		  
-     	  	        dprintk("%s: next command will be 0x%x\n", __func__, transmit[0].buffer[0]);
+     	  	        dprintk(1, "%s: next command will be 0x%x\n", __func__, transmit[0].buffer[0]);
 
+		        state = cStateIdle;
 	   	  }
 		  }
 
@@ -803,7 +923,7 @@ int fpTransmitterTask(void* dummy)
 		  up(&transmit_sem);
      } else
      {
-     	  //dprintk("%d, %d\n", state, transmitCount);
+     	  dprintk(100, "%d, %d\n", state, transmitCount);
         msleep(100);
      }
   }
@@ -814,13 +934,14 @@ int fpTransmitterTask(void* dummy)
 
 /* End ASC2 */
 
-void nuvotonWriteCommand(char* buffer, int len, int needAck, char* ack_buffer, int ack_len_header, int ack_len)
+int nuvotonWriteCommand(char* buffer, int len, int needAck, char* ack_buffer, int ack_len_header, int ack_len)
 {
 
-	dprintk("%s >\n", __func__);
+	dprintk(5, "%s >\n", __func__);
 
 	/* 0. claim semaphore */
-	down_interruptible(&transmit_sem);
+	if (down_interruptible(&transmit_sem))
+	   return -ERESTARTSYS;;
 	
 	if (transmitCount < cMaxTransQueue)
 	{
@@ -847,21 +968,24 @@ void nuvotonWriteCommand(char* buffer, int len, int needAck, char* ack_buffer, i
 	/* 2. free semaphore */
 	up(&transmit_sem);
 
-	dprintk("%s < \n", __func__);
+	dprintk(5, "%s < \n", __func__);
+	
+	return 0;
 }
 
-void nuvotonSetIcon(int which, int on)
+int nuvotonSetIcon(int which, int on)
 {
 	char buffer[128];
 	u8   internalCode1, internalCode2;
-   int  vLoop;
+   int  vLoop, res = 0;
 		
-	dprintk("%s > %d, %d\n", __func__, which, on);
+	dprintk(5, "%s > %d, %d\n", __func__, which, on);
+
 //fixme
-	if (which < 1 || which > 16)
+	if (which < 1 || which >= ICON_MAX)
 	{
 		printk("VFD/Nuvoton icon number out of range %d\n", which);
-		return;
+		return -EINVAL;
 	}
 
    internalCode1 = 0xff;
@@ -875,7 +999,7 @@ void nuvotonSetIcon(int which, int on)
            if (internalCode1 == 0xff)
 			  {
 			  	   printk("%s: not known or not supported icon %d ->%s\n", __func__, which, nuvotonIcons[vLoop].name);
-               return;
+               return -EINVAL;
 			  }
 			  
 			  break;
@@ -885,161 +1009,179 @@ void nuvotonSetIcon(int which, int on)
    if (internalCode1 == 0xff)
 	{
 		 printk("%s: not known or not supported icon %d ->%s\n", __func__, which, nuvotonIcons[vLoop].name);
-       return;
+       return -EINVAL;
 	}
 
 	memset(buffer, 0, 128);
 
-	buffer[0] = 0x02;
-	buffer[1] = 0xc2;
+	buffer[0] = SOP;
+	buffer[1] = cCommandSetIcon;
 	buffer[2] = internalCode1;
    if (on)
 	  buffer[3] = 0x02;
    else	
 	  buffer[3] = 0x00;
 
-	buffer[4] = 0x03;
+	buffer[4] = EOP;
 
-	nuvotonWriteCommand(buffer, 5, 0, NULL, 0, 0);
+	res = nuvotonWriteCommand(buffer, 5, 0, NULL, 0, 0);
 
    /* e.g. timeshift is splitted in two parts */
    if (internalCode2 != 0xff)
 	{
 	  memset(buffer, 0, 128);
 
-	  buffer[0] = 0x02;
-	  buffer[1] = 0xc2;
+	  buffer[0] = SOP;
+	  buffer[1] = cCommandSetIcon;
 	  buffer[2] = internalCode2;
      if (on)
 		 buffer[3] = 0x02;
      else	
 		 buffer[3] = 0x00;
 
-	  buffer[4] = 0x03;
+	  buffer[4] = EOP;
 
-	  nuvotonWriteCommand(buffer, 5, 0, NULL, 0, 0);
+	  res = nuvotonWriteCommand(buffer, 5, 0, NULL, 0, 0);
 	}
 	
-	dprintk("%s <\n", __func__);
+	dprintk(5, "%s <\n", __func__);
+
+   return res;
 }
 
 /* export for later use in e2_proc */
 EXPORT_SYMBOL(nuvotonSetIcon);
 
-void nuvotonSetLED(int which, int on)
+int nuvotonSetLED(int which, int on)
 {
 	char buffer[8];
+	int res = 0;
 	
-	dprintk("%s > %d, %d\n", __func__, which, on);
+	dprintk(5, "%s > %d, %d\n", __func__, which, on);
 
 //FIXME
 	if (which < 1 || which > 6)
 	{
 		printk("VFD/Nuvoton led number out of range %d\n", which);
-		return;
+		return -EINVAL;
 	}
 
 	memset(buffer, 0, 8);
+
+//fixme
 	
-	dprintk("%s <\n", __func__);
+	dprintk(5, "%s <\n", __func__);
+
+   return res;
 }
 
 /* export for later use in e2_proc */
 EXPORT_SYMBOL(nuvotonSetLED);
 
-void nuvotonSetBrightness(int level)
+int nuvotonSetBrightness(int level)
 {
 	char buffer[8];
+	int res = 0;
 	
-	dprintk("%s > %d\n", __func__, level);
+	dprintk(5, "%s > %d\n", __func__, level);
 
 	if (level < 0 || level > 7)
 	{
 		printk("VFD/Nuvoton brightness out of range %d\n", level);
-		return;
+		return -EINVAL;
 	}
 
 	memset(buffer, 0, 8);
 	
-	buffer[0] = 0x02;
-	buffer[1] = 0xd2;
+	buffer[0] = SOP;
+	buffer[1] = cCommandSetVFDBrightness;
 	buffer[2] = 0x00;
 	
 	buffer[3] = level;
-	buffer[4] = 0x03;
+	buffer[4] = EOP;
 	
-	nuvotonWriteCommand(buffer, 5, 0, NULL, 0, 0);
+	res = nuvotonWriteCommand(buffer, 5, 0, NULL, 0, 0);
 
-	dprintk("%s <\n", __func__);
+	dprintk(5, "%s <\n", __func__);
+
+   return res;
 }
 /* export for later use in e2_proc */
 EXPORT_SYMBOL(nuvotonSetBrightness);
 
-void nuvotonSetStandby(char* time)
+int nuvotonSetStandby(char* time)
 {
 	char     buffer[8];
-   char     power_off[] = {0x02, 0x31, 0x01, 0x03};
+   char     power_off[] = {SOP, cCommandPowerOffReplay, 0x01, EOP};
+   int      res = 0;
+	
+	dprintk(5, "%s >\n", __func__);
 
-	dprintk("%s >\n", __func__);
-
-  	nuvotonWriteString("Bye bye ...", strlen("Bye bye ..."));
+  	res = nuvotonWriteString("Bye bye ...", strlen("Bye bye ..."));
 
    /* set wakeup time */
 	memset(buffer, 0, 8);
 
-	buffer[0] = 0x02;
-	buffer[1] = 0x74;
+	buffer[0] = SOP;
+	buffer[1] = cCommandSetWakeupMJD;
 
 	memcpy(buffer + 2, time, 4); /* only 4 because we do not have seconds here */
-	buffer[6] = 0x03;
+	buffer[6] = EOP;
 	
-	nuvotonWriteCommand(buffer, 7, 0, NULL, 0, 0);
+	res = nuvotonWriteCommand(buffer, 7, 0, NULL, 0, 0);
 
    /* now power off */
-   nuvotonWriteCommand(power_off, sizeof(power_off), 0, NULL, 0, 0);
+   res = nuvotonWriteCommand(power_off, sizeof(power_off), 0, NULL, 0, 0);
 
-	dprintk("%s <\n", __func__);
+	dprintk(5, "%s <\n", __func__);
+
+   return res;
 }
 
-void nuvotonSetTime(char* time)
+int nuvotonSetTime(char* time)
 {
 	char 	   buffer[8];
-
-	dprintk("%s >\n", __func__);
+   int      res = 0;
+	
+	dprintk(5, "%s >\n", __func__);
 
 	memset(buffer, 0, 8);
 
-	buffer[0] = 0x02;
-	buffer[1] = 0x15;
+	buffer[0] = SOP;
+	buffer[1] = cCommandSetMJD;
 	
 	memcpy(buffer + 2, time, 5);
-	buffer[7] = 0x03;
+	buffer[7] = EOP;
 	
-	nuvotonWriteCommand(buffer, 8, 0, NULL, 0, 0);
+	res = nuvotonWriteCommand(buffer, 8, 0, NULL, 0, 0);
 	
-	dprintk("%s <\n", __func__);
+	dprintk(5, "%s <\n", __func__);
+
+   return res;
 }
  
-void nuvotonGetTime(void)
+int nuvotonGetTime(void)
 {
 	char 	   buffer[3];
 	char 	   ack_buffer[3];
+   int      res = 0;
 
-	dprintk("%s >\n", __func__);
+	dprintk(5, "%s >\n", __func__);
 
 	memset(buffer, 0, 3);
 	
-	buffer[0] = 0x02;
-	buffer[1] = 0x10;
-	buffer[2] = 0x03;
+	buffer[0] = SOP;
+	buffer[1] = cCommandGetMJD;
+	buffer[2] = EOP;
 
    /* the replay sequence */
 	ack_buffer[0] = 0x00;
-	ack_buffer[1] = 0x02;
-	ack_buffer[2] = 0x15;
+	ack_buffer[1] = SOP;
+	ack_buffer[2] = cAnswerGetMJD;
 	
 	dataReady = 0;
-	nuvotonWriteCommand(buffer, 3, 1, ack_buffer, 3, 8);
+	res = nuvotonWriteCommand(buffer, 3, 1, ack_buffer, 3, 8);
+	
 	wait_event_interruptible(ioctl_wq, dataReady || timeoutOccured);
 	
 	if (timeoutOccured == 1)
@@ -1047,37 +1189,43 @@ void nuvotonGetTime(void)
 		/* timeout */
 		memset(ioctl_data, 0, 8);
 		printk("timeout\n");
+	
+	   res = -ETIMEDOUT;
 	} else
 	{
 		/* time received ->noop here */
-		dprintk("time received\n");
-		printk("myTime= 0x%02x - 0x%02x - 0x%02x - 0x%02x - 0x%02x\n", ioctl_data[0], ioctl_data[1]
+		dprintk(1, "time received\n");
+		dprintk(20, "myTime= 0x%02x - 0x%02x - 0x%02x - 0x%02x - 0x%02x\n", ioctl_data[0], ioctl_data[1]
 		         , ioctl_data[2], ioctl_data[3], ioctl_data[4]);
 	}
 	 
-	dprintk("%s <\n", __func__);
+	dprintk(5, "%s <\n", __func__);
+
+   return res;
 }
 
-void nuvotonGetWakeUpMode(void)
+int nuvotonGetWakeUpMode(void)
 {
 	char 	   buffer[8];
 	char 	   ack_buffer[3];
-
-	dprintk("%s >\n", __func__);
+   int      res = 0;
+	
+	dprintk(5, "%s >\n", __func__);
 
 	memset(buffer, 0, 8);
 	
-	buffer[0] = 0x02;
-	buffer[1] = 0x80;
-	buffer[2] = 0x03;
+	buffer[0] = SOP;
+	buffer[1] = cCommandGetPowerOnSrc;
+	buffer[2] = EOP;
 
    /* the replay sequence */
 	ack_buffer[0] = 0x00;
-	ack_buffer[1] = 0x02;
-	ack_buffer[2] = 0x81;
+	ack_buffer[1] = SOP;
+	ack_buffer[2] = cAnswerGetPowerOnSrc;
 
 	dataReady = 0;
-	nuvotonWriteCommand(buffer, 3, 1, ack_buffer, 3, 5);
+	res = nuvotonWriteCommand(buffer, 3, 1, ack_buffer, 3, 5);
+	
 	wait_event_interruptible(ioctl_wq, dataReady || timeoutOccured);
 	
 	if (timeoutOccured == 1)
@@ -1085,35 +1233,40 @@ void nuvotonGetWakeUpMode(void)
 		/* timeout */
 		memset(ioctl_data, 0, 8);
 		printk("timeout\n");
+
+	   res = -ETIMEDOUT;
 	} else
 	{
 		/* time received ->noop here */
-		dprintk("time received\n");
+		dprintk(1, "time received\n");
 	}
 	 
-	dprintk("%s <\n", __func__);
+	dprintk(5, "%s <\n", __func__);
+
+   return res;
 }
 
-void nuvotonWriteString(unsigned char* aBuf, int len)
+int nuvotonWriteString(unsigned char* aBuf, int len)
 {
 	unsigned char bBuf[128];
 	int i =0;
 	int j =0;
-
-	dprintk("%s >\n", __func__);
+   int res = 0;
+	
+	dprintk(5, "%s >\n", __func__);
 	
 	memset(bBuf, ' ', 128);
 	
 	/* start of command write */
-	bBuf[0] = 0x02;
-	bBuf[1] = 0xce;
+	bBuf[0] = SOP;
+	bBuf[1] = cCommandSetVFD;
 	bBuf[2] = 0x11;
 	
 	/* save last string written to fp */
 	memcpy(&lastdata.data, aBuf, 128);
 	lastdata.length = len;
 	
-	dprintk("len %d\n", len);
+	dprintk(10, "len %d\n", len);
 	
 	while ((i < len) && (j < 12))
 	{
@@ -1165,51 +1318,54 @@ void nuvotonWriteString(unsigned char* aBuf, int len)
 	}
 	/* end of command write, string must be filled with spaces */
 	bBuf[15] = 0x20;
-	bBuf[16] = 0x03;
+	bBuf[16] = EOP;
 	
-	nuvotonWriteCommand(bBuf, 17, 0, NULL, 0, 0);
+	res = nuvotonWriteCommand(bBuf, 17, 0, NULL, 0, 0);
 
-	dprintk("%s <\n", __func__);
+	dprintk(5, "%s <\n", __func__);
+
+   return res;
 }
 
 int nuvoton_init_func(void)
 {
-   char standby_disable[] = {0x02, 0x31, 0x02, 0x03};
-   char init1[] = {0x02, 0x40, 0x03};
-   char init2[] = {0x02, 0x11, 0x81, 0x03};
-   char init3[] = {0x02, 0x72, 0xff, 0xff, 0x03};
-   char init4[] = {0x02, 0x93, 0x01, 0x00, 0x08, 0x03};
-   char init5[] = {0x02, 0x93, 0xf2, 0x0a, 0x00, 0x03};
+   char standby_disable[] = {SOP, cCommandPowerOffReplay, 0x02, EOP};
+   char init1[] = {SOP, cCommandSetBootOn, EOP};
+   char init2[] = {SOP, cCommandSetTimeFormat, 0x81, EOP};
+   char init3[] = {SOP, cCommandSetWakeupTime, 0xff, 0xff, EOP}; /* delete/invalidate wakeup time ? */
+   char init4[] = {SOP, 0x93, 0x01, 0x00, 0x08, EOP};
+   char init5[] = {SOP, 0x93, 0xf2, 0x0a, 0x00, EOP};
 	int  vLoop;
+	int  res = 0;
 /*
 write (count=5, fd = 28): 0x02 0xc2 0x22 0x20 0x03
 write (count=5, fd = 28): 0x02 0xc2 0x23 0x04 0x03
 write (count=5, fd = 28): 0x02 0xc2 0x20 0x04 0x03
 */
 
-	dprintk("%s >\n", __func__);
+	dprintk(5, "%s >\n", __func__);
 
 	printk("Fortis HDBOX VFD/Nuvoton module initializing\n");
 
    /* must be called before standby_disable */
-	nuvotonWriteCommand(init1, sizeof(init1), 0, NULL, 0, 0);
+	res = nuvotonWriteCommand(init1, sizeof(init1), 0, NULL, 0, 0);
 
 	/* setup: frontpanel should not power down the receiver if standby is selected */
-	nuvotonWriteCommand(standby_disable, sizeof(standby_disable), 0, NULL, 0, 0);
+	res = nuvotonWriteCommand(standby_disable, sizeof(standby_disable), 0, NULL, 0, 0);
 
-	nuvotonWriteCommand(init2, sizeof(init2), 0, NULL, 0, 0);
-	nuvotonWriteCommand(init3, sizeof(init3), 0, NULL, 0, 0);
-	nuvotonWriteCommand(init4, sizeof(init4), 0, NULL, 0, 0);
-	nuvotonWriteCommand(init5, sizeof(init5), 0, NULL, 0, 0);
+	res |= nuvotonWriteCommand(init2, sizeof(init2), 0, NULL, 0, 0);
+	res |= nuvotonWriteCommand(init3, sizeof(init3), 0, NULL, 0, 0);
+	res |= nuvotonWriteCommand(init4, sizeof(init4), 0, NULL, 0, 0);
+	res |= nuvotonWriteCommand(init5, sizeof(init5), 0, NULL, 0, 0);
 
-	nuvotonSetBrightness(1);
+	res |= nuvotonSetBrightness(1);
 
-  	nuvotonWriteString("T.-Ducktales", strlen("T.-Ducktales"));
+  	res |= nuvotonWriteString("T.-Ducktales", strlen("T.-Ducktales"));
 	
 	for (vLoop = ICON_MIN + 1; vLoop < ICON_MAX; vLoop++) 
-		nuvotonSetIcon(vLoop, 0);
+		res |= nuvotonSetIcon(vLoop, 0);
 		
-	dprintk("%s <\n", __func__);
+	dprintk(5, "%s <\n", __func__);
 
 	return 0;
 }
@@ -1217,8 +1373,9 @@ write (count=5, fd = 28): 0x02 0xc2 0x20 0x04 0x03
 static ssize_t NUVOTONdev_write(struct file *filp, const char *buff, size_t len, loff_t *off)
 {
 	char* kernel_buf;
-	int minor, vLoop;
-	dprintk("%s > (len %d, offs %d)\n", __func__, len, (int) *off);
+	int minor, vLoop, res = 0;
+
+	dprintk(5, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
 
 	minor = -1;
   	for (vLoop = 0; vLoop < LASTMINOR; vLoop++)
@@ -1235,7 +1392,7 @@ static ssize_t NUVOTONdev_write(struct file *filp, const char *buff, size_t len,
 		return -1; //FIXME
 	}
 
-	dprintk("minor = %d\n", minor);
+	dprintk(1, "minor = %d\n", minor);
 
 	/* dont write to the remote control */
 	if (minor == FRONTPANEL_MINOR_RC)
@@ -1245,41 +1402,46 @@ static ssize_t NUVOTONdev_write(struct file *filp, const char *buff, size_t len,
 
 	if (kernel_buf == NULL)
 	{
-	   dprintk("%s return no mem<\n", __func__);
+	   printk("%s return no mem<\n", __func__);
 	   return -ENOMEM;
 	}
 	copy_from_user(kernel_buf, buff, len); 
 
-        if(down_interruptible (&write_sem))
-            return -ERESTARTSYS;
+   if(down_interruptible (&write_sem))
+      return -ERESTARTSYS;
 
-        /* Dagobert: echo add a \n which will be counted as a char
+   /* Dagobert: echo add a \n which will be counted as a char
 	 */ 
 	if (kernel_buf[len - 1] == '\n')
-	   nuvotonWriteString(kernel_buf, len - 1);
-        else
-	   nuvotonWriteString(kernel_buf, len);
+	   res = nuvotonWriteString(kernel_buf, len - 1);
+   else
+	   res = nuvotonWriteString(kernel_buf, len);
 
 	kfree(kernel_buf);
 	
 	up(&write_sem);
 
-	dprintk("%s <\n", __func__);
-	return len;
+	dprintk(10, "%s < res %d len %d\n", __func__, res, len);
+	
+	if (res < 0)
+	   return res;
+	else
+	   return len;
 }
 
 static ssize_t NUVOTONdev_read(struct file *filp, char __user *buff, size_t len, loff_t *off)
 {
 	int minor, vLoop;
-	dprintk("%s > (len %d, offs %d)\n", __func__, len, (int) *off);
+
+	dprintk(5, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
 
 	minor = -1;
   	for (vLoop = 0; vLoop < LASTMINOR; vLoop++)
   	{
     		if (FrontPanelOpen[vLoop].fp == filp)
     		{
-			minor = vLoop;
-		}
+			    minor = vLoop;
+		   }
 	}
 
 	if (minor == -1)
@@ -1288,12 +1450,12 @@ static ssize_t NUVOTONdev_read(struct file *filp, char __user *buff, size_t len,
 		return -EUSERS;
 	}
 
-	dprintk("minor = %d\n", minor);
+	dprintk(1, "minor = %d\n", minor);
 
 	if (minor == FRONTPANEL_MINOR_RC)
 	{
 
-          while (receiveCount == 0)
+     while (receiveCount == 0)
 	  {
 	    if (wait_event_interruptible(wq, receiveCount > 0))
 		    return -ERESTARTSYS;
@@ -1312,14 +1474,14 @@ static ssize_t NUVOTONdev_read(struct file *filp, char __user *buff, size_t len,
 	  /* 3. free semaphore */
 	  up(&receive_sem);
 	 
-          return 8;
+     return 8;
 	}
 
 	/* copy the current display string to the user */
  	if (down_interruptible(&FrontPanelOpen[minor].sem))
 	{
-	   dprintk("%s return erestartsys<\n", __func__);
-   	   return -ERESTARTSYS;
+	   printk("%s return erestartsys<\n", __func__);
+   	return -ERESTARTSYS;
 	}
 
 	if (FrontPanelOpen[minor].read == lastdata.length)
@@ -1327,7 +1489,7 @@ static ssize_t NUVOTONdev_read(struct file *filp, char __user *buff, size_t len,
 	    FrontPanelOpen[minor].read = 0;
 	    
 	    up (&FrontPanelOpen[minor].sem);
-	    dprintk("%s return 0<\n", __func__);
+	    printk("%s return 0<\n", __func__);
 	    return 0;
 	}
 
@@ -1343,18 +1505,19 @@ static ssize_t NUVOTONdev_read(struct file *filp, char __user *buff, size_t len,
 
 	up (&FrontPanelOpen[minor].sem);
 
-	dprintk("%s < (len %d)\n", __func__, len);
+	dprintk(10, "%s < (len %d)\n", __func__, len);
 	return len;
 }
 
 int NUVOTONdev_open(struct inode *inode, struct file *filp)
 {
 	int minor;
-	dprintk("%s >\n", __func__);
+	
+	dprintk(5, "%s >\n", __func__);
 
    minor = MINOR(inode->i_rdev);
 
-	dprintk("open minor %d\n", minor);
+	dprintk(1, "open minor %d\n", minor);
 
   	if (FrontPanelOpen[minor].fp != NULL)
   	{
@@ -1364,7 +1527,7 @@ int NUVOTONdev_open(struct inode *inode, struct file *filp)
   	FrontPanelOpen[minor].fp = filp;
   	FrontPanelOpen[minor].read = 0;
 
-	dprintk("%s <\n", __func__);
+	dprintk(5, "%s <\n", __func__);
 	return 0;
 
 }
@@ -1372,11 +1535,12 @@ int NUVOTONdev_open(struct inode *inode, struct file *filp)
 int NUVOTONdev_close(struct inode *inode, struct file *filp)
 {
 	int minor;
-	dprintk("%s >\n", __func__);
+	
+	dprintk(5, "%s >\n", __func__);
 
   	minor = MINOR(inode->i_rdev);
 
-	dprintk("close minor %d\n", minor);
+	dprintk(1, "close minor %d\n", minor);
 
   	if (FrontPanelOpen[minor].fp == NULL) 
 	{
@@ -1386,7 +1550,7 @@ int NUVOTONdev_close(struct inode *inode, struct file *filp)
 	FrontPanelOpen[minor].fp = NULL;
   	FrontPanelOpen[minor].read = 0;
 
-	dprintk("%s <\n", __func__);
+	dprintk(5, "%s <\n", __func__);
 	return 0;
 }
 
@@ -1394,33 +1558,34 @@ static int NUVOTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int
 {
 	static int mode = 0;
 	struct nuvoton_ioctl_data * nuvoton = (struct nuvoton_ioctl_data *)arg;
+   int res = 0;
 
-	dprintk("%s > 0x%.8x\n", __func__, cmd);
+	dprintk(5, "%s > 0x%.8x\n", __func__, cmd);
 
-        if(down_interruptible (&write_sem))
-            return -ERESTARTSYS;
+   if(down_interruptible (&write_sem))
+      return -ERESTARTSYS;
 
 	switch(cmd) {
 	case VFDSETMODE:
 		mode = nuvoton->u.mode.compat;
 		break;
 	case VFDSETLED:
-		nuvotonSetLED(nuvoton->u.led.led_nr, nuvoton->u.led.on);
+		res = nuvotonSetLED(nuvoton->u.led.led_nr, nuvoton->u.led.on);
 		break;
 	case VFDBRIGHTNESS:
 		if (mode == 0)
 		{
 			struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg; 
 
-			nuvotonSetBrightness(data->start_address);
+			res = nuvotonSetBrightness(data->start_address);
 		} else
 		{
-			nuvotonSetBrightness(nuvoton->u.brightness.level);
+			res = nuvotonSetBrightness(nuvoton->u.brightness.level);
 		}
 		mode = 0;
 		break;
 	case VFDDRIVERINIT:
-		nuvoton_init_func();
+		res = nuvoton_init_func();
 		mode = 0;
 		break;
 	case VFDICONDISPLAYONOFF:
@@ -1430,27 +1595,27 @@ static int NUVOTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int
 			int icon_nr = (data->data[0] & 0xf) + 1;
 			int on = data->data[4];
 						
-			nuvotonSetIcon(icon_nr, on);
+			res = nuvotonSetIcon(icon_nr, on);
 		} else
 		{
-			nuvotonSetIcon(nuvoton->u.icon.icon_nr, nuvoton->u.icon.on);
+			res = nuvotonSetIcon(nuvoton->u.icon.icon_nr, nuvoton->u.icon.on);
 		}
 		
 		mode = 0;
 		break;	
 	case VFDSTANDBY:
-		   nuvotonSetStandby(nuvoton->u.standby.time);
-		break;	
+		res = nuvotonSetStandby(nuvoton->u.standby.time);
+	   break;	
 	case VFDSETTIME:
 		if (nuvoton->u.time.time != 0)
-		   nuvotonSetTime(nuvoton->u.time.time);
+		   res = nuvotonSetTime(nuvoton->u.time.time);
 		break;	
 	case VFDGETTIME:
-	   nuvotonGetTime();
+	   res = nuvotonGetTime();
       copy_to_user(arg, &ioctl_data, 5);
 		break;	
 	case VFDGETWAKEUPMODE:
-		nuvotonGetWakeUpMode();
+		res = nuvotonGetWakeUpMode();
       copy_to_user(arg, &ioctl_data, 1);
 		break;	
 	case VFDDISPLAYCHARS:
@@ -1458,7 +1623,7 @@ static int NUVOTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int
 		{
 			struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg; 
 						
-			nuvotonWriteString(data->data, data->length);
+			res = nuvotonWriteString(data->data, data->length);
 		} else
 		{
 			//not suppoerted
@@ -1480,8 +1645,8 @@ static int NUVOTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int
 
    up(&write_sem);
 
-	dprintk("%s <\n", __func__);
-	return 0;
+	dprintk(5, "%s <\n", __func__);
+	return res;
 }
 
 static unsigned int NUVOTONdev_poll(struct file *filp, poll_table *wait)
@@ -1515,7 +1680,7 @@ static int __init nuvoton_init_module(void)
   unsigned int         *ASC_2_CTRL   = (unsigned int*)(ASC2BaseAddress + ASC_CTRL);
   int i;
   
-  dprintk("%s >\n", __func__);
+  dprintk(5, "%s >\n", __func__);
 
   //Disable all ASC 2 interrupts
   *ASC_2_INT_EN = *ASC_2_INT_EN & ~0x000001ff;
@@ -1544,9 +1709,9 @@ static int __init nuvoton_init_module(void)
   nuvoton_init_func();
 
   if (register_chrdev(VFD_MAJOR,"VFD",&vfd_fops))
-	printk("unable to get major %d for VFD/Nuvoton\n",VFD_MAJOR);
+	 printk("unable to get major %d for VFD/Nuvoton\n",VFD_MAJOR);
 
-  dprintk("%s <\n", __func__);
+  dprintk(5, "%s <\n", __func__);
   return 0;
 }
 
@@ -1560,6 +1725,9 @@ static void __exit nuvoton_cleanup_module(void)
 module_init(nuvoton_init_module);
 module_exit(nuvoton_cleanup_module);
 
+module_param(paramDebug, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(paramDebug, "Debug Output 0=disabled >0=enabled(debuglevel)");
+
 MODULE_DESCRIPTION("VFD/Nuvoton module for Fortis HDBOX");
-MODULE_AUTHOR("");
+MODULE_AUTHOR("TDT");
 MODULE_LICENSE("GPL");

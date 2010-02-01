@@ -26,6 +26,13 @@ Date        Modification                                    Name
 #include <linux/stm/tkdma.h>
 #endif
 
+#ifdef __TDT__
+#include <linux/delay.h>
+
+extern void demultiplexDvbPackets(struct dvb_demux* demux, const u8 *buf, int count);
+extern int stm_tsm_inject_user_data(const char __user *data, off_t size);
+#endif
+
 static int      DvrOpen        (struct inode*           Inode,
                                 struct file*            File);
 static int      DvrRelease     (struct inode*           Inode,
@@ -359,5 +366,6 @@ static ssize_t DvrWrite (struct file *File, const char __user* Buffer, size_t Co
     }
 #endif    
 
+    return Result;
 }
 

@@ -59,6 +59,15 @@
 #define cx24116_SEARCH_RANGE_KHZ 5000
 #define cMaxError 5
 
+#ifdef TF7700
+/* on tf7700 the new fw does not work
+ * so we use old mechanism.
+ */
+static short useUnknown = 0;
+#else
+static short useUnknown = 1;
+#endif
+
 static short paramDebug = 0;
 #define TAGDEBUG "[cx24116] "
 
@@ -84,6 +93,9 @@ if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
 
 #define CX24116_REG_UCB0    (0xcb)
 #define CX24116_REG_UCB8    (0xca)
+
+#define CX24116_REG_FECSTATUS (0x9c)
+#define CX24116_FEC_FECMASK   (0x1f)
 
 /* arg buffer size */
 #define CX24116_ARGLEN (0x1e)
@@ -177,6 +189,70 @@ struct cx24116_modfec
 /* : redirect AUTO for test */
   { DVBFE_DELSYS_DVBS2, DVBFE_MOD_8PSK, DVBFE_FEC_AUTO, 0x00, 0x0b},};
 
+struct cx24116_U2
+{
+  u8 U2_1;
+  u8 U2_2;
+  u8 U2_3;
+  u8 U2_4;
+  u8 U2_5;
+  u8 U2_6;
+  u8 U2_7;
+  u8 U2_8;
+  u8 U2_9;
+} cx24116_U2_TABLE[] =
+{
+  /* fec none */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+  /* fec none */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+  /* 1/2      */ { 0x10, 0x01, 0x2a, 0x08, 0x01, 0x2a, 0x08, 0x01, 0x00}, //ok
+  /* 1/2      */ { 0x10, 0x01, 0x2a, 0x08, 0x01, 0x2a, 0x08, 0x01, 0x00}, //ok
+  /* 2/3      */ { 0x10, 0x02, 0x54, 0x10, 0x01, 0xbf, 0x0c, 0x01, 0x55}, //ok
+  /* 2/3      */ { 0x10, 0x02, 0x54, 0x10, 0x01, 0xbf, 0x0c, 0x01, 0x55}, //ok
+  /* 3/4      */ { 0x10, 0x03, 0x7e, 0x18, 0x02, 0x54, 0x10, 0x01, 0x80}, //ok
+  /* 3/4      */ { 0x10, 0x03, 0x7e, 0x18, 0x02, 0x54, 0x10, 0x01, 0x80}, //ok
+  /* 4/5      */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  /* 4/5      */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  /* 5/6      */ { 0x10, 0x05, 0xd2, 0x28, 0x03, 0x7e, 0x18, 0x01, 0xaa}, //ok
+  /* 5/6      */ { 0x10, 0x05, 0xd2, 0x28, 0x03, 0x7e, 0x18, 0x01, 0xaa}, //ok
+  /* 6/7      */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  /* 6/7      */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  /* 7/8      */ { 0x10, 0x08, 0x26, 0x38, 0x04, 0xa8, 0x20, 0x01, 0xc0}, //ok
+  /* 7/8      */ { 0x10, 0x08, 0x26, 0x38, 0x04, 0xa8, 0x20, 0x01, 0xc0}, //ok
+  /* 8/9      */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  /* 8/9      */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  /* fec auto */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //ok
+  /* fec auto */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //ok
+    /* NBC-QPSK */
+  /* 1/2      */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  /* 1/2      */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  /* 3/5      */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  /* 3/5      */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  /* 2/3      */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  /* 2/3      */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  /* 3/4      */ { 0x10, 0x06, 0x44, 0xa4, 0x03, 0xe2, 0x29, 0x01, 0x9d}, //ok
+  /* 3/4      */ { 0x10, 0x06, 0x44, 0xa4, 0x03, 0xe2, 0x29, 0x01, 0x9d}, //ok
+  /* 4/5      */ { 0x10, 0x06, 0xb0, 0x38, 0x03, 0xfa, 0x65, 0x01, 0xae}, //ok
+  /* 4/5      */ { 0x10, 0x06, 0xb0, 0x38, 0x03, 0xfa, 0x65, 0x01, 0xae}, //ok
+  /* 5/6      */ { 0x10, 0x00, 0x77, 0x00, 0x00, 0x42, 0x47, 0x01, 0xcb}, //ok->waiting on feedback
+  /* 5/6      */ { 0x10, 0x00, 0x77, 0x00, 0x00, 0x42, 0x47, 0x01, 0xcb}, //ok->waiting on feedback
+  /* 8/9      */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  /* 8/9      */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  /* 9/10     */ { 0x10, 0x07, 0x89, 0x80, 0x03, 0xe2, 0x29, 0x01, 0xf0}, //ok
+  /* 9/10     */ { 0x10, 0x07, 0x89, 0x80, 0x03, 0xe2, 0x29, 0x01, 0xf0}, //ok
+    /* 8PSK */
+  /* 3/5      */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  /* 3/5      */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  /* 2/3      */ { 0x10, 0x00, 0x5f, 0x18, 0x00, 0x2c, 0x3f, 0x02, 0x26}, //0x00 0x05 0x98 0x00 0x02 0xd3 pilot off
+  /* 2/3      */ { 0x10, 0x01, 0xdb, 0x78, 0x00, 0xe2, 0x5f, 0x02, 0x19}, //0x00 0x1b 0xf8 0x00 0x0e 0x73 pilot on
+  /* 3/4      */ { 0x10, 0x06, 0x44, 0xa4, 0x02, 0x97, 0xb1, 0x02, 0x6a}, //ok
+  /* 3/4      */ { 0x10, 0x06, 0x44, 0xa4, 0x02, 0x97, 0xb1, 0x02, 0x6a}, //ok
+  /* 5/6      */ { 0x10, 0x00, 0x77, 0x00, 0x00, 0x2c, 0x3f, 0x02, 0xb0}, //0x00 0x07 0x00 0x00 0x02 0xd3 pilot off
+  /* 5/6      */ { 0x10, 0x02, 0x53, 0x00, 0x00, 0xe2, 0x5f, 0x02, 0xa0}, //ok
+  /* 8/9      */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  /* 8/9      */ { 0x10, 0x07, 0x71, 0x98, 0x02, 0xa7, 0x1d, 0x02, 0xce}, //0x00 0x70 0x18 0x00 0x2b 0x59 pilot on
+  /* 9/10     */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  /* 9/10     */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
+  };
 
 static struct dvbfe_info dvbs_info = {
   .name = "Conexant CX24116 DVB-S",
@@ -422,7 +498,7 @@ cx24116_read_status (struct dvb_frontend *fe, fe_status_t * status)
 /* **********************************************
  *
  */
-#define FE_IS_TUNED (FE_HAS_SIGNAL + FE_HAS_LOCK)
+#define FE_IS_TUNED (FE_HAS_SIGNAL + FE_HAS_LOCK + FE_HAS_CARRIER + FE_HAS_VITERBI)
 static int
 cx24116_is_tuned (struct dvb_frontend *fe)
 {
@@ -1160,10 +1236,23 @@ cx24116_read_signal_strength (struct dvb_frontend *fe, u16 * signal_strength)
 
   dprintk (20, "%s()\n", __FUNCTION__);
 
-  sig_reading =
-    (cx24116_readreg (state, CX24116_REG_STATUS) & 0xc0) |
-    (cx24116_readreg (state, CX24116_REG_SIGNAL) << 6);
-
+  if (useUnknown == 1)
+  {
+/* Dagobert: fixme: this does not work currently. Dont know why, but
+ * register 0x9d is always 0x2f and 0x9e is always 0x00. Mysterious
+ * on ufs922 this works great and using the orig soft the regs
+ * have correct values ...
+ */
+     sig_reading =
+       ((cx24116_readreg (state, CX24116_REG_STATUS) & 0xc0) <<8) |
+       (cx24116_readreg (state, CX24116_REG_SIGNAL) << 6);
+  } else
+  {
+     sig_reading =
+       (cx24116_readreg (state, CX24116_REG_STATUS) & 0xc0) |
+       (cx24116_readreg (state, CX24116_REG_SIGNAL) << 6);
+  }
+  
   *signal_strength = 0 - sig_reading;
 
   dprintk (20, "%s: Signal strength (raw / cooked) = (0x%04x / 0x%04x)\n",
@@ -1188,89 +1277,24 @@ cx24116_load_firmware (struct dvb_frontend *fe, const struct firmware *fw)
   /* Toggle 88x SRST pin to reset demod */
   cx24116_reset (state->config);
 
-#ifdef alt
-  /* Begin the firmware load process */
-  /* Prepare the demod, load the firmware, cleanup after load */
-  cx24116_writereg (state, 0xF1, 0x08);
-  cx24116_writereg (state, 0xF2, cx24116_readreg (state, 0xF2) | 0x03);
-  cx24116_writereg (state, 0xF3, 0x46);
-  cx24116_writereg (state, 0xF9, 0x00);
-
-  cx24116_writereg (state, 0x00, 0x35);
-  cx24116_writereg (state, 0x01, 0x00);
-
-  cx24116_writereg (state, 0xF0, 0x03);
-  cx24116_writereg (state, 0xF4, 0x81);
-  cx24116_writereg (state, 0xF5, 0x00);
-  cx24116_writereg (state, 0xF6, 0x00);
-
-  /* write the entire firmware as one transaction */
-  cx24116_writeregN (state, 0xF7, fw->data, fw->size);
-
-  cx24116_writereg (state, 0xF4, 0x10);
-  cx24116_writereg (state, 0xF0, 0x00);
-  cx24116_writereg (state, 0xF3, 0x00);
-  cx24116_writereg (state, 0xF8, 0x06);
-
-  /* Firmware CMD 10: VCO config */
-  cmd.id = CMD_SET_VCO;
-  cmd.args[0x01] = 0x05;
-  cmd.args[0x02] = 0xdc;
-  cmd.args[0x03] = 0xda;
-  cmd.args[0x04] = 0xae;
-  cmd.args[0x05] = 0xaa;
-  cmd.args[0x06] = 0x04;
-  cmd.args[0x07] = 0x9d;
-  cmd.args[0x08] = 0xfc;
-  cmd.args[0x09] = 0x06;
-  ret = cx24116_cmd_execute (fe, &cmd);
-  if (ret != 0)
-    return ret;
-
-  cx24116_writereg (state, CX24116_REG_STATUS, 0x00);
-
-  /* Firmware CMD 14: Tuner config */
-  cmd.id = CMD_TUNERINIT;
-  cmd.args[0x01] = 0x00;
-  cmd.args[0x02] = 0x00;
-  ret = cx24116_cmd_execute (fe, &cmd);
-  if (ret != 0)
-    return ret;
-
-  cx24116_writereg (state, 0xe5, 0x00);
-
-  /* Firmware CMD 13: MPEG config */
-  cmd.id = CMD_MPEGCONFIG;
-  cmd.args[0x01] = 0x01;
-  cmd.args[0x02] = 0x75;
-  cmd.args[0x03] = 0x00;
-  cmd.args[0x04] = 0x02;
-  cmd.args[0x05] = 0x00;
-  ret = cx24116_cmd_execute (fe, &cmd);
-  if (ret != 0)
-    return ret;
-
-  // Firmware CMD 20: LNB/Diseqc config
-  cmd.id = CMD_LNBCONFIG;
-  cmd.args[0x01] = 0x00;
-  cmd.args[0x02] = 0x10;
-  cmd.args[0x03] = 0x00;
-  cmd.args[0x04] = 0x8f;
-  cmd.args[0x05] = 0x28;
-  cmd.args[0x06] = 0x01;        // Enable tone burst?
-  cmd.args[0x07] = 0x01;
-  ret = cx24116_cmd_execute (fe, &cmd);
-  if (ret != 0)
-    return ret;
-#else
   // PLL
-  cx24116_writereg (state, 0xE5, 0x00);
-  cx24116_writereg (state, 0xF1, 0x08);
-  cx24116_writereg (state, 0xF2, 0x13);
+  if (useUnknown == 0)
+     cx24116_writereg (state, 0xE5, 0x00);
 
-  // Kick PLL
-  cx24116_writereg (state, 0xe0, 0x03);
-  cx24116_writereg (state, 0xe0, 0x00);
+  cx24116_writereg (state, 0xF1, 0x08);
+
+  if (useUnknown == 0)
+     cx24116_writereg (state, 0xF2, 0x13);
+  else
+     cx24116_writereg (state, 0xF2, 0x12);
+
+
+  if (useUnknown == 0)
+  {
+     // Kick PLL
+     cx24116_writereg (state, 0xe0, 0x03);
+     cx24116_writereg (state, 0xe0, 0x00);
+  }
 
   /* Begin the firmware load process */
   /* Prepare the demod, load the firmware, cleanup after load */
@@ -1293,10 +1317,21 @@ cx24116_load_firmware (struct dvb_frontend *fe, const struct firmware *fw)
   /* Firmware CMD 10: Main init */
   cmd.id = CMD_SET_VCO;
   cmd.args[0x01] = 0x05;
-  cmd.args[0x02] = 0xdc;
-  cmd.args[0x03] = 0xda;
-  cmd.args[0x04] = 0xae;
-  cmd.args[0x05] = 0xaa;
+  if (useUnknown == 0)
+  {
+     cmd.args[0x02] = 0xdc;
+     cmd.args[0x03] = 0xda;
+     cmd.args[0x04] = 0xae;
+     cmd.args[0x05] = 0xaa;
+  }
+  else
+  {
+     cmd.args[0x02] = 0x8d;
+     cmd.args[0x03] = 0xdc;
+     cmd.args[0x04] = 0xb8;
+     cmd.args[0x05] = 0x5e;
+  }
+  
   cmd.args[0x06] = 0x04;
   cmd.args[0x07] = 0x9d;
   cmd.args[0x08] = 0xfc;
@@ -1305,21 +1340,6 @@ cx24116_load_firmware (struct dvb_frontend *fe, const struct firmware *fw)
   if (ret != 0)
     return ret;
 
-/*
-	cmd.id = CMD_SET_VCO;
-	cmd.args[0x01] = 0x05;
-	cmd.args[0x02] = 0x8d;
-	cmd.args[0x03] = 0xdc;
-	cmd.args[0x04] = 0xb8;
-	cmd.args[0x05] = 0x5e;
-	cmd.args[0x06] = 0x04;
-	cmd.args[0x07] = 0x9d;
-	cmd.args[0x08] = 0xfc;
-	cmd.args[0x09] = 0x06;
-	ret = cx24116_cmd_execute(fe, &cmd);
-	if (ret != 0)
-		return ret;
-*/
   cx24116_writereg (state, 0x9d, 0x00);
 
   /* Firmware CMD 14: Tuner Init */
@@ -1332,50 +1352,46 @@ cx24116_load_firmware (struct dvb_frontend *fe, const struct firmware *fw)
 
   cx24116_writereg (state, 0xe5, 0x00);
 
-
   /* Firmware CMD 13: MPEG/TS output config */
   cmd.id = CMD_MPEGCONFIG;
-  cmd.args[0x01] = 0x01;
-  cmd.args[0x02] = /*0x79 */ 0x75;
-  cmd.args[0x03] = 0x00;
-  cmd.args[0x04] = 0x02 + (1 & 1);
-  cmd.args[0x05] = 0x00;
-
   cmd.args[0x01] = 0x01;
   cmd.args[0x02] = 0x70;
   cmd.args[0x03] = 0x00;
   cmd.args[0x04] = 0x01;
   cmd.args[0x05] = 0x00;
 
-
   ret = cx24116_cmd_execute (fe, &cmd);
   if (ret != 0)
     return ret;
+
+  if (useUnknown == 1)
+     cx24116_writereg (state, 0xe0, 0x08);
 
   // Firmware CMD 20: LNB/Diseqc Config
   cmd.id = CMD_LNBCONFIG;
+
   cmd.args[1] = 0;
-  cmd.args[2] = 0x10;
-  cmd.args[3] = 0x00;
-  cmd.args[4] = 0x8f;
-  cmd.args[5] = 0x28;
-  cmd.args[6] = 0x00;           // Disable tone burst. Temporarily enabled later
-  cmd.args[7] = 0x01;
-#ifdef m
-  cmd.id = CMD_LNBCONFIG;
-  cmd.args[1] = 0x03;
-  cmd.args[2] = 0x01;
-  cmd.args[3] = 0x00;
-  cmd.args[4] = 0x8f;
-  cmd.args[5] = 0x28;
-  cmd.args[6] = 0x00;           // Disable tone burst. Temporarily enabled later
-  cmd.args[7] = 0x01;
-#endif
+  if (useUnknown == 0)
+  {
+     cmd.args[2] = 0x10;
+     cmd.args[3] = 0x00;
+     cmd.args[4] = 0x8f;
+     cmd.args[5] = 0x28;
+     cmd.args[6] = 0x00;           // Disable tone burst. Temporarily enabled later
+     cmd.args[7] = 0x01;
+  } else
+  {
+     cmd.args[2] = 0x03;
+     cmd.args[3] = 0x00;
+     cmd.args[4] = 0x8e;
+     cmd.args[5] = 0xff;
+     cmd.args[6] = 0x02;
+     cmd.args[7] = 0x01;
+  }
+  
   ret = cx24116_cmd_execute (fe, &cmd);
   if (ret != 0)
     return ret;
-#endif
-
 
   return 0;
 }
@@ -1618,6 +1634,7 @@ cx24116_set_fec (struct cx24116_state *state, struct dvbfe_params *p)
     dprintk (20, "%s() fec/mask = 0x%02x/0x%02x\n", __FUNCTION__,
              state->dnxt.fec_val, state->dnxt.fec_mask);
 
+    state->dnxt.fec_numb = ret;
     ret = 0;
   }
   dprintk (10, "%s(ret =%d)\n", __FUNCTION__, ret);
@@ -1737,6 +1754,12 @@ cx24116_get_params (struct dvb_frontend *fe, struct dvbfe_params *p)
   return ret;
 }
 
+/* Dagobert: enable highSR dynamically */
+#define TSMergerBaseAddress   	0x19242000
+#define TS_1394_CFG      	0x0810
+
+unsigned long    reg_tsm_config = 0;
+
 static int
 cx24116_set_params (struct dvb_frontend *fe, struct dvbfe_params *p)
 {
@@ -1744,7 +1767,10 @@ cx24116_set_params (struct dvb_frontend *fe, struct dvbfe_params *p)
   struct cx24116_cmd cmd;
   int ret, i,above30msps ;
   u8 status, retune = 1;
-
+#if !defined(TF7700) /* use this unless UFS910 is not defined */
+  u32 reg;
+#endif
+  
   dprintk (10, "%s() >\n", __FUNCTION__);
 
 
@@ -1818,31 +1844,66 @@ cx24116_set_params (struct dvb_frontend *fe, struct dvbfe_params *p)
 
   above30msps = (state->dcur.symbol_rate > 30000000);
 
+#if !defined(TF7700) /* use this unless UFS910 is not defined */
+  if (reg_tsm_config == 0)
+      reg_tsm_config = (unsigned long) ioremap(TSMergerBaseAddress, 0x0900);
+
+  reg = ctrl_inl(reg_tsm_config + TS_1394_CFG);
+  /* disable pace */
+  reg &= ~0xFFFF;
+#endif
+  
+#if !defined(TF7700) /* use this unless UFS910 is not defined */
+  if (state->dcur.symbol_rate >= 30000000)  
+  {
+     ctrl_outl(reg | 0xF ,reg_tsm_config + TS_1394_CFG);
+  }
+  else
+  {
+     ctrl_outl(reg | 0x14 ,reg_tsm_config + TS_1394_CFG);
+  }
+#endif  
+  
   if (above30msps)
   {
+
+/* 2010/01/07: should be revised with new fw202rc !!!!!
+ * currently I does not get channels with this
+ * symbol rates so I cant test.
+ *  
+ */
      cmd.args[0x0e] = 0x04;
      cmd.args[0x0f] = 0x00;
      cmd.args[0x10] = 0x01;
      cmd.args[0x11] = 0x77 /* 0xEC */ ;
      cmd.args[0x12] = 0x36 /* 0xFA */ ;
 
-     /* Set/Reset unknown */
+     /* Set Reset unknown */
      cx24116_writereg (state, 0xF9, 0x01); /* DVB S1/2 Mode */
      cx24116_writereg (state, 0xF3, 0x44); /* Clock Devider */
   } else
   {
+ 
      cmd.args[0x0e] = 0x06;
      cmd.args[0x0f] = 0x00;
      cmd.args[0x10] = 0x00;
-     cmd.args[0x11] = 0xFA /* 0xEC */ ;
-     cmd.args[0x12] = 0x24 /* 0xFA */ ;
 
+     if (useUnknown == 0)
+     {
+	cmd.args[0x11] = 0xFA /* 0xEC */ ;
+	cmd.args[0x12] = 0x24 /* 0xFA */ ;
+     } else
+     {
+	cmd.args[0x11] = 0xec;
+	cmd.args[0x12] = 0xfa;
+     }
+     
      /* Set/Reset unknown */
      cx24116_writereg (state, 0xF9, 0x00); /* DVB S1/2 Mode */
      cx24116_writereg (state, 0xF3, 0x46); /* Clock Devider */
   }
 
-  if (p->delivery == DVBFE_DELSYS_DVBS2)
+  if ((state->dcur.delivery == DVBFE_DELSYS_DVBS2) || (state->dcur.fec != DVBFE_FEC_AUTO)) //fec_auto
     retune = 2;
 
   do
@@ -1860,13 +1921,29 @@ cx24116_set_params (struct dvb_frontend *fe, struct dvbfe_params *p)
     for (i = 0; i < 50; i++)
     {
       if (cx24116_is_tuned (fe))
-        goto tuned;
+      {
+          printk("tuned retune counte = %d\n", retune);
+          goto tuned;
+      }
       msleep (10);
     }
 
-    if (p->delivery == DVBFE_DELSYS_DVBS2)
+    printk("retuned %d\n", retune);
+    
+    if (state->dcur.delivery == DVBFE_DELSYS_DVBS2)
+    {
       /* Toggle pilot bit */
       cmd.args[0x07] ^= 0x40;
+      printk("toggle pilot\n");
+    }
+    else
+    {
+      /* dvbs try fec_auto on second try */
+      cmd.args[0x07] =0x2e;
+      cmd.args[0x0d] =0xfe;
+      state->dcur.fec = DVBFE_FEC_AUTO;
+      state->dcur.fec_numb = 9;
+    }
 
   }
   while (--retune);
@@ -1879,44 +1956,56 @@ tuned:                         /* Set/Reset B/W */
   if (ret != 0)
     return ret;
 
-
-#ifdef pvrmain_fw
-
-//scheinen mit dieser fw oder mit unserer
-//initialisierung nicht zu gehen.
-
-  cmd.id = CMD_U1;
-  ret = cx24116_cmd_execute (fe, &cmd);
-
-  if (p->delivery == DVBFE_DELSYS_DVBS2)
+  if (useUnknown == 1)
   {
-    cmd.id = CMD_U2;
-    cmd.args[1] = 0x10;
-    cmd.args[2] = 0x07;
-    cmd.args[3] = 0x89;
-    cmd.args[4] = 0x80;
-    cmd.args[5] = 0x03;
-    cmd.args[6] = 0xe2;
-    cmd.args[7] = 0x29;
-    cmd.args[8] = 0x01;
-    cmd.args[9] = 0xf0;
-  }
-  else
-  {
-    cmd.id = CMD_U2;
-    cmd.args[1] = 0x10;
-    cmd.args[2] = 0x03;
-    cmd.args[3] = 0x7e;
-    cmd.args[4] = 0x18;
-    cmd.args[5] = 0x02;
-    cmd.args[6] = 0x54;
-    cmd.args[7] = 0x10;
-    cmd.args[8] = 0x01;
-    cmd.args[9] = 0x80;
-  }
+     status = cx24116_readreg (state, CX24116_REG_FECSTATUS);
+     dprintk(1, "tuned fec=%02x new fec=%02x\n",state->dcur.fec_numb,status);
+     if ((state->dcur.fec_numb != (status & CX24116_FEC_FECMASK)) && (state->dcur.delivery == DVBFE_DELSYS_DVBS))
+     {
+       state->dcur.fec_numb = status & CX24116_FEC_FECMASK;
+       state->dcur.fec=cx24116_MODFEC_MODES[state->dcur.fec_numb].fec;
+     }
 
-  ret = cx24116_cmd_execute (fe, &cmd);
-#endif
+     cmd.id = CMD_U1;
+     ret = cx24116_cmd_execute (fe, &cmd);
+     dprintk(1, "U1 data %02x ",cmd.args[0x07]);
+     for (i = 0; i < 6; i++)
+     {
+	 state->dcur.U1[i]=cx24116_readreg(state,i+1);
+	 dprintk(1, " %02x",state->dcur.U1[i]);
+     }
+
+     ret = state->dcur.fec_numb * 2;
+
+     if ((cmd.args[0x07] & 0x40) == 0x40)
+     {
+	 ret++;
+	 pilot = 1;
+     }
+     else
+	 pilot = 0;
+
+     dprintk(1, "cmd_u2 index = %d\n", ret);    
+
+     cmd.id = CMD_U2;
+     cmd.args[1] = cx24116_U2_TABLE[ret].U2_1;
+     cmd.args[2] = cx24116_U2_TABLE[ret].U2_2;
+     cmd.args[3] = cx24116_U2_TABLE[ret].U2_3;
+     cmd.args[4] = cx24116_U2_TABLE[ret].U2_4;
+     cmd.args[5] = cx24116_U2_TABLE[ret].U2_5;
+     cmd.args[6] = cx24116_U2_TABLE[ret].U2_6;
+     cmd.args[7] = cx24116_U2_TABLE[ret].U2_7;
+     cmd.args[8] = cx24116_U2_TABLE[ret].U2_8;
+     cmd.args[9] = cx24116_U2_TABLE[ret].U2_9;
+
+     ret = cx24116_cmd_execute (fe, &cmd);
+
+     printk("U2 data (pilot = %d): ", pilot);
+     for (i = 0; i < 10 ; i++)
+	printk("0x%02x ", cmd.args[i]);
+     printk("\n");
+
+  }
 
   dprintk (10, "%s < %d\n", __FUNCTION__, ret);
 
@@ -2554,6 +2643,9 @@ void __exit cx24116_exit(void)
 
 module_param(paramDebug, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 MODULE_PARM_DESC(paramDebug, "Debug Output 0=disabled >0=enabled(debuglevel)");
+
+module_param(useUnknown, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(useUnknown, "Enable an unknown tuner command 0=disabled 1=enabled");
 
 module_init             (cx24116_init);
 module_exit             (cx24116_exit);

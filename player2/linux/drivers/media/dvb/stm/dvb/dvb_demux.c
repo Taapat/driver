@@ -25,6 +25,9 @@ Date        Modification                                    Name
 #include "dvb_video.h"
 #include "dvb_dmux.h"
 #include "backend.h"
+#include <asm/io.h>
+#include <linux/delay.h>
+#include <asm/cacheflush.h>
 
 //__TDT__: many modifications in this file
 
@@ -227,7 +230,7 @@ StartFeed (struct dvb_demux_feed *Feed)
       return -EINVAL;
     }
 #endif
-  //DVB_DEBUG("Feed->type = %d\n", Feed->type);
+  DVB_DEBUG("t = %d, pt = %d, pid = %d\n", Feed->type, Feed->pes_type, Feed->pid);
   //DVB_DEBUG("Feed->pes_type = %d\n", Feed->pes_type);
   //DVB_DEBUG("Feed->pid = %d\n", Feed->pid);
 
@@ -235,7 +238,7 @@ StartFeed (struct dvb_demux_feed *Feed)
     {
     case DMX_TYPE_SEC:
       {
-	DVB_DEBUG ("feed type = SEC\n");
+	//DVB_DEBUG ("feed type = SEC\n");
 
 	mutex_lock (&(DvbContext->Lock));
 
@@ -246,7 +249,7 @@ StartFeed (struct dvb_demux_feed *Feed)
 	break;
       }
     case DMX_TYPE_TS:
-      DVB_DEBUG ("type = TS\n");
+      //DVB_DEBUG ("type = TS\n");
       for (i = 0; i < DVB_MAX_DEVICES_PER_ADAPTER; i++)
 	{
 	  if (Feed->pes_type == AudioId[i])
@@ -408,12 +411,12 @@ StopFeed (struct dvb_demux_feed *Feed)
 
           	    AvContext = &Context->DvbContext->DeviceContext[i];
 
-		    if(Feed->ts_type & TS_DECODER)
+		    /*if(Feed->ts_type & TS_DECODER)
 		    {
 		      AudioIoctlSetAvSync (AvContext, 0);
 
 		      AudioIoctlStop (AvContext);
-		    }
+		    }*/
 
 		    stpti_stop_feed(Feed, Context);
 
@@ -427,8 +430,8 @@ StopFeed (struct dvb_demux_feed *Feed)
 
           	    AvContext = &Context->DvbContext->DeviceContext[i];
 
-		    if(Feed->ts_type & TS_DECODER)
-		      VideoIoctlStop(AvContext, AvContext->VideoState.video_blank);
+		    /*if(Feed->ts_type & TS_DECODER)
+		      VideoIoctlStop(AvContext, AvContext->VideoState.video_blank);*/
 
 		    stpti_stop_feed(Feed, Context);
 
@@ -475,7 +478,7 @@ StopFeed (struct dvb_demux_feed *Feed)
    With this workaround packets sent to the player do not block the DVB API
    and do not cause the scheduling bug (waiting on buffers during spin_lock).
    However, there is a side effect - playback may disturb recordings. */
-//#define DECOUPLE_PLAYER_FROM_DVBAPI
+#define DECOUPLE_PLAYER_FROM_DVBAPI
 #ifndef DECOUPLE_PLAYER_FROM_DVBAPI
 
 /*{{{  WriteToDecoder*/
@@ -533,14 +536,13 @@ void demultiplexDvbPackets(struct dvb_demux* demux, const u8 *buf, int count)
 }
 
 #else
-static int provideToDecoder = 0;
-static int feedPesType = 0;
-static int demuxInitialized = 0;
-struct mutex injectMutex;
 
 /*{{{  WriteToDecoder*/
 int WriteToDecoder (struct dvb_demux_feed *Feed, const u8 *buf, size_t count)
 {
+  struct dvb_demux* demux = Feed->demux;
+  struct DeviceContext_s* Context = (struct DeviceContext_s*)demux->priv;
+
   /* The decoder needs only the video and audio PES.
      For whatever reason the demux provides the video packets twice
      (once as PES_VIDEO and then as PES_PCR). Therefore it is IMPORTANT
@@ -551,8 +553,8 @@ int WriteToDecoder (struct dvb_demux_feed *Feed, const u8 *buf, size_t count)
       (Feed->pes_type == DMX_PES_AUDIO1) ||
       (Feed->pes_type == DMX_PES_VIDEO1)))
   {
-    provideToDecoder = 1;
-    feedPesType = Feed->pes_type;
+    Context->provideToDecoder = 1;
+    Context->feedPesType = Feed->pes_type;
   }
   
   return 0;
@@ -614,12 +616,7 @@ void demultiplexDvbPackets(struct dvb_demux* demux, const u8 *buf, int count)
   int next = 0;
   int cnt = 0;
   u16 pid, firstPid;
-
-  if(!demuxInitialized)
-  {
-    mutex_init(&injectMutex);
-    demuxInitialized = 1;
-  }
+  struct DeviceContext_s* Context = (struct DeviceContext_s*)demux->priv;
 
   /* Group the packets by the PIDs and feed them into the kernel demuxer.
      If there is data for the decoder we will be informed via the callback.
@@ -643,17 +640,17 @@ void demultiplexDvbPackets(struct dvb_demux* demux, const u8 *buf, int count)
     }
     if((next - first) > 0)
     {
-      mutex_lock_interruptible(&injectMutex);
+      mutex_lock_interruptible(&Context->injectMutex);
 
       /* reset the flag (to be set by the callback */
-      provideToDecoder = 0;
+      Context->provideToDecoder = 0;
       dvb_dmx_swfilter_packets(demux, buf + first, cnt);
-      if(provideToDecoder)
+      if(Context->provideToDecoder)
       {
         /* the demuxer indicated that the packets are for the decoder */
-        writeToDecoder(demux, feedPesType, buf + first, next - first);
+        writeToDecoder(demux, Context->feedPesType, buf + first, next - first);
       }
-      mutex_unlock(&injectMutex);
+      mutex_unlock(&Context->injectMutex);
     }
   }
 }

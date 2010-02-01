@@ -19,6 +19,7 @@
 #include <asm/io.h>
 
 #if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
+#include "../../../../../../pti/pti_hal.h"
 #include <linux/bpa2.h>
 #else
 #include <linux/bigphysarea.h>

@@ -17,6 +17,10 @@
 
 #include "st-common.h"
 
+#if defined (CONFIG_KERNELVERSION) /* STLinux 2.3 */
+#include "../../../../../../pti/pti_hal.h"
+#endif
+
 static int ca_open (struct inode*     Inode,
 		   struct file*      File)
 {

@@ -153,7 +153,11 @@ static inline snd_pcm_uframes_t _ksnd_pcm_avail_update(snd_pcm_substream_t
 	snd_pcm_runtime_t *runtime = substream->runtime;
 
 /*NICK added if to remove real updates which we do not want*/
-#if 0
+/* Dagobert: Also add UFS922 here for the "bad" 7101BWC cpu 
+ * currently it seems so that this works for both cpu types
+ * (BWC vs. BWD)
+ */
+#if defined(__TDT__) && (defined(FORTIS_HDBOX) || defined(UFS922))
 	if (runtime->sleep_min == 0 &&
 	    _ksnd_pcm_state(substream) == SNDRV_PCM_STATE_RUNNING)
 		snd_pcm_update_hw_ptr(substream);
@@ -220,7 +224,12 @@ int ksnd_pcm_htimestamp(ksnd_pcm_t *kpcm, snd_pcm_uframes_t *avail, struct times
        10 or 20 us, and you correct for it by adjusting by lumps of around 160 us.
        So I set myavail to be zero always.
        Also I added a a return failure if the timestamp is set to zero. */
-#if 0
+
+/* Dagobert: Also add UFS922 here for the "bad" 7101BWC cpu 
+ * currently it seems so that this works for both cpu types
+ * (BWC vs. BWD)
+ */
+#if defined(__TDT__) && (defined(FORTIS_HDBOX) || defined(UFS922))
 	myavail = _ksnd_pcm_avail_update(kpcm->substream);
 #else
         myavail	= 0;

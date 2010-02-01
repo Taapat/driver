@@ -24,6 +24,9 @@
 #include <linux/delay.h>
 
 //__TDT__: many modifications in this file
+#if defined (CONFIG_KERNELVERSION) /* STLinux 2.3 */
+#include "../../../../../../pti/pti_hal.h"
+#endif
 
 #ifndef TSM_NUM_PTI_ALT_OUT
 unsigned long TSM_NUM_PTI_ALT_OUT;
@@ -49,6 +52,11 @@ unsigned long TSM_NUM_1394_ALT_OUT;
 #define TSM_STREAM2_SYNC   	0x0048
 #define TSM_STREAM3_SYNC   	0x0068
 #define TSM_STREAM4_SYNC   	0x0088
+
+/* for all 7109er */
+#define TSM_STREAM5_SYNC      	0x00a8
+#define TSM_STREAM6_SYNC      	0x00c8
+
 
 #define TSM_STREAM0_STA      	0x0010
 #define TSM_STREAM1_STA      	0x0030
@@ -288,6 +296,7 @@ EXPORT_SYMBOL(stm_tsm_inject_user_data);
  * **************************************** 
  */
 
+
 void stm_tsm_interrupt ( void )
 {
   int n;
@@ -333,6 +342,7 @@ void stm_tsm_init (int use_cimax)
       unsigned long    reg_config = 0;
       unsigned int     ret;
       int              n;
+
       /*
        * 0xbc4733
        * sync = 3
@@ -377,7 +387,9 @@ void stm_tsm_init (int use_cimax)
 	 ->TS interface is as indicated by TSMerger configuration bits
        */
 
-      ctrl_outl(0x6, reg_sys_config + SYS_CFG0);
+/* from fw 202 rc ->see also pti */
+      ctrl_outl(0x2, reg_sys_config + SYS_CFG0);
+
 #elif  defined(FORTIS_HDBOX)
 	/* ->TSIN0 routes to TSIN2
 	 */
@@ -461,6 +473,12 @@ void stm_tsm_init (int use_cimax)
       /* add tag bytes to stream + stream priority */
       ret = ctrl_inl(reg_config + TSM_STREAM0_CFG);
       ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM0_CFG);
+
+      ret = ctrl_inl(reg_config + TSM_STREAM4_CFG);
+      ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM4_CFG);
+
+      ret = ctrl_inl(reg_config + TSM_STREAM5_CFG);
+      ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM5_CFG);
 #else
       /* configure streams: */
       /* add tag bytes to stream + stream priority */
@@ -537,20 +555,22 @@ void stm_tsm_init (int use_cimax)
  * with this setting and some modules.
  * 0xf from 106 pvrmain
  */
+#ifdef FW1XX
       if (highSR)	
          ctrl_outl(0x7000f ,reg_config + TS_1394_CFG);
       else   	
          ctrl_outl(0x70014 ,reg_config + TS_1394_CFG);
+#else
+/* logged from fw 202rc ->see also pti */
+         ctrl_outl(0x50014 ,reg_config + TS_1394_CFG);
+#endif      	
+	
       	
       /* connect TSIN0 to TS1394 for routing tuner TS through the CIMAX */
       ret = ctrl_inl(reg_config + TSM_1394_DEST);
       ctrl_outl(ret | 0x1 , reg_config + TSM_1394_DEST);
-#elif  defined(TF7700) || defined(UFS922) || defined(FORTIS_HDBOX)
 
-#if defined(FORTIS_HDBOX)
-      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-      ctrl_outl(ret | 0x4,reg_config + TSM_PTI_SEL);
-#endif
+#elif  defined(TF7700) || defined(UFS922)
 
       /* TF7700 stream configuration */
       /* route stream 1 to PTI */
@@ -571,6 +591,46 @@ void stm_tsm_init (int use_cimax)
       /* connect SWTS to TS1394 for routing through the StarCI2Win */
       //ret = ctrl_inl(reg_config + TSM_1394_DEST);
       //ctrl_outl(ret | 0x8 , reg_config + TSM_1394_DEST);
+#elif defined(FORTIS_HDBOX)
+      /* route stream 1 to PTI */
+      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x2,reg_config + TSM_PTI_SEL);
+
+      /* route stream 2 to PTI */
+      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x4, reg_config + TSM_PTI_SEL);
+
+      /* set stream on */
+      ret = ctrl_inl(reg_config + TSM_STREAM5_CFG);
+      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM5_CFG);
+
+      /* set stream on */
+      ret = ctrl_inl(reg_config + TSM_STREAM4_CFG);
+      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM4_CFG);
+
+      /* set stream on */
+      ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
+      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM3_CFG);
+
+      /* set stream on */
+      ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
+      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM2_CFG);
+
+      /* set stream 1 on */
+      ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
+      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM1_CFG);
+
+      /* route stream 0 to PTI */
+      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x1, reg_config + TSM_PTI_SEL);
+
+      ctrl_outl(stream_sync, reg_config + TSM_STREAM4_SYNC);
+      ctrl_outl(stream_sync, reg_config + TSM_STREAM5_SYNC);
+      ctrl_outl(0x00, reg_config + TSM_STREAM6_SYNC);
+
+      ret = ctrl_inl(reg_config + TSM_1394_DEST);
+      ctrl_outl(ret | 0x38 , reg_config + TSM_1394_DEST);
+
 #endif
 
       /* set stream on */
@@ -592,8 +652,8 @@ void stm_tsm_init (int use_cimax)
       tsm_handle.tsm_swts = (unsigned long)ioremap (0x1A300000, 0x1000);
 
       /* Now lets get the SWTS info and setup an FDMA channel */
-#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX)
-			//nit2005, ufs910 use dma request id 30 für swts, do'nt know what other boxes use
+#if !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX)
+      //nit2005, ufs910 use dma request id 30 f\ufffdr swts, do'nt know what other boxes use
       tsm_handle.fdma_reqline = 30;
 #else
       tsm_handle.fdma_reqline = 28;
@@ -607,23 +667,24 @@ void stm_tsm_init (int use_cimax)
          dma_params_DIM_1_x_0(&tsm_handle.swts_params[n]);
          dma_params_req(&tsm_handle.swts_params[n],tsm_handle.fdma_req);
       }
+
    } else
    {
    	/* bypass cimax */
-      int n;
-      unsigned long size;
+  	int n;
+  	unsigned long size;
 
-      printk("Bypass cimax\n");
+        printk("Bypass cimax\n");
 
-      tsm_io = ioremap (/* config->tsm_base_address */ 0x19242000,0x1000);
+  	tsm_io = ioremap (/* config->tsm_base_address */ 0x19242000,0x1000);
 
 #ifdef LOAD_TSM_DATA
   	TSM_NUM_PTI_ALT_OUT  = 1/* config->tsm_num_pti_alt_out*/;
   	TSM_NUM_1394_ALT_OUT = 1/*config->tsm_num_1394_alt_out */;
 #endif
 
-      writel( 0x0, tsm_io + TSM_SW_RESET);
-      writel( 0x6, tsm_io + TSM_SW_RESET);
+  	writel( 0x0, tsm_io + TSM_SW_RESET);
+  	writel( 0x6, tsm_io + TSM_SW_RESET);
 
 /*
 channels = streams = 5 ? wohl 4 s.u.

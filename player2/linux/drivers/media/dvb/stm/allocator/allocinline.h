@@ -48,11 +48,17 @@ typedef struct allocator_device_s       *allocator_device_t;
 
 #define DEVICE_NAME                     "/dev/allocator"
 
-#if defined(__TDT__) && !defined(UFS922)
-//Dagobert
-#define	SYS_LMI_PARTITION		"BPA2_Region1"
+#if defined(__TDT__) 
 
-#else
+#if defined(UFS910)
+/* This remapping is only necessary for the UFS910 because it only has 64 MB
+   in SYS_LMI. All other models should have at least 128 MB in SYS_LMI. */
+#define	SYS_LMI_PARTITION		"BPA2_Region1"
+#else /* not UFS910 */
+#define	SYS_LMI_PARTITION		"BPA2_Region0"
+#endif
+
+#else /* not __TDT__ */
 
 #define	SYS_LMI_PARTITION		"BPA2_Region0"
 

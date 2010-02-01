@@ -352,12 +352,19 @@ static void serial3_init (void)
  */
 int processDataAck(unsigned char* data, int count)
 {
+   int i;
+	
 	switch (data[0])
 	{
 		case 0xB9: /* timeval ->len = 6 */
 			if (count != 6)
 			    return 0;
 
+         for (i = 0; i < 6; i++)
+			{
+			   dprintk(20, "0x%02x ", data[i] & 0xff);
+         }
+			
 			/* 0. claim semaphore */
 			down_interruptible(&receive_sem);
 			
@@ -528,7 +535,6 @@ void requeueData(void)
       if (transmit[0].requeueCount == cMaxQueueCount)
       {
          printk("max requeueCount reached aborting transmission %d\n", state);
-         down_interruptible(&transmit_sem);
 
          transmitCount--;
 
@@ -536,8 +542,6 @@ void requeueData(void)
 
          if (transmitCount != 0)		  
      	     dprintk(1, "next command will be 0x%x\n", transmit[0].command);
-
-         up(&transmit_sem);
 
         dataReady = 0;
         timeoutOccured = 1;
@@ -555,6 +559,7 @@ int fpReceiverTask(void* dummy)
   int count = 0;
   unsigned char receivedData[16];
   int timeout = 0;
+  u16 res;
   
   daemonize("fp_rcv");
 
@@ -570,190 +575,206 @@ int fpReceiverTask(void* dummy)
        break;
 #endif  
      
-     if (state != cStateTransmission)
-     {
-        u16 res = serial3_getc();
-		  
-        /* timeout ? */
-        if ((res & 0xff00) != 0)
-		  {
-            timeout = 1;
-		  } else
-            timeout = 0;
+	  dprintk(200, "w ");
+	  
+     down(&transmit_sem);
 
-		  c = res & 0x00ff; 
-	
-	if ((timeout) && ((state == cStateIdle) || (state == cStateWaitEvent)))
-	{
-		msleep(100);
-		continue;
-	}
+     res = serial3_getc();
 
-	dprintk(100, "(0x%x) ", c);  
-	
-	/* process our state-machine */
-	switch (state)
-	{
+     /* timeout ? */
+     if ((res & 0xff00) != 0)
+	  {
+         timeout = 1;
+	  } else
+         timeout = 0;
+
+	  c = res & 0x00ff; 
+
+	  if ((timeout) && ((state == cStateIdle) || (state == cStateWaitEvent)))
+	  {
+		  dprintk(150, "t ");
+        up(&transmit_sem);
+		  msleep(100);
+		  continue;
+	  }
+
+	  dprintk(100, "(0x%x) ", c);  
+
+	  /* process our state-machine */
+	  switch (state)
+	  {
      	   case cStateIdle: /* nothing do to, search for command start */
      	      if (detectEvent(c))
      	      {
-		  dprintk(20, "receive[%d]: 0x%02x\n", count, c);
-     		  count = 0;
-        	  receivedData[count++] = c;
-		  state = cStateWaitEvent;
+		         dprintk(20, "receive[%d]: 0x%02x\n", count, c);
+     		      count = 0;
+        	      receivedData[count++] = c;
+		         state = cStateWaitEvent;
      	      }
-	   break;
+	      break;
      	   case cStateWaitAck: /* each setter */
      	   {
-	       int err = processAck(c);    
+			   int err;
+				
+				if (timeout)
+				   err = 0;
+			   else
+	            err = processAck(c);    
 
-	       if (err == 2)
-	       {
-	    	    /* an error is detected from fp requeue data ...
-		     */
-			requeueData();
-			
-			state = cStateIdle;	  
-			waitAckCounter = 0;
-			count = 0;
-	       }
-	       else
-	       if (err == 1)
-	       {
-	    	      /* data is processed remove it from queue */
+	         if (err == 2)
+	         {
+	    	      /* an error is detected from fp requeue data ...
+		          */
+			      requeueData();
 
-		      down_interruptible(&transmit_sem);
+			      state = cStateIdle;	  
+			      waitAckCounter = 0;
+			      count = 0;
+	         }
+	         else
+	         if (err == 1)
+	         {
+	    	       /* data is processed remove it from queue */
 
-		      transmitCount--;
+		          transmitCount--;
 
-	              memmove(&transmit[0], &transmit[1], (cMaxTransQueue - 1) * sizeof(struct transmit_s));	
+	             memmove(&transmit[0], &transmit[1], (cMaxTransQueue - 1) * sizeof(struct transmit_s));	
 
-	              if (transmitCount != 0)		  
-     	  		 dprintk(1, "next command will be 0x%x\n", transmit[0].command);
+	             if (transmitCount != 0)		  
+     	  		       dprintk(1, "next command will be 0x%x\n", transmit[0].command);
 
-		      up(&transmit_sem);
-
-	 	      waitAckCounter = 0;
-     	 	      dprintk(1, "detect ACK %d\n", state);
-		      state = cStateIdle;
-		      count = 0;
-	       }
-	       else
-	       if (err == 0)
-	       {
-	 	      udelay(1);
+	 	          waitAckCounter = 0;
+     	 	       dprintk(1, "detect ACK %d\n", state);
+		          state = cStateIdle;
+		          count = 0;
+	          }
+	          else
+	          if (err == 0)
+	          {
+	 	           udelay(1);
 	              waitAckCounter--;
 
-		      dprintk(10, "1. %d\n", waitAckCounter);
+		           dprintk(10, "1. %d\n", waitAckCounter);
 
-		      if (waitAckCounter <= 0)
-		      {
-			  dprintk(1, "missing ACK from micom ->requeue data %d\n", state);
+		           if (waitAckCounter <= 0)
+		           {
+			           dprintk(1, "missing ACK from micom ->requeue data %d\n", state);
 
-			  requeueData();
+			           requeueData();
 
-			  count = 0;
-			  waitAckCounter = 0;
-			  state = cStateIdle;
-		      }
+			           count = 0;
+			           waitAckCounter = 0;
+			           state = cStateIdle;
+		           }
      	       }
-	   }
-	   break;
+	      }
+	      break;
      	   case cStateWaitDataAck: /* each getter */
-	   {
-		   int err;
-		   
-         receivedData[count++] = c;
-		   err = processDataAck(receivedData, count);
+	      {
+		      int err;
 
-		   if (err == 1)
-		   {
+				if (timeout)
+				   err = 0;
+			   else
+            {
+               receivedData[count++] = c;
+		         err = processDataAck(receivedData, count);
+            }
+				
+		      if (err == 1)
+		      {
 	    	      /* data is processed remove it from queue */
 
-		      down_interruptible(&transmit_sem);
+		      	transmitCount--;
 
-		      transmitCount--;
+            	memmove(&transmit[0], &transmit[1], (cMaxTransQueue - 1) * sizeof(struct transmit_s));	
 
-            memmove(&transmit[0], &transmit[1], (cMaxTransQueue - 1) * sizeof(struct transmit_s));	
+            	if (transmitCount != 0)		  
+     	  		   	dprintk(1, "next command will be 0x%x\n", transmit[0].command);
 
-            if (transmitCount != 0)		  
-     	  		   dprintk(1, "next command will be 0x%x\n", transmit[0].command);
+	 	      	waitAckCounter = 0;
+            	dprintk(1, "detect ACK %d\n", state);
+		      	state = cStateIdle;
+		      	count = 0;
+		   	}
+	   	}
+	   	break;
+     		case cStateWaitEvent: /* key or button */
+		   	if (receiveCount < cMaxReceiveQueue)
+		   	{
+					dprintk(20, "receive[%d]: 0x%02x\n", count, c);
+        	   	receivedData[count++] = c;
 
-		      up(&transmit_sem);
+					if (processEvent(receivedData, count))
+			   	{
+			   	   	/* command completed */
+                  	count = 0;
+                  	state = cStateIdle;
+			   	}
+		   	} else
+		   	{
+			   	/* noop: wait that someone reads data */
+            	dprintk(1, "overflow, wait for readers\n");
+		   	}
+	   	break;
+     		case cStateWaitStartOfAnswer: /* each getter */
+	   	{
+			   int err;
+				
+				if (timeout)
+				   err = 0;
+			   else
+		   	   err = searchAnswerStart(c);
 
-	 	      waitAckCounter = 0;
-            dprintk(1, "detect ACK %d\n", state);
-		      state = cStateIdle;
-		      count = 0;
-		   }
-	   }
-	   break;
-     	case cStateWaitEvent: /* key or button */
-		   if (receiveCount < cMaxReceiveQueue)
-		   {
-				dprintk(20, "receive[%d]: 0x%02x\n", count, c);
-        	   receivedData[count++] = c;
-			   
-				if (processEvent(receivedData, count))
-			   {
-			   	   /* command completed */
-                  count = 0;
-                  state = cStateIdle;
-			   }
-		   } else
-		   {
-			   /* noop: wait that someone reads data */
-            dprintk(1, "overflow, wait for readers\n");
-		   }
-	   break;
-     	case cStateWaitStartOfAnswer: /* each getter */
-	   {
-		   int err = searchAnswerStart(c);
+		   	if (err == 2) 
+		   	{
+					/* error detected ->requeue data ... */
 
-		   if (err == 2) 
-		   {
-			/* error detected ->requeue data ... */
+					requeueData();
 
-			requeueData();
-			
-			state = cStateIdle;	  
-			waitAckCounter = 0;
-			count = 0;
-		   }
-		   else
-		   if (err == 1)
-		   {
-			/* answer start detected now process data */
-        		count = 0;
-			receivedData[count++] = c;
-			state = cStateWaitDataAck;
-		   } else
-		   {
-		   	   /* no answer start detected */
-	 	         udelay(1);
-               waitAckCounter--;
+					state = cStateIdle;	  
+					waitAckCounter = 0;
+					count = 0;
+		   	}
+		   	else
+		   	if (err == 1)
+		   	{
+					/* answer start detected now process data */
+        			count = 0;
+					receivedData[count++] = c;
+					state = cStateWaitDataAck;
+		   	} else
+		   	{
+		   	   	/* no answer start detected */
+	 	         	udelay(1);
+               	waitAckCounter--;
 
-		         dprintk(10, "2. %d\n", waitAckCounter);
+		         	dprintk(10, "2. %d\n", waitAckCounter);
 
-			 if (waitAckCounter <= 0)
-			 {
-			     dprintk(1, "missing ACK from micom ->requeue data %d\n", state);
-			     requeueData();
+						if (waitAckCounter <= 0)
+						{
+			   			 dprintk(1, "missing ACK from micom ->requeue data %d\n", state);
+			   			 requeueData();
 
-			     count = 0;
-			     waitAckCounter = 0;
-			     state = cStateIdle;
-			 }
-		   }
-	   }
-	   break;
-	   case cStateTransmission:
-		   /* we currently transmit data so ignore all */
-	   break;
+			   			 count = 0;
+			   			 waitAckCounter = 0;
+			   			 state = cStateIdle;
+						}
+		   	}
+	   	}
+	   	break;
+	   	case cStateTransmission:
+		   	/* we currently transmit data so ignore all 
+				 * ->should not happen because we use semaphore!
+				 */
+	   	break;
 
-	}
-     }
+	  }
+     
+	  up(&transmit_sem);
   }
+  
+  printk("fpReceiverTask died !!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 
   return 0;
 }
@@ -782,6 +803,15 @@ int fpTransmitterTask(void* dummy)
      	  /* 0. claim sema */
 	     down_interruptible(&transmit_sem);
 
+	     /* fixme: the state may have changed while we sleep ...
+		   * I'm not sure if this is a proper solution?!?!
+			*/
+	     if (state != cStateIdle)
+		  {
+		      up(&transmit_sem);
+				continue;
+		  }
+
      	  dprintk(1, "send data to fp (0x%x)\n", transmit[0].command);
      
 	     /* 1. send it to the frontpanel */
@@ -793,54 +823,52 @@ int fpTransmitterTask(void* dummy)
 	
         state = cStateTransmission;
 	
-	  for(vLoop = 0 ; vLoop < transmit[0].len + 1; vLoop++)
-	  {	
+	     for(vLoop = 0 ; vLoop < transmit[0].len + 1; vLoop++)
+	     {	
 	        udelay(100);
-		if (serial3_putc((micom_cmd[vLoop])) == 0)
-		{
-			printk("%s failed < char = %c \n", __func__, micom_cmd[vLoop]);
-			state = cStateIdle;
-			sendFailed = 1;
-			break;
-		} else
-		    dprintk(100, "<0x%x> ", micom_cmd[vLoop]);
-	  }
+		     if (serial3_putc((micom_cmd[vLoop])) == 0)
+		     {
+			     printk("%s failed < char = %c \n", __func__, micom_cmd[vLoop]);
+			     state = cStateIdle;
+			     sendFailed = 1;
+			     break;
+		     } else
+		        dprintk(100, "<0x%x> ", micom_cmd[vLoop]);
+	      }
 
-	  state = cStateIdle;
+	      if (sendFailed == 0)
+	      {
+	         if (transmit[0].needAck)
+	         {
+	         	 waitAckCounter = cMaxAckAttempts;
 
-	  if (sendFailed == 0)
-	  {
-	     if (transmit[0].needAck)
-	     {
-	           waitAckCounter = cMaxAckAttempts;
-
-	  	   if (transmit[0].isGetter)
-		   {
-		      timeoutOccured = 0;
-	  	      state = cStateWaitStartOfAnswer;
-		   }
-		   else
-	  	      state = cStateWaitAck;
+	  	   		 if (transmit[0].isGetter)
+		   		 {
+		      		 timeoutOccured = 0;
+	  	      		 state = cStateWaitStartOfAnswer;
+		   		 }
+		   		 else
+	  	         	 state = cStateWaitAck;
              } else
-	     {
-	  	   /* no acknowledge needed so remove it direct */
-		   transmitCount--;
+	          {
+	  	   		 /* no acknowledge needed so remove it direct */
+		   		 transmitCount--;
 
-	           memmove(&transmit[0], &transmit[1], (cMaxTransQueue - 1) * sizeof(struct transmit_s));	
+                memmove(&transmit[0], &transmit[1], (cMaxTransQueue - 1) * sizeof(struct transmit_s));	
 
-	           if (transmitCount != 0)		  
-     	  	      dprintk(1, "%s: next command will be 0x%x\n", __func__, transmit[0].command);
+                if (transmitCount != 0)		  
+                   dprintk(1, "%s: next command will be 0x%x\n", __func__, transmit[0].command);
 
-	     }
-	  }
+	             state = cStateIdle;
+	   		 }
+	       }
 	  
-	  /* 4. free sem */
-	  up(&transmit_sem);
+	       /* 4. free sem */
+	       up(&transmit_sem);
      } else
      {
-     	dprintk(100, "%d, %d\n", state, transmitCount);
-        msleep(100);
-     
+     	   dprintk(100, "%d, %d\n", state, transmitCount);
+         msleep(100);
      }
   }
 
@@ -850,13 +878,14 @@ int fpTransmitterTask(void* dummy)
 
 /* End ASC3 */
 
-void micomWriteCommand(char command, char* buffer, int len, int needAck, int isGetter)
+int micomWriteCommand(char command, char* buffer, int len, int needAck, int isGetter)
 {
 
 	dprintk(5, "%s >\n", __func__);
 
 	/* 0. claim semaphore */
-	down_interruptible(&transmit_sem);
+	if (down_interruptible(&transmit_sem))
+	   return -ERESTARTSYS;;
 	
 	if (transmitCount < cMaxTransQueue)
 	{
@@ -882,145 +911,180 @@ void micomWriteCommand(char command, char* buffer, int len, int needAck, int isG
 	up(&transmit_sem);
 
 	dprintk(10, "%s < \n", __func__);
+
+   return 0;
 }
 
-void micomSetIcon(int which, int on)
+int micomSetIcon(int which, int on)
 {
 	char buffer[8];
+	int  res = 0;
 	
 	dprintk(5, "%s > %d, %d\n", __func__, which, on);
 	if (which < 1 || which > 16)
 	{
 		printk("VFD/MICOM icon number out of range %d\n", which);
-		return;
+		return -EINVAL;
 	}
 
 	memset(buffer, 0, 8);
 	buffer[0] = which;
 	
 	if (on == 1)
-	   micomWriteCommand(0x11, buffer, 7, 1 ,0);
+	   res = micomWriteCommand(0x11, buffer, 7, 1 ,0);
 	else
-	   micomWriteCommand(0x12, buffer, 7, 1 ,0);
+	   res = micomWriteCommand(0x12, buffer, 7, 1 ,0);
 	
 	dprintk(10, "%s <\n", __func__);
+
+   return res;
 }
 
 /* export for later use in e2_proc */
 EXPORT_SYMBOL(micomSetIcon);
 
-void micomSetLED(int which, int on)
+int micomSetLED(int which, int on)
 {
 	char buffer[8];
+	int  res = 0;
 	
 	dprintk(5, "%s > %d, %d\n", __func__, which, on);
 	if (which < 1 || which > 6)
 	{
 		printk("VFD/MICOM led number out of range %d\n", which);
-		return;
+		return -EINVAL;
 	}
 
 	memset(buffer, 0, 8);
 	buffer[0] = which;
 	
 	if (on == 1)
-	   micomWriteCommand(0x06, buffer, 7, 1 ,0);
+	   res = micomWriteCommand(0x06, buffer, 7, 1 ,0);
 	else
-	   micomWriteCommand(0x22, buffer, 7, 1 ,0);
+	   res = micomWriteCommand(0x22, buffer, 7, 1 ,0);
 	
 	dprintk(10, "%s <\n", __func__);
+
+   return res;
 }
 
 /* export for later use in e2_proc */
 EXPORT_SYMBOL(micomSetLED);
 
 
-void micomSetBrightness(int level)
+int micomSetBrightness(int level)
 {
 	char buffer[8];
+	int  res = 0;
 	
 	dprintk(5, "%s > %d\n", __func__, level);
 	if (level < 1 || level > 5)
 	{
 		printk("VFD/MICOM brightness out of range %d\n", level);
-		return;
+		return -EINVAL;
 	}
 
 	memset(buffer, 0, 8);
 	buffer[0] = level;
 	
-	micomWriteCommand(0x25, buffer, 7, 1 ,0);
+	res = micomWriteCommand(0x25, buffer, 7, 1 ,0);
 
 	dprintk(10, "%s <\n", __func__);
+
+   return res;
 }
 /* export for later use in e2_proc */
 EXPORT_SYMBOL(micomSetBrightness);
 
-void micomSetModel(void)
+int micomSetModel(void)
 {
 	char buffer[8];
+	int  res = 0;
 	
 	dprintk(5, "%s >\n", __func__);
 
 	memset(buffer, 0, 8);
 	buffer[0] = 0x1;
 	
-	micomWriteCommand(0x3, buffer, 7, 0 ,0);
+	res = micomWriteCommand(0x3, buffer, 7, 0 ,0);
 
 	dprintk(10, "%s <\n", __func__);
+
+   return res;
 }
 
-void micomSetStandby(char* time)
+int micomSetStandby(char* time)
 {
 	char 	   buffer[8];
-
+   int      res = 0;
+	
 	dprintk(5, "%s >\n", __func__);
 
 	memset(buffer, 0, 8);
 
-        if (time[0] == '\0')
+   if (time[0] == '\0')
 	{
 	   /* clear wakeup time */
-	   micomWriteCommand(0x33, buffer, 7, 1 ,0);
+	   res = micomWriteCommand(0x33, buffer, 7, 1 ,0);
 	} else
 	{
 	   /* set wakeup time */
 
 	   memcpy(buffer, time, 5);
-	   micomWriteCommand(0x32, buffer, 7, 1 ,0);
+	   res = micomWriteCommand(0x32, buffer, 7, 1 ,0);
+	}
+	
+	if (res < 0)
+	{
+	   printk("%s <res %d \n", __func__, res);
+		return res;
 	}
 	
 	memset(buffer, 0, 8);
 	/* enter standby */
-	micomWriteCommand(0x41, buffer, 7, 0 ,0);
+	res = micomWriteCommand(0x41, buffer, 7, 0 ,0);
 	
 	dprintk(10, "%s <\n", __func__);
+
+   return res;
 }
 
-void micomSetTime(char* time)
+int micomSetTime(char* time)
 {
 	char 	   buffer[8];
-
+   int      res = 0;
+	
 	dprintk(5, "%s >\n", __func__);
 
 	memset(buffer, 0, 8);
 
 	memcpy(buffer, time, 5);
-	micomWriteCommand(0x31, buffer, 7, 1 ,0);
+	res = micomWriteCommand(0x31, buffer, 7, 1 ,0);
 	
 	dprintk(10, "%s <\n", __func__);
+
+   return res;
 }
 
-void micomGetTime(void)
+int micomGetTime(void)
 {
 	char 	   buffer[8];
-
+   int      res = 0;
+	
 	dprintk(5, "%s >\n", __func__);
 
 	memset(buffer, 0, 8);
 	
+   timeoutOccured = 0;
 	dataReady = 0;
-	micomWriteCommand(0x39, buffer, 7, 1 ,1); 
+	res = micomWriteCommand(0x39, buffer, 7, 1 ,1); 
+	
+	if (res < 0)
+	{
+	   printk("%s < res %d\n", __func__, res);
+	   return res;
+	}
+	
 	wait_event_interruptible(ioctl_wq, dataReady || timeoutOccured);
 	
 	if (timeoutOccured == 1)
@@ -1028,6 +1092,8 @@ void micomGetTime(void)
 		/* timeout */
 		memset(ioctl_data, 0, 8);
 		printk("timeout\n");
+
+	   res = -ETIMEDOUT;
 	} else
 	{
 		/* time received ->noop here */
@@ -1035,18 +1101,29 @@ void micomGetTime(void)
 	}
 	 
 	dprintk(10, "%s <\n", __func__);
+
+   return res;
 }
 
-void micomGetWakeUpMode(void)
+int micomGetWakeUpMode(void)
 {
 	char 	   buffer[8];
-
+   int      res = 0;
+	
 	dprintk(5, "%s >\n", __func__);
 
 	memset(buffer, 0, 8);
 	
+   timeoutOccured = 0;
 	dataReady = 0;
-	micomWriteCommand(0x43, buffer, 7, 1 ,1);
+	res = micomWriteCommand(0x43, buffer, 7, 1 ,1);
+
+	if (res < 0)
+	{
+	   printk("%s < res %d\n", __func__, res);
+	   return res;
+	}
+
 	wait_event_interruptible(ioctl_wq, dataReady || timeoutOccured);
 	
 	if (timeoutOccured == 1)
@@ -1054,6 +1131,8 @@ void micomGetWakeUpMode(void)
 		/* timeout */
 		memset(ioctl_data, 0, 8);
 		printk("timeout\n");
+
+	   res = -ETIMEDOUT;
 	} else
 	{
 		/* time received ->noop here */
@@ -1061,28 +1140,34 @@ void micomGetWakeUpMode(void)
 	}
 	 
 	dprintk(10, "%s <\n", __func__);
+
+   return res;
 }
 
-void micomReboot(void)
+int micomReboot(void)
 {
 	char 	   buffer[8];
-
+   int      res = 0;
+	
 	dprintk(5, "%s >\n", __func__);
 
 	memset(buffer, 0, 8);
 
-	micomWriteCommand(0x46, buffer, 7, 0 ,0);
+	res = micomWriteCommand(0x46, buffer, 7, 0 ,0);
 	
 	dprintk(10, "%s <\n", __func__);
+
+   return res;
 }
 
 
-void micomWriteString(unsigned char* aBuf, int len)
+int micomWriteString(unsigned char* aBuf, int len)
 {
 	unsigned char bBuf[20];
 	int i =0;
 	int j =0;
-
+   int res = 0;
+	
 	dprintk(5, "%s >\n", __func__);
 	
 //utf8:	if (len > 16 || len < 0)
@@ -1145,9 +1230,11 @@ void micomWriteString(unsigned char* aBuf, int len)
 		i++;
 		j++;
 	}
-	micomWriteCommand(0x21, bBuf, 16, 1 ,0);
+	res = micomWriteCommand(0x21, bBuf, 16, 1 ,0);
 
 	dprintk(10, "%s <\n", __func__);
+
+   return res;
 }
 
 int micom_init_func(void)
@@ -1175,14 +1262,15 @@ int micom_init_func(void)
 static ssize_t MICOMdev_write(struct file *filp, const char *buff, size_t len, loff_t *off)
 {
 	char* kernel_buf;
-	int minor, vLoop;
+	int minor, vLoop, res = 0;
+	
 	dprintk(5, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
 
 	minor = -1;
   	for (vLoop = 0; vLoop < LASTMINOR; vLoop++)
   	{
-    		if (FrontPanelOpen[vLoop].fp == filp)
-    		{
+    	if (FrontPanelOpen[vLoop].fp == filp)
+    	{
 			minor = vLoop;
 		}
 	}
@@ -1208,22 +1296,26 @@ static ssize_t MICOMdev_write(struct file *filp, const char *buff, size_t len, l
 	}
 	copy_from_user(kernel_buf, buff, len); 
 
-        if(down_interruptible (&write_sem))
-            return -ERESTARTSYS;
+   if(down_interruptible (&write_sem))
+       return -ERESTARTSYS;
 
-        /* Dagobert: echo add a \n which will be counted as a char
+   /* Dagobert: echo add a \n which will be counted as a char
 	 */
-	if (kernel_buf[len - 1] == '\n')
-	   micomWriteString(kernel_buf, len - 1);
+	if (kernel_buf[len - 1] == '\n')
+	   res = micomWriteString(kernel_buf, len - 1);
 	else
-	   micomWriteString(kernel_buf, len);
+	   res = micomWriteString(kernel_buf, len);
 	
 	kfree(kernel_buf);
 	
 	up(&write_sem);
 
-	dprintk(10, "%s <\n", __func__);
-	return len;
+	dprintk(10, "%s < res %d len %d\n", __func__, res, len);
+	
+	if (res < 0)
+	   return res;
+	else
+	   return len;
 }
 
 static ssize_t MICOMdev_read(struct file *filp, char __user *buff, size_t len, loff_t *off)
@@ -1234,8 +1326,8 @@ static ssize_t MICOMdev_read(struct file *filp, char __user *buff, size_t len, l
 	minor = -1;
   	for (vLoop = 0; vLoop < LASTMINOR; vLoop++)
   	{
-    		if (FrontPanelOpen[vLoop].fp == filp)
-    		{
+    	if (FrontPanelOpen[vLoop].fp == filp)
+      {
 			minor = vLoop;
 		}
 	}
@@ -1251,17 +1343,17 @@ static ssize_t MICOMdev_read(struct file *filp, char __user *buff, size_t len, l
 	if (minor == FRONTPANEL_MINOR_RC)
 	{
 
-          while (receiveCount == 0)
+     while (receiveCount == 0)
 	  {
-	    if (wait_event_interruptible(wq, receiveCount > 0))
-		return -ERESTARTSYS;
+	     if (wait_event_interruptible(wq, receiveCount > 0))
+		     return -ERESTARTSYS;
 	  }
 
 	  /* 0. claim semaphore */
 	  down_interruptible(&receive_sem);
 	  
 	  /* 1. copy data to user */
-          copy_to_user(buff, receive[0].buffer, 8);
+     copy_to_user(buff, receive[0].buffer, 8);
 
 	  /* 2. copy all entries to start and decreas receiveCount */
 	  receiveCount--;
@@ -1270,14 +1362,14 @@ static ssize_t MICOMdev_read(struct file *filp, char __user *buff, size_t len, l
 	  /* 3. free semaphore */
 	  up(&receive_sem);
 	 
-          return 8;
+     return 8;
 	}
 
 	/* copy the current display string to the user */
  	if (down_interruptible(&FrontPanelOpen[minor].sem))
 	{
 	   printk("%s return erestartsys<\n", __func__);
-   	   return -ERESTARTSYS;
+   	return -ERESTARTSYS;
 	}
 
 	if (FrontPanelOpen[minor].read == lastdata.length)
@@ -1310,7 +1402,7 @@ int MICOMdev_open(struct inode *inode, struct file *filp)
 	int minor;
 	dprintk(5, "%s >\n", __func__);
 
-        minor = MINOR(inode->i_rdev);
+   minor = MINOR(inode->i_rdev);
 
 	dprintk(1, "open minor %d\n", minor);
 
@@ -1352,18 +1444,19 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 {
 	static int mode = 0;
 	struct micom_ioctl_data * micom = (struct micom_ioctl_data *)arg;
-
+   int res = 0;
+	
 	dprintk(5, "%s > 0x%.8x\n", __func__, cmd);
 
-        if(down_interruptible (&write_sem))
-            return -ERESTARTSYS;
+   if(down_interruptible (&write_sem))
+       return -ERESTARTSYS;
 
 	switch(cmd) {
 	case VFDSETMODE:
 		mode = micom->u.mode.compat;
 		break;
 	case VFDSETLED:
-		micomSetLED(micom->u.led.led_nr, micom->u.led.on);
+		res = micomSetLED(micom->u.led.led_nr, micom->u.led.on);
 		break;
 	case VFDBRIGHTNESS:
 		if (mode == 0)
@@ -1376,15 +1469,15 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 
 			level =  ((level * 100) / 7 * 5) / 100 + 1;
 
-			micomSetBrightness(level);
+			res = micomSetBrightness(level);
 		} else
 		{
-			micomSetBrightness(micom->u.brightness.level);
+			res = micomSetBrightness(micom->u.brightness.level);
 		}
 		mode = 0;
 		break;
 	case VFDDRIVERINIT:
-		micom_init_func();
+		res = micom_init_func();
 		mode = 0;
 		break;
 	case VFDICONDISPLAYONOFF:
@@ -1394,38 +1487,38 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 			int icon_nr = (data->data[0] & 0xf) + 1;
 			int on = data->data[4];
 						
-			micomSetIcon(icon_nr, on);
+			res = micomSetIcon(icon_nr, on);
 		} else
 		{
-			micomSetIcon(micom->u.icon.icon_nr, micom->u.icon.on);
+			res = micomSetIcon(micom->u.icon.icon_nr, micom->u.icon.on);
 		}
 		
 		mode = 0;
 		break;	
 	case VFDSTANDBY:
-		   micomSetStandby(micom->u.standby.time);
+		   res = micomSetStandby(micom->u.standby.time);
 		break;	
 	case VFDREBOOT:
-		   micomReboot();
+		   res = micomReboot();
 		break;	
 	case VFDSETTIME:
 		if (micom->u.time.time != 0)
-		   micomSetTime(micom->u.time.time);
+		   res = micomSetTime(micom->u.time.time);
 		break;	
 	case VFDGETTIME:
-		micomGetTime();
-      		copy_to_user(arg, &ioctl_data, 8);
+		res = micomGetTime();
+      copy_to_user(arg, &ioctl_data, 8);
 		break;	
 	case VFDGETWAKEUPMODE:
-		micomGetWakeUpMode();
-      		copy_to_user(arg, &ioctl_data, 8);
+		res = micomGetWakeUpMode();
+      copy_to_user(arg, &ioctl_data, 8);
 		break;	
 	case VFDDISPLAYCHARS:
 		if (mode == 0)
 		{
 			struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg; 
 						
-			micomWriteString(data->data, data->length);
+			res = micomWriteString(data->data, data->length);
 		} else
 		{
 			//not suppoerted
@@ -1445,10 +1538,10 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		break;
 	}
 
-        up(&write_sem);
+   up(&write_sem);
 
 	dprintk(10, "%s <\n", __func__);
-	return 0;
+	return res;
 }
 
 static unsigned int MICOMdev_poll(struct file *filp, poll_table *wait)

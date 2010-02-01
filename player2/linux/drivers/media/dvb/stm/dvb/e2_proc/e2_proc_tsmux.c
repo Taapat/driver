@@ -159,7 +159,7 @@ int proc_tsmux_ci0_input_write(struct file *file, const char __user *buf,
 		page[count] = 0;
 		printk("%s\n", page);
 		ret = count;
-#if defined(TF7700) || defined(UFS922) || defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_9500HD)
+#if defined(TF7700) || defined(UFS922) || defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_9500HD) || defined(FORTIS_HDBOX)
 		if(strcmp(page, "A") == 0)
 			setCiSource(0, 0);
 		else if(strcmp(page, "B") == 0)
@@ -211,7 +211,7 @@ int proc_tsmux_ci1_input_write(struct file *file, const char __user *buf,
 		page[count] = 0;
 		printk("%s\n", page);
 		ret = count;
-#if defined(TF7700) || defined(UFS922) || defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_9500HD)
+#if defined(TF7700) || defined(UFS922) || defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_9500HD) || defined(FORTIS_HDBOX)
 		if(strcmp(page, "A") == 0)
 			setCiSource(1, 0);
 		else if(strcmp(page, "B") == 0)

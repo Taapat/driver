@@ -134,6 +134,9 @@ struct DeviceContext_s
     struct PtiSession*          pPtiSession;
     int dvr_write;
     int                         VideoPlaySpeed;
+    int provideToDecoder;
+    int feedPesType;
+    struct mutex injectMutex;
 #endif
     struct DvbContext_s*        DvbContext;
 };

@@ -1297,6 +1297,7 @@ CodecStatus_t     Status;
 		// frame to mess around with.
 		//
 
+#if 0
 		report( severity_error, "Codec_MmeBase_c::TranslateReferenceFrameLists(%s) - Unable to translate reference.\n", Configuration.CodecName );
 		report( severity_info,  "        Missing index is %d (%d %d)\n", ParsedFrameParameters->ReferenceFrameList[i].EntryIndicies[j], ParsedFrameParameters->NumberOfReferenceFrameLists, ParsedFrameParameters->ReferenceFrameList[i].EntryCount );
 		report( severity_info,  "        Missing %d %d\n", ParsedFrameParameters->DecodeFrameIndex, ParsedFrameParameters->ReferenceFrameList[i].EntryIndicies[j] );
@@ -1310,6 +1311,7 @@ CodecStatus_t     Status;
 			ParsedFrameParameters->ReferenceFrameList[1].EntryIndicies[2],ParsedFrameParameters->ReferenceFrameList[1].EntryIndicies[3],
 			ParsedFrameParameters->ReferenceFrameList[1].EntryIndicies[4],ParsedFrameParameters->ReferenceFrameList[1].EntryIndicies[5],
 			ParsedFrameParameters->ReferenceFrameList[1].EntryIndicies[6],ParsedFrameParameters->ReferenceFrameList[1].EntryIndicies[7] );
+#endif
 		BufferIndex     = CurrentDecodeBufferIndex;
 	    }
 

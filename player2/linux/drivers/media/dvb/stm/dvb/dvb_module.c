@@ -24,6 +24,7 @@ Date        Modification                                    Name
 #include <linux/module.h>
 #include <linux/file.h>
 #include <linux/kthread.h>
+#include <linux/delay.h>
 #include <asm/uaccess.h>
 
 #include <linux/dvb/audio.h>
@@ -247,9 +248,12 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
 	DeviceContext->dvr_in                   = kmalloc(65536,GFP_KERNEL); // 128Kbytes is quite a lot per device.
 	DeviceContext->dvr_out                  = kmalloc(65536,GFP_KERNEL); // However allocating on each write is expensive.
 	DeviceContext->EncryptionOn             = 0;
-        DeviceContext->VideoPlaySpeed           = DVB_SPEED_NORMAL_PLAY;
-
 #ifdef __TDT__
+        DeviceContext->VideoPlaySpeed           = DVB_SPEED_NORMAL_PLAY;
+        DeviceContext->provideToDecoder = 0;
+        DeviceContext->feedPesType = 0;
+        mutex_init(&DeviceContext->injectMutex);
+
         if(i < 3)
         {
 	  ptiInit(DeviceContext);

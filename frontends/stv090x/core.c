@@ -14,6 +14,8 @@
 
 #include <pvr_config.h>
 
+short paramDebug = 0;
+
 static struct core *core[MAX_DVB_ADAPTERS];
 
 static struct stv090x_config tt1600_stv090x_config = {
@@ -233,6 +235,9 @@ static void __exit stv090x_exit(void)
 
 module_init             (stv090x_init);
 module_exit             (stv090x_exit);
+
+module_param(paramDebug, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(paramDebug, "Debug Output 0=disabled >0=enabled(debuglevel)");
 
 MODULE_DESCRIPTION      ("Tunerdriver");
 MODULE_AUTHOR           ("Dagobert");

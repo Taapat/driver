@@ -76,8 +76,7 @@ static int debug;
 
 #ifdef FORTIS_HDBOX
 struct stpio_pin*	cic_enable_pin;
-struct stpio_pin*	module_A_pin;
-struct stpio_pin*	module_B_pin;
+struct stpio_pin*	module_pin[2];
 #endif
 
 /* konfetti: EMI ************************* */
@@ -294,7 +293,7 @@ static int cimax_readreg(struct cimax_state* state, u8 reg)
 */
 int setCiSource(int slot, int source)
 {
-#if defined(TF7700)
+#if defined(TF7700) || defined(FORTIS_HDBOX)
   int val;
 
   if((slot < 0) || (slot > 1) ||
@@ -305,7 +304,7 @@ int setCiSource(int slot, int source)
   if(slot != source)
   {
     /* send stream A through module B and stream B through module A */
-#if defined(TF7700)
+#if defined(TF7700) || defined(FORTIS_HDBOX)
     val |= 0x20;
 #else
     val &= ~0x20;
@@ -315,7 +314,7 @@ int setCiSource(int slot, int source)
   {
     /* enforce direct mapping */
     /* send stream A through module A and stream B through module B */
-#if defined(TF7700)
+#if defined(TF7700) || defined(FORTIS_HDBOX)
     val &= ~0x20;
 #else
     val |= 0x20;
@@ -335,6 +334,7 @@ void setDestination(struct cimax_state *state, int slot)
    
    dprintk("%s (slot = %d)>\n", __func__, slot);
 
+#if !defined(FORTIS_HDBOX)
    if (slot == 0)
    {
       /* read destination register */
@@ -389,7 +389,7 @@ void setDestination(struct cimax_state *state, int slot)
       	 }
       }
    }
-
+#endif
    dprintk("%s (slot = %d)<\n", __func__, slot);
 }
 
@@ -416,6 +416,10 @@ static int cimax_poll_slot_status(struct dvb_ca_en50221 *ca, int slot, int open)
 	{
 	  if(state->cimax_module_present[slot] == 0)
 	  {
+#if defined(FORTIS_HDBOX)
+	    stpio_set_pin (module_pin[slot], 1);
+#endif
+
 	    if(state->detection_timeout[slot] == 0)
 	    {
 	      /* detected module insertion, set the detection
@@ -436,6 +440,11 @@ static int cimax_poll_slot_status(struct dvb_ca_en50221 *ca, int slot, int open)
 	}
 	else
 	{
+#if defined(FORTIS_HDBOX)
+	  if(state->cimax_module_present[slot] == 1)
+	      stpio_set_pin (module_pin[slot], 0);
+#endif
+
 	  /* module not present, reset everything */
 	  state->cimax_module_present[slot] = 0;
 	  state->detection_timeout[slot] = 0;
@@ -476,7 +485,9 @@ static int cimax_slot_reset(struct dvb_ca_en50221 *ca, int slot)
 			printk("%s: result = 0x%x\n", __func__, result);
 			cimax_writereg(state, 0x00, result | 0x80);
 
+#if !defined(FORTIS_HDBOX)
          cimax_writereg(state, 0x17, 0x0);
+#endif
 			msleep(60);
 			
 			/* reset "rst" bit */
@@ -498,7 +509,9 @@ static int cimax_slot_reset(struct dvb_ca_en50221 *ca, int slot)
 			printk("%s: result = 0x%x\n", __func__, result);
 			cimax_writereg(state, 0x09, result | 0x80);
 			
+#if !defined(FORTIS_HDBOX)
          cimax_writereg(state, 0x17, 0x0);
+#endif
 			msleep(60);
 
 			/* reset "rst" bit */
@@ -789,9 +802,13 @@ static int cimax_slot_ts_enable(struct dvb_ca_en50221 *ca, int slot)
 	   /* das read back der register ist gleichzeitig unser sleep! */	
 	   int result = cimax_readreg(state, 0x00);
 	   
+#if !defined(FORTIS_HDBOX)
 	   cimax_writereg(state, 0x00, 0x23);
 	   
 	   printk("%s: writing 0x%x\n", __func__, 0x23);
+#else
+	   cimax_writereg(state, 0x00, result | 0x20);
+#endif
 	   
 	   result = cimax_readreg(state, 0x00);
 
@@ -807,8 +824,12 @@ static int cimax_slot_ts_enable(struct dvb_ca_en50221 *ca, int slot)
 	{
 	   int result = cimax_readreg(state, 0x09);
 
+#if !defined(FORTIS_HDBOX)
 	   cimax_writereg(state, 0x09, 0x23);
 	   printk("%s: writing 0x%x\n", __func__, 0x23);
+#else
+	   cimax_writereg(state, 0x09, result | 0x20);
+#endif
 
 	   result = cimax_readreg(state, 0x09);
 
@@ -882,8 +903,11 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
    stpio_set_pin (cic_enable_pin, 0);
 	msleep(250);
 
-	module_A_pin = stpio_request_pin (1, 2, "StarCI_ModuleA", STPIO_OUT);
-	module_B_pin = stpio_request_pin (2, 7, "StarCI_ModuleB", STPIO_OUT);
+	module_pin[0] = stpio_request_pin (1, 2, "StarCI_ModuleA", STPIO_OUT);
+	module_pin[1] = stpio_request_pin (2, 7, "StarCI_ModuleB", STPIO_OUT);
+
+   stpio_set_pin (module_pin[0], 0);
+   stpio_set_pin (module_pin[1], 0);
 
 #endif
 
@@ -906,11 +930,16 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 
 #endif
  
+#if !defined(FORTIS_HDBOX)
 	/* Modul A auto activation */	
 	cimax_writereg(state, 0x00, 0x02);
 
 	/* Modul B auto activation */	
 	cimax_writereg(state, 0x09, 0x02);
+#else
+	cimax_writereg(state, 0x00, 0x00);
+	cimax_writereg(state, 0x09, 0x00);
+#endif
 
 #if defined(TF7700)
 	/* Powercontrol: VCLVL ->VCC pin active-low (LOCK muss 0 sein) */
@@ -922,10 +951,11 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 	cimax_writereg(state, 0x18, 0x40);	
 #endif
 
+#if !defined(FORTIS_HDBOX)
 	/* Destination Select: Select modul A */
 	cimax_writereg(state, 0x17, 0x02);
 
-#if defined(TF7700) || defined(FORTIS_HDBOX)
+#if defined(TF7700)
 	/* memory access cycle for Modul A: set all to 250ns */
 	cimax_writereg(state, 0x05, 0x33);
 
@@ -945,7 +975,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 	/* interrupt mask register: set all to mask */
 	cimax_writereg(state, 0x1b, 0x00);
 
-#if defined(TF7700) || defined(FORTIS_HDBOX)
+#if defined(TF7700)
 	/* UCSG2 Register: */
         cimax_writereg(state, 0x1e, 0x03);
 
@@ -965,7 +995,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 	/* Auto select mask high module a */
 	cimax_writereg(state, 0x01, 0x00);
 
-#if defined(TF7700) || defined(FORTIS_HDBOX)
+#if defined(TF7700)
 	/* Auto select mask low module a */
 	cimax_writereg(state, 0x02, 0x01);
 #else
@@ -976,7 +1006,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 	/* Auto select pattern high module a */
 	cimax_writereg(state, 0x03, 0x00);
 
-#if defined(TF7700) || defined(FORTIS_HDBOX)
+#if defined(TF7700)
 	/* Auto select pattern low module a */
 	cimax_writereg(state, 0x04, 0x00);
 #else
@@ -987,7 +1017,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 	/* Auto select mask high module b */
 	cimax_writereg(state, 0x0a, 0x00);
 
-#if defined(TF7700) || defined(FORTIS_HDBOX)
+#if defined(TF7700)
 	/* Auto select mask low module b */
 	cimax_writereg(state, 0x0b, 0x01);
 #else
@@ -998,7 +1028,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 	/* Auto select pattern high module b */
 	cimax_writereg(state, 0x0c, 0x00);
 
-#if defined(TF7700) || defined(FORTIS_HDBOX)
+#if defined(TF7700)
 	/* Auto select pattern low module b */
 	cimax_writereg(state, 0x0d, 0x01);
 #else
@@ -1014,13 +1044,15 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 	/* LOCK */
 	cimax_writereg(state, 0x1f, 0x01);
 
-#if defined(TF7700)|| defined(FORTIS_HDBOX)
+#if defined(TF7700)
 	/* POWER ON */
 	cimax_writereg(state, 0x18, 0x21);
 #else
 	/* POWER ON */
 	cimax_writereg(state, 0x18, 0x01);
 #endif
+
+#endif /* fortis_hdbox */
 
 	ctrl_outl(0x0, reg_config + EMI_LCK);
 	ctrl_outl(0x0, reg_config + EMI_GEN_CFG);
@@ -1062,6 +1094,12 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 	ctrl_outl(0x9d220000,reg_config + EMIBank1 + EMI_CFG_DATA1);
 	ctrl_outl(0x9d220000,reg_config + EMIBank1 + EMI_CFG_DATA2);
 	ctrl_outl(0x8,reg_config + EMIBank1 + EMI_CFG_DATA3);
+
+	ctrl_outl(0x001016d9,reg_config + EMIBank3 + EMI_CFG_DATA0);
+	ctrl_outl(0x9d200000,reg_config + EMIBank3 + EMI_CFG_DATA1);
+	ctrl_outl(0x9d220000,reg_config + EMIBank3 + EMI_CFG_DATA2);
+	ctrl_outl(0x00000008,reg_config + EMIBank3 + EMI_CFG_DATA3);
+
 #else
 	ctrl_outl(0xa306d9,reg_config + EMIBank4 + EMI_CFG_DATA0);
 	ctrl_outl(0x7d336633,reg_config + EMIBank4 + EMI_CFG_DATA1);
@@ -1075,8 +1113,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 #if defined(TF7700)  || defined(FORTIS_HDBOX)
 
 #if defined(FORTIS_HDBOX)
-//is [0] = top slot?
-	slot_membase[0] = (unsigned long) ioremap( 0xa2000000, 0x1000 );
+	slot_membase[0] = (unsigned long) 0xa2000000;
 #else
 	slot_membase[0] = (unsigned long) ioremap( 0xa3000000, 0x1000 );
 #endif
@@ -1088,8 +1125,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 #if defined(TF7700)
 	slot_membase[1] = (unsigned long) ioremap( 0xa3400000, 0x1000 );
 #elif defined(FORTIS_HDBOX)
-//is [1] = bottom slot?
-	slot_membase[1] = (unsigned long) ioremap( 0xa2010000, 0x1000 );
+	slot_membase[1] = (unsigned long) 0xa2010000;
 #else
 	slot_membase[1] = (unsigned long) ioremap( 0xa3010000, 0x1000 );
 #endif

@@ -177,9 +177,15 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	{
 		{
 #if defined (CONFIG_KERNELVERSION)
+	#if defined(__TDT__)
+			CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
+	//		CARD        ("Analog",  1, 0,  48000, 2),
+			CARD        ("HDMI",    0, 0,  48000, 2),
+	#else
 			CARD_SPDIF  ("SPDIF",   0, 2,  48000, 2),
 			CARD        ("Analog",  0, 1,  48000, 2),
 			CARD        ("HDMI",    0, 0,  48000, 2),
+	#endif
 #else /* STLinux 2.2 */
 			CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
 			CARD        ("Analog",  1, 0,  48000, 2),
@@ -195,8 +201,13 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	{
 		{
 #if defined (CONFIG_KERNELVERSION)
+	#if defined(__TDT__)
+			CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
+	//		CARD        ("Analog",  0, 0,  48000, 2),
+	#else
 			CARD_SPDIF  ("SPDIF",   0, 2,  48000, 2),
 			CARD        ("HDMI",    0, 0,  48000, 2),
+	#endif
 #else /* STLinux-2.2 */
 			CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
 			CARD        ("Analog",  0, 0,  48000, 2),
@@ -206,7 +217,11 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	{
 		{
 #if defined (CONFIG_KERNELVERSION)
+	#if define(__TDT__)
+	//		CARD        ("Analog",  1, 0,  48000, 2),
+	#else
 			CARD        ("Analog",  0, 1,  48000, 2),
+	#endif
 #else /* STLinux-2.2 */
 			CARD        ("Analog",  1, 0,  48000, 2),
 #endif

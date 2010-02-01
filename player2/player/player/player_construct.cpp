@@ -75,23 +75,8 @@ unsigned int    i;
     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, (PlayerPolicy_t)PolicyStatisticsOnAudio,			PolicyValueDisapply );
     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, (PlayerPolicy_t)PolicyStatisticsOnVideo,			PolicyValueDisapply );
 
-#ifdef player_before_131
-
-#ifdef __TDT__
-    // policies proposed to use for live tv - should solve audio issuses after zap
-    SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyDiscardLateFrames,	 				PolicyValueDiscardLateFramesNever );
-    SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyVideoStartImmediate,					PolicyValueDisapply );
-#else
     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyDiscardLateFrames,	 				PolicyValueDiscardLateFramesAfterSynchronize );
     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyVideoStartImmediate,					PolicyValueApply );
-#endif
-
-#else
-//Dagobert wyplay uses default ones so lets try this again!
-    SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyDiscardLateFrames,	 				PolicyValueDiscardLateFramesAfterSynchronize );
-    SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyVideoStartImmediate,					PolicyValueApply );
-
-#endif
 
     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyRebaseOnFailureToDeliverDataInTime,			PolicyValueApply );
     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyRebaseOnFailureToDecodeInTime,			PolicyValueApply );
@@ -102,12 +87,7 @@ unsigned int    i;
     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyH264TreatDuplicateDpbValuesAsNonReferenceFrameFirst,	PolicyValueApply );
 
     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyMPEG2ApplicationType,				PolicyValueMPEG2ApplicationDvb );
-#ifdef __TDT__
-//Thiw will fix N24 an hopefully every other interlaced-progressive miss interpretertation 
-    SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyMPEG2DoNotHonourProgressiveFrameFlag,		PolicyValueApply );
-#else
     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyMPEG2DoNotHonourProgressiveFrameFlag,		PolicyValueDisapply );
-#endif
 
     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyClockPullingLimit2ToTheNPartsPerMillion,		8 );
 
@@ -120,6 +100,24 @@ unsigned int    i;
 #endif
 
 //
+#ifdef __TDT__
+    // Overwrite default settings (see class_definitions/player_types.h for definitions
+    // and descriptions).
+
+    // Discarding late frames significantly improves the H.264 deadlock behavior.
+    // Obviously late frames cause the player to run out of buffers if not discarded
+    // immediately. It even does not matter how many decode buffers are available -
+    // all of them will be used (up to 32 if enough memory is availble in LMI_VID).
+    SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyDiscardLateFrames,	 				PolicyValueDiscardLateFramesAlways );
+    // Usage of the immediate start depends on the LateFrame policy. Though, it is not
+    // quite clear what is meant by "agressive policy".
+    SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyVideoStartImmediate,					PolicyValueApply );
+
+    // This will fix N24 an hopefully every other interlaced-progressive miss interpretertation 
+    SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyMPEG2DoNotHonourProgressiveFrameFlag,		PolicyValueApply );
+
+    //SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyLimitInputInjectAhead,				PolicyValueApply );
+#endif
 
     InitializationStatus        = BufferNoError;
 }
