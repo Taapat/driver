@@ -108,7 +108,7 @@ unsigned int    i;
     // Obviously late frames cause the player to run out of buffers if not discarded
     // immediately. It even does not matter how many decode buffers are available -
     // all of them will be used (up to 32 if enough memory is availble in LMI_VID).
-    SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyDiscardLateFrames,	 				PolicyValueDiscardLateFramesAlways );
+    SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyDiscardLateFrames,	 				PolicyValueDiscardLateFramesAfterSynchronize );
     // Usage of the immediate start depends on the LateFrame policy. Though, it is not
     // quite clear what is meant by "agressive policy".
     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyVideoStartImmediate,					PolicyValueApply );
