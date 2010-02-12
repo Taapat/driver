@@ -52,6 +52,10 @@ typedef enum tuxbox_submodel
 	TUXBOX_SUBMODEL_DREAMBOX_DM7000		= 2,
 	TUXBOX_SUBMODEL_DREAMBOX_DM5600		= 3,
 	TUXBOX_SUBMODEL_TTPCI			= 4,
+	TUXBOX_SUBMODEL_RELOOK_900              = 5,
+	TUXBOX_SUBMODEL_RELOOK_910              = 6,
+	TUXBOX_SUBMODEL_RELOOK_9000             = 7,
+	TUXBOX_SUBMODEL_RELOOK_91               = 8,
 }
 tuxbox_submodel_t;
 
