@@ -427,9 +427,16 @@ cx21143_writereg_lnb_supply (struct cx21143_state *state, char data)
 
   if ((ret = i2c_transfer (state->config->i2c_adap, &msg, 1)) != 1)
   {
-    printk ("%s: writereg error(err == %i)\n",
-            __FUNCTION__, ret);
-    ret = -EREMOTEIO;
+    //wohl nicht LNBH23, mal mit LNBH221 versuchen
+    msg.addr = 0x08;
+    msg.flags = 0;
+    msg.buf = &buf;
+    msg.len = 1;
+    if ((ret = i2c_transfer (state->config->i2c_adap, &msg, 1)) != 1)
+      printk ("%s: writereg error(err == %i)\n",
+              __FUNCTION__, ret);
+      ret = -EREMOTEIO;
+    }
   }
 
   return ret;
@@ -2407,7 +2414,9 @@ struct plat_tuner_config tuner_resources[] = {
                 .tuner_enable = {2, 4, 1},
                 .lnb_enable = {-1, -1, -1},
 //hacky
-                .lnb_vsel = {0x08, 0xd4, 0xdc},
+//              .lnb_vsel = {0x08, 0xd4, 0xdc},
+//GOst4711 setze LNBH23 als Standart
+                .lnb_vsel = {0x0a, 0xd4, 0xdc},
         },
         [1] = {
                 .adapter = 0,
@@ -2416,7 +2425,9 @@ struct plat_tuner_config tuner_resources[] = {
                 .tuner_enable = {2, 5, 1},
                 .lnb_enable = {-1, -1, -1},
 //hacky
-                .lnb_vsel = {0x08, 0xd4, 0xdc},
+//              .lnb_vsel = {0x08, 0xd4, 0xdc},
+//GOst4711 setze LNBH23 als Standart
+                .lnb_vsel = {0x0a, 0xd4, 0xdc},
         },
 };
 
