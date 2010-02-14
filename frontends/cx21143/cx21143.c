@@ -433,6 +433,7 @@ cx21143_writereg_lnb_supply (struct cx21143_state *state, char data)
     msg.buf = &buf;
     msg.len = 1;
     if ((ret = i2c_transfer (state->config->i2c_adap, &msg, 1)) != 1)
+    {
       printk ("%s: writereg error(err == %i)\n",
               __FUNCTION__, ret);
       ret = -EREMOTEIO;
