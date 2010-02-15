@@ -957,8 +957,12 @@ int pti_hal_get_new_slot_handle ( int session_handle, int dvb_type,
 
   return -1;
 }
-
+#if defined (CONFIG_KERNELVERSION) /* STLinux 2.3 */
+int pti_hal_set_source(int session_handle, const int source)
+//FIXME int pti_hal_set_source ( int session_handle, const dmx_source_t source )
+#else
 int pti_hal_set_source ( int session_handle, const dmx_source_t source )
+#endif
 {
         return 1;
 }
