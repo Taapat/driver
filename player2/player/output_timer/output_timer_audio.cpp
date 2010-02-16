@@ -354,8 +354,10 @@ long long	CorrectionUnits;
 //
 
 #ifdef __TDT__
-    if(noaudiosync == 1)
+    if(noaudiosync == 1) {
+    	report( severity_info, "no audio sync correction (noaudiosync is aktiv)\n" );
       return OutputTimerNoError;
+    }
 #endif
 
     ErrorSign		= (SynchronizationError < 0) ? -1 : 1;
