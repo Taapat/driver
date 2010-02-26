@@ -79,6 +79,7 @@ struct stmfbio_output_configuration
 
 extern struct DeviceContext_s* DeviceContext;
 
+static int current_standby = 0;
 static int current_input = 0;
 #if defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI_FTA) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(TF7700) || defined(UFS922) 
 static int current_volume = 0;
@@ -589,7 +590,6 @@ int proc_avs_0_standby_write(struct file *file, const char __user *buf,
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
 	{
-		unsigned int standby = 0;
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
 			goto out;
@@ -602,13 +602,13 @@ int proc_avs_0_standby_write(struct file *file, const char __user *buf,
 
 		if (strncmp("on", page, count - 1) == 0)
 		{
-                        standby = 1;
+                        current_standby = 1;
 		} else if (strncmp("off", page, count - 1) == 0)
 		{
-                        standby = 0;
+                        current_standby = 0;
 		} 
 
-		avs_command_kernel(AVSIOSTANDBY, standby);
+		avs_command_kernel(AVSIOSTANDBY, current_standby);
 
 		kfree(myString);
 		//result = sscanf(page, "%3s %3s %3s %3s %3s", s1, s2, s3, s4, s5);
@@ -628,7 +628,10 @@ int proc_avs_0_standby_read (char *page, char **start, off_t off, int count,
 	int len = 0;
 	printk("%s\n", __FUNCTION__);
 
-	len = sprintf(page, "off\n");
-
+	if(current_standby == 0)
+		len = sprintf(page, "off\n");
+	if(current_standby == 1)
+		len = sprintf(page, "on\n");
+		
         return len;
 }
