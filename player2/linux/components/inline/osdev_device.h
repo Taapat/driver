@@ -970,10 +970,12 @@ struct task_struct          *Taskp;
     if (0 != Priority) {
 	Param.sched_priority = Priority;
 	if (0 != sched_setscheduler(Taskp, SCHED_RR, &Param)) {
-	    printk(KERN_ERR "FAILED to set scheduling parameters to priority %d (SCHED_RR)\n", Priority);
+	    printk(KERN_ERR "%s: FAILED to set scheduling parameters to priority %d (SCHED_RR)\n", Name, Priority);
 	    Priority = 0;
 	}
-    }
+	else
+		printk("%s: set scheduling parameters to priority %d (SCHED_RR)\n", Name, Priority);
+  }
 
     wake_up_process(Taskp);
 
