@@ -29,6 +29,7 @@ Date        Modification                                    Name
 
 #include <linux/dvb/audio.h>
 #include <linux/dvb/video.h>
+#include <linux/dvb/version.h>
 
 #include "dvb_demux.h"          /* provides kernel demux types */
 
@@ -42,6 +43,9 @@ Date        Modification                                    Name
 #include "dvb_ca.h"
 #include "backend.h"
 
+#if ((DVB_API_VERSION == 3) && (DVB_API_VERSION_MINOR > 2))
+DVB_DEFINE_MOD_OPT_ADAPTER_NR(adapter_num);
+#endif
 extern int __init dvp_init(void);
 extern void linuxdvb_v4l2_init(void);
 #ifdef __TDT__
@@ -108,7 +112,11 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
 
 
     #if defined (CONFIG_KERNELVERSION)
+  #if ((DVB_API_VERSION == 3) && (DVB_API_VERSION_MINOR > 2))
+    Result      = dvb_register_adapter (&DvbContext->DvbAdapter, MODULE_NAME, THIS_MODULE,NULL, adapter_num);
+  #else
     Result      = dvb_register_adapter (&DvbContext->DvbAdapter, MODULE_NAME, THIS_MODULE,NULL);
+  #endif
     #else /* STLinux 2.2 kernel */
 #ifdef __TDT__
     Result      = dvb_register_adapter (&DvbContext->DvbAdapter, MODULE_NAME, THIS_MODULE,NULL);

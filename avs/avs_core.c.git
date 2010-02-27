@@ -226,6 +226,9 @@ int __init avs_init(void)
 #if defined(TF7700)
 		printk("AVS: TF7700 Handling\n");
 		normal_i2c[0] = 0x96 >> 1;
+#if defined(HL101)
+		printk("AVS: HL101 Handling\n");
+		normal_i2c[0] = 0x96 >> 1;
 #elif defined(UFS922)
 		printk("AVS: UFS922 Handling\n");
 		normal_i2c[0] = 0x4a;

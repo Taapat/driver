@@ -74,7 +74,7 @@ static int debug;
 		if (debug) printk (args); \
 	} while (0)
 
-#ifdef FORTIS_HDBOX
+#if defined(FORTIS_HDBOX) || defined(HL101)
 struct stpio_pin*	cic_enable_pin;
 struct stpio_pin*	module_pin[2];
 #endif
@@ -202,7 +202,7 @@ static struct mutex cimax_mutex;
 /* konfetti ->cimax control   */
 /* ************************** */
 
-#if defined(FORTIS_HDBOX)
+#if defined(FORTIS_HDBOX) || defined(HL101)
 static int
 cimax_writeregN (struct cimax_state *state, u8 * data, u16 len)
 {
@@ -293,7 +293,7 @@ static int cimax_readreg(struct cimax_state* state, u8 reg)
 */
 int setCiSource(int slot, int source)
 {
-#if defined(TF7700) || defined(FORTIS_HDBOX)
+#if defined(TF7700) || defined(FORTIS_HDBOX) || defined(HL101)
   int val;
 
   if((slot < 0) || (slot > 1) ||
@@ -304,7 +304,7 @@ int setCiSource(int slot, int source)
   if(slot != source)
   {
     /* send stream A through module B and stream B through module A */
-#if defined(TF7700) || defined(FORTIS_HDBOX)
+#if defined(TF7700) || defined(FORTIS_HDBOX) || defined(HL101)
     val |= 0x20;
 #else
     val &= ~0x20;
@@ -314,7 +314,7 @@ int setCiSource(int slot, int source)
   {
     /* enforce direct mapping */
     /* send stream A through module A and stream B through module B */
-#if defined(TF7700) || defined(FORTIS_HDBOX)
+#if defined(TF7700) || defined(FORTIS_HDBOX) || defined(HL101)
     val &= ~0x20;
 #else
     val |= 0x20;
@@ -858,7 +858,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
         mutex_init (&cimax_mutex);
 
 	core->dvb_adap = dvb_adap;
-#if defined(FORTIS_HDBOX)
+#if defined(FORTIS_HDBOX) || defined(HL101)
 	state->i2c = i2c_get_adapter(2);
 #else
 	state->i2c = i2c_get_adapter(0);
@@ -909,12 +909,27 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
    stpio_set_pin (module_pin[0], 0);
    stpio_set_pin (module_pin[1], 0);
 
+#elif defined(HL101)
+   cic_enable_pin = stpio_request_pin (2, 5, "CIMaX", STPIO_OUT);
+   stpio_set_pin (cic_enable_pin, 1);
+	msleep(250);
+   stpio_set_pin (cic_enable_pin, 0);
+	msleep(250);
+
+	module_pin[0] = stpio_request_pin (0, 2, "CIMaX_ModuleA", STPIO_OUT);
+	module_pin[1] = stpio_request_pin (0, 6, "CIMaX_ModuleB", STPIO_OUT);
+
+   stpio_set_pin (module_pin[0], 0);
+   stpio_set_pin (module_pin[1], 0);
+
+#else
+	/* add ur box hw infos here...	 */
 #endif
 
 	/* cimax reset */
 	cimax_writereg(state, 0x1f, 0x80);
 
-#if defined(FORTIS_HDBOX)
+#if defined(FORTIS_HDBOX) || defined(HL101)
 	u8 sequence[] =
 	{
 	  0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x44, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x02, 0x44,

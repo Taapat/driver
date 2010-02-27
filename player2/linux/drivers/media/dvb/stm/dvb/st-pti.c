@@ -46,6 +46,8 @@
 extern void cx21143_register_frontend(struct dvb_adapter *dvb_adap);
 #elif defined(FORTIS_HDBOX)
 extern void stv090x_register_frontend(struct dvb_adapter *dvb_adap);
+#elif defined(HL101)
+extern void fe_core_register_frontend(struct dvb_adapter *dvb_adap);
 #else
 extern void cx24116_register_frontend(struct dvb_adapter *dvb_adap);
 #endif
@@ -326,7 +328,12 @@ static int convert_source ( const dmx_source_t source)
   switch ( source )
   {
   case DMX_SOURCE_FRONT0:
-#if !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX)
+#if defined(HL101) // one tuner only
+    /* in HL101 the CIMAX output is connected to TSIN0 */
+    tag = TSIN0;
+    printk ( "%s(): Routing Frontend source (%d) to TSIN0\n", __func__, source );
+    break;
+#elif !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) // TODO
     /* in UFS910 the CIMAX output is connected to TSIN2 */
     tag = TSIN2;
     break;
@@ -387,13 +394,15 @@ void ptiInit ( struct DeviceContext_s *pContext )
     stm_tsm_init (  /*config */ 1 );
     
 #if defined(TF7700) || defined(UFS922) || defined(FORTIS_HDBOX)
-    pti_hal_init ( &pti, &pContext->DvbDemux, demultiplexDvbPackets, 2); 
+    pti_hal_init ( &pti, &pContext->DvbDemux, demultiplexDvbPackets, 2);
 #else
-    pti_hal_init ( &pti, &pContext->DvbDemux, demultiplexDvbPackets, 1); 
+    pti_hal_init ( &pti, &pContext->DvbDemux, demultiplexDvbPackets, 1);
 #endif
 
 #if defined(FORTIS_HDBOX)
     stv090x_register_frontend(&pContext->DvbContext->DvbAdapter);
+#elif defined(HL101)
+    fe_core_register_frontend( &pContext->DvbContext->DvbAdapter);
 #elif !defined(UFS922)
     cx24116_register_frontend( &pContext->DvbContext->DvbAdapter);
 #else

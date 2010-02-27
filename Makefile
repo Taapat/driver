@@ -17,6 +17,9 @@ CFLAGS+=-D__TDT__
 ifdef TF7700
 CFLAGS+=-DTF7700
 endif
+ifdef HL101
+CFLAGS+=-DHL101
+endif
 ifdef UFS922
 CFLAGS+=-DUFS922
 endif
@@ -50,4 +53,7 @@ else
 obj-y	+= nuvoton/
 endif
 #obj-y   += zd1211/
+endif
+ifdef HL101
+obj-y   += proton/
 endif

@@ -34,8 +34,12 @@
 
 #include <linux/dvb/frontend.h>
 #include <linux/dvb/dmx.h>
+#include <linux/dvb/version.h>
 
 #include "st-common.h"
+#if ((DVB_API_VERSION == 3) && (DVB_API_VERSION_MINOR > 2))
+DVB_DEFINE_MOD_OPT_ADAPTER_NR(adapter_nr);
+#endif
 
 //__TDT__ ->file moved in this directory
 
@@ -83,8 +87,12 @@ struct stfe *stfe_create( void *private_data, void *start_feed, void *stop_feed 
    stfe->channel[channel].havana_id = private_data;
  }
 
+#if ((DVB_API_VERSION == 3) && (DVB_API_VERSION_MINOR > 2))
+ dvb_register_adapter(&stfe->adapter, "ST Generic Front End Driver", THIS_MODULE, NULL, adapter_nr);
+#else
 //sylvester
  dvb_register_adapter(&stfe->adapter, "ST Generic Front End Driver", THIS_MODULE, NULL /* device ??? */);
+#endif
 
  stfe->adapter.priv = stfe;
 

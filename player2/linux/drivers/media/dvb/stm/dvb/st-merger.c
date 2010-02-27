@@ -379,7 +379,7 @@ void stm_tsm_init (int use_cimax)
 	 ->TS interface is as indicated by TSMerger configuration bits
        */
 
-#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX)
+#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101)
       /*
 	 The UFS910 hardware requires the following connections:
 	 ->TSIN1 routed to TSIN2
@@ -448,7 +448,7 @@ void stm_tsm_init (int use_cimax)
 
       ctrl_outl(0x0, reg_config + SWTS_CFG(0));
 
-#if  defined(FORTIS_HDBOX) || defined(UFS922) || defined(TF7700)
+#if  defined(FORTIS_HDBOX) || defined(UFS922) || defined(TF7700) || defined(HL101)
       ctrl_outl(0x0, reg_config + SWTS_CFG(1));
       ctrl_outl(0x0, reg_config + SWTS_CFG(2));
 #endif
@@ -463,7 +463,7 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0xe00, reg_config + TSM_STREAM3_CFG);
       ctrl_outl(0x1300, reg_config + TSM_STREAM4_CFG);
 
-#if  defined(FORTIS_HDBOX) || defined(UFS922)
+#if  defined(FORTIS_HDBOX) || defined(UFS922) || defined(HL101)
       ctrl_outl(0x1700, reg_config + TSM_STREAM5_CFG);
       ctrl_outl(0x1a00, reg_config + TSM_STREAM6_CFG);
 #endif
@@ -536,7 +536,7 @@ void stm_tsm_init (int use_cimax)
       /* auto count */
       ctrl_outl(0x0, reg_config + TSM_PROG_CNT0);
 
-#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX)
+#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101)
       /* UFS910 stream configuration */
       /* route stream 2 to PTI */
       ret = ctrl_inl(reg_config + TSM_PTI_SEL);
@@ -570,7 +570,7 @@ void stm_tsm_init (int use_cimax)
       ret = ctrl_inl(reg_config + TSM_1394_DEST);
       ctrl_outl(ret | 0x1 , reg_config + TSM_1394_DEST);
 
-#elif  defined(TF7700) || defined(UFS922)
+#elif  defined(TF7700) || defined(UFS922) || defined(HL101)
 
       /* TF7700 stream configuration */
       /* route stream 1 to PTI */

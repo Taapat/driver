@@ -233,6 +233,8 @@ static int info_model_read(char *page, char **start, off_t off, int count,
 	int len = sprintf(page, "cuberevo-9500hd\n");
 #elif defined(TF7700)
   int len = sprintf(page, "tf7700hdpvr\n");
+#elif defined(HL101)
+  int len = sprintf(page, "hl101\n");
 #elif defined(UFS922)
   int len = sprintf(page, "ufs922\n");
 #elif defined(FORTIS_HDBOX)

@@ -124,6 +124,9 @@ static struct stmcore_display_pipeline_data platform_data[] = {
 #if defined(UFS922)
 /* Dagobert: for stlinux23 this is mb422 but i2c is on bus 2 instead! */
     .hdmi_i2c_adapter_id      = 2,
+#elif defined(HL101)
+/*nassar: spider-box hl-101 uses id 1  */
+    .hdmi_i2c_adapter_id      = 1,
 #elif defined(CONFIG_SH_STB7100_REF) || defined(CONFIG_SH_ST_MB442)
     .hdmi_i2c_adapter_id      = 1,
 #elif defined(CONFIG_SH_STB7109E_REF) || defined(CONFIG_SH_ST_MB448)
@@ -252,6 +255,8 @@ int __init stmcore_probe_device(struct stmcore_display_pipeline_data **pd, int *
       hotplug_pio = stpio_request_pin(2,3,"HDMI Hotplug",STPIO_BIDIR_Z1); 
 #elif defined(FORTIS_HDBOX) && defined(__TDT__)
       hotplug_pio = stpio_request_pin(4,7,"HDMI Hotplug",STPIO_BIDIR_Z1);
+#elif defined(HL101) && defined(__TDT__)
+      hotplug_pio = stpio_request_pin(4,7,"HDMI Hotplug",STPIO_IN);
 #else 
       hotplug_pio = stpio_request_pin(2,2,"HDMI Hotplug",STPIO_BIDIR_Z1);
 #endif
