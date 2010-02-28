@@ -142,7 +142,11 @@ OutputTimerStatus_t   OutputTimer_Audio_c::InitializeConfiguration(  void )
     //	    A count of frames to be ignored to allow any correction to work through
     //
 
-    Configuration.SynchronizationErrorThreshold			= 1000;
+#ifdef __TDT__
+    Configuration.SynchronizationErrorThreshold			= 200000;
+#else
+		Configuration.SynchronizationErrorThreshold			= 1000;
+#endif
     Configuration.SynchronizationErrorThresholdForExternalSync	= 1000;			// Unchanged for audio
     Configuration.SynchronizationIntegrationCount		= 8;
     Configuration.SynchronizationWorkthroughCount		= 64;			// Never need be greater than the number of decode buffers

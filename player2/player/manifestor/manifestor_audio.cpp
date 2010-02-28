@@ -483,6 +483,10 @@ ManifestorStatus_t Manifestor_Audio_c::GetFrameCount (unsigned long long* FrameC
 /// \param NonBlock If true, return an error rather than blocking.
 /// \return Manifestor status code, ManifestorNoError indicates success.
 ///
+#ifdef __TDT__
+int inject_silent_count = 0;
+#endif
+
 ManifestorStatus_t Manifestor_Audio_c::DequeueBuffer(unsigned int *BufferIndexPtr, bool NonBlock)
 {
 unsigned int BufferIndex;
@@ -496,6 +500,17 @@ unsigned int BufferIndex;
 	OS_LockMutex(&BufferQueueLock);
 	if( BufferQueueHead != INVALID_BUFFER_ID )
 	{
+	
+#ifdef __TDT__
+			if(QueuedBufferCount < 3) inject_silent_count = 3;
+			if(inject_silent_count > 0)
+			{
+				OS_UnLockMutex(&BufferQueueLock);
+				inject_silent_count--;
+				return ManifestorWouldBlock;
+			}
+#endif
+
 	    BufferIndex = BufferQueueHead;
 	    BufferQueueHead = StreamBuffer[BufferIndex].NextIndex;
             
