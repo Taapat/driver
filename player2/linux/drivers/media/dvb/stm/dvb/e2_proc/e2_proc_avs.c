@@ -511,13 +511,24 @@ int proc_avs_0_colorformat_read (char *page, char **start, off_t off, int count,
 
 	stmfb_get_output_configuration(&outputConfig,info);
 
-	if (outputConfig.hdmi_config & STMFBIO_OUTPUT_HDMI_YUV)
-		len = sprintf(page, "hdmi_yuv\n");
-	else if (outputConfig.hdmi_config & STMFBIO_OUTPUT_HDMI_422)
+	if (outputConfig.hdmi_config & STMFBIO_OUTPUT_HDMI_422)
 		len = sprintf(page, "hdmi_422\n");
+	else if (outputConfig.hdmi_config & STMFBIO_OUTPUT_HDMI_YUV)
+		len = sprintf(page, "hdmi_yuv\n");
 	else
 		len = sprintf(page, "hdmi_rgb\n");
 
+	if (outputConfig.analogue_config & STMFBIO_OUTPUT_ANALOGUE_RGB)
+		len += sprintf(page+len, "rgb\n");
+	else if (outputConfig.analogue_config & STMFBIO_OUTPUT_ANALOGUE_CVBS)
+		len += sprintf(page+len, "cvbs\n");
+	else if (outputConfig.analogue_config & STMFBIO_OUTPUT_ANALOGUE_YC)
+		len += sprintf(page+len, "svideo\n");
+	else if (outputConfig.analogue_config & STMFBIO_OUTPUT_ANALOGUE_YPrPb)
+		len += sprintf(page+len, "yuv\n");
+	else
+		len += sprintf(page+len, "not defined\n");
+		
         return len;
 }
 
