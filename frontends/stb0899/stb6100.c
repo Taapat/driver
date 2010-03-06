@@ -24,10 +24,11 @@
 #include <linux/module.h>
 #include <linux/string.h>
 
+#include "compat.h"
 #include "dvb_frontend.h"
 #include "stb6100.h"
 
-static unsigned int verbose;
+static unsigned int verbose = 0;
 
 #define FE_ERROR		0
 #define FE_NOTICE		1
@@ -218,18 +219,25 @@ static int stb6100_get_status(struct dvb_frontend *fe, u32 *status)
 {
 	int rc;
 	struct stb6100_state *state = fe->tuner_priv;
+	if (fe->ops.i2c_gate_ctrl)
+                        fe->ops.i2c_gate_ctrl(fe, 1);
 
 	if ((rc = stb6100_read_reg(state, STB6100_LD)) < 0)
 		return rc;
+	if (fe->ops.i2c_gate_ctrl)
+                        fe->ops.i2c_gate_ctrl(fe, 0);
 
 	return (rc & STB6100_LD_LOCK) ? TUNER_STATUS_LOCKED : 0;
 }
+
 
 static int stb6100_get_bandwidth(struct dvb_frontend *fe, u32 *bandwidth)
 {
 	int rc;
 	u8 f;
 	struct stb6100_state *state = fe->tuner_priv;
+	if (fe->ops.i2c_gate_ctrl)
+                        fe->ops.i2c_gate_ctrl(fe, 1);
 
 	if ((rc = stb6100_read_reg(state, STB6100_F)) < 0)
 		return rc;
@@ -239,6 +247,9 @@ static int stb6100_get_bandwidth(struct dvb_frontend *fe, u32 *bandwidth)
 
 	*bandwidth = state->bandwidth = state->status.bandwidth * 1000;
 	dprintk(verbose, FE_DEBUG, 1, "bandwidth = %u Hz", state->bandwidth);
+	if (fe->ops.i2c_gate_ctrl)
+                        fe->ops.i2c_gate_ctrl(fe, 0);
+
 	return 0;
 }
 
@@ -247,6 +258,8 @@ static int stb6100_set_bandwidth(struct dvb_frontend *fe, u32 bandwidth)
 	u32 tmp;
 	int rc;
 	struct stb6100_state *state = fe->tuner_priv;
+	if (fe->ops.i2c_gate_ctrl)
+                        fe->ops.i2c_gate_ctrl(fe, 1);
 
 	dprintk(verbose, FE_DEBUG, 1, "set bandwidth to %u Hz", bandwidth);
 
@@ -269,6 +282,8 @@ static int stb6100_set_bandwidth(struct dvb_frontend *fe, u32 bandwidth)
 	msleep(1);
 	if ((rc = stb6100_write_reg(state, STB6100_FCCK, 0x0d)) < 0)
 		return rc;
+	if (fe->ops.i2c_gate_ctrl)
+                        fe->ops.i2c_gate_ctrl(fe, 0);
 
 	return 0;
 }
@@ -280,6 +295,8 @@ static int stb6100_get_frequency(struct dvb_frontend *fe, u32 *frequency)
 	int psd2, odiv;
 	struct stb6100_state *state = fe->tuner_priv;
 	u8 regs[STB6100_NUMREGS];
+	if (fe->ops.i2c_gate_ctrl)
+                        fe->ops.i2c_gate_ctrl(fe, 1);
 
 	if ((rc = stb6100_read_regs(state, regs)) < 0)
 		return rc;
@@ -294,6 +311,9 @@ static int stb6100_get_frequency(struct dvb_frontend *fe, u32 *frequency)
 	dprintk(verbose, FE_DEBUG, 1,
 		"frequency = %u kHz, odiv = %u, psd2 = %u, fxtal = %u kHz, fvco = %u kHz, N(I) = %u, N(F) = %u",
 		state->frequency, odiv, psd2, state->reference,	fvco, nint, nfrac);
+	if (fe->ops.i2c_gate_ctrl)
+                        fe->ops.i2c_gate_ctrl(fe, 0);
+
 	return 0;
 }
 
@@ -310,36 +330,29 @@ static int stb6100_set_frequency(struct dvb_frontend *fe, u32 frequency)
 	int rc;
 	const struct stb6100_lkup *ptr;
 	struct stb6100_state *state = fe->tuner_priv;
-	struct dvbfe_params params;
+	struct dtv_frontend_properties *c = &fe->dtv_property_cache;
 
 	u32 srate = 0, fvco, nint, nfrac;
 	u8 regs[STB6100_NUMREGS];
 	u8 g, psd2, odiv;
 
+	if (fe->ops.i2c_gate_ctrl)
+                        fe->ops.i2c_gate_ctrl(fe, 1);
+
+
 	if ((rc = stb6100_read_regs(state, regs)) < 0)
 		return rc;
-	if (fe->ops.get_params) {
+	if (fe->ops.set_property && fe->ops.get_property) {
 		dprintk(verbose, FE_DEBUG, 1, "Get Frontend parameters");
-		fe->ops.get_params(fe, &params);
+		srate = c->symbol_rate;
 	}
-	switch (params.delivery) {
-	case DVBFE_DELSYS_DVBS:
-		srate = params.delsys.dvbs.symbol_rate;
-		dprintk(verbose, FE_DEBUG, 1, "Delivery system = DVB-S, Symbol Rate=[%d]", srate);
-		break;
-	case DVBFE_DELSYS_DSS:
-		dprintk(verbose, FE_DEBUG, 1, "Delivery system = DSS, Symbol Rate=[%d]", srate);
-		srate = params.delsys.dss.symbol_rate;
-		break;
-	case DVBFE_DELSYS_DVBS2:
-		dprintk(verbose, FE_DEBUG, 1, "Delivery system = DVB-S2, Symbol Rate=[%d]", srate);
-		srate = params.delsys.dvbs2.symbol_rate;
-		break;
-	default:
-		dprintk(verbose, FE_NOTICE, 1, "symbol rate unknown!");
-		srate = 22000000; /* just a typical default value	*/
-		break;
-	}
+
+	regs[STB6100_DLB] = 0xDC;
+	/** Disable LPEN */
+	regs[STB6100_LPEN] &= ~STB6100_LPEN_LPEN;	/* PLL loop disabled		*/
+
+	if ((rc = stb6100_write_regs(state, regs)) < 0)
+		return rc;
 
 	/* Baseband gain.	*/
 	if (srate >= 15000000)
@@ -381,7 +394,9 @@ static int stb6100_set_frequency(struct dvb_frontend *fe, u32 frequency)
 	/* N(I) = floor(f(VCO) / (f(XTAL) * (PSD2 ? 2 : 1)))	*/
 	nint = fvco / (state->reference << psd2);
 	/* N(F) = round(f(VCO) / f(XTAL) * (PSD2 ? 2 : 1) - N(I)) * 2 ^ 9	*/
-	nfrac = (((fvco - (nint * state->reference << psd2)) << (9 - psd2)) + state->reference / 2) / state->reference;
+	nfrac = DIV_ROUND_CLOSEST((fvco - (nint * state->reference << psd2))
+					 << (9 - psd2),
+				  state->reference);
 	dprintk(verbose, FE_DEBUG, 1,
 		"frequency = %u, srate = %u, g = %u, odiv = %u, psd2 = %u, fxtal = %u, osm = %u, fvco = %u, N(I) = %u, N(F) = %u",
 		frequency, srate, (unsigned int)g, (unsigned int)odiv,
@@ -397,9 +412,11 @@ static int stb6100_set_frequency(struct dvb_frontend *fe, u32 frequency)
 	/* Power up. */
 	regs[STB6100_LPEN] |= STB6100_LPEN_SYNP	| STB6100_LPEN_OSCP | STB6100_LPEN_BEN;
 
+	msleep(2);
 	if ((rc = stb6100_write_regs(state, regs)) < 0)
 		return rc;
 
+	msleep(2);
 	regs[STB6100_LPEN] |= STB6100_LPEN_LPEN;	/* PLL loop enabled		*/
 	if ((rc = stb6100_write_reg(state, STB6100_LPEN, regs[STB6100_LPEN])) < 0)
 		return rc;
@@ -414,10 +431,15 @@ static int stb6100_set_frequency(struct dvb_frontend *fe, u32 frequency)
 	if ((rc = stb6100_write_reg(state, STB6100_VCO, regs[STB6100_VCO])) < 0)
 		return rc;
 	regs[STB6100_FCCK] &= ~STB6100_FCCK_FCCK;       /* LPF BW clock disabled	*/
-	if ((rc = stb6100_write_reg(state, STB6100_FCCK, regs[STB6100_FCCK])) < 0)
+	/* if ((rc = stb6100_write_reg(state, STB6100_FCCK, regs[STB6100_FCCK])) < 0) */
+
+	stb6100_normalise_regs(regs);
+	if((rc = stb6100_write_reg_range(state, &regs[1], 1, STB6100_NUMREGS - 3)) < 0)
 		return rc;
 
 	msleep(30);
+	if (fe->ops.i2c_gate_ctrl)
+                        fe->ops.i2c_gate_ctrl(fe, 0);
 
 	return 0;
 }
@@ -438,13 +460,13 @@ static int stb6100_init(struct dvb_frontend *fe)
 	status->refclock	= 27000000;	/* Hz	*/
 	status->iqsense		= 1;
 	status->bandwidth	= 36000;	/* kHz	*/
-	state->bandwidth	= status->bandwidth * 1000;	/* MHz	*/
+	state->bandwidth	= status->bandwidth * 1000;	/* Hz	*/
 	state->reference	= status->refclock / 1000;	/* kHz	*/
 
 	/* Set default bandwidth.	*/
-	return stb6100_set_bandwidth(fe, status->bandwidth);
+	return stb6100_set_bandwidth(fe, state->bandwidth);
 }
-
+#if 0
 static int stb6100_get_state(struct dvb_frontend *fe,
 			     enum tuner_param param,
 			     struct tuner_state *state)
@@ -496,6 +518,34 @@ static int stb6100_set_state(struct dvb_frontend *fe,
 
 	return 0;
 }
+#endif
+static int stb6100_set_params(struct dvb_frontend *fe, struct dvb_frontend_parameters *params)
+{
+	struct dtv_frontend_properties *c = &fe->dtv_property_cache;
+	u32 srate, frequency;
+
+	if (fe->ops.i2c_gate_ctrl)
+                        fe->ops.i2c_gate_ctrl(fe, 1);
+
+	if (fe->ops.set_property && fe->ops.get_property) {
+		dprintk(verbose, FE_DEBUG, 1, "Get Frontend parameters");
+		frequency = c->frequency;
+		srate = c->symbol_rate;
+
+	} else {
+		frequency = params->frequency;
+		srate = params->u.qpsk.symbol_rate;
+
+	}
+
+	stb6100_set_frequency(fe, frequency);
+	stb6100_set_bandwidth(fe, srate);/* or srate * 2 ? */
+
+	if (fe->ops.i2c_gate_ctrl)
+                        fe->ops.i2c_gate_ctrl(fe, 0);
+
+	return 0;
+}
 
 static struct dvb_tuner_ops stb6100_ops = {
 	.info = {
@@ -508,8 +558,15 @@ static struct dvb_tuner_ops stb6100_ops = {
 	.init		= stb6100_init,
 	.sleep          = stb6100_sleep,
 	.get_status	= stb6100_get_status,
+#if 0
 	.get_state	= stb6100_get_state,
 	.set_state	= stb6100_set_state,
+#endif
+	.set_frequency	= stb6100_set_frequency,
+	.set_bandwidth	= stb6100_set_bandwidth,
+	.get_frequency	= stb6100_get_frequency,
+	.get_bandwidth	= stb6100_get_bandwidth,
+	.set_params	= stb6100_set_params,
 	.release	= stb6100_release
 };
 

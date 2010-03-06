@@ -75,6 +75,13 @@
 
 #define CHKRANGE(val, x, y)		(((val >= x) && (val < y)) ? 1 : 0)
 
+#define DIV_ROUND_CLOSEST(x, divisor)(			\
+{							\
+	typeof(divisor) __divisor = divisor;		\
+	(((x) + ((__divisor) / 2)) / (__divisor));	\
+}							\
+)
+
 struct stb6100_config {
 	u8	tuner_address;
 	u32	refclock;
@@ -94,7 +101,9 @@ struct stb6100_state {
 	u32 reference;
 };
 
+
 extern struct dvb_frontend *stb6100_attach(struct dvb_frontend *fe,
 					   struct stb6100_config *config,
 					   struct i2c_adapter *i2c);
-#endif //CONFIG_DVB_STB6100
+
+#endif

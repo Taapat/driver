@@ -20,7 +20,6 @@
 #define DMX_FILTER_BY_PRIORITY_HIGH     0x00020000      /* using the ts priority bit and, if so, whether to filter on */
 #define DMX_FILTER_BY_PRIORITY_MASK     0x00030000      /* bit set or bit clear */
 
-
 /*
  * Extra events
  */
@@ -73,6 +72,9 @@ typedef enum {
 	VIDEO_ENCODING_H263,
 	VIDEO_ENCODING_FLV1,
 	VIDEO_ENCODING_VP6,
+	VIDEO_ENCODING_RMV,
+	VIDEO_ENCODING_DIVXHD,
+	VIDEO_ENCODING_AVS,
 	VIDEO_ENCODING_NONE,
 	VIDEO_ENCODING_PRIVATE
 } video_encoding_t;
@@ -99,6 +101,8 @@ typedef enum {
 	AUDIO_ENCODING_SPDIF, /*<! Data coming through SPDIF link :: compressed or PCM data */
 	AUDIO_ENCODING_DTS_LBR,
 	AUDIO_ENCODING_MLP,
+	AUDIO_ENCODING_RMA,
+	AUDIO_ENCODING_AVS,
 	AUDIO_ENCODING_NONE,
 	AUDIO_ENCODING_PRIVATE
 } audio_encoding_t;
@@ -163,17 +167,27 @@ typedef struct dvb_play_time_s {
 typedef dvb_play_time_t                 video_play_time_t;
 typedef dvb_play_time_t                 audio_play_time_t;
 
+typedef struct dvb_play_info_s {
+	unsigned long long              system_time;
+	unsigned long long              presentation_time;
+	unsigned long long              pts;
+	unsigned long long              frame_count;
+}dvb_play_info_t;
+
+typedef dvb_play_info_t                 video_play_info_t;
+typedef dvb_play_info_t                 audio_play_info_t;
+
 
 typedef enum {
-#define DVB_OPTION_VALUE_DISABLE                                                    0
-#define DVB_OPTION_VALUE_ENABLE                                                     1
+#define DVB_OPTION_VALUE_DISABLE                                                        0
+#define DVB_OPTION_VALUE_ENABLE                                                         1
 
     DVB_OPTION_TRICK_MODE_AUDIO               = 0,
     DVB_OPTION_PLAY_24FPS_VIDEO_AT_25FPS,
 
-#define DVB_OPTION_VALUE_VIDEO_CLOCK_MASTER                                         0
-#define DVB_OPTION_VALUE_AUDIO_CLOCK_MASTER                                         1
-#define DVB_OPTION_VALUE_SYSTEM_CLOCK_MASTER                                        2
+#define DVB_OPTION_VALUE_VIDEO_CLOCK_MASTER                                             0
+#define DVB_OPTION_VALUE_AUDIO_CLOCK_MASTER                                             1
+#define DVB_OPTION_VALUE_SYSTEM_CLOCK_MASTER                                            2
     DVB_OPTION_MASTER_CLOCK,
 
     DVB_OPTION_EXTERNAL_TIME_MAPPING,
@@ -184,8 +198,8 @@ typedef enum {
     DVB_OPTION_STREAM_SINGLE_GROUP_BETWEEN_DISCONTINUITIES,
     DVB_OPTION_CLAMP_PLAYBACK_INTERVAL_ON_PLAYBACK_DIRECTION_CHANGE,
 
-#define DVB_OPTION_VALUE_PLAYOUT                                                    0
-#define DVB_OPTION_VALUE_DISCARD                                                    1
+#define DVB_OPTION_VALUE_PLAYOUT                                                        0
+#define DVB_OPTION_VALUE_DISCARD                                                        1
     DVB_OPTION_PLAYOUT_ON_TERMINATE,
     DVB_OPTION_PLAYOUT_ON_SWITCH,
     DVB_OPTION_PLAYOUT_ON_DRAIN,
@@ -193,18 +207,18 @@ typedef enum {
     DVB_OPTION_VIDEO_ASPECT_RATIO,
     DVB_OPTION_VIDEO_DISPLAY_FORMAT,
 
-#define DVB_OPTION_VALUE_TRICK_MODE_AUTO                                            0
-#define DVB_OPTION_VALUE_TRICK_MODE_DECODE_ALL                                      1
-#define DVB_OPTION_VALUE_TRICK_MODE_DECODE_ALL_DEGRADE_NON_REFERENCE_FRAMES         2
-#define DVB_OPTION_VALUE_TRICK_MODE_START_DISCARDING_NON_REFERENCE_FRAMES           3
-#define DVB_OPTION_VALUE_TRICK_MODE_DECODE_REFERENCE_FRAMES_DEGRADE_NON_KEY_FRAMES  4
-#define DVB_OPTION_VALUE_TRICK_MODE_DECODE_KEY_FRAMES                               5
-#define DVB_OPTION_VALUE_TRICK_MODE_DISCONTINUOUS_KEY_FRAMES                        6
+#define DVB_OPTION_VALUE_TRICK_MODE_AUTO                                                0
+#define DVB_OPTION_VALUE_TRICK_MODE_DECODE_ALL                                          1
+#define DVB_OPTION_VALUE_TRICK_MODE_DECODE_ALL_DEGRADE_NON_REFERENCE_FRAMES             2
+#define DVB_OPTION_VALUE_TRICK_MODE_START_DISCARDING_NON_REFERENCE_FRAMES               3
+#define DVB_OPTION_VALUE_TRICK_MODE_DECODE_REFERENCE_FRAMES_DEGRADE_NON_KEY_FRAMES      4
+#define DVB_OPTION_VALUE_TRICK_MODE_DECODE_KEY_FRAMES                                   5
+#define DVB_OPTION_VALUE_TRICK_MODE_DISCONTINUOUS_KEY_FRAMES                            6
     DVB_OPTION_TRICK_MODE_DOMAIN,
 
-#define DVB_OPTION_VALUE_DISCARD_LATE_FRAMES_NEVER                                  0
-#define DVB_OPTION_VALUE_DISCARD_LATE_FRAMES_ALWAYS                                 1
-#define DVB_OPTION_VALUE_DISCARD_LATE_FRAMES_AFTER_SYNCHRONIZE                      2
+#define DVB_OPTION_VALUE_DISCARD_LATE_FRAMES_NEVER                                      0
+#define DVB_OPTION_VALUE_DISCARD_LATE_FRAMES_ALWAYS                                     1
+#define DVB_OPTION_VALUE_DISCARD_LATE_FRAMES_AFTER_SYNCHRONIZE                          2
     DVB_OPTION_DISCARD_LATE_FRAMES,
     DVB_OPTION_VIDEO_START_IMMEDIATE,
     DVB_OPTION_REBASE_ON_DATA_DELIVERY_LATE,
@@ -218,6 +232,7 @@ typedef enum {
     DVB_OPTION_CLOCK_RATE_ADJUSTMENT_LIMIT_2_TO_THE_N_PARTS_PER_MILLION,                /* Value = N */
     DVB_OPTION_LIMIT_INPUT_INJECT_AHEAD,
 
+    DVP_OPTION_H264_TREAT_DUPLICATE_DPB_AS_NON_REFERENCE_FRAME_FIRST,
     DVB_OPTION_MAX
 } dvb_option_t;
 
@@ -227,8 +242,9 @@ typedef dvb_option_t                    video_option_t;
 #define VIDEO_CMD_PLAY                  (0)
 #define VIDEO_CMD_STOP                  (1)
 #define VIDEO_CMD_FREEZE                (2)
-#define VIDEO_CMD_SET_OPTION            (3)
-#define VIDEO_CMD_GET_OPTION            (4)
+#define VIDEO_CMD_CONTINUE              (3)
+#define VIDEO_CMD_SET_OPTION            (4)
+#define VIDEO_CMD_GET_OPTION            (5)
 
 /* Flags for VIDEO_CMD_FREEZE */
 #define VIDEO_CMD_FREEZE_TO_BLACK       (1 << 0)
@@ -252,6 +268,7 @@ typedef dvb_option_t                    video_option_t;
 #define VIDEO_SET_PLAY_INTERVAL         _IOW('o', 86, video_play_interval_t)
 #define VIDEO_SET_SYNC_GROUP            _IO('o',  87)
 #define VIDEO_GET_PLAY_TIME             _IOR('o', 88, video_play_time_t)
+#define VIDEO_GET_PLAY_INFO             _IOR('o', 89, video_play_info_t)
 
 /* ST specific audio ioctls */
 #define AUDIO_SET_ENCODING              _IO('o',  70)
@@ -262,6 +279,7 @@ typedef dvb_option_t                    video_option_t;
 #define AUDIO_SET_PLAY_INTERVAL         _IOW('o', 75, audio_play_interval_t)
 #define AUDIO_SET_SYNC_GROUP            _IO('o',  76)
 #define AUDIO_GET_PLAY_TIME             _IOR('o', 77, audio_play_time_t)
+#define AUDIO_GET_PLAY_INFO             _IOR('o', 78, audio_play_info_t)
 
 #endif /* H_DVB_STM_H */
 

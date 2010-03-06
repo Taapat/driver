@@ -22,7 +22,7 @@
 #include <asm/io.h>
 
 #if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
-#include <linux/bpa2.h> 
+#include <linux/bpa2.h>
 #else
 #include <linux/bigphysarea.h>
 #endif
@@ -37,7 +37,7 @@
 #include <linux/dvb/version.h>
 
 #include "st-common.h"
-#if ((DVB_API_VERSION == 3) && (DVB_API_VERSION_MINOR > 2))
+#if (DVB_API_VERSION > 3)
 DVB_DEFINE_MOD_OPT_ADAPTER_NR(adapter_nr);
 #endif
 
@@ -87,17 +87,16 @@ struct stfe *stfe_create( void *private_data, void *start_feed, void *stop_feed 
    stfe->channel[channel].havana_id = private_data;
  }
 
-#if ((DVB_API_VERSION == 3) && (DVB_API_VERSION_MINOR > 2))
+#if (DVB_API_VERSION > 3)
  dvb_register_adapter(&stfe->adapter, "ST Generic Front End Driver", THIS_MODULE, NULL, adapter_nr);
 #else
-//sylvester
- dvb_register_adapter(&stfe->adapter, "ST Generic Front End Driver", THIS_MODULE, NULL /* device ??? */);
+ dvb_register_adapter(&stfe->adapter, "ST Generic Front End Driver", THIS_MODULE, NULL);
 #endif
 
  stfe->adapter.priv = stfe;
 
  memset(&stfe->dvb_demux, 0, sizeof(stfe->dvb_demux));
- 
+
  stfe->dvb_demux.dmx.capabilities =
    DMX_TS_FILTERING | DMX_SECTION_FILTERING | DMX_MEMORY_BASED_FILTERING;
  stfe->dvb_demux.priv = private_data;
@@ -108,7 +107,7 @@ struct stfe *stfe_create( void *private_data, void *start_feed, void *stop_feed 
 
  stfe->dvb_demux.start_feed       = start_feed;
  stfe->dvb_demux.stop_feed        = stop_feed;
- stfe->dvb_demux.write_to_decoder = NULL;//write_to_decoder;
+ stfe->dvb_demux.write_to_decoder = NULL;		 /* write_to_decoder;*/
 
  if ((result = dvb_dmx_init(&stfe->dvb_demux)) < 0) {
    printk("stfe_init: dvb_dmx_init failed (errno = %d)\n",
@@ -119,7 +118,7 @@ struct stfe *stfe_create( void *private_data, void *start_feed, void *stop_feed 
  stfe->dmxdev.filternum = stfe->dvb_demux.filternum;
  stfe->dmxdev.demux = &stfe->dvb_demux.dmx;
  stfe->dmxdev.capabilities = 0;
- 
+
  if ((result = dvb_dmxdev_init(&stfe->dmxdev, &stfe->adapter)) < 0) {
    printk("stfe_init: dvb_dmxdev_init failed (errno = %d)\n",
 	  result);

@@ -69,7 +69,7 @@ unsigned long TSM_NUM_1394_ALT_OUT;
 #define TSM_PTI_SEL      	TSM_PTI_DEST
 
 #define TSM_1394_DEST      	0x0210
-#define TSM_1394_SEL      	TSM_1394_DEST      
+#define TSM_1394_SEL      	TSM_1394_DEST
 
 #define TSM_PROG_CNT0      	0x0400
 #define TSM_PROG_CNT1      	0x0410
@@ -92,9 +92,9 @@ unsigned long tsm_io;
 extern int highSR;
 
 /* ****************************************
- * Dagobert: 
+ * Dagobert:
  * Taken from new player - frontend
- * **************************************** 
+ * ****************************************
  */
 
 #define SWTS_FDMA_ALIGNMENT 127
@@ -110,9 +110,9 @@ struct stm_tsm_handle {
 
   /* FDMA for SWTS */
   int                        fdma_channel;
-  struct stm_dma_params      fdma_params;  
+  struct stm_dma_params      fdma_params;
   unsigned long              fdma_reqline;
-  struct stm_dma_req        *fdma_req;  
+  struct stm_dma_req        *fdma_req;
 
   struct page               *swts_pages[MAX_SWTS_PAGES];
   struct stm_dma_params      swts_params[MAX_SWTS_PAGES];
@@ -281,7 +281,7 @@ int stm_tsm_inject_user_data(const char __user *data, off_t size)
     stm_tsm_inject_data(handle,(u32*)(data + size - extra), extra);
   }
 
-out_unmap: 
+out_unmap:
   for (n = 0; n < nr_pages; n++)
     page_cache_release(handle->swts_pages[n]);
 
@@ -293,7 +293,7 @@ EXPORT_SYMBOL(stm_tsm_inject_user_data);
 
 /* ****************************************
  * END: Taken from new player - frontend
- * **************************************** 
+ * ****************************************
  */
 
 
@@ -333,8 +333,12 @@ int read_tsm(int a)
 void stm_tsm_init (int use_cimax)
 {
 
+#if defined(HL101) // TODO fix cimax first
+	use_cimax = 0;
+#endif
+
    if (use_cimax != 0)
-   {	
+   {
 
       //route tsmerger to cimax and then to pti
       //first configure sysconfig
@@ -358,17 +362,17 @@ void stm_tsm_init (int use_cimax)
 #endif
 
       /* Streamconfig + jeweils ram start s.u.
-       * 0x20020 = 
+       * 0x20020 =
        * add_tag_bytes = 1
-       * ram = 0 	
+       * ram = 0
        * pri = 2 (binaer 10)
 
-       * 0x30020 = 
+       * 0x30020 =
        * add_tag_bytes = 1
-       * ram = 0 	
+       * ram = 0
        * pri = 3 (binaer 11)
        */
-       
+
       printk("Routing streams through cimax\n");
 
       reg_sys_config = ioremap(SysConfigBaseAddress, 0x0900 /* ??? */);
@@ -498,7 +502,7 @@ void stm_tsm_init (int use_cimax)
       ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
       ctrl_outl(ret | (0x20020), reg_config + TSM_STREAM1_CFG);
 #endif
-      
+
       ctrl_outl(stream_sync, reg_config + TSM_STREAM1_SYNC);
       ctrl_outl(0x0, reg_config + 0x38 /* reserved ??? */);
 
@@ -548,7 +552,7 @@ void stm_tsm_init (int use_cimax)
 
       /* set firewire clock */
 
-      /* This solves the SR 30000 Problem */	
+      /* This solves the SR 30000 Problem */
 /* this must be 0x70010 for SR 30000. for some modules
  * this must be 0x70012 or 0x70014 :-(
  * ->also the original pvrmain (fw 106) makes CC trouble
@@ -556,16 +560,16 @@ void stm_tsm_init (int use_cimax)
  * 0xf from 106 pvrmain
  */
 #ifdef FW1XX
-      if (highSR)	
+      if (highSR)
          ctrl_outl(0x7000f ,reg_config + TS_1394_CFG);
-      else   	
+      else
          ctrl_outl(0x70014 ,reg_config + TS_1394_CFG);
 #else
 /* logged from fw 202rc ->see also pti */
          ctrl_outl(0x50014 ,reg_config + TS_1394_CFG);
-#endif      	
-	
-      	
+#endif
+
+
       /* connect TSIN0 to TS1394 for routing tuner TS through the CIMAX */
       ret = ctrl_inl(reg_config + TSM_1394_DEST);
       ctrl_outl(ret | 0x1 , reg_config + TSM_1394_DEST);
@@ -643,22 +647,22 @@ void stm_tsm_init (int use_cimax)
       /* SWTS0 to PTI */
       ret = ctrl_inl(reg_config + TSM_PTI_SEL);
       ctrl_outl(ret | 0x8, reg_config + TSM_PTI_SEL);
-		
+
 		ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
-      ctrl_outl( (ret & TSM_RAM_ALLOC_START(0xff)) | 
+      ctrl_outl( (ret & TSM_RAM_ALLOC_START(0xff)) |
 		           TSM_PRIORITY(0x7) | TSM_STREAM_ON | TSM_ADD_TAG_BYTES | TSM_SYNC_NOT_ASYNC | TSM_ASYNC_SOP_TOKEN, reg_config + TSM_STREAM3_CFG);
 
       tsm_handle.swts_channel = 3;
       tsm_handle.tsm_swts = (unsigned long)ioremap (0x1A300000, 0x1000);
 
       /* Now lets get the SWTS info and setup an FDMA channel */
-#if !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX)
+#if !defined(TF7700) && !defined(HL101) && !defined(UFS922) && !defined(FORTIS_HDBOX)
       //nit2005, ufs910 use dma request id 30 f\ufffdr swts, do'nt know what other boxes use
       tsm_handle.fdma_reqline = 30;
 #else
       tsm_handle.fdma_reqline = 28;
 #endif
-      tsm_handle.fdma_channel = request_dma_bycap(fdmac_id, fdma_cap_hb, "swts0");  
+      tsm_handle.fdma_channel = request_dma_bycap(fdmac_id, fdma_cap_hb, "swts0");
       tsm_handle.fdma_req     = dma_req_config(tsm_handle.fdma_channel,tsm_handle.fdma_reqline,&fdma_req_config);
 
       /* Initilise the parameters for the FDMA SWTS data injection */
@@ -724,13 +728,13 @@ Dies sind die Options (also wohl auch view channel):
        			tsm_io + TSM_STREAM_CONF(chan));
 
 #ifdef alt
-    writel( TSM_SYNC(config->channels[n].lock) |     
+    writel( TSM_SYNC(config->channels[n].lock) |
        TSM_DROP(config->channels[n].drop) |
        TSM_SOP_TOKEN(0x47)                |
        TSM_PACKET_LENGTH(188)
        ,tsm_io + TSM_STREAM_SYNC(chan));
 #endif
-    		writel( TSM_SYNC(3 /* lock */) |     
+    		writel( TSM_SYNC(3 /* lock */) |
        			TSM_DROP(3 /*drop*/) |
        			TSM_SOP_TOKEN(0x47)                |
        			TSM_PACKET_LENGTH(188)
@@ -746,4 +750,4 @@ void stm_tsm_release ( )
 {
   iounmap( tsm_io );
 }
- 
+

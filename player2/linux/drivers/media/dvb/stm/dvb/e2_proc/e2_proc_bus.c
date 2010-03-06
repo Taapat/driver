@@ -1,13 +1,13 @@
-/* 
+/*
  * e2_proc_bus
  */
- 
-#include <linux/proc_fs.h>  	/* proc fs */ 
+
+#include <linux/proc_fs.h>  	/* proc fs */
 #include <asm/uaccess.h>    	/* copy_from_user */
 
 #include <linux/dvb/video.h>	/* Video Format etc */
-
 #include <linux/dvb/audio.h>
+#include <linux/dvb/version.h>
 #include <linux/smp_lock.h>
 #include <linux/string.h>
 
@@ -44,7 +44,7 @@ static struct dvb_device* dvbdev_find_device (int minor)
   {
     struct dvb_adapter *adap1;
     adap1 = list_entry (entry, struct dvb_adapter, list_head);
-    
+
 #if 0
     printk("adap %d, list_head %p, prev %p, next %p\n",
           adap1->num, &adap1->list_head, adap1->list_head.prev,
@@ -73,7 +73,11 @@ int proc_bus_nim_sockets_read (char *page, char **start, off_t off, int count,
   int i, j, k;
   int feIndex = 0;
   struct dvb_device *dev;
-  struct dvbfe_info fe_info;
+#if (DVB_API_VERSION < 5)
+  struct dvbfe_info fe_info;	// old api 3 (insertion)
+#else
+  struct dtv_property p;		// new api 5 (standard)
+#endif
   struct dvb_frontend *fe;
   char *pType = "unknown";
   struct
@@ -82,10 +86,19 @@ int proc_bus_nim_sockets_read (char *page, char **start, off_t off, int count,
     char *pType;
   } typeMap[] =
   {
-    { DVBFE_DELSYS_DVBS2, "DVB-S2" },
-    { DVBFE_DELSYS_DVBS, "DVB-S" },
-    { DVBFE_DELSYS_DVBT, "DVB-T" },
-    { DVBFE_DELSYS_DVBC, "DVB-C" }
+#if (DVB_API_VERSION < 5)
+	    { DVBFE_DELSYS_DVBS2,"DVB-S2"},
+	    { DVBFE_DELSYS_DVBS, "DVB-S" },
+	    { DVBFE_DELSYS_DVBT, "DVB-T" },
+	    { DVBFE_DELSYS_DVBC, "DVB-C" }
+#else
+	    { SYS_DVBS2, 		 "DVB-S2"},
+	    { SYS_DVBS, 		 "DVB-S" },
+	    { SYS_DVBT, 		 "DVB-T" },
+	    { SYS_DSS, 		 	 "DVB-DSS"},
+	    { SYS_DVBC_ANNEX_AC, "DVB-C"},
+	    { SYS_DVBC_ANNEX_B,  "DVB-C" }
+#endif
   };
 
   /* loop over all adapters */
@@ -102,24 +115,31 @@ int proc_bus_nim_sockets_read (char *page, char **start, off_t off, int count,
 
       if((dev = dvbdev_find_device(nums2minor(j, DVB_DEVICE_FRONTEND, i))) == NULL)
       {
-	/* there are no further frontends registered with this adapter */
-	break;
+    	  /* there are no further frontends registered with this adapter */
+    	  break;
       }
 
       fe = dev->priv;
 
-      if(fe->ops.get_info == NULL)
-	continue;
-
       /* loop over all types */
       for(k = 0; k < sizeof(typeMap)/sizeof(typeMap[0]); k++)
       {
-	fe_info.delivery = typeMap[k].type;
-	if(fe->ops.get_info(fe, &fe_info) == 0)
-	{
-	  pType = typeMap[k].pType;
-	  break;
-	}
+#if (DVB_API_VERSION < 5)
+    	  fe_info.delivery = typeMap[k].type;
+    	  if(fe->ops.get_info(fe, &fe_info) == 0)
+    	  {
+    		  pType = typeMap[k].pType;
+    		  break;
+    	  }
+#else
+    	  p.cmd = DTV_DELIVERY_SYSTEM;
+    	  p.u.data = typeMap[k].type;
+    	  if(fe->ops.get_property(fe, &p) == 0)
+    	  {
+    		  pType = typeMap[k].pType;
+    		  break;
+    	  }
+#endif
       }
 
       len += sprintf(page + len, "NIM Socket %d:\n"

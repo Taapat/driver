@@ -43,7 +43,7 @@ Date        Modification                                    Name
 #include "dvb_ca.h"
 #include "backend.h"
 
-#if ((DVB_API_VERSION == 3) && (DVB_API_VERSION_MINOR > 2))
+#if (DVB_API_VERSION > 3)
 DVB_DEFINE_MOD_OPT_ADAPTER_NR(adapter_num);
 #endif
 extern int __init dvp_init(void);
@@ -70,14 +70,14 @@ MODULE_LICENSE          ("GPL");
 #define MODULE_NAME     "STM Streamer"
 
 #ifdef __TDT__
-int highSR = 0; 
-int swts = 0; 
- 
-module_param(highSR, int, 0444); 
-MODULE_PARM_DESC(highSR, "Start Driver with support for Symbol Rates 30000.\nIf 1 then some CAMS will not work."); 
+int highSR = 0;
+int swts = 0;
 
-module_param(swts, int, 0444); 
-MODULE_PARM_DESC(swts, "Do not route injected data through the tsm/pti\n"); 
+module_param(highSR, int, 0444);
+MODULE_PARM_DESC(highSR, "Start Driver with support for Symbol Rates 30000.\nIf 1 then some CAMS will not work.");
+
+module_param(swts, int, 0444);
+MODULE_PARM_DESC(swts, "Do not route injected data through the tsm/pti\n");
 #endif
 
 struct DvbContext_s*     DvbContext;
@@ -111,8 +111,8 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
 #endif
 
 
-    #if defined (CONFIG_KERNELVERSION)
-  #if ((DVB_API_VERSION == 3) && (DVB_API_VERSION_MINOR > 2))
+#if defined (CONFIG_KERNELVERSION)
+  #if (DVB_API_VERSION > 3)
     Result      = dvb_register_adapter (&DvbContext->DvbAdapter, MODULE_NAME, THIS_MODULE,NULL, adapter_num);
   #else
     Result      = dvb_register_adapter (&DvbContext->DvbAdapter, MODULE_NAME, THIS_MODULE,NULL);
@@ -239,7 +239,7 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
                              &DeviceContext->VideoDevice,
                              VideoInit (DeviceContext),
                              DeviceContext,
-                             DVB_DEVICE_VIDEO);                             
+                             DVB_DEVICE_VIDEO);
 
         DeviceContext->Id                       = i;
         DeviceContext->DemuxContext             = DeviceContext;        /* wire directly to own demux by default */
@@ -274,7 +274,7 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
 #endif
     }
 
-    /*}}}  */    
+    /*}}}  */
     mutex_unlock (&(DvbContext->Lock));
 
     BackendInit ();
@@ -282,7 +282,7 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
 #ifndef __TDT__
     dvp_init();
 #endif
-    
+
     linuxdvb_v4l2_init();
 
     DVB_DEBUG("STM stream device loaded\n");

@@ -394,11 +394,11 @@ StopFeed (struct dvb_demux_feed *Feed)
     switch (Feed->type)
     {
         case DMX_TYPE_SEC:
-	
+
 	  mutex_lock (&(DvbContext->Lock));
-	
+
 	  stpti_stop_feed(Feed, Context);
-   
+
 	  mutex_unlock (&(DvbContext->Lock));
 
 	  break;
@@ -436,7 +436,7 @@ StopFeed (struct dvb_demux_feed *Feed)
 		    stpti_stop_feed(Feed, Context);
 
             	    mutex_unlock (&(DvbContext->Lock));
-                   
+
                     break;
                 }
 		//videotext & subtitles (other)
@@ -449,20 +449,20 @@ StopFeed (struct dvb_demux_feed *Feed)
 		    stpti_stop_feed(Feed, Context);
 
 		    mutex_unlock (&(DvbContext->Lock));
-		    
+
 		    break;
 		}
 		else if (Feed->pes_type == DMX_TS_PES_PCR)
 			break;
             }
-           
+
             if (i >= DVB_MAX_DEVICES_PER_ADAPTER)
             {
 		printk("%s(): INVALID PES TYPE (%d, %d)\n", __func__,
 					   Feed->pid, Feed->pes_type);
                 return -EINVAL;
             }
-           
+
             break;
         default:
 	    printk("%s(): INVALID FEED TYPE (%d)\n", __func__, Feed->type);
@@ -556,7 +556,7 @@ int WriteToDecoder (struct dvb_demux_feed *Feed, const u8 *buf, size_t count)
     Context->provideToDecoder = 1;
     Context->feedPesType = Feed->pes_type;
   }
-  
+
   return 0;
 }
 /*}}}  */

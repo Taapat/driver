@@ -1,8 +1,8 @@
-/* 
+/*
  * e2_proc_tsmux.c
  */
 
-#include <linux/proc_fs.h>  	/* proc fs */ 
+#include <linux/proc_fs.h>  	/* proc fs */
 #include <asm/uaccess.h>    	/* copy_from_user */
 
 #include <linux/dvb/video.h>	/* Video Format etc */
@@ -17,16 +17,19 @@
 
 extern struct DeviceContext_s* DeviceContext;
 
+int setCiSource(int slot, int source);
+void getCiSource(int slot, int* source);
+
 int proc_tsmux_input0_write(struct file *file, const char __user *buf,
                            unsigned long count, void *data)
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	
+
 	printk("%s %ld ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
@@ -47,7 +50,7 @@ int proc_tsmux_input0_write(struct file *file, const char __user *buf,
 			ret = -EINVAL;
 #endif
 	}
-	
+
 out:
 	free_page((unsigned long)page);
 	return ret;
@@ -68,11 +71,11 @@ int proc_tsmux_input1_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	
+
 	printk("%s %ld ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
@@ -93,7 +96,7 @@ int proc_tsmux_input1_write(struct file *file, const char __user *buf,
 			ret = -EINVAL;
 #endif
 	}
-	
+
 out:
 	free_page((unsigned long)page);
 	return ret;
@@ -115,17 +118,17 @@ int proc_tsmux_lnb_b_input_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	
+
 	printk("%s %ld\n", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
 			goto out;
 	}
-	
+
 	ret = count;
 out:
 	free_page((unsigned long)page);
@@ -147,11 +150,11 @@ int proc_tsmux_ci0_input_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	
+
 	printk("%s %ld ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
@@ -168,7 +171,7 @@ int proc_tsmux_ci0_input_write(struct file *file, const char __user *buf,
 			ret = -EINVAL;
 #endif
 	}
-	
+
 out:
 	free_page((unsigned long)page);
 	return ret;
@@ -184,12 +187,12 @@ int proc_tsmux_ci0_input_read (char *page, char **start, off_t off, int count,
 
 #if defined(UFS922)
 	getCiSource(0, &source);
-	
+
 	if (source == 0)
 		len = sprintf(page, "A\n");
 	else
 		len = sprintf(page, "B\n");
-#endif	
+#endif
 
         return len;
 }
@@ -199,11 +202,11 @@ int proc_tsmux_ci1_input_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	
+
 	printk("%s %ld ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
@@ -220,7 +223,7 @@ int proc_tsmux_ci1_input_write(struct file *file, const char __user *buf,
 			ret = -EINVAL;
 #endif
 	}
-	
+
 out:
 	free_page((unsigned long)page);
 	return ret;
@@ -236,12 +239,12 @@ int proc_tsmux_ci1_input_read (char *page, char **start, off_t off, int count,
 
 #if defined(UFS922)
 	getCiSource(1, &source);
-	
+
 	if (source == 0)
 		len = sprintf(page, "A\n");
 	else
 		len = sprintf(page, "B\n");
-#endif	
+#endif
 
         return len;
 }

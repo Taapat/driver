@@ -24,14 +24,13 @@
 
 #include <linux/kernel.h>
 #include <linux/module.h>
-
-#include "dvb_frontend.h"
 #if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
 #include <linux/stm/pio.h>
 #else
 #include <linux/stpio.h>
 #endif
 
+#include "dvb_frontend.h"
 
 #define STB0899_TSMODE_SERIAL		1
 #define STB0899_CLKPOL_FALLING		2
@@ -89,7 +88,7 @@ enum stb0899_inversion {
  * 1. POWER ON/OFF		(index 0)
  * 2. FE_HAS_LOCK/LOCK_LOSS	(index 1)
  *
- * @gpio 	= one of the above listed GPIO's
+ * @gpio 	= one of the above listed GPIO's (set to 0 to ignore this entry)
  * @level	= output state: pulled up or low
  */
 struct stb0899_postproc {
@@ -154,5 +153,4 @@ struct stb0899_config {
 extern struct dvb_frontend *stb0899_attach(struct stb0899_config *config,
 					   struct i2c_adapter *i2c);
 
-#endif //CONFIG_DVB_STB0899
-
+#endif
