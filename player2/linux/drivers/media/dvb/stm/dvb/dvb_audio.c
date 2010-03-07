@@ -400,13 +400,20 @@ static int AudioIoctlSetBypassMode (struct DeviceContext_s* Context, unsigned in
 
     //DVB_DEBUG("(not implemented)\n");
     //mpeg2=4, ac3=6
-    //e2 : 1=mpegm 0=ac3
+    //e2 : 1=mpegm 0=ac3, 2=dts, 8=aac, 9=aache, 6=lpcm
+    //libdreamdvd : 5=dts 6=lpcm
     DVB_DEBUG("Set BypassMode to %d\n", Mode);
     
     if (Mode == 0)
-	Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_AC3;
+			Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_AC3;
+    else if (Mode == 5 || Mode == 2)
+      Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_DTS;
+    else if (Mode == 6)
+      Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_LPCM;
+    else if (Mode == 8)
+      Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_AAC;
     else
-        Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_MPEG2;
+      Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_MPEG2;
 
 //before we jump to any conclusions, does the user really want passtrough, its possible that he wants downmix!
 //ask e2_proc_audio what the user wants
