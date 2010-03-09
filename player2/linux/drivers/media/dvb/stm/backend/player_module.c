@@ -42,6 +42,10 @@ MODULE_PARM_DESC(noaudiosync, "Workaround, if there are problems with audio drop
 int discardlateframe = 2;
 module_param(discardlateframe, int, 0444);
 MODULE_PARM_DESC(discardlateframe, "Set start value for Discard Late Frame 0=never, 1=aftersync, 2=always");
+
+int useoldaudiofw = 0;
+module_param(useoldaudiofw, int, 0444);
+MODULE_PARM_DESC(useoldaudiofw, "Set to 1 if you will use old audio firmware (audio.elf)");
 #endif
 
 static struct dvb_backend_operations            DvbBackendOps        =
