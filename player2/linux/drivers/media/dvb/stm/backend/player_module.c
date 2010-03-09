@@ -38,6 +38,10 @@ MODULE_LICENSE                  ("GPL");
 int noaudiosync = 0;
 module_param(noaudiosync, int, 0444); 
 MODULE_PARM_DESC(noaudiosync, "Workaround, if there are problems with audio dropouts set it to 1.");
+
+int discardlateframe = 2;
+module_param(discardlateframe, int, 0444);
+MODULE_PARM_DESC(discardlateframe, "Set start value for Discard Late Frame 0=never, 1=aftersync, 2=always");
 #endif
 
 static struct dvb_backend_operations            DvbBackendOps        =
