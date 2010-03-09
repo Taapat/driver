@@ -655,6 +655,9 @@ HavanaStatus_t HavanaStream_c::GetOption       (play_option_t           Option,
         case PLAY_OPTION_EXTERNAL_TIME_MAPPING:
             PlayerPolicy        = PolicyExternalTimeMapping;
             break;
+        case PLAY_OPTION_DISCARD_LATE_FRAMES:
+            PlayerPolicy	= PolicyDiscardLateFrames;
+            break;
         default:
             STREAM_ERROR("Unknown option %d\n", Option);
             return HavanaError;
@@ -688,6 +691,20 @@ HavanaStatus_t HavanaStream_c::GetOption       (play_option_t           Option,
             break;
         case PLAY_OPTION_AV_SYNC:
             *Value      = (PolicyValue == PolicyValueApply) ? true : false;
+            break;
+        case PLAY_OPTION_DISCARD_LATE_FRAMES:
+            switch (PolicyValue)
+            {
+                case PolicyValueDiscardLateFramesNever:
+                    *Value = PLAY_OPTION_VALUE_DISCARD_LATE_FRAMES_NEVER;
+                    break;
+                case PolicyValueDiscardLateFramesAlways:
+                    *Value = PLAY_OPTION_VALUE_DISCARD_LATE_FRAMES_ALWAYS;
+                    break;
+                default:
+                    *Value = PLAY_OPTION_VALUE_DISCARD_LATE_FRAMES_AFTER_SYNCHRONIZE;
+                    break;
+            }
             break;
         default:
             STREAM_ERROR("Unknown option %d\n", Option);

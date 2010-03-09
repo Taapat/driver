@@ -1015,8 +1015,10 @@ int proc_stream_DISCARD_LATE_FRAMES_read(char *page, char **start, off_t off, in
 
       	if (value == PLAY_OPTION_VALUE_DISCARD_LATE_FRAMES_NEVER)
 	   	  len = sprintf(page, "never\n");
-      	else
+      	else if (value == PLAY_OPTION_VALUE_DISCARD_LATE_FRAMES_ALWAYS)
 	   	  len = sprintf(page, "always\n");
+	else
+	   	  len = sprintf(page, "aftersync\n");
 
       } else
 	   	  len = sprintf(page, "failed to get value\n");
@@ -1048,7 +1050,7 @@ int proc_stream_DISCARD_LATE_FRAMES_write(struct file *file, const char __user *
 
       if (strncmp("always", myString, count - 1) == 0)
 		{
-		   result  = StreamSetOption (ProcDeviceContext->VideoStream, PLAY_OPTION_DISCARD_LATE_FRAMES, PLAY_OPTION_VALUE_DISCARD_LATE_FRAMES_NEVER);
+		   result  = StreamSetOption (ProcDeviceContext->VideoStream, PLAY_OPTION_DISCARD_LATE_FRAMES, PLAY_OPTION_VALUE_DISCARD_LATE_FRAMES_ALWAYS);
 	    	
 			if (result != 0)
 		   {
@@ -1058,7 +1060,7 @@ int proc_stream_DISCARD_LATE_FRAMES_write(struct file *file, const char __user *
 		} else
       if (strncmp("never", myString, count - 1) == 0)
 		{
-		   result  = StreamSetOption (ProcDeviceContext->VideoStream, PLAY_OPTION_DISCARD_LATE_FRAMES, PLAY_OPTION_VALUE_DISCARD_LATE_FRAMES_ALWAYS);
+		   result  = StreamSetOption (ProcDeviceContext->VideoStream, PLAY_OPTION_DISCARD_LATE_FRAMES, PLAY_OPTION_VALUE_DISCARD_LATE_FRAMES_NEVER);
 	    	
 			if (result != 0)
 		   {
@@ -1066,6 +1068,16 @@ int proc_stream_DISCARD_LATE_FRAMES_write(struct file *file, const char __user *
 			}
 		
 		} else
+      if (strncmp("aftersync", myString, count - 1) == 0)
+                {
+                   result  = StreamSetOption (ProcDeviceContext->VideoStream, PLAY_OPTION_DISCARD_LATE_FRAMES, PLAY_OPTION_VALUE_DISCARD_LATE_FRAMES_AFTER_SYNCHRONIZE);
+
+                        if (result != 0)
+                   {
+                            printk("failed to set policy\n");
+                        }
+
+                } else
 		{
 			    printk("invalid value\n");
 		}
