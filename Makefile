@@ -20,6 +20,9 @@ endif
 ifdef HL101
 CFLAGS+=-DHL101
 endif
+ifdef HL101
+CFLAGS+=-DHL101
+endif
 ifdef UFS922
 CFLAGS+=-DUFS922
 endif
@@ -29,7 +32,7 @@ endif
 obj-y	:= avs/ 
 obj-y	+= multicom/
 obj-y	+= stgfb/
-#obj-y	+= player2/
+obj-y	+= player2/
 obj-y	+= boxtype/
 obj-y	+= simu_button/
 obj-y	+= e2_proc/
@@ -54,6 +57,7 @@ obj-y	+= nuvoton/
 endif
 #obj-y   += zd1211/
 endif
+# HL101 = argus vip1, opticum 9500hd, truman tm900hd... 
 ifdef HL101
 obj-y   += proton/
 endif
