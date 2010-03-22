@@ -564,22 +564,32 @@ int WriteToDecoder (struct dvb_demux_feed *Feed, const u8 *buf, size_t count)
 int writeToDecoder (struct dvb_demux *demux, int pes_type, const u8 *buf, size_t count)
 {
   struct DeviceContext_s* Context = (struct DeviceContext_s*)demux->priv;
-  int j = 0;
-  int audio = 0;
+  int j = 3;
 
   /* select the context */
   /* no more than two output devices supported */
+  /* don't inject if playback is stopped */
   switch (pes_type)
   {
     case DMX_PES_AUDIO0:
-      audio = 1;
+      Context = &Context->DvbContext->DeviceContext[0];
+      if (Context->AudioState.play_state == AUDIO_STOPPED)
+	      return count;
+      break;
     case DMX_PES_VIDEO0:
       Context = &Context->DvbContext->DeviceContext[0];
+      if (Context->VideoState.play_state == VIDEO_STOPPED)
+	      return count;
       break;
     case DMX_PES_AUDIO1:
-      audio = 1;
+      Context = &Context->DvbContext->DeviceContext[1];
+      if (Context->AudioState.play_state == AUDIO_STOPPED)
+	      return count;
+      break;
     case DMX_PES_VIDEO1:
       Context = &Context->DvbContext->DeviceContext[1];
+      if (Context->VideoState.play_state == VIDEO_STOPPED)
+	      return count;
       break;
     default:
       return 0;
@@ -588,19 +598,10 @@ int writeToDecoder (struct dvb_demux *demux, int pes_type, const u8 *buf, size_t
   /* injecting scrambled data crashes the player */
   while (j < count)
   {
-      if ((buf[j+3] & 0xc0) > 0)
+      if ((buf[j] & 0xc0) > 0)
 	  return count;
       j+=188;
   }
-
-  /* don't inject if playback is stopped */
-  if (audio == 1)
-  {
-    if (Context->AudioState.play_state == AUDIO_STOPPED)
-	    return count;
-  }
-  else if (Context->VideoState.play_state == VIDEO_STOPPED)
-	    return count;
 
   return StreamInject(Context->DemuxContext->DemuxStream, buf, count);
 }
