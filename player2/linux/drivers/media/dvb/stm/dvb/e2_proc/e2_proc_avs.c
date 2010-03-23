@@ -1,8 +1,8 @@
-/* 
+/*
  * e2_proc_avs.c
  */
- 
-#include <linux/proc_fs.h>  	/* proc fs */ 
+
+#include <linux/proc_fs.h>  	/* proc fs */
 #include <asm/uaccess.h>    	/* copy_from_user */
 
 #include <linux/dvb/video.h>	/* Video Format etc */
@@ -42,7 +42,7 @@ struct stmfbio_output_configuration
   __u32 caps;
   __u32 failed;
   __u32 activate;
-  
+
   __u32 sdtv_encoding;
   __u32 analogue_config;
   __u32 dvo_config;
@@ -99,18 +99,18 @@ int proc_avs_0_volume_write(struct file *file, const char __user *buf,
 		 0,  0,  1,  1,  1,  1,  2,  2,  2,  3,  3,  3,  4,  4,  4,  5,
 		 5,  5,  6,  6,  6,  7,  7,  8,  8,  9,  9,  9, 10, 10, 11, 11,
 		12, 13, 13, 14, 14, 15, 16, 16, 17, 18, 19, 19, 20, 21, 22, 23,
-		24, 25, 27, 28, 29, 31, 33, 35, 37, 40, 43, 47, 51, 58, 70 
+		24, 25, 27, 28, 29, 31, 33, 35, 37, 40, 43, 47, 51, 58, 70
 	};
 
 	char 		*page;
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
 	int		result;
-	
+
 	printk("%s %d - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		int number = 0;
 		struct snd_kcontrol ** kcontrol = pseudoGetControls(&number);
@@ -133,11 +133,11 @@ int proc_avs_0_volume_write(struct file *file, const char __user *buf,
 #if defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI_FTA) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(TF7700) || defined(UFS922) || defined(HL101)
       current_volume = volume;
 #else
-/* Dagobert: 04.10.2009: e2 delivers values from 0 to 63 db. the ak4705 
+/* Dagobert: 04.10.2009: e2 delivers values from 0 to 63 db. the ak4705
  * needs values which are a little bit more sophisticated.
- * the range is from mute (value 0) to -60 db (value 1) to +6db (value 34) 
+ * the range is from mute (value 0) to -60 db (value 1) to +6db (value 34)
  * which is represented by 6 bits in 2db steps
- * 
+ *
  * so we have a value range of 0 - 34. in my opinion the algo must be:
  *
  * current_volume = ((volume * 100) / 63 * 34) / 100;
@@ -147,9 +147,9 @@ int proc_avs_0_volume_write(struct file *file, const char __user *buf,
  *
  */
 
- current_volume = 31 - volume / 4; 
+ current_volume = 31 - volume / 4;
 #endif
-		
+
 		for (vLoop = 0; vLoop < number; vLoop++)
 		{
 			if (kcontrol[vLoop]->private_value == PSEUDO_ADDR(master_volume))
@@ -157,29 +157,29 @@ int proc_avs_0_volume_write(struct file *file, const char __user *buf,
 				single_control = kcontrol[vLoop];
 				//printk("Find master_volume control at %p\n", single_control);
 				break;
-			}		
-		}	
+			}
+		}
 
 		if ((kcontrol != NULL) && (single_control != NULL))
 		{
 			struct snd_ctl_elem_value ucontrol;
 
 			current_e2_volume = volume;
-			
-/* Dagobert: 04.10.2009: e2 delivers values from 0 to 63 db. the current 
+
+/* Dagobert: 04.10.2009: e2 delivers values from 0 to 63 db. the current
  * pseudo_mixer needs a value from 0 to "-70".
  * ->see pseudo_mixer.c line 722.
  */
 
 /* Dagobert: 06.10.2009: Volume is a logarithmical value ...
 
-  scale range 
+  scale range
 
         volume = ((volume * 100) / cMaxVolumeE2 * cMaxVolumePlayer) / 100;
         volume = 0 - volume;
 */
         volume = 0 - logarithmicAttenuation[current_e2_volume];
-		  
+
 		  //printk("Pseudo Mixer controls = %p\n", kcontrol);
 		  ucontrol.value.integer.value[0] = volume;
 		  ucontrol.value.integer.value[1] = volume;
@@ -200,10 +200,10 @@ int proc_avs_0_volume_write(struct file *file, const char __user *buf,
 
 		kfree(myString);
 	}
-	
+
 	ret = count;
 out:
-	
+
 	free_page((unsigned long)page);
 	return ret;
 }
@@ -236,11 +236,11 @@ int proc_avs_0_input_write(struct file *file, const char __user *buf,
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
 	int		result;
-	
+
 	printk("%s %d - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
@@ -251,7 +251,7 @@ int proc_avs_0_input_write(struct file *file, const char __user *buf,
 		myString[count] = '\0';
 
 		printk("%s\n", myString);
-		
+
 	    	if(!strncmp("encoder", myString, count - 1))
 	    	{
 			avs_command_kernel(SAAIOSSRCSEL, SAA_SRC_ENC);
@@ -262,7 +262,7 @@ int proc_avs_0_input_write(struct file *file, const char __user *buf,
 #endif
 			current_input = 0;
 		}
-		
+
 	    	if(!strncmp("scart", myString, count - 1))
 	    	{
 	      		avs_command_kernel(SAAIOSSRCSEL, SAA_SRC_SCART);
@@ -276,7 +276,7 @@ int proc_avs_0_input_write(struct file *file, const char __user *buf,
 
 	ret = count;
 out:
-	
+
 	free_page((unsigned long)page);
 	return ret;
 }
@@ -302,11 +302,11 @@ int proc_avs_0_fb_write(struct file *file, const char __user *buf,
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
 	int		result;
-	
+
 	printk("%s %d - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
@@ -320,10 +320,10 @@ int proc_avs_0_fb_write(struct file *file, const char __user *buf,
 		kfree(myString);
 		//result = sscanf(page, "%3s %3s %3s %3s %3s", s1, s2, s3, s4, s5);
 	}
-	
+
 	ret = count;
 out:
-	
+
 	free_page((unsigned long)page);
 	return ret;
 }
@@ -347,11 +347,11 @@ int proc_avs_0_colorformat_write(struct file *file, const char __user *buf,
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
 	int		result;
-	
+
 	printk("%s %d - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		void* fb =  stmfb_get_fbinfo_ptr();
 		struct fb_info *info = (struct fb_info*) fb;
@@ -372,7 +372,7 @@ int proc_avs_0_colorformat_write(struct file *file, const char __user *buf,
 		myString[count] = '\0';
 
 		printk("%s\n", myString);
-		
+
 		sscanf(myString, "%d", &alpha);
 
 //0rgb 1yuv 2422
@@ -486,10 +486,10 @@ int proc_avs_0_colorformat_write(struct file *file, const char __user *buf,
 
 		kfree(myString);
 	}
-	
+
 	ret = count;
 out:
-	
+
 	free_page((unsigned long)page);
 	return ret;
 }
@@ -528,7 +528,7 @@ int proc_avs_0_colorformat_read (char *page, char **start, off_t off, int count,
 		len += sprintf(page+len, "yuv\n");
 	else
 		len += sprintf(page+len, "not defined\n");
-		
+
         return len;
 }
 
@@ -550,11 +550,11 @@ int proc_avs_0_sb_write(struct file *file, const char __user *buf,
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
 	int		result;
-	
+
 	printk("%s %d - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
@@ -568,10 +568,10 @@ int proc_avs_0_sb_write(struct file *file, const char __user *buf,
 		kfree(myString);
 		//result = sscanf(page, "%3s %3s %3s %3s %3s", s1, s2, s3, s4, s5);
 	}
-	
+
 	ret = count;
 out:
-	
+
 	free_page((unsigned long)page);
 	return ret;
 }
@@ -595,11 +595,11 @@ int proc_avs_0_standby_write(struct file *file, const char __user *buf,
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
 	int		result;
-	
+
 	printk("%s %d - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
@@ -617,17 +617,17 @@ int proc_avs_0_standby_write(struct file *file, const char __user *buf,
 		} else if (strncmp("off", page, count - 1) == 0)
 		{
                         current_standby = 0;
-		} 
+		}
 
 		avs_command_kernel(AVSIOSTANDBY, current_standby);
 
 		kfree(myString);
 		//result = sscanf(page, "%3s %3s %3s %3s %3s", s1, s2, s3, s4, s5);
 	}
-	
+
 	ret = count;
 out:
-	
+
 	free_page((unsigned long)page);
 	return ret;
 }
@@ -643,6 +643,6 @@ int proc_avs_0_standby_read (char *page, char **start, off_t off, int count,
 		len = sprintf(page, "off\n");
 	if(current_standby == 1)
 		len = sprintf(page, "on\n");
-		
+
         return len;
 }

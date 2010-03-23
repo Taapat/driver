@@ -2,7 +2,7 @@
  *
  * File: stmfb/Linux/stm/coredisplay/stx7109c2.c
  * Copyright (c) 2007 STMicroelectronics Limited.
- * 
+ *
  * This file is subject to the terms and conditions of the GNU General Public
  * License.  See the file COPYING in the main directory of this archive for
  * more details.
@@ -38,7 +38,7 @@ static const unsigned long whitelist[] = {
 };
 
 
-#ifndef __TDT__ 
+#ifndef __TDT__
 static struct stmcore_display_pipeline_data platform_data[] = {
   {
     .owner                    = THIS_MODULE,
@@ -46,7 +46,7 @@ static struct stmcore_display_pipeline_data platform_data[] = {
     .device                   = 0,
     .vtg_irq                  = 154,
     .blitter_irq              = 156,
-    .hdmi_irq                 = 158, 
+    .hdmi_irq                 = 158,
 #if defined(CONFIG_SH_STB7100_REF) || defined(CONFIG_SH_ST_MB442)
     .hdmi_i2c_adapter_id      = 1,
 #elif defined(CONFIG_SH_STB7109E_REF) || defined(CONFIG_SH_ST_MB448)
@@ -90,7 +90,7 @@ static struct stmcore_display_pipeline_data platform_data[] = {
     .device                   = 0,
     .vtg_irq                  = 155,
     .blitter_irq              = -1,
-    .hdmi_irq                 = -1, 
+    .hdmi_irq                 = -1,
     .hdmi_i2c_adapter_id      = -1,
     .main_output_id           = 1,
     .aux_output_id            = -1,
@@ -120,11 +120,11 @@ static struct stmcore_display_pipeline_data platform_data[] = {
     .device                   = 0,
     .vtg_irq                  = 154,
     .blitter_irq              = 156,
-    .hdmi_irq                 = 158, 
+    .hdmi_irq                 = 158,
 #if defined(UFS922)
 /* Dagobert: for stlinux23 this is mb422 but i2c is on bus 2 instead! */
     .hdmi_i2c_adapter_id      = 2,
-#elif defined(HL101)
+#elif defined(HL101) || defined(VIP2)
 /*nassar: spider-box hl-101 uses id 1  */
     .hdmi_i2c_adapter_id      = 1,
 #elif defined(CONFIG_SH_STB7100_REF) || defined(CONFIG_SH_ST_MB442)
@@ -169,7 +169,7 @@ static struct stmcore_display_pipeline_data platform_data[] = {
     .device                   = 0,
     .vtg_irq                  = 155,
     .blitter_irq              = -1,
-    .hdmi_irq                 = -1, 
+    .hdmi_irq                 = -1,
     .hdmi_i2c_adapter_id      = -1,
     .main_output_id           = 1,
     .aux_output_id            = -1,
@@ -213,7 +213,7 @@ static const int DAC456SaturationPoint = 0;
 
 static struct stpio_pin *hotplug_pio = 0;
 
-#ifndef __TDT__ 
+#ifndef __TDT__
 #if defined(CONFIG_SH_STB7100_MBOARD) || defined(CONFIG_SH_STB7100_REF) || \
     defined(CONFIG_SH_STB7109E_REF)   || defined(CONFIG_SH_ST_MB411)    || \
     defined(CONFIG_SH_ST_MB442)       || defined(CONFIG_SH_ST_MB448)    || \
@@ -247,17 +247,19 @@ int __init stmcore_probe_device(struct stmcore_display_pipeline_data **pd, int *
     iounmap(devid);
 
     if(is7109 && chipVersion == 3)
-    {	
+    {
       *pd = platform_data;
       *nr_platform_devices = N_ELEMENTS (platform_data);
 
 #if defined(UFS922) && defined(__TDT__)
-      hotplug_pio = stpio_request_pin(2,3,"HDMI Hotplug",STPIO_BIDIR_Z1); 
+      hotplug_pio = stpio_request_pin(2,3,"HDMI Hotplug",STPIO_BIDIR_Z1);
 #elif defined(FORTIS_HDBOX) && defined(__TDT__)
       hotplug_pio = stpio_request_pin(4,7,"HDMI Hotplug",STPIO_BIDIR_Z1);
 #elif defined(HL101) && defined(__TDT__)
       hotplug_pio = stpio_request_pin(4,7,"HDMI Hotplug",STPIO_IN);
-#else 
+#elif defined(VIP2) && defined(__TDT__)
+      hotplug_pio = stpio_request_pin(4,7,"HDMI Hotplug",STPIO_IN);
+#else
       hotplug_pio = stpio_request_pin(2,2,"HDMI Hotplug",STPIO_BIDIR_Z1);
 #endif
 
@@ -265,7 +267,7 @@ int __init stmcore_probe_device(struct stmcore_display_pipeline_data **pd, int *
        * Use the following for boards where hdmi hotplug is connected to the
        * hdmi block interrupt, via PIO4(7) alternate input function on
        * 7109C3.
-       * 
+       *
        * hotplug_pio = stpio_request_pin(4,7,"HDMI Hotplug",STPIO_ALT_BIDIR);
        */
 
@@ -280,7 +282,7 @@ int __init stmcore_probe_device(struct stmcore_display_pipeline_data **pd, int *
   }
 
   printk(KERN_WARNING "stmcore-display: STx7109C3 display not found\n");
-  
+
   return -ENODEV;
 }
 
@@ -289,7 +291,7 @@ int __init stmcore_probe_device(struct stmcore_display_pipeline_data **pd, int *
  * The following FIR filter setups for the DENC luma filter have been derived
  * for the MB411; FIR2C is the default already used by the core driver. The
  * others give a variety of different frequency responses.
- * 
+ *
  * We do not have specific filters for MB442 or HMS1; however, they both use the
  * same video output stage configuration as the MB411, so it is expected that
  * they will give very similar frequency responses.
@@ -331,13 +333,13 @@ static stm_display_filter_setup_t luma_filter_FIR2F = {
 int __init stmcore_display_postinit(struct stmcore_display *p)
 {
 
-#ifdef __TDT__ 
-#ifdef USE_EXT_CLK 
-  stm_display_output_setup_clock_reference(p->main_output, STM_CLOCK_REF_27MHZ, refClockError); 
-#else 
+#ifdef __TDT__
+#ifdef USE_EXT_CLK
+  stm_display_output_setup_clock_reference(p->main_output, STM_CLOCK_REF_27MHZ, refClockError);
+#else
   stm_display_output_setup_clock_reference(p->main_output, STM_CLOCK_REF_30MHZ, refClockError);
 #endif
-#else 
+#else
   stm_display_output_setup_clock_reference(p->main_output, STM_CLOCK_REF_30MHZ, refClockError);
 #endif
 
@@ -346,18 +348,18 @@ int __init stmcore_display_postinit(struct stmcore_display *p)
    */
   if(maxDAC123Voltage != 0)
     stm_display_output_set_control(p->main_output, STM_CTRL_DAC123_MAX_VOLTAGE, maxDAC123Voltage);
-    
+
   if(maxDAC456Voltage != 0)
     stm_display_output_set_control(p->main_output, STM_CTRL_DAC456_MAX_VOLTAGE, maxDAC456Voltage);
-    
+
   if(DAC123SaturationPoint != 0)
     stm_display_output_set_control(p->main_output, STM_CTRL_DAC123_SATURATION_POINT, DAC123SaturationPoint);
-    
+
   if(DAC456SaturationPoint != 0)
-    stm_display_output_set_control(p->main_output, STM_CTRL_DAC456_SATURATION_POINT, DAC456SaturationPoint);  
+    stm_display_output_set_control(p->main_output, STM_CTRL_DAC456_SATURATION_POINT, DAC456SaturationPoint);
 
   /*
-   * To poll a pio for hotplug changes in the primary vsync handler set the 
+   * To poll a pio for hotplug changes in the primary vsync handler set the
    * following.
    */
   p->hotplug_poll_pio = hotplug_pio;
@@ -369,7 +371,7 @@ int __init stmcore_display_postinit(struct stmcore_display *p)
    *
    * if(p->hdmi_data)
    *   stm_display_output_set_control(p->main_output, STM_CTRL_HDMI_USE_HOTPLUG_INTERRUPT, 1);
-   */ 
+   */
 
 
   /*

@@ -1,8 +1,8 @@
-/* 
+/*
  * e2_proc_info.c
  */
- 
-#include <linux/proc_fs.h>  	/* proc fs */ 
+
+#include <linux/proc_fs.h>  	/* proc fs */
 #include <asm/uaccess.h>    	/* copy_from_user */
 
 
@@ -30,6 +30,8 @@ int proc_info_model_read (char *page, char **start, off_t off, int count,
 	len = sprintf(page, "tf7700\n");
 #elif defined(HL101)
 	len = sprintf(page, "hl101\n");
+#elif defined(VIP2)
+	len = sprintf(page, "vip2\n");
 #elif defined(UFS922)
 	len = sprintf(page, "ufs922\n");
 #elif defined(FORTIS_HDBOX)

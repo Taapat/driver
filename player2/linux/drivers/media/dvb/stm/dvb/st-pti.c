@@ -46,13 +46,13 @@
 extern void cx21143_register_frontend(struct dvb_adapter *dvb_adap);
 #elif defined(FORTIS_HDBOX)
 extern void stv090x_register_frontend(struct dvb_adapter *dvb_adap);
-#elif defined(HL101)
+#elif defined(HL101) || defined(VIP2)
 extern void fe_core_register_frontend(struct dvb_adapter *dvb_adap);
 #else
 extern void cx24116_register_frontend(struct dvb_adapter *dvb_adap);
 #endif
 
-extern void demultiplexDvbPackets(struct dvb_demux* demux, const u8 *buf, int count); 
+extern void demultiplexDvbPackets(struct dvb_demux* demux, const u8 *buf, int count);
 
 extern int swts;
 
@@ -126,7 +126,7 @@ int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
   {
     dprintk ( "type = %d \n",dvbdmxfeed->type );
   }
-  
+
   if (dvbdmxfeed->type == DMX_TYPE_SEC)
   	my_pes_type = 99;
   else
@@ -138,13 +138,13 @@ int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
 	 ( unsigned short ) dvbdmxfeed->pid ))
     {
       pSession->references[vLoop]++;
-      
+
       //ok we have a reference but maybe this one must be rechecked to a new
       //dma (video) and maybe we must attach the descrambler
       //normally we should all these things (referencing etc)
       //in the hal module. later ;-)
-  
-      /* link audio/video slot to the descrambler */	
+
+      /* link audio/video slot to the descrambler */
       if ( dvbdmxfeed->type == DMX_TYPE_TS )
       {
 	if ((dvbdmxfeed->pes_type == DMX_TS_PES_VIDEO) || (dvbdmxfeed->pes_type == DMX_TS_PES_AUDIO))
@@ -154,7 +154,7 @@ int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
 	    printk("Error linking slot %d to descrambler %d, err = %d\n", pSession->slots[vLoop], pSession->descrambler, err);
 	}
       }
-      
+
       printk ( "pid %d already collecting. references %d \n",
 	       dvbdmxfeed->pid , pSession->references[vLoop]);
       return 0;
@@ -165,9 +165,9 @@ int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
 
   pSession->type[pSession->num_pids] = dvbdmxfeed->type;
   pSession->pes_type[pSession->num_pids] = my_pes_type;
-  
+
   pSession->references[pSession->num_pids] = 1;
-  
+
   pSession->slots[pSession->num_pids] = pti_hal_get_new_slot_handle ( pSession->session,
 							    dvbdmxfeed->type,
 							    dvbdmxfeed->
@@ -187,7 +187,7 @@ int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
 
   if ( dvbdmxfeed->type == DMX_TYPE_TS )
   {
-    /* link audio/video slot to the descrambler */	
+    /* link audio/video slot to the descrambler */
     if ((dvbdmxfeed->pes_type == DMX_TS_PES_VIDEO) ||
         (dvbdmxfeed->pes_type == DMX_TS_PES_AUDIO))
     {
@@ -215,8 +215,8 @@ int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
 #if 0
   printk ( "#  pid t pt ref\n");
   for ( vLoop = 0; vLoop < ( pSession->num_pids ); vLoop++ )
-  {  
-    printk ( "%d %4d %d %2d  %d\n", vLoop, pSession->pidtable[vLoop], pSession->type[vLoop], pSession->pes_type[vLoop], 
+  {
+    printk ( "%d %4d %d %2d  %d\n", vLoop, pSession->pidtable[vLoop], pSession->type[vLoop], pSession->pes_type[vLoop],
 		 pSession->references[vLoop] );
   }
 #endif
@@ -256,16 +256,16 @@ int stpti_stop_feed ( struct dvb_demux_feed *dvbdmxfeed,
   	my_pes_type = dvbdmxfeed->pes_type;
 
   /*
-   * Now reallocate the pids, and update id information 
+   * Now reallocate the pids, and update id information
    */
   for ( vLoop = 0; vLoop < ( pSession->num_pids ); vLoop++ )
   {
     if (( pSession->pidtable[vLoop] == dvbdmxfeed->pid ) )
     {
       pSession->references[vLoop]--;
-      
+
       printk("Reference = %d\n", pSession->references[vLoop]);
-      
+
       haveFound = 1;
 
       if (pSession->references[vLoop] == 0)
@@ -283,7 +283,7 @@ int stpti_stop_feed ( struct dvb_demux_feed *dvbdmxfeed,
 
 	for ( n = vLoop; n < ( pSession->num_pids - 1 ); n++ )
 	{
-	  //printk ( "n = %d, old pid = %d, %d, %d, new pid = %d\n", n, pSession->pidtable[n], pSession->type[n], pSession->pes_type[n], 
+	  //printk ( "n = %d, old pid = %d, %d, %d, new pid = %d\n", n, pSession->pidtable[n], pSession->type[n], pSession->pes_type[n],
 	//	   pSession->pidtable[n + 1] );
 
 	  pSession->pidtable[n] = pSession->pidtable[n + 1];
@@ -328,24 +328,17 @@ static int convert_source ( const dmx_source_t source)
   switch ( source )
   {
   case DMX_SOURCE_FRONT0:
-#if defined(HL101) // one tuner only
-    /* in HL101 the CIMAX output is connected to TSIN0 */
-    tag = TSIN0;
-    printk ( "%s(): Routing Frontend source (%d) to TSIN0\n", __func__, source );
-    break;
-#elif !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) // TODO
+#if defined(UFS910)
     /* in UFS910 the CIMAX output is connected to TSIN2 */
     tag = TSIN2;
     break;
 #else
-    /* in TF7700 the first tuner is connected to TSIN0 */
     tag = TSIN0;
     break;
+#endif
   case DMX_SOURCE_FRONT1:
-    /* in TF7700 the second tuner is connected to TSIN1 */
     tag = TSIN1;
     break;
-#endif
   case DMX_SOURCE_DVR0:
     tag = SWTS0;
     break;
@@ -384,16 +377,16 @@ void ptiInit ( struct DeviceContext_s *pContext )
     // perform common PTI initialization
 
     /*
-     * ioremap the pti address space 
+     * ioremap the pti address space
      */
     pti.pti_io = (unsigned int)ioremap ( start, 0xFFFF );
 
     /*
-     * Setup the transport stream merger based on the configuration 
+     * Setup the transport stream merger based on the configuration
      */
     stm_tsm_init (  /*config */ 1 );
-    
-#if defined(TF7700) || defined(UFS922) || defined(FORTIS_HDBOX)
+
+#if defined(TF7700) || defined(UFS922) || defined(FORTIS_HDBOX) || defined(HL101) || defined(VIP2)
     pti_hal_init ( &pti, &pContext->DvbDemux, demultiplexDvbPackets, 2);
 #else
     pti_hal_init ( &pti, &pContext->DvbDemux, demultiplexDvbPackets, 1);
@@ -401,7 +394,7 @@ void ptiInit ( struct DeviceContext_s *pContext )
 
 #if defined(FORTIS_HDBOX)
     stv090x_register_frontend(&pContext->DvbContext->DvbAdapter);
-#elif defined(HL101)
+#elif defined(HL101) || defined(VIP2)
     fe_core_register_frontend( &pContext->DvbContext->DvbAdapter);
 #elif !defined(UFS922)
     cx24116_register_frontend( &pContext->DvbContext->DvbAdapter);
@@ -412,7 +405,7 @@ void ptiInit ( struct DeviceContext_s *pContext )
   }
 
   /*
-   * Allocate the session structure 
+   * Allocate the session structure
    */
   pSession = ( struct PtiSession * ) kmalloc ( sizeof ( struct PtiSession ), GFP_KERNEL );
 

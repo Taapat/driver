@@ -20,8 +20,8 @@ endif
 ifdef HL101
 CFLAGS+=-DHL101
 endif
-ifdef HL101
-CFLAGS+=-DHL101
+ifdef VIP2
+CFLAGS+=-DVIP2
 endif
 ifdef UFS922
 CFLAGS+=-DUFS922
@@ -29,16 +29,18 @@ endif
 ifdef FORTIS_HDBOX
 CFLAGS+=-DFORTIS_HDBOX
 endif
-obj-y	:= avs/ 
-obj-y	+= multicom/
+obj-y	:= multicom/
 obj-y	+= stgfb/
 #obj-y	+= player2/
 obj-y	+= boxtype/
 obj-y	+= simu_button/
 obj-y	+= e2_proc/
 obj-y	+= frontends/
-obj-y	+= cic/
 obj-y	+= pti/
+ifndef VIP2
+obj-y	+= avs/ 
+obj-y	+= cic/
+endif
 ifndef FORTIS_HDBOX
 ifndef UFS922
 ifndef TF7700
@@ -60,4 +62,7 @@ endif
 # HL101 = argus vip1, opticum 9500hd, truman tm900hd... 
 ifdef HL101
 obj-y   += proton/
+endif
+ifdef VIP2
+obj-y   += aotom/
 endif

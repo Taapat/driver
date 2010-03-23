@@ -1,18 +1,18 @@
 /*
  * e2_proc_main.c
- * 
+ *
  * (c) 2009 teamducktales
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or 
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
@@ -75,7 +75,7 @@
  *  |             --------- pal_h_start
  *  |             |
  *  |             --------- pal_h_end
- *  |  
+ *  |
  *  ---------- avs
  *  |           |
  *  |           --------- 0
@@ -95,17 +95,17 @@
  *  |               --------- input_choices
  *  |               |
  *  |               --------- standby
- *  |  
+ *  |
  *  ---------- denc
  *  |           |
  *  |           --------- 0
  *  |               |
  *  |               --------- wss
  *  |               |
- *  |               --------- 
+ *  |               ---------
  *  |               |
- *  |               --------- 
- *  |  
+ *  |               ---------
+ *  |
  *  ---------- fp (this is wrong used for e2 I think. on dm800 this is frontprocessor and there is another proc entry for frontend)
  *  |           |
  *  |           --------- lnb_sense1
@@ -119,10 +119,10 @@
  *  |           |
  *  |           --------- version
  *  |           |
- *  |           --------- wakeup_time <- dbox frontpanel wakeuptime 
+ *  |           --------- wakeup_time <- dbox frontpanel wakeuptime
  *  |           |
  *  |           --------- was_timer_wakeup
- *  |  
+ *  |
  *  |
  *  ---------- hdmi
  *  |           |
@@ -132,7 +132,7 @@
  *  |           |
  *  |           --------- audio_source
  *  |           |
- *  |           --------- 
+ *  |           ---------
  *  |
  *  ---------- info
  *  |           |
@@ -158,7 +158,7 @@
  *  |
  *  ---------- tuner (dagoberts tuner entry ;-) )
  *  |           |
- *  |           --------- 
+ *  |           ---------
  *  |
  *  ---------- vmpeg
  *  |           |
@@ -166,7 +166,7 @@
  *  |               |
  *  |               --------- dst_left   \
  *  |               |                     |
- *  |               --------- dst_top     | 
+ *  |               --------- dst_top     |
  *  |               |                      >  PIG WINDOW SIZE AND POSITION
  *  |               --------- dst_width   |
  *  |               |                     |
@@ -188,7 +188,7 @@
  *
  */
 
-#include <linux/proc_fs.h>  	/* proc fs */ 
+#include <linux/proc_fs.h>  	/* proc fs */
 #include <asm/uaccess.h>    	/* copy_from_user */
 
 #include <linux/string.h>
@@ -200,8 +200,8 @@ typedef int (*proc_write_t) (struct file *file, const char __user *buf,
 		   unsigned long count, void *data);
 
 #define cProcDir	1
-#define cProcEntry	2 
- 
+#define cProcEntry	2
+
 struct ProcStructure_s
 {
 	int   type;
@@ -235,6 +235,8 @@ static int info_model_read(char *page, char **start, off_t off, int count,
   int len = sprintf(page, "tf7700hdpvr\n");
 #elif defined(HL101)
   int len = sprintf(page, "hl101\n");
+#elif defined(VIP2)
+  int len = sprintf(page, "vip2\n");
 #elif defined(UFS922)
   int len = sprintf(page, "ufs922\n");
 #elif defined(FORTIS_HDBOX)
@@ -266,7 +268,7 @@ static int default_write_proc(struct file *file, const char __user *buf,
   return count;
 }
 
-struct ProcStructure_s e2Proc[] = 
+struct ProcStructure_s e2Proc[] =
 {
 	{cProcEntry, "progress"                                                         , NULL, NULL, NULL, NULL, ""},
 
@@ -336,7 +338,7 @@ struct ProcStructure_s e2Proc[] =
 
 	{cProcDir  , "stb/vmpeg"                                                        , NULL, NULL, NULL, NULL, ""},
 	{cProcDir  , "stb/vmpeg/0"                                                      , NULL, NULL, NULL, NULL, ""},
-	{cProcEntry, "stb/vmpeg/0/dst_left"                                             , NULL, NULL, NULL, NULL, ""}, 
+	{cProcEntry, "stb/vmpeg/0/dst_left"                                             , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/vmpeg/0/dst_top"                                              , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/vmpeg/0/dst_width"                                            , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/vmpeg/0/dst_height"                                           , NULL, NULL, NULL, NULL, ""},
@@ -347,7 +349,7 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/vmpeg/0/framerate"                                            , NULL, NULL, NULL, NULL, ""},
 
 	{cProcDir  , "stb/vmpeg/1"                                                      , NULL, NULL, NULL, NULL, ""},
-	{cProcEntry, "stb/vmpeg/1/dst_left"                                             , NULL, NULL, NULL, NULL, ""}, 
+	{cProcEntry, "stb/vmpeg/1/dst_left"                                             , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/vmpeg/1/dst_top"                                              , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/vmpeg/1/dst_width"                                            , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/vmpeg/1/dst_height"                                           , NULL, NULL, NULL, NULL, ""},
@@ -405,7 +407,7 @@ static int cpp_read_proc(char *page, char **start, off_t off, int count,
                            int *eof, void *data)
 {
   int i;
-  
+
   /* find the entry */
   for(i = 0; i < sizeof(e2Proc) / sizeof(e2Proc[0]); i++)
   {
@@ -423,7 +425,7 @@ static int cpp_read_proc(char *page, char **start, off_t off, int count,
  * (e.g. copy_from_user)
  * so we make here the dirty stuff and then call the c-function
  * in the cpp module which can cast the instance and call the
- * real method ;-) 
+ * real method ;-)
  */
 static int cpp_write_proc(struct file *file, const char __user *buf,
                             unsigned long count, void *data)
@@ -431,15 +433,15 @@ static int cpp_write_proc(struct file *file, const char __user *buf,
   int 		i;
   char 		*page;
   ssize_t 	ret = -ENOMEM;
-	
+
   page = (char *)__get_free_page(GFP_KERNEL);
-  if (page) 
+  if (page)
   {
 	ret = -EFAULT;
-	
+
 	if (copy_from_user(page, buf, count))
 		goto out;
-  
+
 	/* find the entry */
 	for(i = 0; i < sizeof(e2Proc) / sizeof(e2Proc[0]); i++)
 	{
@@ -584,7 +586,7 @@ printk("%s: %s\n", __func__, path);
 	  e2Proc[i].read_proc = read_func;
 	  e2Proc[i].write_proc = write_func;
 	  e2Proc[i].instance = instance;
-	  
+
       }
       break;
     }

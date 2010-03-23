@@ -333,7 +333,7 @@ int read_tsm(int a)
 void stm_tsm_init (int use_cimax)
 {
 
-#if defined(HL101) // TODO fix cimax first
+#if defined(HL101) || defined(VIP2) // TODO fix cimax first
 	use_cimax = 0;
 #endif
 
@@ -678,7 +678,7 @@ void stm_tsm_init (int use_cimax)
   	int n;
   	unsigned long size;
 
-        printk("Bypass cimax\n");
+    printk("Bypass ci\n");
 
   	tsm_io = ioremap (/* config->tsm_base_address */ 0x19242000,0x1000);
 

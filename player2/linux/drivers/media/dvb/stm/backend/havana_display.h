@@ -20,7 +20,7 @@ Date        Modification                                    Name
 
 #if defined(__TDT__)
 
-#if defined(FORTIS_HDBOX) || defined(TF7700) || defined(UFS922) || defined(HL101)
+#if defined(FORTIS_HDBOX) || defined(TF7700) || defined(UFS922) || defined(HL101) || defined(VIP2)
 #define AUDIO_BUFFER_MEMORY                     0x00180000
 #else
 #define AUDIO_BUFFER_MEMORY                     0x00100000       // 1 mb
@@ -38,7 +38,7 @@ Date        Modification                                    Name
    buffers should be 1-2 MB less than the maximum described above
    because of memory fragmentation. Otherwise the player cannot get
    memory for auxiliary buffers. */
-#if defined(UFS922) || defined(TF7700) || defined(FORTIS_HDBOX) || defined(HL101)
+#if defined(UFS922) || defined(TF7700) || defined(FORTIS_HDBOX) || defined(HL101) || defined(VIP2)
 
 #define PRIMARY_VIDEO_BUFFER_MEMORY             0x01500000       // 21 mb or enough for 7 full HD 4:2:0
 #define SECONDARY_VIDEO_BUFFER_MEMORY           0x00300000       // 3 mb
@@ -69,7 +69,7 @@ Date        Modification                                    Name
 #else
 
 #define PRIMARY_VIDEO_BUFFER_MEMORY             0x02700000       // 39 mb or enough for 13 full HD 4:2:0
-#define SECONDARY_VIDEO_BUFFER_MEMORY           0x00000000       // 0 mb or enough for 6 full HD 4:2:0 
+#define SECONDARY_VIDEO_BUFFER_MEMORY           0x00000000       // 0 mb or enough for 6 full HD 4:2:0
 #define AVR_VIDEO_BUFFER_MEMORY                 0x02F00000
 #define MAX_VIDEO_DECODE_BUFFERS                32
 

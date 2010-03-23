@@ -59,7 +59,7 @@ MODULE_PARM_DESC(hdmi0, "[enable|disable]");
 extern int stmhdmi_manager(void *data);
 
 #ifdef __TDT__
-static struct stm_hdmi *HACK_dev; 
+static struct stm_hdmi *HACK_dev;
 #endif
 
 static int stmhdmi_open(struct inode *inode,struct file *filp)
@@ -406,7 +406,7 @@ long stmhdmiio_set_audio_source(unsigned int arg)
       retval = -ERESTARTSYS;
     else
      retval = -EIO;
-    
+
     goto exit;
   }
 
@@ -416,10 +416,10 @@ long stmhdmiio_set_audio_source(unsigned int arg)
       retval = -EINTR;
     else
       retval = -EIO;
-        
+
     goto exit;
   }
-      
+
   if(val != audio)
     retval = -EINVAL;
 
@@ -429,7 +429,7 @@ exit:
   return retval;
 
 }
-EXPORT_SYMBOL(stmhdmiio_set_audio_source); 
+EXPORT_SYMBOL(stmhdmiio_set_audio_source);
 
 
 long stmhdmiio_get_audio_source(unsigned int * arg)
@@ -449,7 +449,7 @@ long stmhdmiio_get_audio_source(unsigned int * arg)
       retval = -EINTR;
     else
       retval = -EIO;
-        
+
     goto exit;
   }
 
@@ -468,7 +468,7 @@ exit:
   return retval;
 
 }
-EXPORT_SYMBOL(stmhdmiio_get_audio_source); 
+EXPORT_SYMBOL(stmhdmiio_get_audio_source);
 
 
 long stmhdmiio_set_edid_handling(unsigned int arg)
@@ -487,7 +487,7 @@ long stmhdmiio_set_edid_handling(unsigned int arg)
   return retval;
 
 }
-EXPORT_SYMBOL(stmhdmiio_set_edid_handling); 
+EXPORT_SYMBOL(stmhdmiio_set_edid_handling);
 
 
 long stmhdmiio_get_edid_handling(unsigned int * arg)
@@ -508,7 +508,7 @@ exit:
   return retval;
 
 }
-EXPORT_SYMBOL(stmhdmiio_get_edid_handling); 
+EXPORT_SYMBOL(stmhdmiio_get_edid_handling);
 
 //HACK <-
 #endif
@@ -804,14 +804,14 @@ static void stmhdmi_vsync_cb(stm_vsync_context_handle_t context, stm_field_t fie
   if(hdmi_data->display_runtime->hotplug_poll_pio)
   {
     unsigned hotplugstate = stpio_get_pin(hdmi_data->display_runtime->hotplug_poll_pio);
-#if !defined(HL101)
+#if defined(HL101) || defined(VIP2)
     if(hdmi_status == STM_DISPLAY_DISCONNECTED)
     {
       /*
        * If the device has just been plugged in, flag that we now need to
        * start the output.
        */
-      if(hotplugstate != 0)
+      if(hotplugstate == 0)
       {
         hdmi_status = STM_DISPLAY_NEEDS_RESTART;
         stm_display_output_set_status(hdmi_data->hdmi_output, hdmi_status);
@@ -824,21 +824,20 @@ static void stmhdmi_vsync_cb(stm_vsync_context_handle_t context, stm_field_t fie
        * started, so only change the state if the device has now been
        * disconnected.
        */
-      if(hotplugstate == 0)
+      if(hotplugstate != 0)
       {
         hdmi_status = STM_DISPLAY_DISCONNECTED;
         stm_display_output_set_status(hdmi_data->hdmi_output, hdmi_status);
       }
     }
 #else
-    /* nassar: Spider-Box HL101 stuff */
     if(hdmi_status == STM_DISPLAY_DISCONNECTED)
     {
       /*
        * If the device has just been plugged in, flag that we now need to
        * start the output.
        */
-      if(hotplugstate == 0)
+      if(hotplugstate != 0)
       {
         hdmi_status = STM_DISPLAY_NEEDS_RESTART;
         stm_display_output_set_status(hdmi_data->hdmi_output, hdmi_status);
@@ -851,7 +850,7 @@ static void stmhdmi_vsync_cb(stm_vsync_context_handle_t context, stm_field_t fie
        * started, so only change the state if the device has now been
        * disconnected.
        */
-      if(hotplugstate != 0)
+      if(hotplugstate == 0)
       {
         hdmi_status = STM_DISPLAY_DISCONNECTED;
         stm_display_output_set_status(hdmi_data->hdmi_output, hdmi_status);
@@ -1025,8 +1024,8 @@ int __init stmhdmi_create(int id,
   DPRINTK("new hdmi structure = %p\n",hdmi);
 
 #ifdef __TDT__
-  //Dagobert 
-  HACK_dev = hdmi; 
+  //Dagobert
+  HACK_dev = hdmi;
 #endif
 
   /*
