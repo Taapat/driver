@@ -80,7 +80,7 @@ static int ca_ioctl(struct inode *inode, struct file *file,
 
 		if (pti_hal_descrambler_set(pSession->session, pSession->descrambler, descr->cw, descr->parity) != 0)
 			printk("Error while setting descrambler keys\n");
-		
+
 		if (&pContext->DvbContext->Lock != NULL)
                    mutex_unlock (&pContext->DvbContext->Lock);
 
@@ -88,7 +88,7 @@ static int ca_ioctl(struct inode *inode, struct file *file,
 		return 0;
 	break;
 	}
-      
+
     default:
       printk ("%s: Error - invalid ioctl %08x\n", __FUNCTION__, cmd);
     }
@@ -117,6 +117,7 @@ static struct dvb_device ca_device =
 
 static int caInitialized = 0;
 
+#ifndef VIP2
 extern int init_ci_controller(struct dvb_adapter* dvb_adap);
 
 struct dvb_device *CaInit(struct DeviceContext_s *DeviceContext)
@@ -136,4 +137,4 @@ struct dvb_device *CaInit(struct DeviceContext_s *DeviceContext)
      are associated with the hardware descrambler */
   return &ca_device;
 }
-
+#endif

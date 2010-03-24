@@ -1,0 +1,1 @@
+cmd_/home/apps/duckbox/neutrino-stm23/tdt/tdt/cvs/driver/proton/proton.ko := sh4-linux-ld -r  -EL  --build-id -o /home/apps/duckbox/neutrino-stm23/tdt/tdt/cvs/driver/proton/proton.ko /home/apps/duckbox/neutrino-stm23/tdt/tdt/cvs/driver/proton/proton.o /home/apps/duckbox/neutrino-stm23/tdt/tdt/cvs/driver/proton/proton.mod.o

@@ -229,11 +229,13 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
 #ifdef __TDT__
         if(i < 2)
 #endif
+#ifndef VIP2
         dvb_register_device (&DvbContext->DvbAdapter,
                              &DeviceContext->CaDevice,
                              CaInit (DeviceContext),
                              DeviceContext,
                              DVB_DEVICE_CA);
+#endif
 
         dvb_register_device (&DvbContext->DvbAdapter,
                              &DeviceContext->VideoDevice,

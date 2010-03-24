@@ -29,7 +29,8 @@ endif
 ifdef FORTIS_HDBOX
 CFLAGS+=-DFORTIS_HDBOX
 endif
-obj-y	:= multicom/
+obj-y	:= avs/ 
+obj-y	+= multicom/
 obj-y	+= stgfb/
 #obj-y	+= player2/
 obj-y	+= boxtype/
@@ -38,7 +39,6 @@ obj-y	+= e2_proc/
 obj-y	+= frontends/
 obj-y	+= pti/
 ifndef VIP2
-obj-y	+= avs/ 
 obj-y	+= cic/
 endif
 ifndef FORTIS_HDBOX

@@ -21,6 +21,11 @@ fe-core-objs +=        stb0899/stb0899_drv.o
 fe-core-objs +=        stb0899/stb6100.o
 fe-core-objs +=        stb0899/core.o
 obj-m += fe-core.o
+else ifdef VIP2
+fe-core-objs +=        stv090x_api5/stv090x.o
+fe-core-objs +=        stv090x_api5/stv6110x.o
+fe-core-objs +=        stv090x_api5/core.o
+obj-m += fe-core.o
 else
 cx24116-objs +=	cx24116/cx24116.o
 obj-m += cx24116.o
