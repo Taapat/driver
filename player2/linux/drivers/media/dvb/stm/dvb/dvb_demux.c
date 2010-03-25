@@ -645,7 +645,7 @@ void demultiplexDvbPackets(struct dvb_demux* demux, const u8 *buf, int count)
       Context->provideToDecoder = 0;
 
       spin_lock(&demux->lock);
-      dvb_dmx_swfilter_packets(demux, first_buf, diff_count);
+      dvb_dmx_swfilter_packet(demux, first_buf, diff_count);
       spin_unlock(&demux->lock);
 
       // the demuxer indicated that the packets are for the decoder //
