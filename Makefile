@@ -14,6 +14,9 @@ DRIVER_TOPDIR:=$(shell pwd)
 include $(DRIVER_TOPDIR)/kernel.make
 else
 CFLAGS+=-D__TDT__
+ifdef UFS910
+CFLAGS+=-DUFS910
+endif
 ifdef TF7700
 CFLAGS+=-DTF7700
 endif
