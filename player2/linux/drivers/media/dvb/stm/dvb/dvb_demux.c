@@ -15,6 +15,7 @@ Date        Modification                                    Name
 #include <linux/dvb/audio.h>
 #include <linux/dvb/video.h>
 #ifdef __TDT__
+#include <linux/dvb/version.h>
 #include <linux/dvb/ca.h>
 #include "dvb_ca_en50221.h"
 #endif
@@ -634,7 +635,11 @@ void demultiplexDvbPackets(struct dvb_demux* demux, const u8 *buf, int count)
     count--;
     next += 188;
     cnt++;
+#if DVB_API_VERSION > 3
+    if(cnt > 8 || ts_pid(&buf[next]) != firstPid || !count)
+#else
     if(cnt > 8 || ts_pid(&buf[next]) != firstPid || !count || buf[next] != 0x47)
+#endif
     {
       diff_count = next - first;
       first_buf = buf + first;
@@ -644,9 +649,13 @@ void demultiplexDvbPackets(struct dvb_demux* demux, const u8 *buf, int count)
       // reset the flag (to be set by the callback //
       Context->provideToDecoder = 0;
 
+#if DVB_API_VERSION > 3
+      dvb_dmx_swfilter_packets(demux, first_buf, diff_count);
+#else
       spin_lock(&demux->lock);
       dvb_dmx_swfilter_packet(demux, first_buf, diff_count);
       spin_unlock(&demux->lock);
+#endif
 
       // the demuxer indicated that the packets are for the decoder //
       if(Context->provideToDecoder)
