@@ -31,9 +31,7 @@
 #include "stv6110x.h"
 #include "stv6110x_priv.h"
 
-static unsigned int verbose;
-module_param(verbose, int, 0644);
-MODULE_PARM_DESC(verbose, "Set Verbosity level");
+static unsigned int verbose=16;
 
 static int stv6110x_read_reg(struct stv6110x_state *stv6110x, u8 reg, u8 *data)
 {
@@ -491,7 +489,3 @@ error:
 	return NULL;
 }
 EXPORT_SYMBOL(stv6110x_attach);
-
-MODULE_AUTHOR("Manu Abraham");
-MODULE_DESCRIPTION("STV6110x Silicon tuner");
-MODULE_LICENSE("GPL");

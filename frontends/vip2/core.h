@@ -21,17 +21,25 @@
 #define MAX_DVB_ADAPTERS 4
 #define MAX_TUNERS_PER_ADAPTER 4
 
+struct tuner_config
+{
+	int adapter; /* DVB adapter number */
+	int i2c_bus; /* i2c adapter number */
+	u8 fe_rst;
+	u8 fe_lnb_en;
+	u8 fe_1318;
+	u8 fe_1419;
+};
+
+
 struct core_config
 {
+	struct tuner_config *tuner;
 	struct i2c_adapter	*i2c_adap; /* i2c bus of the tuner */
 	u8			i2c_addr; /* i2c address of the tuner */
 	u8			i2c_addr_lnb_supply; /* i2c address of the lnb_supply */
 	u8			vertical; /* i2c value */
 	u8			horizontal; /* i2c value */
-	struct stpio_pin*	lnb_enable;
-	struct stpio_pin*	lnb_vsel;	// 13/18V select pin
-	struct stpio_pin*	tuner_reset_pin;
-	u8			tuner_reset_act; /* active state of the pin */
 
 };
 
@@ -96,5 +104,7 @@ struct core {
 
 	void *priv;
 };
-extern void st90x_register_frontend(struct dvb_adapter *dvb_adap);
+
+extern void hc595_out(unsigned char ctls, int state);
+extern void fe_core_register_frontend(struct dvb_adapter *dvb_adap);
 #endif

@@ -19,11 +19,14 @@
 	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
+#include <linux/module.h>
+#include <linux/moduleparam.h>
+#include <linux/string.h>
 #include <linux/init.h>
 #include <linux/kernel.h>
-#include <linux/module.h>
 #include <linux/string.h>
 #include <linux/mutex.h>
+#include <linux/platform_device.h>
 
 #include "compat.h"
 #include <linux/dvb/frontend.h>
@@ -34,14 +37,14 @@
 #include "stv090x_reg.h"
 #include "stv090x.h"
 #include "stv090x_priv.h"
+#include "core.h"
 
-static unsigned int verbose;
-module_param(verbose, int, 0644);
+static unsigned int verbose=0;
 
 /* internal params node */
 struct stv090x_dev {
 	/* pointer for internal params, one for each pair of demods */
-	struct stv090x_internal		*internal;
+	struct stv090x_internal	*internal;
 	struct stv090x_dev		*next_dev;
 };
 
@@ -49,8 +52,7 @@ struct stv090x_dev {
 static struct stv090x_dev *stv090x_first_dev;
 
 /* find chip by i2c adapter and i2c address */
-static struct stv090x_dev *find_dev(struct i2c_adapter *i2c_adap,
-					u8 i2c_addr)
+static struct stv090x_dev *find_dev(struct i2c_adapter *i2c_adap, u8 i2c_addr)
 {
 	struct stv090x_dev *temp_dev = stv090x_first_dev;
 
@@ -1139,6 +1141,10 @@ static struct stv090x_reg stv0900_initval[] = {
 	{ STV090x_P2_PRVIT,		0x2F }, /* disable PR 6/7 */
 };
 
+#define STV090x_TNRSTEPS     0xf4e7
+#define STV090x_TNRGAIN      0xf4e8
+#define STV090x_P1_TNRCFG3   0xf4ee
+
 static struct stv090x_reg stv0903_initval[] = {
 	{ STV090x_OUTCFG,		0x00 },
 	{ STV090x_AGCRF1CFG,		0x11 },
@@ -1150,18 +1156,19 @@ static struct stv090x_reg stv0903_initval[] = {
 	{ STV090x_P1_F22TX,		0xc0 },
 	{ STV090x_P1_F22RX,		0xc0 },
 	{ STV090x_P1_DISRXCTL,		0x00 },
-#if 0
+/* __TDT__*/
 	{ STV090x_TNRSTEPS,		0x87 },
 	{ STV090x_TNRGAIN,		0x09 },
-#endif
-	{ STV090x_P1_DMDCFGMD,		0xF9 },
+
+/* TDT	{ STV090x_P1_DMDCFGMD,		0xF9 },*/
+	{ STV090x_P1_DMDCFGMD,		0xc9 },
 	{ STV090x_P1_DEMOD,		0x08 },
 	{ STV090x_P1_DMDCFG3,		0xc4 },
 	{ STV090x_P1_CARFREQ,		0xed },
 	{ STV090x_P1_TNRCFG2,		0x82 },
-#if 0
+/* __TDT__ */
 	{ STV090x_P1_TNRCFG3,		0x03 },
-#endif
+
 	{ STV090x_P1_LDT,		0xd0 },
 	{ STV090x_P1_LDT2,		0xb8 },
 	{ STV090x_P1_TMGCFG,		0xd2 },
@@ -1718,6 +1725,11 @@ static int stv090x_set_viterbi(struct stv090x_state *state)
 			goto err;
 		if (STV090x_WRITE_DEMOD(state, PRVIT, 0x3f) < 0) /* all puncture rate */
 			goto err;
+//#endif
+		if (STV090x_WRITE_DEMOD(state, FECM, 0x00) < 0) /* DVB-S and DVB-S2 */
+			goto err;
+		if (STV090x_WRITE_DEMOD(state, PRVIT, 0x2f) < 0) /* all puncture rate */
+			goto err;
 		break;
 	case STV090x_SEARCH_DVBS1:
 		if (STV090x_WRITE_DEMOD(state, FECM, 0x00) < 0) /* disable DSS */
@@ -1990,6 +2002,9 @@ static int stv090x_delivery_search(struct stv090x_state *state)
 		reg = STV090x_READ_DEMOD(state, DMDCFGMD);
 		STV090x_SETFIELD_Px(reg, DVBS1_ENABLE_FIELD, 1);
 		STV090x_SETFIELD_Px(reg, DVBS2_ENABLE_FIELD, 0);
+		if (STV090x_WRITE_DEMOD(state, DMDCFGMD, reg) < 0)
+			goto err;
+
 		if (STV090x_WRITE_DEMOD(state, DMDCFGMD, reg) < 0)
 			goto err;
 
@@ -4548,18 +4563,18 @@ static int stv090x_set_voltage(struct dvb_frontend *fe, fe_sec_voltage_t voltage
 
 	switch (voltage) {
 	case SEC_VOLTAGE_13:
-        printk("frontend: set_voltage_vertical \n");
-        stpio_set_pin (state->config->lnb_enable, VOLTAGE_ON);
-        stpio_set_pin (state->config->lnb_vsel, VOLTAGE_13);
+        printk("frontend %d: set_voltage_vertical \n", fe->id);
+        hc595_out (state->config->fe_lnb_en, VOLTAGE_ON);
+        hc595_out (state->config->fe_1318, VOLTAGE_13);
 		break;
 	case SEC_VOLTAGE_18:
-        printk("frontend: set_voltage_horizontal\n");
-        stpio_set_pin (state->config->lnb_enable, VOLTAGE_ON);
-        stpio_set_pin (state->config->lnb_vsel, VOLTAGE_18);
+        printk("frontend %d: set_voltage_horizontal\n", fe->id);
+        hc595_out (state->config->fe_lnb_en, VOLTAGE_ON);
+        hc595_out (state->config->fe_1318, VOLTAGE_18);
 		break;
 	case SEC_VOLTAGE_OFF:
-        printk("frontend: set_voltage_off\n");
-        stpio_set_pin (state->config->lnb_enable, VOLTAGE_OFF);
+        printk("frontend %d: set_voltage_off\n", fe->id);
+        hc595_out (state->config->fe_lnb_en, VOLTAGE_OFF);
 		break;
 	default:
 		return -EINVAL;
@@ -5347,41 +5362,41 @@ err:
 static struct dvb_frontend_ops stv090x_ops = {
 
 	.info = {
-		.name			= "STV090x Multistandard",
-		.type			= FE_QPSK,
+		.name				= "STV090x Multistandard",
+		.type				= FE_QPSK,
 		.frequency_min		= 950000,
 		.frequency_max 		= 2150000,
 		.frequency_stepsize	= 0,
-		.frequency_tolerance	= 0,
+		.frequency_tolerance= 0,
 		.symbol_rate_min 	= 1000000,
 		.symbol_rate_max 	= 45000000,
-		.caps			= FE_CAN_INVERSION_AUTO |
+		.caps				= FE_CAN_INVERSION_AUTO |
 					  FE_CAN_FEC_AUTO       |
 					  FE_CAN_QPSK           |
 					  FE_CAN_2G_MODULATION
 	},
 
-	.release			= stv090x_release,
-	.init				= stv090x_init,
+	.release				= stv090x_release,
+	.init					= stv090x_init,
 
-	.sleep				= stv090x_sleep,
+	.sleep					= stv090x_sleep,
 	.get_frontend_algo		= stv090x_frontend_algo,
 	.set_property			= stv090x_set_property,
 	.get_property			= stv090x_get_property,
 
 	.i2c_gate_ctrl			= stv090x_i2c_gate_ctrl,
 
-	.diseqc_send_master_cmd		= stv090x_send_diseqc_msg,
+	.diseqc_send_master_cmd	= stv090x_send_diseqc_msg,
 	.diseqc_send_burst		= stv090x_send_diseqc_burst,
-	.diseqc_recv_slave_reply	= stv090x_recv_slave_reply,
+	.diseqc_recv_slave_reply= stv090x_recv_slave_reply,
 	.set_tone				= stv090x_set_tone,
 	.set_voltage			= stv090x_set_voltage,
 
-	.search				= stv090x_search,
+	.search					= stv090x_search,
 	.read_status			= stv090x_read_status,
-	.read_ber			= stv090x_read_per,
-	.read_signal_strength		= stv090x_read_signal_strength,
-	.read_snr			= stv090x_read_cnr
+	.read_ber				= stv090x_read_per,
+	.read_signal_strength	= stv090x_read_signal_strength,
+	.read_snr				= stv090x_read_cnr
 };
 
 

@@ -22,12 +22,6 @@
 #ifndef __STV090x_H
 #define __STV090x_H
 
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
-#include <linux/stm/pio.h>
-#else
-#include <linux/stpio.h>
-#endif
-
 enum stv090x_demodulator {
 	STV090x_DEMODULATOR_0 = 1,
 	STV090x_DEMODULATOR_1
@@ -79,6 +73,11 @@ struct stv090x_config {
 	u32 xtal; /* default: 8000000 */
 	u8 address; /* default: 0x68 */
 
+	u8 fe_rst;
+	u8 fe_lnb_en;
+	u8 fe_1318;
+	u8 fe_1419;
+
 	u8 ts1_mode;
 	u8 ts2_mode;
 	u32 ts1_clk;
@@ -91,9 +90,6 @@ struct stv090x_config {
 	enum stv090x_adc_range	adc2_range; /* default: 2Vpp */
 
 	bool diseqc_envelope_mode;
-
-	struct stpio_pin	*lnb_enable;
-	struct stpio_pin	*lnb_vsel;	// 13/18V select pin
 
 	int (*tuner_init) (struct dvb_frontend *fe);
 	int (*tuner_set_mode) (struct dvb_frontend *fe, enum tuner_mode mode);
