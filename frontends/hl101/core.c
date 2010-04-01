@@ -1,11 +1,15 @@
 #include "core.h"
-/* Demodulator */
+/* Demodulators */
 #include "stb0899_drv.h"
 #include "stb0899_reg.h"
 #include "stb0899_cfg.h"
-/* Tuner */
+#include "stv090x.h"
+
+/* Tuners */
 #include "stb6100.h"
 #include "stb6100_cfg.h"
+#include "stv6110x.h"
+
 #include <linux/platform_device.h>
 #include <asm/system.h>
 #include <asm/io.h>
@@ -31,8 +35,20 @@ MODULE_PARM_DESC(demod, "demodelator type. (default stb0899");
 module_param(tuner,charp,0);
 MODULE_PARM_DESC(tuner, "tuner type. (default stb6100");
 
-#define I2C_ADDR_STB0899 (0xd4 >> 1)
-#define I2C_ADDR_STB6100 (0xc0 >> 1)
+#define I2C_ADDR_STB0899 	(0xd4 >> 1)
+#define I2C_ADDR_STB6100 	(0xc0 >> 1)
+#define I2C_ADDR_STV090X	(0xd0 >> 1)
+#define I2C_ADDR_STV6110X	(0xc0 >> 1)
+
+enum {
+	STV090X,
+	STB0899,
+};
+
+enum {
+	STV6110X,
+	STB6100,
+};
 
 static struct core *core[MAX_DVB_ADAPTERS];
 
@@ -551,38 +567,112 @@ static struct stb0899_config stb0899_config = {
 	.tuner_set_rfsiggain	= NULL,
 };
 
+static struct stv090x_config stv090x_config = {
+	.device			= STV0903,
+	.demod_mode		= STV090x_DUAL/*STV090x_SINGLE*/,
+	.clk_mode		= STV090x_CLK_EXT,
+
+	.xtal			= 16000000,
+	.address		= I2C_ADDR_STV090X,
+
+	.ts1_mode		= STV090x_TSMODE_DVBCI/*STV090x_TSMODE_SERIAL_CONTINUOUS*/,
+	.ts2_mode		= STV090x_TSMODE_DVBCI/*STV090x_TSMODE_SERIAL_CONTINUOUS*/,
+	.ts1_clk		= 0,
+	.ts2_clk		= 0,
+
+	.lnb_enable 	= NULL,
+	.lnb_vsel	 	= NULL,
+
+	.repeater_level	= STV090x_RPTLEVEL_16,
+
+	.tuner_init				= NULL,
+	.tuner_set_mode			= NULL,
+	.tuner_set_frequency	= NULL,
+	.tuner_get_frequency	= NULL,
+	.tuner_set_bandwidth	= NULL,
+	.tuner_get_bandwidth	= NULL,
+	.tuner_set_bbgain		= NULL,
+	.tuner_get_bbgain		= NULL,
+	.tuner_set_refclk		= NULL,
+	.tuner_get_status		= NULL,
+};
+
 static struct stb6100_config stb6100_config = {
 	.tuner_address = I2C_ADDR_STB6100,
 	.refclock      = 27000000
 };
 
+static struct stv6110x_config stv6110x_config = {
+	.addr			= I2C_ADDR_STV6110X,
+	.refclk			= 16000000,
+};
+
 static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 {
 	struct dvb_frontend *frontend = NULL;
+	struct stv6110x_devctl *ctl;
 
 	printk (KERN_INFO "%s >\n", __FUNCTION__);
 
 	if (i> 0)
 		return NULL;
 
-	frontend = dvb_attach(stb0899_attach, &stb0899_config, cfg->i2c_adap);
+	switch (demodType) {
+	  case STV090X:
+	  {
+		frontend = dvb_attach(stv090x_attach, &stv090x_config,
+				cfg->i2c_adap, STV090x_DEMODULATOR_0);
+		if (frontend) {
+			stv090x_config.lnb_enable  = cfg->lnb_enable;
+			stv090x_config.lnb_vsel    = cfg->lnb_vsel;
+			printk("%s: stv090x attached\n", __FUNCTION__);
 
-	if (frontend) {
-		printk("stb0899 attached\n");
-
-		if (dvb_attach(stb6100_attach, frontend, &stb6100_config, cfg->i2c_adap) == 0) {
-			printk (KERN_INFO "error attaching stb6100\n");
+				ctl = dvb_attach(stv6110x_attach, frontend, &stv6110x_config, cfg->i2c_adap);
+				if(ctl)	{
+					printk("%s: stv6110x attached\n", __FUNCTION__);
+					stv090x_config.tuner_init	  	  	= ctl->tuner_init;
+					stv090x_config.tuner_set_mode	  	= ctl->tuner_set_mode;
+					stv090x_config.tuner_set_frequency 	= ctl->tuner_set_frequency;
+					stv090x_config.tuner_get_frequency 	= ctl->tuner_get_frequency;
+					stv090x_config.tuner_set_bandwidth 	= ctl->tuner_set_bandwidth;
+					stv090x_config.tuner_get_bandwidth 	= ctl->tuner_get_bandwidth;
+					stv090x_config.tuner_set_bbgain	  	= ctl->tuner_set_bbgain;
+					stv090x_config.tuner_get_bbgain	  	= ctl->tuner_get_bbgain;
+					stv090x_config.tuner_set_refclk	  	= ctl->tuner_set_refclk;
+					stv090x_config.tuner_get_status	  	= ctl->tuner_get_status;
+				} else {
+					printk (KERN_INFO "%s: error attaching stv6110x\n", __FUNCTION__);
+					goto error_out;
+				}
+		} else {
+			printk (KERN_INFO "%s: error attaching stv090x\n", __FUNCTION__);
 			goto error_out;
 		}
+		break;
+	  }
+	  case STB0899:
+	  {
+			frontend = dvb_attach(stb0899_attach, &stb0899_config, cfg->i2c_adap);
 
-			printk("stb6100 attached\n");
-	} else {
-		printk (KERN_INFO "%s: error attaching stb0899\n", __FUNCTION__);
-		goto error_out;
+			if (frontend) {
+				printk("stb0899 attached\n");
+
+				if (dvb_attach(stb6100_attach, frontend, &stb6100_config, cfg->i2c_adap) == 0) {
+					printk (KERN_INFO "error attaching stb6100\n");
+					goto error_out;
+				}
+
+					printk("stb6100 attached\n");
+			} else {
+				printk (KERN_INFO "%s: error attaching stb0899\n", __FUNCTION__);
+				goto error_out;
+			}
+
+			stb0899_config.lnb_enable  = cfg->lnb_enable;
+			stb0899_config.lnb_vsel    = cfg->lnb_vsel;
+		  break;
+	  }
 	}
-
-	stb0899_config.lnb_enable  = cfg->lnb_enable;
-	stb0899_config.lnb_vsel    = cfg->lnb_vsel;
 
 	return frontend;
 
@@ -606,7 +696,7 @@ init_fe_device (struct dvb_adapter *adapter,
   cfg = kmalloc (sizeof (struct core_config), GFP_KERNEL);
   if (cfg == NULL)
   {
-    printk ("stb0899: kmalloc failed\n");
+    printk ("fe-core: kmalloc failed\n");
     return NULL;
   }
 
@@ -616,8 +706,6 @@ init_fe_device (struct dvb_adapter *adapter,
   printk("i2c adapter = 0x%0x\n", cfg->i2c_adap);
 
   cfg->i2c_addr = tuner_cfg->i2c_addr;
-
-  printk("i2c addr = %02x\n", cfg->i2c_addr);
 
   printk("tuner reset = %d.%d\n", tuner_cfg->tuner_enable[0], tuner_cfg->tuner_enable[1]);
 
@@ -636,7 +724,7 @@ init_fe_device (struct dvb_adapter *adapter,
   if ((cfg->i2c_adap == NULL) || (cfg->tuner_reset_pin == NULL) ||
 		  (cfg->lnb_vsel==NULL) || (cfg->lnb_enable==NULL)) {
 
-    printk ("stb0899: failed to allocate resources (%s)\n",
+    printk ("fe-core: failed to allocate resources (%s)\n",
     		(cfg->i2c_adap == NULL)?"i2c":"STPIO error");
 
     if(cfg->tuner_reset_pin != NULL)
@@ -711,7 +799,6 @@ struct plat_tuner_config tuner_resources[] = {
         [0] = {
                 .adapter 	= 0,
                 .i2c_bus 	= 0,
-                .i2c_addr 	= I2C_ADDR_STB0899,
                 .tuner_enable 	= {2, 3, 1},
                 .lnb_enable 	= {1, 6, 1},
                 .lnb_vsel   	= {1, 2, 0},
@@ -723,7 +810,7 @@ void fe_core_register_frontend(struct dvb_adapter *dvb_adap)
 	int i = 0;
 	int vLoop = 0;
 
-	printk (KERN_INFO "%s: DVB: Spider-Team STB0899 frontend core\n", __FUNCTION__);
+	printk (KERN_INFO "%s: DVB: Spider-Team plug and play frontend core\n", __FUNCTION__);
 
 	core[i] = (struct core*) kmalloc(sizeof(struct core),GFP_KERNEL);
 	if (!core[i])
@@ -755,6 +842,27 @@ EXPORT_SYMBOL(fe_core_register_frontend);
 
 int __init fe_core_init(void)
 {
+	if((demod[0] == 0) || (strcmp("stb0899", demod) == 0))
+	{
+		printk("demodelator: stb0899 dvb-s2    ");
+		demodType = STB0899;
+	}
+	else if(strcmp("stv090x", demod) == 0)
+	{
+		printk("demodelator: stv090x dvb-s2    ");
+		demodType = STV090X;
+	}
+
+	if((tuner[0] == 0) || (strcmp("stb6100", tuner) == 0))
+	{
+		printk("tuner: stb6100\n");
+		tunerType = STB6100;
+	}
+	else if(strcmp("stv6110x", tuner) == 0)
+	{
+		printk("tuner: stv6110x\n");
+		tunerType = STV6110X;
+	}
     printk("frontend core loaded\n");
     return 0;
 }
