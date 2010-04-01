@@ -41,6 +41,7 @@ obj-y	+= simu_button/
 obj-y	+= e2_proc/
 obj-y	+= frontends/
 obj-y	+= pti/
+obj-y	+= compcache/
 ifndef VIP2
 obj-y	+= cic/
 endif
