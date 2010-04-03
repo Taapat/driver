@@ -460,16 +460,21 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x0, reg_config + TSM_SYS_CFG);
       ctrl_outl(0x0, reg_config + TSM_SYS_CFG); /* 2 times ? */
 
-      /* RAM partitioning of streams */
-      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG);
-      ctrl_outl(0x500, reg_config + TSM_STREAM1_CFG);
-      ctrl_outl(0xa00, reg_config + TSM_STREAM2_CFG);
-      ctrl_outl(0xe00, reg_config + TSM_STREAM3_CFG);
-      ctrl_outl(0x1300, reg_config + TSM_STREAM4_CFG);
-
+      /* RAM partitioning of streams max 1984kb (31*64) */
 #if  defined(FORTIS_HDBOX) || defined(UFS922) || defined(HL101)
-      ctrl_outl(0x1700, reg_config + TSM_STREAM5_CFG);
-      ctrl_outl(0x1a00, reg_config + TSM_STREAM6_CFG);
+      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG);     //320kb (5*64)
+      ctrl_outl(0x500, reg_config + TSM_STREAM1_CFG);   //320kb (5*64)
+      ctrl_outl(0xa00, reg_config + TSM_STREAM2_CFG);   //256kb (4*64)
+      ctrl_outl(0xe00, reg_config + TSM_STREAM3_CFG);   //320kb (5*64)
+      ctrl_outl(0x1300, reg_config + TSM_STREAM4_CFG);  //256kb (4*64)
+      ctrl_outl(0x1700, reg_config + TSM_STREAM5_CFG);  //192kb (3*64)
+      ctrl_outl(0x1a00, reg_config + TSM_STREAM6_CFG);  //384kb (5*64)
+#else
+      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG);     //448kb (7*64)
+      ctrl_outl(0x700, reg_config + TSM_STREAM1_CFG);   //448kb (7*64)
+      ctrl_outl(0xe00, reg_config + TSM_STREAM2_CFG);   //384kb (6*64)
+      ctrl_outl(0x1400, reg_config + TSM_STREAM3_CFG);  //384kb (6*64)
+      ctrl_outl(0x1a00, reg_config + TSM_STREAM4_CFG);  //320kb (5*64)
 #endif
 
 #if  defined(FORTIS_HDBOX)
