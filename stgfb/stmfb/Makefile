@@ -73,6 +73,14 @@ EXTRA_CFLAGS    := -I$(DRIVER_TOPDIR)/stgfb/stmfb -I$(DRIVER_TOPDIR)/include/stm
 EXTRA_CXXFLAGS := -fno-rtti -fno-exceptions
 
 #ifdef __TDT__
+ifdef CUBEREVO_250HD
+EXTRA_CFLAGS += -DUSE_EXT_CLK
+endif
+ifdef CUBEREVO_MINI_FTA
+EXTRA_CFLAGS += -DUSE_EXT_CLK
+endif
+
+#ifdef __TDT__
 #EXTRA_CFLAGS += -DDEBUG
 #endif
 

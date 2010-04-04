@@ -79,7 +79,15 @@ CSTb7100Device::CSTb7100Device(void): CGenericGammaDevice()
    */
   WriteDevReg(STb7100_CLKGEN_BASE + CKGB_LCK, CKGB_LCK_UNLOCK);
 
+#ifdef __TDT__ 
+#ifdef USE_EXT_CLK
+  WriteDevReg(STb7100_CLKGEN_BASE + CKGB_CLK_REF_SEL, CKGB_REF_SEL_EXTERNAL);
+#else
   WriteDevReg(STb7100_CLKGEN_BASE + CKGB_CLK_REF_SEL, CKGB_REF_SEL_INTERNAL);
+#endif
+#else
+  WriteDevReg(STb7100_CLKGEN_BASE + CKGB_CLK_REF_SEL, CKGB_REF_SEL_INTERNAL);
+#endif
 
   ULONG chipid = ReadDevReg(STb7100_SYSCFG_BASE);
 
@@ -158,7 +166,15 @@ bool CSTb7100Device::Create()
     return false;
   }
 
+#ifdef __TDT__ 
+#ifdef USE_EXT_CLK
+  m_pHDFSynth->SetClockReference(STM_CLOCK_REF_27MHZ,0);
+#else
   m_pHDFSynth->SetClockReference(STM_CLOCK_REF_30MHZ,0);
+#endif
+#else
+  m_pHDFSynth->SetClockReference(STM_CLOCK_REF_30MHZ,0);
+#endif
 
   if((m_pSDFSynth = new CSTmFSynthType1(this, STb7100_CLKGEN_BASE+CKGB_FS1_MD1)) == 0)
   {
@@ -166,7 +182,15 @@ bool CSTb7100Device::Create()
     return false;
   }
 
+#ifdef __TDT__ 
+#ifdef USE_EXT_CLK
+  m_pSDFSynth->SetClockReference(STM_CLOCK_REF_27MHZ,0);
+#else
   m_pSDFSynth->SetClockReference(STM_CLOCK_REF_30MHZ,0);
+#endif
+#else
+  m_pSDFSynth->SetClockReference(STM_CLOCK_REF_30MHZ,0);
+#endif
 
   if(!m_pHDFSynth || !m_pSDFSynth)
   {

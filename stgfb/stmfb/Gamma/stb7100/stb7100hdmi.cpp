@@ -56,9 +56,21 @@
 
 #define AUD_FSYN_CFG_SPDIF_EN (1L<<8)
 
+#ifdef __TDT__ 
+#ifdef USE_EXT_CLK
+#define MD_48KHZ_256FS   0x11
+#define PE_48KHZ_256FS   0x3600
+#define SDIV_48KHZ_256FS 0x5
+#else
 #define MD_48KHZ_256FS   0xF3
 #define PE_48KHZ_256FS   0x3C00
 #define SDIV_48KHZ_256FS 0x4
+#endif
+#else
+#define MD_48KHZ_256FS   0xF3
+#define PE_48KHZ_256FS   0x3C00
+#define SDIV_48KHZ_256FS 0x4
+#endif
 
 #define AUD_SPDIF_CTRL   0x1C
 #define AUD_PRCONV_CTRL  0x200
@@ -130,7 +142,15 @@ CSTb710xHDMI::CSTb710xHDMI(CDisplayDevice     *pDev,
     WriteAUDReg(AUD_FSYN_CFG, 0x1);        /* Reset                          */
     g_pIOS->StallExecution(10);
 
+#ifdef __TDT__ 
+#ifdef USE_EXT_CLK
+    WriteAUDReg(AUD_FSYN_CFG, 0x00005ddc|(1<<23)); /* Enable and power everything up */
+#else
     WriteAUDReg(AUD_FSYN_CFG, 0x00005ddc); /* Enable and power everything up */
+#endif
+#else
+    WriteAUDReg(AUD_FSYN_CFG, 0x00005ddc); /* Enable and power everything up */
+#endif
 
     WriteAUDReg(AUD_FSYN0_EN,   0);
     WriteAUDReg(AUD_FSYN0_SDIV, SDIV_48KHZ_256FS);
@@ -337,7 +357,15 @@ int CSTb710xHDMI::GetAudioFrequency(void)
    * The 710x uses a 30MHz reference clock to the audio FSynths,
    * the same clock as for video.
    */
+#ifdef __TDT__ 
+#ifdef USE_EXT_CLK
+  return stm_fsynth_frequency(STM_CLOCK_REF_27MHZ, sdiv, md, pe);
+#else
   return stm_fsynth_frequency(STM_CLOCK_REF_30MHZ, sdiv, md, pe);
+#endif
+#else
+  return stm_fsynth_frequency(STM_CLOCK_REF_30MHZ, sdiv, md, pe);
+#endif
 }
 
 
