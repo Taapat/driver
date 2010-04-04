@@ -335,10 +335,10 @@ static int convert_source ( const dmx_source_t source)
 #else
     tag = TSIN0;
     break;
-#endif
   case DMX_SOURCE_FRONT1:
     tag = TSIN1;
     break;
+#endif
   case DMX_SOURCE_DVR0:
     tag = SWTS0;
     break;
