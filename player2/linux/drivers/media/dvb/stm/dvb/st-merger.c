@@ -355,7 +355,7 @@ void stm_tsm_init (int use_cimax)
        * packet len = 188
        */
 
-#if !defined(FORTIS_HDBOX)
+#if !defined(FORTIS_HDBOX) && !defined(HOMECAST5101)
       unsigned int stream_sync = 0xbc4733;
 #else
       unsigned int stream_sync = 0xbc4722;
@@ -383,7 +383,7 @@ void stm_tsm_init (int use_cimax)
 	 ->TS interface is as indicated by TSMerger configuration bits
        */
 
-#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101)
+#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101) && !defined(HOMECAST5101)
       /*
 	 The UFS910 hardware requires the following connections:
 	 ->TSIN1 routed to TSIN2
@@ -545,7 +545,7 @@ void stm_tsm_init (int use_cimax)
       /* auto count */
       ctrl_outl(0x0, reg_config + TSM_PROG_CNT0);
 
-#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101)
+#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101) && !defined(HOMECAST5101)
       /* UFS910 stream configuration */
       /* route stream 2 to PTI */
       ret = ctrl_inl(reg_config + TSM_PTI_SEL);
@@ -640,6 +640,11 @@ void stm_tsm_init (int use_cimax)
       ret = ctrl_inl(reg_config + TSM_1394_DEST);
       ctrl_outl(ret | 0x38 , reg_config + TSM_1394_DEST);
 
+#elif defined(HOMECAST5101)
+      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x1,reg_config + TSM_PTI_SEL);
+      ret = ctrl_inl(reg_config + TSM_STREAM0_CFG);
+      ctrl_outl(ret | 0x0,reg_config + TSM_STREAM0_CFG);
 #endif
 
       /* set stream on */

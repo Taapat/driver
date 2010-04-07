@@ -241,6 +241,8 @@ static int info_model_read(char *page, char **start, off_t off, int count,
   int len = sprintf(page, "ufs922\n");
 #elif defined(FORTIS_HDBOX)
   int len = sprintf(page, "hdbox\n");
+#elif defined(HOMECAST5101)
+  int len = sprintf(page, "hs5101\n");
 #else
   int len = sprintf(page, "ufs910\n");
 #endif

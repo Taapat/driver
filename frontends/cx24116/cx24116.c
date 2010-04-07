@@ -2291,9 +2291,13 @@ init_cx24116_device (struct dvb_adapter *adapter,
   /* initialize the config data */
   cfg->i2c_adap = i2c_get_adapter (tuner_cfg->i2c_bus);
   cfg->i2c_addr = tuner_cfg->i2c_addr;
+#if defined(HOMECAST5101)
+  cfg->tuner_enable_pin = NULL;
+#else
   cfg->tuner_enable_pin = stpio_request_pin (tuner_cfg->tuner_enable[0],
                                           tuner_cfg->tuner_enable[1],
                                           "tuner enabl", STPIO_OUT);
+#endif
   cfg->lnb_enable_pin = stpio_request_pin (tuner_cfg->lnb_enable[0],
                                            tuner_cfg->lnb_enable[1],
                                            "LNB enable", STPIO_OUT);
@@ -2301,7 +2305,10 @@ init_cx24116_device (struct dvb_adapter *adapter,
                                          tuner_cfg->lnb_vsel[1],
                                          "LNB vsel", STPIO_OUT);
 
-  if ((cfg->i2c_adap == NULL) || (cfg->tuner_enable_pin == NULL) ||
+  if ((cfg->i2c_adap == NULL) || 
+#ifndef HOMECAST5101
+      (cfg->tuner_enable_pin == NULL) ||
+#endif
       (cfg->lnb_enable_pin == NULL) || (cfg->lnb_vsel_pin == NULL))
   {
     printk ("cx24116: failed to allocate resources\n");
@@ -2488,17 +2495,7 @@ static struct device_driver cx24116_driver = {
 /* FIXME: move the tuner configuration data either to the
    board/stb71xx/setup.c or to a module handling configuration */
 struct plat_tuner_config tuner_resources[] = {
-#ifndef TF7700
-	/* UFS910 tuner resources */
-        [0] = {
-                .adapter = 0,
-                .i2c_bus = 0,
-                .i2c_addr = 0x0a >> 1,
-                .tuner_enable = {2, 4, 1},
-                .lnb_enable = {1, 6, 0},
-                .lnb_vsel = {1, 7, 0},
-        },
-#else
+#if defined(TF7700)
 	/* TF7700 tuner resources */
         [0] = {
                 .adapter = 0,
@@ -2515,6 +2512,26 @@ struct plat_tuner_config tuner_resources[] = {
                 .tuner_enable = {2, 6, 1},
                 .lnb_enable = {1, 0, 1},
                 .lnb_vsel = {1, 3, 1},
+        },
+#elif defined(HOMECAST5101)
+        /* Homecast 5101 tuner resources */
+        [0] = {
+                .adapter = 0,
+                .i2c_bus = 0,
+                .i2c_addr = 0x55,
+                .tuner_enable = {5, 3, 0}, // looks like the homecast 5101 has no tuner enable
+                .lnb_enable = {5, 2, 0},   // port5,pin2, 1=Off(~0V), 0=On(vsel), sel_act->On
+                .lnb_vsel = {5, 0, 0},     // port5,pin0, 1=V(13.9V), 0=H(19.1V), sel_act->H
+        }
+#else
+	/* UFS910 tuner resources */
+        [0] = {
+                .adapter = 0,
+                .i2c_bus = 0,
+                .i2c_addr = 0x0a >> 1,
+                .tuner_enable = {2, 4, 1},
+                .lnb_enable = {1, 6, 0},
+                .lnb_vsel = {1, 7, 0},
         },
 #endif
 };

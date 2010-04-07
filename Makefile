@@ -32,6 +32,9 @@ endif
 ifdef FORTIS_HDBOX
 CFLAGS+=-DFORTIS_HDBOX
 endif
+ifdef HOMECAST5101
+CFLAGS+=-DHOMECAST5101
+endif
 obj-y	:= avs/ 
 obj-y	+= multicom/
 obj-y	+= stgfb/
@@ -45,6 +48,7 @@ obj-y	+= compcache/
 ifndef VIP2
 obj-y	+= cic/
 endif
+ifndef HOMECAST5101
 ifndef FORTIS_HDBOX
 ifndef UFS922
 ifndef TF7700
@@ -60,6 +64,11 @@ obj-y	+= ufs922_fan/
 endif
 else
 obj-y	+= nuvoton/
+endif
+else
+obj-y	+= button_hs5101/
+obj-y	+= vfd_hs5101/
+obj-y	+= player2/linux/drivers/media/dvb/stm/dvb
 endif
 #obj-y   += zd1211/
 endif

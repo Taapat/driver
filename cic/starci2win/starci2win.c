@@ -96,6 +96,15 @@ unsigned char default_values[33] =
   0x00, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
   0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00
 };
+#elif defined (HOMECAST5101)
+unsigned char default_values[33] =
+{
+  0x00, /* register address for block transfer */
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 #endif
 
 /* EMI configuration */
@@ -719,6 +728,12 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   ctrl_outl(0x9d220000,reg_config + EMIBank1 + EMI_CFG_DATA1);
   ctrl_outl(0x9d220000,reg_config + EMIBank1 + EMI_CFG_DATA2);
   ctrl_outl(0x8,reg_config + EMIBank1 + EMI_CFG_DATA3);
+#elif defined(HOMECAST5101)
+/* FIXME: Not sure about this at the moment */
+  ctrl_outl(0x002046f9, reg_config + EMIBank2 + EMI_CFG_DATA0);
+  ctrl_outl(0xa5a00000, reg_config + EMIBank2 + EMI_CFG_DATA1);
+  ctrl_outl(0xa5a20000, reg_config + EMIBank2 + EMI_CFG_DATA2);
+  ctrl_outl(0x00000000, reg_config + EMIBank2 + EMI_CFG_DATA3);
 #else /* TF7700 */
   ctrl_outl(	EMI_DATA0_WE_USE_OE(0x0) 	|
 		  EMI_DATA0_WAIT_POL(0x0)		|
@@ -755,6 +770,8 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 #if defined(FORTIS_HDBOX)
 //is [0] = top slot?
   slot_membase[0] = ioremap( 0xa2000000, 0x1000 );
+#elif defined(HOMECAST5101)
+  slot_membase[0] = ioremap( 0xa3000000, 0x1000 );
 #else
   slot_membase[0] = ioremap( 0xa3000000, 0x1000 );
 #endif
@@ -768,6 +785,8 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 #elif defined(FORTIS_HDBOX)
 //is [1] = bottom slot?
   slot_membase[1] = ioremap( 0xa2010000, 0x1000 );
+#elif defined(HOMECAST5101)
+  slot_membase[1] = ioremap( 0xa3010000, 0x1000 );
 #else
   slot_membase[1] = ioremap( 0xa3010000, 0x1000 );
 #endif
