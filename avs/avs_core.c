@@ -240,13 +240,13 @@ int __init avs_init(void)
 #elif defined(UFS922)
 		printk("AVS: UFS922 Handling\n");
 		normal_i2c[0] = 0x4a;
-#elif defined(cuberevo)
+#elif defined(CUBEREVO)
 		printk("AVS: CUBEREVO Handling\n");
 		normal_i2c[0] = 0x4a;
-#elif defined(cuberevo_mini)
+#elif defined(CUBEREVO_MINI)
 		printk("AVS: CUBEREVO_MINI Handling\n");
 		normal_i2c[0] = 0x4a;
-#elif defined(cuberevo_mini2)
+#elif defined(CUBEREVO_MINI2)
 		printk("AVS: CUBEREVO_MINI2 Handling\n");
 		normal_i2c[0] = 0x4a;
 #elif defined(FORTIS_HDBOX)
