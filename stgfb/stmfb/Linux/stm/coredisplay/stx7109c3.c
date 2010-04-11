@@ -128,6 +128,7 @@ static struct stmcore_display_pipeline_data platform_data[] = {
 /*nassar: spider-box hl-101 uses id 1  */
     .hdmi_i2c_adapter_id      = 1,
 #elif defined(CONFIG_SH_STB7100_REF) || defined(CONFIG_SH_ST_MB442) || defined(CONFIG_SH_RELOOK511) || defined(CONFIG_SH_CUBEREVO_MINI) \
+|| defined(CONFIG_SH_CUBEREVO) || defined(CONFIG_SH_CUBEREVO_MINI2) || \
 || defined(CONFIG_SH_CUBEREVO_MINI_FTA) || defined(CONFIG_SH_CUBEREVO_250HD) || defined(CONFIG_SH_CUBEREVO_2000HD)
     .hdmi_i2c_adapter_id      = 1,
 #elif defined(CONFIG_SH_STB7109E_REF) || defined(CONFIG_SH_ST_MB448)
@@ -229,6 +230,7 @@ static struct stpio_pin *hotplug_pio = 0;
     defined(CONFIG_SH_ST_MB442)       || defined(CONFIG_SH_ST_MB448)    || \
     defined(CONFIG_SH_HMS1)           || defined(CONFIG_SH_ST_HMS1)     || \
     defined(CONFIG_SH_RELOOK511)      || defined(CONFIG_SH_CUBEREVO_MINI)|| \
+	defined(CONFIG_SH_CUBEREVO)      || defined(CONFIG_SH_CUBEREVO_MINI2)|| \
     defined(CONFIG_SH_CUBEREVO_MINI_FTA)|| \
     defined(CONFIG_SH_CUBEREVO_250HD) || defined(CONFIG_SH_CUBEREVO_2000HD)
 #define SYSCONF_DEVICEID 0x19001000
