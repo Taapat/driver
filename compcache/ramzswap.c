@@ -12,6 +12,7 @@
  * Project home: http://compcache.googlecode.com
  */
 
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/bitops.h>
@@ -383,7 +384,11 @@ static int __init ramzswap_init(void)
 #ifdef SWAP_DISCARD_SUPPORTED
 	blk_queue_set_discard(rzs.disk->queue, ramzswap_prepare_discard);
 #endif
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	blk_queue_hardsect_size(rzs.disk->queue, PAGE_SIZE);
+#else
+	blk_queue_logical_block_size(rzs.disk->queue, PAGE_SIZE);
+#endif
 	add_disk(rzs.disk);
 
 	pr_info(C "Initialization done!\n");
