@@ -12,6 +12,7 @@ Date        Modification                                    Name
 
 ************************************************************************/
 
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/ioport.h>
@@ -48,7 +49,7 @@ int MonitorMMEInit                     (struct DeviceContext_s*         DeviceCo
     struct sched_param          Param;
     struct task_struct*         Taskp;
     int                         Status;
-#if defined (CONFIG_KERNELVERSION)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
     struct clk*                 Tmu1Clock       = clk_get(NULL, "tmu1_clk");
 #else
     struct clk*                 Tmu1Clock       = clk_get("tmu1_clk");

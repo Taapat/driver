@@ -4,6 +4,7 @@
  *
  * indent: indent -bl -bli0 -cdb -sc -bap -bad -pcs -prs -bls -lp -npsl -bbb st-pti.c
  */
+#include <linux/version.h>
 #include <linux/init.h>
 #include <linux/slab.h>
 #include <linux/wait.h>
@@ -18,7 +19,7 @@
 
 #include <asm/io.h>
 
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #include "../../../../../../pti/pti_hal.h"
 #include <linux/bpa2.h>
 #else

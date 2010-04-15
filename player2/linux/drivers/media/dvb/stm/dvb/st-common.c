@@ -10,6 +10,7 @@
  *      published by the Free Software Foundation; either version 2 of
  *      the License, or (at your option) any later version.
  */
+#include <linux/version.h>
 #include <linux/init.h>
 #include <linux/slab.h>
 #include <linux/wait.h>
@@ -21,7 +22,7 @@
 
 #include <asm/io.h>
 
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #include <linux/bpa2.h>
 #else
 #include <linux/bigphysarea.h>

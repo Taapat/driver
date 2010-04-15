@@ -226,6 +226,7 @@ struct snd_pcm_hw_params {
 #include <sound/pcm.h>
 #include <sound/pcm_params.h>
 #include <sound/info.h>
+#include <linux/version.h>
 #include <linux/soundcard.h>
 #include <sound/initval.h>
 #include <sound/asoundef.h>
@@ -233,7 +234,7 @@ struct snd_pcm_hw_params {
 //#include <sound/typedefs.h>
 #include <sound/asound.h>
 
-#if defined (CONFIG_KERNELVERSION)    
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 typedef struct snd_kcontrol snd_kcontrol_t;
 typedef struct snd_ctl_elem_value snd_ctl_elem_value_t;
 typedef struct snd_ctl_elem_id snd_ctl_elem_id_t;

@@ -2,6 +2,7 @@
  * Simple __udivdi3 function which doesn't use FPU.
  */
 
+#include <linux/version.h>
 #include <linux/types.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
@@ -15,6 +16,6 @@ u64 __udivdi3(u64 n, u64 d)
 	return __xdiv64_32(n, (u32)d);
 }
 
-#if defined (CONFIG_KERNELVERSION) /* STLinux 2.3 or later */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 EXPORT_SYMBOL(__udivdi3);
 #endif

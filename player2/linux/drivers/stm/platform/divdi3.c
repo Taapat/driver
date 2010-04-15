@@ -2,6 +2,7 @@
  * Simple __divdi3 function which doesn't use FPU.
  */
 
+#include <linux/version.h>
 #include <linux/types.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
@@ -32,7 +33,7 @@ s64 __divdi3(s64 n, s64 d)
 	return res;
 }
 
-#if defined (CONFIG_KERNELVERSION) /* STLinux 2.3 or later */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 EXPORT_SYMBOL(__divdi3);
 #endif
 

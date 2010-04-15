@@ -11,6 +11,7 @@
 *      the License, or (at your option) any later version.
 */
 
+#include <linux/version.h>
 #include <linux/slab.h>
 #include <linux/pagemap.h>
 #include <linux/dma-mapping.h>
@@ -24,7 +25,7 @@
 #include <linux/delay.h>
 
 //__TDT__: many modifications in this file
-#if defined (CONFIG_KERNELVERSION) /* STLinux 2.3 */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #include "../../../../../../pti/pti_hal.h"
 #endif
 

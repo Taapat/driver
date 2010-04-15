@@ -21,6 +21,7 @@
  */
 
 #include <sound/driver.h>
+#include <linux/version.h>
 #include <linux/ioport.h>
 #include <linux/bpa2.h>
 #include <linux/init.h>
@@ -55,7 +56,7 @@ MODULE_DESCRIPTION("Pseudo soundcard");
 MODULE_LICENSE("GPL");
 MODULE_SUPPORTED_DEVICE("{{ALSA,Pseudo soundcard}}");
 
-#if defined (CONFIG_KERNELVERSION) /* STLinux 2.3 */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #warning Need to remove these typedefs
 typedef struct snd_pcm_substream snd_pcm_substream_t;
 typedef struct snd_pcm_runtime   snd_pcm_runtime_t;
@@ -129,7 +130,7 @@ static struct platform_device *devices[SNDRV_CARDS];
 static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	{
 		{
-#if defined (CONFIG_KERNELVERSION)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 			CARD_FATPIPE("SPDIF",   0, 5, 192000, 2),
 			CARD        ("Analog0", 0, 0, 192000, 2),
 			CARD        ("Analog1", 0, 1, 192000, 2),
@@ -149,7 +150,7 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	{
 		{
-#if defined (CONFIG_KERNELVERSION)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 			CARD        ("Analog0", 0, 0, 192000, 2),
 			CARD_SPDIF  ("HDMI",    0, 6, 192000, 2),
 #else /* STLinux-2.2 */
@@ -160,7 +161,7 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	},
 	{
 		{
-#if defined (CONFIG_KERNELVERSION)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 			CARD_SPDIF  ("SPDIF",   0, 5, 192000, 2),
 			CARD        ("Analog1", 0, 1, 192000, 2),
 #else /* STLinux 2.2 */
@@ -176,7 +177,7 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	{
 		{
-#if defined (CONFIG_KERNELVERSION)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 	#if defined(__TDT__)
 			CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
 	//		CARD        ("Analog",  1, 0,  48000, 2),
@@ -200,7 +201,7 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	{
 		{
-#if defined (CONFIG_KERNELVERSION)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 	#if defined(__TDT__)
 			CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
 	//		CARD        ("Analog",  0, 0,  48000, 2),
@@ -216,7 +217,7 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	},
 	{
 		{
-#if defined (CONFIG_KERNELVERSION)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 	#if define(__TDT__)
 	//		CARD        ("Analog",  1, 0,  48000, 2),
 	#else
@@ -603,7 +604,7 @@ static int snd_card_pseudo_pcm_mmap(struct snd_pcm_substream *substream,
         area->vm_ops = &snd_card_pseudo_pcm_vm_ops_data;
         area->vm_private_data = substream;
         area->vm_flags |= VM_RESERVED;
-#if defined (CONFIG_KERNELVERSION)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
         atomic_inc(&substream->mmap_count);
 #else /* STLinux 2.2 kernel */
         atomic_inc(&substream->runtime->mmap_count);
@@ -1632,7 +1633,7 @@ static int __init snd_pseudo_probe(struct platform_device *devptr)
 	snd_pseudo_mixer_init(pseudo, dev);
 	if ((err = snd_card_pseudo_register_dynamic_controls(pseudo)) < 0)
 		goto __nodev;
-#if defined (CONFIG_KERNELVERSION)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 	INIT_WORK(&pseudo->work, snd_card_pseudo_update_dynamic_controls);
 #else
 	INIT_WORK(&pseudo->work, snd_card_pseudo_update_dynamic_controls, &pseudo->work);

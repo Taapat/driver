@@ -12,6 +12,7 @@
 #ifndef _EMBX_OSINTERFACE_H
 #define _EMBX_OSINTERFACE_H
 
+#include <linux/version.h>
 #include "embx_typesP.h"
 
 #ifdef __cplusplus

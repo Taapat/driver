@@ -25,7 +25,7 @@
 */
 
 
-
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/string.h>
@@ -43,7 +43,7 @@
 #include <linux/i2c.h> 
 #include <linux/i2c-algo-bit.h>
 #include <linux/firmware.h>
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #include <linux/stm/pio.h>
 #else
 #include <linux/stpio.h>
@@ -1152,7 +1152,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 	}
 #else
 
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 /* Dagobert: we have a 29Bit MMU so it is not possible
  * to ioremap addresses greater than 0x20000000, nevertheless
  * on stlinux22 it works to remap this. 

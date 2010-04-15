@@ -11,11 +11,12 @@
  *
  */
 
+#include <linux/version.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/platform_device.h>
 #include <linux/leds.h>
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #include <linux/stm/pio.h>
 #else
 #include <linux/stpio.h>

@@ -5,6 +5,7 @@
 *    ca1 .. caX -> hardware descrambler via PTI session
 ***********************************************************************/
 
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/dvb/audio.h>
 #include <linux/dvb/ca.h>
@@ -17,7 +18,7 @@
 
 #include "st-common.h"
 
-#if defined (CONFIG_KERNELVERSION) /* STLinux 2.3 */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #include "../../../../../../pti/pti_hal.h"
 #endif
 

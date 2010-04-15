@@ -10,12 +10,13 @@
 #include "stb6100_cfg.h"
 #include "stv6110x.h"
 
+#include <linux/version.h>
 #include <linux/platform_device.h>
 #include <asm/system.h>
 #include <asm/io.h>
 #include <linux/dvb/dmx.h>
 #include <linux/proc_fs.h>
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #include <linux/stm/pio.h>
 #else
 #include <linux/stpio.h>

@@ -1333,7 +1333,7 @@ unsigned int		 Transfer1;
 //	Nicks dvp interrupt handler
 //
 
-#if defined (CONFIG_KERNELVERSION)  // STLinux 2.3
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 int DvpInterrupt(int irq, void* data)
 #else
 int DvpInterrupt(int irq, void* data, struct pt_regs* pRegs)
@@ -1914,7 +1914,7 @@ printk( "VIDIOC_OVERLAY: video start\n" );
     sema_init( &Context->DvpVideoInterruptSem, 0 );
     sema_init( &Context->DvpSynchronizerWakeSem, 0 );
 
-#if defined (CONFIG_KERNELVERSION) // STLinux 2.3
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
     Result	= request_irq( Context->DvpIrq, DvpInterrupt, IRQF_DISABLED, "dvp", Context );
 #else
     Result	= request_irq( Context->DvpIrq, DvpInterrupt, SA_INTERRUPT, "dvp", Context );

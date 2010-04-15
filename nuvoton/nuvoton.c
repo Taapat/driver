@@ -48,12 +48,13 @@
 #include <asm/io.h>
 #include <asm/uaccess.h>
 #include <asm/termbits.h>
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/delay.h>
 #include <linux/fs.h>
 #include <linux/kernel.h>
 #include <linux/mm.h>
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #include <linux/stm/pio.h>
 #else
 #include <linux/stpio.h>

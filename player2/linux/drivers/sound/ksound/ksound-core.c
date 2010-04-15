@@ -19,6 +19,7 @@
  */
 
 #include <sound/driver.h>
+#include <linux/version.h>
 #include <linux/init.h>
 #include <linux/smp_lock.h>
 #include <linux/slab.h>
@@ -41,7 +42,7 @@
 
 #include "ksound.h"
 
-#if defined (CONFIG_KERNELVERSION) /* STLinux 2.3 */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #warning Need to remove these typedefs and externs
 typedef struct snd_pcm_runtime snd_pcm_runtime_t;
 typedef struct snd_pcm snd_pcm_t;
@@ -653,7 +654,7 @@ int ksnd_pcm_open(ksnd_pcm_t **kpcm,
 	}
 
 #ifdef __TDT__
-#if defined (CONFIG_KERNELVERSION)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 	minor = snd_get_minor(device_type, card, device);
 #else
 	minor = SNDRV_MINOR(card, device_type + device);
@@ -768,7 +769,7 @@ static int _ksnd_pcm_IEC60958_transfer(snd_pcm_substream_t *substream,
 	int ret = 0;
 	mm_segment_t fs;
 
-//#ifndef CONFIG_KERNELVERSION /* Only works in STlinux 2.2 */
+//#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,17) /* Only works in STlinux 2.2 */
 #if 0
 	char __user *buf =
 	    (char __user *)data + samples_to_bytes(substream->runtime,
@@ -779,7 +780,7 @@ static int _ksnd_pcm_IEC60958_transfer(snd_pcm_substream_t *substream,
 	set_fs(get_ds());
 
 #if 0
-//#ifndef CONFIG_KERNELVERSION /* Only works in STlinux 2.2 */    
+//#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,17) /* Only works in STlinux 2.2 */    
 	ret =
 	    snd_pcm_format_iec60958_copy(substream, srcchannels, hwoffset, buf,
 					 frames);

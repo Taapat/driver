@@ -10,6 +10,7 @@
 
 /* This file handles linux specific stuff */
 
+#include <linux/version.h>
 #include <linux/device.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
@@ -31,7 +32,7 @@
 #include "slim_core.h"
 #include "slim_elf.h"
 
-#ifndef CONFIG_KERNELVERSION /* STLinux 2.2 */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #define IRQF_DISABLED SA_INTERRUPT 
 #endif
     
@@ -280,7 +281,7 @@ static ssize_t slim_debugfs_read_file(struct file *file, char __user * user_buf,
 
 static int slim_debugfs_open(struct inode *inode, struct file *file)
 {
-    #if defined (CONFIG_KERNELVERSION)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 	file->private_data = inode->i_private;
     #else /* STLinux 2.2 kernel */
     file->private_data = inode->u.generic_ip;

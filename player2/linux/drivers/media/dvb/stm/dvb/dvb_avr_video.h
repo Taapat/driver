@@ -18,6 +18,7 @@
 
 #include "dvb_avr.h"
 #include "dvp.h"
+#include <linux/version.h>
 
 /******************************
  * A/V receiver controls to control the "D1-DVP0" input
@@ -342,7 +343,7 @@ typedef struct dvp_v4l2_video_handle_s
  * video code.
  ******************************/
 
-#if defined (CONFIG_KERNELVERSION)  // STLinux 2.3
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 int DvpInterrupt(int irq, void* data);
 #else
 int DvpInterrupt(int irq, void* data, struct pt_regs* pRegs);

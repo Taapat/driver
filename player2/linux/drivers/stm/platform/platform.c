@@ -8,6 +8,7 @@
  * License.  See linux/COPYING for more information.
  */
 
+#include <linux/version.h>
 #include <linux/io.h>
 #include <linux/init.h>
 #include <linux/platform_device.h>
@@ -15,7 +16,7 @@
 #include <linux/autoconf.h>
 #include <asm-sh/processor.h>
 
-#if defined (CONFIG_KERNELVERSION)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #include <asm-sh/irq-ilc.h>
 #include <asm-sh/irq.h>
 #else /* STLinux 2.2 kernel */

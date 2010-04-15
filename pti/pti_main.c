@@ -12,6 +12,7 @@
  *	published by the Free Software Foundation; either version 2 of
  *	the License, or (at your option) any later version.
  */
+#include <linux/version.h>
 #include <linux/init.h>
 #include <linux/slab.h>
 #include <linux/wait.h>
@@ -957,7 +958,7 @@ int pti_hal_get_new_slot_handle ( int session_handle, int dvb_type,
 
   return -1;
 }
-#if defined (CONFIG_KERNELVERSION) /* STLinux 2.3 */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 int pti_hal_set_source(int session_handle, const int source)
 //FIXME int pti_hal_set_source ( int session_handle, const dmx_source_t source )
 #else

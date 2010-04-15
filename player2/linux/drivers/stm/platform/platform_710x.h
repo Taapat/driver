@@ -1,6 +1,8 @@
 #ifndef _PLATFORM_710X_
 #define _PLATFORM_710X_
 
+#include <linux/version.h>
+
 static struct resource tkdma_resource_7109[] = {
         [0] = { .start = 0x19248000,
                 .end   = 0x1924FFFF,
@@ -100,7 +102,7 @@ static __init int platform_init_710x(void)
         int chip_revision;
         unsigned long chip_7109;
         
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
         chip_7109 = (boot_cpu_data.type == CPU_STB7109);
         chip_revision = boot_cpu_data.cut_major;
 #else /* Assume STLinux 2.2 */

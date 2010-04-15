@@ -22,7 +22,8 @@
 #ifndef __STV090x_H
 #define __STV090x_H
 
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
+#include <linux/version.h>
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #include <linux/stm/pio.h>
 #else
 #include <linux/stpio.h>

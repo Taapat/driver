@@ -31,6 +31,7 @@
 #include <asm/io.h>
 #include <asm/uaccess.h>
 #include <asm/termbits.h>
+#include <linux/version.h>
 #include <linux/input.h>
 #include <linux/module.h>
 #include <linux/delay.h>
@@ -41,7 +42,7 @@
 #include <linux/time.h>
 #include <linux/poll.h>
 #include <linux/workqueue.h>
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #include <linux/stm/pio.h>
 #else
 #include <linux/stpio.h>
@@ -1142,7 +1143,7 @@ void button_bad_polling(void)
 		}
 	}
 }
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 static DECLARE_WORK(button_obj, button_bad_polling);
 #else
 static DECLARE_WORK(button_obj, button_bad_polling, NULL);

@@ -27,6 +27,8 @@
 #ifndef __STMVOUT_DRIVER_H
 #define __STMVOUT_DRIVER_H
 
+#include <linux/version.h>
+
 //#define DEBUG
 
 #if defined DEBUG
@@ -44,7 +46,7 @@
 #define MAX_OPENS	     3
 #define MAX_STREAM_BUFFERS  15
 
-#if defined (CONFIG_KERNELVERSION)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #include <media/v4l2-dev.h>
 #endif
 

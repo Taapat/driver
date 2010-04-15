@@ -95,7 +95,7 @@ static int dma_req_lines[SDTP_LAST_ENTRY];
 
 static void determine_dma_req_lines(void)
 {
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
   switch(boot_cpu_data.type)
   {
     case CPU_STX7105:
