@@ -136,7 +136,11 @@ void __exit boxtype_exit(void)
 {
 	dprintk("[BOXTYPE] unloading ...\n");
 	driver_unregister (&boxtype_driver);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
 	remove_proc_entry(procfs_name, &proc_root);
+#else
+	remove_proc_entry(procfs_name, NULL);
+#endif
 }
 
 module_init(boxtype_init);

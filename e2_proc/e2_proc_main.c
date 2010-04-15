@@ -191,6 +191,7 @@
 #include <linux/proc_fs.h>  	/* proc fs */
 #include <asm/uaccess.h>    	/* copy_from_user */
 
+#include <linux/version.h>
 #include <linux/string.h>
 #include <linux/module.h>
 
@@ -718,7 +719,11 @@ static int __init e2_proc_init_module(void)
     case cProcEntry:
       if(strcmp("bus", path) == 0)
       {
-	e2Proc[i].entry = create_proc_entry(name, 0, proc_bus);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
+        e2Proc[i].entry = create_proc_entry(name, 0, proc_bus);
+#else
+        e2Proc[i].entry = create_proc_entry(name, 0, NULL);
+#endif
       }
       else
       {
