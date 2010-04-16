@@ -64,7 +64,11 @@ static struct stpio_pin        *button_di = NULL;
 static int                      button_polling = 1;
 static unsigned char            button_value = 0;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20)
 void button_poll(void)
+#else
+void button_poll((struct work_struct *ignored)
+#endif
 {
   unsigned char value = 0, change;
   int           i;
@@ -104,10 +108,10 @@ void button_poll(void)
   }
 }
 
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
-static DECLARE_WORK(button_obj, button_poll); 
-#else
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20)
 static DECLARE_WORK(button_obj, button_poll, NULL); 
+#else
+static DECLARE_WORK(button_obj, button_poll); 
 #endif
 static int button_input_open(struct input_dev *dev)
 {

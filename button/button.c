@@ -27,7 +27,11 @@ static int bad_polling = 1;
 
 static struct workqueue_struct *wq;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20)
 void button_bad_polling(void)
+#else
+void button_bad_polling(struct work_struct *ignored)
+#endif
 {
 	while(bad_polling == 1)
 	{
@@ -73,10 +77,10 @@ void button_bad_polling(void)
 	}
 }
 
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
-static DECLARE_WORK(button_obj, button_bad_polling); 
-#else
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20)
 static DECLARE_WORK(button_obj, button_bad_polling, NULL); 
+#else
+static DECLARE_WORK(button_obj, button_bad_polling); 
 #endif
 static int button_input_open(struct input_dev *dev)
 {
