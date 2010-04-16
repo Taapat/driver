@@ -1,10 +1,15 @@
 TREE_ROOT?=$(DRIVER_TOPDIR)/player2
 CONFIG_STGFB_PATH?=$(DRIVER_TOPDIR)/stgfb/stmfb
-CFLAGS += -I$(TREE_ROOT)/linux/include/linux/stm/ 
-CFLAGS += -I$(TREE_ROOT)/linux/drivers/media/video/stm/ 
-CFLAGS += -I$(KERNEL_LOCATION)/drivers/media/dvb/dvb-core 
-CFLAGS += -I$(CONFIG_STGFB_PATH)/include 
-CFLAGS += -DDEBUG_DVB
+CCFLAGSY := -I$(TREE_ROOT)/linux/include/linux/stm/ 
+CCFLAGSY += -I$(TREE_ROOT)/linux/drivers/media/video/stm/ 
+CCFLAGSY += -I$(KERNEL_LOCATION)/drivers/media/dvb/dvb-core 
+CCFLAGSY += -I$(CONFIG_STGFB_PATH)/include 
+CCFLAGSY += -DDEBUG_DVB
+ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
+ccflags-y += $(CCFLAGSY)
+else
+CFLAGS += $(CCFLAGSY)
+endif
 
 ifdef UFS922
 ufs922_cic-objs += ufs922_cic/ufs922_cic.o

@@ -1,11 +1,16 @@
 TREE_ROOT?=$(DRIVER_TOPDIR)/
 CONFIG_STGFB_PATH?=$(DRIVER_TOPDIR)/stgfb/stmfb
-CFLAGS += -I$(TREE_ROOT)/linux/include/linux/stm/ 
-CFLAGS += -I$(TREE_ROOT)/linux/drivers/media/video/stm/ 
-CFLAGS += -I$(KERNEL_LOCATION)/drivers/media/dvb/dvb-core 
-CFLAGS += -I$(CONFIG_STGFB_PATH)/include 
-CFLAGS += -DDEBUG_DVB
-CFLAGS += -I$(TREE_ROOT)/include 
+CCFLAGSY := -I$(TREE_ROOT)/linux/include/linux/stm/ 
+CCFLAGSY += -I$(TREE_ROOT)/linux/drivers/media/video/stm/ 
+CCFLAGSY += -I$(KERNEL_LOCATION)/drivers/media/dvb/dvb-core 
+CCFLAGSY += -I$(CONFIG_STGFB_PATH)/include 
+CCFLAGSY += -DDEBUG_DVB
+CCFLAGSY += -I$(TREE_ROOT)/include 
+ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
+ccflags-y += $(CCFLAGSY)
+else
+CFLAGS += $(CCFLAGSY)
+endif
 
 ifdef UFS922
 cx21143-objs +=	cx21143/cx21143.o

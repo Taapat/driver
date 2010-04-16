@@ -67,7 +67,7 @@ static unsigned char            button_value = 0;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20)
 void button_poll(void)
 #else
-void button_poll((struct work_struct *ignored)
+void button_poll(struct work_struct *ignored)
 #endif
 {
   unsigned char value = 0, change;
