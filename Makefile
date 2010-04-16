@@ -52,7 +52,7 @@ ccflags-y += $(CCFLAGSY)
 else
 CFLAGS += $(CCFLAGSY)
 endif
-###obj-y	:= avs/ 
+obj-y	:= avs/ 
 obj-y	+= multicom/
 obj-y	+= stgfb/
 #obj-y	+= player2/
