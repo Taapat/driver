@@ -10,6 +10,9 @@
 
 #include "embx_osinterface.h"
 #include "debug_ctrl.h"
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
+#include <asm/cacheflush.h>
+#endif
 
 #if defined(__KERNEL__)
 #ifndef ioremap_cache
@@ -42,7 +45,11 @@ EMBX_VOID *EMBX_OS_ContigMemAlloc(EMBX_UINT size, EMBX_UINT align)
 
 	if (alignedAddr) {
 	    /* ensure there are no cache entries covering this address */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
 	    dma_cache_wback_inv(alignedAddr, size);
+#else
+	    flush_ioremap_region(0, alignedAddr, 0, size);
+#endif
 	}
     }
 

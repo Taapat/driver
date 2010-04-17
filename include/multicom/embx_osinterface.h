@@ -13,6 +13,9 @@
 #define _EMBX_OSINTERFACE_H
 
 #include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
+#include <asm/cacheflush.h>
+#endif
 #include "embx_typesP.h"
 
 #ifdef __cplusplus
@@ -303,9 +306,14 @@ EMBX_VOID EMBX_OS_PurgeCache(EMBX_VOID *ptr, EMBX_UINT sz);
 	EMBX_OS_PurgeCacheWithPrecomputableLength(ptr, sz)
 
 #elif defined __LINUX__ && defined __KERNEL__
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
 #define EMBX_OS_PurgeCache(ptr, sz) dma_cache_wback_inv(ptr, sz)
 #define EMBX_OS_FlushCache(ptr, sz) dma_cache_wback(ptr, sz)
+#else
+#define EMBX_OS_PurgeCache(ptr, sz) flush_ioremap_region(0, ptr, 0, sz)
+#define EMBX_OS_FlushCache(ptr, sz) writeback_ioremap_region(0, ptr, 0, sz)
+#endif
+
 
 #define EMBX_OS_PurgeCacheWithPrecomputableLength(ptr, sz) EMBX_OS_PurgeCache(ptr, sz)
 #define EMBX_OS_FlushCacheWithPrecomputableLength(ptr, sz) EMBX_OS_FlushCache(ptr, sz)

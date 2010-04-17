@@ -12,6 +12,8 @@ else
 CFLAGS += $(CCFLAGSY)
 endif
 
+ifeq (,$(findstring 2.6.3,$(KERNELVERSION)))
+# < 2.6.30
 ifdef UFS922
 cx21143-objs +=	cx21143/cx21143.o
 obj-m += cx21143.o
@@ -38,4 +40,26 @@ cx24116-objs +=	cx24116/cx24116.o
 obj-m += cx24116.o
 endif
 
+else
+
+# >= 2.6.30
+ifdef HL101
+$(error hl101 frontend driver needs to be fixed for >= 2.6.30)
+fe-core-objs +=        hl101/stb0899_algo.o
+fe-core-objs +=        hl101/stb0899_drv.o
+fe-core-objs +=        hl101/stb6100.o
+fe-core-objs +=        hl101/core.o
+obj-m += fe-core.o
+else ifdef VIP2
+$(error vip2 frontend driver needs to be fixed for >= 2.6.30)
+fe-core-objs +=        vip2/stv090x.o
+fe-core-objs +=        vip2/stv6110x.o
+fe-core-objs +=        vip2/ix2470.o
+fe-core-objs +=        vip2/zl10353.o
+fe-core-objs +=        vip2/core.o
+obj-m += fe-core.o
+endif
+# other drivers already in kernel
+
+endif
 
