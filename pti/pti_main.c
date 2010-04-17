@@ -21,7 +21,11 @@
 #include <linux/delay.h>
 #include <linux/time.h>
 #include <linux/errno.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 #include <asm/semaphore.h>
+#else
+#include <linux/semaphore.h>
+#endif
 #include <linux/platform_device.h>
 #include <linux/mutex.h>
 
@@ -335,8 +339,13 @@ static int stream_injector(void *user_data)
 	//printk(".");
 
 	/* invalidate the cache */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	dma_cache_inv((void*)&internal->back_buffer[offset],
 			count * PACKET_SIZE);
+#else
+	invalidate_ioremap_region(0, internal->back_buffer,
+			offset, count * PACKET_SIZE);
+#endif
 
 #ifdef STREAMCHECK
 	/* The first bytes of the packet after the header should
