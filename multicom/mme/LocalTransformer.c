@@ -76,10 +76,12 @@ static void LocalTransformer_Destroy(Transformer_t* tf)
 	LocalTransformer_t *transformer = (LocalTransformer_t *) tf;
 
 	if (transformer->callbackEventHandled) {
+		int ignore;
 		MME_Assert(transformer->callbackEvent);
 
 		/* wait for termination to be sent to the user callback thread */
-		EMBX_OS_EVENT_WAIT(transformer->callbackEventHandled);
+		ignore = EMBX_OS_EVENT_WAIT(transformer->callbackEventHandled);
+		(void) ignore;
 
 		MME_Info(MME_INFO_TRANSFORMER, (DEBUG_NOTIFY_STR "Destroying semaphores\n"));
 		EMBX_OS_EVENT_DESTROY(transformer->callbackEvent);
@@ -170,8 +172,8 @@ static MME_ERROR LocalTransformer_Term(Transformer_t* hostTransformer)
 	if (MME_SUCCESS == res && transformer->callbackEventHandled && transformer->callbackEvent) {
 		/* Unblock the callback wait thread - a NULL command indicates 
                    transformer termination */
-
-		EMBX_OS_EVENT_WAIT(transformer->callbackEventHandled);
+		int ignore = EMBX_OS_EVENT_WAIT(transformer->callbackEventHandled);
+		(void) ignore;
 		transformer->command = NULL;
 		EMBX_OS_EVENT_POST(transformer->callbackEvent);       
 	}
@@ -438,11 +440,13 @@ MME_ERROR MME_LocalTransformer_NotifyHost(
 	if (transformer->callbackEvent) {
 		/* Do not call the callback function directly - but signal another thread
                    which will do it */
+		int ignore;
 
 		MME_Info(MME_INFO_TRANSFORMER, (DEBUG_NOTIFY_STR "waiting for handled sem\n"));
 
 		/* Wait till the waitor is ready */
-		EMBX_OS_EVENT_WAIT(transformer->callbackEventHandled);
+		ignore = EMBX_OS_EVENT_WAIT(transformer->callbackEventHandled);
+		(void) ignore;
 		transformer->event = event;
 		transformer->command = command;
 		/* Signal that the waitor can read the event/command data */

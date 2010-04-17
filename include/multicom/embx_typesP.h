@@ -280,8 +280,8 @@ struct EMBX_TransportMethods_s {
     EMBX_ERROR (*test_state)        (EMBX_Transport_t *, EMBX_VOID *);
 
     /* MULTICOM_32BIT_SUPPORT: Zero copy address translation methods */
-    EMBX_ERROR (*virt_to_phys)      (EMBX_Transport_t *, EMBX_VOID *, EMBX_UINT *);
-    EMBX_ERROR (*phys_to_virt)      (EMBX_Transport_t *, EMBX_UINT, EMBX_VOID **);
+    EMBX_ERROR (*virttophys)      (EMBX_Transport_t *, EMBX_VOID *, EMBX_UINT *);
+    EMBX_ERROR (*phystovirt)      (EMBX_Transport_t *, EMBX_UINT, EMBX_VOID **);
 };
 
 

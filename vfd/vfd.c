@@ -331,6 +331,7 @@ static int VFD_Display_Write_On_Off(struct vfd_ioctl_data *data)
 	return 0; 
 }
 
+#if 0
 static int VFD_TEST_Write(struct vfd_ioctl_data *data)
 {
 	unsigned char write_data[5];
@@ -344,6 +345,7 @@ static int VFD_TEST_Write(struct vfd_ioctl_data *data)
 	dprintk("%s <\n", __func__);
 	return 0;
 }
+#endif
 
 static int VFD_Icon_Display_On_Off(struct vfd_ioctl_data *data)
 {    
@@ -357,7 +359,6 @@ static int VFD_Icon_Display_On_Off(struct vfd_ioctl_data *data)
 void DisplayVFDString(unsigned char* aBuf, int len)
 {
 	struct vfd_ioctl_data data;
-	int i;
 	
 	dprintk("%s >\n", __func__);
 	if(len > 63 || len < 0)
@@ -405,11 +406,11 @@ int vfd_init_func(void)
 	return 0;
 }
 
-static ssize_t VFDdev_write(struct file *filp, const unsigned char *buff, size_t len, loff_t *off)
+static ssize_t VFDdev_write(struct file *filp, const char *buff, size_t len, loff_t *off)
 {
 	unsigned char* kernel_buf = kmalloc(len, GFP_KERNEL);
 
-	dprintk("%s > (len %d, offs %d)\n", __func__, len, *off);
+	dprintk("%s > (len %d, offs %lld)\n", __func__, len, *off);
 /* konfetti */
 	if (kernel_buf == NULL)
 	{
@@ -432,11 +433,11 @@ static ssize_t VFDdev_write(struct file *filp, const unsigned char *buff, size_t
 	return len;
 }
 
-static ssize_t VFDdev_read(struct file *filp, unsigned char __user *buff, size_t len, loff_t *off)
+static ssize_t VFDdev_read(struct file *filp, char __user *buff, size_t len, loff_t *off)
 {
 /* ignore offset or reading of fragments */
 
-	dprintk("%s > (len %d, offs %d)\n", __func__, len, *off);
+	dprintk("%s > (len %d, offs %lld)\n", __func__, len, *off);
 	if (vOpen.fp != filp)
 	{
 	   dprintk("%s return eusers<\n", __func__);

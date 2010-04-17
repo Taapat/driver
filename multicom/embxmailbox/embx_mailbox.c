@@ -82,8 +82,6 @@ EXPORT_SYMBOL( EMBX_Mailbox_GetLockFromHandle );
 
 static int parseMailboxString(char *mailbox, EMBX_VOID **pAddr, EMBX_INT *pIrq, EMBX_Mailbox_Flags_t *pFlags)
 {
-    EMBX_Info(EMBX_INFO_MAILBOX, (">>>parseMailboxString(\"%s\", ...)\n", mailbox));
-
     struct { char *name; EMBX_Mailbox_Flags_t flag; } *pLookup, lookup[] = {
 	{ "set1",     EMBX_MAILBOX_FLAGS_SET1     },
 	{ "st20",     EMBX_MAILBOX_FLAGS_ST20     },
@@ -94,6 +92,8 @@ static int parseMailboxString(char *mailbox, EMBX_VOID **pAddr, EMBX_INT *pIrq, 
 	{ NULL, 0 }
     };
     
+    EMBX_Info(EMBX_INFO_MAILBOX, (">>>parseMailboxString(\"%s\", ...)\n", mailbox));
+
     if (NULL == mailbox) {
 	EMBX_Info(EMBX_INFO_MAILBOX, ("<<<parseMailboxString = -EINVAL:1\n"));
 	return -EINVAL;
@@ -197,7 +197,11 @@ static EMBX_MUTEX                 _mailboxSpinlockLock;
 #define IRQ_HANDLED 1
 #define IRQ_NONE 0
 #endif
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20)
 static int interruptDispatcher(int irq, void *param, struct pt_regs *regs)
+#else
+static irqreturn_t interruptDispatcher(int irq, void *param)
+#endif
 #elif defined __OS21__
 #define IRQ_HANDLED OS21_SUCCESS
 #define IRQ_NONE OS21_FAILURE
@@ -879,7 +883,8 @@ EMBX_ERROR EMBX_Mailbox_Alloc(void (*handler)(void *), void *param, EMBX_Mailbox
 			
 				/* block until this mailbox is activated */
 				if (lms->requiresActivating) {
-					EMBX_OS_EVENT_WAIT(&(lms->activateEvent));
+					int ignore = EMBX_OS_EVENT_WAIT(&(lms->activateEvent));
+					(void) ignore;
 					EMBX_Assert(0 == lms->requiresActivating);
 				}
 
@@ -946,10 +951,11 @@ EMBX_ERROR EMBX_Mailbox_Synchronize(EMBX_Mailbox_t *local, EMBX_UINT token, EMBX
 {
 	EMBX_UINT       oldEnables;
 	EMBX_UINT       oldStatus;
-	void          (*oldHandler)(void *);
-	void           *oldParam;
+	void          (*oldHandler)(void *) = oldHandler;
+	void           *oldParam = oldParam;
 	EMBX_Mailbox_t *remoteMailbox;
 	struct synchronizeHandlerParamBlock paramBlock;
+	int ignore;
 
 	EMBX_Info(EMBX_INFO_MAILBOX, (">>>EMBX_Mailbox_Synchronize(0x%08x, ...)\n", local));
 
@@ -993,7 +999,8 @@ EMBX_ERROR EMBX_Mailbox_Synchronize(EMBX_Mailbox_t *local, EMBX_UINT token, EMBX
 
 	/* wait for the other side to notify us that it has found us */
 	EMBX_Info(EMBX_INFO_MAILBOX, ("   waiting for interrupt from partner\n"));
-	EMBX_OS_EVENT_WAIT(&(paramBlock.event));
+	ignore = EMBX_OS_EVENT_WAIT(&(paramBlock.event));
+	(void) ignore;
 	EMBX_OS_EVENT_DESTROY(&(paramBlock.event));
 
 	if (!remoteMailbox) {

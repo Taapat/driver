@@ -33,6 +33,9 @@
 
 #include <linux/bpa2.h>
 
+struct DeviceContext_s;
+struct StreamContext_s;
+
 #include "dvb_frontend.h"
 #include "dmxdev.h"
 #include "dvb_demux.h"
