@@ -288,7 +288,7 @@ int fake_avs_command_kernel(struct i2c_client *client, unsigned int cmd, void *a
 				return -EINVAL;
 		}
 
-		arg = (int) val;
+		*((int*) arg) = (int) val;
 	        return 0;
 	}
 	else

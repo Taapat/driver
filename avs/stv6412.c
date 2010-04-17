@@ -868,7 +868,7 @@ int stv6412_command_kernel(struct i2c_client *client, unsigned int cmd, void *ar
 				return -EINVAL;
 		}
 
-		arg = (int) val;
+		*((int*) arg) = (int) val;
 	        return 0;
 	}
 	else
