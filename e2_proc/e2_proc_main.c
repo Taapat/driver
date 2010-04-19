@@ -240,10 +240,14 @@ static int info_model_read(char *page, char **start, off_t off, int count,
   int len = sprintf(page, "vip2\n");
 #elif defined(UFS922)
   int len = sprintf(page, "ufs922\n");
+#elif defined(UFS912)
+  int len = sprintf(page, "ufs912\n");
 #elif defined(FORTIS_HDBOX)
   int len = sprintf(page, "hdbox\n");
 #elif defined(HOMECAST5101)
   int len = sprintf(page, "hs5101\n");
+#elif defined(OCTAGON1008)
+  int len = sprintf(page, "octagon1008\n");
 #else
   int len = sprintf(page, "ufs910\n");
 #endif

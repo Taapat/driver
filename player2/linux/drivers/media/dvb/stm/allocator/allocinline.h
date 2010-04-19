@@ -50,7 +50,7 @@ typedef struct allocator_device_s       *allocator_device_t;
 
 #if defined(__TDT__) 
 
-#if defined(UFS910)
+#if defined(UFS910) || defined(FORTIS_HDBOX) || defined(OCTAGON1008)
 /* This remapping is only necessary for the UFS910 because it only has 64 MB
    in SYS_LMI. All other models should have at least 128 MB in SYS_LMI. */
 #define	SYS_LMI_PARTITION		"BPA2_Region1"

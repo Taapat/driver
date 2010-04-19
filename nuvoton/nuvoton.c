@@ -43,6 +43,22 @@
  * 0x02, 0x93, 0x01, 0x00, 0x08, 0x03
  * 0x02, 0x93, 0xf2, 0x0a, 0x00, 0x03
  *
+ * New commands from octagon1008:
+ * 0x02 0xd0 x03
+ * 
+ * 0x02 0xc4 0x20 0x00 0x00 0x00 0x03
+ * 
+ * fixme icons: must be mapped somewhere!
+ * 0x00 dolby 
+ * 0x01 dts
+ * 0x02 video
+ * 0x03 audio
+ * 0x04 link
+ * 0x05 hdd
+ * 0x06 disk
+ * 0x07 DVB
+ * 0x08 DVD
+ * fixme: usb icon at the side and some other?
  */
 
 #include <asm/io.h>
@@ -199,6 +215,7 @@ enum {
 		ICON_MAX
 };
 
+
 struct iconToInternal {
    char  *name;
 	u16	icon;
@@ -258,9 +275,18 @@ struct iconToInternal {
 #define cCommandGetPort          0xb2
 #define cCommandSetPort          0xb3
 
-#define cCommandSetIcon          0xc2
+#ifdef OCTAGON1008
+#define cCommandSetIcon          0xc4 //0xc2
+#else
+#define cCommandSetIcon          0xc4
+#endif
 
+#ifdef OCTAGON1008
+#define cCommandSetVFD           0xc4
+#else
 #define cCommandSetVFD           0xce /* 0xc0 */
+#endif
+
 #define cCommandSetVFDBrightness 0xd2
 
 #define cCommandGetFrontInfo     0xe0
@@ -281,6 +307,69 @@ struct iconToInternal {
 /* general */
 #define SOP 2
 #define EOP 3
+
+#ifdef OCTAGON1008
+//Trick: text + icon
+struct vfd_buffer vfdbuf[8];
+/* Dagobert: On octagon the "normal" fp setting does not work.
+ * it seems that with this command we set the segment elements
+ * direct (not sure here). I dont know how this work but ...
+ */
+struct chars {
+u8 s1;
+u8 s2;
+u8 c;
+} octagon_chars[] =
+{
+   {0x07, 0xf1, 'A'},
+   {0x52, 0xd5, 'B'},
+   {0x44, 0x21, 'C'},
+   {0x52, 0x95, 'D'},
+   {0x45, 0xe1, 'E'},
+   {0x05, 0xe1, 'F'},
+   {0x46, 0xe1, 'G'},
+   {0x07, 0xf0, 'H'},
+   {0x10, 0x84, 'I'},
+   {0x46, 0x10, 'J'},
+   {0x0d, 0xA2, 'K'},
+   {0x44, 0x20, 'L'},
+   {0x06, 0xba, 'M'},
+   {0x0e, 0xb8, 'N'},
+   {0x46, 0x31, 'O'},
+   {0x05, 0xf1, 'P'},
+   {0x4e, 0x31, 'Q'},
+   {0x0d, 0xf1, 'R'},
+   {0x43, 0xe1, 'S'},
+   {0x10, 0x85, 'T'},
+   {0x46, 0x30, 'U'},
+   {0x24, 0xa2, 'V'},
+   {0x2e, 0xb0, 'W'},
+   {0x28, 0x8a, 'X'},
+   {0x10, 0x8a, 'Y'},
+   {0x60, 0x83, 'Z'},
+   {0x02, 0x10, '1'},
+   {0x45, 0xd1, '2'},
+   {0x43, 0xd1, '3'},
+   {0x03, 0xf0, '4'},
+   {0x43, 0xe1, '5'},
+   {0x47, 0xe1, '6'},
+   {0x02, 0x11, '7'},
+   {0x47, 0xf1, '8'},
+   {0x03, 0xf1, '9'},
+   {0x46, 0x31, '0'},
+   {0x38, 0x8e, '!'},
+   {0x20, 0x82, '/'},
+   {0x20, 0x00, '.'},
+   {0x20, 0x00, ','},
+   {0x11, 0xc4, '+'},
+   {0x01, 0xc0, '-'},
+   {0x40, 0x00, '_'},
+   {0x08, 0x82, '<'},
+   {0x20, 0x88, '<'},
+   {0x00, 0x00, ' '},
+};
+
+#endif
 
 int nuvotonWriteString(unsigned char* aBuf, int len);
 
@@ -370,7 +459,7 @@ static u16 serial2_getc(void)
 {
   unsigned char         *ASC_2_RX_BUFF = (unsigned char*)(ASC2BaseAddress + ASC_RX_BUFF);
   unsigned int          *ASC_2_INT_STA = (unsigned int*)(ASC2BaseAddress + ASC_INT_STA);
-  unsigned long         Counter = 100000;
+  unsigned long         Counter = 10000;
   u16                   result;
   
   while (((*ASC_2_INT_STA & ASC_INT_STA_RBF) == 0) && --Counter);
@@ -389,14 +478,14 @@ static u16 serial2_getc(void)
 static void serial2_init (void)
 {
   /* Configure the PIO pins */
-#ifdef ohne_ttyas0
   stpio_request_pin(4, 3,  "ASC_TX", STPIO_ALT_OUT); /* Tx */
   stpio_request_pin(4, 2,  "ASC_RX", STPIO_IN);      /* Rx */
 
-  *(unsigned int*)(PIO4BaseAddress + PIO_CLR_PnC0) = 0x07;
-  *(unsigned int*)(PIO4BaseAddress + PIO_CLR_PnC1) = 0x06;
-  *(unsigned int*)(PIO4BaseAddress + PIO_SET_PnC1) = 0x01;
-  *(unsigned int*)(PIO4BaseAddress + PIO_SET_PnC2) = 0x07;
+#if 0
+  *(unsigned int*)(PIO4BaseAddress + PIO_CLR_PnC0) = 0x03/*0x07*/;
+  *(unsigned int*)(PIO4BaseAddress + PIO_CLR_PnC1) = 0x38 /*0x06*/;
+  *(unsigned int*)(PIO4BaseAddress + PIO_SET_PnC1) = 0x38 /*0x01*/;
+  *(unsigned int*)(PIO4BaseAddress + PIO_SET_PnC2) = 0xac /*0x07*/;
 #endif
 
   *(unsigned int*)(ASC2BaseAddress + ASC_INT_EN)   = 0x00000000;
@@ -728,7 +817,7 @@ int fpReceiverTask(void* dummy)
 	             memmove(&transmit[0], &transmit[1], (cMaxTransQueue - 1) * sizeof(struct transmit_s));	
 
 	             if (transmitCount != 0)		  
-     	  		       dprintk(10, "next command will be 0x%x\n", transmit[0].buffer[0]);
+     	  		       dprintk(10, "next command will be 0x%x\n", transmit[0].buffer[1]);
 
 	 	          waitAckCounter = 0;
      	 	       dprintk(20, "detect ACK %d\n", state);
@@ -914,8 +1003,20 @@ int fpTransmitterTask(void* dummy)
 	           memmove(&transmit[0], &transmit[1], (cMaxTransQueue - 1) * sizeof(struct transmit_s));	
 
 	           if (transmitCount != 0)		  
-     	  	        dprintk(1, "%s: next command will be 0x%x\n", __func__, transmit[0].buffer[0]);
-
+				  {
+     	  	        
+#ifdef OCTAGON1008
+                 if (transmit[0].buffer[1] == 0xc4)
+				        dprintk(1, "%s: next command will be 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", __func__, transmit[0].buffer[0], 
+						                       transmit[0].buffer[1], transmit[0].buffer[2],
+													  transmit[0].buffer[3], transmit[0].buffer[4],
+													  transmit[0].buffer[5], transmit[0].buffer[6]);
+                 else
+#endif
+				        dprintk(1, "%s: next command will be 0x%x\n", __func__, transmit[0].buffer[1]);
+             					                      
+				  }
+				  
 		        state = cStateIdle;
 	   	  }
 		  }
@@ -974,6 +1075,111 @@ int nuvotonWriteCommand(char* buffer, int len, int needAck, char* ack_buffer, in
 	return 0;
 }
 
+#ifdef OCTAGON1008
+int nuvotonSetIcon(int which, int on)
+{
+	char buffer[128];
+   int  res = 0, i;
+		
+	dprintk(5, "%s > %d, %d\n", __func__, which, on);
+
+	if (which < 0 || which >= 8)
+	{
+		printk("VFD/Nuvoton icon number out of range %d\n", which);
+		return -EINVAL;
+		//Trick: symbole left
+/*		memset(buffer, 0, 128);
+
+		buffer[0] = SOP;
+		buffer[1] = cCommandSetIcon;
+		buffer[2] = 8;
+		if (on)
+			buffer[3] = 0x01;
+		else	
+			buffer[3] = 0x00;
+
+		buffer[4] = which;//0x00;
+		buffer[5] = 0x00;
+		buffer[6] = EOP;
+
+		res = nuvotonWriteCommand(buffer, 7, 0, NULL, 0, 0);
+		
+		return res;*/
+	}
+	printk("VFD/Nuvoton icon number %d\n", which);
+	memset(buffer, 0, 128);
+
+	buffer[0] = SOP;
+	buffer[1] = cCommandSetIcon;
+
+	if (on){
+		buffer[3] = 0x01;
+		vfdbuf[0].aktiv = 1;
+	}else
+	{
+		buffer[3] = 0x00;
+		vfdbuf[0].aktiv = 0;
+	}
+//TRICK: FIXME
+	switch (which){
+		case 0x00:
+			vfdbuf[0].which = which;
+			buffer[2] = which;
+			buffer[4] = vfdbuf[0].buf1;
+			buffer[5] = vfdbuf[0].buf2;
+			break;
+		case 0x01:
+			vfdbuf[1].which = which;
+			buffer[2] = which;
+			buffer[4] = vfdbuf[1].buf1;
+			buffer[5] = vfdbuf[1].buf2;
+			break;
+		case 0x02:
+			vfdbuf[2].which = which;
+			buffer[2] = which;
+			buffer[4] = vfdbuf[2].buf1;
+			buffer[5] = vfdbuf[2].buf2;
+			break;
+		case 0x03:
+			vfdbuf[3].which = which;
+			buffer[2] = which;
+			buffer[4] = vfdbuf[3].buf1;
+			buffer[5] = vfdbuf[3].buf2;
+			break;
+		case 0x04:
+			vfdbuf[4].which = which;
+			buffer[2] = which;
+			buffer[4] = vfdbuf[4].buf1;
+			buffer[5] = vfdbuf[4].buf2;
+			break;
+		case 0x05:
+			vfdbuf[5].which = which;
+			buffer[2] = which;
+			buffer[4] = vfdbuf[5].buf1;
+			buffer[5] = vfdbuf[5].buf2;
+			break;
+		case 0x06:
+			vfdbuf[6].which = which;
+			buffer[2] = which;
+			buffer[4] = vfdbuf[6].buf1;
+			buffer[5] = vfdbuf[6].buf2;
+			break;
+		case 0x07:
+			vfdbuf[7].which = which;
+			buffer[2] = which;
+			buffer[4] = vfdbuf[7].buf1;
+			buffer[5] = vfdbuf[7].buf2;
+			break;
+	}
+	buffer[6] = EOP;
+	//printk("Icon 0x%02x 0x%02x 0x%02x \n",buffer[2],buffer[4],buffer[5]);
+	res = nuvotonWriteCommand(buffer, 7, 0, NULL, 0, 0);
+
+	dprintk(5, "%s <\n", __func__);
+
+   return res;
+}
+#else
 int nuvotonSetIcon(int which, int on)
 {
 	char buffer[128];
@@ -1049,6 +1255,7 @@ int nuvotonSetIcon(int which, int on)
 
    return res;
 }
+#endif
 
 /* export for later use in e2_proc */
 EXPORT_SYMBOL(nuvotonSetIcon);
@@ -1247,6 +1454,7 @@ int nuvotonGetWakeUpMode(void)
    return res;
 }
 
+#ifndef OCTAGON1008
 int nuvotonWriteString(unsigned char* aBuf, int len)
 {
 	unsigned char bBuf[128];
@@ -1327,6 +1535,76 @@ int nuvotonWriteString(unsigned char* aBuf, int len)
 
    return res;
 }
+#else
+
+inline char toupper(const char c)
+{
+    if ((c >= 'a') && (c <= 'z'))
+        return (c - 0x20);
+    return c;
+}
+
+int nuvotonWriteString(unsigned char* aBuf, int len)
+{
+	unsigned char bBuf[128];
+	int i =0, max = 0;
+	int j =0;
+	int res = 0;
+
+	dprintk(5, "%s > %d\n", __func__, len);
+	
+	memset(bBuf, ' ', 128);
+
+	max = (len > 8) ? 8 : len;
+	printk("max = %d\n", max);
+
+	//clean display text
+	for(i=0;i<8;i++)
+	{
+		bBuf[0] = SOP;
+	   	bBuf[2] = 7 - i; /* position: 0x00 = right */
+		bBuf[1] = cCommandSetIcon;
+		bBuf[3] = 0x00;
+		bBuf[4] = 0x00;
+		bBuf[5] = 0x00;
+		bBuf[6] = EOP;
+		nuvotonWriteCommand(bBuf, 8, 0, NULL, 0, 0);
+	}
+
+	for (i = 0; i < max ; i++)
+	{
+		bBuf[0] = SOP;
+		bBuf[2] = 7 - i; /* position: 0x00 = right */
+		bBuf[1] = cCommandSetIcon;
+		bBuf[3] = 0x00;
+		bBuf[6] = EOP; 
+      
+		for (j = 0; j < ARRAY_SIZE(octagon_chars); j++)
+		{
+		    if (octagon_chars[j].c == toupper(aBuf[i]))
+			 {
+			     bBuf[4] = octagon_chars[j].s1;
+			     vfdbuf[7 - i].buf1 = bBuf[4];
+			     bBuf[5] = octagon_chars[j].s2;
+			     vfdbuf[7 - i].buf2 = bBuf[5];
+	           res |= nuvotonWriteCommand(bBuf, 8, 0, NULL, 0, 0);
+			     break;
+			 }
+		}
+		//printk(" 0x%02x,0x%02x,0x%02x\n",vfdbuf[7 - i].pos,vfdbuf[7 - i].buf1,vfdbuf[7 - i].buf2);
+	}
+	/* save last string written to fp */
+	memcpy(&lastdata.data, aBuf, 128);
+	lastdata.length = len;
+	
+	dprintk(10, "len %d\n", len);
+
+	dprintk(5, "%s <\n", __func__);
+
+   return res;
+}
+
+#endif
 
 int nuvoton_init_func(void)
 {
@@ -1335,7 +1613,11 @@ int nuvoton_init_func(void)
    char init2[] = {SOP, cCommandSetTimeFormat, 0x81, EOP};
    char init3[] = {SOP, cCommandSetWakeupTime, 0xff, 0xff, EOP}; /* delete/invalidate wakeup time ? */
    char init4[] = {SOP, 0x93, 0x01, 0x00, 0x08, EOP};
+#ifdef OCTAGON1008
+   char init5[] = {SOP, 0x93, 0xf2, 0x08, 0x00, EOP};
+#else
    char init5[] = {SOP, 0x93, 0xf2, 0x0a, 0x00, EOP};
+#endif
 	int  vLoop;
 	int  res = 0;
 /*
@@ -1435,6 +1717,9 @@ static ssize_t NUVOTONdev_read(struct file *filp, char __user *buff, size_t len,
 	int minor, vLoop;
 
 	dprintk(5, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
+
+        if (len == 0)
+	   return len;
 
 	minor = -1;
   	for (vLoop = 0; vLoop < LASTMINOR; vLoop++)

@@ -13,7 +13,10 @@ ifeq ($(KERNELRELEASE),)
 DRIVER_TOPDIR:=$(shell pwd)
 include $(DRIVER_TOPDIR)/kernel.make
 else
-CCFLAGSY := -D__TDT__
+CCFLAGSY+=-D__TDT__
+ifdef OCTAGON1008
+CCFLAGSY+=-DOCTAGON1008
+endif
 ifdef UFS910
 CCFLAGSY += -DUFS910
 endif
@@ -39,7 +42,10 @@ ifdef VIP2
 CCFLAGSY += -DVIP2
 endif
 ifdef UFS922
-CCFLAGSY += -DUFS922
+CCFLAGSY+=-DUFS922
+endif
+ifdef UFS912
+CCFLAGSY+=-DUFS912
 endif
 ifdef FORTIS_HDBOX
 CCFLAGSY += -DFORTIS_HDBOX
@@ -61,7 +67,9 @@ obj-y	+= simu_button/
 obj-y	+= e2_proc/
 obj-y	+= frontends/
 obj-y	+= pti/
+#obj-y	+= pti_np/
 obj-y	+= compcache/
+#obj-y	+= proc_register/
 ifndef VIP2
 obj-y	+= cic/
 endif
@@ -95,4 +103,11 @@ obj-y   += proton/
 endif
 ifdef VIP2
 obj-y   += aotom/
+endif
+ifdef UFS912
+obj-y	+= micom/
+#obj-y	+= cec/
+endif
+ifdef OCTAGON1008
+obj-y	+= nuvoton/
 endif

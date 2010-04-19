@@ -37,6 +37,7 @@ enum stv090x_demodulator {
 enum stv090x_device {
 	STV0903	=  0,
 	STV0900,
+	STX7111
 };
 
 enum stv090x_mode {

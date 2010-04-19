@@ -45,7 +45,7 @@
 #include "stv6110x_priv.h"
 
 extern short paramDebug;
-#define TAGDEBUG "[stv61109] "
+#define TAGDEBUG "[stv6110a] "
 
 #define dprintk(level, x...) do { \
 if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
@@ -75,6 +75,7 @@ static int stv6110x_read_reg(struct stv6110x_state *stv6110x, u8 reg, u8 *data)
 
 	ret = i2c_transfer(stv6110x->i2c, msg, 2);
 	if (ret != 2) {
+		printk("stv6110x_read_reg I/O Error %d, addr=0x%02x, reg=0x%02x\n", ret, config->addr, reg);
 		printk("stv6110x_read_reg I/O Error");
 		return -EREMOTEIO;
 	}
@@ -181,11 +182,13 @@ static int stv6110x_set_frequency(struct dvb_frontend *fe, u32 frequency)
 	stv6110x_regs[STV6110x_CTRL1] |=
 				((((stv6110x->config->refclk / 1000000) - 16) & 0x1f) << 3);
 
+#ifndef UFS912
 /*orig 0x53 = 01010011
 wir 0x56 = 01010110
 */
 	stv6110x_regs[STV6110x_CTRL2] &= ~0x0f;
 	stv6110x_regs[STV6110x_CTRL2] |= (3/* gain*/ & 0x0f);
+#endif
 
 	if (frequency <= 1023000) {
 		p = 1;
@@ -241,7 +244,9 @@ wir 0x56 = 01010110
 // habe bei der orig app ->0x05 ->0x05 diesmal 0x03???
 	stv6110x_regs[STV6110x_STAT1] |= 0x04;
 
+#ifndef UFS912
 	stv6110x_write_reg(stv6110x, STV6110x_CTRL2, stv6110x_regs[STV6110x_CTRL2]);
+#endif
 	stv6110x_write_reg(stv6110x, STV6110x_CTRL1, stv6110x_regs[STV6110x_CTRL1]);
 
 // TDT from app 
@@ -327,6 +332,7 @@ static int stv6110x_set_bandwidth(struct dvb_frontend *fe, u32 bandwidth)
 	stv6110x_regs[STV6110x_CTRL3] &= ~((1 << 6) | 0x1f);
 	stv6110x_regs[STV6110x_CTRL3] |= (r8 & 0x1f);
 	stv6110x_write_reg(stv6110x, STV6110x_CTRL3, stv6110x_regs[STV6110x_CTRL3]);
+	
 	/* stat1, CALRCSTRT = 1 Start LPF auto calibration*/
 	stv6110x_regs[STV6110x_STAT1] |= 0x02;
 	stv6110x_write_reg(stv6110x, STV6110x_STAT1, stv6110x_regs[STV6110x_STAT1]);

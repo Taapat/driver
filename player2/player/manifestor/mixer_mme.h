@@ -45,7 +45,9 @@
  * currently it seems so that this works for both cpu types
  * (BWC vs. BWD)
  */
-#if defined(__TDT__) && (defined(FORTIS_HDBOX) || defined(UFS922))
+#if defined (CONFIG_KERNELVERSION) && (defined(FORTIS_HDBOX) || defined(OCTAGON1008))
+#define MIXER_NUM_PERIODS 3
+#elif defined(__TDT__) && (defined(FORTIS_HDBOX) || defined(UFS922) || defined(OCTAGON1008))
 #define MIXER_NUM_PERIODS 4
 #elif defined(__TDT__)
 #define MIXER_NUM_PERIODS 3

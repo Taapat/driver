@@ -33,6 +33,19 @@
  * - implement a real led and button driver?!
  * - implement a real event driver?!
  *
+ * - FOR UFS912:
+two not implemented commands:
+0x55 ->ohne antwort
+0x55 0x02 0xff 0x80 0x46 0x01 0x00 0x00
+
+0x05 = GetModel ->answer = 0x85 byte [1] + [2] = model
+
+write (count=8, fd = 26): 0x05 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+read (count=16, fd = 25): 0x85 0x01
+read (count=16, fd = 25): 0x05 0xff
+read (count=16, fd = 25): 0xff 0xff
+read (count=16, fd = 25): 0x88 0x0d
+ * 
  */
 
 #include <asm/io.h>
@@ -197,10 +210,18 @@ enum {
 /* ************************************************** */
 /* Access ASC3; from u-boot; copied from TF7700 ;-)   */
 /* ************************************************** */
+#ifdef UFS912
+#define ASC0BaseAddress 0xfd030000
+#define ASC1BaseAddress 0xfd031000
+#define ASC2BaseAddress 0xfd032000
+#define ASC3BaseAddress 0xfd033000
+#else
 #define ASC0BaseAddress 0xb8030000
 #define ASC1BaseAddress 0xb8031000
 #define ASC2BaseAddress 0xb8032000
 #define ASC3BaseAddress 0xb8033000
+#endif
+
 #define ASC_BAUDRATE    0x000
 #define ASC_TX_BUFF     0x004
 #define ASC_RX_BUFF     0x008
@@ -228,7 +249,6 @@ enum {
 #define ASC_CTRL_FIFO_EN  0x400
 
 /*  GPIO Pins  */
-
 #define PIO0BaseAddress   0xb8020000
 #define PIO1BaseAddress   0xb8021000
 #define PIO2BaseAddress   0xb8022000
@@ -290,8 +310,13 @@ static irqreturn_t FP_interrupt(int irq, void *dev_id)
 
 static int serial3_putc (char Data)
 {
+#ifdef UFS912
+  char                  *ASC_3_TX_BUFF = (char*)(ASC2BaseAddress + ASC_TX_BUFF);
+  unsigned int          *ASC_3_INT_STA = (unsigned int*)(ASC2BaseAddress + ASC_INT_STA);
+#else
   char                  *ASC_3_TX_BUFF = (char*)(ASC3BaseAddress + ASC_TX_BUFF);
   unsigned int          *ASC_3_INT_STA = (unsigned int*)(ASC3BaseAddress + ASC_INT_STA);
+#endif
   unsigned long         Counter = 200000;
 
   while (((*ASC_3_INT_STA & ASC_INT_STA_THE) == 0) && --Counter);
@@ -309,9 +334,14 @@ static int serial3_putc (char Data)
 
 static u16 serial3_getc(void)
 {
+#ifdef UFS912
+  unsigned char         *ASC_3_RX_BUFF = (unsigned char*)(ASC2BaseAddress + ASC_RX_BUFF);
+  unsigned int          *ASC_3_INT_STA = (unsigned int*)(ASC2BaseAddress + ASC_INT_STA);
+#else
   unsigned char         *ASC_3_RX_BUFF = (unsigned char*)(ASC3BaseAddress + ASC_RX_BUFF);
   unsigned int          *ASC_3_INT_STA = (unsigned int*)(ASC3BaseAddress + ASC_INT_STA);
-  unsigned long         Counter = 100000;
+#endif
+  unsigned long         Counter = 10000;
   u16                   result;
 
   while (((*ASC_3_INT_STA & ASC_INT_STA_RBF) == 0) && --Counter);
@@ -331,6 +361,7 @@ static u16 serial3_getc(void)
 
 static void serial3_init (void)
 {
+#ifndef UFS912
   /* Configure the PIO pins */
   stpio_request_pin(5, 0,  "ASC_TX", STPIO_ALT_OUT); /* Tx */
   stpio_request_pin(5, 1,  "ASC_RX", STPIO_IN);      /* Rx */
@@ -346,6 +377,14 @@ static void serial3_init (void)
   *(unsigned int*)(ASC3BaseAddress + ASC_BAUDRATE) = 0x000000c9;
   *(unsigned int*)(ASC3BaseAddress + ASC_TX_RST)   = 0;
   *(unsigned int*)(ASC3BaseAddress + ASC_RX_RST)   = 0;
+#else
+  *(unsigned int*)(ASC2BaseAddress + ASC_INT_EN)   = 0x00000000;
+  *(unsigned int*)(ASC2BaseAddress + ASC_CTRL)     = 0x00001589;
+  *(unsigned int*)(ASC2BaseAddress + ASC_TIMEOUT)  = 0x00000010;
+  *(unsigned int*)(ASC2BaseAddress + ASC_BAUDRATE) = 0x000000c9;
+  *(unsigned int*)(ASC2BaseAddress + ASC_TX_RST)   = 0;
+  *(unsigned int*)(ASC2BaseAddress + ASC_RX_RST)   = 0;
+#endif
 }
 
 /* process commands where we expect data from frontcontroller
@@ -555,7 +594,11 @@ void requeueData(void)
 
 int fpReceiverTask(void* dummy)
 {
+#ifdef UFS912
+  unsigned int         *ASC_2_INT_EN = (unsigned int*)(ASC2BaseAddress + ASC_INT_EN);
+#else
   unsigned int         *ASC_3_INT_EN = (unsigned int*)(ASC3BaseAddress + ASC_INT_EN);
+#endif
   unsigned char c;
   int count = 0;
   unsigned char receivedData[16];
@@ -566,8 +609,12 @@ int fpReceiverTask(void* dummy)
 
   allow_signal(SIGTERM);
 
+#ifdef UFS912
   //we are on so enable the irq  
+  *ASC_2_INT_EN = *ASC_2_INT_EN | 0x00000001;
+#else
   *ASC_3_INT_EN = *ASC_3_INT_EN | 0x00000001;
+#endif
 
   while(1)
   {
@@ -950,11 +997,23 @@ int micomSetLED(int which, int on)
 	int  res = 0;
 	
 	dprintk(5, "%s > %d, %d\n", __func__, which, on);
+
+#ifndef UFS912
 	if (which < 1 || which > 6)
 	{
 		printk("VFD/MICOM led number out of range %d\n", which);
 		return -EINVAL;
 	}
+#else
+/* 0x02 = green
+ * 0x03 = red
+ */
+	if (which < 0x02 || which > 0x03)
+	{
+		printk("VFD/MICOM led number out of range %d\n", which);
+		return -EINVAL;
+	}
+#endif
 
 	memset(buffer, 0, 8);
 	buffer[0] = which;
@@ -997,6 +1056,32 @@ int micomSetBrightness(int level)
 /* export for later use in e2_proc */
 EXPORT_SYMBOL(micomSetBrightness);
 
+#ifdef UFS912
+int micomSetLedBrightness(int level)
+{
+	char buffer[8];
+	int  res = 0;
+	
+	dprintk(5, "%s > %d\n", __func__, level);
+	if (level < 0 || level > 0xff)
+	{
+		printk("VFD/MICOM button brightness out of range %d\n", level);
+		return -EINVAL;
+	}
+
+	memset(buffer, 0, 8);
+	buffer[0] = level;
+	
+	res = micomWriteCommand(0x07, buffer, 7, 1 ,0);
+
+	dprintk(10, "%s <\n", __func__);
+
+   return res;
+}
+
+EXPORT_SYMBOL(micomSetLedBrightness);
+#endif
+#ifdef UFS922
 int micomSetModel(void)
 {
 	char buffer[8];
@@ -1013,6 +1098,25 @@ int micomSetModel(void)
 
    return res;
 }
+#else
+int micomInitialize(void)
+{
+	char buffer[8];
+	int  res = 0;
+	
+	dprintk(5, "%s >\n", __func__);
+
+	memset(buffer, 0, 8);
+	buffer[0] = 0x1;
+	
+	res = micomWriteCommand(0x3, buffer, 7, 0 ,0);
+
+	dprintk(10, "%s <\n", __func__);
+
+   return res;
+}
+#endif
+
 
 int micomSetStandby(char* time)
 {
@@ -1246,15 +1350,22 @@ int micom_init_func(void)
 
 	printk("Kathrein UFS922 VFD/MICOM module initializing\n");
 
+#ifdef UFS922
 	micomSetModel();
-	
+#else        
+	micomInitialize();
+#endif	
 	micomSetBrightness(1);
 
+#ifdef UFS912	
+        micomSetLedBrightness(0x50);
+#endif
   	micomWriteString(" Team Ducktales ", strlen(" Team Ducktales "));
 	
+#ifndef UFS912	
 	for (vLoop = ICON_MIN + 1; vLoop < ICON_MAX; vLoop++) 
 		micomSetIcon(vLoop, 0);
-		
+#endif		
 	dprintk(10, "%s <\n", __func__);
 
 	return 0;
@@ -1266,6 +1377,9 @@ static ssize_t MICOMdev_write(struct file *filp, const char *buff, size_t len, l
 	int minor, vLoop, res = 0;
 	
 	dprintk(5, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
+
+        if (len == 0) 
+	   return len; 
 
 	minor = -1;
   	for (vLoop = 0; vLoop < LASTMINOR; vLoop++)
@@ -1477,6 +1591,17 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		}
 		mode = 0;
 		break;
+#ifdef UFS912
+	case VFDLEDBRIGHTNESS:
+		if (mode == 0)
+		{
+		} else
+		{
+			res = micomSetLedBrightness(micom->u.brightness.level);
+		}
+		mode = 0;
+		break;
+#endif
 	case VFDDRIVERINIT:
 		res = micom_init_func();
 		mode = 0;
@@ -1531,6 +1656,9 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 	case VFDDISPLAYWRITEONOFF:
 		/* ->alles abschalten ? VFD_Display_Write_On_Off */
 		printk("VFDDISPLAYWRITEONOFF ->not yet implemented\n");
+#ifdef UFS912
+                micomInitialize();
+#endif
 		break;		
 	default:
 		printk("VFD/MICOM: unknown IOCTL 0x%x\n", cmd);
@@ -1572,16 +1700,28 @@ static struct file_operations vfd_fops =
 
 static int __init micom_init_module(void)
 {	
+#ifdef UFS912
+  unsigned int         *ASC_2_INT_EN = (unsigned int*)(ASC2BaseAddress + ASC_INT_EN);
+  unsigned int         *ASC_2_CTRL   = (unsigned int*)(ASC2BaseAddress + ASC_CTRL);
+#else
   unsigned int         *ASC_3_INT_EN = (unsigned int*)(ASC3BaseAddress + ASC_INT_EN);
   unsigned int         *ASC_3_CTRL   = (unsigned int*)(ASC3BaseAddress + ASC_CTRL);
+#endif
   int i;
   
   dprintk(5, "%s >\n", __func__);
 
+#ifdef UFS912
+  //Disable all ASC 2 interrupts
+  *ASC_2_INT_EN = *ASC_2_INT_EN & ~0x000001ff;
+
+  serial_init();
+#else
   //Disable all ASC 3 interrupts
   *ASC_3_INT_EN = *ASC_3_INT_EN & ~0x000001ff;
 
   serial3_init();
+#endif
 
   sema_init(&rx_int_sem, 0);
   sema_init(&write_sem, 1);
@@ -1595,8 +1735,13 @@ static int __init micom_init_module(void)
   init_waitqueue_head(&task_wq);
   init_waitqueue_head(&ioctl_wq);
 
+#ifdef UFS912
+  //Enable the FIFO
+  *ASC_2_CTRL = *ASC_2_CTRL | ASC_CTRL_FIFO_EN;
+#else
   //Enable the FIFO
   *ASC_3_CTRL = *ASC_3_CTRL | ASC_CTRL_FIFO_EN;
+#endif
 
 #ifdef IRQ_WORKS
   i = request_irq(120, (void*)FP_interrupt, SA_INTERRUPT, "FP_serial", NULL);

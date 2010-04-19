@@ -20,20 +20,46 @@ short paramDebug = 0;
 static struct core *core[MAX_DVB_ADAPTERS];
 
 static struct stv090x_config tt1600_stv090x_config = {
+#if defined(FORTIS_HDBOX)
 	.device			= STV0903,
 	.demod_mode		= STV090x_DUAL/*STV090x_SINGLE*/,
+#elif defined(UFS912)
+	.device			= STX7111,
+	.demod_mode		= STV090x_DUAL,
+#else
+#warning  not supported architechture
+#endif
 	.clk_mode		= STV090x_CLK_EXT,
 
+#if defined(FORTIS_HDBOX)
 	.xtal			= 16000000/*8000000*/,
+#elif defined(UFS912)
+	.xtal			= 30000000,
+#else
+#warning  not supported architechture
+#endif
 	.address		= 0x68,
 	.ref_clk		= 16000000,
 
+#if defined(FORTIS_HDBOX)
 	.ts1_mode		= STV090x_TSMODE_DVBCI/*STV090x_TSMODE_SERIAL_CONTINUOUS*/,
 	.ts2_mode		= STV090x_TSMODE_DVBCI/*STV090x_TSMODE_SERIAL_CONTINUOUS*/,
+#elif defined(UFS912)
+	.ts1_mode		= STV090x_TSMODE_DVBCI,
+	.ts2_mode		= STV090x_TSMODE_SERIAL_CONTINUOUS,
+#else
+#warning  not supported architechture
+#endif
 	.ts1_clk		= 0, /* diese regs werden in orig nicht gesetzt */
 	.ts2_clk		= 0, /* diese regs werden in orig nicht gesetzt */
 
+#if defined(FORTIS_HDBOX)
 	.repeater_level		= STV090x_RPTLEVEL_16,
+#elif defined(UFS912)
+	.repeater_level		= STV090x_RPTLEVEL_64,
+#else
+#warning  not supported architechture
+#endif
 
 	.tuner_init		= NULL,
 	.tuner_set_mode		= NULL,
@@ -59,11 +85,15 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 
 	printk (KERN_INFO "%s >\n", __FUNCTION__);
 	
+#ifdef UFS912
+		frontend = stv090x_attach(&tt1600_stv090x_config, cfg->i2c_adap, STV090x_DEMODULATOR_0, STV090x_TUNER1);
+#else
 	if (i== 0)
 		frontend = stv090x_attach(&tt1600_stv090x_config, cfg->i2c_adap, STV090x_DEMODULATOR_0, STV090x_TUNER1);
 	else
+/* Dagobert commented: is this correct? second tuner uses demod0 ??? */
 		frontend = stv090x_attach(&tt1600_stv090x_config, cfg->i2c_adap, STV090x_DEMODULATOR_0, STV090x_TUNER2);
-	
+#endif	
 	if (frontend) {
 		printk("%s: attached\n", __FUNCTION__);
 		
@@ -132,10 +162,19 @@ init_stv090x_device (struct dvb_adapter *adapter,
   if ((cfg->i2c_adap == NULL) || (cfg->tuner_enable_pin == NULL))
   {
 
+    if ((cfg->i2c_adap == NULL))
+        printk("i2c_adap == null\n");
+
+    if ((cfg->tuner_enable_pin == NULL))
+        printk("pin == null\n");
+    
     printk ("stv090x: failed to allocate resources\n");
     if(cfg->tuner_enable_pin != NULL)
+    {
+      printk("freeing ping\n");
       stpio_free_pin (cfg->tuner_enable_pin);
-
+    }
+    
     kfree (cfg);
     return NULL;
   }
@@ -172,7 +211,7 @@ init_stv090x_device (struct dvb_adapter *adapter,
 }
 
 struct plat_tuner_config tuner_resources[] = {
-
+#if defined(FORTIS_HDBOX)
         [0] = {
                 .adapter = 0,
                 .i2c_bus = 0,
@@ -185,6 +224,21 @@ struct plat_tuner_config tuner_resources[] = {
                 .i2c_addr = 0x68,
                 .tuner_enable = {2, 4, 1},
         },
+#elif defined(UFS912)
+        [0] = {
+                .adapter = 0,
+                .i2c_bus = 3,
+                .i2c_addr = 0x68,
+                .tuner_enable = {2, 4, 1},
+        },
+#else
+
+#warning not supported architecture 
+
+#endif
+
+
+
 };
 
 
@@ -241,5 +295,5 @@ module_param(paramDebug, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 MODULE_PARM_DESC(paramDebug, "Debug Output 0=disabled >0=enabled(debuglevel)");
 
 MODULE_DESCRIPTION      ("Tunerdriver");
-MODULE_AUTHOR           ("Dagobert");
+MODULE_AUTHOR           ("Manu Abraham; adapted by TDT");
 MODULE_LICENSE          ("GPL");

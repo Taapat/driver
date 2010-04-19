@@ -140,7 +140,7 @@ static struct stmcore_display_pipeline_data platform_data[] = {
     .hdmi_i2c_adapter_id      = 1,
 #endif
 #endif
-#if defined(FORTIS_HDBOX)
+#if defined(FORTIS_HDBOX) || defined(OCTAGON1008)
     .hdmi_i2c_adapter_id      = 2,
 #endif
     .main_output_id           = 0,
@@ -258,12 +258,8 @@ int __init stmcore_probe_device(struct stmcore_display_pipeline_data **pd, int *
       *nr_platform_devices = N_ELEMENTS (platform_data);
 
 #if defined(UFS922) && defined(__TDT__)
-      hotplug_pio = stpio_request_pin(2,3,"HDMI Hotplug",STPIO_BIDIR_Z1);
-#elif defined(FORTIS_HDBOX) && defined(__TDT__)
-      hotplug_pio = stpio_request_pin(4,7,"HDMI Hotplug",STPIO_BIDIR_Z1);
-#elif defined(HL101) && defined(__TDT__)
-      hotplug_pio = stpio_request_pin(4,7,"HDMI Hotplug",STPIO_IN);
-#elif defined(VIP2) && defined(__TDT__)
+      hotplug_pio = stpio_request_pin(2,3,"HDMI Hotplug",STPIO_IN); 
+#elif (defined(HL101) || defined(FORTIS_HDBOX) || defined(OCTAGON1008) || defined(VIP2)) && defined(__TDT__)
       hotplug_pio = stpio_request_pin(4,7,"HDMI Hotplug",STPIO_IN);
 #else
       hotplug_pio = stpio_request_pin(2,2,"HDMI Hotplug",STPIO_BIDIR_Z1);

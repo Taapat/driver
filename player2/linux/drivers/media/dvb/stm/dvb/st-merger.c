@@ -17,6 +17,11 @@
 #include <linux/dma-mapping.h>
 #include <linux/stm/stm-dma.h>
 #include <asm/io.h>
+#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
+#include <linux/stm/pio.h>
+#else
+#include <linux/stpio.h>
+#endif
 
 #include <linux/stm/stm-frontend.h>
 #include "tsmerger.h"
@@ -35,7 +40,11 @@ unsigned long TSM_NUM_1394_ALT_OUT;
 #define LOAD_TSM_DATA
 #endif
 
+#if defined(UFS912)
+#define TSMergerBaseAddress   	0xFE242000
+#else
 #define TSMergerBaseAddress   	0x19242000
+#endif
 
 #define TSM_STREAM0_CFG      	0x0000
 #define TSM_STREAM1_CFG      	0x0020
@@ -46,6 +55,21 @@ unsigned long TSM_NUM_1394_ALT_OUT;
 /* for all 7109er */
 #define TSM_STREAM5_CFG      	0x00a0
 #define TSM_STREAM6_CFG      	0x00c0
+
+/* see proc entry from ufs912 */
+#define TSM_STREAM7_CFG      	0x00e0
+#define TSM_STREAM7_SYNC      	0x00e8
+#define TSM_STREAM7_STAT      	0x00f0
+
+/* 7111er */
+#define TSM_STREAM0_CFG2      	0x0018
+#define TSM_STREAM1_CFG2      	0x0038
+#define TSM_STREAM2_CFG2      	0x0058
+#define TSM_STREAM3_CFG2      	0x0078
+#define TSM_STREAM4_CFG2      	0x0098
+#define TSM_STREAM5_CFG2      	0x00b8
+#define TSM_STREAM6_CFG2      	0x00d8
+#define TSM_STREAM7_CFG2      	0x00f8
 
 
 #define TSM_STREAM0_SYNC   	0x0008
@@ -84,9 +108,16 @@ unsigned long TSM_NUM_1394_ALT_OUT;
 
 #define TSM_SWTS      		0x010BE000
 
+#if defined(UFS912)
+#define SysConfigBaseAddress    0xFE001000
+#else
 #define SysConfigBaseAddress    0x19001000
+#endif
+
 #define SYS_CFG0      		0x100
 #define SYS_CFG1      		0x104
+
+#define SYS_CFG7      		0x11C
 
 unsigned long tsm_io;
 
@@ -348,6 +379,15 @@ void stm_tsm_init (int use_cimax)
       unsigned int     ret;
       int              n;
 
+#if defined(UFS912)
+      struct stpio* stream1_pin = stpio_request_pin (5, 0, "TSinterface1", STPIO_IN);
+      struct stpio* stream2_pin = stpio_request_pin (5, 3, "TSinterface2", STPIO_IN);
+#elif defined(OCTAGON1008)
+      struct stpio* stream2_pin = stpio_request_pin (1, 3, "STREAM2", STPIO_OUT);
+/* disbaled on 1 */
+      stpio_set_pin(stream2_pin, 0);
+#endif
+
       /*
        * 0xbc4733
        * sync = 3
@@ -356,7 +396,7 @@ void stm_tsm_init (int use_cimax)
        * packet len = 188
        */
 
-#if !defined(FORTIS_HDBOX) && !defined(HOMECAST5101)
+#if !defined(FORTIS_HDBOX) && !defined(UFS912) && !defined(OCTAGON1008) && !defined(HOMECAST5101)
       unsigned int stream_sync = 0xbc4733;
 #else
       unsigned int stream_sync = 0xbc4722;
@@ -378,13 +418,20 @@ void stm_tsm_init (int use_cimax)
 
       reg_sys_config = ioremap(SysConfigBaseAddress, 0x0900 /* ??? */);
 
+#if defined(OCTAGON1008)
+/* smartcard settings */
+      ret = ctrl_inl(reg_sys_config + SYS_CFG7);
+      ctrl_outl(ret | 0x1b0, reg_sys_config + SYS_CFG7);
+
+#endif
+
       /*
 	 ->TSIN0 routed to TSIN2
 	 ->TSMerger TSIN2 receives TSIN0 (based on config before)
 	 ->TS interface is as indicated by TSMerger configuration bits
        */
 
-#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101) && !defined(HOMECAST5101)
+#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101) && !defined(HOMECAST5101) && !defined(UFS912) && !defined(OCTAGON1008)
       /*
 	 The UFS910 hardware requires the following connections:
 	 ->TSIN1 routed to TSIN2
@@ -399,6 +446,10 @@ void stm_tsm_init (int use_cimax)
 	/* ->TSIN0 routes to TSIN2
 	 */
       ctrl_outl(0x2, reg_sys_config + SYS_CFG0);
+#elif defined(UFS912)
+      ctrl_outl(0x3, reg_sys_config + SYS_CFG0);
+#elif defined(OCTAGON1008)
+      ctrl_outl(0x6, reg_sys_config + SYS_CFG0);
 #else
       /*
 	 The TF7700 hardware requires the following connections:
@@ -453,7 +504,7 @@ void stm_tsm_init (int use_cimax)
 
       ctrl_outl(0x0, reg_config + SWTS_CFG(0));
 
-#if  defined(FORTIS_HDBOX) || defined(UFS922) || defined(TF7700) || defined(HL101)
+#if  defined(FORTIS_HDBOX) || defined(UFS922) || defined(TF7700) || defined(HL101) || defined(UFS912)
       ctrl_outl(0x0, reg_config + SWTS_CFG(1));
       ctrl_outl(0x0, reg_config + SWTS_CFG(2));
 #endif
@@ -470,6 +521,25 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x1300, reg_config + TSM_STREAM4_CFG);  //256kb (4*64)
       ctrl_outl(0x1700, reg_config + TSM_STREAM5_CFG);  //192kb (3*64)
       ctrl_outl(0x1a00, reg_config + TSM_STREAM6_CFG);  //384kb (5*64)
+#elif defined (UFS912)
+      /* RAM partitioning of streams */
+      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG);
+      ctrl_outl(0x400, reg_config + TSM_STREAM1_CFG);
+      ctrl_outl(0x500, reg_config + TSM_STREAM2_CFG);
+      ctrl_outl(0xb00, reg_config + TSM_STREAM3_CFG);
+      ctrl_outl(0xc00, reg_config + TSM_STREAM4_CFG);
+      ctrl_outl(0x1d00, reg_config + TSM_STREAM5_CFG);
+      ctrl_outl(0x1e00, reg_config + TSM_STREAM6_CFG);
+      ctrl_outl(0x1f00, reg_config + TSM_STREAM7_CFG);
+
+      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM1_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM2_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM3_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM4_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM5_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM6_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM7_CFG2);
 #else
       ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG);     //448kb (7*64)
       ctrl_outl(0x700, reg_config + TSM_STREAM1_CFG);   //448kb (7*64)
@@ -478,7 +548,7 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x1a00, reg_config + TSM_STREAM4_CFG);  //320kb (5*64)
 #endif
 
-#if  defined(FORTIS_HDBOX)
+#if  defined(FORTIS_HDBOX) || defined(OCTAGON1008)
       /* configure streams: */
       /* add tag bytes to stream + stream priority */
       ret = ctrl_inl(reg_config + TSM_STREAM0_CFG);
@@ -499,7 +569,7 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(stream_sync, reg_config + TSM_STREAM0_SYNC);
       ctrl_outl(0x0, reg_config + 0x18 /* reserved ??? */);
 
-#if defined(FORTIS_HDBOX)
+#if defined(FORTIS_HDBOX) || defined(OCTAGON1008)
       /* add tag bytes to stream + stream priority */
       ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
       ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM1_CFG);
@@ -513,9 +583,12 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x0, reg_config + 0x38 /* reserved ??? */);
 
       /* add tag bytes to stream + stream priority */
-#if defined(FORTIS_HDBOX)
+#if defined(FORTIS_HDBOX) || defined(OCTAGON1008)
       ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
       ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM2_CFG);
+#elif defined(UFS912)
+      ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
+      ctrl_outl(ret | (0x20020), reg_config + TSM_STREAM2_CFG);
 #else
       ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
       ctrl_outl(ret | (0x30020), reg_config + TSM_STREAM2_CFG);
@@ -525,9 +598,18 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x0, reg_config + 0x58 /* reserved ??? */);
 
       /* add tag bytes to stream + stream priority */
-#if defined(FORTIS_HDBOX)
+#if defined(FORTIS_HDBOX) || defined(OCTAGON1008)
       ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
       ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM3_CFG);
+#elif defined(UFS912)
+      ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
+      ctrl_outl(ret | (0x20020), reg_config + TSM_STREAM3_CFG);
+
+      ret = ctrl_inl(reg_config + TSM_STREAM4_CFG);
+      ctrl_outl(ret | (0x20020), reg_config + TSM_STREAM4_CFG);
+
+      ctrl_outl(0x00 , reg_config + TSM_STREAM5_SYNC);
+      ctrl_outl(0x00 , reg_config + TSM_STREAM6_SYNC);
 #else
       ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
       ctrl_outl(ret | (0x30020), reg_config + TSM_STREAM3_CFG);
@@ -536,9 +618,13 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(stream_sync, reg_config + TSM_STREAM3_SYNC);
       ctrl_outl(0x0, reg_config + 0x78 /* reserved ??? */);
 
-#if !defined(FORTIS_HDBOX)
+#if !defined(FORTIS_HDBOX) && !defined(UFS912)
       /* swts_req_trigger + pace cycles (1101) */
       ctrl_outl(0x800000d, reg_config + SWTS_CFG(0));
+#elif defined (UFS912)
+      ctrl_outl(0x8f0000e, reg_config + SWTS_CFG(0));
+      ctrl_outl(0x8000000, reg_config + SWTS_CFG(1));
+      ctrl_outl(0x8000000, reg_config + SWTS_CFG(2));
 #else
       ctrl_outl(0x8000010, reg_config + SWTS_CFG(0));
 #endif
@@ -546,7 +632,7 @@ void stm_tsm_init (int use_cimax)
       /* auto count */
       ctrl_outl(0x0, reg_config + TSM_PROG_CNT0);
 
-#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101) && !defined(HOMECAST5101)
+#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101) && !defined(HOMECAST5101) && !defined(UFS912) && !defined(OCTAGON1008)
       /* UFS910 stream configuration */
       /* route stream 2 to PTI */
       ret = ctrl_inl(reg_config + TSM_PTI_SEL);
@@ -579,6 +665,17 @@ void stm_tsm_init (int use_cimax)
       /* connect TSIN0 to TS1394 for routing tuner TS through the CIMAX */
       ret = ctrl_inl(reg_config + TSM_1394_DEST);
       ctrl_outl(ret | 0x1 , reg_config + TSM_1394_DEST);
+
+#elif defined(UFS912)
+      ctrl_outl(0x15 ,reg_config + TSM_PTI_SEL);
+
+      /* set stream 2 on */
+      ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
+      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM2_CFG);
+
+      /* set stream 4 on */
+      ret = ctrl_inl(reg_config + TSM_STREAM4_CFG);
+      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM4_CFG);
 
 #elif  defined(TF7700) || defined(UFS922) || defined(HL101)
 
@@ -646,6 +743,30 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(ret | 0x1,reg_config + TSM_PTI_SEL);
       ret = ctrl_inl(reg_config + TSM_STREAM0_CFG);
       ctrl_outl(ret | 0x0,reg_config + TSM_STREAM0_CFG);
+#elif defined(OCTAGON1008)
+      /* route stream 1 to PTI */
+      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x2,reg_config + TSM_PTI_SEL);
+
+      /* route stream 2 to PTI */
+      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x4, reg_config + TSM_PTI_SEL);
+
+      /* set stream on */
+      ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
+      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM2_CFG);
+
+      /* set stream 1 on */
+      ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
+      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM1_CFG);
+
+      /* route stream 0 to PTI */
+      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x1, reg_config + TSM_PTI_SEL);
+
+      ret = ctrl_inl(reg_config + TSM_1394_DEST);
+      ctrl_outl(ret | 0x38 , reg_config + TSM_1394_DEST);
+
 #endif
 
       /* set stream on */
@@ -667,7 +788,9 @@ void stm_tsm_init (int use_cimax)
       tsm_handle.tsm_swts = (unsigned long)ioremap (0x1A300000, 0x1000);
 
       /* Now lets get the SWTS info and setup an FDMA channel */
-#if !defined(TF7700) && !defined(HL101) && !defined(UFS922) && !defined(FORTIS_HDBOX)
+#if defined(UFS912)
+      tsm_handle.fdma_reqline = 31;
+#elif !defined(TF7700) && !defined(HL101) && !defined(UFS922) && !defined(FORTIS_HDBOX)
       //ufs910 use dma request id 30 for swts, do'nt know what other boxes use
       tsm_handle.fdma_reqline = 30;
 #else

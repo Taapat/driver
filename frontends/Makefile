@@ -17,6 +17,11 @@ ifeq (,$(findstring 2.6.3,$(KERNELVERSION)))
 ifdef UFS922
 cx21143-objs +=	cx21143/cx21143.o
 obj-m += cx21143.o
+else ifdef UFS912
+stv090x-objs +=	stv090x/stv090x.o
+stv090x-objs +=	stv090x/stv6110x.o
+stv090x-objs +=	stv090x/core.o
+obj-m += stv090x.o
 else ifdef FORTIS_HDBOX
 stv090x-objs +=	stv090x/stv090x.o
 stv090x-objs +=	stv090x/stv6110x.o
@@ -35,6 +40,9 @@ fe-core-objs +=        vip2/ix2470.o
 fe-core-objs +=        vip2/zl10353.o
 fe-core-objs +=        vip2/core.o
 obj-m += fe-core.o
+else ifdef OCTAGON1008
+#avl2108-objs +=        avl2108/avl2108.o
+#obj-m += avl2108.o
 else
 cx24116-objs +=	cx24116/cx24116.o
 obj-m += cx24116.o

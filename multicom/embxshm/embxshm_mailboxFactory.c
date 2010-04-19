@@ -567,7 +567,6 @@ static EMBX_ERROR slave_configureTransport(EMBXSHM_Transport_t *tpshm, EMBXSHM_M
     } else {
 	EMBX_ERROR res = EMBX_OS_VirtToPhys(tpshm->heap, (EMBX_UINT *)&tpshm->warpRangeAddr);
 	EMBX_Assert(res != EMBX_INVALID_ARGUMENT);
-	(void) res;
 	tpshm->warpRangeSize = tpshm->heapSize;
     }
 

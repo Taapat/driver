@@ -45,10 +45,12 @@
 
 #ifdef UFS922
 extern void cx21143_register_frontend(struct dvb_adapter *dvb_adap);
-#elif defined(FORTIS_HDBOX)
+#elif defined(FORTIS_HDBOX) || defined(UFS912)
 extern void stv090x_register_frontend(struct dvb_adapter *dvb_adap);
 #elif defined(HL101) || defined(VIP2)
 extern void fe_core_register_frontend(struct dvb_adapter *dvb_adap);
+#elif defined(OCTAGON1008)
+extern void avl2108_register_frontend(struct dvb_adapter *dvb_adap);
 #else
 extern void cx24116_register_frontend(struct dvb_adapter *dvb_adap);
 #endif
@@ -333,6 +335,17 @@ static int convert_source ( const dmx_source_t source)
     /* in UFS910 the CIMAX output is connected to TSIN2 */
     tag = TSIN2;
     break;
+#elif defined(OCTAGON1008)
+    tag = TSIN2;
+    break;
+#elif !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX)
+/* Dagobert: ufs912 explanation:
+ * TSIN0 = not routed through ci (stream is everytime available!)
+ * TSIN2 = the stream after routing through ci
+ */ 
+    /* in UFS910 the CIMAX output is connected to TSIN2 */
+    tag = TSIN2;
+    break;
 #else
     tag = TSIN0;
     break;
@@ -359,7 +372,12 @@ static struct stpti pti;
 
 void ptiInit ( struct DeviceContext_s *pContext )
 {
+#if defined(UFS912)
+  unsigned long start = 0xfe230000;
+#else
   unsigned long start = 0x19230000;
+#endif
+
   struct PtiSession *pSession;
   int tag;
 
@@ -393,10 +411,12 @@ void ptiInit ( struct DeviceContext_s *pContext )
     pti_hal_init ( &pti, &pContext->DvbDemux, demultiplexDvbPackets, 1);
 #endif
 
-#if defined(FORTIS_HDBOX)
+#if defined(FORTIS_HDBOX) || defined(UFS912)
     stv090x_register_frontend(&pContext->DvbContext->DvbAdapter);
 #elif defined(HL101) || defined(VIP2)
     fe_core_register_frontend( &pContext->DvbContext->DvbAdapter);
+#elif defined(OCTAGON1008)
+    avl2108_register_frontend( &pContext->DvbContext->DvbAdapter);
 #elif !defined(UFS922)
     cx24116_register_frontend( &pContext->DvbContext->DvbAdapter);
 #else

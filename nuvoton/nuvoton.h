@@ -71,3 +71,12 @@ struct vfd_ioctl_data {
 	unsigned char data[64];
 	unsigned char length;
 };
+
+#ifdef OCTAGON1008
+struct vfd_buffer {
+	int aktiv;
+	int which;
+	unsigned char *buf1;
+	unsigned char *buf2;
+};
+#endif

@@ -33,7 +33,14 @@
 #include "Gamma/sti7111/sti7111device.h"
 
 #if defined(CONFIG_SH_ST_MB618)
+
+#if defined(UFS912)
+#define HAS_DSUB 0
+#warning fixme: take a look if we have DSUB
+#else
 #define HAS_DSUB 1
+#endif
+
 #else
 #define HAS_DSUB 0
 #endif
@@ -57,7 +64,12 @@ static struct stmcore_display_pipeline_data platform_data[] = {
     .vtg_irq                  = evt2irq(0x1540),
     .blitter_irq              = evt2irq(0x1580),
     .hdmi_irq                 = evt2irq(0x15C0),
+#if defined(UFS912)
+    .hdmi_i2c_adapter_id      = 3,
+#else
     .hdmi_i2c_adapter_id      = 0,
+#warning not supported architecture
+#endif
     .main_output_id           = STi7111_OUTPUT_IDX_VDP0_MAIN,
     .aux_output_id            = STi7111_OUTPUT_IDX_VDP0_AUX,
     .hdmi_output_id           = STi7111_OUTPUT_IDX_VDP0_HDMI,
@@ -146,6 +158,7 @@ int __init stmcore_probe_device(struct stmcore_display_pipeline_data **pd, int *
      * Setup HDMI hotplug
      */
     hotplug_pio = stpio_request_pin(4,7,"HDMI Hotplug",STPIO_IN);
+
     /*
      * Enable hotplug pio in syscfg
      */
