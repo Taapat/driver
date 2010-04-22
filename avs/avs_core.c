@@ -307,6 +307,7 @@ static int avs_detect(struct i2c_client *client, int kind, struct i2c_board_info
 	case CXA2161:  name = "cxa2161";  break;
 	case FAKE_AVS: name = "fake_avs"; break;
 	case AVS_NONE: name = "avs_none"; break;
+	default: return -ENODEV;
 	}
 	devType = kind;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
