@@ -97,11 +97,6 @@ static unsigned short normal_i2c[] = {
 I2C_CLIENT_INSMOD;
 
 static struct i2c_driver avs_i2c_driver;
-static struct i2c_client client_template = {
-	.name = "AVS",
-	.flags = 0,
-	.driver = &avs_i2c_driver
-};
 static struct i2c_client *avs_client = NULL;
 
 /*
@@ -116,17 +111,18 @@ static int avs_newprobe(struct i2c_client *client, const struct i2c_device_id *i
 	}
 
 	dprintk("[AVS]: chip found @ 0x%x\n", client->addr);
-	avs_client = client;
 
 	switch(devType)
 	{
-	case AK4705:   ak4705_init(&client_template);   break;
-	case STV6412:  stv6412_init(&client_template);  break;
-	case STV6417:  stv6417_init(&client_template);  break;
-	case CXA2161:  cxa2161_init(&client_template);  break;
-	case FAKE_AVS: fake_avs_init(&client_template); break;
-	case AVS_NONE: avs_none_init(&client_template); break;
+	case AK4705:   ak4705_init(client);   break;
+	case STV6412:  stv6412_init(client);  break;
+	case STV6417:  stv6417_init(client);  break;
+	case CXA2161:  cxa2161_init(client);  break;
+	case FAKE_AVS: fake_avs_init(client); break;
+	case AVS_NONE: avs_none_init(client); break;
+	default: return -ENODEV;
 	}
+	avs_client = client;
 	return 0;
 }
 
@@ -138,7 +134,7 @@ static int avs_attach(struct i2c_adapter *adap, int addr, int kind)
 
 	dprintk("[AVS]: attach\n");
 
-	if (!(client = kmalloc(sizeof(struct i2c_client), GFP_KERNEL))) {
+	if (!(client = kzalloc(sizeof(struct i2c_client), GFP_KERNEL))) {
 		dprintk("[AVS]: attach nomem 1\n");
 		return -ENOMEM;
 	}
@@ -146,9 +142,10 @@ static int avs_attach(struct i2c_adapter *adap, int addr, int kind)
 	/*
 		NB: this code only works for a single client
 	*/
-	client_template.adapter = adap;
-	client_template.addr = addr;
-	memcpy(client, &client_template, sizeof(struct i2c_client));
+	client->adapter = adap;
+	client->addr = addr;
+	client->driver = &avs_i2c_driver;
+	strlcpy(client->name, "AVS", I2C_NAME_SIZE);
 
 	if ((err = avs_newprobe(client, NULL))) {
 		kfree(client);
@@ -243,7 +240,10 @@ EXPORT_SYMBOL(avs_command_kernel);
 static int avs_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg)
 {
 	dprintk("[AVS]: IOCTL\n");
-	return avs_command_ioctl(&client_template, cmd, (void *) arg);
+	if (avs_client)
+		return avs_command_ioctl(avs_client, cmd, (void *) arg);
+	else
+		return -1;
 }
 
 static struct file_operations avs_fops = {
@@ -350,8 +350,8 @@ static struct i2c_driver avs_i2c_driver = {
 
 int __init avs_init(void)
 {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	int res;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	const char *name;
 	struct i2c_client client = { .addr = normal_i2c[0] };
 	int err;
@@ -377,7 +377,11 @@ int __init avs_init(void)
 	}
 #endif
 	
-#endif /* < 2.6.30 */
+#else /* >= 2.6.30 */
+	if ((res = i2c_add_driver(&avs_i2c_driver)))
+		return res;
+
+#endif /* >= 2.6.30 */
 
 	if (misc_register(&avs_dev)<0){
 		printk(KERN_ERR "avs: unable to register device\n");
@@ -390,9 +394,7 @@ int __init avs_init(void)
 void __exit avs_exit(void)
 {
 	misc_deregister(&avs_dev);
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	i2c_del_driver(&avs_i2c_driver);
-#endif
 }
 
 module_init(avs_init);
