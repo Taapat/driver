@@ -1,7 +1,7 @@
 /*
  *   avs_none.c - 
  *
- *   For av receiver without no av switch. the e2_core in stmdvb need some functions
+ *   For av receiver without av switch. the e2_core in stmdvb need some functions
  *   from avs module but fake_avs is not a real fake because it sets pio pins.
  *
  *   mainly based on avs_core.c from Gillem gillem@berlios.de / Tuxbox-Project
@@ -22,6 +22,7 @@
  *
  */
 
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/sched.h>
@@ -32,10 +33,10 @@
 #include <linux/slab.h>
 #include <linux/poll.h>
 #include <linux/types.h>
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
-#include <linux/stm/pio.h>
-#else
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
 #include <linux/stpio.h>
+#else
+#include <linux/stm/pio.h>
 #endif
 
 #include <linux/i2c.h>
@@ -60,7 +61,7 @@ int avs_none_command_kernel(struct i2c_client *client, unsigned int cmd, void *a
 
 int avs_none_init(struct i2c_client *client)
 {
-  return 0;
+	return 0;
 }
 
 /* ---------------------------------------------------------------------- */
