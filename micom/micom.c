@@ -359,7 +359,7 @@ static u16 serial3_getc(void)
 
 #define BAUDRATE_VAL_M1(bps, clk)	( ((bps * (1 << 14)) / ((clk) / (1 << 6)) ) + 1 )
 
-static void serial3_init (void)
+static void serial_init (void)
 {
 #ifndef UFS912
   /* Configure the PIO pins */
@@ -1720,7 +1720,7 @@ static int __init micom_init_module(void)
   //Disable all ASC 3 interrupts
   *ASC_3_INT_EN = *ASC_3_INT_EN & ~0x000001ff;
 
-  serial3_init();
+  serial_init();
 #endif
 
   sema_init(&rx_int_sem, 0);
