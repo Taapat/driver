@@ -721,7 +721,12 @@ void pti_hal_init ( struct stpti *pti , struct dvb_demux* demux, void (*_demulti
      printk("error allocating back buffer !!!!!!!!!!!!!!!!!!!!!!!!\n");
 
   /* ioremap the pti address space */
+#if defined(UFS912)
+  start = 0xfe230000;
+#else
   start = 0x19230000;
+#endif
+
   internal->pti_io = (unsigned long)ioremap((unsigned long) start, 0xFFFF); 
 
   printk("pti ioremap 0x%.8lx -> 0x%.8x\n", start, internal->pti_io);
