@@ -41,7 +41,7 @@ int tkdma = 1;
 #endif
 module_param(tkdma, bool, S_IRUGO|S_IWUSR);
 
-#if defined(CONFIG_CPU_SUBTYPE_STB7100)
+#if defined(CONFIG_CPU_SUBTYPE_STB7100) || defined (CONFIG_CPU_SUBTYPE_STX7100)
 #include "mb442.h"
 #include "hms1.h"
 #include "platform_710x.h"

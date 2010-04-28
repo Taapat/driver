@@ -67,6 +67,7 @@ ccflags-y += $(CCFLAGSY)
 else
 CFLAGS += $(CCFLAGSY)
 endif
+export CCFLAGSY
 
 obj-y += drivers/media/dvb/stm/mpeg2_hard_host_transformer/
 obj-y += drivers/media/dvb/stm/dvb/

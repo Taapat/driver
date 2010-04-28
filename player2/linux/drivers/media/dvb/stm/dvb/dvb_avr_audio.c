@@ -77,7 +77,7 @@ static snd_pcm_uframes_t AUDIO_BUFFER_FRAMES	= 20480; /*10240*/
 #	elif defined(CONFIG_CPU_SUBTYPE_STX7105)
 #		define AUDIO_CAPTURE_PCM 3
 #               warning Need to check this value
-#	elif defined(CONFIG_CPU_SUBTYPE_STB7100)
+#	elif defined(CONFIG_CPU_SUBTYPE_STB7100) || defined (CONFIG_CPU_SUBTYPE_STX7100)
 #		define AUDIO_CAPTURE_PCM 3
 #	else
 #		error Unsupported platform!

@@ -8,8 +8,6 @@
 
 #include <string.h>
 
-
-
 #include "wma_properties.h"
 #include "report.h"
 

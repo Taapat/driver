@@ -9,7 +9,7 @@
 #define _TSMERGER_H_
 
 /* Parameters for device */
-#if defined(ST5100) || defined(ST5301) || defined(CONFIG_CPU_SUBTYPE_STB7100)
+#if defined(ST5100) || defined(ST5301) || defined(CONFIG_CPU_SUBTYPE_STB7100) || defined (CONFIG_CPU_SUBTYPE_STX7100)
 #ifdef CONFIG_CPU_SUBTYPE_STB5301
   #define TSM_BASE_ADDRESS 0x21100000
   #define TSM_BASE_SIZE    0x400
@@ -25,7 +25,7 @@
   #define TSM_OUTPUT_1394      (1 << 1)
 #endif
 
-#ifdef CONFIG_CPU_SUBTYPE_STB7100
+#if defined(CONFIG_CPU_SUBTYPE_STB7100) || defined (CONFIG_CPU_SUBTYPE_STX7100)
   #define TSM_BASE_ADDRESS 0x19242000
   #define TSM_BASE_SIZE    0x900
 

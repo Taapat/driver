@@ -172,7 +172,7 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	},
 };
 
-#elif defined CONFIG_CPU_SUBTYPE_STB7100 && !defined CONFIG_DUAL_DISPLAY
+#elif (defined(CONFIG_CPU_SUBTYPE_STB7100) || defined (CONFIG_CPU_SUBTYPE_STX7100)) && !defined CONFIG_DUAL_DISPLAY
 
 static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	{
@@ -196,7 +196,7 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	},
 };
 
-#elif defined CONFIG_CPU_SUBTYPE_STB7100
+#elif defined (CONFIG_CPU_SUBTYPE_STB7100) || defined (CONFIG_CPU_SUBTYPE_STX7100)
 
 static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	{
