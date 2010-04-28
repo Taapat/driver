@@ -1,19 +1,25 @@
 TREE_ROOT?=$(DRIVER_TOPDIR)/player2
-#CFLAGS+=-I$(TREE_ROOT)/linux/include/linux/stm/
-CFLAGS+=-I$(TREE_ROOT)/linux/drivers/media/dvb/stm/dvb/
-CFLAGS+=-I$(TREE_ROOT)/linux/drivers/media/dvb/stm/allocator/
-CFLAGS+=-I$(TREE_ROOT)/linux/drivers/media/dvb/stm/h264_preprocessor/
-CFLAGS+=-I$(TREE_ROOT)/linux/drivers/sound/pseudocard/
-CFLAGS+=-I$(TREE_ROOT)/linux/drivers/stm/mmelog/
-CFLAGS+=-I$(TREE_ROOT)/linux/drivers/stm/monitor/
-CFLAGS+=-I$(TREE_ROOT)/linux/drivers/media/sysfs/stm/
-CFLAGS+=-DREPORT
+CCFLAGSY+=-I$(TREE_ROOT)/components/include/
+CCFLAGSY+=-I$(TREE_ROOT)/linux/drivers/media/dvb/stm/dvb/
+CCFLAGSY+=-I$(TREE_ROOT)/linux/drivers/media/dvb/stm/allocator/
+CCFLAGSY+=-I$(TREE_ROOT)/linux/drivers/media/dvb/stm/h264_preprocessor/
+CCFLAGSY+=-I$(TREE_ROOT)/linux/drivers/sound/pseudocard/
+CCFLAGSY+=-I$(TREE_ROOT)/linux/drivers/stm/mmelog/
+CCFLAGSY+=-I$(TREE_ROOT)/linux/drivers/stm/monitor/
+CCFLAGSY+=-I$(TREE_ROOT)/linux/drivers/media/sysfs/stm/
+CCFLAGSY+=-DREPORT
 
-CFLAGS+= -fno-exceptions
+CCFLAGSY+= -fno-exceptions
 
 ## It would be good to make this CXXFLAGS however, this generates some missing cxx symbols???
 ## Somebody is using c++ in c code.
-CFLAGS+= -fno-rtti
+CCFLAGSY+= -fno-rtti
+
+ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
+ccflags-y += $(CCFLAGSY)
+else
+CFLAGS += $(CCFLAGSY)
+endif
 
 infrastructure-objs := \
 			crc32.o \

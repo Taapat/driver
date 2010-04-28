@@ -26,6 +26,7 @@ Date        Modification                                    Name
 #undef min
 #undef max
 
+#include <linux/version.h>
 #include <linux/kernel.h>
 #include <linux/sched.h>
 #include <linux/delay.h>
@@ -896,14 +897,22 @@ STATIC_INLINE void OSDEV_PurgeCacheAll(void)
 
 STATIC_INLINE void OSDEV_FlushCacheRange(void *start, int size)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
     dma_cache_wback(start, size);
+#else
+    writeback_ioremap_region(0, start, 0, size);
+#endif
 }
 
 // -----------------------------------------------------------------------------------------------
 
 STATIC_INLINE void OSDEV_InvalidateCacheRange(void *start, int size)
 {
-    dma_cache_inv(start, size);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	dma_cache_inv(start, size);
+#else
+	invalidate_ioremap_region(0, start, 0, size);
+#endif
 }
 
 // -----------------------------------------------------------------------------------------------
@@ -923,7 +932,11 @@ STATIC_INLINE void OSDEV_SnoopCacheRange(void *start, int size)
 
 STATIC_INLINE void OSDEV_PurgeCacheRange(void *start, int size)
 {
-    dma_cache_wback_inv(start, size);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
+	dma_cache_wback_inv(start, size);
+#else
+	flush_ioremap_region(0, start, 0, size);
+#endif
 }
 
 // -----------------------------------------------------------------------------------------------
