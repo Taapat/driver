@@ -22,12 +22,14 @@
 #ifndef __STV090x_H
 #define __STV090x_H
 
-#include <linux/version.h>
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
+#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
 #include <linux/stm/pio.h>
 #else
 #include <linux/stpio.h>
 #endif
+
+//#define	TUNER_IX7306
+#define	TUNER_STB6110
 
 enum stv090x_demodulator {
 	STV090x_DEMODULATOR_0 = 1,

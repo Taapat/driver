@@ -22,10 +22,9 @@
 #ifndef __STB0899_DRV_H
 #define __STB0899_DRV_H
 
-#include <linux/version.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
+#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
 #include <linux/stm/pio.h>
 #else
 #include <linux/stpio.h>

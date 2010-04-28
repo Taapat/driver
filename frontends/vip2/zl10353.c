@@ -25,12 +25,12 @@
 #include <linux/delay.h>
 #include <linux/string.h>
 #include <linux/slab.h>
-#include "compat.h"
 #include <asm/div64.h>
 
 #include "dvb_frontend.h"
 #include "zl10353_priv.h"
 #include "zl10353.h"
+#include "core.h"
 
 struct zl10353_state {
 	struct i2c_adapter *i2c;

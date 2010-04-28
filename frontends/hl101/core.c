@@ -4,19 +4,19 @@
 #include "stb0899_reg.h"
 #include "stb0899_cfg.h"
 #include "stv090x.h"
+#include "cx24116.h"
 
 /* Tuners */
 #include "stb6100.h"
 #include "stb6100_cfg.h"
 #include "stv6110x.h"
 
-#include <linux/version.h>
 #include <linux/platform_device.h>
 #include <asm/system.h>
 #include <asm/io.h>
 #include <linux/dvb/dmx.h>
 #include <linux/proc_fs.h>
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
+#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
 #include <linux/stm/pio.h>
 #else
 #include <linux/stpio.h>
@@ -40,10 +40,12 @@ MODULE_PARM_DESC(tuner, "tuner type. (default stb6100");
 #define I2C_ADDR_STB6100 	(0xc0 >> 1)
 #define I2C_ADDR_STV090X	(0xd0 >> 1)
 #define I2C_ADDR_STV6110X	(0xc0 >> 1)
+#define I2C_ADDR_CX24116	(0x0a >> 1)
 
 enum {
 	STV090X,
 	STB0899,
+	CX24116,
 };
 
 enum {
@@ -596,6 +598,13 @@ static struct stv090x_config stv090x_config = {
 	.tuner_get_bbgain		= NULL,
 	.tuner_set_refclk		= NULL,
 	.tuner_get_status		= NULL,
+};
+
+static struct cx24116_config cx24116_config = {
+	.demod_address   = I2C_ADDR_CX24116, /* I2C Address */
+	.mpg_clk_pos_pol = 0x01,
+	.lnb_enable 	 = NULL,
+	.lnb_vsel	 	 = NULL,
 };
 
 static struct stb6100_config stb6100_config = {

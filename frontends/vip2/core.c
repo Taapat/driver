@@ -1,31 +1,36 @@
 #include "core.h"
 #include "stv6110x.h"
 #include "stv090x.h"
-#include "ix2470.h"
-#include "ix2470_cfg.h"
+#include "ix7306.h"
 #include "zl10353.h"
 
-#include <linux/version.h>
 #include <linux/platform_device.h>
 #include <asm/system.h>
 #include <asm/io.h>
 #include <linux/dvb/dmx.h>
 #include <linux/proc_fs.h>
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
-#include <linux/stm/pio.h>
-#else
-#include <linux/stpio.h>
-#endif
-
+#include <linux/version.h>
 #include <pvr_config.h>
 
 #define I2C_ADDR_STV090X	(0xd0 >> 1)
 #define I2C_ADDR_STV6110X	(0xc0 >> 1)
-#define I2C_ADDR_IX2470		(0xc0 >> 1)
+#define I2C_ADDR_IX7306		(0xc0 >> 1)
 #define I2C_ADDR_CE6353		(0x1e >> 1)
 
-#define CLK_EXT_IX2470 		4000000
-#define CLK_EXT_STV6110 	8000000
+/* On this framework, We can't support dual tuner,
+ * so we can only use one. In order to support dual tuner,
+ * we need add tuner type option to stx090x_config,
+ * when this done, just remove the define TUNER_IX7306 in stv090x.h*/
+
+#if   defined(TUNER_IX7306)
+#define CLK_EXT_IX7306 		4000000
+#define CLK_EXT_STV6110 	16000000
+#elif defined(TUNER_STB6110)
+#define CLK_EXT_IX7306 		8000000
+#define CLK_EXT_STV6110 	16000000
+#else
+	#error "You must define tuner type..."
+#endif
 
 static char *demod1 = "stv090x";
 static char *demod2 = "ce6353";
@@ -104,26 +109,22 @@ void hc595_out(unsigned char ctls, int state)
 	SRCLK_CLR();
     udelay(10);
 
-	printk("+++ fctl= ");
-
     for(i = 7; i >=0; i--)
 	{
     	SRCLK_CLR();
 		if(fctl & (1<<i))
 		{
 			SDA_SET();
-			printk("1");
 		}
 		else
 		{
 			SDA_CLR();
-			printk("0");
 		}
 		udelay(1);
 		SRCLK_SET();
 		udelay(1);
 	}
-	printk("\n");
+
     RCLK_CLR();
     udelay(1);
     RCLK_SET();
@@ -136,11 +137,11 @@ static struct stv090x_config stv090x_config = {
 	.demod_mode		= STV090x_DUAL/*STV090x_SINGLE*/,
 	.clk_mode		= STV090x_CLK_EXT,
 
-	.xtal			= CLK_EXT_IX2470,
+	.xtal			= CLK_EXT_IX7306,
 	.address		= I2C_ADDR_STV090X,
 
-	.ts1_mode		= STV090x_TSMODE_DVBCI/*STV090x_TSMODE_SERIAL_CONTINUOUS*/,
-	.ts2_mode		= STV090x_TSMODE_DVBCI/*STV090x_TSMODE_SERIAL_CONTINUOUS*/,
+	.ts1_mode		= STV090x_TSMODE_DVBCI/*STV090x_TSMODE_PARALLEL_PUNCTURED*//*STV090x_TSMODE_SERIAL_CONTINUOUS*/,
+	.ts2_mode		= STV090x_TSMODE_DVBCI/*STV090x_TSMODE_PARALLEL_PUNCTURED*//*STV090x_TSMODE_SERIAL_CONTINUOUS*/,
 	.ts1_clk		= 0,
 	.ts2_clk		= 0,
 
@@ -166,14 +167,15 @@ static struct stv090x_config stv090x_config = {
 static struct stv6110x_config stv6110x_config = {
 	.addr			= I2C_ADDR_STV6110X,
 	.refclk			= CLK_EXT_STV6110,
+	.clk_div		= 2,
 };
 
-static const struct ix2470_config bs2s7hz7306a_config = {
+static const struct ix7306_config bs2s7hz7306a_config = {
 	.name		= "Sharp BS2S7HZ7306A",
-	.addr		= I2C_ADDR_IX2470,
-	.step_size 	= IX2470_STEP_1000,
-	.bb_lpf		= IX2470_LPF_12,
-	.bb_gain	= IX2470_GAIN_2dB,
+	.addr		= I2C_ADDR_IX7306,
+	.step_size 	= IX7306_STEP_1000,
+	.bb_lpf		= IX7306_LPF_12,
+	.bb_gain	= IX7306_GAIN_2dB,
 };
 
 static struct zl10353_config ce6353_config = {
@@ -205,15 +207,16 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 
 				switch (tunerType1) {
 				case SHARP7306:
-					if(dvb_attach(ix2470_attach, frontend, &bs2s7hz7306a_config, cfg->i2c_adap))
+					if(dvb_attach(ix7306_attach, frontend, &bs2s7hz7306a_config, cfg->i2c_adap))
 					{
-						printk("%s: ix2470 attached\n", __FUNCTION__);
-						stv090x_config.tuner_set_frequency 	= ix2470_set_frequency;
-						stv090x_config.tuner_get_frequency 	= ix2470_get_frequency;
-						stv090x_config.tuner_get_bandwidth 	= ix2470_get_bandwidth;
+						printk("%s: IX7306 attached\n", __FUNCTION__);
+						stv090x_config.tuner_set_frequency 	= ix7306_set_frequency;
+						stv090x_config.tuner_get_frequency 	= ix7306_get_frequency;
+						stv090x_config.tuner_set_bandwidth 	= ix7306_set_bandwidth;
+						stv090x_config.tuner_get_bandwidth 	= ix7306_get_bandwidth;
 						stv090x_config.tuner_get_status	  	= frontend->ops.tuner_ops.get_status;
 					}else{
-						printk (KERN_INFO "%s: error attaching ix2470\n", __FUNCTION__);
+						printk (KERN_INFO "%s: error attaching IX7306\n", __FUNCTION__);
 						goto error_out;
 					}
 					break;
@@ -277,15 +280,15 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 
 				switch (tunerType2) {
 				case SHARP7306:
-					if(dvb_attach(ix2470_attach, frontend, &bs2s7hz7306a_config, cfg->i2c_adap))
+					if(dvb_attach(ix7306_attach, frontend, &bs2s7hz7306a_config, cfg->i2c_adap))
 					{
-						printk("%s: ix2470 attached\n", __FUNCTION__);
-						stv090x_config.tuner_set_frequency 	= ix2470_set_frequency;
-						stv090x_config.tuner_get_frequency 	= ix2470_get_frequency;
-						stv090x_config.tuner_get_bandwidth 	= ix2470_get_bandwidth;
+						printk("%s: IX7306 attached\n", __FUNCTION__);
+						stv090x_config.tuner_set_frequency 	= ix7306_set_frequency;
+						stv090x_config.tuner_get_frequency 	= ix7306_get_frequency;
+						stv090x_config.tuner_get_bandwidth 	= ix7306_get_bandwidth;
 						stv090x_config.tuner_get_status	  	= frontend->ops.tuner_ops.get_status;
 					}else{
-						printk (KERN_INFO "%s: error attaching ix2470\n", __FUNCTION__);
+						printk (KERN_INFO "%s: error attaching IX7306\n", __FUNCTION__);
 						goto error_out;
 					}
 					break;
@@ -345,7 +348,7 @@ error_out:
 static struct dvb_frontend *init_fe_device (struct dvb_adapter *adapter,
                      struct tuner_config *tuner_cfg, int i)
 {
-  struct core_state *state;
+  struct fe_core_state *state;
   struct dvb_frontend *frontend;
   struct core_config *cfg;
 

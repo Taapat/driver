@@ -1147,7 +1147,13 @@ static struct stv090x_reg stv0900_initval[] = {
 
 static struct stv090x_reg stv0903_initval[] = {
 	{ STV090x_OUTCFG,		0x00 },
-	{ STV090x_AGCRF1CFG,		0x11 },
+#if   defined(TUNER_IX7306)
+	{ STV090x_AGCRF1CFG,		0x10 },		// 0x10 for sharp7306, 0x11 for stb6110
+#elif defined(TUNER_STB6110)
+	{ STV090x_AGCRF1CFG,		0x11 },		// 0x10 for sharp7306, 0x11 for stb6110
+#else
+	#error "You must define tuner type..."
+#endif
 	{ STV090x_STOPCLK1,		0x48 },
 	{ STV090x_STOPCLK2,		0x14 },
 	{ STV090x_TSTTNR1,		0x27 },
@@ -1497,30 +1503,30 @@ static int stv090x_i2c_gate_ctrl(struct dvb_frontend *fe, int enable)
 	struct stv090x_state *state = fe->demodulator_priv;
 	u32 reg;
 
-	if (enable)
-		mutex_lock(&state->internal->tuner_lock);
+//	if (enable)
+//		mutex_lock(&state->internal->tuner_lock);
 
-	reg = STV090x_READ_DEMOD(state, I2CRPT);
+//	reg = STV090x_READ_DEMOD(state, I2CRPT);
 	if (enable) {
 		dprintk(FE_DEBUG, 1, "Enable Gate");
 		STV090x_SETFIELD_Px(reg, I2CT_ON_FIELD, 1);
-		if (STV090x_WRITE_DEMOD(state, I2CRPT, reg) < 0)
+		if (STV090x_WRITE_DEMOD(state, I2CRPT, 0xc0) < 0)
 			goto err;
 
 	} else {
 		dprintk(FE_DEBUG, 1, "Disable Gate");
 		STV090x_SETFIELD_Px(reg, I2CT_ON_FIELD, 0);
-		if ((STV090x_WRITE_DEMOD(state, I2CRPT, reg)) < 0)
+		if ((STV090x_WRITE_DEMOD(state, I2CRPT, 0x40)) < 0)
 			goto err;
 	}
 
-	if (!enable)
-		mutex_unlock(&state->internal->tuner_lock);
+//	if (!enable)
+//		mutex_unlock(&state->internal->tuner_lock);
 
 	return 0;
 err:
 	dprintk(FE_ERROR, 1, "I/O error");
-	mutex_unlock(&state->internal->tuner_lock);
+//	mutex_unlock(&state->internal->tuner_lock);
 	return -1;
 }
 
@@ -4075,22 +4081,26 @@ static enum stv090x_signal_state stv090x_algo(struct stv090x_state *state)
 			goto err_gateoff;
 	}
 
-	if (state->config->tuner_set_frequency) {
-		if (state->config->tuner_set_frequency(fe, state->frequency) < 0)
-			goto err_gateoff;
-	}
+//	if (state->config->tuner_set_frequency) {
+//		if (state->config->tuner_set_frequency(fe, state->frequency) < 0)
+//			goto err_gateoff;
+//	}
 
 	if (state->config->tuner_set_bandwidth) {
 		if (state->config->tuner_set_bandwidth(fe, state->tuner_bw) < 0)
 			goto err_gateoff;
 	}
 
+	if (state->config->tuner_set_frequency) {
+		if (state->config->tuner_set_frequency(fe, state->frequency) < 0)
+			goto err_gateoff;
+	}
 	if (stv090x_i2c_gate_ctrl(fe, 0) < 0)
 		goto err;
 
 	msleep(50);
 
-	if (state->config->tuner_get_status) {
+	if (!state->config->tuner_get_status) {
 		if (stv090x_i2c_gate_ctrl(fe, 1) < 0)
 			goto err;
 		if (state->config->tuner_get_status(fe, &reg) < 0)
@@ -5473,4 +5483,5 @@ error:
 	kfree(state);
 	return NULL;
 }
+
 EXPORT_SYMBOL(stv090x_attach);
