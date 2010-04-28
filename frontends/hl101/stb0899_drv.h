@@ -24,10 +24,11 @@
 
 #include <linux/kernel.h>
 #include <linux/module.h>
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
-#include <linux/stm/pio.h>
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
+#  include <linux/stpio.h>
 #else
-#include <linux/stpio.h>
+#  include <linux/stm/pio.h>
 #endif
 
 #include "dvb_frontend.h"

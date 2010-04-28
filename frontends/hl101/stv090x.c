@@ -28,7 +28,6 @@
 #include <linux/mutex.h>
 #include <linux/platform_device.h>
 
-#include "compat.h"
 #include <linux/dvb/frontend.h>
 #include "dvb_frontend.h"
 

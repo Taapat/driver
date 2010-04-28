@@ -22,10 +22,11 @@
 #define CX24116_H
 
 #include <linux/dvb/frontend.h>
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
-#include <linux/stm/pio.h>
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
+#  include <linux/stpio.h>
 #else
-#include <linux/stpio.h>
+#  include <linux/stm/pio.h>
 #endif
 
 struct cx24116_config {

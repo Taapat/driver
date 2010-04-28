@@ -16,12 +16,6 @@
 #include <asm/io.h>
 #include <linux/dvb/dmx.h>
 #include <linux/proc_fs.h>
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
-#include <linux/stm/pio.h>
-#else
-#include <linux/stpio.h>
-#endif
-
 #include <pvr_config.h>
 
 static int demodType;
