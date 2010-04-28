@@ -24,7 +24,10 @@
 #include <linux/module.h>
 #include <linux/string.h>
 
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27)
 #include "compat.h"
+#endif
 #include "dvb_frontend.h"
 #include "stb6100.h"
 

@@ -28,7 +28,6 @@
 #include <linux/mutex.h>
 #include <linux/platform_device.h>
 
-#include "compat.h"
 #include <linux/dvb/frontend.h>
 #include "dvb_frontend.h"
 
@@ -1147,7 +1146,13 @@ static struct stv090x_reg stv0900_initval[] = {
 
 static struct stv090x_reg stv0903_initval[] = {
 	{ STV090x_OUTCFG,		0x00 },
-	{ STV090x_AGCRF1CFG,		0x11 },
+#if   defined(TUNER_IX7306)
+	{ STV090x_AGCRF1CFG,		0x10 },		// 0x10 for sharp7306, 0x11 for stb6110
+#elif defined(TUNER_STB6110)
+	{ STV090x_AGCRF1CFG,		0x11 },		// 0x10 for sharp7306, 0x11 for stb6110
+#else
+	#error "You must define tuner type..."
+#endif
 	{ STV090x_STOPCLK1,		0x48 },
 	{ STV090x_STOPCLK2,		0x14 },
 	{ STV090x_TSTTNR1,		0x27 },
@@ -1497,30 +1502,30 @@ static int stv090x_i2c_gate_ctrl(struct dvb_frontend *fe, int enable)
 	struct stv090x_state *state = fe->demodulator_priv;
 	u32 reg;
 
-	if (enable)
-		mutex_lock(&state->internal->tuner_lock);
+//	if (enable)
+//		mutex_lock(&state->internal->tuner_lock);
 
-	reg = STV090x_READ_DEMOD(state, I2CRPT);
+//	reg = STV090x_READ_DEMOD(state, I2CRPT);
 	if (enable) {
 		dprintk(FE_DEBUG, 1, "Enable Gate");
 		STV090x_SETFIELD_Px(reg, I2CT_ON_FIELD, 1);
-		if (STV090x_WRITE_DEMOD(state, I2CRPT, reg) < 0)
+		if (STV090x_WRITE_DEMOD(state, I2CRPT, 0xc0) < 0)
 			goto err;
 
 	} else {
 		dprintk(FE_DEBUG, 1, "Disable Gate");
 		STV090x_SETFIELD_Px(reg, I2CT_ON_FIELD, 0);
-		if ((STV090x_WRITE_DEMOD(state, I2CRPT, reg)) < 0)
+		if ((STV090x_WRITE_DEMOD(state, I2CRPT, 0x40)) < 0)
 			goto err;
 	}
 
-	if (!enable)
-		mutex_unlock(&state->internal->tuner_lock);
+//	if (!enable)
+//		mutex_unlock(&state->internal->tuner_lock);
 
 	return 0;
 err:
 	dprintk(FE_ERROR, 1, "I/O error");
-	mutex_unlock(&state->internal->tuner_lock);
+//	mutex_unlock(&state->internal->tuner_lock);
 	return -1;
 }
 
@@ -4075,22 +4080,26 @@ static enum stv090x_signal_state stv090x_algo(struct stv090x_state *state)
 			goto err_gateoff;
 	}
 
-	if (state->config->tuner_set_frequency) {
-		if (state->config->tuner_set_frequency(fe, state->frequency) < 0)
-			goto err_gateoff;
-	}
+//	if (state->config->tuner_set_frequency) {
+//		if (state->config->tuner_set_frequency(fe, state->frequency) < 0)
+//			goto err_gateoff;
+//	}
 
 	if (state->config->tuner_set_bandwidth) {
 		if (state->config->tuner_set_bandwidth(fe, state->tuner_bw) < 0)
 			goto err_gateoff;
 	}
 
+	if (state->config->tuner_set_frequency) {
+		if (state->config->tuner_set_frequency(fe, state->frequency) < 0)
+			goto err_gateoff;
+	}
 	if (stv090x_i2c_gate_ctrl(fe, 0) < 0)
 		goto err;
 
 	msleep(50);
 
-	if (state->config->tuner_get_status) {
+	if (!state->config->tuner_get_status) {
 		if (stv090x_i2c_gate_ctrl(fe, 1) < 0)
 			goto err;
 		if (state->config->tuner_get_status(fe, &reg) < 0)
@@ -4237,16 +4246,11 @@ err:
 
 static int stv090x_set_property(struct dvb_frontend *fe, struct dtv_property* tvp)
 {
-	struct stv090x_state *state = fe->demodulator_priv;
-	//dprintk(state->verbose, FE_ERROR, 1, "%s(..)\n", __func__);
 	return 0;
 }
 
 static int stv090x_get_property(struct dvb_frontend *fe, struct dtv_property* tvp)
 {
-	struct stv090x_state *state = fe->demodulator_priv;
-	//dprintk(state->verbose, FE_ERROR, 1, "%s(..)\n", __func__);
-
 	/* get delivery system info */
 	if(tvp->cmd==DTV_DELIVERY_SYSTEM){
 		switch (tvp->u.data) {
@@ -5473,4 +5477,376 @@ error:
 	kfree(state);
 	return NULL;
 }
+
+void demod_d0903_PrintAllRegValue(struct stv090x_state *state)
+{
+	printk("\n0---49");
+	printk("\nSTV090x_MID: 0x%x", stv090x_read_reg(state, STV090x_MID));
+	printk("\nSTV090x_DACR1: 0x%x", stv090x_read_reg(state, STV090x_DACR1));
+	printk("\nSTV090x_DACR2: 0x%x", stv090x_read_reg(state, STV090x_DACR2));
+	printk("\nSTV090x_OUTCFG: 0x%x", stv090x_read_reg(state, STV090x_OUTCFG));
+	printk("\nSTV090x_IRQSTATUS3: 0x%x", stv090x_read_reg(state, STV090x_IRQSTATUS3));
+	printk("\nSTV090x_IRQSTATUS2: 0x%x", stv090x_read_reg(state, STV090x_IRQSTATUS2));
+	printk("\nSTV090x_IRQSTATUS1: 0x%x", stv090x_read_reg(state, STV090x_IRQSTATUS1));
+	printk("\nSTV090x_IRQSTATUS0: 0x%x", stv090x_read_reg(state, STV090x_IRQSTATUS0));
+	printk("\nSTV090x_IRQMASK3: 0x%x", stv090x_read_reg(state, STV090x_IRQMASK3));
+	printk("\nSTV090x_IRQMASK2: 0x%x", stv090x_read_reg(state, STV090x_IRQMASK2));
+	printk("\nSTV090x_IRQMASK1: 0x%x", stv090x_read_reg(state, STV090x_IRQMASK1));
+	printk("\nSTV090x_IRQMASK0: 0x%x", stv090x_read_reg(state, STV090x_IRQMASK0));
+	printk("\nSTV090x_I2CCFG: 0x%x", stv090x_read_reg(state, STV090x_I2CCFG));
+	printk("\nSTV090x_I2CRPT: 0x%x", stv090x_read_reg(state, STV090x_P1_I2CRPT));
+	printk("\nSTV090x_CLKI2CFG: 0x%x", stv090x_read_reg(state, STV090x_CLKI2CFG));
+	printk("\nSTV090x_GPIO1CFG: 0x%x", stv090x_read_reg(state, STV090x_GPIO1CFG));
+	printk("\nSTV090x_GPIO2CFG: 0x%x", stv090x_read_reg(state, STV090x_GPIO2CFG));
+	printk("\nSTV090x_GPIO3CFG: 0x%x", stv090x_read_reg(state, STV090x_GPIO3CFG));
+	printk("\nSTV090x_GPIO4CFG: 0x%x", stv090x_read_reg(state, STV090x_GPIO4CFG));
+	printk("\nSTV090x_GPIO5CFG: 0x%x", stv090x_read_reg(state, STV090x_GPIO5CFG));
+	printk("\nSTV090x_GPIO6CFG: 0x%x", stv090x_read_reg(state, STV090x_GPIO6CFG));
+	printk("\nSTV090x_GPIO7CFG: 0x%x", stv090x_read_reg(state, STV090x_GPIO7CFG));
+	printk("\nSTV090x_GPIO8CFG: 0x%x", stv090x_read_reg(state, STV090x_GPIO8CFG));
+	printk("\nSTV090x_GPIO9CFG: 0x%x", stv090x_read_reg(state, STV090x_GPIO9CFG));
+	printk("\nSTV090x_GPIO10CFG: 0x%x", stv090x_read_reg(state, STV090x_GPIO10CFG));
+	printk("\nSTV090x_GPIO11CFG: 0x%x", stv090x_read_reg(state, STV090x_GPIO11CFG));
+	printk("\nSTV090x_GPIO12CFG: 0x%x", stv090x_read_reg(state, STV090x_GPIO12CFG));
+	printk("\nSTV090x_GPIO13CFG: 0x%x", stv090x_read_reg(state, STV090x_GPIO13CFG));
+	printk("\nSTV090x_CS0CFG: 0x%x", stv090x_read_reg(state, STV090x_CS0CFG));
+	printk("\nSTV090x_CS1CFG: 0x%x", stv090x_read_reg(state, STV090x_CS1CFG));
+	printk("\nSTV090x_STDBYCFG: 0x%x", stv090x_read_reg(state, STV090x_STDBYCFG));
+	printk("\nSTV090x_DIRCLKCFG: 0x%x", stv090x_read_reg(state, STV090x_DIRCLKCFG));
+	printk("\nSTV090x_AGCRF1CFG: 0x%x", stv090x_read_reg(state, STV090x_AGCRF1CFG));
+	printk("\nSTV090x_SDAT1CFG: 0x%x", stv090x_read_reg(state, STV090x_SDAT1CFG));
+	printk("\nSTV090x_SCLT1CFG: 0x%x", stv090x_read_reg(state, STV090x_SCLT1CFG));
+	printk("\nSTV090x_DISEQCO1CFG: 0x%x", stv090x_read_reg(state, STV090x_DISEQCO1CFG));
+	printk("\nSTV090x_CLKOUT27CFG: 0x%x", stv090x_read_reg(state, STV090x_CLKOUT27CFG));
+	printk("\nSTV090x_ERRORCFG: 0x%x", stv090x_read_reg(state, STV090x_ERRORCFG));
+	printk("\nSTV090x_DPNCFG: 0x%x", stv090x_read_reg(state, STV090x_DPNCFG));
+	printk("\nSTV090x_STROUTCFG: 0x%x", stv090x_read_reg(state, STV090x_STROUTCFG));
+	printk("\nSTV090x_CLKOUTCFG: 0x%x", stv090x_read_reg(state, STV090x_CLKOUTCFG));
+	printk("\nSTV090x_DATA7CFG: 0x%x", stv090x_read_reg(state, STV090x_DATA7CFG));
+	printk("\nSTV090x_FSKTFC2: 0x%x", stv090x_read_reg(state, STV090x_FSKTFC2));
+	printk("\nSTV090x_FSKTFC1: 0x%x", stv090x_read_reg(state, STV090x_FSKTFC1));
+	printk("\nSTV090x_FSKTFC0: 0x%x", stv090x_read_reg(state, STV090x_FSKTFC0));
+	printk("\nSTV090x_FSKTDELTAF1: 0x%x", stv090x_read_reg(state, STV090x_FSKTDELTAF1));
+	printk("\nSTV090x_FSKTDELTAF0: 0x%x", stv090x_read_reg(state, STV090x_FSKTDELTAF0));
+	printk("\nSTV090x_FSKTCTRL: 0x%x", stv090x_read_reg(state, STV090x_FSKTCTRL));
+	printk("\nSTV090x_FSKRFC2: 0x%x", stv090x_read_reg(state, STV090x_FSKRFC2));
+	printk("\nSTV090x_FSKRFC1: 0x%x", stv090x_read_reg(state, STV090x_FSKRFC1));
+
+	printk("\n50---99");
+	printk("\nSTV090x_FSKRFC0: 0x%x", stv090x_read_reg(state, STV090x_FSKRFC0));
+	printk("\nSTV090x_FSKRK1: 0x%x", stv090x_read_reg(state, STV090x_FSKRK1));
+	printk("\nSTV090x_FSKRK2: 0x%x", stv090x_read_reg(state, STV090x_FSKRK2));
+	printk("\nSTV090x_FSKRAGCR: 0x%x", stv090x_read_reg(state, STV090x_FSKRAGCR));
+	printk("\nSTV090x_FSKRAGC: 0x%x", stv090x_read_reg(state, STV090x_FSKRAGC));
+	printk("\nSTV090x_FSKRALPHA: 0x%x", stv090x_read_reg(state, STV090x_FSKRALPHA));
+	printk("\nSTV090x_FSKRPLTH1: 0x%x", stv090x_read_reg(state, STV090x_FSKRPLTH1));
+	printk("\nSTV090x_FSKRPLTH0: 0x%x", stv090x_read_reg(state, STV090x_FSKRPLTH0));
+	printk("\nSTV090x_FSKRDF1: 0x%x", stv090x_read_reg(state, STV090x_FSKRDF1));
+	printk("\nSTV090x_FSKRDF0: 0x%x", stv090x_read_reg(state, STV090x_FSKRDF0));
+	printk("\nSTV090x_FSKRSTEPP: 0x%x", stv090x_read_reg(state, STV090x_FSKRSTEPP));
+	printk("\nSTV090x_FSKRSTEPM: 0x%x", stv090x_read_reg(state, STV090x_FSKRSTEPM));
+	printk("\nSTV090x_FSKRDET1: 0x%x", stv090x_read_reg(state, STV090x_FSKRDET1));
+	printk("\nSTV090x_FSKRDET0: 0x%x", stv090x_read_reg(state, STV090x_FSKRDET0));
+	printk("\nSTV090x_FSKRDTH1: 0x%x", stv090x_read_reg(state, STV090x_FSKRDTH1));
+	printk("\nSTV090x_FSKRDTH0: 0x%x", stv090x_read_reg(state, STV090x_FSKRDTH0));
+	printk("\nSTV090x_FSKRLOSS: 0x%x", stv090x_read_reg(state, STV090x_FSKRLOSS));
+	printk("\nSTV090x_ACRPRESC2: 0x%x", stv090x_read_reg(state, STV090x_ACRPRESC2));
+	printk("\nSTV090x_ACRDIV2: 0x%x", stv090x_read_reg(state, STV090x_ACRDIV2));
+	printk("\nSTV090x_DISTXCTL: 0x%x", stv090x_read_reg(state, STV090x_P1_DISTXCTL));
+	printk("\nSTV090x_DISRXCTL: 0x%x", stv090x_read_reg(state, STV090x_P1_DISRXCTL));
+	printk("\nSTV090x_DISRX_ST0: 0x%x", stv090x_read_reg(state, STV090x_P1_DISRX_ST0));
+	printk("\nSTV090x_DISRX_ST1: 0x%x", stv090x_read_reg(state, STV090x_P1_DISRX_ST1));
+	printk("\nSTV090x_DISRXDATA: 0x%x", stv090x_read_reg(state, STV090x_P1_DISRXDATA));
+	printk("\nSTV090x_DISTXDATA: 0x%x", stv090x_read_reg(state, STV090x_P1_DISTXDATA));
+	printk("\nSTV090x_DISTXSTATUS: 0x%x", stv090x_read_reg(state, STV090x_P1_DISTXSTATUS));
+	printk("\nSTV090x_F22TX: 0x%x", stv090x_read_reg(state, STV090x_P1_F22TX));
+	printk("\nSTV090x_F22RX: 0x%x", stv090x_read_reg(state, STV090x_P1_F22RX));
+	printk("\nSTV090x_ACRPRESC: 0x%x", stv090x_read_reg(state, STV090x_P1_ACRPRESC));
+	printk("\nSTV090x_ACRDIV: 0x%x", stv090x_read_reg(state, STV090x_P1_ACRDIV));
+	printk("\nSTV090x_NCOARSE: 0x%x", stv090x_read_reg(state, STV090x_NCOARSE));
+	printk("\nSTV090x_SYNTCTRL: 0x%x", stv090x_read_reg(state, STV090x_SYNTCTRL));
+	printk("\nSTV090x_FILTCTRL: 0x%x", stv090x_read_reg(state, STV090x_FILTCTRL));
+	printk("\nSTV090x_PLLSTAT: 0x%x", stv090x_read_reg(state, STV090x_PLLSTAT));
+	printk("\nSTV090x_STOPCLK1: 0x%x", stv090x_read_reg(state, STV090x_STOPCLK1));
+	printk("\nSTV090x_STOPCLK2: 0x%x", stv090x_read_reg(state, STV090x_STOPCLK2));
+	printk("\nSTV090x_TSTTNR0: 0x%x", stv090x_read_reg(state, STV090x_TSTTNR0));
+	printk("\nSTV090x_TSTTNR1: 0x%x", stv090x_read_reg(state, STV090x_TSTTNR1));
+	printk("\nSTV090x_TSTTNR2: 0x%x", stv090x_read_reg(state, STV090x_TSTTNR2));
+	printk("\nSTV090x_IQCONST: 0x%x", stv090x_read_reg(state, STV090x_P1_IQCONST));
+	printk("\nSTV090x_NOSCFG: 0x%x", stv090x_read_reg(state, STV090x_P1_NOSCFG));
+	printk("\nSTV090x_ISYMB: 0x%x", stv090x_read_reg(state, STV090x_P1_ISYMB));
+	printk("\nSTV090x_QSYMB: 0x%x", stv090x_read_reg(state, STV090x_P1_QSYMB));
+	printk("\nSTV090x_AGC1CFG: 0x%x", stv090x_read_reg(state, STV090x_P1_AGC1CFG));
+	printk("\nSTV090x_AGC1CN: 0x%x", stv090x_read_reg(state, STV090x_P1_AGC1CN));
+	printk("\nSTV090x_AGC1REF: 0x%x", stv090x_read_reg(state, STV090x_P1_AGC1REF));
+	printk("\nSTV090x_IDCCOMP: 0x%x", stv090x_read_reg(state, STV090x_P1_IDCCOMP));
+	printk("\nSTV090x_QDCCOMP: 0x%x", stv090x_read_reg(state, STV090x_P1_QDCCOMP));
+	printk("\nSTV090x_POWERI: 0x%x", stv090x_read_reg(state, STV090x_P1_POWERI));
+	printk("\nSTV090x_POWERQ: 0x%x", stv090x_read_reg(state, STV090x_P1_POWERQ));
+
+	printk("\n100---149");
+	printk("\nSTV090x_AGC1AMM: 0x%x", stv090x_read_reg(state, STV090x_P1_AGC1AMM));
+	printk("\nSTV090x_AGC1QUAD: 0x%x", stv090x_read_reg(state, STV090x_P1_AGC1QUAD));
+	printk("\nSTV090x_AGCIQIN1: 0x%x", stv090x_read_reg(state, STV090x_P1_AGCIQIN1));
+	printk("\nSTV090x_AGCIQIN0: 0x%x", stv090x_read_reg(state, STV090x_P1_AGCIQIN0));
+	printk("\nSTV090x_DEMOD: 0x%x", stv090x_read_reg(state, STV090x_P1_DEMOD));
+	printk("\nSTV090x_DMDMODCOD: 0x%x", stv090x_read_reg(state, STV090x_P1_DMDMODCOD));
+	printk("\nSTV090x_DSTATUS: 0x%x", stv090x_read_reg(state, STV090x_P1_DSTATUS));
+	printk("\nSTV090x_DSTATUS2: 0x%x", stv090x_read_reg(state, STV090x_P1_DSTATUS2));
+	printk("\nSTV090x_DMDCFGMD: 0x%x", stv090x_read_reg(state, STV090x_P1_DMDCFGMD));
+	printk("\nSTV090x_DMDCFG2: 0x%x", stv090x_read_reg(state, STV090x_P1_DMDCFG2));
+	printk("\nSTV090x_DMDISTATE: 0x%x", stv090x_read_reg(state, STV090x_P1_DMDISTATE));
+	printk("\nSTV090x_DMDT0M: 0x%x", stv090x_read_reg(state, STV090x_DMDT0M));
+	printk("\nSTV090x_DMDSTATE: 0x%x", stv090x_read_reg(state, STV090x_P1_DMDSTATE));
+	printk("\nSTV090x_DMDFLYW: 0x%x", stv090x_read_reg(state, STV090x_P1_DMDFLYW));
+	printk("\nSTV090x_DMDCFG3: 0x%x", stv090x_read_reg(state, STV090x_P1_DMDCFG3));
+	printk("\nSTV090x_DMDCFG4: 0x%x", stv090x_read_reg(state, STV090x_P1_DMDCFG4));
+	printk("\nSTV090x_CORRELMANT: 0x%x", stv090x_read_reg(state, STV090x_P1_CORRELMANT));
+	printk("\nSTV090x_CORRELABS: 0x%x", stv090x_read_reg(state, STV090x_P1_CORRELABS));
+	printk("\nSTV090x_CORRELEXP: 0x%x", stv090x_read_reg(state, STV090x_P1_CORRELEXP));
+	printk("\nSTV090x_PLHMODCOD: 0x%x", stv090x_read_reg(state, STV090x_P1_PLHMODCOD));
+	printk("\nSTV090x_AGC2O: 0x%x", stv090x_read_reg(state, STV090x_P1_AGC2O));
+	printk("\nSTV090x_AGC2REF: 0x%x", stv090x_read_reg(state, STV090x_P1_AGC2REF));
+	printk("\nSTV090x_AGC2I1: 0x%x", stv090x_read_reg(state, STV090x_P1_AGC2I1));
+	printk("\nSTV090x_AGC2I0: 0x%x", stv090x_read_reg(state, STV090x_P1_AGC2I0));
+	printk("\nSTV090x_CARCFG: 0x%x", stv090x_read_reg(state, STV090x_P1_CARCFG));
+	printk("\nSTV090x_ACLC: 0x%x", stv090x_read_reg(state, STV090x_P1_ACLC));
+	printk("\nSTV090x_BCLC: 0x%x", stv090x_read_reg(state, STV090x_P1_BCLC));
+	printk("\nSTV090x_ACLCS2: 0x%x", stv090x_read_reg(state, STV090x_P1_ACLCS2));
+	printk("\nSTV090x_BCLCS2: 0x%x", stv090x_read_reg(state, STV090x_P1_BCLCS2));
+	printk("\nSTV090x_CARFREQ: 0x%x", stv090x_read_reg(state, STV090x_P1_CARFREQ));
+	printk("\nSTV090x_CARHDR: 0x%x", stv090x_read_reg(state, STV090x_P1_CARHDR));
+	printk("\nSTV090x_LDT: 0x%x", stv090x_read_reg(state, STV090x_P1_LDT));
+	printk("\nSTV090x_LDT2: 0x%x", stv090x_read_reg(state, STV090x_P1_LDT2));
+	printk("\nSTV090x_CFRICFG: 0x%x", stv090x_read_reg(state, STV090x_P1_CFRICFG));
+	printk("\nSTV090x_CFRUP1: 0x%x", stv090x_read_reg(state, STV090x_P1_CFRUP1));
+	printk("\nSTV090x_CFRUP0: 0x%x", stv090x_read_reg(state, STV090x_P1_CFRUP0));
+	printk("\nSTV090x_CFRLOW1: 0x%x", stv090x_read_reg(state, STV090x_P1_CFRLOW1));
+	printk("\nSTV090x_CFRLOW0: 0x%x", stv090x_read_reg(state, STV090x_P1_CFRLOW0));
+	printk("\nSTV090x_CFRINIT1: 0x%x", stv090x_read_reg(state, STV090x_P1_CFRINIT1));
+	printk("\nSTV090x_CFRINIT0: 0x%x", stv090x_read_reg(state, STV090x_P1_CFRINIT0));
+	printk("\nSTV090x_CFRINC1: 0x%x", stv090x_read_reg(state, STV090x_P1_CFRINC1));
+	printk("\nSTV090x_CFRINC0: 0x%x", stv090x_read_reg(state, STV090x_P1_CFRINC0));
+	printk("\nSTV090x_CFR2: 0x%x", stv090x_read_reg(state, STV090x_P1_CFR2));
+	printk("\nSTV090x_CFR1: 0x%x", stv090x_read_reg(state, STV090x_P1_CFR1));
+	printk("\nSTV090x_CFR0: 0x%x", stv090x_read_reg(state, STV090x_P1_CFR0));
+	printk("\nSTV090x_LDI: 0x%x", stv090x_read_reg(state, STV090x_P1_LDI));
+	printk("\nSTV090x_TMGCFG: 0x%x", stv090x_read_reg(state, STV090x_P1_TMGCFG));
+	printk("\nSTV090x_RTC: 0x%x", stv090x_read_reg(state, STV090x_P1_RTC));
+	printk("\nSTV090x_RTCS2: 0x%x", stv090x_read_reg(state, STV090x_P1_RTCS2));
+	printk("\nSTV090x_TMGTHRISE: 0x%x", stv090x_read_reg(state, STV090x_P1_TMGTHRISE));
+
+	printk("\n150---199");
+	printk("\nSTV090x_TMGTHFALL: 0x%x", stv090x_read_reg(state, STV090x_P1_TMGTHFALL));
+	printk("\nSTV090x_SFRUPRATIO: 0x%x", stv090x_read_reg(state, STV090x_P1_SFRUPRATIO));
+	printk("\nSTV090x_SFRLOWRATIO: 0x%x", stv090x_read_reg(state, STV090x_P1_SFRLOWRATIO));
+	printk("\nSTV090x_KREFTMG: 0x%x", stv090x_read_reg(state, STV090x_P1_KREFTMG));
+	printk("\nSTV090x_SFRSTEP: 0x%x", stv090x_read_reg(state, STV090x_P1_SFRSTEP));
+	printk("\nSTV090x_TMGCFG2: 0x%x", stv090x_read_reg(state, STV090x_P1_TMGCFG2));
+	printk("\nSTV090x_SFRINIT1: 0x%x", stv090x_read_reg(state, STV090x_P1_SFRINIT1));
+	printk("\nSTV090x_SFRINIT0: 0x%x", stv090x_read_reg(state, STV090x_P1_SFRINIT0));
+	printk("\nSTV090x_SFRUP1: 0x%x", stv090x_read_reg(state, STV090x_P1_SFRUP1));
+	printk("\nSTV090x_SFRUP0: 0x%x", stv090x_read_reg(state, STV090x_P1_SFRUP0));
+	printk("\nSTV090x_SFRLOW1: 0x%x", stv090x_read_reg(state, STV090x_P1_SFRLOW1));
+	printk("\nSTV090x_SFRLOW0: 0x%x", stv090x_read_reg(state, STV090x_P1_SFRLOW0));
+	printk("\nSTV090x_SFR3: 0x%x", stv090x_read_reg(state, STV090x_P1_SFR3));
+	printk("\nSTV090x_SFR2: 0x%x", stv090x_read_reg(state, STV090x_P1_SFR2));
+	printk("\nSTV090x_SFR1: 0x%x", stv090x_read_reg(state, STV090x_P1_SFR1));
+	printk("\nSTV090x_SFR0: 0x%x", stv090x_read_reg(state, STV090x_P1_SFR0));
+	printk("\nSTV090x_TMGREG2: 0x%x", stv090x_read_reg(state, STV090x_P1_TMGREG2));
+	printk("\nSTV090x_TMGREG1: 0x%x", stv090x_read_reg(state, STV090x_P1_TMGREG1));
+	printk("\nSTV090x_TMGREG0: 0x%x", stv090x_read_reg(state, STV090x_P1_TMGREG0));
+	printk("\nSTV090x_TMGLOCK1: 0x%x", stv090x_read_reg(state, STV090x_P1_TMGLOCK1));
+	printk("\nSTV090x_TMGLOCK0: 0x%x", stv090x_read_reg(state, STV090x_P1_TMGLOCK0));
+	printk("\nSTV090x_TMGOBS: 0x%x", stv090x_read_reg(state, STV090x_P1_TMGOBS));
+	printk("\nSTV090x_EQUALCFG: 0x%x", stv090x_read_reg(state, STV090x_P1_EQUALCFG));
+	printk("\nSTV090x_NNOSDATAT1: 0x%x", stv090x_read_reg(state, STV090x_P1_NNOSDATAT1));
+	printk("\nSTV090x_NNOSDATAT0: 0x%x", stv090x_read_reg(state, STV090x_P1_NNOSDATAT0));
+	printk("\nSTV090x_NNOSDATA1: 0x%x", stv090x_read_reg(state, STV090x_P1_NNOSDATA1));
+	printk("\nSTV090x_NNOSDATA0: 0x%x", stv090x_read_reg(state, STV090x_P1_NNOSDATA0));
+	printk("\nSTV090x_NNOSPLHT1: 0x%x", stv090x_read_reg(state, STV090x_P1_NNOSPLHT1));
+	printk("\nSTV090x_NNOSPLHT0: 0x%x", stv090x_read_reg(state, STV090x_P1_NNOSPLHT0));
+	printk("\nSTV090x_NNOSPLH1: 0x%x", stv090x_read_reg(state, STV090x_P1_NNOSPLH1));
+	printk("\nSTV090x_NNOSPLH0: 0x%x", stv090x_read_reg(state, STV090x_P1_NNOSPLH0));
+	printk("\nSTV090x_NOSDATAT1: 0x%x", stv090x_read_reg(state, STV090x_P1_NOSDATAT1));
+	printk("\nSTV090x_NOSDATAT0: 0x%x", stv090x_read_reg(state, STV090x_P1_NOSDATAT0));
+	printk("\nSTV090x_NOSDATA1: 0x%x", stv090x_read_reg(state, STV090x_P1_NOSDATA1));
+	printk("\nSTV090x_NOSDATA0: 0x%x", stv090x_read_reg(state, STV090x_P1_NOSDATA0));
+	printk("\nSTV090x_NOSPLHT1: 0x%x", stv090x_read_reg(state, STV090x_P1_NOSPLHT1));
+	printk("\nSTV090x_NOSPLHT0: 0x%x", stv090x_read_reg(state, STV090x_P1_NOSPLHT0));
+	printk("\nSTV090x_NOSPLH1: 0x%x", stv090x_read_reg(state, STV090x_P1_NOSPLH1));
+	printk("\nSTV090x_NOSPLH0: 0x%x", stv090x_read_reg(state, STV090x_P1_NOSPLH0));
+	printk("\nSTV090x_CAR2CFG: 0x%x", stv090x_read_reg(state, STV090x_P1_CAR2CFG));
+	printk("\nSTV090x_ACLC2: 0x%x", stv090x_read_reg(state, STV090x_P1_ACLC2));
+	printk("\nSTV090x_BCLC2: 0x%x", stv090x_read_reg(state, STV090x_P1_BCLC2));
+	printk("\nSTV090x_ACLC2S2Q: 0x%x", stv090x_read_reg(state, STV090x_P1_ACLC2S2Q));
+	printk("\nSTV090x_ACLC2S28: 0x%x", stv090x_read_reg(state, STV090x_P1_ACLC2S28));
+	printk("\nSTV090x_BCLC2S2Q: 0x%x", stv090x_read_reg(state, STV090x_P1_BCLC2S2Q));
+	printk("\nSTV090x_BCLC2S28: 0x%x", stv090x_read_reg(state, STV090x_P1_BCLC2S28));
+	printk("\nSTV090x_BCLC2S216A: 0x%x", stv090x_read_reg(state, STV090x_P1_BCLC2S216A));
+	printk("\nSTV090x_BCLC2S232A: 0x%x", stv090x_read_reg(state, STV090x_P1_BCLC2S232A));
+	printk("\nSTV090x_PLROOT2: 0x%x", stv090x_read_reg(state, STV090x_P1_PLROOT2));
+	printk("\nSTV090x_PLROOT1: 0x%x", stv090x_read_reg(state, STV090x_P1_PLROOT1));
+
+	printk("\n200---249");
+	printk("\nSTV090x_PLROOT0: 0x%x", stv090x_read_reg(state, STV090x_P1_PLROOT0));
+	printk("\nSTV090x_MODCODLST0: 0x%x", stv090x_read_reg(state, STV090x_P1_MODCODLST0));
+	printk("\nSTV090x_MODCODLST1: 0x%x", stv090x_read_reg(state, STV090x_P1_MODCODLST1));
+	printk("\nSTV090x_MODCODLST2: 0x%x", stv090x_read_reg(state, STV090x_P1_MODCODLST2));
+	printk("\nSTV090x_MODCODLST3: 0x%x", stv090x_read_reg(state, STV090x_P1_MODCODLST3));
+	printk("\nSTV090x_MODCODLST4: 0x%x", stv090x_read_reg(state, STV090x_P1_MODCODLST4));
+	printk("\nSTV090x_MODCODLST5: 0x%x", stv090x_read_reg(state, STV090x_P1_MODCODLST5));
+	printk("\nSTV090x_MODCODLST6: 0x%x", stv090x_read_reg(state, STV090x_P1_MODCODLST6));
+	printk("\nSTV090x_MODCODLST7: 0x%x", stv090x_read_reg(state, STV090x_P1_MODCODLST7));
+	printk("\nSTV090x_MODCODLST8: 0x%x", stv090x_read_reg(state, STV090x_P1_MODCODLST8));
+	printk("\nSTV090x_MODCODLST9: 0x%x", stv090x_read_reg(state, STV090x_P1_MODCODLST9));
+	printk("\nSTV090x_MODCODLSTA: 0x%x", stv090x_read_reg(state, STV090x_P1_MODCODLSTA));
+	printk("\nSTV090x_MODCODLSTB: 0x%x", stv090x_read_reg(state, STV090x_P1_MODCODLSTB));
+	printk("\nSTV090x_MODCODLSTC: 0x%x", stv090x_read_reg(state, STV090x_P1_MODCODLSTC));
+	printk("\nSTV090x_MODCODLSTD: 0x%x", stv090x_read_reg(state, STV090x_P1_MODCODLSTD));
+	printk("\nSTV090x_MODCODLSTE: 0x%x", stv090x_read_reg(state, STV090x_P1_MODCODLSTE));
+	printk("\nSTV090x_MODCODLSTF: 0x%x", stv090x_read_reg(state, STV090x_P1_MODCODLSTF));
+	printk("\nSTV090x_DMDRESCFG: 0x%x", stv090x_read_reg(state, STV090x_P1_DMDRESCFG));
+	printk("\nSTV090x_DMDRESADR: 0x%x", stv090x_read_reg(state, STV090x_P1_DMDRESADR));
+	printk("\nSTV090x_DMDRESDATA7: 0x%x", stv090x_read_reg(state, STV090x_P1_DMDRESDATA7));
+	printk("\nSTV090x_DMDRESDATA6: 0x%x", stv090x_read_reg(state, STV090x_P1_DMDRESDATA6));
+	printk("\nSTV090x_DMDRESDATA5: 0x%x", stv090x_read_reg(state, STV090x_P1_DMDRESDATA5));
+	printk("\nSTV090x_DMDRESDATA4: 0x%x", stv090x_read_reg(state, STV090x_P1_DMDRESDATA4));
+	printk("\nSTV090x_DMDRESDATA3: 0x%x", stv090x_read_reg(state, STV090x_P1_DMDRESDATA3));
+	printk("\nSTV090x_DMDRESDATA2: 0x%x", stv090x_read_reg(state, STV090x_P1_DMDRESDATA2));
+	printk("\nSTV090x_DMDRESDATA1: 0x%x", stv090x_read_reg(state, STV090x_P1_DMDRESDATA1));
+	printk("\nSTV090x_DMDRESDATA0: 0x%x", stv090x_read_reg(state, STV090x_P1_DMDRESDATA0));
+	printk("\nSTV090x_PLHDEBUG: 0x%x", stv090x_read_reg(state, STV090x_PLHDEBUG));
+	printk("\nSTV090x_TNRCFG: 0x%x", stv090x_read_reg(state, STV090x_P1_TNRCFG));
+	printk("\nSTV090x_TNRCFG2: 0x%x", stv090x_read_reg(state, STV090x_P1_TNRCFG2));
+	printk("\nSTV090x_TNRXTAL: 0x%x", stv090x_read_reg(state, STV090x_TNRXTAL));
+	printk("\nSTV090x_TNRSTEPS: 0x%x", stv090x_read_reg(state, STV090x_TNRSTEPS));
+	printk("\nSTV090x_TNRGAIN: 0x%x", stv090x_read_reg(state, STV090x_TNRGAIN));
+	printk("\nSTV090x_TNRRF1: 0x%x", stv090x_read_reg(state, STV090x_TNRRF1));
+	printk("\nSTV090x_TNRRF0: 0x%x", stv090x_read_reg(state, STV090x_TNRRF0));
+	printk("\nSTV090x_TNRBW: 0x%x", stv090x_read_reg(state, STV090x_TNRBW));
+	printk("\nSTV090x_TNRADJ: 0x%x", stv090x_read_reg(state, STV090x_TNRADJ));
+	printk("\nSTV090x_TNRCTL2: 0x%x", stv090x_read_reg(state, STV090x_TNRCTL2));
+	printk("\nSTV090x_TNRCFG3: 0x%x", stv090x_read_reg(state, STV090x_TNRCFG3));
+	printk("\nSTV090x_TNRLD: 0x%x", stv090x_read_reg(state, STV090x_TNRLD));
+	printk("\nSTV090x_TNROBSL: 0x%x", stv090x_read_reg(state, STV090x_TNROBSL));
+	printk("\nSTV090x_TNRRESTE: 0x%x", stv090x_read_reg(state, STV090x_TNRRESTE));
+	printk("\nSTV090x_SMAPCOEF7: 0x%x", stv090x_read_reg(state, STV090x_P1_SMAPCOEF7));
+	printk("\nSTV090x_SMAPCOEF6: 0x%x", stv090x_read_reg(state, STV090x_P1_SMAPCOEF6));
+	printk("\nSTV090x_SMAPCOEF5: 0x%x", stv090x_read_reg(state, STV090x_P1_SMAPCOEF5));
+	printk("\nSTV090x_LOCKTIME3: 0x%x", stv090x_read_reg(state, STV090x_P1_LOCKTIME3));
+	printk("\nSTV090x_LOCKTIME2: 0x%x", stv090x_read_reg(state, STV090x_P1_LOCKTIME2));
+	printk("\nSTV090x_LOCKTIME1: 0x%x", stv090x_read_reg(state, STV090x_P1_LOCKTIME1));
+	printk("\nSTV090x_LOCKTIME0: 0x%x", stv090x_read_reg(state, STV090x_P1_LOCKTIME0));
+	printk("\nSTV090x_VITSCALE: 0x%x", stv090x_read_reg(state, STV090x_P1_VITSCALE));
+
+	printk("\n250---299");
+	printk("\nSTV090x_FECM: 0x%x", stv090x_read_reg(state, STV090x_P1_FECM));
+	printk("\nSTV090x_VTH12: 0x%x", stv090x_read_reg(state, STV090x_P1_VTH12));
+	printk("\nSTV090x_VTH23: 0x%x", stv090x_read_reg(state, STV090x_P1_VTH23));
+	printk("\nSTV090x_VTH34: 0x%x", stv090x_read_reg(state, STV090x_P1_VTH34));
+	printk("\nSTV090x_VTH56: 0x%x", stv090x_read_reg(state, STV090x_P1_VTH56));
+	printk("\nSTV090x_VTH67: 0x%x", stv090x_read_reg(state, STV090x_P1_VTH67));
+	printk("\nSTV090x_VTH78: 0x%x", stv090x_read_reg(state, STV090x_P1_VTH78));
+	printk("\nSTV090x_VITCURPUN: 0x%x", stv090x_read_reg(state, STV090x_P1_VITCURPUN));
+	printk("\nSTV090x_VERROR: 0x%x", stv090x_read_reg(state, STV090x_P1_VERROR));
+	printk("\nSTV090x_PRVIT: 0x%x", stv090x_read_reg(state, STV090x_P1_PRVIT));
+	printk("\nSTV090x_VAVSRVIT: 0x%x", stv090x_read_reg(state, STV090x_P1_VAVSRVIT));
+	printk("\nSTV090x_VSTATUSVIT: 0x%x", stv090x_read_reg(state, STV090x_P1_VSTATUSVIT));
+	printk("\nSTV090x_KDIV12: 0x%x", stv090x_read_reg(state, STV090x_P1_KDIV12));
+	printk("\nSTV090x_KDIV23: 0x%x", stv090x_read_reg(state, STV090x_P1_KDIV23));
+	printk("\nSTV090x_KDIV34: 0x%x", stv090x_read_reg(state, STV090x_P1_KDIV34));
+	printk("\nSTV090x_KDIV56: 0x%x", stv090x_read_reg(state, STV090x_P1_KDIV56));
+	printk("\nSTV090x_KDIV67: 0x%x", stv090x_read_reg(state, STV090x_P1_KDIV67));
+	printk("\nSTV090x_KDIV78: 0x%x", stv090x_read_reg(state, STV090x_P1_KDIV78));
+	printk("\nSTV090x_PDELCTRL1: 0x%x", stv090x_read_reg(state, STV090x_P1_PDELCTRL1));
+	printk("\nSTV090x_PDELCTRL2: 0x%x", stv090x_read_reg(state, STV090x_P1_PDELCTRL2));
+	printk("\nSTV090x_HYSTTHRESH: 0x%x", stv090x_read_reg(state, STV090x_P1_HYSTTHRESH));
+	printk("\nSTV090x_MATSTR1: 0x%x", stv090x_read_reg(state, STV090x_P1_MATSTR1));
+	printk("\nSTV090x_MATSTR0: 0x%x", stv090x_read_reg(state, STV090x_P1_MATSTR0));
+	printk("\nSTV090x_UPLSTR1: 0x%x", stv090x_read_reg(state, STV090x_P1_UPLSTR1));
+	printk("\nSTV090x_UPLSTR0: 0x%x", stv090x_read_reg(state, STV090x_P1_UPLSTR0));
+	printk("\nSTV090x_DFLSTR1: 0x%x", stv090x_read_reg(state, STV090x_P1_DFLSTR1));
+	printk("\nSTV090x_DFLSTR0: 0x%x", stv090x_read_reg(state, STV090x_P1_DFLSTR0));
+	printk("\nSTV090x_SYNCSTR: 0x%x", stv090x_read_reg(state, STV090x_P1_SYNCSTR));
+	printk("\nSTV090x_SYNCDSTR1: 0x%x", stv090x_read_reg(state, STV090x_P1_SYNCDSTR1));
+	printk("\nSTV090x_SYNCDSTR0: 0x%x", stv090x_read_reg(state, STV090x_P1_SYNCDSTR0));
+	printk("\nSTV090x_PDELSTATUS1: 0x%x", stv090x_read_reg(state, STV090x_P1_PDELSTATUS1));
+	printk("\nSTV090x_PDELSTATUS2: 0x%x", stv090x_read_reg(state, STV090x_P1_PDELSTATUS2));
+	printk("\nSTV090x_BBFCRCKO1: 0x%x", stv090x_read_reg(state, STV090x_P1_BBFCRCKO1));
+	printk("\nSTV090x_BBFCRCKO0: 0x%x", stv090x_read_reg(state, STV090x_P1_BBFCRCKO0));
+	printk("\nSTV090x_UPCRCKO1: 0x%x", stv090x_read_reg(state, STV090x_P1_UPCRCKO1));
+	printk("\nSTV090x_UPCRCKO0: 0x%x", stv090x_read_reg(state, STV090x_P1_UPCRCKO0));
+	printk("\nSTV090x_TSSTATEM: 0x%x", stv090x_read_reg(state, STV090x_P1_TSSTATEM));
+	printk("\nSTV090x_TSCFGH: 0x%x", stv090x_read_reg(state, STV090x_P1_TSCFGH));
+	printk("\nSTV090x_TSCFGM: 0x%x", stv090x_read_reg(state, STV090x_P1_TSCFGM));
+	printk("\nSTV090x_TSCFGL: 0x%x", stv090x_read_reg(state, STV090x_P1_TSCFGL));
+	printk("\nSTV090x_TSINSDELH: 0x%x", stv090x_read_reg(state, STV090x_P1_TSINSDELH));
+	printk("\nSTV090x_TSSPEED: 0x%x", stv090x_read_reg(state, STV090x_P1_TSSPEED));
+	printk("\nSTV090x_TSSTATUS: 0x%x", stv090x_read_reg(state, STV090x_P1_TSSTATUS));
+	printk("\nSTV090x_TSSTATUS2: 0x%x", stv090x_read_reg(state, STV090x_P1_TSSTATUS2));
+	printk("\nSTV090x_TSBITRATE1: 0x%x", stv090x_read_reg(state, STV090x_P1_TSBITRATE1));
+	printk("\nSTV090x_TSBITRATE0: 0x%x", stv090x_read_reg(state, STV090x_P1_TSBITRATE0));
+	printk("\nSTV090x_ERRCTRL1: 0x%x", stv090x_read_reg(state, STV090x_P1_ERRCTRL1));
+	printk("\nSTV090x_ERRCNT12: 0x%x", stv090x_read_reg(state, STV090x_P1_ERRCNT12));
+	printk("\nSTV090x_ERRCNT11: 0x%x", stv090x_read_reg(state, STV090x_P1_ERRCNT11));
+	printk("\nSTV090x_ERRCNT10: 0x%x", stv090x_read_reg(state, STV090x_P1_ERRCNT10));
+	
+	printk("\n300---353");
+	printk("\nSTV090x_ERRCTRL2: 0x%x", stv090x_read_reg(state, STV090x_P1_ERRCTRL2));
+	printk("\nSTV090x_ERRCNT22: 0x%x", stv090x_read_reg(state, STV090x_P1_ERRCNT22));
+	printk("\nSTV090x_ERRCNT21: 0x%x", stv090x_read_reg(state, STV090x_P1_ERRCNT21));
+	printk("\nSTV090x_ERRCNT20: 0x%x", stv090x_read_reg(state, STV090x_P1_ERRCNT20));
+	printk("\nSTV090x_FECSPY: 0x%x", stv090x_read_reg(state, STV090x_P1_FECSPY));
+	printk("\nSTV090x_FSPYCFG: 0x%x", stv090x_read_reg(state, STV090x_P1_FSPYCFG));
+	printk("\nSTV090x_FSPYDATA: 0x%x", stv090x_read_reg(state, STV090x_P1_FSPYDATA));
+	printk("\nSTV090x_FSPYOUT: 0x%x", stv090x_read_reg(state, STV090x_P1_FSPYOUT));
+	printk("\nSTV090x_FSTATUS: 0x%x", stv090x_read_reg(state, STV090x_P1_FSTATUS));
+	printk("\nSTV090x_FBERCPT4: 0x%x", stv090x_read_reg(state, STV090x_P1_FBERCPT4));
+	printk("\nSTV090x_FBERCPT3: 0x%x", stv090x_read_reg(state, STV090x_P1_FBERCPT3));
+	printk("\nSTV090x_FBERCPT2: 0x%x", stv090x_read_reg(state, STV090x_P1_FBERCPT2));
+	printk("\nSTV090x_FBERCPT1: 0x%x", stv090x_read_reg(state, STV090x_P1_FBERCPT1));
+	printk("\nSTV090x_FBERCPT0: 0x%x", stv090x_read_reg(state, STV090x_P1_FBERCPT0));
+	printk("\nSTV090x_FBERERR2: 0x%x", stv090x_read_reg(state, STV090x_P1_FBERERR2));
+	printk("\nSTV090x_FBERERR1: 0x%x", stv090x_read_reg(state, STV090x_P1_FBERERR1));
+	printk("\nSTV090x_FBERERR0: 0x%x", stv090x_read_reg(state, STV090x_P1_FBERERR0));
+	printk("\nSTV090x_FSPYBER: 0x%x", stv090x_read_reg(state, STV090x_P1_FSPYBER));
+	printk("\nSTV090x_RCCFGH: 0x%x", stv090x_read_reg(state, STV090x_RCCFGH));
+	printk("\nSTV090x_NBITER_NF4: 0x%x", stv090x_read_reg(state, STV090x_NBITER_NF4));
+	printk("\nSTV090x_NBITER_NF5: 0x%x", stv090x_read_reg(state, STV090x_NBITER_NF5));
+	printk("\nSTV090x_NBITER_NF6: 0x%x", stv090x_read_reg(state, STV090x_NBITER_NF6));
+	printk("\nSTV090x_NBITER_NF7: 0x%x", stv090x_read_reg(state, STV090x_NBITER_NF7));
+	printk("\nSTV090x_NBITER_NF8: 0x%x", stv090x_read_reg(state, STV090x_NBITER_NF8));
+	printk("\nSTV090x_NBITER_NF9: 0x%x", stv090x_read_reg(state, STV090x_NBITER_NF9));
+	printk("\nSTV090x_NBITER_NF10: 0x%x", stv090x_read_reg(state, STV090x_NBITER_NF10));
+	printk("\nSTV090x_NBITER_NF11: 0x%x", stv090x_read_reg(state, STV090x_NBITER_NF11));
+	printk("\nSTV090x_NBITER_NF12: 0x%x", stv090x_read_reg(state, STV090x_NBITER_NF12));
+	printk("\nSTV090x_NBITER_NF13: 0x%x", stv090x_read_reg(state, STV090x_NBITER_NF13));
+	printk("\nSTV090x_NBITER_NF14: 0x%x", stv090x_read_reg(state, STV090x_NBITER_NF14));
+	printk("\nSTV090x_NBITER_NF15: 0x%x", stv090x_read_reg(state, STV090x_NBITER_NF15));
+	printk("\nSTV090x_NBITER_NF16: 0x%x", stv090x_read_reg(state, STV090x_NBITER_NF16));
+	printk("\nSTV090x_NBITER_NF17: 0x%x", stv090x_read_reg(state, STV090x_NBITER_NF17));
+	printk("\nSTV090x_NBITERNOERR: 0x%x", stv090x_read_reg(state, STV090x_NBITERNOERR));
+	printk("\nSTV090x_GAINLLR_NF4: 0x%x", stv090x_read_reg(state, STV090x_GAINLLR_NF4));
+	printk("\nSTV090x_GAINLLR_NF5: 0x%x", stv090x_read_reg(state, STV090x_GAINLLR_NF5));
+	printk("\nSTV090x_GAINLLR_NF6: 0x%x", stv090x_read_reg(state, STV090x_GAINLLR_NF6));
+	printk("\nSTV090x_GAINLLR_NF7: 0x%x", stv090x_read_reg(state, STV090x_GAINLLR_NF7));
+	printk("\nSTV090x_GAINLLR_NF8: 0x%x", stv090x_read_reg(state, STV090x_GAINLLR_NF8));
+	printk("\nSTV090x_GAINLLR_NF9: 0x%x", stv090x_read_reg(state, STV090x_GAINLLR_NF9));
+	printk("\nSTV090x_GAINLLR_NF10: 0x%x", stv090x_read_reg(state, STV090x_GAINLLR_NF10));
+	printk("\nSTV090x_GAINLLR_NF11: 0x%x", stv090x_read_reg(state, STV090x_GAINLLR_NF11));
+	printk("\nSTV090x_GAINLLR_NF12: 0x%x", stv090x_read_reg(state, STV090x_GAINLLR_NF12));
+	printk("\nSTV090x_GAINLLR_NF13: 0x%x", stv090x_read_reg(state, STV090x_GAINLLR_NF13));
+	printk("\nSTV090x_GAINLLR_NF14: 0x%x", stv090x_read_reg(state, STV090x_GAINLLR_NF14));
+	printk("\nSTV090x_GAINLLR_NF15: 0x%x", stv090x_read_reg(state, STV090x_GAINLLR_NF15));
+	printk("\nSTV090x_GAINLLR_NF16: 0x%x", stv090x_read_reg(state, STV090x_GAINLLR_NF16));
+	printk("\nSTV090x_GAINLLR_NF17: 0x%x", stv090x_read_reg(state, STV090x_GAINLLR_NF17));
+	printk("\nSTV090x_CFGEXT: 0x%x", stv090x_read_reg(state, STV090x_CFGEXT));
+	printk("\nSTV090x_GENCFG: 0x%x", stv090x_read_reg(state, STV090x_GENCFG));
+	printk("\nSTV090x_LDPCERR1: 0x%x", stv090x_read_reg(state, STV090x_LDPCERR1));
+	printk("\nSTV090x_LDPCERR0: 0x%x", stv090x_read_reg(state, STV090x_LDPCERR0));
+	printk("\nSTV090x_BCHERR: 0x%x", stv090x_read_reg(state, STV090x_BCHERR));
+	printk("\nSTV090x_TSTRES0: 0x%x", stv090x_read_reg(state, STV090x_TSTRES0));
+}
+
 EXPORT_SYMBOL(stv090x_attach);

@@ -14,8 +14,17 @@
 #include "dvb_frontend.h"
 
 #include <linux/module.h>
-#include "compat.h"
 #include <linux/mutex.h>
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
+#  include <linux/stpio.h>
+#else
+#  include <linux/stm/pio.h>
+#endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27)
+#include "compat.h"
+#endif
 
 #define MAX_DVB_ADAPTERS 4
 #define MAX_TUNERS_PER_ADAPTER 4

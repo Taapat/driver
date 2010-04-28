@@ -22,6 +22,9 @@
 #ifndef __STV090x_H
 #define __STV090x_H
 
+#define	TUNER_IX7306
+//#define	TUNER_STB6110
+
 enum stv090x_demodulator {
 	STV090x_DEMODULATOR_0 = 1,
 	STV090x_DEMODULATOR_1

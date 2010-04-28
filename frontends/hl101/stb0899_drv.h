@@ -22,13 +22,13 @@
 #ifndef __STB0899_DRV_H
 #define __STB0899_DRV_H
 
-#include <linux/version.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
-#include <linux/stm/pio.h>
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
+#  include <linux/stpio.h>
 #else
-#include <linux/stpio.h>
+#  include <linux/stm/pio.h>
 #endif
 
 #include "dvb_frontend.h"
