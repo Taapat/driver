@@ -54,6 +54,55 @@ static int ca_ioctl(struct inode *inode, struct file *file,
     dprintk("TEST %s : Ioctl %08x\n", __func__, cmd);
     switch (cmd)
     {
+	case CA_SET_PID: // currently this is useless but prevents from softcams errors
+	{
+		ca_pid_t *service_pid = (ca_pid_t*) parg;
+		int vLoop;
+		unsigned short pid = service_pid->pid;
+		int descramble_index = service_pid->index;
+		printk("CA_SET_PID index = %d pid %d\n",descramble_index,pid);
+		if(descramble_index >=0){
+			if( descramble_index >= NUMBER_OF_DESCRAMBLERS){
+				printk("Error only descramblers 0 - %d supportet\n",NUMBER_OF_DESCRAMBLERS-1);
+				return -1;
+			}
+			for ( vLoop = 0; vLoop < pSession->num_pids; vLoop++ )
+  			{
+    				if (( ( unsigned short ) pSession->pidtable[vLoop] ==
+	 			( unsigned short ) pid ))
+    				{
+					if ( pSession->type[vLoop] == DMX_TYPE_TS )
+  					{
+    						/* link audio/video slot to the descrambler */	
+						if ((pSession->pes_type[vLoop] == DMX_TS_PES_VIDEO) ||
+        					(pSession->pes_type[vLoop] == DMX_TS_PES_AUDIO) ||
+						(pid>50)) /*dirty hack because for some reason the pes_type is changed to DMX_TS_PES_OTHER*/
+    						{
+							int err;
+							if(pSession->descramblerindex[vLoop]!=descramble_index){
+								pSession->descramblerindex[vLoop]=descramble_index;
+								if ((err = pti_hal_descrambler_link(pSession->session,
+									pSession->descramblers[pSession->descramblerindex[vLoop]],
+									pSession->slots[vLoop])) != 0)
+								printk("Error linking slot %d to descrambler %d, err = %d\n",
+									pSession->slots[vLoop],
+									pSession->descramblers[pSession->descramblerindex[vLoop]],
+									err);
+								else dprintk("linking pid %d slot %d to descrambler %d, session = %d pSession\n",
+									pid,pSession->slots[vLoop],
+									pSession->descramblers[pSession->descramblerindex[vLoop]],
+									pSession->session, pSession);
+								return 0;
+							}else { printk("pid %x is already linked to descrambler %d\n",pid,descramble_index);return 0;}
+						}else{ printk("pid %x no audio or video pid! type=%d slot=%d not linking to descrambler\n",pid,pSession->pes_type[vLoop],pSession->slots[vLoop]);return -1;}
+					}else{ printk("pid %x type is not DMX_TYPE_TS! not linking to descrambler\n",pid);return -1;}
+				}
+			}
+			printk("pid %x not found in pidtable\n",pid);
+		}
+		return 0;
+	break;
+	}
 	case CA_SET_DESCR:
 	{
 		ca_descr_t *descr = (ca_descr_t*) parg;
@@ -77,9 +126,12 @@ static int ca_ioctl(struct inode *inode, struct file *file,
 		dprintk("cw[4] = %d\n", descr->cw[4]);
 		dprintk("cw[5] = %d\n", descr->cw[5]);
 		dprintk("cw[6] = %d\n", descr->cw[6]);
-		dprintk("cw[7] = %d\n", descr->cw[7]);
-
-		if (pti_hal_descrambler_set(pSession->session, pSession->descrambler, descr->cw, descr->parity) != 0)
+		dprintk("cw[7] = %d\n", descr->cw[7]);	
+		if(descr->index < 0 || descr->index >= NUMBER_OF_DESCRAMBLERS){
+			printk("Error descrambler %d not supported! needs to be in range 0 - %d\n",NUMBER_OF_DESCRAMBLERS-1);
+			return -1;
+		}
+		if (pti_hal_descrambler_set(pSession->session, pSession->descramblers[descr->index], descr->cw, descr->parity) != 0)
 			printk("Error while setting descrambler keys\n");
 
 		if (&pContext->DvbContext->Lock != NULL)

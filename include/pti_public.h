@@ -3,6 +3,9 @@
 
 /* public pti header */
 
+/*quack: 6 is the max for HDBOX maybe other values have to be chosen for other boxes*/
+#define NUMBER_OF_DESCRAMBLERS 6
+
 struct PtiSession 
 {
   short int 		pidtable[32];
@@ -16,6 +19,8 @@ struct PtiSession
 
   int 			session;
   int 			descrambler;
+  int 			descramblers[NUMBER_OF_DESCRAMBLERS];
+  int			descramblerindex[32];
   int 			source;
 
 };

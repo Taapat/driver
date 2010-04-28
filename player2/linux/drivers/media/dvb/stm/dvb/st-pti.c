@@ -153,8 +153,9 @@ int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
 	if ((dvbdmxfeed->pes_type == DMX_TS_PES_VIDEO) || (dvbdmxfeed->pes_type == DMX_TS_PES_AUDIO))
 	{
 	  int err;
-	  if ((err = pti_hal_descrambler_link(pSession->session, pSession->descrambler, pSession->slots[vLoop])) != 0)
-	    printk("Error linking slot %d to descrambler %d, err = %d\n", pSession->slots[vLoop], pSession->descrambler, err);
+	  if ((err = pti_hal_descrambler_link(pSession->session, pSession->descramblers[pSession->descramblerindex[vLoop]], pSession->slots[vLoop])) != 0)
+	    printk("Error linking slot %d to descrambler %d, err = %d\n", pSession->slots[vLoop], pSession->descramblers[pSession->descramblerindex[vLoop]], err);
+	  else dprintk("linking slot %d to descrambler %d, session = %d type = %d\n", pSession->slots[vLoop], pSession->descramblers[pSession->descramblerindex[vLoop]], pSession->session, dvbdmxfeed->pes_type);
 	}
       }
 
@@ -176,6 +177,8 @@ int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
 							    dvbdmxfeed->
 							    pes_type, demux , NULL, NULL);
 
+  pSession->descramblerindex[pSession->num_pids]=0;
+
   printk ( "SlotHandle = %d\n", pSession->slots[pSession->num_pids] );
 
   if(pti_hal_slot_link_buffer ( pSession->session,
@@ -196,11 +199,12 @@ int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
     {
       int err;
       if ((err = pti_hal_descrambler_link(pSession->session,
-                                    pSession->descrambler,
+                                    pSession->descramblers[pSession->descramblerindex[pSession->num_pids]],
                                     pSession->slots[pSession->num_pids])) != 0)
 	printk("Error linking slot %d to descrambler %d, err = %d\n",
                 pSession->slots[pSession->num_pids],
-                pSession->descrambler, err);
+                pSession->descramblers[pSession->descramblerindex[pSession->num_pids]], err);
+     else dprintk("linking slot %d to descrambler %d, session = %d type=%d\n", pSession->slots[pSession->num_pids], pSession->descramblers[pSession->descramblerindex[pSession->num_pids]], pSession->session, dvbdmxfeed->pes_type);
     }
   }
 
@@ -294,6 +298,7 @@ int stpti_stop_feed ( struct dvb_demux_feed *dvbdmxfeed,
 	  pSession->type[n] = pSession->type[n + 1];
 	  pSession->pes_type[n] = pSession->pes_type[n + 1];
 	  pSession->references[n] = pSession->references[n + 1];
+	  pSession->descramblerindex[n]=pSession->descramblerindex[n + 1];
 	}
 
 	pSession->num_pids--;
@@ -443,6 +448,10 @@ void ptiInit ( struct DeviceContext_s *pContext )
 
   // get new descrambler handle
   pSession->descrambler = pti_hal_get_new_descrambler(pSession->session);
+  pSession->descramblers[0] = pSession->descrambler;
+  int i;
+  for(i=1;i<NUMBER_OF_DESCRAMBLERS;i++)
+  	pSession->descramblers[i] = pti_hal_get_new_descrambler(pSession->session);
 
   printk("Descrambler Handler = %d\n", pSession->descrambler);
 
