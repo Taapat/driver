@@ -49,6 +49,7 @@
 #endif
 
 #include "proton.h"
+#include "utf.h"
 
 static short paramDebug = 0;
 #define TAGDEBUG "[proton] "
@@ -77,6 +78,13 @@ if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
 #define REC_NEW_KEY 	34
 #define REC_NO_KEY  	0
 #define REC_REPEAT_KEY  2
+
+static int gmt_offset = 0;
+
+static char *gmt = "+0000";
+
+module_param(gmt,charp,0);
+MODULE_PARM_DESC(gmt, "gmt offset (default +0000");
 
 typedef struct
 {
@@ -210,7 +218,7 @@ static SegAddrVal_T VfdSegAddr[15];
 struct rw_semaphore vfd_rws;
 #endif
 
-unsigned char CharLib[48][2] =
+unsigned char ASCII[48][2] =
 {
 	{0xF1, 0x38},	//A
 	{0x74, 0x72},	//B
@@ -222,7 +230,7 @@ unsigned char CharLib[48][2] =
 	{0xF1, 0x18},	//H
 	{0x44, 0x62},	//I
 	{0x45, 0x22},	//J
-	{0x46, 0x06},	//K
+	{0xC3, 0x0C},	//K
 	{0x01, 0x48},	//L
 	{0x51, 0x1D},	//M
 	{0x53, 0x19},	//N
@@ -263,7 +271,7 @@ unsigned char CharLib[48][2] =
 	{0xF1, 0x78},	//
 	{0xF0, 0x78},	//
 	/* 0--9  */
-	{0x00, 0x00}
+	{0x0, 0x0}
 };
 
 unsigned char NumLib[10][2] =
@@ -447,7 +455,7 @@ void VFD_Clear_All(void)
     }
 }
 
-void VFD_Draw_Char(char c, unsigned char position)
+void VFD_Draw_ASCII_Char(char c, unsigned char position)
 {
 	if(position < 1 || position > 8)
 	{
@@ -460,15 +468,14 @@ void VFD_Draw_Char(char c, unsigned char position)
 		c = c - 97;
 	else if(c >= 42 && c <= 57)
 		c = c - 11;
-	else if(c == 32)
-		c = 47;
+
 	else
 	{
 		dprintk(2, "unknown char!\n");
 		return;
 	}
-	VFD_Seg_Dig_Seg(position, SEGNUM1, CharLib[(unsigned char)c][0]);
-	VFD_Seg_Dig_Seg(position, SEGNUM2, CharLib[(unsigned char)c][1]);
+	VFD_Seg_Dig_Seg(position, SEGNUM1, ASCII[(unsigned char)c][0]);
+	VFD_Seg_Dig_Seg(position, SEGNUM2, ASCII[(unsigned char)c][1]);
 
     VFD_Show_Content();
 }
@@ -509,37 +516,24 @@ void VFD_Draw_Num(unsigned char c, unsigned char position)
     		VfdSegAddr[dignum].CurrValue1 = VfdSegAddr[dignum].CurrValue1 & 0x80;
     		VFD_Seg_Dig_Seg(dignum, SEGNUM1, (NumLib[c][0] >>1 ) | VfdSegAddr[dignum].CurrValue1 );
 	}
-    VFD_Show_Content();
 }
 
-static int VFD_Show_String(char* str, int len)
+
+static int VFD_Show_Time(int hh, int mm)
 {
-	int i;
-	char buf[8];
-
-	if(len < 1){
-		dprintk(2, "empty string\n");
-		return -1;
-	}
-
-	dprintk(5, "VFD String : '%s'\n", str);
-	memset(buf,' ',8);
-
-	if(len > 8){
-		dprintk(2, "VFD String Length value is over! %d\n", len);
-		len = 8;
-		memcpy(buf, str, 8);
-	}else{
-		memcpy(buf, str, len);
-	}
-
- 	for(i = 0; i < 8; i++)
-	{
-	 	VFD_Draw_Char(buf[i], i + 1);
-	}
-
+    if( (hh > 24) && (mm > 60))
+    {
+    	dprintk(2, "%s bad parameter!\n", __func__);
+	return;
+    }
+    VFD_Draw_Num((hh/10), 1);
+    VFD_Draw_Num((hh%10), 2);
+    VFD_Draw_Num((mm/10), 3);
+    VFD_Draw_Num((mm%10), 4);
+    VFD_Show_Content();
     return 0;
 }
+
 
 static int VFD_Show_Ico(LogNum_T log_num, int log_stat)
 {
@@ -595,18 +589,307 @@ static int VFD_Show_Ico(LogNum_T log_num, int log_stat)
     return 0 ;
 }
 
-static int VFD_Show_Time(int hh, int mm)
+
+static struct task_struct *thread; 
+static struct task_struct *time_thread;
+static int thread_stop  = 1;
+
+
+void clear_display()
 {
-    if( (hh > 24) && (mm > 60))
+  int j;
+  for(j=0;j<8;j++)
+   {
+     VFD_Seg_Dig_Seg(j+1, SEGNUM1, 0x00);
+     VFD_Seg_Dig_Seg(j+1, SEGNUM2, 0x00);
+   }
+   VFD_Show_Content(); 
+}
+
+
+void draw_thread(void *arg)
+{
+  struct vfd_ioctl_data *data;
+  data = (struct vfd_ioctl_data *)arg;
+  
+  struct vfd_ioctl_data draw_data;
+  
+  draw_data.length = data->length;
+  memcpy(draw_data.data,data->data,data->length);
+  
+  thread_stop = 0;
+
+  unsigned char c = 0;
+  unsigned char c1 = 0;
+  unsigned char temp = 0;
+  unsigned char draw_buf[64][2];
+  int count = 0; 
+  int pos = 0;
+  
+  int k =0;
+  int j =0;
+  
+  clear_display();
+  while(pos < draw_data.length)
+  {
+
+    if(kthread_should_stop())
     {
-    	dprintk(2, "%s bad parameter!\n", __func__);
+      thread_stop = 1;
+      return;
     }
-    VFD_Draw_Num((hh/10), 1);
-    VFD_Draw_Num((hh%10), 2);
-    VFD_Draw_Num((mm/10), 3);
-    VFD_Draw_Num((mm%10), 4);
+    
+    
+    c = c1 = temp = 0;
+
+    if(draw_data.data[pos] == 32)
+    {
+      k++;
+      if(k==3)
+      {
+	count = count - 2;
+	break;
+      }
+    }
+    else
+      k=0;
+	
+      
+    if (draw_data.data[pos] < 0x80)
+     {
+      	temp = draw_data.data[pos];
+	
+	if(temp == 40 || temp == 41)
+	  temp = 32;
+        else if(temp >= 65 && temp <= 95)
+		temp = temp - 65;
+	else if(temp >= 97 && temp <= 122)
+		temp = temp - 97;
+	else if(temp >= 42 && temp <= 57)
+		temp = temp - 11;
+	else if(temp == 32)
+		temp = 47;
+	if(temp < 48)
+	{
+	  c  = ASCII[temp][0];
+          c1 = ASCII[temp][1];
+	}
+     }
+     else 
+     if (draw_data.data[pos] < 0xE0)
+      {
+	pos++;
+	switch (draw_data.data[pos-1])
+	{
+	  case 0xc2:
+	    c  = UTF_C2[draw_data.data[pos] & 0x3f][0];
+	    c1 = UTF_C2[draw_data.data[pos] & 0x3f][1];
+	  break;
+	  case 0xc3:
+	    c  = UTF_C3[draw_data.data[pos] & 0x3f][0];
+	    c1 = UTF_C3[draw_data.data[pos] & 0x3f][1];
+	  break;
+	  case 0xc4:
+	    c  = UTF_C4[draw_data.data[pos] & 0x3f][0];
+	    c1 = UTF_C4[draw_data.data[pos] & 0x3f][1];
+	  break;
+	  case 0xc5:
+    	    c  = UTF_C5[draw_data.data[pos] & 0x3f][0];
+	    c1 = UTF_C5[draw_data.data[pos] & 0x3f][1];
+	  break;
+	  case 0xd0:
+	    c  = UTF_D0[draw_data.data[pos] & 0x3f][0];
+	    c1 = UTF_D0[draw_data.data[pos] & 0x3f][1];
+	  break;
+	  case 0xd1:
+	    c  = UTF_D1[draw_data.data[pos] & 0x3f][0];
+	    c1 = UTF_D1[draw_data.data[pos] & 0x3f][1];
+	  break;
+	}
+      }
+      else 
+      {
+	if (draw_data.data[pos] < 0xF0)
+	  pos+=2;
+	else if (draw_data.data[pos] < 0xF8)
+	  pos+=3;
+	else if (draw_data.data[pos] < 0xFC)
+	  pos+=4;
+	else
+	  pos+=5;
+      }
+      
+
+      draw_buf[count][0] = c;
+      draw_buf[count][1] = c1;
+      count++;
+ 
+    pos++;
+  }
+
+  
+  if(count > 8)
+  {
+    pos  = 0;
+    while(pos < count)
+    {
+       if(kthread_should_stop())
+	{
+	  thread_stop = 1;
+	  return;
+        }
+      
+       k =8;
+       if(count-pos < 8 )
+        k = count-pos;
+
+       clear_display();
+     
+       for(j=0;j<k;j++)
+	{
+	  VFD_Seg_Dig_Seg(j+1, SEGNUM1, draw_buf[pos+j][0]);
+	  VFD_Seg_Dig_Seg(j+1, SEGNUM2, draw_buf[pos+j][1]);
+	}  
+       VFD_Show_Content();
+       msleep(200);
+       pos++;
+    }
+  }
+ 
+  if(count > 0)
+  {
+    clear_display();
+    k =8;
+    if(count < 8 )
+      k = count;
+
+    for(j=0;j<k;j++)
+    {
+      VFD_Seg_Dig_Seg(j+1, SEGNUM1, draw_buf[j][0]);
+      VFD_Seg_Dig_Seg(j+1, SEGNUM2, draw_buf[j][1]);
+    }  
+    VFD_Show_Content();
+  }
+  
+  thread_stop = 1;
+}
+ 
+
+#define LEAPYEAR(year) (!((year) % 4) && (((year) % 100) || !((year) % 400)))
+#define YEARSIZE(year) (LEAPYEAR(year) ? 366 : 365)
+static const int _ytab[2][12] =
+{
+  { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 },
+  { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
+};
+
+typedef struct
+{
+   unsigned short    year;
+   unsigned short    month;
+   unsigned short    day;
+   unsigned short    dow;
+  char    sdow[4];
+   unsigned short    hour;
+   unsigned short    min;
+   unsigned short    sec;
+   unsigned short   now;
+} frontpanel_ioctl_time;
+
+
+static frontpanel_ioctl_time * gmtime(register const time_t time)
+{
+  static frontpanel_ioctl_time fptime;
+  register unsigned long dayclock, dayno;
+  int year = 1970;
+
+  dayclock = (unsigned long)time % 86400;
+  dayno = (unsigned long)time / 86400;
+
+  fptime.sec = dayclock % 60;
+  fptime.min = (dayclock % 3600) / 60;
+  fptime.hour = dayclock / 3600;
+  fptime.dow = (dayno + 4) % 7;       /* day 0 was a thursday */
+  while (dayno >= YEARSIZE(year)) {
+	  dayno -= YEARSIZE(year);
+	  year++;
+  }
+  fptime.year = year;
+  fptime.month = 0;
+  while (dayno >= _ytab[LEAPYEAR(year)][fptime.month]) {
+	  dayno -= _ytab[LEAPYEAR(year)][fptime.month];
+	  fptime.month++;
+  }
+  fptime.day = dayno + 1;
+  fptime.month++;
+
+  return &fptime;
+} 
+ 
+ 
+void run_time_thread(void *arg)
+{
+  frontpanel_ioctl_time *pTime;
+  struct timeval tv;
+  int sec = 60;
+  unsigned char trig = 0;
+  
+  int min  = gmt_offset%100;
+  int hour = gmt_offset/100;
+
+  if(gmt_offset != 0)
+  {
+    gmt_offset = 0;
+    gmt_offset = hour * 3600;
+    if(min != 0)
+      if(gmt_offset > 0)
+	gmt_offset += 1800;
+      else
+	gmt_offset += -1800;
+  }
+ 
+  while(!kthread_should_stop())
+  {
+   do_gettimeofday(&tv);
+   tv.tv_sec += gmt_offset;
+   pTime = gmtime(tv.tv_sec);
+
+   if(sec == 60)
+    {
+      sec = 0;
+      VFD_Show_Time(pTime->hour,pTime->min);
+    }
+    
+   trig =!trig;
+   VFD_Show_Ico(TIME_SECOND,trig);
+   sec ++;
+
+   msleep(950);
+  }
+}
+
+
+int run_draw_thread(struct vfd_ioctl_data *draw_data)
+{
+    if(!thread_stop)
+      kthread_stop(thread);
+	  
+    //wait thread stop
+    while(!thread_stop)
+    {msleep(1);}
+
+  
+    thread_stop = 2;
+    thread=kthread_run(draw_thread,draw_data,"draw thread",NULL,true);
+
+    //wait thread run
+    while(thread_stop == 2)
+    {msleep(1);}
+	
     return 0;
 }
+
+
 
 static int VFD_Show_Time_Off(void)
 {
@@ -722,6 +1005,7 @@ int vfd_init_func(void)
 	dprintk(5, "%s >\n", __func__);
 	printk("Spider HL101 VFD module initializing\n");
 
+
 	cfg.data_pin[0] = 3;
 	cfg.data_pin[1] = 2;
 	cfg.clk_pin[0] = 3;
@@ -793,7 +1077,9 @@ static ssize_t PROTONdev_write(struct file *filp, const unsigned char *buff, siz
 {
 	char* kernel_buf;
 	int minor, vLoop, res = 0;
-
+        
+	struct vfd_ioctl_data data;
+	
 	dprintk(5, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
 
 	minor = -1;
@@ -828,13 +1114,24 @@ static ssize_t PROTONdev_write(struct file *filp, const unsigned char *buff, siz
 	if(down_interruptible (&write_sem))
       return -ERESTARTSYS;
 
-	if (kernel_buf[len-1] == '\n') {
-		kernel_buf[len-1] = 0;
-		VFD_Show_String(kernel_buf, len - 1);
+      	data.length = len;
+	if (kernel_buf[len-1] == '\n') 
+	{
+	  kernel_buf[len-1] = 0;
+	  data.length--;
+	}
+	
+	if(len <0)
+	{ 
+	  res = -1;
+	  dprintk(2, "empty string\n");
 	}
 	else
-		VFD_Show_String(kernel_buf, len);
-
+	{
+	  memcpy(data.data,kernel_buf,len);
+	  res=run_draw_thread(&data);
+	}
+	
 	kfree(kernel_buf);
 
 	up(&write_sem);
@@ -1009,8 +1306,15 @@ static int PROTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int 
 	case VFDDISPLAYCHARS:
 		if (mode == 0)
 		{
-			struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;
-			res = VFD_Show_String(data->data, data->length);
+		  //res = VFD_Show_String(data->data, data->length);
+	 	  struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg; 
+		  if(data->length <0)
+	            { 
+	              res = -1;
+	              dprintk(2, "empty string\n");
+	            }
+		    else
+		     res = run_draw_thread(data);
 		} else
 		{
 			//not suppoerted
@@ -1143,7 +1447,7 @@ void button_bad_polling(void)
 		}
 	}
 }
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
+#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
 static DECLARE_WORK(button_obj, button_bad_polling);
 #else
 static DECLARE_WORK(button_obj, button_bad_polling, NULL);
@@ -1219,8 +1523,10 @@ void button_dev_exit(void)
 static int __init proton_init_module(void)
 {
 	int i;
-
+	
 	dprintk(5, "%s >\n", __func__);
+        
+
 
 	if(vfd_init_func()) {
 		printk("unable to init module\n");
@@ -1239,13 +1545,25 @@ static int __init proton_init_module(void)
 	for (i = 0; i < LASTMINOR; i++)
 	    sema_init(&FrontPanelOpen[i].sem, 1);
 
+	
+	if(strcmp("+0000", gmt) != 0)
+	{
+	  if(gmt[0] == '+') 
+	    sscanf(gmt,"+%i",&gmt_offset);
+	  else
+	    sscanf(gmt,"%i",&gmt_offset);
+	}
+	
+	time_thread=kthread_run(run_time_thread,NULL,"time thread",NULL,true);
+	
 	dprintk(5, "%s <\n", __func__);
+	
 	return 0;
 }
 
 static void __exit proton_cleanup_module(void)
 {
-
+   
     if(cfg.data != NULL)
       stpio_free_pin (cfg.data);
     if(cfg.clk != NULL)
@@ -1255,7 +1573,9 @@ static void __exit proton_cleanup_module(void)
 
 	dprintk(5, "[BTN] unloading ...\n");
 	button_dev_exit();
-
+        
+	kthread_stop(time_thread);
+	
 	unregister_chrdev(VFD_MAJOR,"VFD");
 	printk("HL101 FrontPanel module unloading\n");
 }
