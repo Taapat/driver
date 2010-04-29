@@ -18,7 +18,11 @@
 #include <linux/platform_device.h>
 #include <linux/pm.h>
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
 #include <asm/semaphore.h>
+#else
+#include <linux/semaphore.h>
+#endif
 
 #include <stmdisplay.h>
 #include <linux/stm/stmcoredisplay.h>
@@ -772,16 +776,27 @@ static void stmfb_iomm_vma_close(struct vm_area_struct *vma)
   }
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
 static struct page *stmfb_iomm_vma_nopage(struct vm_area_struct *vma, unsigned long address, int *type)
 {
   /* we want to provoke a bus error rather than give the client the zero page */
   return NOPAGE_SIGBUS;
 }
+#else
+static int stmfb_iomm_vma_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+{
+  return VM_FAULT_SIGBUS;
+}
+#endif
 
 static struct vm_operations_struct stmfb_iomm_nopage_ops = {
   .open = stmfb_iomm_vma_open,
   .close = stmfb_iomm_vma_close,
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
   .nopage = stmfb_iomm_vma_nopage,
+#else
+  .fault = stmfb_iomm_vma_fault,
+#endif
 };
 
 static int stmfb_iomm_mmap(struct stmfb_info * const i, struct vm_area_struct * vma)
