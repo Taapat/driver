@@ -330,7 +330,7 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/fp/led_pattern_speed"                                         , NULL, NULL, default_write_proc, NULL, ""},
 	{cProcEntry, "stb/fp/version"                                                   , NULL, zero_read, NULL, NULL, ""},
 	{cProcEntry, "stb/fp/wakeup_time"                                               , NULL, default_read_proc, default_write_proc, NULL, ""},
-	{cProcEntry, "stb/fp/was_timer_wakeup"                                          , NULL, default_read_proc, NULL, NULL, ""},
+	{cProcEntry, "stb/fp/was_timer_wakeup"                                          , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/fp/rtc"                                                       , NULL, zero_read, default_write_proc, NULL, ""},
 
 	{cProcDir  , "stb/tsmux"                                                        , NULL, NULL, NULL, NULL, ""},

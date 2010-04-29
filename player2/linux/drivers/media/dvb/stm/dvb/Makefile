@@ -26,6 +26,7 @@ stmdvb-objs:=   backend.o \
 		e2_proc/e2_proc_vmpeg.o \
 		e2_proc/e2_proc_progress.o \
 		e2_proc/e2_proc_stream.o \
+		e2_proc/e2_proc_fp.o \
 		st-pti.o \
 		st-merger.o \
 		st-common.o

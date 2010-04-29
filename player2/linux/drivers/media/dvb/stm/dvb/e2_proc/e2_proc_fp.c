@@ -228,7 +228,7 @@ int proc_fp_was_timer_wakeup_write(struct file *file, const char __user *buf,
 		if (copy_from_user(page, buf, count))
 			goto out;
 			
-		myString = (char *) kmalloc(count + 1, GFP_KERNEL);
+		char* myString = (char *) kmalloc(count + 1, GFP_KERNEL);
 		strncpy(myString, page, count);
 		myString[count] = '\0';
 

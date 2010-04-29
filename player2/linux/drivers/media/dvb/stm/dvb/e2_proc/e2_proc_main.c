@@ -266,6 +266,8 @@ extern int proc_fp_led0_pattern_read(char *page, char **start, off_t off, int co
 extern int proc_fp_led0_pattern_write(struct file *file, const char __user *buf, unsigned long count, void *data);
 extern int proc_fp_led_pattern_speed_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
 extern int proc_fp_led_pattern_speed_write(struct file *file, const char __user *buf, unsigned long count, void *data);
+extern int proc_fp_was_timer_wakeup_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
+extern int proc_fp_was_timer_wakeup_write(struct file *file, const char __user *buf, unsigned long count, void *data);
 
 extern int proc_vmpeg_0_dst_left_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
 extern int proc_vmpeg_0_dst_left_write(struct file *file, const char __user *buf, unsigned long count, void *data);
@@ -374,6 +376,8 @@ struct e2_procs
   {"stb/avs/0/standby",                 proc_avs_0_standby_read,                proc_avs_0_standby_write, 0},
 
   {"stb/denc/0/wss",                    proc_denc_0_wss_read,                   proc_denc_0_wss_write, 0},
+
+  {"stb/fp/was_timer_wakeup",           proc_fp_was_timer_wakeup_read,          proc_fp_was_timer_wakeup_write, 0},
 
   {"stb/tsmux/input0",                  proc_tsmux_input0_read,                 proc_tsmux_input0_write, 0},
   {"stb/tsmux/input1",                  proc_tsmux_input1_read,                 proc_tsmux_input1_write, 0},
