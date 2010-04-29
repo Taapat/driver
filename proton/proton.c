@@ -31,6 +31,7 @@
 #include <asm/io.h>
 #include <asm/uaccess.h>
 #include <asm/termbits.h>
+#include <linux/kthread.h>
 #include <linux/version.h>
 #include <linux/input.h>
 #include <linux/module.h>
