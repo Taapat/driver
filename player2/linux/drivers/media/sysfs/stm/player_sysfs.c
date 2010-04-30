@@ -81,11 +81,7 @@ static int                      playback_count          = 0;
 
 static unsigned long notify_count = 0;
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
 static ssize_t show_notify_count(struct class *cls, char *buf)
-#else
-static ssize_t show_notify_count(struct class *cls, struct device_attribute *attr, char *buf)
-#endif
 {
 	return sprintf(buf, "%lu\n", notify_count);
 }
@@ -93,7 +89,7 @@ static ssize_t show_notify_count(struct class *cls, struct device_attribute *att
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
 static struct class_attribute player2_class_attributes[] = 
 #else
-static struct device_attribute player2_class_attributes[] = 
+static struct class_attribute player2_class_attributes[] = 
 #endif
 {
 	__ATTR(notify, 0400, show_notify_count, NULL),
