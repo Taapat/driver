@@ -15,6 +15,7 @@ Date        Modification                                    Name
 #include <linux/ioport.h>
 #include <linux/bpa2.h>
 #include <linux/mutex.h>
+#include <linux/pagemap.h>
 
 #include "pes.h"
 #include "dvb_module.h"

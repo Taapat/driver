@@ -12,6 +12,7 @@ Date        Modification                                    Name
 
 ************************************************************************/
 
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/dvb/video.h>
 #include <linux/dvb/audio.h>
@@ -29,7 +30,9 @@ Date        Modification                                    Name
 
 #ifdef __TDT__
 //Dagobert Hack
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 #include <sound/driver.h>
+#endif
 #include <sound/core.h>
 #include <sound/control.h>
 #include <sound/pcm.h>

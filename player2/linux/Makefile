@@ -4,7 +4,7 @@ CCFLAGSY := -I$(CONFIG_KERNEL_BUILD)/include2 \
 	-I$(KERNEL_LOCATION)/include \
 	-include $(KERNEL_LOCATION)/include/linux/autoconf.h \
 	-I$(CONFIG_KERNEL_PATH)/include -D__KERNEL__ \
-        -I$(DRIVER_TOPDIR)/include/
+	-I$(DRIVER_TOPDIR)/include/
 
 CCFLAGSY += -I$(TREE_ROOT)/linux/components/inline         \
 	-I$(TREE_ROOT)/components/include              \
@@ -59,7 +59,7 @@ CCFLAGSY += -DCONFIG_MONITOR=1
 CCFLAGSY += -I$(DRIVER_TOPDIR)/include/player2
 
 CCFLAGSY += -D__SH4__       
-
+CCFLAGSY += -D__TDT__       
 CCFLAGSY += -DREPORT
 
 ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
