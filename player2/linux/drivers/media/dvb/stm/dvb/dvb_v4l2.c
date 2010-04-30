@@ -759,6 +759,7 @@ static int linuxdvb_close(struct stm_v4l2_handles *handle, int type, struct file
 	return 0;
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2.6.24)
 static struct page* linuxdvb_vm_nopage(struct vm_area_struct *vma, unsigned long vaddr, int *type)
 {
 	struct page *page;
@@ -788,6 +789,34 @@ static struct page* linuxdvb_vm_nopage(struct vm_area_struct *vma, unsigned long
 		*type = VM_FAULT_MINOR;
 	return page;
 }
+#else /* >= 2.6.24 */
+static int linuxdvb_vm_fault(struct vm_area_struct *vma, struct fault_data *vmf)
+{
+	struct page *page;
+	void *page_addr;
+	unsigned long page_frame;
+
+	if (vmf->virtual_address > vma->vm_end)
+		return VM_FAULT_SIGBUS;
+
+	/*
+	 * Note that this assumes an identity mapping between the page offset and
+	 * the pfn of the physical address to be mapped. This will get more complex
+	 * when the 32bit SH4 address space becomes available.
+	 */
+	page_addr = (void*)(((unsigned long) vmf->virtual_address - vma->vm_start) + (vma->vm_pgoff << PAGE_SHIFT));
+	
+	page_frame  = ((unsigned long)page_addr >> PAGE_SHIFT);
+
+	if(!pfn_valid(page_frame))
+		return VM_FAULT_SIGBUS;
+
+	page = virt_to_page(__va(page_addr));
+	get_page(page);
+	vmf->page = page;
+	return 0;
+}
+#endif /* >= 2.6.24 */
 
 static void linuxdvb_vm_open(struct vm_area_struct *vma)
 {
@@ -803,7 +832,11 @@ static struct vm_operations_struct linuxdvb_vm_ops_memory =
 {
 	.open     = linuxdvb_vm_open,
 	.close    = linuxdvb_vm_close,
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2.6.24)
 	.nopage   = linuxdvb_vm_nopage,
+#else
+	.fault    = linuxdvb_vm_fault,
+#endif
 };
 
 static int linuxdvb_mmap(struct stm_v4l2_handles *handle, int type, struct file *file, struct vm_area_struct*  vma)

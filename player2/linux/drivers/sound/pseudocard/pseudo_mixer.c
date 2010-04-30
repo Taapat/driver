@@ -553,6 +553,7 @@ static int snd_card_pseudo_hw_free(struct snd_pcm_substream *substream)
 /*
  * Copied verbaitum from snd_pcm_mmap_data_nopage()
  */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2.6.24)
 static struct page *snd_card_pseudo_pcm_mmap_data_nopage(struct vm_area_struct *area,
                                              unsigned long address, int *type)
 {
@@ -585,12 +586,48 @@ static struct page *snd_card_pseudo_pcm_mmap_data_nopage(struct vm_area_struct *
                 *type = VM_FAULT_MINOR;
         return page;
 }
+#else /* >= 2.6.24 */
+static int snd_card_pseudo_pcm_mmap_data_fault(struct vm_area_struct *vma, struct fault_data *vmf)
+{
+        struct snd_pcm_substream *substream = vma->vm_private_data;
+        struct snd_pcm_runtime *runtime;
+        unsigned long offset;
+        struct page * page;
+        void *vaddr;
+        size_t dma_bytes;
+
+        if (substream == NULL)
+                return VM_FAULT_SIGBUS;
+        runtime = substream->runtime;
+        offset = vma->vm_pgoff << PAGE_SHIFT;
+        offset += (unsigned long) vmf->virtual_address - vma->vm_start;
+        snd_assert((offset % PAGE_SIZE) == 0, return VM_FAULT_SIGBUS);
+        dma_bytes = PAGE_ALIGN(runtime->dma_bytes);
+        if (offset > dma_bytes - PAGE_SIZE)
+                return VM_FAULT_SIGBUS;
+        if (substream->ops->page) {
+                page = substream->ops->page(substream, offset);
+                if (! page)
+                        return VM_FAULT_OOM; /* XXX: is this really due to OOM? */
+        } else {
+                vaddr = runtime->dma_area + offset;
+                page = virt_to_page(vaddr);
+        }
+        get_page(page);
+	vmf->page = page;
+	return 0;
+}
+#endif /* >= 2.6.24 */
 
 static struct vm_operations_struct snd_card_pseudo_pcm_vm_ops_data =
 {
         .open =         snd_pcm_mmap_data_open,
         .close =        snd_pcm_mmap_data_close,
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2.6.24)
         .nopage =       snd_card_pseudo_pcm_mmap_data_nopage,
+#else
+        .fault =        snd_card_pseudo_pcm_mmap_data_fault,
+#endif
 };
 
 /*
