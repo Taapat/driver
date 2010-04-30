@@ -11,7 +11,12 @@
 
 #include <linux/module.h>
 #include <linux/init.h>
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 #include <asm/semaphore.h>
+#else
+#include <linux/semaphore.h>
+#endif
 
 #include "acc_mme.h"
 #include "report.h"

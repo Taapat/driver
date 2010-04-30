@@ -46,7 +46,11 @@
 
 #include <asm/system.h>
 #include <asm/io.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 #include <asm/semaphore.h>
+#else
+#include <linux/semaphore.h>
+#endif
 #include <linux/mutex.h>
 #include <linux/dvb/dmx.h>
 

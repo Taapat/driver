@@ -21,7 +21,11 @@
 #include <linux/version.h>
 #include <linux/interrupt.h>
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 #include <asm/semaphore.h>
+#else
+#include <linux/semaphore.h>
+#endif
 #include <asm/page.h>
 #include <asm/io.h>
 #include <asm/page.h>

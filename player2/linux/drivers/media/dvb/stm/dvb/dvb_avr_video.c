@@ -16,7 +16,6 @@
 /******************************
  * INCLUDES
  ******************************/
-#include <asm/semaphore.h>
 #include <asm/page.h>
 #include <asm/io.h>
 #include <asm/page.h>
@@ -40,6 +39,11 @@
 #include <stmdisplay.h>
 #include <Linux/video/stmfb.h>
 #include <linux/stm/stmcoredisplay.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+#include <asm/semaphore.h>
+#else
+#include <linux/semaphore.h>
+#endif
 
 #include "dvb_module.h"
 #include "stmdisplayoutput.h"

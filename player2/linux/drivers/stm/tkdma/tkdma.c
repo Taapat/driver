@@ -14,7 +14,12 @@
 #include <linux/delay.h>
 
 #include <linux/stm/slim.h>
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 #include <asm/semaphore.h>
+#else
+#include <linux/semaphore.h>
+#endif
 
 #define SLIM_PERS_MBOX_SET      (0x387)
 #define SLIM_PERS_MBOX_STATUS   (0x386)

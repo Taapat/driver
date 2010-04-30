@@ -17,12 +17,11 @@
 #include <linux/dma-mapping.h>
 #include <linux/stm/stm-dma.h>
 #include <asm/io.h>
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
-#include <linux/stm/pio.h>
-#else
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
 #include <linux/stpio.h>
+#else
+#include <linux/stm/pio.h>
 #endif
-
 #include <linux/stm/stm-frontend.h>
 #include "tsmerger.h"
 #include "st-common.h"

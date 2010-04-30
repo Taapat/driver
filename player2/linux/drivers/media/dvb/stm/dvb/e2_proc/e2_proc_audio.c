@@ -18,7 +18,10 @@
 #include <asm/io.h>
 
 //Dagobert Hack
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 #include <sound/driver.h>
+#endif
 #include <sound/core.h>
 #include <sound/control.h>
 #include <sound/pcm.h>

@@ -53,9 +53,13 @@
 
 
 #include <asm/cacheflush.h>
-#include <asm/semaphore.h>
 #include <asm/io.h>
 #include <asm/page.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+#include <asm/semaphore.h>
+#else
+#include <linux/semaphore.h>
+#endif
 
 #include <stmdisplay.h>
 

@@ -13,9 +13,13 @@
 #include <linux/delay.h>
 #include <linux/time.h>
 #include <linux/errno.h>
-#include <asm/semaphore.h>
 #include <linux/platform_device.h>
 #include <linux/mutex.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+#include <asm/semaphore.h>
+#else
+#include <linux/semaphore.h>
+#endif
 
 #include <asm/io.h>
 

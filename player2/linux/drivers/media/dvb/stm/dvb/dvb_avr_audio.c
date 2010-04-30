@@ -11,7 +11,6 @@
  *
 \***********************************************************************/
 
-#include <asm/semaphore.h>
 #include <asm/page.h>
 #include <asm/io.h>
 #include <asm/page.h>
@@ -31,6 +30,11 @@
 #include <linux/videodev.h>
 #include <linux/interrupt.h>
 #include <linux/kthread.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+#include <asm/semaphore.h>
+#else
+#include <linux/semaphore.h>
+#endif
 
 #include "dvb_module.h"
 #include "stm_v4l2.h"
