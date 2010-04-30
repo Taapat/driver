@@ -17,12 +17,6 @@
 #include "stmawg.h"
 
 
-#define FIRMWARE_BUNDLE_VERSION   1
-
-#define FIRMWARE_NAME_MAX 30  // same as in linux/firmware.h
-
-
-
 CAWG::CAWG (CDisplayDevice *pDev,ULONG ram_offset, ULONG ram_size, const char *prefix)
 {
   DEBUGF2 (3, ("%s\n", __PRETTY_FUNCTION__));

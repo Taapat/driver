@@ -21,4 +21,8 @@
 #include "stmdisplayplane.h"
 #include "stmdisplayblitter.h"
 
+#define FIRMWARE_BUNDLE_VERSION   1
+#define FIRMWARE_NAME_MAX 30  // same as in linux/firmware.h
+
+
 #endif /* STM_DISPLAY_H */

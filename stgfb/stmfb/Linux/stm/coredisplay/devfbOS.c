@@ -37,10 +37,14 @@
 
 #include <asm/cacheflush.h>
 #include <asm/io.h>
-#include <asm/cpu/timer.h>
 #include <asm/processor.h>
 #include <asm/clock.h>
 #include <asm/atomic.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
+#include <asm/cpu/timer.h>
+#else
+#include <linux/timer.h>
+#endif
 
 #include <linux/stm/stm-dma.h>
 
@@ -110,7 +114,11 @@ static void determine_dma_req_lines(void)
       dma_req_lines[SDTP_DENC2_TELETEXT] = -1;
       break;
 #endif
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,23)
+    case CPU_STX7109:
+#else
     case CPU_STB7109:
+#endif
       dma_req_lines[SDTP_HDMI1_IFRAME]   = 1;
       dma_req_lines[SDTP_DENC1_TELETEXT] = -1;
       dma_req_lines[SDTP_DENC2_TELETEXT] = -1;
@@ -130,7 +138,11 @@ static void determine_dma_req_lines(void)
       dma_req_lines[SDTP_DENC1_TELETEXT] = 41;
       dma_req_lines[SDTP_DENC2_TELETEXT] = 42;
       break;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,23)
+    case CPU_STX7100:
+#else
     case CPU_STB7100:
+#endif
     default:
       dma_req_lines[SDTP_HDMI1_IFRAME]   = -1;
       dma_req_lines[SDTP_DENC1_TELETEXT] = -1;
@@ -175,9 +187,15 @@ static int Init(void)
 
   failure = device_register (&firmware_device);
   if (unlikely (failure))
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
     dev_err (&firmware_device,
              "Device registration [%s] failed: %d\n",
              firmware_device.bus_id, failure);
+#else
+  dev_err (&firmware_device,
+           "Device registration [%s] failed: %d\n",
+           firmware_device.init_name, failure);
+#endif
   firmware_device_registered = !failure;
 #endif
 
@@ -371,7 +389,11 @@ static void MemsetDMAArea(DMA_Area *mem, ULONG offset, int val, unsigned long co
   CheckDMAAreaGuards(mem);
 
   if (!(mem->ulFlags & SDAAF_UNCACHED))
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
     dma_cache_wback_inv(mem->pData+offset, count);
+#else
+	flush_ioremap_region(0, mem->pData+offset, 0, count);
+#endif
 }
 
 
@@ -389,7 +411,11 @@ static void MemcpyToDMAArea(DMA_Area *mem, ULONG offset, const void* pSrc, unsig
   CheckDMAAreaGuards(mem);
 
   if (!(mem->ulFlags & SDAAF_UNCACHED))
-    dma_cache_wback_inv(mem->pData+offset, count);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
+	dma_cache_wback_inv(mem->pData+offset, count);
+#else
+	flush_ioremap_region(0, mem->pData+offset, 0, count);
+#endif
 }
 
 
@@ -532,7 +558,11 @@ static void AllocateDMAArea(DMA_Area *mem, ULONG size, ULONG align, STM_DMA_AREA
   guard[1] = topguard1;
 
   if (!(flags & SDAAF_UNCACHED))
-    dma_cache_wback_inv(mem->pMemory, mem->ulAllocatedSize);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
+	dma_cache_wback_inv(mem->pMemory, mem->ulAllocatedSize);
+#else
+	flush_ioremap_region(0, mem->pMemory, 0, mem->ulAllocatedSize);
+#endif
 }
 
 
@@ -893,7 +923,11 @@ static void UpSemaphore(ULONG ulHandle)
 
 static void FlushCache(void *vaddr, int size)
 {
-  dma_cache_wback_inv(vaddr, size);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
+	dma_cache_wback_inv(vaddr, size);
+#else
+	flush_ioremap_region(0, vaddr, 0, size);
+#endif
 }
 
 
@@ -923,7 +957,11 @@ static void
 firmware_dev_release (struct device * device)
 {
   /* free firmware cache */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
   struct firmware_data * const fwd = (struct firmware_data *) (device->driver_data);
+#else
+  struct firmware_data * const fwd = (struct firmware_data *) (device->platform_data);
+#endif
   struct list_head *pos, *n;
 
   list_for_each_safe (pos, n, &fwd->fw_cache)
@@ -937,8 +975,13 @@ firmware_dev_release (struct device * device)
 }
 
 static struct device firmware_device = {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
   .bus_id      = "stm_fw0",
   .driver_data = &firmware_data,
+#else
+  .init_name	= "stm_fw0",
+  .platform_data	= &firmware_data,
+#endif
   .release     = firmware_dev_release,
 };
 
@@ -946,7 +989,11 @@ static int CacheGetFirmware (const char                 * const name,
                              const STMFirmware_private **st_firmware_priv)
 {
   struct list_head     *pos;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
   struct firmware_data * const fwd = (struct firmware_data *) (firmware_device.driver_data);
+#else
+  struct firmware_data * const fwd = (struct firmware_data *) (firmware_device.platform_data);
+#endif
   int                   error = ENOENT;
 
   BUG_ON (!st_firmware_priv);
