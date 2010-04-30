@@ -159,7 +159,11 @@ static void __exit stmcore_display_exit(void)
 
     if(platform_data[i].class_device)
     {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
+      class_device_unregister(platform_data[i].class_device);
+#else
       device_unregister(platform_data[i].class_device);
+#endif
       platform_data[i].class_device = NULL;
     }
 
@@ -232,9 +236,17 @@ static int __init stmcore_platformdev_init(int i, struct stmcore_display_pipelin
 }
 
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
+static ssize_t stmcore_show_display_info(struct class_device *class_device, char *buf)
+#else
 static ssize_t stmcore_show_display_info(struct device *class_device, struct device_attribute *attr, char *buf)
+#endif
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
+  struct stmcore_display_pipeline_data *platform_data = class_get_devdata(class_device);
+#else
   struct stmcore_display_pipeline_data *platform_data = dev_get_drvdata(class_device);
+#endif
   int sz=0;
   int plane;
 
@@ -287,9 +299,17 @@ static ssize_t stmcore_show_display_info(struct device *class_device, struct dev
 }
 
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
+static ssize_t stmcore_show_display_timing(struct class_device *class_device, char *buf)
+#else
 static ssize_t stmcore_show_display_timing(struct device *class_device, struct device_attribute *attr, char *buf)
+#endif
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
+  struct stmcore_display_pipeline_data *platform_data = class_get_devdata(class_device);
+#else
   struct stmcore_display_pipeline_data *platform_data = dev_get_drvdata(class_device);
+#endif
   int sz=0;
   unsigned long saveFlags;
   s64 tlast, tavg, tmax, tmin;
@@ -313,14 +333,23 @@ static ssize_t stmcore_show_display_timing(struct device *class_device, struct d
 }
 
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
+static CLASS_DEVICE_ATTR(info,S_IRUGO, stmcore_show_display_info,NULL);
+static CLASS_DEVICE_ATTR(timing,S_IRUGO, stmcore_show_display_timing,NULL);
+#else
 static DEVICE_ATTR(info,S_IRUGO, stmcore_show_display_info,NULL);
 static DEVICE_ATTR(timing,S_IRUGO, stmcore_show_display_timing,NULL);
+#endif
 
 
 static int __init stmcore_classdev_init(int i, struct stmcore_display_pipeline_data *platform_data)
 {
   int res;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
+  platform_data->class_device = class_device_create(stmcore_class, NULL, MKDEV(0,0), NULL, "display%d",i);
+#else
   platform_data->class_device = device_create(stmcore_class, NULL, MKDEV(0,0), NULL, "display%d",i);
+#endif
 
   if(IS_ERR(platform_data->class_device))
   {
@@ -329,10 +358,17 @@ static int __init stmcore_classdev_init(int i, struct stmcore_display_pipeline_d
     return -ENODEV;
   }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
+  class_set_devdata(platform_data->class_device,platform_data);
+
+  res = class_device_create_file(platform_data->class_device,&class_device_attr_info);
+  res += class_device_create_file(platform_data->class_device,&class_device_attr_timing);
+#else
   dev_set_drvdata(platform_data->class_device,platform_data);
 
   res = device_create_file(platform_data->class_device,&dev_attr_info);
   res += device_create_file(platform_data->class_device,&dev_attr_timing);
+#endif
   return res;
 }
 
