@@ -14,7 +14,6 @@
 /******************************
  * INCLUDES
  ******************************/
-#include <asm/semaphore.h>
 #include <asm/page.h>
 #include <asm/io.h>
 #include <asm/page.h>
@@ -39,6 +38,12 @@
 #include <linux/ioport.h>
 #include <linux/bpa2.h>
 #include <linux/delay.h>
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+#include <asm/semaphore.h>
+#else
+#include <linux/semaphore.h>
+#endif
 
 #include <include/stmdisplay.h>
 #include <linux/stm/stmcoredisplay.h>
@@ -759,7 +764,7 @@ static int linuxdvb_close(struct stm_v4l2_handles *handle, int type, struct file
 	return 0;
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2.6.24)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
 static struct page* linuxdvb_vm_nopage(struct vm_area_struct *vma, unsigned long vaddr, int *type)
 {
 	struct page *page;
@@ -832,7 +837,7 @@ static struct vm_operations_struct linuxdvb_vm_ops_memory =
 {
 	.open     = linuxdvb_vm_open,
 	.close    = linuxdvb_vm_close,
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2.6.24)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
 	.nopage   = linuxdvb_vm_nopage,
 #else
 	.fault    = linuxdvb_vm_fault,

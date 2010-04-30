@@ -12,12 +12,16 @@ Date        Modification                                    Name
 
 ************************************************************************/
 
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/ioport.h>
 #include <linux/bpa2.h>
 #include <linux/dvb/audio.h>
 #include <linux/dvb/video.h>
 #include <linux/smp_lock.h>
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,23)
+#include <linux/pagemap.h>
+#endif
 #include <asm/uaccess.h>
 
 #include "dvb_module.h"
