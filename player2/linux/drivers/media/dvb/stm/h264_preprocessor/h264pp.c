@@ -841,7 +841,13 @@ unsigned int	IntermediateEndAddress;
  * ->should be revised!
  */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
     dma_cache_wback((SubContext->Parameters.BufferCachedAddress + 0x10000),sizeof(GNBvd42331Data));
+#else
+    writeback_ioremap_region(0, (SubContext->Parameters.BufferCachedAddress + 0x10000),
+    		0, sizeof(GNBvd42331Data));
+#endif
+
 #else
     flush_cache_all();
 #endif
