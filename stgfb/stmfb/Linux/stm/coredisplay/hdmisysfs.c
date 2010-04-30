@@ -808,17 +808,7 @@ __ATTR(colorgamut_profiles, S_IRUGO, show_hdmi_colorgamut_profiles, NULL),
 __ATTR(av_latency, S_IRUGO, show_hdmi_avlatency, NULL),
 __ATTR(tmds_status, S_IRUGO, show_tmds_status, NULL)
 };
-/*
-extern struct device *device_create(struct class *cls, struct device *parent,
-				    dev_t devt, void *drvdata,
-				    const char *fmt, ...)
-				    __attribute__((format(printf, 5, 6)));
 
-extern struct class_device *class_device_create(struct class *cls, struct class_device *parent,
-						dev_t devt,	struct device *device,
-						const char *fmt, ...)
-					__attribute__((format(printf,5,6)));
-*/
 int __init stmhdmi_init_class_device(struct stm_hdmi *hdmi, struct stmcore_display_pipeline_data *platform_data)
 {
   int i,ret;

@@ -52,6 +52,13 @@
 #define I2C_EDID_ADDR             0x50
 #define I2C_EDDC_SEGMENT_REG_ADDR 0x30
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
+static const struct i2c_device_id hdmi_id[] = {
+        { "stm-hdmi",  },
+        { }
+};
+MODULE_DEVICE_TABLE(i2c, hdmi_id);
+#endif
 
 /*
  * We have to force the detection of the I2C devices, because the SMBUS QUICK
@@ -63,14 +70,22 @@ static unsigned short forced_i2c_edid[] = { ANY_I2C_BUS, I2C_EDID_ADDR, ANY_I2C_
 static unsigned short *forces_edid[]    = { forced_i2c_edid,NULL };
 
 static struct i2c_driver driver = {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
    .id             = I2C_DRIVERID_STM_HDMI,
    .attach_adapter = 0,
    .detach_client  = 0,
-   .command        = 0,
-   .driver         = {
-       .owner          = THIS_MODULE,
-       .name           = "i2c_hdmi_driver"
-   }
+#else
+	.class  = I2C_CLASS_DDC,
+	.probe  = 0,
+	.detect = 0,
+	.remove = 0,
+	.id_table = hdmi_id,
+#endif
+	 .command        = 0,
+	 .driver         = {
+	     .owner          = THIS_MODULE,
+	     .name           = "i2c_hdmi_driver"
+	 }
 };
 
 static unsigned short ignore = I2C_CLIENT_END;
@@ -101,11 +116,12 @@ static int stmhdmi_attach_edid(struct i2c_adapter *adap, int addr, int kind)
 
   strncpy(client->name, I2C_CLIENT_NAME_STM_HDMI, I2C_NAME_SIZE);
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
   i2c_attach_client(client);
+#endif
 
   return 0;
 }
-
 
 static void stmhdmi_i2c_connect(struct stm_hdmi *hdmi)
 {
@@ -119,7 +135,9 @@ static void stmhdmi_i2c_connect(struct stm_hdmi *hdmi)
    */
   if(!hdmi->edid_client)
   {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
     i2c_probe(hdmi->i2c_adapter, &edid_addr_data, stmhdmi_attach_edid);
+#endif
   }
 
   DPRINTK("Searching for registered I2C client objects\n");

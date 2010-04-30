@@ -12,6 +12,8 @@
 #ifndef _STMCOREDISPLAY_H
 #define _STMCOREDISPLAY_H
 
+#include <linux/version.h>
+
 #if !defined(_STM_HDMI_DEF)
 struct stm_hdmi;
 #endif
