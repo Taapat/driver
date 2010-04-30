@@ -67,7 +67,11 @@ MODULE_DEVICE_TABLE(i2c, hdmi_id);
  * to keep compatibility with 2.6.17 for the moment.
  */
 static unsigned short forced_i2c_edid[] = { ANY_I2C_BUS, I2C_EDID_ADDR, ANY_I2C_BUS, I2C_EDDC_SEGMENT_REG_ADDR, I2C_CLIENT_END};
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static unsigned short *forces_edid[]    = { forced_i2c_edid,NULL };
+#endif
+
+static int stmhdmi_probe(struct i2c_client *client, const struct i2c_device_id *id);
 
 static struct i2c_driver driver = {
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
@@ -76,7 +80,7 @@ static struct i2c_driver driver = {
    .detach_client  = 0,
 #else
 	.class  = I2C_CLASS_DDC,
-	.probe  = 0,
+	.probe  = stmhdmi_probe,
 	.detect = 0,
 	.remove = 0,
 	.id_table = hdmi_id,
@@ -88,6 +92,7 @@ static struct i2c_driver driver = {
 	 }
 };
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static unsigned short ignore = I2C_CLIENT_END;
 
 static struct i2c_client_address_data edid_addr_data = {
@@ -96,17 +101,24 @@ static struct i2c_client_address_data edid_addr_data = {
   .probe      = &ignore,
   .ignore     = &ignore
 };
+#endif
 
 /***********************************************************************
  * I2C management routines for EDID devices
  */
+static int stmhdmi_probe(struct i2c_client *client, const struct i2c_device_id *id)
+{
+	return 0;
+}
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static int stmhdmi_attach_edid(struct i2c_adapter *adap, int addr, int kind)
 {
   struct i2c_client *client;
+  int err;
 
   if (!(client = kmalloc(sizeof(struct i2c_client), GFP_KERNEL)))
     return -ENOMEM;
-
 
   memset(client, 0, sizeof(struct i2c_client));
 
@@ -116,15 +128,20 @@ static int stmhdmi_attach_edid(struct i2c_adapter *adap, int addr, int kind)
 
   strncpy(client->name, I2C_CLIENT_NAME_STM_HDMI, I2C_NAME_SIZE);
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+  if ((err = stmhdmi_probe(client, NULL))) {
+    kfree(client)
+    return err;
+  }
+
   i2c_attach_client(client);
-#endif
 
   return 0;
 }
+#endif /* < 2.6.30 */
 
 static void stmhdmi_i2c_connect(struct stm_hdmi *hdmi)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
   struct list_head *entry;
 
   DPRINTK("Probing for I2C clients\n");
@@ -135,12 +152,8 @@ static void stmhdmi_i2c_connect(struct stm_hdmi *hdmi)
    */
   if(!hdmi->edid_client)
   {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
     i2c_probe(hdmi->i2c_adapter, &edid_addr_data, stmhdmi_attach_edid);
-#endif
   }
-
-  DPRINTK("Searching for registered I2C client objects\n");
 
   mutex_lock(&hdmi->i2c_adapter->clist_lock);
 
@@ -170,6 +183,29 @@ static void stmhdmi_i2c_connect(struct stm_hdmi *hdmi)
   }
 
   mutex_unlock(&hdmi->i2c_adapter->clist_lock);
+#else /* >= 2.6.30 */
+  if(!hdmi->edid_client) {
+    int items;
+    /* Probe twice, to find both addresses (hopefully) */
+    for (items = 0; items < 2; items++) {
+      struct i2c_client *client;
+      struct i2c_board_info info = {.addr=0};
+      /* which one: i2c_hdmi_driver, HDMI-EDID, or stm-hdmi? */
+      strlcpy(info.type, "i2c_hdmi_driver", I2C_NAME_SIZE);
+      client = i2c_new_probed_device(hdmi->i2c_adapter, &info, forced_i2c_edid);
+      switch(client->addr) {
+      case I2C_EDDC_SEGMENT_REG_ADDR:
+        DPRINTK("Found EDDC I2C Client\n");
+        hdmi->eddc_segment_reg_client = client;
+        break;
+      case I2C_EDID_ADDR:
+        DPRINTK("Found EDID I2C Client\n");
+        hdmi->edid_client = client;
+        break;
+      }
+    }
+  }
+#endif /* >= 2.6.30 */
 }
 
 
@@ -177,14 +213,22 @@ static void stmhdmi_i2c_disconnect(struct stm_hdmi *hdmi)
 {
   if(hdmi->edid_client)
   {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
     i2c_detach_client(hdmi->edid_client);
     kfree(hdmi->edid_client);
+#else
+    i2c_unregister_device(hdmi->edid_client);
+#endif
     hdmi->edid_client = 0;
   }
   if(hdmi->eddc_segment_reg_client)
   {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
     i2c_detach_client(hdmi->eddc_segment_reg_client);
     kfree(hdmi->eddc_segment_reg_client);
+#else
+    i2c_unregister_device(hdmi->eddc_segment_reg_client);
+#endif
     hdmi->eddc_segment_reg_client = 0;
   }
 }
