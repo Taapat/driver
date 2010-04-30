@@ -66,8 +66,8 @@ MODULE_DEVICE_TABLE(i2c, hdmi_id);
  * use the new i2c_new_device interface in the later 2.6 kernels, but need
  * to keep compatibility with 2.6.17 for the moment.
  */
-static unsigned short forced_i2c_edid[] = { ANY_I2C_BUS, I2C_EDID_ADDR, ANY_I2C_BUS, I2C_EDDC_SEGMENT_REG_ADDR, I2C_CLIENT_END};
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+static unsigned short forced_i2c_edid[] = { ANY_I2C_BUS, I2C_EDID_ADDR, ANY_I2C_BUS, I2C_EDDC_SEGMENT_REG_ADDR, I2C_CLIENT_END};
 static unsigned short *forces_edid[]    = { forced_i2c_edid,NULL };
 #endif
 
@@ -185,25 +185,12 @@ static void stmhdmi_i2c_connect(struct stm_hdmi *hdmi)
   mutex_unlock(&hdmi->i2c_adapter->clist_lock);
 #else /* >= 2.6.30 */
   if(!hdmi->edid_client) {
-    int items;
-    /* Probe twice, to find both addresses (hopefully) */
-    for (items = 0; items < 2; items++) {
-      struct i2c_client *client;
-      struct i2c_board_info info = {.addr=0};
-      /* which one: i2c_hdmi_driver, HDMI-EDID, or stm-hdmi? */
-      strlcpy(info.type, "i2c_hdmi_driver", I2C_NAME_SIZE);
-      client = i2c_new_probed_device(hdmi->i2c_adapter, &info, forced_i2c_edid);
-      switch(client->addr) {
-      case I2C_EDDC_SEGMENT_REG_ADDR:
-        DPRINTK("Found EDDC I2C Client\n");
-        hdmi->eddc_segment_reg_client = client;
-        break;
-      case I2C_EDID_ADDR:
-        DPRINTK("Found EDID I2C Client\n");
-        hdmi->edid_client = client;
-        break;
-      }
-    }
+    struct i2c_board_info devices[] = {
+      { I2C_BOARD_INFO("stm-hdmi", I2C_EDDC_SEGMENT_REG_ADDR) },
+      { I2C_BOARD_INFO("stm-hdmi", I2C_EDID_ADDR) }
+    };
+    hdmi->eddc_segment_reg_client = i2c_new_device(hdmi->i2c_adapter, &devices[0]);
+    hdmi->edid_client = i2c_new_device(hdmi->i2c_adapter, &devices[1]);
   }
 #endif /* >= 2.6.30 */
 }
