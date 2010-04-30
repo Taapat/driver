@@ -1,9 +1,14 @@
-CFLAGS += -I$(TREE_ROOT)/linux/include/linux/stm/
+CCFLAGSY := -I$(TREE_ROOT)/linux/include/linux/stm/
 
 CONFIG_MONITOR_HAVANA=m
 
-CFLAGS += -DDEBUG_MONITOR
+CCFLAGSY += -DDEBUG_MONITOR
 
+ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
+ccflags-y += $(CCFLAGSY)
+else
+CFLAGS += $(CCFLAGSY)
+endif
 
 obj-$(CONFIG_MONITOR_HAVANA)+= stm_monitor.o
 
