@@ -6,8 +6,7 @@
  * Stream properties object decoding utility classes
  */
 
-#include <string.h>
-
+#include "osinline.h"
 #include "wma_properties.h"
 #include "report.h"
 
