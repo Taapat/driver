@@ -33,7 +33,11 @@
 
 #include <asm/uaccess.h>
 #include <asm/irq.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
 #include <asm/semaphore.h>
+#else
+#include <linux/semaphore.h>
+#endif
 
 #include <stmdisplay.h>
 #include <linux/stm/stmcoredisplay.h>
@@ -892,7 +896,11 @@ int __exit stmhdmi_destroy(struct stm_hdmi *hdmi)
 
   if(hdmi->class_device)
   {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
     class_device_unregister(hdmi->class_device);
+#else
+    device_unregister(hdmi->class_device);
+#endif
     hdmi->class_device = NULL;
   }
 

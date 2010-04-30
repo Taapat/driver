@@ -22,9 +22,13 @@
 #include <linux/stm/sysconf.h>
 
 #include <asm/io.h>
-#include <asm/semaphore.h>
 #include <asm/irq.h>
 #include <asm/processor.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
+#include <asm/semaphore.h>
+#else
+#include <linux/semaphore.h>
+#endif
 
 #include <linux/stm/pio.h>
 #include <asm/irq-ilc.h>

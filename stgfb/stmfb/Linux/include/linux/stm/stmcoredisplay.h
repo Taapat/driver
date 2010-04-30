@@ -124,7 +124,12 @@ struct stmcore_display_pipeline_data
   struct stm_hdmi          *hdmi_data;
   struct stmcore_display   *display_runtime;
   struct platform_device   *platform_device;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
   struct class_device      *class_device;
+#else
+  struct device     	   *class_device;
+#endif
+
 };
 
 

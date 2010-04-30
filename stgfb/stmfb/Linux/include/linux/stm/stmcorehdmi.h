@@ -223,8 +223,11 @@ struct stm_hdmi {
   struct stmcore_vsync_cb       vsync_cb_info;
 
   struct task_struct           *thread;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
   struct class_device          *class_device;
-
+#else
+  struct device          	   *class_device;
+#endif
   stm_display_device_t         *device;
   stm_display_output_t         *main_output;
   stm_display_output_t         *hdmi_output;

@@ -22,7 +22,11 @@
 #include <media/v4l2-dev.h>
 #include <media/v4l2-common.h>
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
 #include <asm/semaphore.h>
+#else
+#include <linux/semaphore.h>
+#endif
 #include <asm/page.h>
 
 #include <stmdisplay.h>

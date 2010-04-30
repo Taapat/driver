@@ -26,7 +26,11 @@
 
 #include <asm/uaccess.h>
 #include <asm/irq.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
 #include <asm/semaphore.h>
+#else
+#include <linux/semaphore.h>
+#endif
 
 #include <stmdisplay.h>
 #include <linux/stm/stmcoredisplay.h>
@@ -108,10 +112,17 @@ static int mode_string(char *buf, unsigned int offset, const stm_mode_line_t *mo
       mode->ModeParams.FrameRate / 1000);
 }
 
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static ssize_t show_hdmi_aspect(struct class_device *class_device, char *buf)
+#else
+static ssize_t show_hdmi_aspect(struct device *device, struct device_attribute *attr, char *buf)
+#endif
 {
-  struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#else
+	struct stm_hdmi *hdmi = dev_get_drvdata(device);
+#endif
 
 #define L(x) case STM_WSS_##x: return sprintf(buf, "%s\n", #x);
   switch(hdmi->edid_info.tv_aspect) {
@@ -126,10 +137,17 @@ static ssize_t show_hdmi_aspect(struct class_device *class_device, char *buf)
   return sprintf(buf, "UNKNOWN\n");
 }
 
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static ssize_t show_hdmi_cea861(struct class_device *class_device, char *buf)
+#else
+static ssize_t show_hdmi_cea861(struct device *device, struct device_attribute *attr, char *buf)
+#endif
 {
-  struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#else
+	struct stm_hdmi *hdmi = dev_get_drvdata(device);
+#endif
   int i,sz;
 
   sz = 0;
@@ -153,10 +171,17 @@ static ssize_t show_hdmi_cea861(struct class_device *class_device, char *buf)
   return sz;
 }
 
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static ssize_t show_hdmi_display_type(struct class_device *class_device, char *buf)
+#else
+static ssize_t show_hdmi_display_type(struct device *device, struct device_attribute *attr, char *buf)
+#endif
 {
-  struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#else
+	struct stm_hdmi *hdmi = dev_get_drvdata(device);
+#endif
 
 #define L(x) case STM_DISPLAY_##x: return sprintf(buf, "%s\n", #x);
   switch(hdmi->edid_info.display_type) {
@@ -169,10 +194,17 @@ static ssize_t show_hdmi_display_type(struct class_device *class_device, char *b
   return sprintf(buf, "UNKNOWN\n");
 }
 
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static ssize_t show_hdmi_display_name(struct class_device *class_device, char *buf)
+#else
+static ssize_t show_hdmi_display_name(struct device *device, struct device_attribute *attr, char *buf)
+#endif
 {
-  struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#else
+	struct stm_hdmi *hdmi = dev_get_drvdata(device);
+#endif
 
   if(hdmi->edid_info.monitor_name[0] != 0)
     return sprintf(buf, "%s\n", hdmi->edid_info.monitor_name);
@@ -180,14 +212,20 @@ static ssize_t show_hdmi_display_name(struct class_device *class_device, char *b
   return sprintf(buf, "UNKNOWN\n");
 }
 
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static ssize_t show_hdmi_hotplug(struct class_device *class_device, char *buf)
+#else
+static ssize_t show_hdmi_hotplug(struct device *device, struct device_attribute *attr, char *buf)
+#endif
 {
-  struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#else
+	struct stm_hdmi *hdmi = dev_get_drvdata(device);
+#endif
 
   return sprintf(buf, "%c\n", hdmi->status ? 'y' : 'n');
 }
-
 
 static ssize_t __show_hdmi_modes(const stm_mode_line_t **display_modes, int num_modes, char *buf)
 {
@@ -200,10 +238,17 @@ static ssize_t __show_hdmi_modes(const stm_mode_line_t **display_modes, int num_
   return sz;
 }
 
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static ssize_t show_hdmi_modes(struct class_device *class_device, char *buf)
+#else
+static ssize_t show_hdmi_modes(struct device *device, struct device_attribute *attr, char *buf)
+#endif
 {
-  struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#else
+	struct stm_hdmi *hdmi = dev_get_drvdata(device);
+#endif
 
   /* if no modes were retrieved from the display device then we must
    * infer them from the display characteristics.
@@ -220,9 +265,17 @@ static ssize_t show_hdmi_modes(struct class_device *class_device, char *buf)
 }
 
 #if defined(__sh__) 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static ssize_t show_hdmi_edid(struct class_device *class_device, char *buf)
+#else
+static ssize_t show_hdmi_edid(struct device *device, struct device_attribute *attr, char *buf)
+#endif
 {
-  struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#else
+	struct stm_hdmi *hdmi = dev_get_drvdata(device);
+#endif
   int i = 0, j = 0, offset = 0;
 
   for(i = 0; i < 10/*STM_MAX_EDID_BLOCKS*/; i++)
@@ -238,9 +291,18 @@ static ssize_t show_hdmi_edid(struct class_device *class_device, char *buf)
 }
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static ssize_t show_hdmi_speaker_allocation(struct class_device *class_device, char *buf)
+#else
+static ssize_t show_hdmi_speaker_allocation(struct device *device, struct device_attribute *attr, char *buf)
+#endif
 {
-  struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#else
+	struct stm_hdmi *hdmi = dev_get_drvdata(device);
+#endif
+
   int sz = 0;
 
   mutex_lock(&hdmi->lock);
@@ -371,10 +433,17 @@ static ssize_t show_hdmi_audio_mode(struct stm_cea_audio_descriptor *mode, char 
   return sz;
 }
 
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static ssize_t show_hdmi_audio_capabilities(struct class_device *class_device, char *buf)
+#else
+static ssize_t show_hdmi_audio_capabilities(struct device *device, struct device_attribute *attr, char *buf)
+#endif
 {
-  struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#else
+	struct stm_hdmi *hdmi = dev_get_drvdata(device);
+#endif
   int sz = 0;
   stm_cea_audio_formats_t fmt;
 
@@ -390,10 +459,18 @@ static ssize_t show_hdmi_audio_capabilities(struct class_device *class_device, c
   return sz;
 }
 
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static ssize_t show_cec_address(struct class_device *class_device, char *buf)
+#else
+static ssize_t show_cec_address(struct device *device, struct device_attribute *attr, char *buf)
+#endif
 {
-  struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#else
+	struct stm_hdmi *hdmi = dev_get_drvdata(device);
+#endif
+
   int sz = 0;
 
   mutex_lock(&hdmi->lock);
@@ -408,10 +485,18 @@ static ssize_t show_cec_address(struct class_device *class_device, char *buf)
   return sz;
 }
 
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static ssize_t show_hdmi_supports_ai(struct class_device *class_device, char *buf)
+#else
+static ssize_t show_hdmi_supports_ai(struct device *device, struct device_attribute *attr, char *buf)
+#endif
 {
-  struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#else
+	struct stm_hdmi *hdmi = dev_get_drvdata(device);
+#endif
+
   int sz = 0;
 
   mutex_lock(&hdmi->lock);
@@ -438,9 +523,18 @@ static char *ptscan_support[STM_CEA_VCDB_CE_SCAN_BOTH+1] = {
   "Selectable",
 };
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static ssize_t show_hdmi_underscan(struct class_device *class_device, char *buf)
+#else
+static ssize_t show_hdmi_underscan(struct device *device, struct device_attribute *attr, char *buf)
+#endif
 {
-  struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#else
+	struct stm_hdmi *hdmi = dev_get_drvdata(device);
+#endif
+
   int sz = 0;
 
   mutex_lock(&hdmi->lock);
@@ -463,9 +557,18 @@ static char *quantization[4] = {
   "RGB:YCC",
 };
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static ssize_t show_hdmi_quantization(struct class_device *class_device, char *buf)
+#else
+static ssize_t show_hdmi_quantization(struct device *device, struct device_attribute *attr, char *buf)
+#endif
 {
-  struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#else
+	struct stm_hdmi *hdmi = dev_get_drvdata(device);
+#endif
+
   int sz = 0;
 
   mutex_lock(&hdmi->lock);
@@ -477,10 +580,18 @@ static ssize_t show_hdmi_quantization(struct class_device *class_device, char *b
   return sz;
 }
 
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static ssize_t show_hdmi_colorspace(struct class_device *class_device, char *buf)
+#else
+static ssize_t show_hdmi_colorspace(struct device *device, struct device_attribute *attr, char *buf)
+#endif
 {
-  struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#else
+	struct stm_hdmi *hdmi = dev_get_drvdata(device);
+#endif
+
   int sz = 0;
 
   mutex_lock(&hdmi->lock);
@@ -510,10 +621,18 @@ static ssize_t show_hdmi_colorspace(struct class_device *class_device, char *buf
   return sz;
 }
 
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static ssize_t show_hdmi_colorgamut_profiles(struct class_device *class_device, char *buf)
+#else
+static ssize_t show_hdmi_colorgamut_profiles(struct device *device, struct device_attribute *attr, char *buf)
+#endif
 {
-  struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#else
+	struct stm_hdmi *hdmi = dev_get_drvdata(device);
+#endif
+
   int sz = 0;
 
   mutex_lock(&hdmi->lock);
@@ -540,10 +659,18 @@ static ssize_t show_hdmi_colorgamut_profiles(struct class_device *class_device, 
   return sz;
 }
 
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static ssize_t show_hdmi_colorformat(struct class_device *class_device, char *buf)
+#else
+static ssize_t show_hdmi_colorformat(struct device *device, struct device_attribute *attr, char *buf)
+#endif
 {
-  struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#else
+	struct stm_hdmi *hdmi = dev_get_drvdata(device);
+#endif
+
   int sz = 0;
 
   mutex_lock(&hdmi->lock);
@@ -591,10 +718,18 @@ static ssize_t show_hdmi_colorformat(struct class_device *class_device, char *bu
   return sz;
 }
 
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static ssize_t show_hdmi_avlatency(struct class_device *class_device, char *buf)
+#else
+static ssize_t show_hdmi_avlatency(struct device *device, struct device_attribute *attr, char *buf)
+#endif
 {
-  struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#else
+	struct stm_hdmi *hdmi = dev_get_drvdata(device);
+#endif
+
   int sz = 0;
 
   mutex_lock(&hdmi->lock);
@@ -617,10 +752,18 @@ static ssize_t show_hdmi_avlatency(struct class_device *class_device, char *buf)
   return sz;
 }
 
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static ssize_t show_tmds_status(struct class_device *class_device, char *buf)
+#else
+static ssize_t show_tmds_status(struct device *device, struct device_attribute *attr, char *buf)
+#endif
 {
-  struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	struct stm_hdmi *hdmi = class_get_devdata(class_device);
+#else
+	struct stm_hdmi *hdmi = dev_get_drvdata(device);
+#endif
+
   int sz = 0;
 
   mutex_lock(&hdmi->lock);
@@ -639,8 +782,11 @@ static ssize_t show_tmds_status(struct class_device *class_device, char *buf)
   return sz;
 }
 
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static struct class_device_attribute stmhdmi_device_attrs[] = {
+#else
+static struct device_attribute stmhdmi_device_attrs[] = {
+#endif
 __ATTR(aspect, S_IRUGO, show_hdmi_aspect, NULL),
 __ATTR(cea861_codes, S_IRUGO, show_hdmi_cea861, NULL),
 __ATTR(type, S_IRUGO, show_hdmi_display_type, NULL),
@@ -662,15 +808,32 @@ __ATTR(colorgamut_profiles, S_IRUGO, show_hdmi_colorgamut_profiles, NULL),
 __ATTR(av_latency, S_IRUGO, show_hdmi_avlatency, NULL),
 __ATTR(tmds_status, S_IRUGO, show_tmds_status, NULL)
 };
+/*
+extern struct device *device_create(struct class *cls, struct device *parent,
+				    dev_t devt, void *drvdata,
+				    const char *fmt, ...)
+				    __attribute__((format(printf, 5, 6)));
 
+extern struct class_device *class_device_create(struct class *cls, struct class_device *parent,
+						dev_t devt,	struct device *device,
+						const char *fmt, ...)
+					__attribute__((format(printf,5,6)));
+*/
 int __init stmhdmi_init_class_device(struct stm_hdmi *hdmi, struct stmcore_display_pipeline_data *platform_data)
 {
   int i,ret;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
   hdmi->class_device = class_device_create(platform_data->class_device->class,
-                                           platform_data->class_device,
-                                           hdmi->cdev.dev,
-                                           NULL,kobject_name(&hdmi->cdev.kobj));
+										   platform_data->class_device,
+                                           hdmi->cdev.dev, NULL,
+                                           kobject_name(&hdmi->cdev.kobj));
+#else
+  hdmi->class_device = device_create(platform_data->class_device->class,
+										   platform_data->class_device,
+                                           hdmi->cdev.dev, NULL,
+                                           kobject_name(&hdmi->cdev.kobj));
+#endif
 
   if(IS_ERR(hdmi->class_device))
   {
@@ -678,10 +841,18 @@ int __init stmhdmi_init_class_device(struct stm_hdmi *hdmi, struct stmcore_displ
     return -ENODEV;
   }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
   class_set_devdata(hdmi->class_device,hdmi);
+#else
+  dev_set_drvdata(hdmi->class_device, hdmi);
+#endif
 
   for (i = 0; i < ARRAY_SIZE(stmhdmi_device_attrs); i++) {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
     ret = class_device_create_file(hdmi->class_device, &stmhdmi_device_attrs[i]);
+#else
+    ret = device_create_file(hdmi->class_device, &stmhdmi_device_attrs[i]);
+#endif
     if(ret)
       break;
   }
