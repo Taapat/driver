@@ -29,7 +29,7 @@ Date        Modification                                    Name
 #include "havana_playback.h"
 #include "havana_stream.h"
 #include "pes.h"
-#include <include/stmdisplay.h>
+#include <stmdisplay.h>
 
 //{{{  HavanaStream_c
 HavanaStream_c::HavanaStream_c (void)

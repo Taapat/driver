@@ -44,7 +44,7 @@
 #include <linux/semaphore.h>
 #endif
 
-#include <include/stmdisplay.h>
+#include <stmdisplay.h>
 #include <linux/stm/stmcoredisplay.h>
 #include <stmdisplayplane.h>
 #include <stmdisplayblitter.h>

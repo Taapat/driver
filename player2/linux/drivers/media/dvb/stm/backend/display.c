@@ -17,7 +17,7 @@ Date        Modification                                    Name
 #include <linux/kthread.h>
 #include <linux/wait.h>
 #include <linux/errno.h>
-#include <include/stmdisplay.h>
+#include <stmdisplay.h>
 #include <linux/stm/stmcoredisplay.h>
 #include "osdev_user.h"
 #include "player_module.h"

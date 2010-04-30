@@ -17,7 +17,7 @@ Date        Modification                                    Name
 #define MANIFESTOR_VIDEO_STMFB_H
 
 #include "osinline.h"
-#include <include/stmdisplay.h>
+#include <stmdisplay.h>
 #include "allocinline.h"
 #include "manifestor_video.h"
 

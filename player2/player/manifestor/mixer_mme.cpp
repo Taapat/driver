@@ -18,7 +18,7 @@
 #include "output_timer_audio.h"
 #include "mixer_mme.h"
 #include "../codec/codec_mme_base.h"
-#include <include/stmdisplay.h>
+#include <stmdisplay.h>
 
 // /////////////////////////////////////////////////////////////////////////
 //
