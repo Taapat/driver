@@ -145,7 +145,11 @@ static struct file_operations mme_ops = {
 static struct cdev mme_cdev;
 static dev_t       mme_devid;
 static struct class *mme_class;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
 static struct class_device *mme_class_dev;
+#else
+static struct device *mme_class_dev;
+#endif
 
 /* ==========================================================================
  * 

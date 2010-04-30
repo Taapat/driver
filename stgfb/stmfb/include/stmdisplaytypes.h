@@ -40,7 +40,9 @@ __extension__ typedef unsigned long long ULONGLONG;
    result (of value 0 and type size_t), so the expression can be used
    e.g. in a structure initializer (or where-ever else comma expressions
    aren't permitted). */
+#ifndef BUILD_BUG_ON_ZERO
 #define BUILD_BUG_ON_ZERO(e) (sizeof(char[1 - 2 * !!(e)]) - 1)
+#endif
 
 /* &a[0] degrades to a pointer: a different type from an array */
 #define __must_be_array(a) \
