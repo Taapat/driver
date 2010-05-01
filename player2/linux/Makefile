@@ -8,7 +8,7 @@ CCFLAGSY := -I$(CONFIG_KERNEL_BUILD)/include2 \
 	-I$(DRIVER_TOPDIR)/stgfb/stmfb/include				\
 	-I$(DRIVER_TOPDIR)/include							\
 	-I$(DRIVER_TOPDIR)/include/stmfb					\
-	-I$(DRIVER_TOPDIR)/include/player2					
+	-I$(DRIVER_TOPDIR)/include/player2
 
 CCFLAGSY += -I$(TREE_ROOT)/linux/components/inline         \
 	-I$(TREE_ROOT)/components/include              \

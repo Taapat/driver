@@ -22,7 +22,11 @@ Date        Modification                                    Name
 #include <linux/cdev.h>
 #include <linux/kthread.h>
 #include <asm/uaccess.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 #include <asm/timer.h>
+#else
+#include <linux/timer.h>
+#endif
 #include <asm/clock.h>
 #include <linux/delay.h>
 

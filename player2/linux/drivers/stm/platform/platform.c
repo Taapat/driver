@@ -14,11 +14,16 @@
 #include <linux/platform_device.h>
 #include <linux/stm/slim.h>
 #include <linux/autoconf.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 #include <asm-sh/processor.h>
-
+#endif
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 #include <asm-sh/irq-ilc.h>
 #include <asm-sh/irq.h>
+#else
+#include <linux/irq.h>
+#endif
 #else /* STLinux 2.2 kernel */
 #define ILC_IRQ(x) (x + MUXED_IRQ_BASE)
 #endif 

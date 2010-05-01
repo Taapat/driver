@@ -161,9 +161,11 @@ static inline snd_pcm_uframes_t _ksnd_pcm_avail_update(snd_pcm_substream_t
  * (BWC vs. BWD)
  */
 #if defined(__TDT__) && (defined(FORTIS_HDBOX) || defined(UFS922) || defined(OCTAGON1008))
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	if (runtime->sleep_min == 0 &&
 	    _ksnd_pcm_state(substream) == SNDRV_PCM_STATE_RUNNING)
 		snd_pcm_update_hw_ptr(substream);
+#endif
 #endif
 
 	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
@@ -435,8 +437,9 @@ int ksnd_pcm_mmap_begin(ksnd_pcm_t *pcm, const snd_pcm_channel_area_t **areas,
 	snd_pcm_substream_t *substream = pcm->substream;
 	snd_pcm_channel_area_t *xareas = pcm->hwareas;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	snd_assert(substream && areas && offset && frames, return -EFAULT);
-
+#endif
 	snd_pcm_stream_lock_irq(substream);
 	_ksnd_pcm_mmap_begin(substream, offset, frames);
 	snd_pcm_stream_unlock_irq(substream);
@@ -474,10 +477,11 @@ static int _ksnd_pcm_update_appl_ptr(snd_pcm_substream_t *substream,
 			return err;
 	}
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	if (runtime->sleep_min &&
 	    runtime->status->state == SNDRV_PCM_STATE_RUNNING)
 		snd_pcm_tick_prepare(substream);
-
+#endif
 	return 0;
 }
 
@@ -491,7 +495,9 @@ snd_pcm_sframes_t ksnd_pcm_mmap_commit(ksnd_pcm_t *pcm,
 	snd_pcm_sframes_t res = frames;
 	int err;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	snd_assert(substream, return -EFAULT);
+#endif
 
 	/* for SPDIF we need to run though the just committed PCM samples and
 	 * add formating (unless raw mode is enabled)
@@ -894,7 +900,7 @@ static int _ksnd_pcm_writei1(snd_pcm_substream_t *substream,
 			avail -= avail % runtime->xfer_align;
 #else
 		if (avail > runtime->min_align)
-			avail -= avail % runtime->m_align;
+			avail -= avail % runtime->min_align;
 #endif
 
 		frames = size > avail ? avail : size;
@@ -905,8 +911,10 @@ static int _ksnd_pcm_writei1(snd_pcm_substream_t *substream,
 		if (frames > cont)
 			frames = cont;
 
-		snd_assert(frames != 0, snd_pcm_stream_unlock_irq(substream);
-			   return -EINVAL);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+		snd_assert(frames != 0, snd_pcm_stream_unlock_irq(substream));
+#endif
+			   return -EINVAL;
 
 		appl_ptr = runtime->control->appl_ptr;
 		appl_ofs = appl_ptr % runtime->buffer_size;
@@ -955,9 +963,11 @@ static int _ksnd_pcm_writei1(snd_pcm_substream_t *substream,
 				goto _end_unlock;
 		}
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 		if (runtime->sleep_min &&
 		    _ksnd_pcm_state(substream) == SNDRV_PCM_STATE_RUNNING)
 			snd_pcm_tick_prepare(substream);
+#endif
 	}
 
       _end_unlock:
@@ -973,12 +983,15 @@ int ksnd_pcm_writei(ksnd_pcm_t *kpcm,
 	snd_pcm_runtime_t *runtime;
 	int err;
 	transfer_f out_func = 0;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	snd_assert(substream != NULL, return -ENXIO);
-
+#endif
 	runtime = substream->runtime;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	snd_assert(runtime != NULL, return -ENXIO);
 	snd_assert(runtime->dma_area != NULL, return -EINVAL);
 	snd_assert(runtime->dma_addr != 0, return -EINVAL);
+#endif
 
 	if (substream->pcm->card->number == 2) {
 		out_func = _ksnd_pcm_IEC60958_transfer;
@@ -1232,8 +1245,9 @@ int ksnd_pcm_set_params(ksnd_pcm_t *pcm,
 	}
 
 	err = ksnd_pcm_hw_params_any(pcm, hw_params);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	snd_assert(err >= 0, goto failure);
-
+#endif
 	_snd_pcm_hw_param_setinteger(hw_params, SNDRV_PCM_HW_PARAM_PERIODS);
 	_snd_pcm_hw_param_min(hw_params, SNDRV_PCM_HW_PARAM_PERIODS, 2, 0);
 
@@ -1251,31 +1265,36 @@ int ksnd_pcm_set_params(ksnd_pcm_t *pcm,
 	err =
 	    snd_pcm_hw_param_set(substream, hw_params, SNDRV_PCM_HW_PARAM_RATE,
 				 samplerate, 0);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	snd_assert(err >= 0, goto failure);
-
+#endif
 	err =
 	    snd_pcm_hw_param_near(substream, hw_params,
 				  SNDRV_PCM_HW_PARAM_CHANNELS, nrchannels,
 				  NULL);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	snd_assert(err >= 0, goto failure);
-
+#endif
 	err =
 	    snd_pcm_hw_param_near(substream, hw_params,
 				  SNDRV_PCM_HW_PARAM_FORMAT, format, 0);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	snd_assert(err >= 0, goto failure);
-
+#endif
 	err =
 	    snd_pcm_hw_param_near(substream, hw_params,
 				  SNDRV_PCM_HW_PARAM_PERIOD_SIZE, periodsize,
 				  NULL);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	snd_assert(err >= 0, goto failure);
-
+#endif
 	err =
 	    snd_pcm_hw_param_near(substream, hw_params,
 				  SNDRV_PCM_HW_PARAM_BUFFER_SIZE, buffersize,
 				  NULL);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	snd_assert(err >= 0, goto failure);
-
+#endif
 	_ksnd_pcm_drop(substream);
 
 	/*now we re-use the 61937 control to enable the HW sync mechanism */
@@ -1292,7 +1311,11 @@ int ksnd_pcm_set_params(ksnd_pcm_t *pcm,
 			    (runtime->buffer_size - (runtime->period_size * 2));
 
 	sw_params->stop_threshold = runtime->buffer_size;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27)
+	sw_params->tstamp_mode = SNDRV_PCM_TSTAMP_ENABLE;
+#else
 	sw_params->tstamp_mode = SNDRV_PCM_TSTAMP_MMAP;
+#endif
 	sw_params->period_step = 1;
 	sw_params->sleep_min = 0;
 	sw_params->avail_min = runtime->period_size;
@@ -1446,7 +1469,9 @@ void ksnd_ctl_elem_id_alloca(snd_ctl_elem_id_t **id)
  */
 void ksnd_ctl_elem_id_set_name(snd_ctl_elem_id_t *obj, const char *val)
 {
-    	snd_assert(obj);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+    snd_assert(obj);
+#endif
 	strncpy((char *)obj->name, val, sizeof(obj->name));
 }
 
@@ -1457,7 +1482,9 @@ void ksnd_ctl_elem_id_set_name(snd_ctl_elem_id_t *obj, const char *val)
  */
 void ksnd_ctl_elem_id_set_interface(snd_ctl_elem_id_t *obj, snd_ctl_elem_iface_t val)
 {
-    	snd_assert(obj);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+    snd_assert(obj);
+#endif
 	obj->iface = val;
 }
 
@@ -1468,7 +1495,9 @@ void ksnd_ctl_elem_id_set_interface(snd_ctl_elem_id_t *obj, snd_ctl_elem_iface_t
  */
 void ksnd_ctl_elem_id_set_device(snd_ctl_elem_id_t *obj, unsigned int val)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	snd_assert(obj);
+#endif
 	obj->device = val;
 }
 /**
@@ -1478,7 +1507,9 @@ void ksnd_ctl_elem_id_set_device(snd_ctl_elem_id_t *obj, unsigned int val)
  */
 void ksnd_ctl_elem_id_set_index(snd_ctl_elem_id_t *obj, unsigned int val)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	snd_assert(obj);
+#endif
 	obj->index = val;
 }
 
@@ -1528,7 +1559,9 @@ void ksnd_ctl_elem_value_set_integer(snd_ctl_elem_value_t *obj, unsigned int idx
  */ 
 void ksnd_ctl_elem_value_set_iec958(snd_ctl_elem_value_t *obj, const struct snd_aes_iec958 *ptr)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	snd_assert(obj && ptr, return);
+#endif
 	memcpy(&obj->value.iec958, ptr, sizeof(obj->value.iec958));
 }
 

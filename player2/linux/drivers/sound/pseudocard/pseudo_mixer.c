@@ -20,7 +20,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <sound/driver.h>
 #include <linux/version.h>
 #include <linux/ioport.h>
 #include <linux/bpa2.h>
@@ -43,7 +42,9 @@
 #include <sound/initval.h>
 #include <asm/io.h>
 #include <asm/cacheflush.h>
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+#include <sound/driver.h>
+#endif
 #include <ACC_Transformers/acc_mmedefines.h>
 
 #include <stmdisplay.h>
@@ -553,7 +554,7 @@ static int snd_card_pseudo_hw_free(struct snd_pcm_substream *substream)
 /*
  * Copied verbaitum from snd_pcm_mmap_data_nopage()
  */
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2.6.24)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
 static struct page *snd_card_pseudo_pcm_mmap_data_nopage(struct vm_area_struct *area,
                                              unsigned long address, int *type)
 {
@@ -595,7 +596,9 @@ static int snd_card_pseudo_pcm_mmap_data_fault(struct vm_area_struct *vma, struc
         struct page * page;
         void *vaddr;
         size_t dma_bytes;
-
+#warning kire pls fix this
+        //FIXME
+#if 0
         if (substream == NULL)
                 return VM_FAULT_SIGBUS;
         runtime = substream->runtime;
@@ -615,6 +618,7 @@ static int snd_card_pseudo_pcm_mmap_data_fault(struct vm_area_struct *vma, struc
         }
         get_page(page);
 	vmf->page = page;
+#endif
 	return 0;
 }
 #endif /* >= 2.6.24 */
@@ -623,7 +627,7 @@ static struct vm_operations_struct snd_card_pseudo_pcm_vm_ops_data =
 {
         .open =         snd_pcm_mmap_data_open,
         .close =        snd_pcm_mmap_data_close,
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2.6.24)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
         .nopage =       snd_card_pseudo_pcm_mmap_data_nopage,
 #else
         .fault =        snd_card_pseudo_pcm_mmap_data_fault,
@@ -1338,7 +1342,9 @@ static int __init snd_card_pseudo_new_mixer(struct snd_pseudo *pseudo)
 	unsigned int idx;
 	int err;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	snd_assert(pseudo != NULL, return -EINVAL);
+#endif
 	spin_lock_init(&pseudo->mixer_lock);
 	strcpy(card->mixername, "Pseudo Mixer");
 
@@ -1630,10 +1636,16 @@ static int __init snd_pseudo_probe(struct platform_device *devptr)
 	int idx, err;
 	int dev = devptr->id;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	card = snd_card_new(index[dev], id[dev], THIS_MODULE,
 			    sizeof(struct snd_pseudo));
 	if (card == NULL)
 		return -ENOMEM;
+#else
+	if(snd_card_create(index[dev], id[dev], THIS_MODULE,
+		    sizeof(struct snd_pseudo), &card))
+		return -ENOMEM;
+#endif
 	pseudo = card->private_data;
 
 	pseudo->card = card;

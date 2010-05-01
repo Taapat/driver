@@ -103,7 +103,11 @@ static __init int platform_init_710x(void)
         unsigned long chip_7109;
         
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,23)
+        chip_7109 = (boot_cpu_data.type == CPU_STX7109);
+#else
         chip_7109 = (boot_cpu_data.type == CPU_STB7109);
+#endif
         chip_revision = boot_cpu_data.cut_major;
 #else /* Assume STLinux 2.2 */
         unsigned long sysconf;

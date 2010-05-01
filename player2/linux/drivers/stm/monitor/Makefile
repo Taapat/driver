@@ -1,4 +1,4 @@
-CCFLAGSY := -I$(TREE_ROOT)/linux/include/linux/stm/
+CCFLAGSY += -I$(TREE_ROOT)/linux/include/linux/stm/
 
 CONFIG_MONITOR_HAVANA=m
 

@@ -19,6 +19,7 @@ Date        Modification                                    Name
 #include <linux/bpa2.h>
 #include <linux/module.h>
 #include <linux/device.h>
+#include <linux/version.h>
 #include <linux/file.h>
 #include <linux/kthread.h>
 #include <linux/autoconf.h>
@@ -110,11 +111,19 @@ static int StmMonitorProbe(struct device *dev)
             printk (KERN_ERR "%s: unable to add device\n",__FUNCTION__);
             return -ENODEV;
         }
-        DeviceContext->ClassDevice              = class_device_create (ModuleContext->DeviceClass,
-                                                                       NULL,
-                                                                       DeviceContext->CDev.dev,
-                                                                       NULL,
-                                                                       kobject_name (&(DeviceContext->CDev.kobj)));
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
+        DeviceContext->ClassDevice  = class_device_create (ModuleContext->DeviceClass,
+                                                 NULL,
+                                                 DeviceContext->CDev.dev,
+                                                 NULL,
+                                                 kobject_name (&(DeviceContext->CDev.kobj)));
+#else /* >= 2.6.26 */
+    DeviceContext->ClassDevice  = device_create (ModuleContext->DeviceClass,
+                                             NULL,
+                                             DeviceContext->CDev.dev,
+                                             NULL,
+                                             kobject_name (&(DeviceContext->CDev.kobj)));
+#endif /* >= 2.6.26 */
         if (IS_ERR(DeviceContext->ClassDevice))
         {
             printk (KERN_ERR "%s: unable to create class device\n",__FUNCTION__);
@@ -122,7 +131,11 @@ static int StmMonitorProbe(struct device *dev)
             return -ENODEV;
         }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
         class_set_devdata (DeviceContext->ClassDevice, DeviceContext);
+#else
+        dev_set_drvdata(DeviceContext->ClassDevice, DeviceContext);
+#endif
     }
 
     mutex_unlock (&(ModuleContext->Lock));
