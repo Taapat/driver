@@ -220,7 +220,6 @@ struct snd_pcm_hw_params {
 #else
 //#warning KSOUND.H AS C INCLUDE
 
-#include <sound/driver.h>
 #include <sound/core.h>
 #include <sound/minors.h>
 #include <sound/pcm.h>
@@ -233,6 +232,9 @@ struct snd_pcm_hw_params {
 #include <sound/control.h>
 //#include <sound/typedefs.h>
 #include <sound/asound.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+#include <sound/driver.h>
+#endif
 
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 typedef struct snd_kcontrol snd_kcontrol_t;

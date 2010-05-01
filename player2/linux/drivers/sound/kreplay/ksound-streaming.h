@@ -21,7 +21,7 @@
 #ifndef _SOUND_KSOUND_STREAMING_H_
 #define _SOUND_KSOUND_STREAMING_H_
 
-#include <ksound.h>
+#include "../ksound/ksound.h"
 
 #ifdef __cplusplus
 extern "C" {

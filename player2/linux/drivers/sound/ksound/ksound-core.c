@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <sound/driver.h>
 #include <linux/version.h>
 #include <linux/init.h>
 #include <linux/smp_lock.h>
@@ -37,6 +36,9 @@
 #include <sound/control.h>
 #include <linux/mutex.h>
 #include <linux/slab.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+#include <sound/driver.h>
+#endif
 
 #include <asm/io.h>
 
@@ -180,8 +182,13 @@ snd_pcm_uframes_t ksnd_pcm_avail_update(ksnd_pcm_t *kpcm)
 	avail = _ksnd_pcm_avail_update(substream);
 	snd_pcm_stream_unlock_irq(substream);
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	if (avail > runtime->xfer_align)
 		avail -= avail % runtime->xfer_align;
+#else
+	if (avail > runtime->min_align)
+		avail -= avail % runtime->min_align;
+#endif
 
 	return avail;
 }
@@ -245,8 +252,13 @@ int ksnd_pcm_htimestamp(ksnd_pcm_t *kpcm, snd_pcm_uframes_t *avail, struct times
 	if (myavail < 0)
 		return myavail;
 	
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	if (myavail > runtime->xfer_align)
 		myavail -= myavail % runtime->xfer_align;
+#else
+	if (myavail > runtime->min_align)
+		myavail -= myavail % runtime->min_align;
+#endif
 	
 	*avail = myavail;
 	*tstamp = mystamp;
@@ -393,8 +405,13 @@ static void _ksnd_pcm_mmap_begin(snd_pcm_substream_t *substream,
 		avail = snd_pcm_playback_avail(runtime);
 	else
 		avail = snd_pcm_capture_avail(runtime);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	if (avail > runtime->xfer_align)
 		avail -= avail % runtime->xfer_align;
+#else
+	if (avail > runtime->min_align)
+		avail -= avail % runtime->min_align;
+#endif
 
 	f = *frames;
 	if (f > avail)
@@ -833,8 +850,14 @@ static int _ksnd_pcm_writei1(snd_pcm_substream_t *substream,
 		avail = _ksnd_pcm_avail_update(substream);
 
 		if (((avail < runtime->control->avail_min && size > avail) ||
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 		     (size >= runtime->xfer_align
-		      && avail < runtime->xfer_align))) {
+		      && avail < runtime->xfer_align)))
+#else
+		     (size >= runtime->min_align
+		      && avail < runtime->min_align)))
+#endif
+		{
 			int res;
 
 			snd_pcm_stream_unlock_irq(substream);
@@ -866,8 +889,13 @@ static int _ksnd_pcm_writei1(snd_pcm_substream_t *substream,
 			avail = snd_pcm_playback_avail(runtime);
 		}
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 		if (avail > runtime->xfer_align)
 			avail -= avail % runtime->xfer_align;
+#else
+		if (avail > runtime->min_align)
+			avail -= avail % runtime->m_align;
+#endif
 
 		frames = size > avail ? avail : size;
 		cont =
@@ -971,8 +999,13 @@ int ksnd_pcm_writei(ksnd_pcm_t *kpcm,
 	if (size == 0)
 		return 0;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	if (size > runtime->xfer_align)
 		size -= size % runtime->xfer_align;
+#else
+	if (size > runtime->min_align)
+		size -= size % runtime->min_align;
+#endif
 
 	do {
 		err =

@@ -1,7 +1,7 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/kthread.h>
-#include "ksound.h"
+#include "../ksound/ksound.h"
 
 MODULE_LICENSE("GPL");
 
