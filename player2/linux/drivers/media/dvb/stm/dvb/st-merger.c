@@ -253,7 +253,13 @@ int stm_tsm_inject_user_data(const char __user *data, off_t size)
 
   for (n=0; n<nr_pages; n++) {
     int copy = min_t(int, PAGE_SIZE - page_offset, remaining);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
     handle->swts_sg[n].page   = handle->swts_pages[n];
+#else
+#warning need fix this
+	// FIXME not works!!!!
+    //handle->swts_sg[n].page = handle->swts_pages[n];
+#endif
     handle->swts_sg[n].offset = page_offset;
     handle->swts_sg[n].length = copy;
 
@@ -303,8 +309,12 @@ int stm_tsm_inject_user_data(const char __user *data, off_t size)
     goto out_unmap;
   }
   dma_wait_for_completion(handle->fdma_channel);
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
   dma_unmap_sg(NULL, sg, nr_pages, DMA_TO_DEVICE);
+#else
+#warning fixme
+	// FIXME not works!!!!
+#endif
 
   if (extra)
   {

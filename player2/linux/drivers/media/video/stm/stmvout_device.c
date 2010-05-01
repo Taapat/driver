@@ -542,7 +542,11 @@ int mmapAllocateBuffers(stvout_device_t *pDev, struct v4l2_requestbuffers* req)
 
       /* Clear the buffer to prevent data leaking leaking into userspace */
       memset(pDev->streamBuffers[i].cpuAddr, 0x0, bufLen);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
       dma_cache_wback(pDev->streamBuffers[i].cpuAddr, bufLen);
+#else
+      writeback_ioremap_region(0, pDev->streamBuffers[i].cpuAddr, 0, bufLen);
+#endif
 
       pDev->streamBuffers[i].bufferHeader.src.ulVideoBufferSize = bufLen;
 

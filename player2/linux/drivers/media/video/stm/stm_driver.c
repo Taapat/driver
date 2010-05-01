@@ -25,6 +25,7 @@
 #include <asm/semaphore.h>
 #else
 #include <linux/semaphore.h>
+#include <media/v4l2-ioctl.h>
 #endif
 #include <asm/page.h>
 #include <asm/io.h>
@@ -160,6 +161,7 @@ static int stm_v4l2_do_ioctl(struct inode *inode, struct file  *file, unsigned i
 
     switch (cmd)
     {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
     case VIDIOC_RESERVED:         //_IO   ('V',  1)
     case VIDIOC_G_MPEGCOMP:       //_IOR  ('V',  6, struct v4l2_mpeg_compression)
     case VIDIOC_S_MPEGCOMP:       //_IOW  ('V',  7, struct v4l2_mpeg_compression)
@@ -178,7 +180,7 @@ static int stm_v4l2_do_ioctl(struct inode *inode, struct file  *file, unsigned i
       debug_msg("IOCTL is not implemented\n");
       ret = -ENODEV;// TIMPLEMENTED;
       break;
-
+#endif
       // video ioctls
     case VIDIOC_QUERYCAP:         //_IOR  ('V',  0, struct v4l2_capability)
     {
@@ -484,7 +486,11 @@ static int stm_v4l2_do_ioctl(struct inode *inode, struct file  *file, unsigned i
  *********************************************************/
 static int stm_v4l2_ioctl(struct inode *inode, struct file  *file, unsigned int  cmd, unsigned long arg)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
   return video_usercopy(inode, file, cmd, arg, stm_v4l2_do_ioctl);
+#else // FIXME
+  return video_usercopy(file, cmd, arg, stm_v4l2_do_ioctl);
+#endif
 }
 
 
@@ -544,9 +550,11 @@ static struct file_operations v4l2_fops = {
 
 struct video_device v4l2_template __devinitdata = {
 	.name     = "",
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	.type     = (VID_TYPE_OVERLAY   | VID_TYPE_SCALES),
 	.type2    = (V4L2_CAP_STREAMING | V4L2_CAP_VIDEO_OUTPUT),
 	.hardware = VID_HARDWARE_STMVOUT,
+#endif
 	.fops     = &v4l2_fops,
 	.release  = &v4l2_vdev_release,
 	.minor    = -1

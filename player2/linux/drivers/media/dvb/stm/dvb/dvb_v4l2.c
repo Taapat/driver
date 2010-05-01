@@ -800,6 +800,9 @@ static int linuxdvb_vm_fault(struct vm_area_struct *vma, struct fault_data *vmf)
 	void *page_addr;
 	unsigned long page_frame;
 
+#warning Kire pls fix this
+	// FIXME not works!!!!
+#if 0
 	if (vmf->virtual_address > vma->vm_end)
 		return VM_FAULT_SIGBUS;
 
@@ -818,6 +821,7 @@ static int linuxdvb_vm_fault(struct vm_area_struct *vma, struct fault_data *vmf)
 	page = virt_to_page(__va(page_addr));
 	get_page(page);
 	vmf->page = page;
+#endif
 	return 0;
 }
 #endif /* >= 2.6.24 */
