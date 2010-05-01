@@ -25,6 +25,7 @@
 #include <linux/stm/stm-frontend.h>
 #include "tsmerger.h"
 #include "st-common.h"
+#include "dvb_module.h"
 
 #include <linux/delay.h>
 
@@ -118,7 +119,11 @@ unsigned long TSM_NUM_1394_ALT_OUT;
 
 #define SYS_CFG7      		0x11C
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
 unsigned long tsm_io;
+#else
+void* tsm_io;
+#endif
 
 extern int highSR;
 
@@ -134,7 +139,11 @@ extern int highSR;
 #define MAX_SWTS_PAGES 260
 
 struct stm_tsm_handle {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
   unsigned long tsm_io;
+#else
+  void* tsm_io;
+#endif
   unsigned long tsm_swts;
 
   int swts_channel;
@@ -174,7 +183,7 @@ void stm_tsm_inject_data(struct stm_tsm_handle *handle, u32 *data, off_t size)
   int m;
   u32 *addr = (u32*)handle->tsm_swts;
 
-  dprintk("%s > size = %d, block %d\n", __FUNCTION__, size, blocks);
+  dprintk("%s > size = %d, block %d\n", __FUNCTION__, (int) size, blocks);
 
   for (n=0;n<blocks;n++) {
     while( !(readl(handle->tsm_io + SWTS_CFG(0)) & TSM_SWTS_REQ) ) {
@@ -213,7 +222,7 @@ int stm_tsm_inject_user_data(const char __user *data, off_t size)
   int extra = 0;
   struct stm_tsm_handle *handle = &tsm_handle;
 
-  dprintk("%s > size = %d\n", __FUNCTION__, size);
+  dprintk("%s > size = %d\n", __FUNCTION__, (int) size);
 
   dprintk("status: 0x%08x",  readl (tsm_io + TSM_STREAM3_STA));
 
@@ -256,9 +265,7 @@ int stm_tsm_inject_user_data(const char __user *data, off_t size)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
     handle->swts_sg[n].page   = handle->swts_pages[n];
 #else
-#warning need fix this
-	// FIXME not works!!!!
-    //handle->swts_sg[n].page = handle->swts_pages[n];
+    handle->swts_sg[n].page_link = (unsigned long) handle->swts_pages[n];
 #endif
     handle->swts_sg[n].offset = page_offset;
     handle->swts_sg[n].length = copy;
@@ -312,8 +319,8 @@ int stm_tsm_inject_user_data(const char __user *data, off_t size)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
   dma_unmap_sg(NULL, sg, nr_pages, DMA_TO_DEVICE);
 #else
-#warning fixme
-	// FIXME not works!!!!
+#warning FIXME, skipping dma_unmap_sg
+/* dma_unmap_sg(NULL, sg, nr_pages, DMA_TO_DEVICE); */
 #endif
 
   if (extra)
@@ -383,8 +390,13 @@ void stm_tsm_init (int use_cimax)
 
       //route tsmerger to cimax and then to pti
       //first configure sysconfig
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
       unsigned long    reg_sys_config = 0;
       unsigned long    reg_config = 0;
+#else
+      void *reg_sys_config = NULL;
+      void *reg_config = NULL;
+#endif
       unsigned int     ret;
       int              n;
 
@@ -819,7 +831,6 @@ void stm_tsm_init (int use_cimax)
    {
    	/* bypass cimax */
   	int n;
-  	unsigned long size;
 
     printk("Bypass ci\n");
 
@@ -889,7 +900,7 @@ Dies sind die Options (also wohl auch view channel):
    }
 }
 
-void stm_tsm_release ( )
+void stm_tsm_release(void)
 {
   iounmap( tsm_io );
 }
