@@ -75,7 +75,7 @@ static MME_ERROR issueTerminateMMEMessages(TransportInfo_t* tpInfo)
 	for (i=0; i<4; i++) {
 		char adminPortName[] = "MMECompanionAdmin#0";
 		EMBX_PORT adminPort;
-		TransformerTerminateMMEMessage *message;
+		TransformerTerminateMMEMessage *message = message;
 
 		/* Generate the port name we want to examine */
 		adminPortName[sizeof(adminPortName) - 2] += i;

@@ -343,8 +343,12 @@ static void SetPriority(struct ThreadInfo *t, int policy, struct sched_param *sp
     int res;
 
 #ifdef MULTICOM_GPL
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
     res = sched_setscheduler(t->kthread, policy, &sp); 	/* GPL only function */
 #else
+    res = sched_setscheduler(t->kthread, policy, sp); 	/* GPL only function */
+#endif
+#else /* MULTICOM_GPL */
     /* Call sched_setscheduler() via an in kernel syscall */
     register long __sc0 __asm__ ("r3") = __NR_sched_setscheduler;
     register long __sc4 __asm__ ("r4") = (long) t->kthread->pid;

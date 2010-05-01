@@ -82,8 +82,6 @@ EXPORT_SYMBOL( EMBX_Mailbox_GetLockFromHandle );
 
 static int parseMailboxString(char *mailbox, EMBX_VOID **pAddr, EMBX_INT *pIrq, EMBX_Mailbox_Flags_t *pFlags)
 {
-    EMBX_Info(EMBX_INFO_MAILBOX, (">>>parseMailboxString(\"%s\", ...)\n", mailbox));
-
     struct { char *name; EMBX_Mailbox_Flags_t flag; } *pLookup, lookup[] = {
 	{ "set1",     EMBX_MAILBOX_FLAGS_SET1     },
 	{ "st20",     EMBX_MAILBOX_FLAGS_ST20     },
@@ -94,6 +92,8 @@ static int parseMailboxString(char *mailbox, EMBX_VOID **pAddr, EMBX_INT *pIrq, 
 	{ NULL, 0 }
     };
     
+    EMBX_Info(EMBX_INFO_MAILBOX, (">>>parseMailboxString(\"%s\", ...)\n", mailbox));
+
     if (NULL == mailbox) {
 	EMBX_Info(EMBX_INFO_MAILBOX, ("<<<parseMailboxString = -EINVAL:1\n"));
 	return -EINVAL;
@@ -950,8 +950,8 @@ EMBX_ERROR EMBX_Mailbox_Synchronize(EMBX_Mailbox_t *local, EMBX_UINT token, EMBX
 {
 	EMBX_UINT       oldEnables;
 	EMBX_UINT       oldStatus;
-	void          (*oldHandler)(void *);
-	void           *oldParam;
+	void          (*oldHandler)(void *) = oldHandler;
+	void           *oldParam = oldParam;
 	EMBX_Mailbox_t *remoteMailbox;
 	struct synchronizeHandlerParamBlock paramBlock;
 

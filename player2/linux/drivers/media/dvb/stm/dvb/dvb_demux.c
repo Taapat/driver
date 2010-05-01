@@ -618,7 +618,7 @@ void demultiplexDvbPackets(struct dvb_demux* demux, const u8 *buf, int count)
   int next = 0;
   int cnt = 0;
   int diff_count;
-  u8 *first_buf;
+  const u8 *first_buf;
   u16 firstPid;
   struct DeviceContext_s* Context = (struct DeviceContext_s*)demux->priv;
 
