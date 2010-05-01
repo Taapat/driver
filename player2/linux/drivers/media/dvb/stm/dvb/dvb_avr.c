@@ -984,7 +984,7 @@ static struct page* avr_vm_nopage(struct vm_area_struct *vma, unsigned long vadd
     return page;
 }
 #else /* >= 2.6.24 */
-static int avr_vm_fault(struct vm_area_struct *vma, struct fault_data *vmf)
+static int avr_vm_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
 {
 	struct page     *page;
 	void            *page_addr;

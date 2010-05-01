@@ -588,7 +588,7 @@ static struct page *snd_card_pseudo_pcm_mmap_data_nopage(struct vm_area_struct *
         return page;
 }
 #else /* >= 2.6.24 */
-static int snd_card_pseudo_pcm_mmap_data_fault(struct vm_area_struct *vma, struct fault_data *vmf)
+static int snd_card_pseudo_pcm_mmap_data_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
 {
         struct snd_pcm_substream *substream = vma->vm_private_data;
         struct snd_pcm_runtime *runtime;
@@ -596,9 +596,7 @@ static int snd_card_pseudo_pcm_mmap_data_fault(struct vm_area_struct *vma, struc
         struct page * page;
         void *vaddr;
         size_t dma_bytes;
-#warning kire pls fix this
-        //FIXME
-#if 0
+
         if (substream == NULL)
                 return VM_FAULT_SIGBUS;
         runtime = substream->runtime;
@@ -618,7 +616,7 @@ static int snd_card_pseudo_pcm_mmap_data_fault(struct vm_area_struct *vma, struc
         }
         get_page(page);
 	vmf->page = page;
-#endif
+
 	return 0;
 }
 #endif /* >= 2.6.24 */

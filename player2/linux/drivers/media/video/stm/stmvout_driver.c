@@ -1332,7 +1332,7 @@ stmvout_vm_nopage(struct vm_area_struct *vma, unsigned long vaddr, int *type)
   return page;
 }
 #else /* >= 2.6.24 */
-static int stmvout_vm_fault(struct vm_area_struct *vma, struct fault_data *vmf)
+static int stmvout_vm_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
 {
   struct page *page;
   void *page_addr;
@@ -1340,8 +1340,7 @@ static int stmvout_vm_fault(struct vm_area_struct *vma, struct fault_data *vmf)
 
   debug_msg("nopage: fault @ %08lx [vma %08lx-%08lx]\n",
 	    (unsigned long) vmf->virtual_address,vma->vm_start,vma->vm_end);
-#warning Kire pls fix this
-#if 0 // FIXME
+
   if (vmf->virtual_address > vma->vm_end)
     return VM_FAULT_SIGBUS;
 
@@ -1360,7 +1359,7 @@ static int stmvout_vm_fault(struct vm_area_struct *vma, struct fault_data *vmf)
   page = virt_to_page(__va(page_addr));
   get_page(page);
   vmf->page = page;
-#endif
+  
   return 0;
 }
 #endif /* >= 2.6.24 */
