@@ -129,7 +129,7 @@ static int stmhdmi_attach_edid(struct i2c_adapter *adap, int addr, int kind)
   strncpy(client->name, I2C_CLIENT_NAME_STM_HDMI, I2C_NAME_SIZE);
 
   if ((err = stmhdmi_probe(client, NULL))) {
-    kfree(client)
+    kfree(client);
     return err;
   }
 

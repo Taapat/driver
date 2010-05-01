@@ -20,11 +20,11 @@
  */
 
 #include <linux/version.h>
-#include <sound/core.h>
-#include <sound/pcm.h>
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 #include <sound/driver.h>
 #endif
+#include <sound/core.h>
+#include <sound/pcm.h>
 
 #include <asm/bitops.h>
 #include <linux/stm/stm-dma.h>

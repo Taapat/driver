@@ -4,10 +4,14 @@
  * Kernel based tone generator (a ksound example program)
  */
 
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/kthread.h>
-#include "ksound.h"
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+#include <sound/driver.h>
+#endif
+#include "../ksound/ksound.h"
 
 #include <linux/types.h>
 #include <linux/kernel.h>

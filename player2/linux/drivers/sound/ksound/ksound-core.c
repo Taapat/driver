@@ -24,6 +24,9 @@
 #include <linux/slab.h>
 #include <linux/time.h>
 #include <linux/vmalloc.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+#include <sound/driver.h>
+#endif
 #include <sound/core.h>
 #include <sound/minors.h>
 #include <sound/pcm.h>

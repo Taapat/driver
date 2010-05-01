@@ -34,6 +34,9 @@
 #include <linux/wait.h>
 #include <linux/moduleparam.h>
 #include <linux/workqueue.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+#include <sound/driver.h>
+#endif
 #include <sound/core.h>
 #include <sound/control.h>
 #include <sound/pcm.h>
@@ -42,9 +45,6 @@
 #include <sound/initval.h>
 #include <asm/io.h>
 #include <asm/cacheflush.h>
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
-#include <sound/driver.h>
-#endif
 #include <ACC_Transformers/acc_mmedefines.h>
 
 #include <stmdisplay.h>

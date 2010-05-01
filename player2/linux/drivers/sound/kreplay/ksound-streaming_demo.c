@@ -1,6 +1,10 @@
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/kthread.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+#include <sound/driver.h>
+#endif
 #include "ksound-streaming.h"
 
 MODULE_LICENSE("GPL");
