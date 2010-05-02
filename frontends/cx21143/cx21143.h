@@ -39,6 +39,8 @@
 
 #include <linux/proc_fs.h>
 
+#include <linux/dvb/version.h>
+
 #ifdef STLINUX20
 #include "dvb_new_frontend.h"
 #endif
@@ -52,11 +54,18 @@ struct cx21143_tuning
 	u32 			frequency;
 	u32 			symbol_rate;
 	fe_spectral_inversion_t inversion;
+#if DVB_API_VERSION < 5
 	enum dvbfe_fec 		fec;
 	enum dvbfe_modulation	modulation;
 
 	enum dvbfe_delsys 	delivery;
 	enum dvbfe_rolloff 	rolloff;
+#else
+	fe_code_rate_t		fec;
+        fe_modulation_t         modulation;
+	fe_delivery_system_t 	delivery;
+	fe_rolloff_t 	        rolloff;
+#endif
 
 	int		 	pilot; // 0: off, 1: on (only used for S2)
 

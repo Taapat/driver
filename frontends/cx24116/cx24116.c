@@ -51,6 +51,8 @@
 #include <linux/dvb/dmx.h>
 #include <linux/proc_fs.h>
 
+#include <linux/dvb/version.h>
+
 #include <pvr_config.h>
 
 #include "cx24116.h"
@@ -153,13 +155,20 @@ cx24116_COMMANDS[] =
  */
 struct cx24116_modfec
 {
+#if DVB_API_VERSION < 5
   enum dvbfe_delsys delsys;
   enum dvbfe_modulation modulation;
   enum dvbfe_fec fec;
+#else
+  fe_delivery_system_t delsys;
+  fe_modulation_t      modulation;
+  fe_code_rate_t       fec;
+#endif
   u8 mask;                      /* In DVBS mode this is used to autodetect */
   u8 val;                       /* Passed to the firmware to indicate mode selection */
 } cx24116_MODFEC_MODES[] =
 {
+#if DVB_API_VERSION < 5
   /* QPSK. For unknown rates we set to hardware to to detect 0xfe 0x30 */
   { DVBFE_DELSYS_DVBS, DVBFE_MOD_QPSK, DVBFE_FEC_NONE, 0xfe, 0x30},
   { DVBFE_DELSYS_DVBS, DVBFE_MOD_QPSK, DVBFE_FEC_1_2, 0x02, 0x2e},
@@ -190,6 +199,39 @@ struct cx24116_modfec
       /*0x11 pvrmain sets: */ 0x0b},
 /* : redirect AUTO for test */
   { DVBFE_DELSYS_DVBS2, DVBFE_MOD_8PSK, DVBFE_FEC_AUTO, 0x00, 0x0b},};
+#else
+  /* QPSK. For unknown rates we set to hardware to to detect 0xfe 0x30 */
+  { SYS_DVBS, QPSK, FEC_NONE, 0xfe, 0x30},
+  { SYS_DVBS, QPSK, FEC_1_2, 0x02, 0x2e},
+  { SYS_DVBS, QPSK, FEC_2_3, 0x04, 0x2f},
+  { SYS_DVBS, QPSK, FEC_3_4, 0x08, 0x30},
+  { SYS_DVBS, QPSK, FEC_4_5, 0xfe, 0x30},
+  { SYS_DVBS, QPSK, FEC_5_6, 0x20, 0x31},
+  { SYS_DVBS, QPSK, FEC_6_7, 0xfe, 0x30},
+  { SYS_DVBS, QPSK, FEC_7_8, 0x80, 0x32},
+  { SYS_DVBS, QPSK, FEC_8_9, 0xfe, 0x30},
+  { SYS_DVBS, QPSK, FEC_AUTO, 0xfe, 0x30},
+    /* NBC-QPSK */
+  { SYS_DVBS2, QPSK, FEC_1_2, 0x00, 0x04},
+  { SYS_DVBS2, QPSK, FEC_3_5, 0x00, 0x05},
+  { SYS_DVBS2, QPSK, FEC_2_3, 0x00, 0x06},
+  { SYS_DVBS2, QPSK, FEC_3_4, 0x00, 0x07},
+  { SYS_DVBS2, QPSK, FEC_4_5, 0x00, 0x08},
+  { SYS_DVBS2, QPSK, FEC_5_6, 0x00, 0x09},
+  { SYS_DVBS2, QPSK, FEC_8_9, 0x00, 0x0a},
+  { SYS_DVBS2, QPSK, FEC_9_10, 0x00, 0x0b},
+    /* 8PSK */
+  { SYS_DVBS2, PSK_8, FEC_3_5, 0x00, 0x0c},
+  { SYS_DVBS2, PSK_8, FEC_2_3, 0x00, 0x0d},
+  { SYS_DVBS2, PSK_8, FEC_3_4, 0x00, 0x0e},
+  { SYS_DVBS2, PSK_8, FEC_5_6, 0x00, 0x0f},
+  { SYS_DVBS2, PSK_8, FEC_8_9, 0x00, 0x10},
+  { SYS_DVBS2, PSK_8, FEC_9_10, 0x00,
+      /*0x11 pvrmain sets: */ 0x0b},
+/* : redirect AUTO for test */
+  { SYS_DVBS2, PSK_8, FEC_AUTO, 0x00, 0x0b},};
+
+#endif
 
 struct cx24116_U2
 {
@@ -256,6 +298,7 @@ struct cx24116_U2
   /* 9/10     */ { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, //unknown
   };
 
+#if DVB_API_VERSION < 5
 static struct dvbfe_info dvbs_info = {
   .name = "Conexant CX24116 DVB-S",
   .delivery = DVBFE_DELSYS_DVBS,
@@ -295,6 +338,7 @@ static const struct dvbfe_info dvbs2_info = {
   .symbol_rate_max = 45000000,
   .symbol_rate_tolerance = 0
 };
+#endif
 
 struct config_entry
 {
@@ -306,6 +350,7 @@ static struct config_entry config_data[MAX_DVB_ADAPTERS];
 
 static struct cx24116_core *core[MAX_DVB_ADAPTERS];
 
+#if DVB_API_VERSION < 5
 static int
 cx24116_lookup_fecmod (struct cx24116_state *state,
                       enum dvbfe_delsys d, enum dvbfe_modulation m,
@@ -332,6 +377,7 @@ cx24116_lookup_fecmod (struct cx24116_state *state,
   return ret;
 
 }
+#endif
 
 /* ***************************
  * Request PIO Pins and reset 
@@ -511,6 +557,8 @@ cx24116_is_tuned (struct dvb_frontend *fe)
   return ((tunerstat & FE_IS_TUNED) == FE_IS_TUNED);
 }
 
+#if DVB_API_VERSION < 5
+
 /* **********************************************
  *
  */
@@ -535,6 +583,7 @@ cx24116_get_tune_settings (struct dvb_frontend *fe,
 
   return 0;
 }
+#endif
 
 /* **********************************************
  *
@@ -609,6 +658,7 @@ cx24116_read_ucblocks (struct dvb_frontend *fe, u32 * ucblocks)
 /* **********************************************
  *
  */
+#if DVB_API_VERSION < 5
 
 #define FEC_S2_QPSK_1_2 (fe_code_rate_t)(FEC_AUTO+1)
 #define FEC_S2_QPSK_2_3 (fe_code_rate_t)(FEC_S2_QPSK_1_2+1)
@@ -1028,6 +1078,7 @@ cx24116_create_old_qpsk_feparams (struct dvb_frontend *fe,
   /* I guess we could do more validation on the old fe params and return error */
   return ret;
 }
+#endif
 
 /* Wait for LNB */
 static int
@@ -1606,6 +1657,7 @@ cx24116_release (struct dvb_frontend *fe)
   kfree (state);
 }
 
+#if DVB_API_VERSION < 5
 static int
 cx24116_set_fec (struct cx24116_state *state, struct dvbfe_params *p)
 {
@@ -2037,13 +2089,15 @@ cx24116_get_frontend (struct dvb_frontend *fe,
 
   return cx24116_create_old_qpsk_feparams (fe, &feparams, p);
 }
+#endif
 
 static int
 cx24116_set_frontend (struct dvb_frontend *fe,
                      struct dvb_frontend_parameters *p)
 {
-  struct dvbfe_params newfe;
   int ret = 0;
+#if DVB_API_VERSION < 5
+  struct dvbfe_params newfe;
 
   dprintk (10, "%s: > \n", __FUNCTION__);
 
@@ -2053,7 +2107,39 @@ cx24116_set_frontend (struct dvb_frontend *fe,
     return ret;
 
   return cx24116_set_params (fe, &newfe);
+#else
+#warning set_frontend must be implemented
+  return ret;
+#endif
 }
+
+#if DVB_API_VERSION >= 5
+static int cx24116_tune(struct dvb_frontend *fe, struct dvb_frontend_parameters *params,
+	unsigned int mode_flags, unsigned int *delay, fe_status_t *status)
+{
+	*delay = HZ / 5;
+	if (params) {
+		int ret = cx24116_set_frontend(fe, params);
+		if (ret)
+			return ret;
+	}
+	return cx24116_read_status(fe, status);
+}
+
+static int cx24116_set_property(struct dvb_frontend *fe,
+	struct dtv_property *tvp)
+{
+	dprintk(10, "%s(..)\n", __func__);
+	return 0;
+}
+
+static int cx24116_get_property(struct dvb_frontend *fe,
+	struct dtv_property *tvp)
+{
+	dprintk(10, "%s(..)\n", __func__);
+	return 0;
+}
+#endif
 
 static int
 cx24116_fe_init (struct dvb_frontend *fe)
@@ -2102,6 +2188,7 @@ cx24116_set_voltage (struct dvb_frontend *fe, fe_sec_voltage_t voltage)
   return ret;
 }
 
+#if DVB_API_VERSION < 5
 
 static int
 cx24116_get_info (struct dvb_frontend *fe, struct dvbfe_info *fe_info)
@@ -2143,6 +2230,13 @@ cx24116_get_algo (struct dvb_frontend *fe)
   dprintk (10, "%s()\n", __FUNCTION__);
   return DVBFE_ALGO_SW;
 }
+#else
+static int cx24116_get_algo(struct dvb_frontend *fe)
+{
+  dprintk (10, "%s()\n", __FUNCTION__);
+  return DVBFE_ALGO_HW;
+}
+#endif
 
 static struct dvb_frontend_ops dvb_cx24116_fe_qpsk_ops;
 
@@ -2629,10 +2723,6 @@ static struct dvb_frontend_ops dvb_cx24116_fe_qpsk_ops = {
 
   .init = cx24116_fe_init,
   .sleep = cx24116_sleep,
-
-  .set_frontend = cx24116_set_frontend,
-  .get_frontend = cx24116_get_frontend,
-
   .read_status = cx24116_read_status,
   .read_ber = cx24116_read_ber,
   .read_signal_strength = cx24116_read_signal_strength,
@@ -2645,14 +2735,22 @@ static struct dvb_frontend_ops dvb_cx24116_fe_qpsk_ops = {
   .diseqc_send_master_cmd = cx24116_send_diseqc_msg,
   .diseqc_send_burst = cx24116_diseqc_send_burst,
 
-  .get_tune_settings = cx24116_get_tune_settings,
+  .get_frontend_algo = cx24116_get_algo,
+  .set_frontend = cx24116_set_frontend,
 
+#if DVB_API_VERSION < 5
+  .get_tune_settings = cx24116_get_tune_settings,
+  .get_frontend = cx24116_get_frontend,
   .get_info = cx24116_get_info,
   .get_delsys = cx24116_get_delsys,
-  .get_frontend_algo = cx24116_get_algo,
-
   .set_params = cx24116_set_params,
   .get_params = cx24116_get_params,
+#else
+  .tune = cx24116_tune,
+  .set_property = cx24116_set_property,
+  .get_property = cx24116_get_property,
+
+#endif
 };
 
 int __init cx24116_init(void)
