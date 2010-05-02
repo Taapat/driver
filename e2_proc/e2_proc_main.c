@@ -564,7 +564,7 @@ int install_e2_procs(char *path, read_proc_t *read_func, write_proc_t *write_fun
 EXPORT_SYMBOL(install_e2_procs);
 
 
-int cpp_install_e2_procs(char *path, read_proc_t *read_func, write_proc_t *write_func, void* instance)
+int cpp_install_e2_procs(const char *path, read_proc_t *read_func, write_proc_t *write_func, void* instance)
 {
   int i;
 
@@ -654,7 +654,7 @@ int remove_e2_procs(char *path, read_proc_t *read_func, write_proc_t *write_func
 
 EXPORT_SYMBOL(remove_e2_procs);
 
-int cpp_remove_e2_procs(char *path, read_proc_t *read_func, write_proc_t *write_func)
+int cpp_remove_e2_procs(const char *path, read_proc_t *read_func, write_proc_t *write_func)
 {
   int i;
 

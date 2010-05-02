@@ -196,7 +196,7 @@ CollatorStatus_t   Collator_PesFrame_c::Input  (PlayerInputDescriptor_t*        
         COLLATOR_DEBUG ("%s: PlaybackTimeValid %d, PlaybackTime %llx\n", __FUNCTION__, PlaybackTimeValid, PlaybackTime);
     }
 
-    if (PayloadLength > RemainingDataLength)            // Too much data - have some packets been lost?
+    if (RemainingDataLength < 0 || PayloadLength > RemainingDataLength) // Too much data - have some packets been lost?
     {
         if (RemainingDataLength != 0)
         {

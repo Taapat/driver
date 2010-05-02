@@ -319,7 +319,7 @@ int stm_tsm_inject_user_data(const char __user *data, off_t size)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
   dma_unmap_sg(NULL, sg, nr_pages, DMA_TO_DEVICE);
 #else
-#warning FIXME, skipping dma_unmap_sg
+#warning FIXME, STM24, skipping dma_unmap_sg
 /* dma_unmap_sg(NULL, sg, nr_pages, DMA_TO_DEVICE); */
 #endif
 

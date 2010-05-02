@@ -516,13 +516,14 @@ bool CSTb710xHDMI::SetInputSource(ULONG src)
 
 bool CSTb710xHDMI::PreAuth() const
 {
-  if (GNBvd47682_USE_VSYNC_WORKAROUND)
+  if (GNBvd47682_USE_VSYNC_WORKAROUND) {
     if (ReadHDMIReg(STM_HDMI_CFG) & STM_HDMI_CFG_CP_EN) {
       m_pVTG1->DisableSyncs();
       return true;
     } else {
       return false;
     }
+  }
 
   return true;
 }

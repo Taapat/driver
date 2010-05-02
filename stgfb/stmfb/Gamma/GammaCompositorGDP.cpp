@@ -743,7 +743,7 @@ bool CGammaCompositorGDP::setOutputViewport(GENERIC_GDP_LLU_NODE    &topNode,
    * by the active video area.
    */
   ULONG horizontalInputSamples = (qbinfo.horizontalFilterOutputSamples * qbinfo.hsrcinc) / m_fixedpointONE;
-  if(horizontalInputSamples > qbinfo.src.width)
+  if(qbinfo.src.width < 0 || horizontalInputSamples > (ULONG) qbinfo.src.width)
     horizontalInputSamples = qbinfo.src.width;
 
   DEBUGF2(3,("%s: H input samples = %lu V input samples = %lu\n",__PRETTY_FUNCTION__,horizontalInputSamples, qbinfo.verticalFilterInputSamples));

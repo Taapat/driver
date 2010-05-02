@@ -21,6 +21,10 @@ CCFLAGSY+= -fno-exceptions
 ## Somebody is using c++ in c code.
 CCFLAGSY+= -fno-rtti
 
+ifeq ($(CONFIG_CPU_SUBTYPE_STX7100),y)
+CCFLAGSY += -DCONFIG_CPU_SUBTYPE_STB7100
+endif
+
 ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
 ccflags-y += $(CCFLAGSY)
 else

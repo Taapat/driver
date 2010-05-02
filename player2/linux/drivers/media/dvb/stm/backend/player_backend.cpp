@@ -688,8 +688,6 @@ int DisplayCreate      (char*           Media,
 int isDisplayCreated (char*           Media,
                       unsigned int    SurfaceId)
 {
-    class HavanaDisplay_c*      Display;
-
     PLAYER_DEBUG("SurfaceId  = %d\n", SurfaceId);
 
     return (HavanaPlayer->isDisplayCreated (Media, SurfaceId));

@@ -49,7 +49,7 @@ int proc_stream_AV_SYNC_write(struct file *file, const char __user *buf, unsigne
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -125,7 +125,7 @@ int proc_stream_TRICK_MODE_AUDIO_write(struct file *file, const char __user *buf
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -202,7 +202,7 @@ int proc_stream_PLAY_24FPS_VIDEO_AT_25FPS_write(struct file *file, const char __
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -279,7 +279,7 @@ int proc_stream_MASTER_CLOCK_write(struct file *file, const char __user *buf, un
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -356,7 +356,7 @@ int proc_stream_EXTERNAL_TIME_MAPPING_write(struct file *file, const char __user
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -433,7 +433,7 @@ int proc_stream_DISPLAY_FIRST_FRAME_EARLY_write(struct file *file, const char __
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -508,7 +508,7 @@ int proc_stream_STREAM_ONLY_KEY_FRAMES_write(struct file *file, const char __use
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -584,7 +584,7 @@ int proc_stream_STREAM_SINGLE_GROUP_BETWEEN_DISCONTINUITIES_write(struct file *f
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -660,7 +660,7 @@ int proc_stream_PLAYOUT_ON_TERMINATE_write(struct file *file, const char __user 
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -736,7 +736,7 @@ int proc_stream_PLAYOUT_ON_SWITCH_write(struct file *file, const char __user *bu
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -812,7 +812,7 @@ int proc_stream_PLAYOUT_ON_DRAIN_write(struct file *file, const char __user *buf
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -900,7 +900,7 @@ int proc_stream_TRICK_MODE_DOMAIN_write(struct file *file, const char __user *bu
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -1033,7 +1033,7 @@ int proc_stream_DISCARD_LATE_FRAMES_write(struct file *file, const char __user *
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -1119,7 +1119,7 @@ int proc_stream_REBASE_ON_DATA_DELIVERY_LATE_write(struct file *file, const char
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -1195,7 +1195,7 @@ int proc_stream_REBASE_ON_FRAME_DECODE_LATE_write(struct file *file, const char 
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -1271,7 +1271,7 @@ int proc_stream_LOWER_CODEC_DECODE_LIMITS_ON_FRAME_DECODE_LATE_write(struct file
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -1347,7 +1347,7 @@ int proc_stream_H264_ALLOW_NON_IDR_RESYNCHRONIZATION_write(struct file *file, co
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -1423,7 +1423,7 @@ int proc_stream_MPEG2_IGNORE_PROGESSIVE_FRAME_FLAG_write(struct file *file, cons
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 

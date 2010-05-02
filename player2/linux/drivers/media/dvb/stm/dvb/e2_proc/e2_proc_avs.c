@@ -27,16 +27,19 @@
 #include <sound/rawmidi.h>
 #include <sound/initval.h>
 
+struct stmfb_info;
+struct stmfbio_output_configuration;
+
 extern struct snd_kcontrol ** pseudoGetControls(int* numbers);
-static int snd_pseudo_integer_get(struct snd_kcontrol *kcontrol,
+extern int snd_pseudo_integer_get(struct snd_kcontrol *kcontrol,
 				struct snd_ctl_elem_value *ucontrol);
-static int snd_pseudo_integer_put(struct snd_kcontrol *kcontrol,
+extern int snd_pseudo_integer_put(struct snd_kcontrol *kcontrol,
 				struct snd_ctl_elem_value *ucontrol);
 extern int avs_command_kernel(unsigned int cmd, void *arg);
 
 extern int stmfb_set_output_configuration(struct stmfbio_output_configuration *c, struct stmfb_info *i);
 extern int stmfb_get_output_configuration(struct stmfbio_output_configuration *c, struct stmfb_info *i);
-struct stmfb_info* stmfb_get_fbinfo_ptr();
+struct stmfb_info* stmfb_get_fbinfo_ptr(void);
 
 //stgfb.h
 struct stmfbio_output_configuration
@@ -108,9 +111,8 @@ int proc_avs_0_volume_write(struct file *file, const char __user *buf,
 	char 		*page;
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
-	int		result;
 
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page)
@@ -199,7 +201,7 @@ int proc_avs_0_volume_write(struct file *file, const char __user *buf,
 		}
 
 		if(current_input == 1)
-	  		avs_command_kernel(AVSIOSVOL, current_volume);
+	  		avs_command_kernel(AVSIOSVOL, (void*) current_volume);
 
 		kfree(myString);
 	}
@@ -238,9 +240,9 @@ int proc_avs_0_input_write(struct file *file, const char __user *buf,
 	char 		*page;
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
-	int		result;
+	/* int		result; */
 
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page)
@@ -259,17 +261,17 @@ int proc_avs_0_input_write(struct file *file, const char __user *buf,
 	    	{
 			avs_command_kernel(SAAIOSSRCSEL, SAA_SRC_ENC);
 #if defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI_FTA) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(TF7700) || defined(UFS922) || defined(HL101) || defined(HOMECAST5101)
-			avs_command_kernel(AVSIOSVOL, current_volume);
+			avs_command_kernel(AVSIOSVOL, (void*) current_volume);
 #else
-			avs_command_kernel(AVSIOSVOL, 31);
+			avs_command_kernel(AVSIOSVOL, (void*) 31);
 #endif
 			current_input = 0;
 		}
 
 	    	if(!strncmp("scart", myString, count - 1))
 	    	{
-	      		avs_command_kernel(SAAIOSSRCSEL, SAA_SRC_SCART);
-	      		avs_command_kernel(AVSIOSVOL, current_volume);
+	      		avs_command_kernel(SAAIOSSRCSEL, (void*) SAA_SRC_SCART);
+	      		avs_command_kernel(AVSIOSVOL, (void*) current_volume);
 	      		current_input = 1;
 	    	}
 
@@ -304,9 +306,9 @@ int proc_avs_0_fb_write(struct file *file, const char __user *buf,
 	char 		*page;
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
-	int		result;
+	/* int		result; */
 
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page)
@@ -349,15 +351,13 @@ int proc_avs_0_colorformat_write(struct file *file, const char __user *buf,
 	char 		*page;
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
-	int		result;
 
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page)
 	{
-		void* fb =  stmfb_get_fbinfo_ptr();
-		struct fb_info *info = (struct fb_info*) fb;
+		struct fb_info *info = stmfb_get_fbinfo_ptr();
 
 		struct stmfbio_output_configuration outputConfig;
 		int err = 0;
@@ -462,7 +462,7 @@ int proc_avs_0_colorformat_write(struct file *file, const char __user *buf,
 
 			err = stmfb_set_output_configuration(&outputConfig, info);
 			if (err != 0) {
-				printk("SET SCART COLOR - %d - ", count);
+				printk("SET SCART COLOR - %ld - ", count);
 			}
 
 		} else {
@@ -480,7 +480,7 @@ int proc_avs_0_colorformat_write(struct file *file, const char __user *buf,
 
 			err = stmfb_set_output_configuration(&outputConfig, info);
 			if (err != 0) {
-				printk("SET SCART COLOR - %d - ", count);
+				printk("SET SCART COLOR - %ld - ", count);
 			}
 		}
 
@@ -500,13 +500,9 @@ out:
 int proc_avs_0_colorformat_read (char *page, char **start, off_t off, int count,
 			  int *eof, void *data_unused)
 {
-	void* fb =  stmfb_get_fbinfo_ptr();
-	struct fb_info *info = (struct fb_info*) fb;
+	struct stmfb_info *info = stmfb_get_fbinfo_ptr();
 
 	struct stmfbio_output_configuration outputConfig;
-	int err = 0;
-	int alpha = 0;
-	int hdmi_colour = 0;
 	int len = 0;
 	printk("%s %d\n", __FUNCTION__, count);
 
@@ -552,9 +548,9 @@ int proc_avs_0_sb_write(struct file *file, const char __user *buf,
 	char 		*page;
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
-	int		result;
+	/* int		result; */
 
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page)
@@ -597,9 +593,9 @@ int proc_avs_0_standby_write(struct file *file, const char __user *buf,
 	char 		*page;
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
-	int		result;
+	/* int		result; */
 
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page)
@@ -622,7 +618,7 @@ int proc_avs_0_standby_write(struct file *file, const char __user *buf,
                         current_standby = 0;
 		}
 
-		avs_command_kernel(AVSIOSTANDBY, current_standby);
+		avs_command_kernel(AVSIOSTANDBY, (void*) current_standby);
 
 		kfree(myString);
 		//result = sscanf(page, "%3s %3s %3s %3s %3s", s1, s2, s3, s4, s5);

@@ -90,6 +90,7 @@ EXPORT_SYMBOL(stm_v4l2_unregister_driver);
 /************************************************
  *  v4l2_open
  ************************************************/
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static int v4l2_open(struct inode *inode, struct file *file)
 {
   unsigned int     minor            = iminor(inode);
@@ -106,12 +107,23 @@ static int v4l2_open(struct inode *inode, struct file *file)
 
   return 0;
 }
+#else /* >= 2.6.30 */
+static int v4l2_open(struct file *file)
+{
+  file->private_data = NULL;
+  return 0;
+}
+#endif /* >= 2.6.30 */
 
 
 /************************************************
  *  v4l2_close
  ************************************************/
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static int v4l2_close(struct inode *inode, struct file *file)
+#else
+static int v4l2_close(struct file *file)
+#endif
 {
   struct stm_v4l2_handles *handle = file->private_data;
 //  unsigned int     minor          = iminor(inode);
@@ -151,10 +163,16 @@ static struct stm_v4l2_handles *alloc_handle(void)
 /************************************************
  *  stm_v4l2_do_ioctl
  ************************************************/
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static int stm_v4l2_do_ioctl(struct inode *inode, struct file  *file, unsigned int  cmd, void *arg)
+#else
+static long stm_v4l2_do_ioctl(struct file  *file, unsigned int  cmd, void *arg)
+#endif
 {
   struct stm_v4l2_handles *handle = file->private_data;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
   unsigned int     minor          = iminor(inode);
+#endif
   int ret = 0;
   int type = -1,index  = -1;
   int n;
@@ -415,6 +433,9 @@ static int stm_v4l2_do_ioctl(struct inode *inode, struct file  *file, unsigned i
     // If it is a control let's deal with that
     if (type==STM_V4L2_MAX_TYPES) {
       for (n=0;n<number_drivers;n++)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
+#warning FIXME, STM24, how to cope with minor?
+#else
 	if (index >= drivers[n].control_start_index[minor] && index < (drivers[n].control_start_index[minor] + drivers[n].number_controls[minor]))
 	  {
 	    struct v4l2_control *control = arg;
@@ -424,6 +445,7 @@ static int stm_v4l2_do_ioctl(struct inode *inode, struct file  *file, unsigned i
 	    control->id += drivers[n].control_start_index[minor];
 	    return ret;
 	  }
+#endif
       return -EINVAL;
     }
 
@@ -435,6 +457,9 @@ static int stm_v4l2_do_ioctl(struct inode *inode, struct file  *file, unsigned i
 
       		for (n=0;n<number_drivers;n++) {
 				if (type == -1 || type == drivers[n].type) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
+#warning FIXME, STM24, how to cope with minor?
+#else
 				  ret = drivers[n].ioctl(handle,&drivers[n],minor,drivers[n].type,file,cmd,arg);
 	  				if (handle->v4l2type[drivers[n].type].handle) {
 	    				if (ret) printk("%s: BUG ON... can't set a handle and return an error\n",__FUNCTION__);
@@ -451,6 +476,7 @@ static int stm_v4l2_do_ioctl(struct inode *inode, struct file  *file, unsigned i
 				    if (!file->private_data) memset(handle,0,sizeof(struct stm_v4l2_handles));
 				    return ret;
 				  }
+#endif
 			}
 		}
 
@@ -464,7 +490,11 @@ static int stm_v4l2_do_ioctl(struct inode *inode, struct file  *file, unsigned i
     {
       if (handle->v4l2type[type].driver)
       {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
+#warning FIXME, STM24, how to cope with minor?
+#else
 	return handle->v4l2type[type].driver->ioctl(handle,handle->v4l2type[type].driver,minor,type,file,cmd,arg);
+#endif
       }
       else
       {
@@ -474,8 +504,12 @@ static int stm_v4l2_do_ioctl(struct inode *inode, struct file  *file, unsigned i
 
     for (n=0;n<STM_V4L2_MAX_TYPES;n++)
       if (handle->v4l2type[n].driver)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
+#warning FIXME, STM24, how to cope with minor?
+#else
 	if (!handle->v4l2type[n].driver->ioctl(handle,handle->v4l2type[n].driver,minor,n,file,cmd,arg))
-	  return 0;
+#endif
+      	  return 0;
 
     return -ENODEV;
 }
@@ -484,14 +518,17 @@ static int stm_v4l2_do_ioctl(struct inode *inode, struct file  *file, unsigned i
  * v4l2_ioctl - ioctl via standard helper proxy to manage
  *              the argument copying to and from userspace
  *********************************************************/
-static int stm_v4l2_ioctl(struct inode *inode, struct file  *file, unsigned int  cmd, unsigned long arg)
-{
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+static int stm_v4l2_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg)
+{
   return video_usercopy(inode, file, cmd, arg, stm_v4l2_do_ioctl);
-#else // FIXME
-  return video_usercopy(file, cmd, arg, stm_v4l2_do_ioctl);
-#endif
 }
+#else
+static long stm_v4l2_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+  return video_usercopy(file, cmd, arg, stm_v4l2_do_ioctl);
+}
+#endif
 
 
 /************************************************
@@ -536,12 +573,19 @@ void v4l2_vdev_release (struct video_device *vdev)
    */
 }
 
-static struct file_operations v4l2_fops = {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+static struct file_operations v4l2_fops = 
+#else
+static struct v4l2_file_operations v4l2_fops = 
+#endif
+{
 	.owner   = THIS_MODULE,
 	.open    = v4l2_open,
 	.release = v4l2_close,
 	.ioctl   = stm_v4l2_ioctl,
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	.llseek  = no_llseek,
+#endif
 	.read    = NULL,
 	.write   = NULL,
 	.mmap    = v4l2_mmap,

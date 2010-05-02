@@ -24,9 +24,9 @@ int proc_fp_lnb_sense1_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int		result;
+	/* int		result; */
 	
-	printk("%s %d\n", __FUNCTION__, count);
+	printk("%s %ld\n", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -59,9 +59,9 @@ int proc_fp_lnb_sense2_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int		result;
+	/* int		result; */
 	
-	printk("%s %d\n", __FUNCTION__, count);
+	printk("%s %ld\n", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -95,9 +95,9 @@ int proc_fp_led0_pattern_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int		result;
+	/* int		result; */
 	
-	printk("%s %d\n", __FUNCTION__, count);
+	printk("%s %ld\n", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -130,9 +130,9 @@ int proc_fp_led_pattern_speed_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int		result;
+	/* int		result; */
 	
-	printk("%s %d\n", __FUNCTION__, count);
+	printk("%s %ld\n", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -183,9 +183,9 @@ int proc_fp_wakeup_time_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int		result;
+	/* int		result; */
 	
-	printk("%s %d\n", __FUNCTION__, count);
+	printk("%s %ld\n", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -217,18 +217,19 @@ int proc_fp_was_timer_wakeup_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int		result;
+	/* int		result; */
 	
-	printk("%s %d\n", __FUNCTION__, count);
+	printk("%s %ld\n", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
 	{
+		char* myString;
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
 			goto out;
 			
-		char* myString = (char *) kmalloc(count + 1, GFP_KERNEL);
+		myString = (char *) kmalloc(count + 1, GFP_KERNEL);
 		strncpy(myString, page, count);
 		myString[count] = '\0';
 

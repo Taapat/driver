@@ -390,7 +390,7 @@ public:
 
     Rational_c   operator* (	int	V )
     {
-	Rational_c	Product( Numerator * Abs(V), Denominator, min(Denominator,Abs(V)), (V < 0) ^ Negative );
+	Rational_c	Product( Numerator * (unsigned int) Abs(V), Denominator, min(Denominator,(unsigned int) Abs(V)), (V < 0) ^ Negative );
 	return Product;
     }
 

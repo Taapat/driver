@@ -34,7 +34,7 @@ struct platform_device h264pp_device_7109 = {
 	.name          = "h264pp",
 	.id            = -1,
 	.num_resources = ARRAY_SIZE(h264pp_resource_7109),
-	.resource      = &h264pp_resource_7109
+	.resource      = h264pp_resource_7109
 };
 
 static struct platform_device *platform_7109[] __initdata = {
@@ -59,7 +59,7 @@ struct platform_device h264pp_device_7100 = {
 	.name          = "h264pp",
 	.id            = -1,
 	.num_resources = ARRAY_SIZE(h264pp_resource_7100),
-	.resource      = &h264pp_resource_7100
+	.resource      = h264pp_resource_7100
 };
 
 static struct platform_device *platform_7100[] __initdata = {

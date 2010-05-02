@@ -173,7 +173,7 @@ CollatorStatus_t Collator_PesAudioDtshd_c::FindAnyNextSyncWord( int *CodeOffset,
 
       if ( (SyncWord == DTSHD_START_CODE_CORE) || 
 	  (SyncWord == DTSHD_START_CODE_SUBSTREAM) || 
-	  (SyncWord == DTSHD_START_CODE_CORE_14_1) && (Bits.Show(6) == DTSHD_START_CODE_CORE_14_2))
+	  ((SyncWord == DTSHD_START_CODE_CORE_14_1) && (Bits.Show(6) == DTSHD_START_CODE_CORE_14_2)))
 	{
 	  *Type = (SyncWord == DTSHD_START_CODE_SUBSTREAM)?TypeDtshdExt:TypeDtshdCore;
 	  *CodeOffset = (RemainingInPotential > 0)?(-RemainingInPotential):(i-FrameHeaderLength);

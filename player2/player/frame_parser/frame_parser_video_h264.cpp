@@ -2766,8 +2766,8 @@ unsigned int		 ConsumedSize;
 FrameParserStatus_t   FrameParser_VideoH264_c::ReadPlayer2ContainerParameters( void )
 {
 unsigned char	ParametersVersion;
-unsigned int	TimeScale;
-unsigned int	TimeDelta;
+unsigned int    TimeScale = TimeScale;
+unsigned int    TimeDelta = TimeDelta;
 
 //
 
@@ -3991,8 +3991,8 @@ bool			ApplyTwoRefTestForBframes;
 
 	ApplyTwoRefTestForBframes	= !SeenAnIDR || (PlaybackDirection == PlayBackward);
 
-	if( (Status == FrameParserNoError) &&
-	    ((ParsedVideoParameters->SliceType != SliceTypeI) && ((NumShortTerm + NumLongTerm) < 1)) ||
+	if( ((Status == FrameParserNoError) &&
+	    ((ParsedVideoParameters->SliceType != SliceTypeI) && ((NumShortTerm + NumLongTerm) < 1))) ||
 	    (ApplyTwoRefTestForBframes && (ParsedVideoParameters->SliceType == SliceTypeB) && ((NumShortTerm + NumLongTerm) < 2)) )
 	    Status	= FrameParserInsufficientReferenceFrames;
 

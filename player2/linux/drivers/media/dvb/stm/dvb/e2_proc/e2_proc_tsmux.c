@@ -182,16 +182,18 @@ int proc_tsmux_ci0_input_read (char *page, char **start, off_t off, int count,
 			  int *eof, void *data_unused)
 {
 	int len = 0;
-	int source = 0;
 	printk("%s\n", __FUNCTION__);
 
 #if defined(UFS922)
-	getCiSource(0, &source);
+	{
+		int source = 0;
+		getCiSource(0, &source);
 
-	if (source == 0)
-		len = sprintf(page, "A\n");
-	else
-		len = sprintf(page, "B\n");
+		if (source == 0)
+			len = sprintf(page, "A\n");
+		else
+			len = sprintf(page, "B\n");
+	}
 #endif
 
         return len;
@@ -234,16 +236,18 @@ int proc_tsmux_ci1_input_read (char *page, char **start, off_t off, int count,
 			  int *eof, void *data_unused)
 {
 	int len = 0;
-	int source = 0;
 	printk("%s\n", __FUNCTION__);
 
 #if defined(UFS922)
-	getCiSource(1, &source);
+	{
+		int source = 0;
+		getCiSource(1, &source);
 
-	if (source == 0)
-		len = sprintf(page, "A\n");
-	else
-		len = sprintf(page, "B\n");
+		if (source == 0)
+			len = sprintf(page, "A\n");
+		else
+			len = sprintf(page, "B\n");
+	}
 #endif
 
         return len;

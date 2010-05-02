@@ -47,26 +47,28 @@ CGenericGammaDevice::CGenericGammaDevice(void): CDisplayDevice()
 
 CGenericGammaDevice::~CGenericGammaDevice()
 {
+  int i;
+  unsigned u;
   DEBUGF2(2,("CGenericGammaDevice::~CGenericGammaDevice()\n"));
 
-  for(int i=0;i<m_numPlanes;i++)
+  for(i=0;i<m_numPlanes;i++)
   {
     delete m_hwPlanes[i];
   }
 
   DEBUGF2(2,("CGenericGammaDevice::~CGenericGammaDevice() deleted all planes\n"));
 
-  for(unsigned i=0;i<m_numAccelerators;i++)
+  for(i=0;i<m_numAccelerators;i++)
   {
     delete m_graphicsAccelerators[i];
   }
 
   DEBUGF2(2,("CGenericGammaDevice::~CGenericGammaDevice() deleted graphics engines\n"));
 
-  for (int i = 0; i < CDISPLAYDEVICE_MAX_OUTPUTS; i++)
+  for (u = 0; u < CDISPLAYDEVICE_MAX_OUTPUTS; u++)
   {
-    delete m_pOutputs[i];	
-    m_pOutputs[i] = 0L;	
+    delete m_pOutputs[u];	
+    m_pOutputs[u] = 0L;	
   }
 
   m_nOutputs = 0;

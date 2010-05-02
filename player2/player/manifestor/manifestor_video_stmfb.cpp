@@ -39,8 +39,8 @@ extern "C" {
 	__attribute__ ((format (scanf, 2, 3)));
 
 //Dagobert
-  extern int cpp_install_e2_procs(char *path, read_proc_t *read_func, write_proc_t *write_func, void* instance);
-  extern int cpp_remove_e2_procs(char *path, read_proc_t *read_func, write_proc_t *write_func);
+  extern int cpp_install_e2_procs(const char *path, read_proc_t *read_func, write_proc_t *write_func, void* instance);
+  extern int cpp_remove_e2_procs(const char *path, read_proc_t *read_func, write_proc_t *write_func);
 #endif
 };
 
@@ -664,7 +664,7 @@ int Manifestor_VideoStmfb_c::get_psi_brightness(char *page, char **start, off_t 
 
         if ((err = stm_display_plane_get_control(Plane, PLANE_CTRL_PSI_BRIGHTNESS, &value)) == 0)
 	{
-		len = sprintf(page, "%d\n", value);
+		len = sprintf(page, "%ld\n", value);
 	} else
            MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
 
@@ -718,7 +718,7 @@ int Manifestor_VideoStmfb_c::get_psi_saturation(char *page, char **start, off_t 
 
         if ((err = stm_display_plane_get_control(Plane, PLANE_CTRL_PSI_SATURATION, &value)) == 0)
 	{
-		len = sprintf(page, "%d\n", value);
+		len = sprintf(page, "%ld\n", value);
 	} else
            MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
 
@@ -772,7 +772,7 @@ int Manifestor_VideoStmfb_c::get_psi_contrast(char *page, char **start, off_t of
 
         if ((err = stm_display_plane_get_control(Plane, PLANE_CTRL_PSI_CONTRAST, &value)) == 0)
 	{
-		len = sprintf(page, "%d\n", value);
+		len = sprintf(page, "%ld\n", value);
 	} else
            MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
 
@@ -826,7 +826,7 @@ int Manifestor_VideoStmfb_c::get_psi_tint(char *page, char **start, off_t off, i
 
         if ((err = stm_display_plane_get_control(Plane, PLANE_CTRL_PSI_TINT, &value)) == 0)
 	{
-		len = sprintf(page, "%d\n", value);
+		len = sprintf(page, "%ld\n", value);
 	} else
            MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
 

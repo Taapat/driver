@@ -23,6 +23,7 @@
 
 #include <asm/io.h>
 
+#include "dvb_module.h"
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #include "../../../../../../pti/pti_hal.h"
 #include <linux/bpa2.h>
@@ -389,6 +390,7 @@ void ptiInit ( struct DeviceContext_s *pContext )
 
   struct PtiSession *pSession;
   int tag;
+  int i;
 
   printk ( "%s context = %p, demux = %p\n",  __FUNCTION__,
            pContext, &pContext->DvbDemux);
@@ -453,7 +455,6 @@ void ptiInit ( struct DeviceContext_s *pContext )
   // get new descrambler handle
   pSession->descrambler = pti_hal_get_new_descrambler(pSession->session);
   pSession->descramblers[0] = pSession->descrambler;
-  int i;
   for(i=1;i<NUMBER_OF_DESCRAMBLERS;i++)
   	pSession->descramblers[i] = pti_hal_get_new_descrambler(pSession->session);
 

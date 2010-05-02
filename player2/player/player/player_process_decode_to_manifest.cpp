@@ -64,7 +64,7 @@ unsigned int                      MaxDecodesOutOfOrder;
 PlayerSequenceNumber_t           *SequenceNumberStructure;
 unsigned long long                LastEntryTime;
 unsigned long long                SequenceNumber;
-unsigned long long                MinumumSequenceNumberAccumulated;
+unsigned long long                MinumumSequenceNumberAccumulated = MinumumSequenceNumberAccumulated;
 unsigned long long                MaximumActualSequenceNumberSeen;
 unsigned long long                Time;
 unsigned int                      AccumulatedBeforeControlMessagesCount;

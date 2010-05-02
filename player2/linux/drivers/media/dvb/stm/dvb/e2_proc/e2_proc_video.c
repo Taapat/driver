@@ -1,7 +1,8 @@
 /* 
  * e2_proc_video.c
  */
- 
+
+#include <linux/version.h>
 #include <linux/proc_fs.h>  	/* proc fs */ 
 #include <asm/uaccess.h>    	/* copy_from_user */
 
@@ -11,13 +12,8 @@
 #include <linux/smp_lock.h>
 #include <linux/string.h>
 #include <linux/fb.h>
-#define STMFBIO_VAR_CAPS_OPACITY        (1L<<4)
 
-extern int stmfb_set_var_ex   (struct stmfbio_var_screeninfo_ex *v, struct stmfb_info *i);
-extern int isDisplayCreated (char*           Media,
-                      unsigned int    SurfaceId);
-extern struct stmfb_info* stmfb_get_fbinfo_ptr();
-extern int avs_command_kernel(unsigned int cmd, void *arg);
+#define STMFBIO_VAR_CAPS_OPACITY        (1L<<4)
 
 struct stmfbio_var_screeninfo_ex
 {
@@ -53,6 +49,14 @@ struct stmfbio_var_screeninfo_ex
 
   __u32 z_position;                   /* STMFBIO_VAR_CAPS_ZPOSITION           */
 };
+
+struct stmfb_info;
+
+extern int stmfb_set_var_ex   (struct stmfbio_var_screeninfo_ex *v, struct stmfb_info *i);
+extern int isDisplayCreated (char*           Media,
+                      unsigned int    SurfaceId);
+extern struct stmfb_info* stmfb_get_fbinfo_ptr(void);
+extern int avs_command_kernel(unsigned int cmd, void *arg);
 
 #include "../backend.h"
 #include "../dvb_module.h"
@@ -259,7 +263,7 @@ int proc_video_policy_get(void) {
 	   }
 
 	   //SCART
-	   avs_command_kernel(SAAIOSWSS, aspect_e2==VIDEO_FORMAT_16_9?SAA_WSS_169F:SAA_WSS_43F);
+	   avs_command_kernel(SAAIOSWSS, (void*) (aspect_e2==VIDEO_FORMAT_16_9?SAA_WSS_169F:SAA_WSS_43F));
 
 	}
 /* Dagobert: You cannot use this semaphore here because this will be called from
@@ -283,11 +287,15 @@ int proc_video_aspect_write(struct file *file, const char __user *buf,
 	char 		*page;
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
-	int		result;
+	/* int		result; */
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	printk("%p, %p, %d, %p", ProcDeviceContext, ProcDeviceContext->DvbContext, ProcDeviceContext->DvbContext->Lock, ProcDeviceContext->VideoStream);
+#else
+	printk("%p, %p, %d, %p", ProcDeviceContext, ProcDeviceContext->DvbContext, ProcDeviceContext->DvbContext->Lock.count.counter, ProcDeviceContext->VideoStream);
+#endif
 
     	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
@@ -384,7 +392,7 @@ int proc_video_policy_write(struct file *file, const char __user *buf,
 	ssize_t 	ret = -ENOMEM;
 	int		result;
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
     	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
@@ -479,18 +487,20 @@ int proc_video_videomode_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int		result, vLoop;
+	/* int		result; */
+	int		vLoop;
         int             new_count;
 	
 	char* myString = kmalloc(count + 1, GFP_KERNEL);
 
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
     	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
 	{
+		int modeToSet = -1;	
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
 			goto out;
@@ -507,7 +517,6 @@ int proc_video_videomode_write(struct file *file, const char __user *buf,
 
 		printk("%s\n", myString);
 
-		int modeToSet = -1;	
 		for (vLoop = 0; vLoop < sizeof(Options) / sizeof(struct Modes); vLoop++)
 		{	
 			if (strncmp(myString, Options[vLoop].name, new_count) == 0)
@@ -527,11 +536,12 @@ int proc_video_videomode_write(struct file *file, const char __user *buf,
 			struct fb_var_screeninfo screen_info;
 			int createNew = 0;
 
-
 			memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
 		
 			if (fb != NULL)
 			{
+				int err;
+
 				/* otherwise we got EBUSY from stmfb device */
 				/* Dagobert: Bugfix: "demux stop" bug; ticket #10 */
 				if (ProcDeviceContext != NULL)
@@ -565,7 +575,7 @@ int proc_video_videomode_write(struct file *file, const char __user *buf,
 				screen_info.vmode = Options[modeToSet].vmode;
 				screen_info.activate = FB_ACTIVATE_FORCE;
 
-				int err = fb_set_var(fb, &screen_info);
+				err = fb_set_var(fb, &screen_info);
 				
 				if (err != 0)
 					printk("error setting new resolution %d\n", err);
@@ -669,17 +679,23 @@ int proc_video_pal_h_start_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int		result, value;
+	/* int		result; */
+	int		value;
 
 	char* myString = kmalloc(count + 1, GFP_KERNEL);
 
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
     	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
 	{
+		void* fb;
+		struct fb_info *info;
+		struct fb_var_screeninfo screen_info;
+		int createNew = 0;
+
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
 			goto out;
@@ -691,17 +707,16 @@ int proc_video_pal_h_start_write(struct file *file, const char __user *buf,
 
 		sscanf(myString, "%x", &value);
 
-		void* fb =  stmfb_get_fbinfo_ptr();
+		fb =  stmfb_get_fbinfo_ptr();
 			
-		struct fb_info *info = (struct fb_info*) fb;
-
-		struct fb_var_screeninfo screen_info;
-		int createNew = 0;
+		info = (struct fb_info*) fb;
 
 		memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
 		
 		if (fb != NULL)
 		{
+			int err;
+
 			/* otherwise we got EBUSY from stmfb device */
 			/* Dagobert: Bugfix: "demux stop" bug; ticket #10 */
 			if (ProcDeviceContext != NULL)
@@ -721,7 +736,7 @@ int proc_video_pal_h_start_write(struct file *file, const char __user *buf,
 				
 			screen_info.left_margin = value;
 		
-			int err = fb_set_var(fb, &screen_info);
+			err = fb_set_var(fb, &screen_info);
 				
 			if (err != 0)
 				printk("error setting new resolution %d\n", err);
@@ -764,17 +779,23 @@ int proc_video_pal_h_end_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int		result, value;
+	/* int		result; */
+	int		value;
 
 	char* myString = kmalloc(count + 1, GFP_KERNEL);
 
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
     	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
 	{
+		void* fb;
+		struct fb_info *info;
+		struct fb_var_screeninfo screen_info;
+		int createNew = 0;
+
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
 			goto out;
@@ -786,17 +807,16 @@ int proc_video_pal_h_end_write(struct file *file, const char __user *buf,
 
 		sscanf(myString, "%x", &value);
 
-		void* fb =  stmfb_get_fbinfo_ptr();
+		fb =  stmfb_get_fbinfo_ptr();
 			
-		struct fb_info *info = (struct fb_info*) fb;
-
-		struct fb_var_screeninfo screen_info;
-		int createNew = 0;
+		info = (struct fb_info*) fb;
 
 		memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
 		
 		if (fb != NULL)
 		{
+			int err;
+
 			/* otherwise we got EBUSY from stmfb device */
 			/* Dagobert: Bugfix: "demux stop" bug; ticket #10 */
 			if (ProcDeviceContext != NULL)
@@ -816,7 +836,7 @@ int proc_video_pal_h_end_write(struct file *file, const char __user *buf,
 				
 			screen_info.right_margin = value;
 		
-			int err = fb_set_var(fb, &screen_info);
+			err = fb_set_var(fb, &screen_info);
 				
 			if (err != 0)
 				printk("error setting new resolution %d\n", err);
@@ -859,17 +879,23 @@ int proc_video_pal_v_start_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int		result, value;
+	/* int		result; */
+	int		value;
 
 	char* myString = kmalloc(count + 1, GFP_KERNEL);
 
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
     	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
 	{
+		void *fb;
+		struct fb_info *info;
+		struct fb_var_screeninfo screen_info;
+		int createNew = 0;
+
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
 			goto out;
@@ -881,17 +907,16 @@ int proc_video_pal_v_start_write(struct file *file, const char __user *buf,
 
 		sscanf(myString, "%x", &value);
 
-		void* fb =  stmfb_get_fbinfo_ptr();
+		fb =  stmfb_get_fbinfo_ptr();
 			
-		struct fb_info *info = (struct fb_info*) fb;
-
-		struct fb_var_screeninfo screen_info;
-		int createNew = 0;
+		info = (struct fb_info*) fb;
 
 		memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
 		
 		if (fb != NULL)
 		{
+			int err;
+
 			/* otherwise we got EBUSY from stmfb device */
 			/* Dagobert: Bugfix: "demux stop" bug; ticket #10 */
 			if (ProcDeviceContext != NULL)
@@ -911,7 +936,7 @@ int proc_video_pal_v_start_write(struct file *file, const char __user *buf,
 				
 			screen_info.upper_margin = value;
 		
-			int err = fb_set_var(fb, &screen_info);
+			err = fb_set_var(fb, &screen_info);
 				
 			if (err != 0)
 				printk("error setting new resolution %d\n", err);
@@ -954,17 +979,23 @@ int proc_video_pal_v_end_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int		result, value;
+	/* int		result; */
+	int		value;
 
 	char* myString = kmalloc(count + 1, GFP_KERNEL);
 
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
     	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
 	{
+		void *fb;
+		struct fb_info *info;
+		struct fb_var_screeninfo screen_info;
+		int createNew = 0;
+
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
 			goto out;
@@ -976,17 +1007,16 @@ int proc_video_pal_v_end_write(struct file *file, const char __user *buf,
 
 		sscanf(myString, "%x", &value);
 
-		void* fb =  stmfb_get_fbinfo_ptr();
+		fb =  stmfb_get_fbinfo_ptr();
 			
-		struct fb_info *info = (struct fb_info*) fb;
-
-		struct fb_var_screeninfo screen_info;
-		int createNew = 0;
+		info = (struct fb_info*) fb;
 
 		memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
 		
 		if (fb != NULL)
 		{
+			int err;
+
 			/* otherwise we got EBUSY from stmfb device */
 			/* Dagobert: Bugfix: "demux stop" bug; ticket #10 */
 			if (ProcDeviceContext != NULL)
@@ -1006,7 +1036,7 @@ int proc_video_pal_v_end_write(struct file *file, const char __user *buf,
 				
 			screen_info.lower_margin = value;
 		
-			int err = fb_set_var(fb, &screen_info);
+			err = fb_set_var(fb, &screen_info);
 				
 			if (err != 0)
 				printk("error setting new resolution %d\n", err);
@@ -1137,9 +1167,9 @@ int proc_video_videomode_choices_write(struct file *file, const char __user *buf
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int		result;
+	/* int		result; */
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
     	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
@@ -1150,7 +1180,6 @@ int proc_video_videomode_choices_write(struct file *file, const char __user *buf
 		ret = count;	
 	}
 	
-out:
 	free_page((unsigned long)page);
     	mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
 	return ret;
@@ -1174,9 +1203,9 @@ int proc_video_videomode_preferred_write(struct file *file, const char __user *b
 	char 		*page;
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
-	int		result;
+	/* int		result; */
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
     	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
@@ -1219,15 +1248,14 @@ int proc_video_alpha_write(struct file *file, const char __user *buf,
 	char 		*page;
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
-	int		result;
+	/* int		result; */
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
 	{
-		void* fb =  stmfb_get_fbinfo_ptr();
-		struct fb_info *info = (struct fb_info*) fb;
+		struct stmfb_info *info = stmfb_get_fbinfo_ptr();
 
 		struct stmfbio_var_screeninfo_ex varEx;
 		int err = 0;

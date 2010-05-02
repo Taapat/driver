@@ -88,7 +88,7 @@ static int ca_ioctl(struct inode *inode, struct file *file,
 									pSession->slots[vLoop],
 									pSession->descramblers[pSession->descramblerindex[vLoop]],
 									err);
-								else dprintk("linking pid %d slot %d to descrambler %d, session = %d pSession\n",
+								else dprintk("linking pid %d slot %d to descrambler %d, session = %d pSession %p\n",
 									pid,pSession->slots[vLoop],
 									pSession->descramblers[pSession->descramblerindex[vLoop]],
 									pSession->session, pSession);
@@ -128,7 +128,7 @@ static int ca_ioctl(struct inode *inode, struct file *file,
 		dprintk("cw[6] = %d\n", descr->cw[6]);
 		dprintk("cw[7] = %d\n", descr->cw[7]);	
 		if(descr->index < 0 || descr->index >= NUMBER_OF_DESCRAMBLERS){
-			printk("Error descrambler %d not supported! needs to be in range 0 - %d\n",NUMBER_OF_DESCRAMBLERS-1);
+			printk("Error descrambler %d not supported! needs to be in range 0 - %d\n", descr->index, NUMBER_OF_DESCRAMBLERS-1);
 			return -1;
 		}
 		if (pti_hal_descrambler_set(pSession->session, pSession->descramblers[descr->index], descr->cw, descr->parity) != 0)

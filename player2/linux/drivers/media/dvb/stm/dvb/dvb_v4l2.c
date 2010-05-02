@@ -800,7 +800,7 @@ static int linuxdvb_vm_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
 	void *page_addr;
 	unsigned long page_frame;
 
-	if (vmf->virtual_address > vma->vm_end)
+	if ((unsigned long) vmf->virtual_address > vma->vm_end)
 		return VM_FAULT_SIGBUS;
 
 	/*

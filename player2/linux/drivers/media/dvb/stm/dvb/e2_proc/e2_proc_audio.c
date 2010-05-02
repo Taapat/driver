@@ -152,7 +152,7 @@ static void WriteRegister(volatile unsigned long *reg,unsigned long val)
   writel(val, (unsigned long)reg);
 }
 
-int spdif_out_mute(int mute)
+void spdif_out_mute(int mute)
 {
 	unsigned long val;
 	unsigned long *RegMap;

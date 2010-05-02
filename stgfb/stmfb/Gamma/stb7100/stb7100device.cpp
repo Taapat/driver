@@ -141,7 +141,7 @@ CSTb7100Device::~CSTb7100Device()
    * Override the base class destruction of registered graphics accelerators,
    * we need to leave this to the final destruction of the BDisp class.
    */
-  for(int i=0;i<N_ELEMENTS(m_graphicsAccelerators);i++)
+  for(unsigned i=0;i<N_ELEMENTS(m_graphicsAccelerators);i++)
     m_graphicsAccelerators[i] = 0;
   delete m_pBDisp;
 

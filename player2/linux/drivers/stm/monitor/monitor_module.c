@@ -94,12 +94,15 @@ static int StmMonitorProbe(struct device *dev)
     for (i = 0; i < MONITOR_MAX_DEVICES; i++)
     {
         struct DeviceContext_s* DeviceContext   = &ModuleContext->DeviceContext[i];
-        int                     DevNo           = MKDEV(MAJOR(FirstDevice), i);
+        int                     DevNo;
+
+        struct file_operations* FileOps;
 
 	DeviceContext->TimerPhysical = TimerPhysical;
 	DeviceContext->Timer         = Timer;
 
-        struct file_operations* FileOps         = MonitorInit (DeviceContext);
+        DevNo = MKDEV(MAJOR(FirstDevice), i);
+	FileOps = MonitorInit (DeviceContext);
 
         DeviceContext->ModuleContext            = ModuleContext;
         cdev_init (&(DeviceContext->CDev), FileOps);

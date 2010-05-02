@@ -880,7 +880,7 @@ PlayerStatus_t   Player_Generic_c::InternalDrainStream(
 {
 unsigned int              i;
 PlayerStatus_t            Status;
-OS_Status_t               OSStatus;
+OS_Status_t               OSStatus = OSStatus;
 unsigned char             PlayoutPolicyValue;
 PlayerEventRecord_t       Event;
 Buffer_t                  MarkerFrame;

@@ -13,6 +13,7 @@ Date        Modification                                    Name
 #ifndef H_MONITOR_DEVICE
 #define H_MONITOR_DEVICE
 
+#include <linux/version.h>
 #include <linux/spinlock.h>
 #include <linux/smp_lock.h>
 
@@ -48,7 +49,11 @@ struct EventValue_s
 
 struct DeviceContext_s
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
     struct class_device*                ClassDevice;
+#else
+    struct device*                      ClassDevice;
+#endif
     struct cdev                         CDev;
 
     unsigned int                        Id;

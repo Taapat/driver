@@ -23,9 +23,9 @@ int proc_denc_0_wss_write(struct file *file, const char __user *buf,
 	char 		*page;
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
-	int		result;
+	/* int		result; */
 	
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 

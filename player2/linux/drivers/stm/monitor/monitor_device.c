@@ -12,6 +12,7 @@ Date        Modification                                    Name
 
 ************************************************************************/
 
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/ioport.h>
@@ -269,7 +270,11 @@ static ssize_t MonitorRead (struct file *File, char __user* Buffer, size_t Count
     struct ModuleContext_s*     ModuleContext   = Context->ModuleContext;
     int                         Result          = 0;
     struct EventQueue_s*        EventList       = &Context->EventQueue;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
     unsigned int                Flags;
+#else
+    unsigned long               Flags;
+#endif
     unsigned int                RecordLength    = 0;
 
     /*MONITOR_DEBUG ("EventList: Read %d, Write %d\n", EventList->Read, EventList->Write);*/
@@ -328,7 +333,11 @@ static ssize_t MonitorWrite    (struct file *File, const char __user* Buffer, si
     struct ModuleContext_s*     ModuleContext   = Context->ModuleContext;
     int                         Result          = 0;
     struct EventQueue_s*        EventList       = &Context->EventQueue;
-    unsigned int                Flags;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+    unsigned int                        Flags;
+#else
+    unsigned long                       Flags;
+#endif
     unsigned int                Next;
     struct EventRecord_s*       EventRecord;
 
@@ -443,7 +452,11 @@ void MonitorRecordEvent        (struct DeviceContext_s*         Context,
     struct EventQueue_s*                EventList;
     unsigned int                        Next;
     unsigned int                        EventReceived   = false;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
     unsigned int                        Flags;
+#else
+    unsigned long                       Flags;
+#endif
     struct EventRecord_s*               EventRecord;
     struct EventValue_s*                StoredEvent;
 

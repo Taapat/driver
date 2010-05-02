@@ -462,7 +462,6 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::ReadStreamFormatInfo (void)
     if (SequenceHeader->OpaqueDataSize > 0)
     {
         unsigned int    BitstreamVersionData;
-        bool            ValidBitstreamVersion   = false;
 
         SequenceHeader->SPOFlags                = Bits.Get (32);
 
@@ -571,7 +570,7 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::ReadPictureHeader (void)
     unsigned int                MbaBits;
     unsigned int                i;
     RmvVideoSegmentList_t*      SegmentList;
-    static unsigned int         Segment = 0;
+    /* static unsigned int         Segment = 0; */
 
 #if 0
     unsigned int        Checksum = 0;

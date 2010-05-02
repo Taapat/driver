@@ -22,9 +22,9 @@ int proc_misc_12V_output_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int		result;
+	/* int		result; */
 	
-	printk("%s %d\n", __FUNCTION__, count);
+	printk("%s %ld\n", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 

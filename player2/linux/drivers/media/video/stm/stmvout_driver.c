@@ -1341,7 +1341,7 @@ static int stmvout_vm_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
   debug_msg("nopage: fault @ %08lx [vma %08lx-%08lx]\n",
 	    (unsigned long) vmf->virtual_address,vma->vm_start,vma->vm_end);
 
-  if (vmf->virtual_address > vma->vm_end)
+  if ((unsigned long) vmf->virtual_address > vma->vm_end)
     return VM_FAULT_SIGBUS;
 
   /*

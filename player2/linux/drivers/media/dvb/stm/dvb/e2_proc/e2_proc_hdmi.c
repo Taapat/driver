@@ -40,12 +40,11 @@ int proc_hdmi_audio_source_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int		result, vLoop;
 	unsigned int 	value;
 
 	char* myString = kmalloc(count + 1, GFP_KERNEL);
 
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
     	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
@@ -132,8 +131,6 @@ int proc_hdmi_audio_source_choices_read (char *page, char **start, off_t off, in
 			  int *eof, void *data_unused)
 {
 	int len = 0;
-	unsigned int value = 0;
-
 
 	printk("%s\n", __FUNCTION__);
 	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
@@ -150,12 +147,11 @@ int proc_hdmi_edid_handling_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int		result, vLoop;
 	unsigned int 	value;
 
 	char* myString = kmalloc(count + 1, GFP_KERNEL);
 
-	printk("%s %d - ", __FUNCTION__, count);
+	printk("%s %ld - ", __FUNCTION__, count);
 
 	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
