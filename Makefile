@@ -13,7 +13,8 @@ ifeq ($(KERNELRELEASE),)
 DRIVER_TOPDIR:=$(shell pwd)
 include $(DRIVER_TOPDIR)/kernel.make
 else
-CCFLAGSY+=-D__TDT__
+CCFLAGSY    += -D__TDT__ -D__LINUX__ -D__SH4__ -D__KERNEL__ -DMODULE -DEXPORT_SYMTAB
+
 ifdef OCTAGON1008
 CCFLAGSY+=-DOCTAGON1008
 endif
@@ -58,6 +59,9 @@ ccflags-y += $(CCFLAGSY)
 else
 CFLAGS += $(CCFLAGSY)
 endif
+
+export CCFLAGSY
+
 obj-y	:= avs/ 
 obj-y	+= multicom/
 obj-y	+= stgfb/

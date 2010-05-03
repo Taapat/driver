@@ -261,9 +261,9 @@ int __init stmcore_probe_device(struct stmcore_display_pipeline_data **pd, int *
       *pd = platform_data;
       *nr_platform_devices = N_ELEMENTS (platform_data);
 
-#if defined(UFS922) && defined(__TDT__)
+#if defined(UFS922)
       hotplug_pio = stpio_request_pin(2,3,"HDMI Hotplug",STPIO_IN); 
-#elif (defined(HL101) || defined(FORTIS_HDBOX) || defined(OCTAGON1008) || defined(VIP2)) && defined(__TDT__)
+#elif defined(HL101) || defined(FORTIS_HDBOX) || defined(OCTAGON1008) || defined(VIP2)
       hotplug_pio = stpio_request_pin(4,7,"HDMI Hotplug",STPIO_IN);
 #else
       hotplug_pio = stpio_request_pin(2,2,"HDMI Hotplug",STPIO_BIDIR_Z1);

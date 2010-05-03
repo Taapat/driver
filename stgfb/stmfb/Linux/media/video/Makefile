@@ -1,3 +1,9 @@
+ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
+ccflags-y += $(CCFLAGSY)
+else
+CFLAGS += $(CCFLAGSY)
+endif
+
 stm_v4l2-objs := $(SRC_TOPDIR)/Linux/media/video/stm_v4l2.o
 
 stmvout-objs := $(addprefix $(SRC_TOPDIR)/Linux/media/video/,stmvout_buffers.o \

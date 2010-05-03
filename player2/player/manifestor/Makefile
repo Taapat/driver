@@ -6,6 +6,11 @@ manifestor-objs:=       manifestor_base.o \
 			mixer_mme.o \
 			pcmplayer_ksound.o
 
-CFLAGS+=-I$(TREE_ROOT)/linux/drivers/sound/pseudocard/
+CCFLAGSY+=-I$(TREE_ROOT)/linux/drivers/sound/pseudocard/
+ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
+ccflags-y += $(CCFLAGSY)
+else
+CFLAGS += $(CCFLAGSY)
+endif
 
 obj-y += $(manifestor-objs)

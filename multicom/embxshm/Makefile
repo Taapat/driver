@@ -9,7 +9,10 @@ embxshm-objs	+= embxshm_connection.o embxshm_death.o embxshm_heap.o \
 		   embxshm_remoteport.o embxshm_transport.o
 
 
-#EXTRA_CFLAGS	:= -DDEBUG
-EXTRA_CFLAGS    := -D__LINUX__ -D__SH4__ -D__KERNEL__ -DMODULE -DEXPORT_SYMTAB -DMULTICOM_GPL -I$(DRIVER_TOPDIR)/include/multicom
+ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
+ccflags-y += $(CCFLAGSY)
+else
+CFLAGS += $(CCFLAGSY)
+endif
 endif
 

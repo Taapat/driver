@@ -1,6 +1,6 @@
 TREE_ROOT?=$(DRIVER_TOPDIR)/player2
 CONFIG_STGFB_PATH?=$(DRIVER_TOPDIR)/stgfb/stmfb
-CCFLAGSY := -I$(CONFIG_KERNEL_BUILD)/include2 \
+CCFLAGSY += -I$(CONFIG_KERNEL_BUILD)/include2 \
 	-I$(KERNEL_LOCATION)/include \
 	-include $(KERNEL_LOCATION)/include/linux/autoconf.h \
 	-I$(CONFIG_KERNEL_PATH)/include -D__KERNEL__ \

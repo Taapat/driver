@@ -1,3 +1,9 @@
+ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
+ccflags-y += $(CCFLAGSY)
+else
+CFLAGS += $(CCFLAGSY)
+endif
+
 EXTRA_CFLAGS := -I$(STG_TOPDIR) -I$(STG_TOPDIR)/include -I$(STG_TOPDIR)/Linux/include
 #EXTRA_CFLAGS += -O0
 

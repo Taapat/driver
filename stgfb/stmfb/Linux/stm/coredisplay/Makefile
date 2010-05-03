@@ -1,3 +1,9 @@
+ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
+ccflags-y += $(CCFLAGSY)
+else
+CFLAGS += $(CCFLAGSY)
+endif
+
 EXTRA_CXXFLAGS := -fno-rtti -fno-exceptions
 
 ifeq ($(CONFIG_STM_FMDSW),y)
