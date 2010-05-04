@@ -24,6 +24,7 @@
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27)
 #include "compat.h"
+#include <linux/mutex.h>
 #endif
 
 #define MAX_DVB_ADAPTERS 4

@@ -569,7 +569,7 @@ static struct stv090x_config stv090x_config = {
 	.demod_mode		= STV090x_DUAL/*STV090x_SINGLE*/,
 	.clk_mode		= STV090x_CLK_EXT,
 
-	.xtal			= 16000000,
+	.xtal			= 8000000,
 	.address		= I2C_ADDR_STV090X,
 
 	.ts1_mode		= STV090x_TSMODE_DVBCI/*STV090x_TSMODE_SERIAL_CONTINUOUS*/,
@@ -609,6 +609,7 @@ static struct stb6100_config stb6100_config = {
 static struct stv6110x_config stv6110x_config = {
 	.addr			= I2C_ADDR_STV6110X,
 	.refclk			= 16000000,
+	.clk_div		= 2,
 };
 
 static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)

@@ -310,7 +310,10 @@ static int stv6110x_get_status(struct dvb_frontend *fe, u32 *status)
 	stv6110x_read_reg(stv6110x, STV6110x_STAT1, &stv6110x->regs[STV6110x_STAT1]);
 
 	if (STV6110x_GETFIELD(STAT1_LOCK, stv6110x->regs[STV6110x_STAT1]))
+	{
 		*status = TUNER_PHASELOCKED;
+		printk("6110 locked\n");
+	}
 	else
 		*status = 0;
 
