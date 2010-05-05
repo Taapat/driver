@@ -3,8 +3,15 @@
 
 /* public pti header */
 
-/*quack: 6 is the max for HDBOX maybe other values have to be chosen for other boxes*/
-#define NUMBER_OF_DESCRAMBLERS 6
+#if defined(UFS910)
+	/*ufs910 has a memory problem causing artefacts while watching HDTV channels
+	so we need to reduce the number of descramblers,
+	maybe other boxes have the same problems*/
+	#define NUMBER_OF_DESCRAMBLERS 4
+#else
+	/*quack: 6 is the max for HDBOX maybe other values have to be chosen for other boxes*/
+	#define NUMBER_OF_DESCRAMBLERS 6
+#endif
 
 struct PtiSession 
 {
