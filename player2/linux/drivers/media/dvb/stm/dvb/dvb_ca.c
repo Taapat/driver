@@ -66,6 +66,7 @@ static int ca_ioctl(struct inode *inode, struct file *file,
 				printk("Error only descramblers 0 - %d supportet\n",NUMBER_OF_DESCRAMBLERS-1);
 				return -1;
 			}
+			pSession->descramblerForPid[pid]=descramble_index;
 			for ( vLoop = 0; vLoop < pSession->num_pids; vLoop++ )
   			{
     				if (( ( unsigned short ) pSession->pidtable[vLoop] ==
@@ -98,8 +99,7 @@ static int ca_ioctl(struct inode *inode, struct file *file,
 					}else{ printk("pid %x type is not DMX_TYPE_TS! not linking to descrambler\n",pid);return -1;}
 				}
 			}
-			printk("pid %x not found in pidtable\n",pid);
-			pSession->descramblerForPid[pid]=descramble_index;
+			printk("pid %x not found in pidtable, it might be inactive\n",pid);
 		}
 		return 0;
 	break;
