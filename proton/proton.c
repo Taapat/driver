@@ -192,6 +192,8 @@ struct semaphore 	   transmit_sem;
 struct semaphore 	   receive_sem;
 struct semaphore 	   key_mutex;
 
+static struct semaphore  display_sem;
+
 struct saved_data_s
 {
 	int   length;
@@ -402,7 +404,7 @@ static int VFD_Seg_Dig_Seg(unsigned char dignum, SegNum_T segnum, unsigned char 
         VfdSegAddr[dignum].CurrValue2 = val ;
     }
     VFD_WR(addr);
-    udelay(10);
+    udelay(5);
     VFD_WR(val);
     VFD_CS_SET();
     return  0;
@@ -430,9 +432,15 @@ static int VFD_Set_Mode(VFDMode_T mode)
 
 static int VFD_Show_Content(void)
 {
+    down_interruptible(&display_sem); //maby no need. need more testing
+    
     VFD_CS_CLR();
     VFD_WR(0x8F);
     VFD_CS_SET();
+    
+    up(&display_sem);
+    udelay(20);
+    
     return 0;
 }
 
@@ -527,11 +535,13 @@ static int VFD_Show_Time(int hh, int mm)
     	dprintk(2, "%s bad parameter!\n", __func__);
 	return;
     }
+
     VFD_Draw_Num((hh/10), 1);
     VFD_Draw_Num((hh%10), 2);
     VFD_Draw_Num((mm/10), 3);
     VFD_Draw_Num((mm%10), 4);
     VFD_Show_Content();
+
     return 0;
 }
 
@@ -582,7 +592,7 @@ static int VFD_Show_Ico(LogNum_T log_num, int log_stat)
         val = VfdSegAddr[dig_num].CurrValue2 ;
     }
     VFD_WR(addr);
-    udelay(10);
+    udelay(5);
     VFD_WR(val);
     VFD_CS_SET();
     VFD_Show_Content();
@@ -592,7 +602,6 @@ static int VFD_Show_Ico(LogNum_T log_num, int log_stat)
 
 
 static struct task_struct *thread; 
-static struct task_struct *time_thread;
 static int thread_stop  = 1;
 
 
@@ -631,6 +640,7 @@ void draw_thread(void *arg)
   int j =0;
   
   clear_display();
+
   while(pos < draw_data.length)
   {
 
@@ -745,7 +755,7 @@ void draw_thread(void *arg)
         k = count-pos;
 
        clear_display();
-     
+
        for(j=0;j<k;j++)
 	{
 	  VFD_Seg_Dig_Seg(j+1, SEGNUM1, draw_buf[pos+j][0]);
@@ -759,10 +769,10 @@ void draw_thread(void *arg)
  
   if(count > 0)
   {
-    clear_display();
     k =8;
     if(count < 8 )
       k = count;
+    clear_display();
 
     for(j=0;j<k;j++)
     {
@@ -775,101 +785,6 @@ void draw_thread(void *arg)
   thread_stop = 1;
 }
  
-
-#define LEAPYEAR(year) (!((year) % 4) && (((year) % 100) || !((year) % 400)))
-#define YEARSIZE(year) (LEAPYEAR(year) ? 366 : 365)
-static const int _ytab[2][12] =
-{
-  { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 },
-  { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
-};
-
-typedef struct
-{
-   unsigned short    year;
-   unsigned short    month;
-   unsigned short    day;
-   unsigned short    dow;
-  char    sdow[4];
-   unsigned short    hour;
-   unsigned short    min;
-   unsigned short    sec;
-   unsigned short   now;
-} frontpanel_ioctl_time;
-
-
-static frontpanel_ioctl_time * gmtime(register const time_t time)
-{
-  static frontpanel_ioctl_time fptime;
-  register unsigned long dayclock, dayno;
-  int year = 1970;
-
-  dayclock = (unsigned long)time % 86400;
-  dayno = (unsigned long)time / 86400;
-
-  fptime.sec = dayclock % 60;
-  fptime.min = (dayclock % 3600) / 60;
-  fptime.hour = dayclock / 3600;
-  fptime.dow = (dayno + 4) % 7;       /* day 0 was a thursday */
-  while (dayno >= YEARSIZE(year)) {
-	  dayno -= YEARSIZE(year);
-	  year++;
-  }
-  fptime.year = year;
-  fptime.month = 0;
-  while (dayno >= _ytab[LEAPYEAR(year)][fptime.month]) {
-	  dayno -= _ytab[LEAPYEAR(year)][fptime.month];
-	  fptime.month++;
-  }
-  fptime.day = dayno + 1;
-  fptime.month++;
-
-  return &fptime;
-} 
- 
- 
-void run_time_thread(void *arg)
-{
-  frontpanel_ioctl_time *pTime;
-  struct timeval tv;
-  int sec = 60;
-  unsigned char trig = 0;
-  
-  int min  = gmt_offset%100;
-  int hour = gmt_offset/100;
-
-  if(gmt_offset != 0)
-  {
-    gmt_offset = 0;
-    gmt_offset = hour * 3600;
-    if(min != 0)
-      if(gmt_offset > 0)
-	gmt_offset += 1800;
-      else
-	gmt_offset += -1800;
-  }
- 
-  while(!kthread_should_stop())
-  {
-   do_gettimeofday(&tv);
-   tv.tv_sec += gmt_offset;
-   pTime = gmtime(tv.tv_sec);
-
-   if(sec == 60)
-    {
-      sec = 0;
-      VFD_Show_Time(pTime->hour,pTime->min);
-    }
-    
-   trig =!trig;
-   VFD_Show_Ico(TIME_SECOND,trig);
-   sec ++;
-
-   msleep(950);
-  }
-}
-
-
 int run_draw_thread(struct vfd_ioctl_data *draw_data)
 {
     if(!thread_stop)
@@ -1290,15 +1205,16 @@ static int PROTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int 
 		break;
 	case VFDICONDISPLAYONOFF:
 		{
-			res = protonSetIcon(proton->u.icon.icon_nr, proton->u.icon.on);
+		  //struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;	
+		  res = protonSetIcon(proton->u.icon.icon_nr, proton->u.icon.on);
 		}
 
 		mode = 0;
 	case VFDSTANDBY:
 	   break;
 	case VFDSETTIME:
-		if (proton->u.time.time != 0)
-		   res = protonSetTime(proton->u.time.time);
+		   //struct set_time_s *data2 = (struct set_time_s *) arg;
+		   res = protonSetTime((char *)arg);
 		break;
 	case VFDGETTIME:
 		break;
@@ -1307,7 +1223,6 @@ static int PROTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int 
 	case VFDDISPLAYCHARS:
 		if (mode == 0)
 		{
-		  //res = VFD_Show_String(data->data, data->length);
 	 	  struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg; 
 		  if(data->length <0)
 	            { 
@@ -1331,6 +1246,12 @@ static int PROTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int 
 			VFD_Show_Content_Off();
 		break;
 	case VFDDISPLAYCLR:
+		if(!thread_stop)
+		  kthread_stop(thread);
+	  
+		//wait thread stop
+		while(!thread_stop)
+		  {msleep(1);}
 		VFD_CLR();
 		break;
 	default:
@@ -1528,6 +1449,7 @@ static int __init proton_init_module(void)
 	dprintk(5, "%s >\n", __func__);
         
 
+	sema_init(&display_sem,1);
 
 	if(vfd_init_func()) {
 		printk("unable to init module\n");
@@ -1547,16 +1469,6 @@ static int __init proton_init_module(void)
 	    sema_init(&FrontPanelOpen[i].sem, 1);
 
 	
-	if(strcmp("+0000", gmt) != 0)
-	{
-	  if(gmt[0] == '+') 
-	    sscanf(gmt,"+%i",&gmt_offset);
-	  else
-	    sscanf(gmt,"%i",&gmt_offset);
-	}
-	
-	time_thread=kthread_run(run_time_thread,NULL,"time thread",NULL,true);
-	
 	dprintk(5, "%s <\n", __func__);
 	
 	return 0;
@@ -1575,7 +1487,7 @@ static void __exit proton_cleanup_module(void)
 	dprintk(5, "[BTN] unloading ...\n");
 	button_dev_exit();
         
-	kthread_stop(time_thread);
+	//kthread_stop(time_thread);
 	
 	unregister_chrdev(VFD_MAJOR,"VFD");
 	printk("HL101 FrontPanel module unloading\n");
