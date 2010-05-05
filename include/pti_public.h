@@ -9,6 +9,7 @@
 struct PtiSession 
 {
   short int 		pidtable[32];
+  short int 		descramblerForPid[8192];
   short int 		references[32];
 
   short int 		type[32];

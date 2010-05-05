@@ -182,7 +182,7 @@ int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
 							    dvbdmxfeed->
 							    pes_type, demux , NULL, NULL);
 
-  pSession->descramblerindex[pSession->num_pids]=0;
+  pSession->descramblerindex[pSession->num_pids]= pSession->descramblerForPid[dvbdmxfeed->pid];
 
   printk ( "SlotHandle = %d\n", pSession->slots[pSession->num_pids] );
 
@@ -459,6 +459,8 @@ void ptiInit ( struct DeviceContext_s *pContext )
   	pSession->descramblers[i] = pti_hal_get_new_descrambler(pSession->session);
 
   printk("Descrambler Handler = %d\n", pSession->descrambler);
+  for(i=0;i<8192;i++)
+  	pSession->descramblerForPid[i] = 0;
 
   pContext->pPtiSession = pSession;
 

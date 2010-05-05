@@ -99,6 +99,7 @@ static int ca_ioctl(struct inode *inode, struct file *file,
 				}
 			}
 			printk("pid %x not found in pidtable\n",pid);
+			pSession->descramblerForPid[pid]=descramble_index;
 		}
 		return 0;
 	break;
