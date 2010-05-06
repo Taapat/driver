@@ -338,31 +338,25 @@ static int convert_source ( const dmx_source_t source)
 {
   int tag = TS_NOTAGS;
 
+  /*
+   from spider-team:
+   Note for all: most developers change this part ignoring other boxes,
+   so please :
+   add ur box only with #if defined(ur box)
+   */
   switch ( source )
   {
   case DMX_SOURCE_FRONT0:
-#if defined(UFS910)
+#if defined(UFS910) || defined(OCTAGON1008)
     /* in UFS910 the CIMAX output is connected to TSIN2 */
     tag = TSIN2;
-    break;
-#elif defined(OCTAGON1008)
-    tag = TSIN2;
-    break;
-#elif !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX)
-/* Dagobert: ufs912 explanation:
- * TSIN0 = not routed through ci (stream is everytime available!)
- * TSIN2 = the stream after routing through ci
- */ 
-    /* in UFS910 the CIMAX output is connected to TSIN2 */
-    tag = TSIN2;
-    break;
 #else
     tag = TSIN0;
+#endif
     break;
   case DMX_SOURCE_FRONT1:
     tag = TSIN1;
     break;
-#endif
   case DMX_SOURCE_DVR0:
     tag = SWTS0;
     break;

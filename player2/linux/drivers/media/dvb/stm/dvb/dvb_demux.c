@@ -619,7 +619,8 @@ void demultiplexDvbPackets(struct dvb_demux* demux, const u8 *buf, int count)
   int cnt = 0;
   int diff_count;
   const u8 *first_buf;
-  u16 firstPid;
+  u16 pid, firstPid;
+
   struct DeviceContext_s* Context = (struct DeviceContext_s*)demux->priv;
 
   /* Group the packets by the PIDs and feed them into the kernel demuxer.
@@ -629,17 +630,46 @@ void demultiplexDvbPackets(struct dvb_demux* demux, const u8 *buf, int count)
      This workaround eliminates the scheduling bug caused by waiting while
      the demux spin is locked. */
 
+#if DVB_API_VERSION > 3
+
+  while (count > 0)
+  {
+    first = next;
+    cnt = 0;
+    firstPid = ts_pid(&buf[first]);
+    while(count > 0)
+    {
+      count--;
+      next += 188;
+      cnt++;
+      pid = ts_pid(&buf[next]);
+      if((pid != firstPid) || (cnt > 8))
+    	  break;
+    }
+    if((next - first) > 0)
+    {
+      mutex_lock_interruptible(&Context->injectMutex);
+
+      /* reset the flag (to be set by the callback */
+      Context->provideToDecoder = 0;
+      dvb_dmx_swfilter_packets(demux, buf + first, cnt);
+      if(Context->provideToDecoder)
+      {
+        /* the demuxer indicated that the packets are for the decoder */
+        writeToDecoder(demux, Context->feedPesType, buf + first, next - first);
+      }
+      mutex_unlock(&Context->injectMutex);
+    }
+  }
+#else
+
   firstPid = ts_pid(&buf[first]);
   while(count)
   {
     count--;
     next += 188;
     cnt++;
-#if DVB_API_VERSION > 3
-    if(cnt > 8 || ts_pid(&buf[next]) != firstPid || !count)
-#else
     if(cnt > 8 || ts_pid(&buf[next]) != firstPid || !count || buf[next] != 0x47)
-#endif
     {
       diff_count = next - first;
       first_buf = buf + first;
@@ -649,13 +679,9 @@ void demultiplexDvbPackets(struct dvb_demux* demux, const u8 *buf, int count)
       // reset the flag (to be set by the callback //
       Context->provideToDecoder = 0;
 
-#if DVB_API_VERSION > 3
-      dvb_dmx_swfilter_packets(demux, first_buf, diff_count);
-#else
       spin_lock(&demux->lock);
       dvb_dmx_swfilter_packet(demux, first_buf, diff_count);
       spin_unlock(&demux->lock);
-#endif
 
       // the demuxer indicated that the packets are for the decoder //
       if(Context->provideToDecoder)
@@ -668,5 +694,6 @@ void demultiplexDvbPackets(struct dvb_demux* demux, const u8 *buf, int count)
       firstPid = ts_pid(&buf[first]);
     }
   }
+#endif
 }
 #endif
