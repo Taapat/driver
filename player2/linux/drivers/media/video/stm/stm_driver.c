@@ -172,6 +172,8 @@ static long stm_v4l2_do_ioctl(struct file  *file, unsigned int  cmd, void *arg)
   struct stm_v4l2_handles *handle = file->private_data;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
   unsigned int     minor          = iminor(inode);
+#else
+  unsigned minor = iminor(file->f_dentry->d_inode);
 #endif
   int ret = 0;
   int type = -1,index  = -1;
@@ -433,9 +435,6 @@ static long stm_v4l2_do_ioctl(struct file  *file, unsigned int  cmd, void *arg)
     // If it is a control let's deal with that
     if (type==STM_V4L2_MAX_TYPES) {
       for (n=0;n<number_drivers;n++)
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
-#warning FIXME, STM24, how to cope with minor?
-#else
 	if (index >= drivers[n].control_start_index[minor] && index < (drivers[n].control_start_index[minor] + drivers[n].number_controls[minor]))
 	  {
 	    struct v4l2_control *control = arg;
@@ -445,7 +444,6 @@ static long stm_v4l2_do_ioctl(struct file  *file, unsigned int  cmd, void *arg)
 	    control->id += drivers[n].control_start_index[minor];
 	    return ret;
 	  }
-#endif
       return -EINVAL;
     }
 
@@ -457,9 +455,6 @@ static long stm_v4l2_do_ioctl(struct file  *file, unsigned int  cmd, void *arg)
 
       		for (n=0;n<number_drivers;n++) {
 				if (type == -1 || type == drivers[n].type) {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
-#warning FIXME, STM24, how to cope with minor?
-#else
 				  ret = drivers[n].ioctl(handle,&drivers[n],minor,drivers[n].type,file,cmd,arg);
 	  				if (handle->v4l2type[drivers[n].type].handle) {
 	    				if (ret) printk("%s: BUG ON... can't set a handle and return an error\n",__FUNCTION__);
@@ -476,7 +471,6 @@ static long stm_v4l2_do_ioctl(struct file  *file, unsigned int  cmd, void *arg)
 				    if (!file->private_data) memset(handle,0,sizeof(struct stm_v4l2_handles));
 				    return ret;
 				  }
-#endif
 			}
 		}
 
@@ -490,11 +484,7 @@ static long stm_v4l2_do_ioctl(struct file  *file, unsigned int  cmd, void *arg)
     {
       if (handle->v4l2type[type].driver)
       {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
-#warning FIXME, STM24, how to cope with minor?
-#else
 	return handle->v4l2type[type].driver->ioctl(handle,handle->v4l2type[type].driver,minor,type,file,cmd,arg);
-#endif
       }
       else
       {
@@ -504,11 +494,7 @@ static long stm_v4l2_do_ioctl(struct file  *file, unsigned int  cmd, void *arg)
 
     for (n=0;n<STM_V4L2_MAX_TYPES;n++)
       if (handle->v4l2type[n].driver)
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
-#warning FIXME, STM24, how to cope with minor?
-#else
 	if (!handle->v4l2type[n].driver->ioctl(handle,handle->v4l2type[n].driver,minor,n,file,cmd,arg))
-#endif
       	  return 0;
 
     return -ENODEV;

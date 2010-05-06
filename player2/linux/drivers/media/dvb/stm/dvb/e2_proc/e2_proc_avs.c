@@ -357,7 +357,7 @@ int proc_avs_0_colorformat_write(struct file *file, const char __user *buf,
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page)
 	{
-		struct fb_info *info = stmfb_get_fbinfo_ptr();
+		struct stmfb_info *info = stmfb_get_fbinfo_ptr();
 
 		struct stmfbio_output_configuration outputConfig;
 		int err = 0;
@@ -433,7 +433,7 @@ int proc_avs_0_colorformat_write(struct file *file, const char __user *buf,
 
 			err = stmfb_set_output_configuration(&outputConfig, info);
 		} else if (hdmi0scart1yuv2 == 1) {
-			avs_command_kernel(SAAIOSMODE, scart_colour);
+			avs_command_kernel(SAAIOSMODE, (void*) scart_colour);
 
 			outputConfig.outputid = 1;
 

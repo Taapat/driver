@@ -506,8 +506,6 @@ long stmhdmiio_get_edid_handling(unsigned int * arg)
 
   *arg =  dev->non_strict_edid_semantics;
 
-
-exit:
   mutex_unlock(&dev->lock);
   return retval;
 

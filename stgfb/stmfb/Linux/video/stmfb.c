@@ -83,7 +83,7 @@ static int stmfb_probe_get_blitter(struct stmfb_info *i,
 
 #ifdef __TDT__
 /* Dagobert big Hacking School :-D */  
-struct stmfb_info* stmfb_get_fbinfo_ptr()  
+struct stmfb_info* stmfb_get_fbinfo_ptr(void)  
 {  
     /* we only deal with fb0 */  
     return &stmfb_info[0];  
