@@ -135,13 +135,6 @@ int proc_audio_delay_bitstream_read (char *page, char **start, off_t off, int co
 
 int volume = 0;
 
-#define AUD_IO_CTRL		0x200
-#define SPDIF_EN		(1L<<3)
-#define SPDIF_DIS		0xFFFFFFF7
-#define STb7100_REGISTER_BASE	0x18000000
-#define STb7100_AUDIO_BASE	0x01210000
-#define STb7100_REG_ADDR_SIZE	0x02000000
-
 static unsigned long ReadRegister(volatile unsigned long *reg)
 {
   return readl((unsigned long)reg);
@@ -151,6 +144,22 @@ static void WriteRegister(volatile unsigned long *reg,unsigned long val)
 {
   writel(val, (unsigned long)reg);
 }
+
+#if defined(UFS912)
+void spdif_out_mute(int mute)
+{
+#warning fixme search the audio mute register for 7111 arch
+   printk("warning: spdif_out_mute currently not implemented for 7111 arch\n");
+}
+#else
+
+#define AUD_IO_CTRL		0x200
+#define SPDIF_EN		(1L<<3)
+#define SPDIF_DIS		0xFFFFFFF7
+#define STb7100_REGISTER_BASE	0x18000000
+#define STb7100_AUDIO_BASE	0x01210000
+#define STb7100_REG_ADDR_SIZE	0x02000000
+
 
 void spdif_out_mute(int mute)
 {
@@ -169,6 +178,8 @@ void spdif_out_mute(int mute)
 	}
 	iounmap(RegMap);
 }
+
+#endif
 
 int proc_audio_j1_mute_write(struct file *file, const char __user *buf,
                            unsigned long count, void *data)
