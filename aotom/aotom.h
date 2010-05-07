@@ -220,3 +220,24 @@ typedef enum LogNum_e
 #define VFD_ShowTime            _IOWR('s',(BASE_VFD_PRIVATE+2),VFD_Time_T)
 #define VFD_ShowStr             _IOWR('s',(BASE_VFD_PRIVATE+3),char*)
 #define VFD_ClearTime           _IOWR('s',(BASE_VFD_PRIVATE+4),int)
+
+extern int YWPANEL_VFD_Init(void);
+extern int YWPANEL_VFD_DETECT(void);
+extern int YWPANEL_VFD_Term(void);
+extern int YWPANEL_VFD_ShowIco(LogNum_T log_num, int log_stat);
+extern int YWPANEL_VFD_ShowString(char* str);
+extern int YWPANEL_VFD_ShowTime(u8 hh, u8 mm);
+extern int YWPANEL_VFD_ShowTimeOff(void);
+extern int YWPANEL_VFD_SetBrightness(int level);
+extern bool YWPANEL_FP_ControlTimer(bool on);
+extern u32  YWPANEL_FP_GetTime(void);
+extern bool YWPANEL_FP_SetTime(u32 value);
+extern u32  YWPANEL_FP_GetStandByKey(u8 index);
+extern bool YWPANEL_FP_SetStandByKey(u8 index, u8 key);
+extern u32  YWPANEL_FP_GetBlueKey(u8 index);
+extern bool YWPANEL_FP_SetBlueKey(u8 index,u8 key);
+
+extern u32  YWPANEL_FP_GetIRKey(void);
+extern bool YWPANEL_FP_SetPowerOnTime(u32 Value);
+extern u32  YWPANEL_FP_GetPowerOnTime(void);
+extern int  YWPANEL_VFD_GetKeyValue(void);

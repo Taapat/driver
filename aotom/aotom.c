@@ -20,17 +20,17 @@
  */
 
 /*
- * Edision argus vip2 frontpanel driver (AOTOM A16311)
+ * edision argus vip2 frontpanel driver.
  *
  * Devices:
  *	- /dev/vfd (vfd ioctls and read/write function)
- *	- /dev/rc  (reading of key events)
  *
  */
 
 #include <asm/io.h>
 #include <asm/uaccess.h>
 #include <asm/termbits.h>
+#include <linux/kthread.h>
 #include <linux/version.h>
 #include <linux/input.h>
 #include <linux/module.h>
@@ -42,29 +42,16 @@
 #include <linux/time.h>
 #include <linux/poll.h>
 #include <linux/workqueue.h>
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
-#include <linux/stm/pio.h>
-#else
-#include <linux/stpio.h>
-#endif
 
 #include "aotom.h"
+#include "utf.h"
 
 static short paramDebug = 0;
-#define TAGDEBUG "[Aotom] "
+#define TAGDEBUG "[aotom] "
 
 #define dprintk(level, x...) do { \
 if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
 } while (0)
-
-#define VFD_CS_CLR() {udelay(10); stpio_set_pin(cfg.cs, 0);}
-#define VFD_CS_SET() {udelay(10); stpio_set_pin(cfg.cs, 1);}
-
-#define VFD_CLK_CLR() {stpio_set_pin(cfg.clk, 0);udelay(1);}
-#define VFD_CLK_SET() {stpio_set_pin(cfg.clk, 1);udelay(1);}
-
-#define VFD_DATA_CLR() {stpio_set_pin(cfg.data, 0);}
-#define VFD_DATA_SET() {stpio_set_pin(cfg.data, 1);}
 
 #define INVALID_KEY    	-1
 #define LOG_OFF     	0
@@ -77,6 +64,13 @@ if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
 #define REC_NEW_KEY 	34
 #define REC_NO_KEY  	0
 #define REC_REPEAT_KEY  2
+
+static int gmt_offset = 0;
+
+static char *gmt = "+0000";
+
+module_param(gmt,charp,0);
+MODULE_PARM_DESC(gmt, "gmt offset (default +0000");
 
 typedef struct
 {
@@ -91,69 +85,7 @@ typedef struct
 
 static tFrontPanelOpen FrontPanelOpen [LASTMINOR];
 
-typedef enum VFDMode_e{
-	VFDWRITEMODE,
-	VFDREADMODE
-}VFDMode_T;
-
-typedef enum SegNum_e{
-	SEGNUM1 = 0,
-	SEGNUM2
-}SegNum_T;
-
-typedef struct SegAddrVal_s{
-	unsigned char Segaddr1;
-	unsigned char Segaddr2;
-	unsigned char CurrValue1;
-	unsigned char CurrValue2;
-}SegAddrVal_T;
-
-typedef enum PIO_Mode_e
-{
-    PIO_Out,
-    PIO_In
-}PIO_Mode_T;
-
-struct VFD_config
-{
-	struct stpio_pin*	clk;
-	struct stpio_pin*	data;
-	struct stpio_pin*	cs;
-	int data_pin[2];
-	int clk_pin[2];
-	int cs_pin[2];
-};
-
-struct VFD_config cfg;
-
 #define BUFFERSIZE                256     //must be 2 ^ n
-
-/* structure to queue transmit data is necessary because
- * after most transmissions we need to wait for an acknowledge
- */
-
-struct transmit_s
-{
-	unsigned char 	buffer[BUFFERSIZE];
-	int		len;
-	int  		needAck; /* should we increase ackCounter? */
-
-   int      ack_len; /* len of complete acknowledge sequence */
-   int      ack_len_header; /* len of ack header ->contained in ack_buffer */
-	unsigned char 	ack_buffer[BUFFERSIZE]; /* the ack sequence we wait for */
-
-	int		requeueCount;
-};
-
-#define cMaxTransQueue	100
-
-/* I make this static, I think if there are more
- * then 100 commands to transmit something went
- * wrong ... point of no return
- */
-struct transmit_s transmit[cMaxTransQueue];
-
-static int transmitCount = 0;
 
 struct receive_s
 {
@@ -165,23 +97,15 @@ struct receive_s
 static wait_queue_head_t   wq;
 
 struct receive_s receive[cMaxReceiveQueue];
-
 static int receiveCount = 0;
-
-#define cMaxAckAttempts	150
-#define cMaxQueueCount	5
-
-/* waiting retry counter, to stop waiting on ack */
-static int 		   waitAckCounter = 0;
-
-static int 		   timeoutOccured = 0;
-static int 		   dataReady = 0;
 
 struct semaphore 	   write_sem;
 struct semaphore 	   rx_int_sem; /* unused until the irq works */
 struct semaphore 	   transmit_sem;
 struct semaphore 	   receive_sem;
 struct semaphore 	   key_mutex;
+
+static struct semaphore  display_sem;
 
 struct saved_data_s
 {
@@ -196,21 +120,13 @@ static struct saved_data_s lastdata;
  * by a semaphore and the threads goes to sleep until
  * the answer has been received or a timeout occurs.
  */
-static char ioctl_data[BUFFERSIZE];
-
-int writePosition = 0;
-int readPosition = 0;
-unsigned char receivedData[BUFFERSIZE];
-
-unsigned char str[64];
-static SegAddrVal_T VfdSegAddr[15];
 
 #define VFD_RW_SEM
 #ifdef VFD_RW_SEM
 struct rw_semaphore vfd_rws;
 #endif
 
-unsigned char CharLib[48][2] =
+unsigned char ASCII[48][2] =
 {
 	{0xF1, 0x38},	//A
 	{0x74, 0x72},	//B
@@ -222,7 +138,7 @@ unsigned char CharLib[48][2] =
 	{0xF1, 0x18},	//H
 	{0x44, 0x62},	//I
 	{0x45, 0x22},	//J
-	{0x46, 0x06},	//K
+	{0xC3, 0x0C},	//K
 	{0x01, 0x48},	//L
 	{0x51, 0x1D},	//M
 	{0x53, 0x19},	//N
@@ -263,430 +179,155 @@ unsigned char CharLib[48][2] =
 	{0xF1, 0x78},	//
 	{0xF0, 0x78},	//
 	/* 0--9  */
-	{0x00, 0x00}
+	{0x0, 0x0}
 };
 
-unsigned char NumLib[10][2] =
+static int VFD_Show_Time(u8 hh, u8 mm)
 {
-	{0x77, 0x77},	//{01110111, 01110111},
-	{0x24, 0x22},	//{00100100, 00010010},
-	{0x6B, 0x6D},	//{01101011, 01101101},
-	{0x6D, 0x6B},	//{01101101, 01101011},
-	{0x3C, 0x3A},	//{00111100, 00111010},
-	{0x5D, 0x5B},	//{01011101, 01011011},
-	{0x5F, 0x5F},	//{01011111, 01011111},
-	{0x64, 0x62},	//{01100100, 01100010},
-	{0x7F, 0x7F},	//{01111111, 01111111},
-	{0x7D, 0x7B} 	//{01111101, 01111011},
-};
-
-static int AOTOMfp_Set_PIO_Mode(PIO_Mode_T Mode_PIO)
-{
-   int ret = 0;
-
-   if(Mode_PIO == PIO_Out)
-   {
-	   stpio_configure_pin(cfg.data, STPIO_OUT);
-   }
-   else if(Mode_PIO == PIO_In)
-   {
-	   stpio_configure_pin(cfg.data, STPIO_IN);
-   }
-   return ret;
-}
-
-unsigned char AOTOMfp_RD(void)
-{
-    int i;
-    unsigned char val = 0, data = 0;
-
-#ifdef VFD_RW_SEM
-     down_read(&vfd_rws);
-#endif
-
-    AOTOMfp_Set_PIO_Mode(PIO_In);
-    for (i = 0; i < 8; i++)
+    if( (hh > 24) || (mm > 59))
     {
-        val >>= 1;
-		VFD_CLK_CLR();
-        udelay(1);
-        data = stpio_get_pin(cfg.data);
-		VFD_CLK_SET();
-        if(data)
-        {
-            val |= 0x80;
-        }
-		VFD_CLK_SET();
-        udelay(1);
-    }
-    udelay(1);
-    AOTOMfp_Set_PIO_Mode(PIO_Out);
-
-#ifdef VFD_RW_SEM
-    up_read(&vfd_rws);
-#endif
-
-    return val;
-}
-
-static int VFD_WR(unsigned char data)
-{
-	int i;
-
-#ifdef VFD_RW_SEM
-    down_write(&vfd_rws);
-#endif
-
-    for(i = 0; i < 8; i++)
-	{
-		VFD_CLK_CLR();
-		if(data & 0x01)
-		{
-			VFD_DATA_SET();
-		}
-		else
-		{
-			VFD_DATA_CLR();
-		}
-		VFD_CLK_SET();
-		data >>= 1;
-	}
-
-#ifdef VFD_RW_SEM
-    up_write(&vfd_rws);
-#endif
-
-    return 0;
-}
-
-void VFD_Seg_Addr_Init(void)
-{
-	unsigned char i, addr = 0xC0;//adress flag
-	for(i = 0; i < 13; i++)
-	{
-		VfdSegAddr[i + 1].CurrValue1 = 0;
-		VfdSegAddr[i + 1].CurrValue2 = 0;
-		VfdSegAddr[i + 1].Segaddr1 = addr;
-		VfdSegAddr[i + 1].Segaddr2 = addr + 1;
-		addr += 3;
-	}
-}
-
-static int VFD_Seg_Dig_Seg(unsigned char dignum, SegNum_T segnum, unsigned char val)
-{
-	unsigned char  addr=0;
-    if(segnum < 0 && segnum > 1)
-    {
-    	dprintk(2, "bad parameter!\n");
-        return -1;
+    	dprintk(2, "%s bad parameter!\n", __func__);
+    	return -1;
     }
 
-    VFD_CS_CLR();
-    if(segnum == SEGNUM1)
-	{
-        addr = VfdSegAddr[dignum].Segaddr1;
-        VfdSegAddr[dignum].CurrValue1 = val ;
-	}
-    else if(segnum == SEGNUM2)
-    {
-        addr = VfdSegAddr[dignum].Segaddr2;
-        VfdSegAddr[dignum].CurrValue2 = val ;
-    }
-    VFD_WR(addr);
-    udelay(10);
-    VFD_WR(val);
-    VFD_CS_SET();
-    return  0;
-}
-
-static int VFD_Set_Mode(VFDMode_T mode)
-{
-    unsigned char data = 0;
-
-    if(mode == VFDWRITEMODE)
-    {
-        data = 0x44;
-        VFD_CS_CLR();
-        VFD_WR(data);
-        VFD_CS_SET();
-    }
-    else if(mode == VFDREADMODE)
-    {
-        data = 0x46;
-        VFD_WR(data);
-        udelay(5);
-    }
-    return 0;
-}
-
-static int VFD_Show_Content(void)
-{
-    VFD_CS_CLR();
-    VFD_WR(0x8F);
-    VFD_CS_SET();
-    return 0;
-}
-
-static int VFD_Show_Content_Off(void)
-{
-    VFD_WR(0x87);
-    return 0;
-}
-
-void VFD_Clear_All(void)
-{
- 	int i;
- 	for(i = 0; i < 13; i++)
-	{
-        VFD_Seg_Dig_Seg(i + 1,SEGNUM1,0x00);
-        VFD_Show_Content();
-		VfdSegAddr[i + 1].CurrValue1 = 0x00;
-        VFD_Seg_Dig_Seg(i + 1,SEGNUM2,0x00);
-        VFD_Show_Content();
-		VfdSegAddr[i + 1].CurrValue2 = 0;
-    }
-}
-
-void VFD_Draw_Char(char c, unsigned char position)
-{
-	if(position < 1 || position > 8)
-	{
-		dprintk(2, "char position error! %d\n", position);
-		return;
-	}
-	if(c >= 65 && c <= 95)
-		c = c - 65;
-	else if(c >= 97 && c <= 122)
-		c = c - 97;
-	else if(c >= 42 && c <= 57)
-		c = c - 11;
-	else if(c == 32)
-		c = 47;
-	else
-	{
-		dprintk(2, "unknown char!\n");
-		return;
-	}
-	VFD_Seg_Dig_Seg(position, SEGNUM1, CharLib[(unsigned char)c][0]);
-	VFD_Seg_Dig_Seg(position, SEGNUM2, CharLib[(unsigned char)c][1]);
-
-    VFD_Show_Content();
-}
-
-void VFD_Draw_Num(unsigned char c, unsigned char position)
-{
-	int dignum;
-
-	if(position < 1 || position > 4)
-	{
-		dprintk(2, "num position error! %d\n", position);
-		return;
-	}
-	if(c >  9)
-	{
-		dprintk(2, "unknown num!\n");
-		return;
-	}
-
-	dignum =10 - position / 3;
-	if(position % 2 == 1)
-	{
-		if(NumLib[c][1] & 0x01)
-			VFD_Seg_Dig_Seg(dignum, SEGNUM1, VfdSegAddr[dignum].CurrValue1 | 0x80);
-		else
-			VFD_Seg_Dig_Seg(dignum, SEGNUM1, VfdSegAddr[dignum].CurrValue1 & 0x7F);
-    		VfdSegAddr[dignum].CurrValue2 = VfdSegAddr[dignum].CurrValue2 & 0x40;//sz
-    		VFD_Seg_Dig_Seg(dignum, SEGNUM2, (NumLib[c][1] >> 1) | VfdSegAddr[dignum].CurrValue2);
-	}
-	else if(position % 2 == 0)
-	{
-	   if((NumLib[c][0] & 0x01))
-        {
-            VFD_Seg_Dig_Seg(dignum, SEGNUM2, VfdSegAddr[dignum].CurrValue2 | 0x40);// SZ  08-05-30
-	   	}
-	   else
-			VFD_Seg_Dig_Seg(dignum, SEGNUM2, VfdSegAddr[dignum].CurrValue2 & 0x3F);
-    		VfdSegAddr[dignum].CurrValue1 = VfdSegAddr[dignum].CurrValue1 & 0x80;
-    		VFD_Seg_Dig_Seg(dignum, SEGNUM1, (NumLib[c][0] >>1 ) | VfdSegAddr[dignum].CurrValue1 );
-	}
-    VFD_Show_Content();
-}
-
-static int VFD_Show_String(char* str, int len)
-{
-	int i;
-	char buf[8];
-
-	if(len < 1){
-		dprintk(2, "empty string\n");
-		return -1;
-	}
-
-	dprintk(5, "VFD String : '%s'\n", str);
-	memset(buf,' ',8);
-
-	if(len > 8){
-		dprintk(2, "VFD String Length value is over! %d\n", len);
-		len = 8;
-		memcpy(buf, str, 8);
-	}else{
-		memcpy(buf, str, len);
-	}
-
- 	for(i = 0; i < 8; i++)
-	{
-	 	VFD_Draw_Char(buf[i], i + 1);
-	}
-
-    return 0;
+    return YWPANEL_FP_SetTime(hh*3600 + mm*60);
 }
 
 static int VFD_Show_Ico(LogNum_T log_num, int log_stat)
 {
-    int dig_num = 0,seg_num = 0;
-    SegNum_T seg_part = 0;
-    u8  seg_offset = 0;
-    u8  addr = 0,val = 0;
-
-    if(log_num >= LogNum_Max)
-    {
-    	dprintk(2, "%s bad parameter!\n", __func__);
-        return -1;
-    }
-    dig_num = log_num/16;
-    seg_num = log_num%16;
-    seg_part = seg_num/9;
-
-    VFD_CS_CLR();
-    if(seg_part == SEGNUM1)
-	{
-        seg_offset = 0x01 << ((seg_num%9) - 1);
-        addr = VfdSegAddr[dig_num].Segaddr1;
-        if(log_stat == LOG_ON)
-        {
-           VfdSegAddr[dig_num].CurrValue1 |= seg_offset;
-        }
-        if(log_stat == LOG_OFF)
-        {
-           VfdSegAddr[dig_num].CurrValue1 &= (0xFF-seg_offset);
-        }
-        val = VfdSegAddr[dig_num].CurrValue1 ;
-	}
-    else if(seg_part == SEGNUM2)
-    {
-        seg_offset = 0x01 << ((seg_num%8) - 1);
-        addr = VfdSegAddr[dig_num].Segaddr2;
-        if(log_stat == LOG_ON)
-        {
-           VfdSegAddr[dig_num].CurrValue2 |= seg_offset;
-        }
-        if(log_stat == LOG_OFF)
-        {
-           VfdSegAddr[dig_num].CurrValue2 &= (0xFF-seg_offset);
-        }
-        val = VfdSegAddr[dig_num].CurrValue2 ;
-    }
-    VFD_WR(addr);
-    udelay(10);
-    VFD_WR(val);
-    VFD_CS_SET();
-    VFD_Show_Content();
-
-    return 0 ;
+	return YWPANEL_VFD_ShowIco(log_num, log_stat);
 }
 
-static int VFD_Show_Time(int hh, int mm)
+static struct task_struct *thread; 
+static int thread_stop  = 1;
+int aotomSetIcon(int which, int on);
+
+void clear_display()
 {
-    if( (hh > 24) && (mm > 60))
+	YWPANEL_VFD_ShowString("        ");
+}
+
+static void VFD_clr(void)
+{
+	int i;
+
+	YWPANEL_VFD_ShowTimeOff();
+	clear_display();
+	for(i=1; i < 45; i++)
+		aotomSetIcon(i, 0);
+}
+
+void draw_thread(void *arg)
+{
+  struct vfd_ioctl_data *data;
+  data = (struct vfd_ioctl_data *)arg;
+  
+  struct vfd_ioctl_data draw_data;
+  
+  draw_data.length = data->length;
+  memset(draw_data.data, 0, sizeof(draw_data.data));
+  memcpy(draw_data.data,data->data,data->length);
+  
+  thread_stop = 0;
+
+  unsigned char buf[9];
+  int count = 0; 
+  int pos = 0;
+  
+  count = draw_data.length;
+
+  if(count > 8)
+  {
+    while(pos < count)
     {
-    	dprintk(2, "%s bad parameter!\n", __func__);
+       if(kthread_should_stop())
+       {
+    	   thread_stop = 1;
+    	   return;
+       }
+      
+       clear_display();
+       memset(buf,0, sizeof(buf));
+       memcpy(buf, &draw_data.data[pos], 8);
+       YWPANEL_VFD_ShowString(buf);
+       msleep(200);
+       pos++;
+       if((count - pos) < 8)
+    	   break;
     }
-    VFD_Draw_Num((hh/10), 1);
-    VFD_Draw_Num((hh%10), 2);
-    VFD_Draw_Num((mm/10), 3);
-    VFD_Draw_Num((mm%10), 4);
+  }
+
+  if(count > 0)
+  {
+      clear_display();
+      memset(buf,0, sizeof(buf));
+      memcpy(buf, draw_data.data, 8);
+      YWPANEL_VFD_ShowString(buf);
+  }
+ 
+  thread_stop = 1;
+}
+ 
+int run_draw_thread(struct vfd_ioctl_data *draw_data)
+{
+    if(!thread_stop)
+      kthread_stop(thread);
+	  
+    //wait thread stop
+    while(!thread_stop)
+    {msleep(1);}
+
+  
+    thread_stop = 2;
+    thread=kthread_run(draw_thread,draw_data,"draw thread",NULL,true);
+
+    //wait thread run
+    while(thread_stop == 2)
+    {msleep(1);}
+	
     return 0;
 }
 
-static int VFD_Show_Time_Off(void)
-{
-	int ret=0;
-
-    ret = VFD_Seg_Dig_Seg(9, SEGNUM1, 0x00);
-    ret = VFD_Seg_Dig_Seg(9, SEGNUM2, 0x00);
-    ret = VFD_Seg_Dig_Seg(10,SEGNUM1, 0x00);
-    ret = VFD_Seg_Dig_Seg(10,SEGNUM2, 0x00);
-    return ret;
-}
-
-unsigned char AOTOMfp_Scan_Keyboard(unsigned char read_num)
-{
-    unsigned char key_val[read_num] ;
-    unsigned char i = 0, ret;
-
-    VFD_CS_CLR();
-    ret = VFD_Set_Mode(VFDREADMODE);
-    if(ret)
-    {
-    	dprintk(2, "%s DEVICE BUSY!\n", __func__);
-        return -1;
-    }
-
-    for (i = 0; i < read_num; i++)
-    {
-    	key_val[i] = AOTOMfp_RD();
-    }
-    VFD_CS_SET();
-
-    ret = VFD_Set_Mode(VFDWRITEMODE);
-    if(ret)
-    {
-    	dprintk(2, "%s DEVICE BUSY!\n", __func__);
-        return -1;
-    }
-    return key_val[5];
-}
-
+static int xxfd=0;
 static int AOTOMfp_Get_Key_Value(void)
 {
-	unsigned char byte = 0;
-	int key_val = INVALID_KEY;
+	int ret, key_val = INVALID_KEY;
 
-	byte = AOTOMfp_Scan_Keyboard(6);
+	ret =  YWPANEL_VFD_GetKeyValue();
 
-	switch(byte)
+	switch(ret)
 	{
-        case 0x02:
+        case 105:
         {
             key_val = KEY_LEFT;
             break;
         }
-        case 0x04:
+        case 103:
         {
             key_val = KEY_UP;
             break;
         }
-        case 0x08:
+        case 28:
         {
             key_val = KEY_OK;
             break;
         }
-        case 0x10:
+        case 106:
         {
             key_val = KEY_RIGHT;
             break;
         }
-        case 0x20:
+        case 108:
         {
             key_val = KEY_DOWN;
             break;
         }
-        case 0x40:
+        case 88:
         {
             key_val = KEY_POWER;
             break;
         }
-        case 0x80:
+        case 102:
         {
             key_val = KEY_MENU;
             break;
@@ -698,20 +339,17 @@ static int AOTOMfp_Get_Key_Value(void)
         }
     }
 
-    return key_val;
+	return key_val;
 }
 
 int aotomSetTime(char* time)
 {
-   char		buffer[8];
-   int      res = 0;
+   int res = 0;
 
 	dprintk(5, "%s >\n", __func__);
 
 	dprintk(5, "%s time: %02d:%02d\n", __func__, time[2], time[3]);
-	memset(buffer, 0, 8);
-	memcpy(buffer, time, 5);
-	VFD_Show_Time(time[2], time[3]);
+	res= VFD_Show_Time(time[2], time[3]);
 	dprintk(5, "%s <\n", __func__);
 
    return res;
@@ -722,54 +360,18 @@ int vfd_init_func(void)
 	dprintk(5, "%s >\n", __func__);
 	printk("Edision argus vip2 VFD module initializing\n");
 
-	cfg.data_pin[0] = 3;
-	cfg.data_pin[1] = 2;
-	cfg.clk_pin[0] = 3;
-	cfg.clk_pin[1] = 4;
-	cfg.cs_pin[0] = 3;
-	cfg.cs_pin[1] = 5;
-
-	cfg.cs  = stpio_request_pin (cfg.cs_pin[0], cfg.cs_pin[1], "VFD CS", STPIO_OUT);
-	cfg.clk = stpio_request_pin (cfg.clk_pin[0], cfg.clk_pin[1], "VFD CLK", STPIO_OUT);
-	cfg.data= stpio_request_pin (cfg.data_pin[0], cfg.data_pin[1], "VFD DATA", STPIO_OUT);
-
-	if(!cfg.cs || !cfg.data || !cfg.clk) {
-		printk("vfd_init_func:  PIO errror!\n");
-		return -1;
-	}
 
 #ifdef VFD_RW_SEM
     init_rwsem(&vfd_rws);
 #endif
 
-    VFD_CS_CLR();
-    VFD_WR(0x0C);
-    VFD_CS_SET();
-
-  	VFD_Set_Mode(VFDWRITEMODE);
-    VFD_Seg_Addr_Init();
-    VFD_Clear_All();
-    VFD_Show_Content();
-
 	return 0;
-}
-
-static void VFD_CLR()
-{
-    VFD_CS_CLR();
-    VFD_WR(0x0C);
-    VFD_CS_SET();
-
-  	VFD_Set_Mode(VFDWRITEMODE);
-    VFD_Seg_Addr_Init();
-    VFD_Clear_All();
-    VFD_Show_Content();
 }
 
 int aotomSetIcon(int which, int on)
 {
 	char buffer[8];
-	int  res = 0, m = 0, n = 0;
+	int  res = 0;
 
 	dprintk(5, "%s > %d, %d\n", __func__, which, on);
 	if (which < 1 || which > 45)
@@ -793,7 +395,9 @@ static ssize_t AOTOMdev_write(struct file *filp, const unsigned char *buff, size
 {
 	char* kernel_buf;
 	int minor, vLoop, res = 0;
-
+        
+	struct vfd_ioctl_data data;
+	
 	dprintk(5, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
 
 	minor = -1;
@@ -828,13 +432,24 @@ static ssize_t AOTOMdev_write(struct file *filp, const unsigned char *buff, size
 	if(down_interruptible (&write_sem))
       return -ERESTARTSYS;
 
-	if (kernel_buf[len-1] == '\n') {
-		kernel_buf[len-1] = 0;
-		VFD_Show_String(kernel_buf, len - 1);
+      	data.length = len;
+	if (kernel_buf[len-1] == '\n') 
+	{
+	  kernel_buf[len-1] = 0;
+	  data.length--;
+	}
+	
+	if(len <0)
+	{ 
+	  res = -1;
+	  dprintk(2, "empty string\n");
 	}
 	else
-		VFD_Show_String(kernel_buf, len);
-
+	{
+	  memcpy(data.data,kernel_buf,len);
+	  res=run_draw_thread(&data);
+	}
+	
 	kfree(kernel_buf);
 
 	up(&write_sem);
@@ -992,15 +607,16 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		break;
 	case VFDICONDISPLAYONOFF:
 		{
-			res = aotomSetIcon(aotom->u.icon.icon_nr, aotom->u.icon.on);
+		  //struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;	
+		  res = aotomSetIcon(aotom->u.icon.icon_nr, aotom->u.icon.on);
 		}
 
 		mode = 0;
 	case VFDSTANDBY:
 	   break;
 	case VFDSETTIME:
-		if (aotom->u.time.time != 0)
-		   res = aotomSetTime(aotom->u.time.time);
+		   //struct set_time_s *data2 = (struct set_time_s *) arg;
+		   res = aotomSetTime((char *)arg);
 		break;
 	case VFDGETTIME:
 		break;
@@ -1009,8 +625,14 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 	case VFDDISPLAYCHARS:
 		if (mode == 0)
 		{
-			struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;
-			res = VFD_Show_String(data->data, data->length);
+	 	  struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg; 
+		  if(data->length <0)
+	            { 
+	              res = -1;
+	              dprintk(2, "empty string\n");
+	            }
+		    else
+		     res = run_draw_thread(data);
 		} else
 		{
 			//not suppoerted
@@ -1020,16 +642,18 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 
 		break;
 	case VFDDISPLAYWRITEONOFF:
-		if(aotom->u.mode.compat) // 1 = show, 0 = off
-			VFD_Show_Content();
-		else
-			VFD_Show_Content_Off();
 		break;
 	case VFDDISPLAYCLR:
-		VFD_CLR();
+		if(!thread_stop)
+		  kthread_stop(thread);
+	  
+		//wait thread stop
+		while(!thread_stop)
+		  {msleep(1);}
+		VFD_clr();
 		break;
 	default:
-		printk("VFD/Aotom: unknown IOCTL 0x%x\n", cmd);
+		printk("VFD/AOTOM: unknown IOCTL 0x%x\n", cmd);
 
 		mode = 0;
 		break;
@@ -1068,7 +692,7 @@ static struct file_operations vfd_fops =
 
 /*----- Button driver -------*/
 
-static char *button_driver_name = "Edision vip2 frontpanel buttons";
+static char *button_driver_name = "argus vip2 frontpanel buttons";
 static struct input_dev *button_dev;
 static int button_value = -1;
 static int bad_polling = 1;
@@ -1129,7 +753,7 @@ void button_bad_polling(void)
 		else {
 			if(btn_pressed) {
 				btn_pressed = 0;
-				msleep(50);
+				msleep(80);
 				VFD_Show_Ico(DOT2,LOG_OFF);
 			}
 			input_report_key(button_dev, KEY_UP, 	0);
@@ -1143,7 +767,7 @@ void button_bad_polling(void)
 		}
 	}
 }
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
+#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
 static DECLARE_WORK(button_obj, button_bad_polling);
 #else
 static DECLARE_WORK(button_obj, button_bad_polling, NULL);
@@ -1219,14 +843,18 @@ void button_dev_exit(void)
 static int __init aotom_init_module(void)
 {
 	int i;
-
+	
 	dprintk(5, "%s >\n", __func__);
+        
 
-	if(vfd_init_func()) {
+	sema_init(&display_sem,1);
+
+	if(YWPANEL_VFD_Init()) {
 		printk("unable to init module\n");
 		return -1;
 	}
 
+	VFD_clr();
 	if(button_dev_init() != 0)
 		return -1;
 
@@ -1239,23 +867,19 @@ static int __init aotom_init_module(void)
 	for (i = 0; i < LASTMINOR; i++)
 	    sema_init(&FrontPanelOpen[i].sem, 1);
 
+	
 	dprintk(5, "%s <\n", __func__);
+	
 	return 0;
 }
 
 static void __exit aotom_cleanup_module(void)
 {
-
-    if(cfg.data != NULL)
-      stpio_free_pin (cfg.data);
-    if(cfg.clk != NULL)
-      stpio_free_pin (cfg.clk);
-    if(cfg.cs != NULL)
-      stpio_free_pin (cfg.cs);
-
 	dprintk(5, "[BTN] unloading ...\n");
 	button_dev_exit();
-
+        
+	//kthread_stop(time_thread);
+	
 	unregister_chrdev(VFD_MAJOR,"VFD");
 	printk("VIP2 FrontPanel module unloading\n");
 }
@@ -1267,6 +891,6 @@ module_exit(aotom_cleanup_module);
 module_param(paramDebug, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 MODULE_PARM_DESC(paramDebug, "Debug Output 0=disabled >0=enabled(debuglevel)");
 
-MODULE_DESCRIPTION("VFD module for Edision vip2");
+MODULE_DESCRIPTION("VFD module for Spider HL101");
 MODULE_AUTHOR("Spider-Team");
 MODULE_LICENSE("GPL");
