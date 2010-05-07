@@ -163,7 +163,7 @@ static inline snd_pcm_uframes_t _ksnd_pcm_avail_update(snd_pcm_substream_t
  * currently it seems so that this works for both cpu types
  * (BWC vs. BWD)
  */
-#if defined(__TDT__) && (defined(FORTIS_HDBOX) || defined(UFS922) || defined(OCTAGON1008))
+#if defined(__TDT__) && (defined(FORTIS_HDBOX) || defined(UFS922) || defined(HL101) || defined(VIP2) || defined(OCTAGON1008))
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	if (runtime->sleep_min == 0 &&
 	    _ksnd_pcm_state(substream) == SNDRV_PCM_STATE_RUNNING)
@@ -242,7 +242,7 @@ int ksnd_pcm_htimestamp(ksnd_pcm_t *kpcm, snd_pcm_uframes_t *avail, struct times
  * currently it seems so that this works for both cpu types
  * (BWC vs. BWD)
  */
-#if defined(__TDT__) && (defined(FORTIS_HDBOX) || defined(UFS922) || defined(OCTAGON1008))
+#if defined(__TDT__) && (defined(FORTIS_HDBOX) || defined(UFS922) || defined(HL101) || defined(VIP2) || defined(OCTAGON1008))
 	myavail = _ksnd_pcm_avail_update(kpcm->substream);
 #else
         myavail	= 0;

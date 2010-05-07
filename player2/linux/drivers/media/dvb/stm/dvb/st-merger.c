@@ -811,11 +811,11 @@ void stm_tsm_init (int use_cimax)
       /* Now lets get the SWTS info and setup an FDMA channel */
 #if defined(UFS912)
       tsm_handle.fdma_reqline = 31;
-#elif !defined(TF7700) && !defined(HL101) && !defined(UFS922) && !defined(FORTIS_HDBOX)
+#elif defined(UFS910)
       //ufs910 use dma request id 30 for swts, do'nt know what other boxes use
-      tsm_handle.fdma_reqline = 30;
-#else
       tsm_handle.fdma_reqline = 28;
+#else
+      tsm_handle.fdma_reqline = 30;
 #endif
       tsm_handle.fdma_channel = request_dma_bycap(fdmac_id, fdma_cap_hb, "swts0");
       tsm_handle.fdma_req     = dma_req_config(tsm_handle.fdma_channel,tsm_handle.fdma_reqline,&fdma_req_config);

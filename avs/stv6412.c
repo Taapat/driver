@@ -163,7 +163,7 @@ static struct s_stv6412_data tmpstv6412_data;
 static int stv6412_s_old_src;
 
 /* ---------------------------------------------------------------------- */
-#if defined(FORTIS_HDBOX)
+#if defined(FORTIS_HDBOX) || defined(HL101)
 //Trick: hack ;)
 int stv6412_set(struct i2c_client *client)
 {
@@ -654,7 +654,7 @@ int stv6412_command(struct i2c_client *client, unsigned int cmd, void *arg )
 				return stv6412_set_mute(client,val);
 			/* set video fast blanking */
 			case AVSIOSFBLK:
-#if defined(FORTIS_HDBOX)
+#if defined(FORTIS_HDBOX) || defined(HL101)
 				printk("[AVS STV6418] not support AVSIOSFBLK yet!\n");
 				return;
 #else
@@ -707,7 +707,7 @@ int stv6412_command(struct i2c_client *client, unsigned int cmd, void *arg )
                                 break;
 			/* get video fast blanking */
 			case AVSIOGFBLK:
-#if defined(FORTIS_HDBOX)
+#if defined(FORTIS_HDBOX) || defined(HL101)
 				printk("[AVS STV6418] not support AVSIOSFBLK yet!\n");
 				break;
 #else
