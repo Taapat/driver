@@ -43,6 +43,7 @@
 #include "stv6412.h"
 #include "stv6417.h"
 #include "cxa2161.h"
+#include "vip2_avs.h"
 #include "fake_avs.h"
 #include "avs_none.h"
 
@@ -52,8 +53,9 @@ enum
 	STV6412,
 	STV6417,
 	CXA2161,
+	VIP2_AVS,
 	FAKE_AVS,
-	AVS_NONE
+	AVS_NONE,
 };
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
@@ -62,6 +64,7 @@ static const struct i2c_device_id avs_id[] = {
         { "stv6412", STV6412 },
         { "stv6417", STV6417 },
         { "cxa2161", CXA2161 },
+        { "vip2_avs", VIP2_AVS },
         { "fake_avs", FAKE_AVS },
         { "avs_none", AVS_NONE },
         { }
@@ -118,6 +121,7 @@ static int avs_newprobe(struct i2c_client *client, const struct i2c_device_id *i
 	case STV6412:  stv6412_init(client);  break;
 	case STV6417:  stv6417_init(client);  break;
 	case CXA2161:  cxa2161_init(client);  break;
+	case VIP2_AVS: vip2_avs_init(client); break;
 	case FAKE_AVS: fake_avs_init(client); break;
 	case AVS_NONE: avs_none_init(client); break;
 	default: return -ENODEV;
@@ -209,6 +213,7 @@ static int avs_command_ioctl(struct i2c_client *client, unsigned int cmd, void *
 	case STV6412:  err = stv6412_command(client, cmd, arg);  break;
 	case STV6417:  err = stv6417_command(client, cmd, arg);  break;
 	case CXA2161:  err = cxa2161_command(client, cmd, arg);  break;
+	case VIP2_AVS: err = vip2_avs_command(client, cmd, arg); break;
 	case FAKE_AVS: err = fake_avs_command(client, cmd, arg); break;
 	case AVS_NONE: err = avs_none_command(client, cmd, arg); break;
 	}
@@ -229,6 +234,7 @@ int avs_command_kernel(unsigned int cmd, void *arg)
 	case STV6412:  err = stv6412_command_kernel(client, cmd, arg);  break;
 	case STV6417:  err = stv6417_command_kernel(client, cmd, arg);  break;
 	case CXA2161:  err = cxa2161_command_kernel(client, cmd, arg);  break;
+	case VIP2_AVS: err = vip2_avs_command_kernel(client, cmd, arg); break;
 	case FAKE_AVS: err = fake_avs_command_kernel(client, cmd, arg); break;
 	case AVS_NONE: err = avs_none_command_kernel(client, cmd, arg); break;
 	}
@@ -293,6 +299,8 @@ static int avs_detect(struct i2c_client *client, int kind, struct i2c_board_info
 			kind = STV6417;
 		else if(!strcmp("cxa2161", type))
 			kind = CXA2161;
+		else if(!strcmp("vip2_avs", type))
+			kind = VIP2_AVS;
 		else if(!strcmp("fake_avs", type))
 			kind = FAKE_AVS;
 		else if(!strcmp("avs_none", type))
@@ -305,6 +313,7 @@ static int avs_detect(struct i2c_client *client, int kind, struct i2c_board_info
 	case STV6412:  name = "stv6412";  break;
 	case STV6417:  name = "stv6417";  break;
 	case CXA2161:  name = "cxa2161";  break;
+	case VIP2_AVS: name = "vip2_avs"; break;
 	case FAKE_AVS: name = "fake_avs"; break;
 	case AVS_NONE: name = "avs_none"; break;
 	default: return -ENODEV;

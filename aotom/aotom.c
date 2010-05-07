@@ -288,7 +288,6 @@ int run_draw_thread(struct vfd_ioctl_data *draw_data)
     return 0;
 }
 
-static int xxfd=0;
 static int AOTOMfp_Get_Key_Value(void)
 {
 	int ret, key_val = INVALID_KEY;
@@ -882,9 +881,8 @@ static void __exit aotom_cleanup_module(void)
 	//kthread_stop(time_thread);
 	
 	unregister_chrdev(VFD_MAJOR,"VFD");
-	printk("Edisio argus vip2 front panel module unloading\n");
+	printk("Edision argus vip2 front panel module unloading\n");
 }
-
 
 module_init(aotom_init_module);
 module_exit(aotom_cleanup_module);
