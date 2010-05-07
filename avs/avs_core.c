@@ -373,7 +373,7 @@ int __init avs_init(void)
 	dprintk("[AVS]: A/V switch handling for %s\n", name);
 
 #if !defined(CUBEREVO_MINI_FTA) && !defined(CUBEREVO_250HD)
-	if ((devType != FAKE_AVS) && (devType != AVS_NONE)) {
+	if ((devType != FAKE_AVS) && (devType != AVS_NONE) && (devType != VIP2_AVS)) {
 		if ((res = i2c_add_driver(&avs_i2c_driver))) {
 			dprintk("[AVS]: i2c add driver failed\n");
 			return res;
