@@ -846,6 +846,7 @@ static int __init aotom_init_module(void)
 	
 	dprintk(5, "%s >\n", __func__);
         
+	printk("Edisio argus vip2 second stage front panel driver\n");
 
 	sema_init(&display_sem,1);
 
@@ -881,7 +882,7 @@ static void __exit aotom_cleanup_module(void)
 	//kthread_stop(time_thread);
 	
 	unregister_chrdev(VFD_MAJOR,"VFD");
-	printk("VIP2 FrontPanel module unloading\n");
+	printk("Edisio argus vip2 front panel module unloading\n");
 }
 
 
@@ -891,6 +892,6 @@ module_exit(aotom_cleanup_module);
 module_param(paramDebug, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 MODULE_PARM_DESC(paramDebug, "Debug Output 0=disabled >0=enabled(debuglevel)");
 
-MODULE_DESCRIPTION("VFD module for Spider HL101");
+MODULE_DESCRIPTION("VFD module for Edision argus vip2");
 MODULE_AUTHOR("Spider-Team");
 MODULE_LICENSE("GPL");
