@@ -5,6 +5,7 @@
 
 /* ioctl numbers ->hacky */
 #define VFDBRIGHTNESS         0xc0425a03
+#define VFDPWRLED             0xc0425a04 /* added by zeroone, also used in fp_control/global.h ; set PowerLed Brightness on HDBOX*/
 #define VFDDRIVERINIT         0xc0425a08
 #define VFDICONDISPLAYONOFF   0xc0425a0a
 #define VFDDISPLAYWRITEONOFF  0xc0425a05
@@ -19,6 +20,10 @@
 #define VFDSETMODE            0xc0425aff
 
 struct set_brightness_s {
+	int level;
+};
+
+struct set_pwrled_s {
 	int level;
 };
 
@@ -60,6 +65,7 @@ struct nuvoton_ioctl_data {
 		struct set_icon_s icon;
 		struct set_led_s led;
 		struct set_brightness_s brightness;
+		struct set_pwrled_s pwrled;
 		struct set_mode_s mode;
 		struct set_standby_s standby;
 		struct set_time_s time;

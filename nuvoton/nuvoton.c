@@ -291,6 +291,7 @@ struct iconToInternal {
 
 #define cCommandGetFrontInfo     0xe0
 
+#define cCommandSetPwrLed        0x93 /* added by zeroone, only used in this file; set PowerLed Brightness on HDBOX */
 
 /* from the fp */
 #define cEventFP           0x51 /* fp buttons */
@@ -1317,6 +1318,38 @@ int nuvotonSetBrightness(int level)
 /* export for later use in e2_proc */
 EXPORT_SYMBOL(nuvotonSetBrightness);
 
+// BEGIN SetPwrLed
+int nuvotonSetPwrLed(int level)
+{
+	char buffer[8];
+	int res = 0;
+	
+	dprintk(5, "%s > %d\n", __func__, level);
+
+	if (level < 0 || level > 15)
+	{
+		printk("VFD/Nuvoton PwrLed out of range %d\n", level);
+		return -EINVAL;
+	}
+
+	memset(buffer, 0, 8);
+	
+	buffer[0] = SOP;
+	buffer[1] = cCommandSetPwrLed;
+	buffer[2] = 0xf2;
+	buffer[3] = level;
+	buffer[4] = 0x00;
+	buffer[5] = EOP;
+	
+	res = nuvotonWriteCommand(buffer, 6, 0, NULL, 0, 0);
+
+	dprintk(5, "%s <\n", __func__);
+
+   return res;
+}
+/* export for later use in e2_proc */
+EXPORT_SYMBOL(nuvotonSetPwrLed);
+// END SetPwrLed
 int nuvotonSetStandby(char* time)
 {
 	char     buffer[8];
@@ -1867,6 +1900,18 @@ static int NUVOTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int
 		} else
 		{
 			res = nuvotonSetBrightness(nuvoton->u.brightness.level);
+		}
+		mode = 0;
+		break;
+	case VFDPWRLED:
+		if (mode == 0)
+		{
+			struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg; 
+
+			res = nuvotonSetPwrLed(data->start_address);
+		} else
+		{
+			res = nuvotonSetPwrLed(nuvoton->u.pwrled.level);
 		}
 		mode = 0;
 		break;
