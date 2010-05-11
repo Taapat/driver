@@ -495,12 +495,16 @@ int proc_video_videomode_write(struct file *file, const char __user *buf,
 
 	printk("%s %ld - ", __FUNCTION__, count);
 
-    	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
+	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
+	
+	void* fb = stmfb_get_fbinfo_ptr();
+	struct fb_info *info = (struct fb_info*) fb;
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
 	{
 		int modeToSet = -1;	
+		int aktmode = -1;
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
 			goto out;
@@ -517,22 +521,39 @@ int proc_video_videomode_write(struct file *file, const char __user *buf,
 
 		printk("%s\n", myString);
 
-		for (vLoop = 0; vLoop < sizeof(Options) / sizeof(struct Modes); vLoop++)
-		{	
+		//whithout -1 write a unsupportet string hangs the driver
+		for (vLoop = 0; vLoop < (sizeof(Options) / sizeof(struct Modes)) - 1; vLoop++)
+		{
+		
+			if (Options[vLoop].xres     == info->var.xres &&
+					Options[vLoop].yres     == info->var.yres &&
+					Options[vLoop].vxres    == info->var.xres_virtual &&
+					Options[vLoop].vyres    == info->var.yres_virtual &&
+					Options[vLoop].pixclock == info->var.pixclock &&
+					Options[vLoop].left     == info->var.left_margin &&
+					Options[vLoop].right    == info->var.right_margin &&
+					Options[vLoop].upper    == info->var.upper_margin &&
+					Options[vLoop].lower    == info->var.lower_margin &&
+					Options[vLoop].hslen    == info->var.hsync_len &&
+					Options[vLoop].vslen    == info->var.vsync_len &&
+					Options[vLoop].sync     == info->var.sync/* &&
+					Options[vLoop].vmode    == info->var.vmode*/ )
+			{
+				aktmode = vLoop;
+			}
+		
 			if (strncmp(myString, Options[vLoop].name, new_count) == 0)
 			{
 				printk("Found mode to set %s at %d\n",  Options[vLoop].name, vLoop);
 				modeToSet = vLoop;
-				break;
 			}
 		}
 		
+		if(aktmode == modeToSet)
+			modeToSet = -1;
+		
 		if (modeToSet != -1)
 		{
-			void* fb =  stmfb_get_fbinfo_ptr();
-			
-			struct fb_info *info = (struct fb_info*) fb;
-
 			struct fb_var_screeninfo screen_info;
 			int createNew = 0;
 
@@ -635,7 +656,8 @@ int proc_video_videomode_read (char *page, char **start, off_t off, int count,
 
 	/* default */
 	len = sprintf(page, "pal\n");
-	for (vLoop = 0; vLoop < sizeof(Options) / sizeof(struct Modes); vLoop++)
+	//whithout -1 if resolution not found hangs the driver
+	for (vLoop = 0; vLoop < (sizeof(Options) / sizeof(struct Modes)) - 1; vLoop++)
 	{
 /*
 printk("%d\n", info->var.xres);
