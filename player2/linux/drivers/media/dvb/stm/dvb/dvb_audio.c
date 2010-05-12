@@ -616,12 +616,13 @@ int AudioIoctlSetId (struct DeviceContext_s* Context, int Id)
 /*{{{  AudioIoctlSetMixer*/
 static int AudioIoctlSetMixer (struct DeviceContext_s* Context, audio_mixer_t* Mix)
 {
-    DVB_DEBUG("Volume left = %d, Volume right = %d (not yet implemented)\n", Mix->volume_left, Mix->volume_right);
-
 #ifdef __TDT__
-/* Dagobert: 04.10.2009: Do nothing here because we do this in
- * e2_proc_avs also.
+/* HACK
+ * set volume over avs.
  */
+    char buf[3];
+    snprintf(buf, 3, "%d", Mix->volume_left); 
+    proc_avs_0_volume_write(NULL, buf, strlen(buf), NULL);
     return 0;
 #else
     return -EPERM;

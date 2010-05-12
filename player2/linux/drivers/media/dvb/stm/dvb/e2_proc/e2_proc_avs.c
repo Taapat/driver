@@ -124,8 +124,13 @@ int proc_avs_0_volume_write(struct file *file, const char __user *buf,
 		int volume = 0;
 
 		ret = -EFAULT;
-		if (copy_from_user(page, buf, count))
-			goto out;
+		if(file == NULL && data == NULL)
+			strncpy(page, buf, count);
+		else
+		{
+			if (copy_from_user(page, buf, count))
+				goto out;
+		}
 
 		myString = (char *) kmalloc(count + 1, GFP_KERNEL);
 		strncpy(myString, page, count);
