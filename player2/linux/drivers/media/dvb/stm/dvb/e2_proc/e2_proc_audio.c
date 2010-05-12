@@ -263,14 +263,20 @@ int proc_audio_j1_mute_write(struct file *file, const char __user *buf,
 			if ((kcontrol != NULL) && (single_control != NULL) ){
 				struct snd_ctl_elem_value ucontrol;
 				//printk("Pseudo Mixer controls = %p\n", kcontrol);
-				ucontrol.value.integer.value[0] = volume;
-				ucontrol.value.integer.value[1] = volume;
-				ucontrol.value.integer.value[2] = volume;
-				ucontrol.value.integer.value[3] = volume;
-				ucontrol.value.integer.value[4] = volume;
-				ucontrol.value.integer.value[5] = volume;
+				
+				//if volume has changed or is not in mute do nothing
+				snd_pseudo_integer_get(single_control, &ucontrol);
+				if(ucontrol.value.integer.value[0] == -63)
+				{
+					ucontrol.value.integer.value[0] = volume;
+					ucontrol.value.integer.value[1] = volume;
+					ucontrol.value.integer.value[2] = volume;
+					ucontrol.value.integer.value[3] = volume;
+					ucontrol.value.integer.value[4] = volume;
+					ucontrol.value.integer.value[5] = volume;
 	
-				snd_pseudo_integer_put(single_control, &ucontrol);
+					snd_pseudo_integer_put(single_control, &ucontrol);
+				}
 	
 			} else {
 				printk("Pseudo Mixer does not deliver controls\n");
