@@ -361,56 +361,59 @@ int proc_audio_ac3_write(struct file *file, const char __user *buf,
 		
 		if (strncmp("passthrough", page, count - 1) == 0)
 		{
-                        passthrough = 1;
-			if (ProcDeviceContext != NULL)
-                        {
-			   int last_state = ProcDeviceContext->AudioState.play_state;
+			if(passthrough == 0)
+			{
+				passthrough = 1;
+				if (ProcDeviceContext != NULL)
+				{
+			   	int last_state = ProcDeviceContext->AudioState.play_state;
 			   
-			   /* avoid ugly sound */
-                           if (last_state == AUDIO_PLAYING)
-			   {
+			   	/* avoid ugly sound */
+					if (last_state == AUDIO_PLAYING)
+					{
 			      AudioIoctlPause (ProcDeviceContext);
 			      AudioIoctlClearBuffer (ProcDeviceContext);
 
 			      VideoIoctlFreeze (ProcDeviceContext);
 			      VideoIoctlClearBuffer (ProcDeviceContext);
-
-                           }
+					}
 			   
-			   AudioIoctlSetBypassMode (ProcDeviceContext, ((ProcDeviceContext->AudioEncoding == AUDIO_ENCODING_AC3) ? 0 : 1));
+					AudioIoctlSetBypassMode (ProcDeviceContext, ((ProcDeviceContext->AudioEncoding == AUDIO_ENCODING_AC3) ? 0 : 1));
 
-                           if (last_state == AUDIO_PLAYING)
-                           {
-                              AudioIoctlContinue (ProcDeviceContext);
+					if (last_state == AUDIO_PLAYING)
+					{
+						AudioIoctlContinue (ProcDeviceContext);
 			      VideoIoctlContinue (ProcDeviceContext);
-                           }
-                        }
-
+					}
+				}
+			}
 		} else { //downmix
+			if(passthrough == 1)
+			{
+				passthrough = 0;
 
-			passthrough = 0;
-
-			if (ProcDeviceContext != NULL)
+				if (ProcDeviceContext != NULL)
                         {
-			   int last_state = ProcDeviceContext->AudioState.play_state;
+					int last_state = ProcDeviceContext->AudioState.play_state;
 			   
 			   /* avoid ugly sound */
-                           if (last_state == AUDIO_PLAYING)
-			   {
-			      AudioIoctlPause (ProcDeviceContext);
+					if (last_state == AUDIO_PLAYING)
+					{
+						AudioIoctlPause (ProcDeviceContext);
 			      AudioIoctlClearBuffer (ProcDeviceContext);
 			      VideoIoctlFreeze (ProcDeviceContext);
 			      VideoIoctlClearBuffer (ProcDeviceContext);
-                           }
+					}
 
-			   AudioIoctlSetBypassMode (ProcDeviceContext, ((ProcDeviceContext->AudioEncoding == AUDIO_ENCODING_AC3) ? 0 : 1));
+					AudioIoctlSetBypassMode (ProcDeviceContext, ((ProcDeviceContext->AudioEncoding == AUDIO_ENCODING_AC3) ? 0 : 1));
 
-                           if (last_state == AUDIO_PLAYING)
-                           {
-                              AudioIoctlContinue (ProcDeviceContext);
+					if (last_state == AUDIO_PLAYING)
+					{
+						AudioIoctlContinue (ProcDeviceContext);
 			      VideoIoctlContinue (ProcDeviceContext);
-		           }
-                       }
+					}
+				}
+			}
 		}
 
 		kfree(myString);
