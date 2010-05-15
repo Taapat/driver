@@ -90,7 +90,7 @@
 #define SAA_SRC_ENC   0
 #define SAA_SRC_SCART 1
 
-static int debug=1;
+static int debug=0;
 
 #define dprintk(fmt...) \
 	do { \

@@ -452,7 +452,7 @@ void stm_tsm_init (int use_cimax)
 	 ->TS interface is as indicated by TSMerger configuration bits
        */
 
-#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101) && !defined(HOMECAST5101) && !defined(UFS912) && !defined(OCTAGON1008)
+#if  defined(UFS910)
       /*
 	 The UFS910 hardware requires the following connections:
 	 ->TSIN1 routed to TSIN2
