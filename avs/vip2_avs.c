@@ -38,8 +38,6 @@
 #include <linux/stpio.h>
 #endif
 
-#include <linux/i2c.h>
-
 #include "avs_core.h"
 #include "vip2_avs.h"
 
@@ -64,7 +62,6 @@ enum scart_ctl {
 	HDD_VCCEN2		= 7,
 };
 
-/* ---------------------------------------------------------------------- */
 static struct stpio_pin*	srclk; // shift clock
 static struct stpio_pin*	rclk;  // latch clock
 static struct stpio_pin*	sda;   // serial data
@@ -117,7 +114,7 @@ void vip2_avs_hc595_out(unsigned char ctls, int state)
     RCLK_SET();
 }
 
-int vip2_avs_src_sel( struct i2c_client *client, int src )
+int vip2_avs_src_sel(int src)
 {
 	if(src == SAA_SRC_ENC)
 		vip2_avs_hc595_out(SCART_TV_SAT, 1);
@@ -127,9 +124,7 @@ int vip2_avs_src_sel( struct i2c_client *client, int src )
 	return 0;
 }
 
-/* ---------------------------------------------------------------------- */
-
-inline int vip2_avs_standby( struct i2c_client *client, int type )
+inline int vip2_avs_standby(int type)
 {
 
 	if ((type<0) || (type>1))
@@ -161,12 +156,11 @@ inline int vip2_avs_standby( struct i2c_client *client, int type )
 	return 0;
 }
  
-/* ---------------------------------------------------------------------- */
- 
-int vip2_avs_set_volume( struct i2c_client *client, int vol )
+int vip2_avs_set_volume(int vol)
 {
 	int c=0;
  
+	dprintk("[AVS]: %s (%d)\n", __func__, vol);
 	c = vol;
  
 	if (c > 63 || c < 0)
@@ -181,11 +175,8 @@ int vip2_avs_set_volume( struct i2c_client *client, int vol )
 	return 0;
 }
  
-/* ---------------------------------------------------------------------- */
- 
-inline int vip2_avs_set_mute( struct i2c_client *client, int type )
+inline int vip2_avs_set_mute(int type)
 {
-
 	if ((type<0) || (type>1))
 	{
 		return -EINVAL;
@@ -204,8 +195,6 @@ inline int vip2_avs_set_mute( struct i2c_client *client, int type )
 	return 0;
 }
  
-/* ---------------------------------------------------------------------- */
- 
 int vip2_avs_get_volume(void)
 {
 	int c;
@@ -215,18 +204,13 @@ int vip2_avs_get_volume(void)
 	return c;
 }
  
-/* ---------------------------------------------------------------------- */
- 
 inline int vip2_avs_get_mute(void)
 {
 	return t_mute;
 }
  
-/* ---------------------------------------------------------------------- */
- 
-int vip2_avs_set_mode( struct i2c_client *client, int vol )
+int vip2_avs_set_mode(int vol)
 {
-	dprintk("[AVS]: SAAIOSMODE command : %d\n", vol);
 	switch(vol)
 	{
 	case	SAA_MODE_RGB:
@@ -239,22 +223,19 @@ int vip2_avs_set_mode( struct i2c_client *client, int vol )
 		break;
 
 	}
-	// fake avs do not need it
  
 	return 0;
 }
  
-/* ---------------------------------------------------------------------- */
-//NOT IMPLEMENTED
-int vip2_avs_set_encoder( struct i2c_client *client, int vol )
+int vip2_avs_set_encoder(int vol)
 {
 	return 0;
 }
  
-/* ---------------------------------------------------------------------- */
- 
-int vip2_avs_set_wss( struct i2c_client *client, int vol )
+int vip2_avs_set_wss(int vol)
 {
+	dprintk("[AVS]: %s\n", __func__);
+
 	if (vol == SAA_WSS_43F)
 	{
 		vip2_avs_hc595_out(SCART_WSS, 0);
@@ -275,14 +256,12 @@ int vip2_avs_set_wss( struct i2c_client *client, int vol )
 	return 0;
 }
 
-/* ---------------------------------------------------------------------- */
-
-int vip2_avs_command(struct i2c_client *client, unsigned int cmd, void *arg )
+int vip2_avs_command(unsigned int cmd, void *arg )
 {
 	int val=0;
 
-	printk("[AVS]: command\n");
-	
+	dprintk("[AVS]: %s(%d)\n", __func__, cmd);
+
 	if (cmd & AVSIOSET)
 	{
 		if ( copy_from_user(&val,arg,sizeof(val)) )
@@ -293,11 +272,11 @@ int vip2_avs_command(struct i2c_client *client, unsigned int cmd, void *arg )
 		switch (cmd)
 		{
 			case AVSIOSVOL:
-				return vip2_avs_set_volume(client,val);
+				return vip2_avs_set_volume(val);
 			case AVSIOSMUTE:
-				return vip2_avs_set_mute(client,val);
+				return vip2_avs_set_mute(val);
 			case AVSIOSTANDBY:
-				return vip2_avs_standby(client,val);
+				return vip2_avs_standby(val);
 			default:
 				return -EINVAL;
 		}
@@ -320,7 +299,7 @@ int vip2_avs_command(struct i2c_client *client, unsigned int cmd, void *arg )
 	}
 	else
 	{
-		printk("[AVS]: SAA command\n");
+		dprintk("[AVS]: %s: SAA command\n", __func__);
 
 		/* an SAA command */
 		if ( copy_from_user(&val,arg,sizeof(val)) )
@@ -331,15 +310,15 @@ int vip2_avs_command(struct i2c_client *client, unsigned int cmd, void *arg )
 		switch(cmd)
 		{
 		case SAAIOSMODE:
-           		 return vip2_avs_set_mode(client,val);
+           		 return vip2_avs_set_mode(val);
  	        case SAAIOSENC:
-        		 return vip2_avs_set_encoder(client,val);
+        		 return vip2_avs_set_encoder(val);
 		case SAAIOSWSS:
-			return vip2_avs_set_wss(client,val);
+			return vip2_avs_set_wss(val);
 		case SAAIOSSRCSEL:
-        		return vip2_avs_src_sel(client,val);
+        		return vip2_avs_src_sel(val);
 		default:
-			dprintk("[AVS]: SAA command not supported\n");
+			dprintk("[AVS]: %s: SAA command not supported\n", __func__);
 			return -EINVAL;
 		}
 	}
@@ -347,34 +326,31 @@ int vip2_avs_command(struct i2c_client *client, unsigned int cmd, void *arg )
 	return 0;
 }
 
-/* ---------------------------------------------------------------------- */
- 
-int vip2_avs_command_kernel(struct i2c_client *client, unsigned int cmd, void *arg)
+int vip2_avs_command_kernel(unsigned int cmd, void *arg)
 {
-   int val=0;
-
-	dprintk("[AVS]: command_kernel(%u)\n", cmd);
+    int val=0;
 	
 	if (cmd & AVSIOSET)
 	{
 		val = (int) arg;
 
-      		dprintk("[AVS]: AVSIOSET command\n");
+      	dprintk("[AVS]: %s: AVSIOSET command\n", __func__);
 
 		switch (cmd)
 		{
 			case AVSIOSVOL:
-		            return vip2_avs_set_volume(client,val);
+		            return vip2_avs_set_volume(val);
 		        case AVSIOSMUTE:
-		            return vip2_avs_set_mute(client,val);
+		            return vip2_avs_set_mute(val);
 		        case AVSIOSTANDBY:
-		            return vip2_avs_standby(client,val);
+		            return vip2_avs_standby(val);
 			default:
 				return -EINVAL;
 		}
-	} else if (cmd & AVSIOGET)
+	}
+	else if (cmd & AVSIOGET)
 	{
-		dprintk("[AVS]: AVSIOGET command\n");
+		dprintk("[AVS]: %s: AVSIOGET command\n", __func__);
 
 		switch (cmd)
 		{
@@ -393,22 +369,22 @@ int vip2_avs_command_kernel(struct i2c_client *client, unsigned int cmd, void *a
 	}
 	else
 	{
-		printk("[AVS]: SAA command (%d)\n", (int)arg);
+		dprintk("[AVS]: %s: SAA command (%d)\n", __func__, cmd);
 
 		val = (int) arg;
 
 		switch(cmd)
 		{
 		case SAAIOSMODE:
-           		 return vip2_avs_set_mode(client,val);
+           		 return vip2_avs_set_mode(val);
  	        case SAAIOSENC:
-        		 return vip2_avs_set_encoder(client,val);
+        		 return vip2_avs_set_encoder(val);
 		case SAAIOSWSS:
-			return vip2_avs_set_wss(client,val);
+			return vip2_avs_set_wss(val);
 		case SAAIOSSRCSEL:
-        		return vip2_avs_src_sel(client,val);
+        		return vip2_avs_src_sel(val);
 		default:
-			dprintk("[AVS]: SAA command not supported\n");
+			dprintk("[AVS]: %s: SAA command not supported\n", __func__);
 			return -EINVAL;
 		}
 	}
@@ -416,30 +392,35 @@ int vip2_avs_command_kernel(struct i2c_client *client, unsigned int cmd, void *a
 	return 0;
 }
 
-/* ---------------------------------------------------------------------- */
-
-int vip2_avs_init(struct i2c_client *client)
+int vip2_avs_init(void)
 {
-  srclk= stpio_request_pin (2, 5, "AVS_HC595_SRCLK", STPIO_OUT);
-  rclk = stpio_request_pin (2, 6, "AVS_HC595_RCLK", STPIO_OUT);
-  sda  = stpio_request_pin (2, 7, "AVS_HC595_SDA", STPIO_OUT);
+	srclk= stpio_request_pin (2, 5, "AVS_HC595_SRCLK", STPIO_OUT);
+	rclk = stpio_request_pin (2, 6, "AVS_HC595_RCLK", STPIO_OUT);
+	sda  = stpio_request_pin (2, 7, "AVS_HC595_SDA", STPIO_OUT);
 
-  if ((srclk == NULL) || (rclk == NULL) || sda == NULL)
-  {
-	if(srclk != NULL)
-		stpio_free_pin (srclk);
-   	if(rclk != NULL)
-		stpio_free_pin (rclk);
-	if(sda != NULL)
-		stpio_free_pin(sda);
-	return -1;
-  }
+	if ((srclk == NULL) || (rclk == NULL) || (sda == NULL))
+	{
+		if(srclk != NULL)
+			stpio_free_pin (srclk);
+		else
+			dprintk("[AVS]: srclk error\n");
 
-//	vip2_avs_hc595_out (SCART_WSS, 1);
-//	vip2_avs_hc595_out (SCART_STANDBY, 1);
-	vip2_avs_hc595_out(SCART_TV_SAT, 1); // to enc
+		if(rclk != NULL)
+			stpio_free_pin (rclk);
+		else
+			dprintk("[AVS]: rclk error\n");
+
+		if(sda != NULL)
+			stpio_free_pin(sda);
+		else
+			dprintk("[AVS]: sda error\n");
+
+		return -1;
+	}
+
+	vip2_avs_hc595_out(SCART_TV_SAT, 1); 	// set encoder
+
+	printk("[AVS]: init success\n");
 
   return 0;
 }
-
-/* ---------------------------------------------------------------------- */

@@ -548,7 +548,7 @@ int stv6412_src_sel( struct i2c_client *client, int src )
 {
 	if (src == SAA_SRC_ENC)
 	{
-     	   stv6412_data.t_vsc = stv6412_s_old_src;
+	   stv6412_data.t_vsc = stv6412_s_old_src;
 	   stv6412_data.v_vsc = stv6412_s_old_src;
 	   stv6412_data.tc_asc = 1;
 	   stv6412_data.v_asc = 1;

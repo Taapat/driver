@@ -20,9 +20,9 @@
  *
  */
 
-int vip2_avs_init(struct i2c_client *client);
-int vip2_avs_command(struct i2c_client *client, unsigned int cmd, void *arg );
-int vip2_avs_command_kernel(struct i2c_client *client, unsigned int cmd, void *arg);
+int vip2_avs_init(void);
+int vip2_avs_command(unsigned int cmd, void *arg );
+int vip2_avs_command_kernel(unsigned int cmd, void *arg);
 
 #endif
 

@@ -90,10 +90,9 @@
 #define SAA_SRC_ENC   0
 #define SAA_SRC_SCART 1
 
- 
- 
-#ifdef DEBUG
-#define dprintk(fmt, args...) printk(fmt, ##args)
-#else
-#define dprintk(fmt, args...)
-#endif
+static int debug=1;
+
+#define dprintk(fmt...) \
+	do { \
+		if (debug) printk (fmt); \
+	} while (0)

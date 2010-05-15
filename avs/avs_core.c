@@ -121,7 +121,6 @@ static int avs_newprobe(struct i2c_client *client, const struct i2c_device_id *i
 	case STV6412:  stv6412_init(client);  break;
 	case STV6417:  stv6417_init(client);  break;
 	case CXA2161:  cxa2161_init(client);  break;
-	case VIP2_AVS: vip2_avs_init(client); break;
 	case FAKE_AVS: fake_avs_init(client); break;
 	case AVS_NONE: avs_none_init(client); break;
 	default: return -ENODEV;
@@ -206,16 +205,23 @@ static int avs_command_ioctl(struct i2c_client *client, unsigned int cmd, void *
 {
 	int err = 0;
 
-	dprintk("[AVS]: command\n");
+#if !defined(VIP2) // none i2c avs !!!
+	if (!client)
+		return -1;
+#endif
+
+	dprintk("[AVS]: %s (%u)\n", __func__, cmd);
+
 	switch(devType)
 	{
 	case AK4705:   err = ak4705_command(client, cmd, arg);   break;
 	case STV6412:  err = stv6412_command(client, cmd, arg);  break;
 	case STV6417:  err = stv6417_command(client, cmd, arg);  break;
 	case CXA2161:  err = cxa2161_command(client, cmd, arg);  break;
-	case VIP2_AVS: err = vip2_avs_command(client, cmd, arg); break;
 	case FAKE_AVS: err = fake_avs_command(client, cmd, arg); break;
 	case AVS_NONE: err = avs_none_command(client, cmd, arg); break;
+	/* none i2c avs!! */
+	case VIP2_AVS: err = vip2_avs_command(cmd, arg); break;
 	}
 	return err;
 }
@@ -223,20 +229,27 @@ static int avs_command_ioctl(struct i2c_client *client, unsigned int cmd, void *
 int avs_command_kernel(unsigned int cmd, void *arg)
 {
 	int err = 0;
+
+#if !defined(VIP2) // i2c avs !!!
 	struct i2c_client *client = avs_client;
 	if (!client)
 		return -1;
+#endif
 
-	dprintk("[AVS]: command_kernel\n");
+	dprintk("[AVS]: %s (%u)\n", __func__, cmd);
+
 	switch(devType)
 	{
+#if defined(VIP2) // none i2c avs !!!
+	case VIP2_AVS: err = vip2_avs_command_kernel(cmd, arg); break;
+#else
 	case AK4705:   err = ak4705_command_kernel(client, cmd, arg);   break;
 	case STV6412:  err = stv6412_command_kernel(client, cmd, arg);  break;
 	case STV6417:  err = stv6417_command_kernel(client, cmd, arg);  break;
 	case CXA2161:  err = cxa2161_command_kernel(client, cmd, arg);  break;
-	case VIP2_AVS: err = vip2_avs_command_kernel(client, cmd, arg); break;
 	case FAKE_AVS: err = fake_avs_command_kernel(client, cmd, arg); break;
 	case AVS_NONE: err = avs_none_command_kernel(client, cmd, arg); break;
+#endif
 	}
 	return err;
 }
@@ -246,10 +259,7 @@ EXPORT_SYMBOL(avs_command_kernel);
 static int avs_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg)
 {
 	dprintk("[AVS]: IOCTL\n");
-	if (avs_client)
-		return avs_command_ioctl(avs_client, cmd, (void *) arg);
-	else
-		return -1;
+	return avs_command_ioctl(avs_client, cmd, (void *) arg);
 }
 
 static struct file_operations avs_fops = {
@@ -382,6 +392,12 @@ int __init avs_init(void)
 		if (!avs_client){
 			printk(KERN_ERR "avs: no client found\n");
 			i2c_del_driver(&avs_i2c_driver);
+			return -EIO;
+		}
+	}else if (devType == VIP2_AVS){
+		if(vip2_avs_init() != 0)
+		{
+			printk("[AVS]: init vip2 avs faild!\n");
 			return -EIO;
 		}
 	}
