@@ -73,7 +73,9 @@ obj-y	+= frontends/
 obj-y	+= pti/
 #obj-y	+= pti_np/
 obj-y	+= compcache/
+ifdef STM22
 obj-y	+= logfs/
+endif
 #obj-y	+= proc_register/
 ifndef VIP2
 obj-y	+= cic/
