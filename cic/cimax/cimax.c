@@ -72,7 +72,7 @@
 
 //#define  my_debug
 
-static int debug;
+static int debug = 0;
 #define dprintk(args...) \
 	do { \
 		if (debug) printk (args); \
@@ -108,7 +108,7 @@ unsigned long reg_bank4 = 0;
 #define EMI_DATA0_PORT_SIZE(a)		(a<<3)
 #define EMI_DATA0_DEVICE_TYPE(a)	(a<<0)
 
-#define EMI_DATA1_CYCLE(a)		(a<<31)
+#define EMI_DATA1_CYCLE(a)			(a<<31)
 #define EMI_DATA1_ACCESS_READ(a)	(a<<24)
 #define EMI_DATA1_CSE1_READ(a)		(a<<20)
 #define EMI_DATA1_CSE2_READ(a)		(a<<16)
@@ -117,7 +117,7 @@ unsigned long reg_bank4 = 0;
 #define EMI_DATA1_BEE1_READ(a)		(a<<4)
 #define EMI_DATA1_BEE2_READ(a)		(a<<0)
 
-#define EMI_DATA2_CYCLE(a)		(a<<31)
+#define EMI_DATA2_CYCLE(a)			(a<<31)
 #define EMI_DATA2_ACCESS_WRITE(a)	(a<<24)
 #define EMI_DATA2_CSE1_WRITE(a)		(a<<20)
 #define EMI_DATA2_CSE2_WRITE(a)		(a<<16)
@@ -355,44 +355,44 @@ void setDestination(struct cimax_state *state, int slot)
 	        /* try it first time without sleep */
            if (loop > 0) msleep(10);
 	  
-	        /* destination: modul a */
-           result = cimax_readreg(state, 0x17);
-          
-	        dprintk("%s (slot = %d, loop = %d): result = 0x%x\n", __func__, slot,loop, result);
-      
-      	  loop++;
-      	  if (loop == 10)
-	        {
-              dprintk("->abort setting slot destination\n");
+			/* destination: modul a */
+		   result = cimax_readreg(state, 0x17);
+		  
+			dprintk("%s (slot = %d, loop = %d): result = 0x%x\n", __func__, slot,loop, result);
+	  
+		  loop++;
+		  if (loop == 10)
+			{
+			  dprintk("->abort setting slot destination\n");
 				  break;
-      	  }
-      } 
+		  }
+	  } 
 
    } else
    {
-      /* read destination register */
-      result = cimax_readreg(state, 0x17);
+	  /* read destination register */
+	  result = cimax_readreg(state, 0x17);
 
-      while ((result & 0x4) == 0)
-      {
-          /* disable module a if this was selected before */
-          result = result & ~0x2; 
-          cimax_writereg(state, 0x17, result | 0x4);
+	  while ((result & 0x4) == 0)
+	  {
+		  /* disable module a if this was selected before */
+		  result = result & ~0x2; 
+		  cimax_writereg(state, 0x17, result | 0x4);
 	  
-          /* try it first time without sleep */
-          if (loop > 0) msleep(10);
+		  /* try it first time without sleep */
+		  if (loop > 0) msleep(10);
 	  
-          /* destination: modul b */
-          result = cimax_readreg(state, 0x17);
+		  /* destination: modul b */
+		  result = cimax_readreg(state, 0x17);
 
-	       dprintk("%s (slot = %d, loop = %d): result = 0x%x\n", __func__, slot,loop,result);
+		   dprintk("%s (slot = %d, loop = %d): result = 0x%x\n", __func__, slot,loop,result);
 
-      	 loop++;
-      	 if (loop == 10)
-	       {
+	      loop++;
+	      if (loop == 10)
+	      {
              dprintk("->abort setting slot destination\n");
              break;
-      	 }
+	      }
       }
    }
 #endif
@@ -410,7 +410,7 @@ static int cimax_poll_slot_status(struct dvb_ca_en50221 *ca, int slot, int open)
 	if ((slot < 0) || (slot > 1))
 		return 0;
 
-   mutex_lock(&cimax_mutex);
+	mutex_lock(&cimax_mutex);
 
 	slot_status = cimax_readreg(state, ctrlReg[slot]) & 0x01;
 
@@ -492,7 +492,7 @@ static int cimax_slot_reset(struct dvb_ca_en50221 *ca, int slot)
 			cimax_writereg(state, 0x00, result | 0x80);
 
 #if !defined(FORTIS_HDBOX) && !defined(OCTAGON1008)
-         cimax_writereg(state, 0x17, 0x0);
+			cimax_writereg(state, 0x17, 0x0);
 #endif
 			msleep(60);
 			
@@ -502,9 +502,10 @@ static int cimax_slot_reset(struct dvb_ca_en50221 *ca, int slot)
 
 			dprintk(KERN_ERR "Reset Module A\n");
 		}
-      state->cimax_module_present[0] = 0;
-      state->detection_timeout[0] = 0;
-	} else
+		state->cimax_module_present[0] = 0;
+		state->detection_timeout[0] = 0;
+	}
+	else
 	{
 		int result = cimax_readreg(state, 0x09);
 
@@ -516,7 +517,7 @@ static int cimax_slot_reset(struct dvb_ca_en50221 *ca, int slot)
 			cimax_writereg(state, 0x09, result | 0x80);
 			
 #if !defined(FORTIS_HDBOX) && !defined(OCTAGON1008)
-         cimax_writereg(state, 0x17, 0x0);
+			cimax_writereg(state, 0x17, 0x0);
 #endif
 			msleep(60);
 
@@ -526,8 +527,8 @@ static int cimax_slot_reset(struct dvb_ca_en50221 *ca, int slot)
 
 			dprintk(KERN_ERR "Reset Module B\n");
 		}
-      state->cimax_module_present[1] = 0;
-      state->detection_timeout[1] = 0;
+		state->cimax_module_present[1] = 0;
+		state->detection_timeout[1] = 0;
 	}
 
 	dprintk("%s <\n", __FUNCTION__);
@@ -540,7 +541,7 @@ static int cimax_read_attribute_mem(struct dvb_ca_en50221 *ca, int slot, int add
 {
 	struct cimax_state *state = ca->data;
 	int res = 0;
-        int result;
+	int result;
 
 	dprintk("%s > slot = %d, address = %d\n", __FUNCTION__, slot, address);
 
@@ -551,7 +552,7 @@ static int cimax_read_attribute_mem(struct dvb_ca_en50221 *ca, int slot, int add
 	   result = cimax_readreg(state, 0x00);
 
 	   if (result & 0xC) 
-			cimax_writereg(state, 0x00, (result & ~0xC));
+		   cimax_writereg(state, 0x00, (result & ~0xC));
 
 	   setDestination(state, slot);
 
@@ -562,7 +563,6 @@ static int cimax_read_attribute_mem(struct dvb_ca_en50221 *ca, int slot, int add
 #else
 	   res = ctrl_inb(reg_bank4 + (address << 1));
 #endif
-
        res &= 0x00FF;
 
     }
@@ -583,7 +583,6 @@ static int cimax_read_attribute_mem(struct dvb_ca_en50221 *ca, int slot, int add
 #else
 	   res = ctrl_inb(reg_bank4 + (address << 1));
 #endif
-
 	   res &= 0x00FF;
 	}
 
@@ -635,7 +634,7 @@ static int cimax_write_attribute_mem(struct dvb_ca_en50221 *ca, int slot, int ad
 
 	   /* bit 3/4 loeschen ->access to attribute mem */
 	   if (result & 0xC) 
-		cimax_writereg(state, 0x09, (result & ~0xC));
+		   cimax_writereg(state, 0x09, (result & ~0xC));
 
 	   setDestination(state, slot);
 
@@ -664,7 +663,6 @@ static int cimax_read_cam_control(struct dvb_ca_en50221 *ca, int slot, u8 addres
 
 	if (slot == 0)
 	{
-
 	   result = cimax_readreg(state, 0x00);
 
 	   /* FIXME: handle "result" ->is the module really present */
@@ -753,7 +751,7 @@ static int cimax_write_cam_control(struct dvb_ca_en50221 *ca, int slot, u8 addre
 	   /* FIXME: handle "result" ->is the module really present */
 	   /* access to i/o mem */
 	   if (!(result & 0x4))
-		  cimax_writereg(state, 0x00, (result & ~0xC) | 0x4);
+		   cimax_writereg(state, 0x00, (result & ~0xC) | 0x4);
 
 		setDestination(state, slot);
 
@@ -795,7 +793,7 @@ static int cimax_slot_shutdown(struct dvb_ca_en50221 *ca, int slot)
 	dprintk("%s > slot = %d\n", __FUNCTION__, slot);
 	mutex_lock(&cimax_mutex);
 
-/*Power control : (@18h); quatsch slot shutdown ->0x17*/
+	/*Power control : (@18h); quatsch slot shutdown ->0x17*/
 	mutex_unlock(&cimax_mutex);
 	return 0;
 }
@@ -1134,7 +1132,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 
 	ctrl_outl(0x0, reg_config + EMI_FLASH_CLK_SEL);
 #elif defined(FORTIS_HDBOX) || defined(OCTAGON1008)
-/* fixme: this is mysterious on HDBOX! there is no lock setting EMI_LCK and there is
+/* FIXME: this is mysterious on HDBOX! there is no lock setting EMI_LCK and there is
  * no EMI_CLK_EN, so the settings cant get into effect?
  */
 	ctrl_outl(0x8486d9,reg_config + EMIBank1 + EMI_CFG_DATA0);
