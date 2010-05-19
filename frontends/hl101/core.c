@@ -10,6 +10,7 @@
 #include "stb6100.h"
 #include "stb6100_cfg.h"
 #include "stv6110x.h"
+#include "ix7306.h"
 
 #include <linux/platform_device.h>
 #include <asm/system.h>
@@ -25,16 +26,19 @@ static int tunerType;
 static char *tuner = "stb6100";
 
 module_param(demod,charp,0);
-MODULE_PARM_DESC(demod, "demodelator type. (default stb0899");
+MODULE_PARM_DESC(demod, "demodelator type: stb0899, stv090x, cx24116 (default stb0899");
 
 module_param(tuner,charp,0);
-MODULE_PARM_DESC(tuner, "tuner type. (default stb6100");
+MODULE_PARM_DESC(tuner, "tuner type: stb6100, stv6110x, sharp7306 (default stb6100");
 
 #define I2C_ADDR_STB0899 	(0xd4 >> 1)
 #define I2C_ADDR_STB6100 	(0xc0 >> 1)
 #define I2C_ADDR_STV090X	(0xd0 >> 1)
 #define I2C_ADDR_STV6110X	(0xc0 >> 1)
 #define I2C_ADDR_CX24116	(0x0a >> 1)
+#define I2C_ADDR_IX7306		(0xc0 >> 1)
+
+#define CLK_EXT_IX7306 		 4000000
 
 enum {
 	STV090X,
@@ -43,8 +47,9 @@ enum {
 };
 
 enum {
-	STV6110X,
 	STB6100,
+	STV6110X,
+	SHARP7306,
 };
 
 static struct core *core[MAX_DVB_ADAPTERS];
@@ -612,6 +617,14 @@ static struct stv6110x_config stv6110x_config = {
 	.clk_div		= 2,
 };
 
+static const struct ix7306_config bs2s7hz7306a_config = {
+	.name		= "Sharp BS2S7HZ7306A",
+	.addr		= I2C_ADDR_IX7306,
+	.step_size 	= IX7306_STEP_1000,
+	.bb_lpf		= IX7306_LPF_12,
+	.bb_gain	= IX7306_GAIN_2dB,
+};
+
 static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 {
 	struct dvb_frontend *frontend = NULL;
@@ -632,6 +645,24 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 			stv090x_config.lnb_vsel    = cfg->lnb_vsel;
 			printk("%s: stv090x attached\n", __FUNCTION__);
 
+			switch (tunerType) {
+			case SHARP7306:
+				if(dvb_attach(ix7306_attach, frontend, &bs2s7hz7306a_config, cfg->i2c_adap))
+				{
+					printk("%s: IX7306 attached\n", __FUNCTION__);
+					//stv090x_config.xtal = CLK_EXT_IX7306;
+					stv090x_config.tuner_set_frequency 	= ix7306_set_frequency;
+					stv090x_config.tuner_get_frequency 	= ix7306_get_frequency;
+					stv090x_config.tuner_set_bandwidth 	= ix7306_set_bandwidth;
+					stv090x_config.tuner_get_bandwidth 	= ix7306_get_bandwidth;
+					stv090x_config.tuner_get_status	  	= frontend->ops.tuner_ops.get_status;
+				}else{
+					printk (KERN_INFO "%s: error attaching IX7306\n", __FUNCTION__);
+					goto error_out;
+				}
+				break;
+			case STV6110X:
+			default:
 				ctl = dvb_attach(stv6110x_attach, frontend, &stv6110x_config, cfg->i2c_adap);
 				if(ctl)	{
 					printk("%s: stv6110x attached\n", __FUNCTION__);
@@ -649,6 +680,7 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 					printk (KERN_INFO "%s: error attaching stv6110x\n", __FUNCTION__);
 					goto error_out;
 				}
+			}
 		} else {
 			printk (KERN_INFO "%s: error attaching stv090x\n", __FUNCTION__);
 			goto error_out;
@@ -815,7 +847,7 @@ void fe_core_register_frontend(struct dvb_adapter *dvb_adap)
 	int i = 0;
 	int vLoop = 0;
 
-	printk (KERN_INFO "%s: DVB: Spider-Team plug and play frontend core\n", __FUNCTION__);
+	printk (KERN_INFO "%s: Spider-Team plug and play frontend core\n", __FUNCTION__);
 
 	core[i] = (struct core*) kmalloc(sizeof(struct core),GFP_KERNEL);
 	if (!core[i])
@@ -857,6 +889,11 @@ int __init fe_core_init(void)
 		printk("demodelator: stv090x dvb-s2    ");
 		demodType = STV090X;
 	}
+	else if(strcmp("cx24116", demod) == 0)
+	{
+		printk("demodelator: cx24116 dvb-s2    ");
+		demodType = CX24116;
+	}
 
 	if((tuner[0] == 0) || (strcmp("stb6100", tuner) == 0))
 	{
@@ -868,6 +905,12 @@ int __init fe_core_init(void)
 		printk("tuner: stv6110x\n");
 		tunerType = STV6110X;
 	}
+	else if(strcmp("sharp7306", tuner) == 0)
+	{
+		printk("tuner: sharp7306\n");
+		tunerType = SHARP7306;
+	}
+
     printk("frontend core loaded\n");
     return 0;
 }
