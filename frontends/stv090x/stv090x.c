@@ -6211,7 +6211,10 @@ static struct dvb_frontend_ops stv090x_ops = {
 	.release			= stv090x_release,
 	.init				= stv090x_init,
 
+//workaround for tuner failed, a frontend open does not allways wakeup the tuner
+#ifndef FORTIS_HDBOX
 	.sleep				= stv090x_sleep,
+#endif
 	.get_frontend_algo		= stv090x_frontend_algo,
 
 	.i2c_gate_ctrl			= stv090x_i2c_gate_ctrl,

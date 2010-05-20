@@ -571,7 +571,10 @@ static struct dvb_tuner_ops stv6110x_ops = {
 	},
 
 	.init			= stv6110x_init,
+//workaround for tuner failed, a frontend open does not allways wakeup the tuner
+#ifndef FORTIS_HDBOX
 	.sleep          	= stv6110x_sleep,
+#endif
 
 #if 0
 	.get_status		= stv6110x_get_status,
