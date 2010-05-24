@@ -33,6 +33,7 @@ fe-core-objs +=        hl101/stb0899_drv.o
 fe-core-objs +=        hl101/stb6100.o
 fe-core-objs +=        hl101/stv090x.o
 fe-core-objs +=        hl101/stv6110x.o
+fe-core-objs +=        hl101/ix7306.o
 fe-core-objs +=        hl101/cx24116.o
 fe-core-objs +=        hl101/core.o
 obj-m += fe-core.o
