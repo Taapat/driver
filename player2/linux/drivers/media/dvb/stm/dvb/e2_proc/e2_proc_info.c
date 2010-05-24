@@ -30,8 +30,10 @@ int proc_info_model_read (char *page, char **start, off_t off, int count,
 	len = sprintf(page, "tf7700\n");
 #elif defined(HL101)
 	len = sprintf(page, "hl101\n");
-#elif defined(VIP2)
-	len = sprintf(page, "vip2\n");
+#elif defined(VIP1_V2)
+	len = sprintf(page, "vip1-v2\n");
+#elif defined(VIP2_V1)
+	len = sprintf(page, "vip2-v1\n");
 #elif defined(UFS922)
 	len = sprintf(page, "ufs922\n");
 #elif defined(FORTIS_HDBOX)

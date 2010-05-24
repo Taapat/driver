@@ -230,7 +230,7 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
 #ifdef __TDT__
         if(i < 2)
 #endif
-#ifndef VIP2
+#ifndef VIP2_V1
         dvb_register_device (&DvbContext->DvbAdapter,
                              &DeviceContext->CaDevice,
                              CaInit (DeviceContext),

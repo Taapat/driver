@@ -207,7 +207,7 @@ static int avs_command_ioctl(struct i2c_client *client, unsigned int cmd, void *
 {
 	int err = 0;
 
-#if !defined(VIP2) // none i2c avs !!!
+#if !defined(VIP1_V2) || !defined(VIP2_V1)// none i2c avs !!!
 	if (!client)
 		return -1;
 #endif
@@ -233,7 +233,7 @@ int avs_command_kernel(unsigned int cmd, void *arg)
 {
 	int err = 0;
 
-#if !defined(VIP2) // i2c avs !!!
+#if !defined(VIP1_V2) || !defined(VIP2_V1)// i2c avs !!!
 	struct i2c_client *client = avs_client;
 	if (!client)
 		return -1;
@@ -243,7 +243,7 @@ int avs_command_kernel(unsigned int cmd, void *arg)
 
 	switch(devType)
 	{
-#if defined(VIP2) // none i2c avs !!!
+#if defined(VIP1_V2) || defined(VIP2_V1) // none i2c avs !!!
 	case VIP2_AVS: err = vip2_avs_command_kernel(cmd, arg); break;
 #else
 	case AK4705:   err = ak4705_command_kernel(client, cmd, arg);   break;

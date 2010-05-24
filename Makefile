@@ -39,8 +39,11 @@ endif
 ifdef HL101
 CCFLAGSY += -DHL101
 endif
-ifdef VIP2
-CCFLAGSY += -DVIP2
+ifdef VIP1_V2
+CCFLAGSY += -DVIP1_V2
+endif
+ifdef VIP2_V1
+CCFLAGSY += -DVIP2_V1
 endif
 ifdef UFS922
 CCFLAGSY+=-DUFS922
@@ -77,7 +80,7 @@ ifdef STM22
 obj-y	+= logfs/
 endif
 #obj-y	+= proc_register/
-ifndef VIP2
+ifndef VIP2_V1
 obj-y	+= cic/
 endif
 ifndef HOMECAST5101
@@ -108,7 +111,10 @@ endif
 ifdef HL101
 obj-y   += proton/
 endif
-ifdef VIP2
+ifdef VIP1_V2
+obj-y   += aotom/
+endif
+ifdef VIP2_V1
 obj-y   += aotom/
 endif
 ifdef UFS912

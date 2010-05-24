@@ -171,7 +171,7 @@ static struct dvb_device ca_device =
 
 static int caInitialized = 0;
 
-#ifndef VIP2
+#ifndef VIP2_V1
 extern int init_ci_controller(struct dvb_adapter* dvb_adap);
 
 struct dvb_device *CaInit(struct DeviceContext_s *DeviceContext)

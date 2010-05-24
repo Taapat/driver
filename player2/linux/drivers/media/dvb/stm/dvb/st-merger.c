@@ -381,7 +381,7 @@ int read_tsm(int a)
 void stm_tsm_init (int use_cimax)
 {
 
-#if defined(HL101) || defined(VIP2) // TODO fix cimax first
+#if defined(VIP2_V1) // none ci targets
 	use_cimax = 0;
 #endif
 

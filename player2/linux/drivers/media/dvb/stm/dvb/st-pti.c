@@ -52,7 +52,7 @@
 extern void cx21143_register_frontend(struct dvb_adapter *dvb_adap);
 #elif defined(FORTIS_HDBOX) || defined(UFS912)
 extern void stv090x_register_frontend(struct dvb_adapter *dvb_adap);
-#elif defined(HL101) || defined(VIP2)
+#elif defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1)
 extern void fe_core_register_frontend(struct dvb_adapter *dvb_adap);
 #elif defined(OCTAGON1008)
 extern void avl2108_register_frontend(struct dvb_adapter *dvb_adap);
@@ -410,7 +410,7 @@ void ptiInit ( struct DeviceContext_s *pContext )
      */
     stm_tsm_init (  /*config */ 1 );
 
-#if defined(TF7700) || defined(UFS922) || defined(FORTIS_HDBOX) || defined(HL101) || defined(VIP2)
+#if defined(TF7700) || defined(UFS922) || defined(FORTIS_HDBOX) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1)
     pti_hal_init ( &pti, &pContext->DvbDemux, demultiplexDvbPackets, 2);
 #else
     pti_hal_init ( &pti, &pContext->DvbDemux, demultiplexDvbPackets, 1);
@@ -418,7 +418,7 @@ void ptiInit ( struct DeviceContext_s *pContext )
 
 #if defined(FORTIS_HDBOX) || defined(UFS912)
     stv090x_register_frontend(&pContext->DvbContext->DvbAdapter);
-#elif defined(HL101) || defined(VIP2)
+#elif defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1)
     fe_core_register_frontend( &pContext->DvbContext->DvbAdapter);
 #elif defined(OCTAGON1008)
     avl2108_register_frontend( &pContext->DvbContext->DvbAdapter);
