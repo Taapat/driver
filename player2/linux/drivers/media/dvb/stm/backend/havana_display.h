@@ -45,6 +45,18 @@ Date        Modification                                    Name
 #define AVR_VIDEO_BUFFER_MEMORY                 0x00000000       // 0 mb
 #define MAX_VIDEO_DECODE_BUFFERS                32
 
+#elif defined(UFS912)
+
+#define PRIMARY_VIDEO_BUFFER_MEMORY             0x02400000       // 36 mb or enough for 12 full hd 4:2:0
+/* The pip setting is not checked, I dont have compiled e2 to test it.
+ * I'm not sure what is necessary for hd pip, but I think it must be
+ * possible on ufs912. This memory is enough for 3 full hd 4:2:0
+ * picture.
+ */
+#define SECONDARY_VIDEO_BUFFER_MEMORY           0x00900000       // 9 mb
+#define AVR_VIDEO_BUFFER_MEMORY                 0x00000000       // 0 mb
+#define MAX_VIDEO_DECODE_BUFFERS                32
+
 #else /* UFS910 and others */
 
 #define PRIMARY_VIDEO_BUFFER_MEMORY             0x01B00000       // 27 mb or enough for 9 full HD 4:2:0
