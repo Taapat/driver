@@ -525,7 +525,7 @@ void stm_tsm_init (int use_cimax)
 
       ctrl_outl(0x0, reg_config + SWTS_CFG(0));
 
-#if  defined(FORTIS_HDBOX) || defined(UFS922) || defined(TF7700) || defined(HL101) || defined(UFS912)
+#if  defined(FORTIS_HDBOX) || defined(UFS922) || defined(TF7700) || defined(HL101) || defined(UFS912) || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD)
       ctrl_outl(0x0, reg_config + SWTS_CFG(1));
       ctrl_outl(0x0, reg_config + SWTS_CFG(2));
 #endif
@@ -631,6 +631,11 @@ void stm_tsm_init (int use_cimax)
 
       ctrl_outl(0x00 , reg_config + TSM_STREAM5_SYNC);
       ctrl_outl(0x00 , reg_config + TSM_STREAM6_SYNC);
+#elif  defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD)
+	  /* configure streams: */
+      /* add tag bytes to stream + stream priority */
+      ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
+      ctrl_outl(ret | (0x70020), reg_config + TSM_STREAM3_CFG);   
 #else
       ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
       ctrl_outl(ret | (0x30020), reg_config + TSM_STREAM3_CFG);
@@ -639,13 +644,15 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(stream_sync, reg_config + TSM_STREAM3_SYNC);
       ctrl_outl(0x0, reg_config + 0x78 /* reserved ??? */);
 
-#if !defined(FORTIS_HDBOX) && !defined(UFS912)
+#if !defined(FORTIS_HDBOX) && !defined(UFS912) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD)
       /* swts_req_trigger + pace cycles (1101) */
       ctrl_outl(0x800000d, reg_config + SWTS_CFG(0));
 #elif defined (UFS912)
       ctrl_outl(0x8f0000e, reg_config + SWTS_CFG(0));
       ctrl_outl(0x8000000, reg_config + SWTS_CFG(1));
       ctrl_outl(0x8000000, reg_config + SWTS_CFG(2));
+#elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD)
+      ctrl_outl(0x88000010, reg_config + SWTS_CFG(0));	  
 #else
       ctrl_outl(0x8000010, reg_config + SWTS_CFG(0));
 #endif
@@ -653,7 +660,7 @@ void stm_tsm_init (int use_cimax)
       /* auto count */
       ctrl_outl(0x0, reg_config + TSM_PROG_CNT0);
 
-#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101) && !defined(HOMECAST5101) && !defined(UFS912) && !defined(OCTAGON1008)
+#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101) && !defined(HOMECAST5101) && !defined(UFS912) && !defined(OCTAGON1008) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD)
       /* UFS910 stream configuration */
       /* route stream 2 to PTI */
       ret = ctrl_inl(reg_config + TSM_PTI_SEL);
@@ -758,7 +765,29 @@ void stm_tsm_init (int use_cimax)
 
       ret = ctrl_inl(reg_config + TSM_1394_DEST);
       ctrl_outl(ret | 0x38 , reg_config + TSM_1394_DEST);
+#elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD)
+      /* route stream 1 to PTI */
+      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x2,reg_config + TSM_PTI_SEL);
 
+      /* set stream 1 on */
+      ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
+      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM1_CFG);
+	  
+      /* route stream 0 to PTI */
+      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x1, reg_config + TSM_PTI_SEL);
+
+	   /* stream 5 and 6 */
+	  ctrl_outl(0x1, reg_config + TSM_STREAM5_CFG);
+      ctrl_outl(0x1, reg_config + TSM_STREAM6_CFG);
+      ctrl_outl(0xbc4700, reg_config + TSM_STREAM5_SYNC);
+      ctrl_outl(0xbc4700, reg_config + TSM_STREAM6_SYNC);
+	  
+      /* set 1394 stream Out */
+	  ctrl_outl(0x0001804c ,reg_config + TS_1394_CFG);
+      ret = ctrl_inl(reg_config + TSM_1394_DEST);
+      ctrl_outl(ret | 0x1 , reg_config + TSM_1394_DEST);  
 #elif defined(HOMECAST5101)
       ret = ctrl_inl(reg_config + TSM_PTI_SEL);
       ctrl_outl(ret | 0x1,reg_config + TSM_PTI_SEL);

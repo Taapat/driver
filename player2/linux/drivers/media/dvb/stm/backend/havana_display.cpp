@@ -195,7 +195,7 @@ HavanaStatus_t HavanaDisplay_c::GetManifestor  (class HavanaPlayer_c*           
 
 #if defined(__TDT__)
 
-#if defined(UFS922) || defined(TF7700)
+#if defined(UFS922) || defined(TF7700)  || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD)
 //Dagobert: lmi_vid isn't available for pip :(
         if (SurfaceId != DISPLAY_ID_MAIN)
             Partition   = "BPA2_Region0";
