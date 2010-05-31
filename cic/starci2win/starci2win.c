@@ -79,7 +79,7 @@ struct stpio_pin*	module_B_pin;
 #define STARCI_CTRL_REG 0x1f
 
 /* hardware specific register values */
-#if defined(TF7700)
+#if defined(TF7700) || defined (CUBEREVO) || defined (CUBEREVO_MINI) || defined (CUBEREVO_MINI2) || defined (CUBEREVO_250HD)
 unsigned char default_values[33] =
 {
   0x00, /* register address for block transfer */
@@ -307,7 +307,7 @@ int setCiSource(int slot, int source)
   if(slot != source)
   {
     /* send stream A through module B and stream B through module A */
-#if defined(TF7700)
+#if defined(TF7700) || defined (CUBEREVO) || defined (CUBEREVO_MINI) || defined (CUBEREVO_MINI2) || defined (CUBEREVO_250HD)
     val |= 0x20;
 #else
     val &= ~0x20;
@@ -317,7 +317,7 @@ int setCiSource(int slot, int source)
   {
     /* enforce direct mapping */
     /* send stream A through module A and stream B through module B */
-#if defined(TF7700)
+#if defined(TF7700) || defined (CUBEREVO) || defined (CUBEREVO_MINI) || defined (CUBEREVO_MINI2) || defined (CUBEREVO_250HD)
     val &= ~0x20;
 #else
     val |= 0x20;
@@ -735,7 +735,34 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   ctrl_outl(0xa5a00000, reg_config + EMIBank2 + EMI_CFG_DATA1);
   ctrl_outl(0xa5a20000, reg_config + EMIBank2 + EMI_CFG_DATA2);
   ctrl_outl(0x00000000, reg_config + EMIBank2 + EMI_CFG_DATA3);
-#else /* TF7700 */
+#elif defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD)  
+/* CUBEREVO  */
+  ctrl_outl(0x010ffed1, reg_config + EMIBank0 + EMI_CFG_DATA0);
+  ctrl_outl(0x9d200000, reg_config + EMIBank0 + EMI_CFG_DATA1);
+  ctrl_outl(0x9d220000, reg_config + EMIBank0 + EMI_CFG_DATA2);
+  ctrl_outl(0x00000000, reg_config + EMIBank0 + EMI_CFG_DATA3);
+  
+  ctrl_outl(0xe400aaaa, reg_config + EMIBank1 + EMI_CFG_DATA0);
+  ctrl_outl(0xe400aaaa, reg_config + EMIBank1 + EMI_CFG_DATA1);
+  ctrl_outl(0x00000000, reg_config + EMIBank1 + EMI_CFG_DATA2);
+   
+  ctrl_outl(0x01e796d1, reg_config + EMIBank2 + EMI_CFG_DATA0);
+  ctrl_outl(0xe400aaaa, reg_config + EMIBank2 + EMI_CFG_DATA1);
+  ctrl_outl(0xe400aaaa, reg_config + EMIBank2 + EMI_CFG_DATA2);
+  ctrl_outl(0x00000000, reg_config + EMIBank2 + EMI_CFG_DATA3);
+   
+  ctrl_outl(0x00052291, reg_config + EMIBank3 + EMI_CFG_DATA0);
+  ctrl_outl(0x14000033, reg_config + EMIBank3 + EMI_CFG_DATA1);
+  ctrl_outl(0x14000033, reg_config + EMIBank3 + EMI_CFG_DATA2);
+  ctrl_outl(0x00000008, reg_config + EMIBank3 + EMI_CFG_DATA3);
+  
+  ctrl_outl(0x00052291, reg_config + EMIBank4 + EMI_CFG_DATA0);
+  ctrl_outl(0x14000033, reg_config + EMIBank4 + EMI_CFG_DATA1);
+  ctrl_outl(0x14000033, reg_config + EMIBank4 + EMI_CFG_DATA2);
+  ctrl_outl(0x00000008, reg_config + EMIBank4 + EMI_CFG_DATA3);
+  
+  
+#else /* TF7700  */
   ctrl_outl(	EMI_DATA0_WE_USE_OE(0x0) 	|
 		  EMI_DATA0_WAIT_POL(0x0)		|
 		  EMI_DATA0_LATCH_POINT(30)	|
@@ -766,7 +793,13 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 
   ctrl_outl(0x0, reg_config + EMI_FLASH_CLK_SEL);
 #endif
+
+#if defined(CUBEREVO) || defined(CUBEREVO_MINI) ||defined (CUBEREVO_MINI2) ||defined (CUBEREVO_250HD)
+  ctrl_outl(0x0, reg_config + EMI_FLASH_CLK_SEL);
+  ctrl_outl(0x0, reg_config + EMI_CLK_EN);
+#else
   ctrl_outl(0x1, reg_config + EMI_CLK_EN);
+#endif
 
 #if defined(FORTIS_HDBOX)
 //is [0] = top slot?
@@ -781,7 +814,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 	  result = 1;
 	  goto error;
   }
-#if defined(TF7700)
+#if defined(TF7700) || defined (CUBEREVO) || defined (CUBEREVO_MINI) || defined (CUBEREVO_MINI2) || defined (CUBEREVO_250HD)
   slot_membase[1] = ioremap( 0xa3400000, 0x1000 );
 #elif defined(FORTIS_HDBOX)
 //is [1] = bottom slot?

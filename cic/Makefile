@@ -26,6 +26,18 @@ starci-objs:= starci2win/starci2win.o
 else ifdef HOMECAST5101
 obj-m += starci.o
 starci-objs:= starci2win/starci2win.o
+else ifdef CUBEREVO
+obj-m += starci.o
+starci-objs:= starci2win/starci2win.o
+else ifdef CUBEREVO_MINI
+obj-m += starci.o
+starci-objs:= starci2win/starci2win.o
+else ifdef CUBEREVO_MINI2
+obj-m += starci.o
+starci-objs:= starci2win/starci2win.o
+else ifdef CUBEREVO_250HD
+obj-m += starci.o
+starci-objs:= starci2win/starci2win.o
 else ifdef HL101
 cimax-objs += cimax/cimax.o
 obj-m += cimax.o
