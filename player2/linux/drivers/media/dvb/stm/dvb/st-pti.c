@@ -352,7 +352,7 @@ static int convert_source ( const dmx_source_t source)
 #if defined(UFS910) || defined(OCTAGON1008) || defined(UFS912)
     /* in UFS910 the CIMAX output is connected to TSIN2 */
     tag = TSIN2;
-#elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD)
+#elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI)
     tag = TSIN1;	
 #else
     tag = TSIN0;
