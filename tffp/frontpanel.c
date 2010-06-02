@@ -1545,7 +1545,12 @@ static void FPCommandInterpreter (void)
     case FPKEYPRESSFP:
     {
       /* reset the bootreason to disable autoshutdown if a key was pressed */
-      fpbootreason.reason = 0;
+      if( fpbootreason.reason )
+      {
+	fpbootreason.reason = 0;
+	VFDSetIcons(FPICON_POWER,0x0,0x0); // Switch off power icon to indicate that no automatic shutdown for auto timers will be done
+      }
+      
       InterpretKeyPresses();
       break;
     }
