@@ -5,9 +5,9 @@ CONFIG_MONITOR_HAVANA=m
 CCFLAGSY += -DDEBUG_MONITOR
 
 ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
-ccflags-y += $(CCFLAGSY)
+	ccflags-y += $(CCFLAGSY)
 else
-CFLAGS += $(CCFLAGSY)
+	CFLAGS += $(CCFLAGSY)
 endif
 
 obj-$(CONFIG_MONITOR_HAVANA)+= stm_monitor.o
