@@ -62,7 +62,7 @@
 #define cx24116_SEARCH_RANGE_KHZ 5000
 #define cMaxError 5
 
-#ifdef TF7700 || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD)
+#ifdef TF7700 || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
 /* on tf7700 the new fw does not work
  * so we use old mechanism.
  */
@@ -1821,7 +1821,7 @@ cx24116_set_params (struct dvb_frontend *fe, struct dvbfe_params *p)
   struct cx24116_cmd cmd;
   int ret, i,above30msps ;
   u8 status, retune = 1;
-#if !defined(TF7700) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) /* use this unless UFS910 is not defined */
+#if !defined(TF7700) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_MINI_FTA) /* use this unless UFS910 is not defined */
   u32 reg;
 #endif
   
@@ -1898,7 +1898,7 @@ cx24116_set_params (struct dvb_frontend *fe, struct dvbfe_params *p)
 
   above30msps = (state->dcur.symbol_rate > 30000000);
 
-#if !defined(TF7700) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) /* use this unless UFS910 is not defined */
+#if !defined(TF7700) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_MINI_FTA) /* use this unless UFS910 is not defined */
   if (reg_tsm_config == 0)
       reg_tsm_config = (unsigned long) ioremap(TSMergerBaseAddress, 0x0900);
 
@@ -1907,7 +1907,7 @@ cx24116_set_params (struct dvb_frontend *fe, struct dvbfe_params *p)
   reg &= ~0xFFFF;
 #endif
   
-#if !defined(TF7700) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) /* use this unless UFS910 is not defined */
+#if !defined(TF7700) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_MINI_FTA) /* use this unless UFS910 is not defined */
   if (state->dcur.symbol_rate >= 30000000)  
   {
      ctrl_outl(reg | 0xF ,reg_tsm_config + TS_1394_CFG);
@@ -2393,7 +2393,7 @@ init_cx24116_device (struct dvb_adapter *adapter,
   /* initialize the config data */
   cfg->i2c_adap = i2c_get_adapter (tuner_cfg->i2c_bus);
   cfg->i2c_addr = tuner_cfg->i2c_addr;
-#if defined(HOMECAST5101) || defined (CUBEREVO) || defined (CUBEREVO_MINI2) || defined (CUBEREVO_MINI) || defined (CUBEREVO_250HD)
+#if defined(HOMECAST5101) || defined (CUBEREVO) || defined (CUBEREVO_MINI2) || defined (CUBEREVO_MINI) || defined (CUBEREVO_250HD) || defined (CUBEREVO_9500HD) || defined (CUBEREVO_2000HD) || defined (CUBEREVO_MINI_FTA)
   cfg->tuner_enable_pin = NULL;
 #else
   cfg->tuner_enable_pin = stpio_request_pin (tuner_cfg->tuner_enable[0],
@@ -2408,7 +2408,7 @@ init_cx24116_device (struct dvb_adapter *adapter,
                                          "LNB vsel", STPIO_OUT);
 
   if ((cfg->i2c_adap == NULL) || 
-#if !defined ( HOMECAST5101) && !defined (CUBEREVO) && !defined (CUBEREVO_MINI2) && !defined (CUBEREVO_MINI) && !defined (CUBEREVO_250HD)
+#if !defined ( HOMECAST5101) && !defined (CUBEREVO) && !defined (CUBEREVO_MINI2) && !defined (CUBEREVO_MINI) && !defined (CUBEREVO_250HD) || defined (CUBEREVO_9500HD) || defined (CUBEREVO_2000HD) || defined (CUBEREVO_MINI_FTA)
       (cfg->tuner_enable_pin == NULL) ||
 #endif
       (cfg->lnb_enable_pin == NULL) || (cfg->lnb_vsel_pin == NULL))
@@ -2625,7 +2625,7 @@ struct plat_tuner_config tuner_resources[] = {
                 .lnb_enable = {5, 2, 0},   // port5,pin2, 1=Off(~0V), 0=On(vsel), sel_act->On
                 .lnb_vsel = {5, 0, 0},     // port5,pin0, 1=V(13.9V), 0=H(19.1V), sel_act->H
 		},	
-#elif defined (CUBEREVO) || defined (CUBEREVO_MINI2) || defined (CUBEREVO_MINI) || defined (CUBEREVO_250HD)
+#elif defined (CUBEREVO) || defined (CUBEREVO_MINI2) || defined (CUBEREVO_MINI) || defined (CUBEREVO_250HD) || defined (CUBEREVO_9500HD) || defined (CUBEREVO_2000HD) || defined (CUBEREVO_MINI_FTA)
 	/* cuberevo tuner resources */
 		[0] = {
 				.adapter = 0,
@@ -2635,7 +2635,7 @@ struct plat_tuner_config tuner_resources[] = {
 				.lnb_enable = {2,6,1},	//pin2.6 for lnb on/off
 				.lnb_vsel = {2,5,1},	//pin2.5 for polarity
         },
-#elif defined (CUBEREVO)	
+#elif defined (CUBEREVO) || defined (CUBEREVO_9500HD)	
 		[1] = {
 				.adapter = 0,
 				.i2c_bus = 2,

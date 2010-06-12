@@ -88,7 +88,7 @@ unsigned char default_values[33] =
   0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
   0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00
 };
-#elif defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD)
+#elif defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
 unsigned char default_values[33] =
 {
    0x00, /* register address for block transfer */
@@ -814,7 +814,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 
   dprintk("init_cimax: call dvb_ca_en50221_init\n");
   
-#if defined(CUBEREVO_250HD)
+#if defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
   if ((result = dvb_ca_en50221_init(state->dvb_adap,
                     &state->ca, 0, 1)) != 0) {
 #else

@@ -85,7 +85,7 @@ static unsigned short normal_i2c[] = {
 #if defined(HOMECAST5101)
 	I2C_ADDRESS_CXA2161, /* cxa2161, 0x48 */
 #elif defined(UFS922) || defined(CUBEREVO) \
-   || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2)
+   || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_2000HD)
 	0x4a, /* stv6412" */
 #elif defined(FORTIS_HDBOX) || defined(TF7700) || defined(HL101) || defined(UFS912)
 	0x4b, /* stv6412 / stv6417 / stv6418 */

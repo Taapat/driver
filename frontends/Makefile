@@ -63,6 +63,15 @@ obj-m += tuner.o
 else ifdef CUBEREVO_250HD
 tuner-objs +=	tuner/tuner.o
 obj-m += tuner.o
+else ifdef CUBEREVO_9500HD
+tuner-objs +=	tuner/tuner.o
+obj-m += tuner.o
+else ifdef CUBEREVO_2000HD
+tuner-objs +=	tuner/tuner.o
+obj-m += tuner.o
+else ifdef CUBEREVO_MINI_FTA
+tuner-objs +=	tuner/tuner.o
+obj-m += tuner.o
 else ifdef OCTAGON1008
 #avl2108-objs +=        avl2108/avl2108.o
 #obj-m += avl2108.o
