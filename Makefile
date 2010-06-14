@@ -129,7 +129,7 @@ endif
 ifdef UFS912
 obj-y	+= micom/
 #obj-y	+= cec/
-obj-y	+= ufs912_clk/
+obj-y	+= clk/
 endif
 ifdef OCTAGON1008
 obj-y	+= nuvoton/
