@@ -45,6 +45,7 @@
 #include "stv6418.h"
 #include "cxa2161.h"
 #include "vip2_avs.h"
+#include "vip1_avs.h"
 #include "fake_avs.h"
 #include "avs_none.h"
 
@@ -56,6 +57,7 @@ enum
 	STV6418,
 	CXA2161,
 	VIP2_AVS,
+	VIP1_AVS,
 	FAKE_AVS,
 	AVS_NONE,
 };
@@ -68,6 +70,7 @@ static const struct i2c_device_id avs_id[] = {
         { "stv6418", STV6418 },
         { "cxa2161", CXA2161 },
         { "vip2_avs", VIP2_AVS },
+		{ "vip1_avs", VIP1_AVS },
         { "fake_avs", FAKE_AVS },
         { "avs_none", AVS_NONE },
         { }
@@ -225,6 +228,7 @@ static int avs_command_ioctl(struct i2c_client *client, unsigned int cmd, void *
 	case AVS_NONE: err = avs_none_command(client, cmd, arg); break;
 	/* none i2c avs!! */
 	case VIP2_AVS: err = vip2_avs_command(cmd, arg); break;
+	case VIP1_AVS: err = vip1_avs_command(cmd, arg); break;
 	}
 	return err;
 }
@@ -245,6 +249,7 @@ int avs_command_kernel(unsigned int cmd, void *arg)
 	{
 #if defined(VIP1_V2) || defined(VIP2_V1) // none i2c avs !!!
 	case VIP2_AVS: err = vip2_avs_command_kernel(cmd, arg); break;
+	case VIP1_AVS: err = vip1_avs_command_kernel(cmd, arg); break;
 #else
 	case AK4705:   err = ak4705_command_kernel(client, cmd, arg);   break;
 	case STV6412:  err = stv6412_command_kernel(client, cmd, arg);  break;
@@ -317,6 +322,8 @@ static int avs_detect(struct i2c_client *client, int kind, struct i2c_board_info
 			kind = CXA2161;
 		else if(!strcmp("vip2_avs", type))
 			kind = VIP2_AVS;
+		else if(!strcmp("vip1_avs", type))
+			kind = VIP1_AVS;
 		else if(!strcmp("fake_avs", type))
 			kind = FAKE_AVS;
 		else if(!strcmp("avs_none", type))
@@ -331,6 +338,7 @@ static int avs_detect(struct i2c_client *client, int kind, struct i2c_board_info
 	case STV6418:  name = "stv6418";  break;
 	case CXA2161:  name = "cxa2161";  break;
 	case VIP2_AVS: name = "vip2_avs"; break;
+	case VIP1_AVS: name = "vip1_avs"; break;
 	case FAKE_AVS: name = "fake_avs"; break;
 	case AVS_NONE: name = "avs_none"; break;
 	default: return -ENODEV;
@@ -390,7 +398,7 @@ int __init avs_init(void)
 	dprintk("[AVS]: A/V switch handling for %s\n", name);
 
 #if !defined(CUBEREVO_MINI_FTA) && !defined(CUBEREVO_250HD)
-	if ((devType != FAKE_AVS) && (devType != AVS_NONE) && (devType != VIP2_AVS)) {
+	if ((devType != FAKE_AVS) && (devType != AVS_NONE) && (devType != VIP2_AVS) && (devType != VIP1_AVS)) {
 		if ((res = i2c_add_driver(&avs_i2c_driver))) {
 			dprintk("[AVS]: i2c add driver failed\n");
 			return res;
@@ -405,6 +413,12 @@ int __init avs_init(void)
 		if(vip2_avs_init() != 0)
 		{
 			printk("[AVS]: init vip2 avs faild!\n");
+			return -EIO;
+		}
+	}else if (devType == VIP1_AVS){
+		if(vip1_avs_init() != 0)
+		{
+			printk("[AVS]: init vip1 avs faild!\n");
 			return -EIO;
 		}
 	}

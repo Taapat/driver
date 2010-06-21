@@ -525,7 +525,7 @@ void stm_tsm_init (int use_cimax)
 
       ctrl_outl(0x0, reg_config + SWTS_CFG(0));
 
-#if  defined(FORTIS_HDBOX) || defined(UFS922) || defined(TF7700) || defined(HL101) || defined(UFS912) || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
+#if  defined(FORTIS_HDBOX) || defined(UFS922) || defined(TF7700) || defined(HL101) || defined(VIP1_V2) || defined(UFS912) || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
       ctrl_outl(0x0, reg_config + SWTS_CFG(1));
       ctrl_outl(0x0, reg_config + SWTS_CFG(2));
 #endif
@@ -534,7 +534,7 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x0, reg_config + TSM_SYS_CFG); /* 2 times ? */
 
       /* RAM partitioning of streams max 1984kb (31*64) */
-#if  defined(FORTIS_HDBOX) || defined(UFS922) || defined(HL101)
+#if  defined(FORTIS_HDBOX) || defined(UFS922) || defined(HL101) || defined(VIP1_V2)
       ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG);     //320kb (5*64)
       ctrl_outl(0x500, reg_config + TSM_STREAM1_CFG);   //320kb (5*64)
       ctrl_outl(0xa00, reg_config + TSM_STREAM2_CFG);   //256kb (4*64)
@@ -660,7 +660,7 @@ void stm_tsm_init (int use_cimax)
       /* auto count */
       ctrl_outl(0x0, reg_config + TSM_PROG_CNT0);
 
-#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101) && !defined(HOMECAST5101) && !defined(UFS912) && !defined(OCTAGON1008) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA)
+#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101) && !defined(VIP1_V2) && !defined(HOMECAST5101) && !defined(UFS912) && !defined(OCTAGON1008) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA)
       /* UFS910 stream configuration */
       /* route stream 2 to PTI */
       ret = ctrl_inl(reg_config + TSM_PTI_SEL);
@@ -705,7 +705,7 @@ void stm_tsm_init (int use_cimax)
       ret = ctrl_inl(reg_config + TSM_STREAM4_CFG);
       ctrl_outl(ret | 0x80,reg_config + TSM_STREAM4_CFG);
 
-#elif  defined(TF7700) || defined(UFS922) || defined(HL101)
+#elif  defined(TF7700) || defined(UFS922) || defined(HL101) || defined(VIP1_V2)
 
       /* TF7700 stream configuration */
       /* route stream 1 to PTI */

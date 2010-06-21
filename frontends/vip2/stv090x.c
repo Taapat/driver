@@ -4099,7 +4099,7 @@ static enum stv090x_signal_state stv090x_algo(struct stv090x_state *state)
 
 	msleep(50);
 
-	if (!state->config->tuner_get_status) {
+	if (state->config->tuner_get_status) {
 		if (stv090x_i2c_gate_ctrl(fe, 1) < 0)
 			goto err;
 		if (state->config->tuner_get_status(fe, &reg) < 0)
