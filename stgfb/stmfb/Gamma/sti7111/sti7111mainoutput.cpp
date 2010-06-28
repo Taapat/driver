@@ -48,6 +48,10 @@ CSTi7111MainOutput::CSTi7111MainOutput(
 
 CSTi7111MainOutput::~CSTi7111MainOutput() {}
 
+#define CKGB_FS1_EN3	0x88
+#define CKGB_FS1_MD3	0x80
+#define CKGB_FS1_PE3    0x84
+#define CKGB_FS1_SDIV3  0x8C
 
 void CSTi7111MainOutput::StartSDInterlacedClocks(const stm_mode_line_t *mode)
 {
@@ -68,6 +72,7 @@ void CSTi7111MainOutput::StartSDInterlacedClocks(const stm_mode_line_t *mode)
   val |= CKGB_CFG_DISP_HD(CKGB_CFG_DIV8);
   val |= CKGB_CFG_656(CKGB_CFG_DIV4);
   val |= CKGB_CFG_PIX_SD_FS0(CKGB_CFG_DIV4);
+
   WriteClkReg(CKGB_DISPLAY_CFG, val);
 
   val = ReadClkReg(CKGB_CLK_SRC) & ~CKGB_SRC_PIXSD_FS1_NOT_FS0;
@@ -86,6 +91,14 @@ void CSTi7111MainOutput::StartSDProgressiveClocks(const stm_mode_line_t *mode)
 
   DENTRY();
 
+#if defined(__TDT__) && defined(UFS912)
+  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_DISPLAY_CFG, 0x3011);
+
+/* maybe we must set fs1_md3 and co here too? especially
+ * if 576p is set as default?
+ */
+
+#else
   val = ReadClkReg(CKGB_DISPLAY_CFG);
   /*
    * Preserve the aux pipeline clock configuration.
@@ -99,7 +112,7 @@ void CSTi7111MainOutput::StartSDProgressiveClocks(const stm_mode_line_t *mode)
   val |= CKGB_CFG_656(CKGB_CFG_DIV2);
   val |= CKGB_CFG_PIX_SD_FS0(CKGB_CFG_DIV4);
   WriteClkReg(CKGB_DISPLAY_CFG, val);
-
+#endif
   DEXIT();
 }
 
@@ -110,6 +123,19 @@ void CSTi7111MainOutput::StartHDClocks(const stm_mode_line_t *mode)
 
   DENTRY();
 
+#if defined(__TDT__) && defined(UFS912)
+  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_DISPLAY_CFG, 0x3000);
+
+  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x0);
+
+  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_MD3, 0x19);
+  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_PE3, 0x3334);
+  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_SDIV3, 0x00);
+
+  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x1);
+  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x0);
+
+#else
   /*
    * Set the clock divides for each block for HD modes
    */
@@ -146,7 +172,7 @@ void CSTi7111MainOutput::StartHDClocks(const stm_mode_line_t *mode)
   }
 
   WriteClkReg(CKGB_DISPLAY_CFG, val);
-
+#endif
   DEXIT();
 }
 

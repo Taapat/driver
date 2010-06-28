@@ -54,7 +54,7 @@ unsigned long    reg_clkb_config = 0;
 #define CKGB_FS1_SDIV3		0x8C
 #define CKGB_FS1_PRG_EN3	0x88
 
-#define CKGB_FS1_MD1		0x5C
+#define CKGB_FS1_MD1		0x60
 #define CKGB_FS1_PE1		0x64
 #define CKGB_FS1_PRG_EN1	0x68
 #define CKGB_FS1_SDIV1		0x6C
