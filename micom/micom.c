@@ -37,15 +37,6 @@
 two not implemented commands:
 0x55 ->ohne antwort
 0x55 0x02 0xff 0x80 0x46 0x01 0x00 0x00
-
-0x05 = GetModel ->answer = 0x85 byte [1] + [2] = model
-
-write (count=8, fd = 26): 0x05 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-read (count=16, fd = 25): 0x85 0x01
-read (count=16, fd = 25): 0x05 0xff
-read (count=16, fd = 25): 0xff 0xff
-read (count=16, fd = 25): 0x88 0x0d
- * 
  */
 
 #include <asm/io.h>
@@ -394,63 +385,84 @@ int processDataAck(unsigned char* data, int count)
 {
    int i;
 	
-	switch (data[0])
-	{
-		case 0xB9: /* timeval ->len = 6 */
-			if (count != 6)
-			    return 0;
+   switch (data[0])
+   {
+      case 0xB9: /* timeval ->len = 6 */
+         if (count != 6)
+            return 0;
 
          for (i = 0; i < 6; i++)
-			{
-			   dprintk(20, "0x%02x ", data[i] & 0xff);
+         {
+             dprintk(20, "0x%02x ", data[i] & 0xff);
          }
 			
-			/* 0. claim semaphore */
-			down_interruptible(&receive_sem);
+        /* 0. claim semaphore */
+        down_interruptible(&receive_sem);
 			
-			dprintk(1, "command getTime complete\n");
+        dprintk(1, "command getTime complete\n");
 
-			/* 1. copy data */
+        /* 1. copy data */
 			
-			memcpy(ioctl_data, data, 8);
+        memcpy(ioctl_data, data, 8);
 			
-			/* 2. free semaphore */
-			up(&receive_sem);
+        /* 2. free semaphore */
+        up(&receive_sem);
 			
-			/* 3. wake up thread */
-	  		dataReady = 1;
-			wake_up_interruptible(&ioctl_wq);
-			return 1;
-		break;
-		case 0x77: /* wakeup ->len = 8 */
+        /* 3. wake up thread */
+        dataReady = 1;
+        wake_up_interruptible(&ioctl_wq);
+        return 1;
+      break;
+      case 0x77: /* wakeup ->len = 8 */
 /* fixme: determine the real len here
  * I think it will be two but I'm not sure
  * ->this will be block until forever if
  * the number does not match!
  */
-			if (count != 8)
-			    return 0;
+         if (count != 8)
+            return 0;
 
-			/* 0. claim semaphore */
-			down_interruptible(&receive_sem);
+         /* 0. claim semaphore */
+         down_interruptible(&receive_sem);
 			
-			dprintk(1, "command getWakeupMode complete\n");
+         dprintk(1, "command getWakeupMode complete\n");
 
-			/* 1. copy data */
+         /* 1. copy data */
 			
-			memcpy(ioctl_data, data, 8);
+         memcpy(ioctl_data, data, 8);
 			
-			/* 2. free semaphore */
-			up(&receive_sem);
+         /* 2. free semaphore */
+         up(&receive_sem);
 			
-			/* 3. wake up thread */
-	  		dataReady = 1;
-			wake_up_interruptible(&ioctl_wq);
-			return 1;
-		break;				
-	}
+         /* 3. wake up thread */
+         dataReady = 1;
+         wake_up_interruptible(&ioctl_wq);
+         return 1;
+       break;				
+      case 0x85: /* get version */
+         if (count != 8)
+            return 0;
+
+         /* 0. claim semaphore */
+         down_interruptible(&receive_sem);
+			
+         dprintk(1, "command getVersion complete\n");
+
+         /* 1. copy data */
+			
+         memcpy(ioctl_data, data, 8);
+			
+         /* 2. free semaphore */
+         up(&receive_sem);
+			
+         /* 3. wake up thread */
+         dataReady = 1;
+         wake_up_interruptible(&ioctl_wq);
+         return 1;
+       break;				
+    }
 	
-	return 0;
+    return 0;
 }
 
 /* process acknowledges from frontcontroller. this is for
@@ -549,12 +561,9 @@ int searchAnswerStart(unsigned char c)
 			return 2;
 		break;
 		case 0xFA: /* cmd_ok ->len = 1*/
-		case 0xB9: /* timeval ->len = 8 */
+		case 0xB9: /* timeval ->len = 6 */
 		case 0x77: /* wakeup ->len = 8 */
-		case 0xC1: /* wakeup from rcu ->len = 8 */
-		case 0xC2: /* wakeup from front ->len = 8 */
-		case 0xC3: /* wakeup from time ->len = 8 */
-		case 0xC4: /* wakeup from ac ->len = 8 */
+		case 0x85: /* version ->len = 8 */
 			return 1;
 		break;				
 	}
@@ -1111,6 +1120,22 @@ int micomInitialize(void)
 	
 	res = micomWriteCommand(0x3, buffer, 7, 0 ,0);
 
+	memset(buffer, 0, 8);
+
+/* unknown command:
+ * modifications of most of the values leads to a 
+ * not working fp which can only be fixed by switching
+ * off receive. value 0x46 can be modified and resetted.
+ * changing the values behind 0x46 has no effect for me.
+ */
+   buffer[0] = 0x02;
+   buffer[1] = 0xff;
+   buffer[2] = 0x80;
+   buffer[3] = 0x46;
+   buffer[4] = 0x01;
+
+	res = micomWriteCommand(0x55, buffer, 7, 0 ,0);
+
 	dprintk(10, "%s <\n", __func__);
 
    return res;
@@ -1171,16 +1196,55 @@ int micomSetTime(char* time)
    return res;
 }
 
-int micomGetTime(void)
+int micomGetVersion(void)
 {
-	char 	   buffer[8];
-   int      res = 0;
+   char 	   buffer[8];
+   int        res = 0;
 	
 	dprintk(5, "%s >\n", __func__);
 
 	memset(buffer, 0, 8);
 	
    timeoutOccured = 0;
+	dataReady = 0;
+	res = micomWriteCommand(0x05, buffer, 7, 1 ,1); 
+	
+	if (res < 0)
+	{
+	   printk("%s < res %d\n", __func__, res);
+	   return res;
+	}
+	
+	wait_event_interruptible(ioctl_wq, dataReady || timeoutOccured);
+	
+	if (timeoutOccured == 1)
+	{
+		/* timeout */
+		memset(ioctl_data, 0, 8);
+		printk("timeout\n");
+
+	   res = -ETIMEDOUT;
+	} else
+	{
+		/* version received ->noop here */
+		dprintk(1, "version received\n");
+	}
+	 
+	dprintk(10, "%s <\n", __func__);
+
+   return res;
+}
+
+int micomGetTime(void)
+{
+	char 	   buffer[8];
+        int        res = 0;
+	
+	dprintk(5, "%s >\n", __func__);
+
+	memset(buffer, 0, 8);
+	
+        timeoutOccured = 0;
 	dataReady = 0;
 	res = micomWriteCommand(0x39, buffer, 7, 1 ,1); 
 	
@@ -1210,10 +1274,15 @@ int micomGetTime(void)
    return res;
 }
 
+/* 0xc1 = rcu
+ * 0xc2 = front
+ * 0xc3 = time
+ * 0xc4 = ac ???
+ */
 int micomGetWakeUpMode(void)
 {
 	char 	   buffer[8];
-   int      res = 0;
+	int      res = 0;
 	
 	dprintk(5, "%s >\n", __func__);
 
@@ -1233,15 +1302,15 @@ int micomGetWakeUpMode(void)
 	
 	if (timeoutOccured == 1)
 	{
-		/* timeout */
-		memset(ioctl_data, 0, 8);
-		printk("timeout\n");
+           /* timeout */
+           memset(ioctl_data, 0, 8);
+           printk("timeout\n");
 
 	   res = -ETIMEDOUT;
 	} else
 	{
-		/* time received ->noop here */
-		dprintk(1, "time received\n");
+           /* time received ->noop here */
+           dprintk(1, "time received\n");
 	}
 	 
 	dprintk(10, "%s <\n", __func__);
@@ -1252,7 +1321,7 @@ int micomGetWakeUpMode(void)
 int micomReboot(void)
 {
 	char 	   buffer[8];
-   int      res = 0;
+        int      res = 0;
 	
 	dprintk(5, "%s >\n", __func__);
 
@@ -1344,21 +1413,23 @@ int micomWriteString(unsigned char* aBuf, int len)
 
 int micom_init_func(void)
 {
+#ifdef UFS922
 	int vLoop;
-	
+#endif	
 	dprintk(5, "%s >\n", __func__);
 
-	printk("Kathrein UFS922 VFD/MICOM module initializing\n");
 
 #ifdef UFS922
+	printk("Kathrein UFS922 VFD/MICOM module initializing\n");
 	micomSetModel();
 #else        
+	printk("Kathrein UFS912 VFD/MICOM module initializing\n");
 	micomInitialize();
 #endif	
 	micomSetBrightness(1);
 
 #ifdef UFS912	
-        micomSetLedBrightness(0x50);
+   micomSetLedBrightness(0x50);
 #endif
   	micomWriteString(" Team Ducktales ", strlen(" Team Ducktales "));
 	
@@ -1632,11 +1703,15 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		   res = micomSetTime(micom->u.time.time);
 		break;	
 	case VFDGETTIME:
-		res = micomGetTime();
+      res = micomGetTime();
+      copy_to_user(arg, &ioctl_data, 8);
+		break;	
+	case VFDGETVERSION:
+      res = micomGetVersion();
       copy_to_user(arg, &ioctl_data, 8);
 		break;	
 	case VFDGETWAKEUPMODE:
-		res = micomGetWakeUpMode();
+      res = micomGetWakeUpMode();
       copy_to_user(arg, &ioctl_data, 8);
 		break;	
 	case VFDDISPLAYCHARS:
@@ -1657,7 +1732,7 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		/* ->alles abschalten ? VFD_Display_Write_On_Off */
 		printk("VFDDISPLAYWRITEONOFF ->not yet implemented\n");
 #ifdef UFS912
-                micomInitialize();
+      micomInitialize();
 #endif
 		break;		
 	default:
@@ -1667,7 +1742,7 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		break;
 	}
 
-   up(&write_sem);
+        up(&write_sem);
 
 	dprintk(10, "%s <\n", __func__);
 	return res;
@@ -1767,8 +1842,12 @@ static int __init micom_init_module(void)
 
 static void __exit micom_cleanup_module(void)
 {
-	unregister_chrdev(VFD_MAJOR,"VFD");
-	printk("Kathrein UFS922 VFD/MICOM module unloading\n");
+    unregister_chrdev(VFD_MAJOR,"VFD");
+#ifdef UFS912
+    printk("Kathrein UFS912 VFD/MICOM module unloading\n");
+#else
+    printk("Kathrein UFS922 VFD/MICOM module unloading\n");
+#endif
 }
 
 
