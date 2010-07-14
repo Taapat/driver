@@ -1286,7 +1286,7 @@ static void VFDSetIcons (dword Icons1, dword Icons2, byte BlinkMode)
   if (Icons1 & FPICON_MP3)          SetIconBits (28, 7, BlinkMode);
   if (Icons1 & FPICON_MUSIC)        SetIconBits (27, 3, BlinkMode);
   if (Icons1 & FPICON_MUTE)         SetIconBits (42, 0, BlinkMode);
-  if (Icons1 & FPICON_NETWORK)      SetIconBits (43, 0, BlinkMode);
+  if (Icons1 & FPICON_NETWORK)      SetIconBits (43, 2, BlinkMode);
   if (Icons1 & FPICON_PAUSE)        SetIconBits (42, 1, BlinkMode);
   if (Icons1 & FPICON_PLAY)         SetIconBits (42, 4, BlinkMode);
   if (Icons1 & FPICON_PM)           SetIconBits ( 6, 0, BlinkMode);
