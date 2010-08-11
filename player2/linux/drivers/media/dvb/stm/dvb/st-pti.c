@@ -50,7 +50,7 @@
 
 #ifdef UFS922
 extern void cx21143_register_frontend(struct dvb_adapter *dvb_adap);
-#elif defined(FORTIS_HDBOX) || defined(UFS912)
+#elif defined(FORTIS_HDBOX) || defined(UFS912) || defined(SPARK)
 extern void stv090x_register_frontend(struct dvb_adapter *dvb_adap);
 #elif defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1)
 extern void fe_core_register_frontend(struct dvb_adapter *dvb_adap);
@@ -349,7 +349,7 @@ static int convert_source ( const dmx_source_t source)
   switch ( source )
   {
   case DMX_SOURCE_FRONT0:
-#if defined(UFS910) || defined(OCTAGON1008) || defined(UFS912)
+#if defined(UFS910) || defined(OCTAGON1008) || defined(UFS912) || defined(SPARK)
     /* in UFS910 the CIMAX output is connected to TSIN2 */
     tag = TSIN2;
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
@@ -384,7 +384,7 @@ static struct stpti pti;
 
 void ptiInit ( struct DeviceContext_s *pContext )
 {
-#if defined(UFS912)
+#if defined(UFS912) || defined(SPARK)
   unsigned long start = 0xfe230000;
 #else
   unsigned long start = 0x19230000;
@@ -424,7 +424,7 @@ void ptiInit ( struct DeviceContext_s *pContext )
     pti_hal_init ( &pti, &pContext->DvbDemux, demultiplexDvbPackets, 1);
 #endif
 
-#if defined(FORTIS_HDBOX) || defined(UFS912)
+#if defined(FORTIS_HDBOX) || defined(UFS912) || defined(SPARK)
     stv090x_register_frontend(&pContext->DvbContext->DvbAdapter);
 #elif defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1)
     fe_core_register_frontend( &pContext->DvbContext->DvbAdapter);

@@ -58,7 +58,10 @@ static int ix7306_write(struct ix7306_state *state, u8 *buf, u8 len)
 
 	err = i2c_transfer(state->i2c, &msg, 1);
 	if (err != 1)
+	{
+		printk("msg.addr = %d\n", msg.addr);
 		printk("%s: write error, err=%d\n", __func__, err);
+	}
 
 	return err;
 }
@@ -67,15 +70,17 @@ static int ix7306_read(struct ix7306_state *state, u8 *buf)
 {
 	const struct ix7306_config *config = state->config;
 	int err = 0;
-	u8 tmp=0;
+	u8 tmp=1;
 
 	struct i2c_msg msg[] = {
 		{ .addr = config->addr, .flags = 0,	   .buf = &tmp, .len = 1 },
 		{ .addr = config->addr, .flags = I2C_M_RD, .buf = buf,  .len = 1 }
 	};
 
-	err = i2c_transfer(state->i2c, msg, 2);
-	if (err != 2)
+	err = i2c_transfer(state->i2c, &msg[0], 1);
+	state->fe->ops.i2c_gate_ctrl(state->fe, 1);
+	err = i2c_transfer(state->i2c, &msg[1], 1);
+	if (err != 1)
 		printk("%s: read error, err=%d\n", __func__, err);
 
 	return err;
@@ -254,7 +259,7 @@ static void pll_setdata_QM1D1B0004(struct dvb_frontend *fe, int *byte_)
 {
 	struct ix7306_state *state = fe->tuner_priv;
 	u8		ucOperData[5];
-	u8		byte1,byte2,byte3,byte4;
+	u8		byte1,/*byte2,*/byte3,byte4;
 
 	//in this function ,we operator ucOperData instead of byte_
 	memset(ucOperData, 0 ,sizeof(ucOperData));

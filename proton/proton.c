@@ -1206,7 +1206,7 @@ static int PROTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int 
 	case VFDICONDISPLAYONOFF:
 		{
 		  //struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;	
-		  res = protonSetIcon(proton->u.icon.icon_nr, proton->u.icon.on);
+//		  res = protonSetIcon(proton->u.icon.icon_nr, proton->u.icon.on);
 		}
 
 		mode = 0;

@@ -139,7 +139,11 @@ bool CSTmHDMI::Create(void)
      * it will not trigger a hotplug interrupt.
      */
     ULONG hotplugstate = (ReadHDMIReg(STM_HDMI_STA) & STM_HDMI_STA_HOT_PLUG);
+#if	defined(SPARK)
+    if(hotplugstate == 0)
+#else
     if(hotplugstate != 0)
+#endif
     {
       m_displayStatus = STM_DISPLAY_NEEDS_RESTART;
       DEBUGF2(2,("CSTmHDMI::Create out initial hotplug detected\n"));
@@ -946,7 +950,11 @@ bool CSTmHDMI::HandleInterrupts()
        * If the device has just been plugged in, flag that we now need to
        * start the output.
        */
+#if	defined(SPARK)
+      if(hotplugstate == 0)
+#else
       if(hotplugstate != 0)
+#endif
         m_displayStatus = STM_DISPLAY_NEEDS_RESTART;
     }
     else
@@ -955,7 +963,11 @@ bool CSTmHDMI::HandleInterrupts()
        * We may either be waiting for the output to be started, or already started,
        * so _only_ change the state if the device has now been disconnected.
        */
+#if	defined(SPARK)
+      if(hotplugstate != 0)
+#else
       if(hotplugstate == 0)
+#endif
         m_displayStatus = STM_DISPLAY_DISCONNECTED;
     }
   }

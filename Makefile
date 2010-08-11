@@ -60,6 +60,9 @@ endif
 ifdef UFS912
 CCFLAGSY+=-DUFS912
 endif
+ifdef SPARK
+CCFLAGSY+=-DSPARK
+endif
 ifdef FORTIS_HDBOX
 CCFLAGSY += -DFORTIS_HDBOX
 endif
@@ -90,7 +93,9 @@ obj-y	+= logfs/
 endif
 #obj-y	+= proc_register/
 ifndef VIP2_V1
+ifndef SPARK
 obj-y	+= cic/
+endif
 endif
 ifndef HOMECAST5101
 ifndef FORTIS_HDBOX
@@ -131,6 +136,12 @@ obj-y	+= micom/
 #obj-y	+= cec/
 obj-y	+= clk/
 endif
+
+ifdef SPARK
+obj-y   += clk/
+obj-y   += aotom/
+endif
+
 ifdef OCTAGON1008
 obj-y	+= nuvoton/
 endif

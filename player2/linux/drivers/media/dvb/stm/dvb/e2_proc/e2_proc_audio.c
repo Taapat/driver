@@ -145,7 +145,7 @@ static void WriteRegister(volatile unsigned long *reg,unsigned long val)
   writel(val, (unsigned long)reg);
 }
 
-#if defined(UFS912)
+#if defined(UFS912) || defined(SPARK)
 void spdif_out_mute(int mute)
 {
 #warning fixme search the audio mute register for 7111 arch

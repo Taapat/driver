@@ -65,8 +65,6 @@ if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
 #define REC_NO_KEY  	0
 #define REC_REPEAT_KEY  2
 
-static int gmt_offset = 0;
-
 static char *gmt = "+0000";
 
 module_param(gmt,charp,0);
@@ -202,7 +200,7 @@ static struct task_struct *thread;
 static int thread_stop  = 1;
 int aotomSetIcon(int which, int on);
 
-void clear_display()
+void clear_display(void)
 {
 	YWPANEL_VFD_ShowString("        ");
 }
@@ -220,9 +218,13 @@ static void VFD_clr(void)
 void draw_thread(void *arg)
 {
   struct vfd_ioctl_data *data;
-  data = (struct vfd_ioctl_data *)arg;
-  
   struct vfd_ioctl_data draw_data;
+  unsigned char buf[9];
+  int count = 0; 
+  int pos = 0;
+  
+  
+  data = (struct vfd_ioctl_data *)arg;
   
   draw_data.length = data->length;
   memset(draw_data.data, 0, sizeof(draw_data.data));
@@ -230,13 +232,12 @@ void draw_thread(void *arg)
   
   thread_stop = 0;
 
-  unsigned char buf[9];
-  int count = 0; 
-  int pos = 0;
-  
   count = draw_data.length;
-
+#if defined(SPARK)
+  if(count > 4)
+#else
   if(count > 8)
+#endif
   {
     while(pos < count)
     {
@@ -252,7 +253,11 @@ void draw_thread(void *arg)
        YWPANEL_VFD_ShowString(buf);
        msleep(200);
        pos++;
+#if defined(SPARK)
+       if((count - pos) < 4)
+#else
        if((count - pos) < 8)
+#endif
     	   break;
     }
   }
@@ -369,7 +374,6 @@ int vfd_init_func(void)
 
 int aotomSetIcon(int which, int on)
 {
-	char buffer[8];
 	int  res = 0;
 
 	dprintk(5, "%s > %d, %d\n", __func__, which, on);
@@ -390,7 +394,7 @@ int aotomSetIcon(int which, int on)
 /* export for later use in e2_proc */
 EXPORT_SYMBOL(aotomSetIcon);
 
-static ssize_t AOTOMdev_write(struct file *filp, const unsigned char *buff, size_t len, loff_t *off)
+static ssize_t AOTOMdev_write(struct file *filp, const char *buff, size_t len, loff_t *off)
 {
 	char* kernel_buf;
 	int minor, vLoop, res = 0;
@@ -461,7 +465,7 @@ static ssize_t AOTOMdev_write(struct file *filp, const unsigned char *buff, size
 	   return len;
 }
 
-static ssize_t AOTOMdev_read(struct file *filp, unsigned char __user *buff, size_t len, loff_t *off)
+static ssize_t AOTOMdev_read(struct file *filp, char __user *buff, size_t len, loff_t *off)
 {
 	int minor, vLoop;
 
@@ -607,7 +611,7 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 	case VFDICONDISPLAYONOFF:
 		{
 		  //struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;	
-		  res = aotomSetIcon(aotom->u.icon.icon_nr, aotom->u.icon.on);
+//		  res = aotomSetIcon(aotom->u.icon.icon_nr, aotom->u.icon.on);
 		}
 
 		mode = 0;
@@ -706,9 +710,9 @@ void button_bad_polling(void)
 		msleep(50);
 		button_value = AOTOMfp_Get_Key_Value();
 		if (button_value != INVALID_KEY) {
-		    dprintk(5, "got button: %X\n", button_value);
-            VFD_Show_Ico(DOT2,LOG_ON);
-            btn_pressed = 1;
+			dprintk(5, "got button: %X\n", button_value);
+	        VFD_Show_Ico(DOT2,LOG_ON);
+	        btn_pressed = 1;
 			switch(button_value) {
 				case KEY_LEFT: {
 					input_report_key(button_dev, KEY_LEFT, 1);

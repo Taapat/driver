@@ -88,29 +88,29 @@ typedef enum
 	REMOTE_NEW,
 	REMOTE_TOPFIELD,
 
-    REMOTE_UNKNOWN,
+	REMOTE_UNKNOWN,
 }REMOTE_TYPE;
 
 enum
 {
 	POWER_KEY 		= 88,
 
-    TIME_SET_KEY 	= 87,
+	TIME_SET_KEY		= 87,
 	UHF_KEY 		= 68,
-	VFormat_KEY 	= 67,
-    MUTE_KEY 		= 66,
+	VFormat_KEY		= 67,
+	MUTE_KEY 		= 66,
 
-    TVSAT_KEY 		= 65,
-    MUSIC_KEY 		= 64,
-    FIND_KEY 		= 63,
-    FAV_KEY 		= 62,
+	TVSAT_KEY 		= 65,
+	MUSIC_KEY 		= 64,
+	FIND_KEY 		= 63,
+	FAV_KEY 		= 62,
 
-    MENU_KEY 		= 102,	//HOME
-    i_KEY 			= 61,
-    EPG_KEY 		= 18,
-    EXIT_KEY 		= 48,	//B
-    RECALL_KEY 		= 30,
-    RECORD_KEY 		= 19,
+	MENU_KEY 		= 102,	//HOME
+	i_KEY 			= 61,
+	EPG_KEY 		= 18,
+	EXIT_KEY 		= 48,	//B
+	RECALL_KEY 		= 30,
+	RECORD_KEY 		= 19,
 
 	UP_KEY 			= 103,	//UP
 	DOWN_KEY		= 108,	//DOWN
@@ -118,25 +118,25 @@ enum
 	RIGHT_KEY		= 106,	//RIGTHT
 	SELECT_KEY 		= 0x160,	//ENTER
 
-    PLAY_KEY 		= 25,
-    PAGE_UP_KEY 	= 104,	//P_UP
-    PAUSE_KEY 		= 22,
-    PAGE_DOWN_KEY 	= 109,	//P_DOWN
+	PLAY_KEY 		= 25,
+	PAGE_UP_KEY		= 104,	//P_UP
+	PAUSE_KEY 		= 22,
+	PAGE_DOWN_KEY		= 109,	//P_DOWN
 
-    STOP_KEY 		= 20,
-	SLOW_MOTION_KEY = 50,
-	FASTREWIND_KEY  = 33,
-	FASTFORWARD_KEY = 49,
+	STOP_KEY 		= 20,
+	SLOW_MOTION_KEY		= 50,
+	FASTREWIND_KEY		= 33,
+	FASTFORWARD_KEY		= 49,
 
-    DOCMENT_KEY 	= 32,
-    SWITCH_PIC_KEY 	= 17,
-    PALY_MODE_KEY 	= 24,
-    USB_KEY 		= 111,
+	DOCMENT_KEY		= 32,
+	SWITCH_PIC_KEY		= 17,
+	PALY_MODE_KEY		= 24,
+	USB_KEY			= 111,
 
-    RADIO_KEY 		= 110,
-    SAT_KEY 		= 15,
-    F1_KEY 			= 59,
-	F2_KEY 			= 60,
+	RADIO_KEY		= 110,
+	SAT_KEY			= 15,
+	F1_KEY			= 59,
+	F2_KEY			= 60,
 
 	RED_KEY 		= 44,	//Z
 	GREEN_KEY 		= 45,	//X

@@ -20,7 +20,7 @@ Date        Modification                                    Name
 
 #if defined(__TDT__)
 
-#if defined(FORTIS_HDBOX) || defined(TF7700) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(UFS912) || defined(OCTAGON1008)  || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
+#if defined(FORTIS_HDBOX) || defined(TF7700) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(UFS912) || defined(SPARK) || defined(OCTAGON1008)  || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
 #define AUDIO_BUFFER_MEMORY                     0x00180000
 #else
 #define AUDIO_BUFFER_MEMORY                     0x00100000       // 1 mb
@@ -45,7 +45,7 @@ Date        Modification                                    Name
 #define AVR_VIDEO_BUFFER_MEMORY                 0x00000000       // 0 mb
 #define MAX_VIDEO_DECODE_BUFFERS                32
 
-#elif defined(UFS912)
+#elif defined(UFS912) || defined(SPARK)
 
 #define PRIMARY_VIDEO_BUFFER_MEMORY             0x02400000       // 36 mb or enough for 12 full hd 4:2:0
 /* The pip setting is not checked, I dont have compiled e2 to test it.

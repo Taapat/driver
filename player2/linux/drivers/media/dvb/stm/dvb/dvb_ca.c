@@ -171,8 +171,9 @@ static struct dvb_device ca_device =
 
 static int caInitialized = 0;
 
-#ifndef VIP2_V1
+#if !defined(VIP2_V1) && !defined (SPARK) 
 extern int init_ci_controller(struct dvb_adapter* dvb_adap);
+#endif
 
 struct dvb_device *CaInit(struct DeviceContext_s *DeviceContext)
 {
@@ -182,7 +183,9 @@ struct dvb_device *CaInit(struct DeviceContext_s *DeviceContext)
     /* the following call creates ca0 associated with the cimax hardware */
     printk("Initializing CI Controller\n");
 
+#if !defined(VIP2_V1) && !defined (SPARK) 
     init_ci_controller(&DeviceContext->DvbContext->DvbAdapter);
+#endif
 
     caInitialized = 1;
   }
@@ -191,4 +194,4 @@ struct dvb_device *CaInit(struct DeviceContext_s *DeviceContext)
      are associated with the hardware descrambler */
   return &ca_device;
 }
-#endif
+

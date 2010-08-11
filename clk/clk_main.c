@@ -26,6 +26,8 @@
 
 #if defined(UFS912)
 extern void ufs912_setup_clks(void);
+#elif defined(SPARK)
+extern void spark_setup_clks(void);
 #elif defined(UFS922)
 extern void ufs922_setup_clks(void);
 #endif
@@ -34,6 +36,8 @@ int my_init_module(void)
 {  
 #if defined(UFS912)
    ufs912_setup_clks();
+#elif defined(SPARK)
+   spark_setup_clks();
 #elif defined(UFS922)
    ufs922_setup_clks();
 #else
