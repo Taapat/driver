@@ -278,7 +278,7 @@ struct iconToInternal {
 #ifdef OCTAGON1008
 #define cCommandSetIcon          0xc4 //0xc2
 #else
-#define cCommandSetIcon          0xc4
+#define cCommandSetIcon          0xc2
 #endif
 
 #ifdef OCTAGON1008
