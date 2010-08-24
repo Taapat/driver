@@ -51,6 +51,9 @@ int install_e2_procs(char *path, read_proc_t *read_func, write_proc_t *write_fun
 
 unsigned long fan_registers;
 struct stpio_pin* fan_pin;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
+struct stpio_pin* fan_pin1;
+#endif
 
 int proc_fan_write(struct file *file, const char __user *buf,
                            unsigned long count, void *data)
@@ -127,7 +130,14 @@ static int __init init_fan_module(void)
   fan_registers = (unsigned long) ioremap(0x18010000, 0x100);
   printk("fan_registers = 0x%.8lx\n", fan_registers);
 
-  fan_pin = stpio_request_pin (4, 7, "fan ctrl", STPIO_ALT_OUT);
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
+  fan_pin1 = stpio_request_pin (4, 7, "fan ctrl", STPIO_ALT_OUT);
+  fan_pin = stpio_request_pin (4, 5, "fan ctrl", STPIO_OUT);
+  stpio_set_pin(fan_pin, 1);
+  printk("fan pin %p\n", fan_pin);
+#else
+	fan_pin = stpio_request_pin (4, 7, "fan ctrl", STPIO_ALT_OUT);
+#endif
 
   //not sure if first one is necessary
   ctrl_outl(0x200, fan_registers + 0x50);
@@ -141,7 +151,20 @@ static int __init init_fan_module(void)
 static void __exit cleanup_fan_module(void)
 {
     remove_e2_procs(e2_procs[0].name, e2_procs[0].read_proc, e2_procs[0].write_proc);
-    stpio_free_pin (fan_pin);
+
+
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17) 
+    if (fan_pin1 != NULL)
+      stpio_free_pin (fan_pin1);
+      
+    if (fan_pin != NULL) {
+    	stpio_set_pin(fan_pin, 0);
+    	stpio_free_pin (fan_pin);
+    }	
+#else      
+    if (fan_pin != NULL)
+    	stpio_free_pin (fan_pin);
+#endif
     	
 }
 
