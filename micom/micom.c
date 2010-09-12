@@ -1065,7 +1065,6 @@ int micomSetBrightness(int level)
 /* export for later use in e2_proc */
 EXPORT_SYMBOL(micomSetBrightness);
 
-#ifdef UFS912
 int micomSetLedBrightness(int level)
 {
 	char buffer[8];
@@ -1089,7 +1088,7 @@ int micomSetLedBrightness(int level)
 }
 
 EXPORT_SYMBOL(micomSetLedBrightness);
-#endif
+
 #ifdef UFS922
 int micomSetModel(void)
 {
@@ -1428,10 +1427,9 @@ int micom_init_func(void)
 #endif	
 	micomSetBrightness(1);
 
-#ifdef UFS912	
-   micomSetLedBrightness(0x50);
-#endif
-  	micomWriteString(" Team Ducktales ", strlen(" Team Ducktales "));
+        micomSetLedBrightness(0x50);
+  	
+	micomWriteString(" Team Ducktales ", strlen(" Team Ducktales "));
 	
 #ifndef UFS912	
 	for (vLoop = ICON_MIN + 1; vLoop < ICON_MAX; vLoop++) 
@@ -1662,7 +1660,6 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		}
 		mode = 0;
 		break;
-#ifdef UFS912
 	case VFDLEDBRIGHTNESS:
 		if (mode == 0)
 		{
@@ -1672,7 +1669,6 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		}
 		mode = 0;
 		break;
-#endif
 	case VFDDRIVERINIT:
 		res = micom_init_func();
 		mode = 0;
