@@ -173,15 +173,26 @@ static void __exit stmcore_display_exit(void)
       platform_data[i].platform_device = NULL;
     }
 
-    stmhdmi_destroy(platform_data[i].hdmi_data);
-    platform_data[i].hdmi_data = NULL;
+    if (platform_data[i].hdmi_data)
+    {
+      stmhdmi_destroy(platform_data[i].hdmi_data);
+      platform_data[i].hdmi_data = NULL;
+    }
 
     stm_display_output_release(platform_data[i].display_runtime->main_output);
-    stm_display_output_release(platform_data[i].display_runtime->hdmi_output);
 
-    stm_display_blitter_release(platform_data[i].blitter);
-    platform_data[i].blitter = NULL;
+    if (platform_data[i].display_runtime->hdmi_output)
+    {
+      stm_display_output_release(platform_data[i].display_runtime->hdmi_output);
+      platform_data[i].display_runtime->hdmi_output = NULL;
+    }
 
+    if (platform_data[i].blitter)
+    {
+      stm_display_blitter_release(platform_data[i].blitter);
+      platform_data[i].blitter = NULL;
+    }
+    
     kfree(platform_data[i].display_runtime);
     platform_data[i].display_runtime = NULL;
   }
