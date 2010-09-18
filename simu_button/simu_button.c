@@ -54,6 +54,7 @@ int button_dev_init(void)
 
 
 	set_bit(EV_KEY, button_dev->evbit);
+  set_bit(EV_REP, button_dev->evbit);
 	
 	for(vLoop = 0; vLoop < KEY_MAX; vLoop++)
 		set_bit(vLoop, button_dev->keybit); 
