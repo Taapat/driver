@@ -144,7 +144,7 @@ int proc_bus_nim_sockets_read (char *page, char **start, off_t off, int count,
 
       len += sprintf(page + len, "NIM Socket %d:\n"
 				 "Type: %s\n"
-				 "Name: %s\n",
+				 "Name: %s\n"
 				 "Frontend_Device: %d\n",
 		     feIndex, pType, fe->ops.info.name, feIndex);
       feIndex++;
