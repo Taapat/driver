@@ -43,9 +43,11 @@
 /* 2009-07-27 V4.2  Removed filtering of the power-off key.               */
 /* 2009-08-08 V4.3  Added support for configuration in EEPROM             */
 /* 2009-10-13 V4.4  Added typematic rate control for the power-off key    */
+/* 2009-10-13 V4.5  Fixed error in function TranslateUTFString            */
+/*                  In special casses the ending '\0' has been skipped    */
 /**************************************************************************/
 
-#define VERSION         "V4.4"
+#define VERSION         "V4.5"
 //#define DEBUG
 
 #include <asm/io.h>
@@ -852,9 +854,12 @@ static void TranslateUTFString(unsigned char *s)
           if((*Source & 0xe0) == 0xc0)
             Source++;
           else if((*Source & 0xf0) == 0xe0)
-            Source += 2;
+            Source++;
+            if(*Source) Source++;
           else if((*Source & 0xf8) == 0xf0)
-            Source += 3;
+            Source++;
+            if(*Source) Source++;
+            if(*Source) Source++;
         }
         else
         {
@@ -864,8 +869,11 @@ static void TranslateUTFString(unsigned char *s)
       }
       else
         *Dest = *Source;
-      Source++;
-      Dest++;
+      if(*Source)
+      {
+        Source++;
+        Dest++;
+      }
     }
     *Dest = '\0';
   }
