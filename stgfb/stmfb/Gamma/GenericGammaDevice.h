@@ -47,7 +47,9 @@ protected:
   // IO mapped pointer to the start of the Gamma register block
   ULONG* m_pGammaReg;
 
-  void WriteDevReg(ULONG reg, ULONG val) { g_pIOS->WriteRegister(m_pGammaReg + (reg>>2), val); }
+  void WriteDevReg(ULONG reg, ULONG val) { 
+        DEBUGF2(1,("### CGenericGammaOutput::WriteDevReg = %08X to %08x\n", m_pGammaReg + (reg>>2), val));
+        g_pIOS->WriteRegister(m_pGammaReg + (reg>>2), val); }
   ULONG ReadDevReg(ULONG reg) { return g_pIOS->ReadRegister(m_pGammaReg + (reg>>2)); }
 
 };

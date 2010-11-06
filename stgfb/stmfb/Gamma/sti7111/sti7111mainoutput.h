@@ -52,7 +52,7 @@ private:
   void WriteSysCfgReg(ULONG reg, ULONG val) { g_pIOS->WriteRegister(m_pGammaReg + ((STi7111_SYSCFG_BASE + reg)>>2), val); }
   ULONG ReadSysCfgReg(ULONG reg) { return g_pIOS->ReadRegister(m_pGammaReg + ((STi7111_SYSCFG_BASE +reg)>>2)); }
 
-  void WriteClkReg(ULONG reg, ULONG val) { g_pIOS->WriteRegister(m_pGammaReg + ((STi7111_CLKGEN_BASE + reg)>>2), val); }
+  void WriteClkReg(ULONG reg, ULONG val);
   ULONG ReadClkReg(ULONG reg) { return g_pIOS->ReadRegister(m_pGammaReg + ((STi7111_CLKGEN_BASE +reg)>>2)); }
 
   CSTi7111MainOutput(const CSTi7111MainOutput&);
