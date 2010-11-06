@@ -934,15 +934,16 @@ int stv6417_init(struct i2c_client *client)
     dprintk("%s >\n", __func__);
 
     regs[0] = 0x00;
-    regs[1] = 0x00; /* 0x00 */
-    regs[2] = 0x09; /* 0x09 */
-    regs[3] = 0x00; /* 0x00 */
-    regs[4] = 0x00; 
-    regs[5] = 0x0a; /* 0x0a */
-    regs[6] = 0x00;
-    regs[7] = 0x20; /* 0x20 */
-    regs[8] = 0x00; /* 0xc0 */
-    regs[9] = 0x00; 
+    regs[1] = 0x40;
+    regs[2] = 0x09;
+    regs[3] = 0x11;
+    regs[4] = 0x84;
+    regs[5] = 0x84;
+    regs[6] = 0x25;
+    regs[7] = 0x08;
+    regs[8] = 0x21;
+    regs[9] = 0xc0;
+    regs[10]= 0x00;
 
     dprintk("%s <\n", __func__);
     return stv6417_set(client);
