@@ -55,15 +55,15 @@ CSTi7111Device::CSTi7111Device(void): CGenericGammaDevice()
   WriteDevReg(STi7111_CLKGEN_BASE + CKGB_CLK_REF_SEL, CKGB_REF_SEL_SYSA_CLKIN);
 
   // Setup FS1 CHANNEL 3 -> DeltaMu Preprocessor clock, what ever that is
-  // TODO: Do we even need this ?
-  /*WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x0);
+  // Jup we need this, else hd channels will sufer from microfractures
+  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x0);
 
   WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_MD3, 0x19);
   WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_PE3, 0x3334);
   WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_SDIV3, 0x00);
 
   WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x1);
-  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x0);*/
+  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x0);
 
 
   //WriteDevReg(STi7111_CLKGEN_BASE + CKGB_CLK_SRC, 0x07);
