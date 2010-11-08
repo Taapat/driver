@@ -46,7 +46,8 @@ Codec_MmeVideoDivx_c::Codec_MmeVideoDivx_c( void)
 	// This is the maximum size of a frame... currently PAL which is 720x576.  aligned to 1kb boundry
 	MaxBytesPerFrame = (((Width * Height) + ((Width * Height) >> 1)) + 1023) & ~0x3FF;
 #else
-	MaxBytesPerFrame = 2000000;
+	MaxBytesPerFrame = 0x17A000; //1548288; Aligned value for 1280x720 frames
+	//MaxBytesPerFrame = 2000000;
 	report (severity_info,"MaxBytesPerFrame =%d\n",MaxBytesPerFrame);
 #endif
 	CurrentWidth   = 720;
