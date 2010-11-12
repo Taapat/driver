@@ -85,63 +85,50 @@ obj-y	+= boxtype/
 obj-y	+= simu_button/
 obj-y	+= e2_proc/
 obj-y	+= frontends/
+obj-y	+= frontcontroller/
 obj-y	+= pti/
 #obj-y	+= pti_np/
 obj-y	+= compcache/
+
 ifdef STM22
 obj-y	+= logfs/
 endif
+
 #obj-y	+= proc_register/
+
 ifndef VIP2_V1
 ifndef SPARK
 obj-y	+= cic/
 endif
 endif
+
 ifndef HOMECAST5101
 ifndef FORTIS_HDBOX
 ifndef UFS922
 ifndef TF7700
 obj-y	+= button/
 obj-y	+= led/
-obj-y	+= vfd/
-else
-obj-y	+= tffp/
 endif
-else
-obj-y	+= micom/
+endif
+endif
+endif
+
+ifdef UFS922
 obj-y	+= ufs922_fan/
 endif
-else
-obj-y	+= nuvoton/
-endif
-else
+
+ifdef HOMECAST5101
 obj-y	+= button_hs5101/
-obj-y	+= vfd_hs5101/
 obj-y	+= player2/linux/drivers/media/dvb/stm/dvb
 endif
-#obj-y   += zd1211/
-endif
-# HL101 = argus vip1, opticum 9500hd, truman tm900hd... 
-ifdef HL101
-obj-y   += proton/
-endif
-ifdef VIP1_V2
-obj-y   += aotom/
-endif
-ifdef VIP2_V1
-obj-y   += aotom/
-endif
+
 ifdef UFS912
-obj-y	+= micom/
 #obj-y	+= cec/
 obj-y	+= clk/
 endif
 
 ifdef SPARK
 obj-y   += clk/
-obj-y   += aotom/
 endif
 
-ifdef OCTAGON1008
-obj-y	+= nuvoton/
 endif
