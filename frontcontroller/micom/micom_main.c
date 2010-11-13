@@ -422,7 +422,11 @@ static int __init micom_init_module(void)
     //Enable the FIFO
     *ASC_X_CTRL = *ASC_X_CTRL | ASC_CTRL_FIFO_EN;
 
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
     i = request_irq(InterruptLine, (void*)FP_interrupt, IRQF_DISABLED /* SA_INTERRUPT */, "FP_serial", NULL);
+#else
+    i = request_irq(InterruptLine, (void*)FP_interrupt, SA_INTERRUPT, "FP_serial", NULL);
+#endif
 
     if (!i)
         *ASC_X_INT_EN = *ASC_X_INT_EN | 0x00000001;
