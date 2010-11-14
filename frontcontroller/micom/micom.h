@@ -108,4 +108,37 @@ struct vfd_ioctl_data {
     unsigned char data[64];
     unsigned char length;
 };
+
+#ifdef UFS922
+enum {
+		LED_AUX = 0x1,
+		LED_LIST,
+		LED_POWER,
+		LED_TV_R,
+		LED_VOL,
+		LED_WHEEL,
+};
+
+enum {
+		ICON_MIN = 0x0,
+		ICON_USB = 0x1,
+		ICON_HD,
+		ICON_HDD,
+		ICON_SCRAMBLED,
+		ICON_BLUETOOTH,
+		ICON_MP3,
+		ICON_RADIO,
+		ICON_DOLBY,
+		ICON_EMAIL,
+		ICON_MUTE,
+		ICON_PLAY,
+		ICON_PAUSE,
+		ICON_FF,
+		ICON_REW,
+		ICON_REC,
+		ICON_TIMER,
+		ICON_MAX
+};
+#endif
+
 #endif
