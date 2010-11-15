@@ -40,7 +40,7 @@
 
 #include "nuvoton.h"
 #include "nuvoton_asc.h"
-#include "../vfd/utf.h"
+#include "nuvoton_utf.h"
 
 extern void ack_sem_up(void);
 extern int  ack_sem_down(void);
@@ -125,54 +125,70 @@ u8 c;
 #endif
 
 enum {
-    ICON_MIN = 0x0,
-    ICON_USB = 0x1,
-    ICON_HD,
-    ICON_HDD,
-    ICON_SCRAMBLED,
-    ICON_BLUETOOTH,
-    ICON_MP3,
-    ICON_RADIO,
-    ICON_DOLBY,
-    ICON_EMAIL,
-    ICON_MUTE,
-    ICON_PLAY,
-    ICON_PAUSE,
-    ICON_FF,
-    ICON_REW,
-    ICON_REC,
-    ICON_TIMER,
-    /* hdbox only: must be implemented in SystemPlugins/VFD-Icons/plugin.py */
-    ICON_TIMESHIFT,
-    ICON_TUNER1,
-    ICON_MAX
+	ICON_MIN,
+	ICON_STANDBY,
+	ICON_SAT,
+	ICON_REC,
+	ICON_TIMESHIFT,
+	ICON_TIMER,
+	ICON_HD,
+	ICON_USB,
+	ICON_SCRAMBLED,
+	ICON_DOLBY,
+	ICON_MUTE,
+	ICON_TUNER1,
+	ICON_TUNER2,
+	ICON_MP3,
+	ICON_REPEAT,
+	ICON_Play,
+	ICON_TER,
+	ICON_FILE,
+	ICON_480i,
+	ICON_480p,
+	ICON_576i,
+	ICON_576p,
+	ICON_720p,
+	ICON_1080i,
+	ICON_1080p,
+	ICON_PM_1Uhr,
+	ICON_MAX
 };
 
 struct iconToInternal {
-    char  *name;
-    u16   icon;
-    u8    internalCode1;
-    u8    internalCode2;
-} nuvotonIcons[] =
-{
-    { "ICON_USB"      , ICON_USB       , 0x35, 0xff},
-    { "ICON_HD"       , ICON_HD        , 0x34, 0xff},
-    { "ICON_HDD"      , ICON_HDD       , 0xff, 0xff},
-    { "ICON_SCRAMBLED", ICON_SCRAMBLED , 0x36, 0xff},
-    { "ICON_BLUETOOTH", ICON_BLUETOOTH , 0xff, 0xff},
-    { "ICON_MP3"      , ICON_MP3       , 0xff, 0xff},
-    { "ICON_RADIO"    , ICON_RADIO     , 0xff, 0xff},
-    { "ICON_DOLBY"    , ICON_DOLBY     , 0x37, 0xff},
-    { "ICON_EMAIL"    , ICON_EMAIL     , 0xff, 0xff},
-    { "ICON_MUTE"     , ICON_MUTE      , 0x38, 0xff},
-    { "ICON_PLAY"     , ICON_PLAY      , 0xff, 0xff},
-    { "ICON_PAUSE"    , ICON_PAUSE     , 0xff, 0xff},
-    { "ICON_FF"       , ICON_FF        , 0xff, 0xff},
-    { "ICON_REW"      , ICON_REW       , 0xff, 0xff},
-    { "ICON_REC"      , ICON_REC       , 0x30, 0xff},
-    { "ICON_TIMER"    , ICON_TIMER     , 0x33, 0xff},
-    { "ICON_TIMESHIFT", ICON_TIMESHIFT , 0x31, 0x32},
-    { "ICON_TUNER1"   , ICON_TUNER1    , 0x39, 0xff},
+	char *name;
+	u16 icon;
+	u8 internalCode1;
+	u8 SymbolData1;
+	u8 internalCode2;
+	u8 SymbolData2;
+} nuvotonIcons[] ={
+/*--------------------- SetIcon ------- code1 data1 code2 data2 -----*/
+	{ "ICON_STANDBY"  , ICON_STANDBY   , 0x20, 0x08, 0xff, 0x00}, // ok
+	{ "ICON_SAT"      , ICON_SAT       , 0x20, 0x04, 0xff, 0x00}, // ok
+	{ "ICON_REC"      , ICON_REC       , 0x30, 0x03, 0xff, 0x00}, // ok
+	{ "ICON_TIMESHIFT", ICON_TIMESHIFT , 0x31, 0x03, 0x32, 0x03}, // ok
+	{ "ICON_TIMER"    , ICON_TIMER     , 0x33, 0x02, 0xff, 0x00}, // ok
+	{ "ICON_HD"       , ICON_HD        , 0x34, 0x02, 0xff, 0x00}, // ok
+	{ "ICON_USB"      , ICON_USB       , 0x35, 0x02, 0xff, 0x00}, // ok
+	{ "ICON_SCRAMBLED", ICON_SCRAMBLED , 0x36, 0x02, 0xff, 0x00}, // ok
+	{ "ICON_DOLBY"    , ICON_DOLBY     , 0x37, 0x02, 0xff, 0x00}, // ok
+	{ "ICON_MUTE"     , ICON_MUTE      , 0x38, 0x02, 0xff, 0x00}, // ok
+	{ "ICON_TUNER1"   , ICON_TUNER1    , 0x39, 0x03, 0xff, 0x00}, // ok
+	{ "ICON_TUNER2"   , ICON_TUNER2    , 0x3a, 0x03, 0xff, 0x00}, // ok
+	{ "ICON_MP3"      , ICON_MP3       , 0x3b, 0x03, 0xff, 0x00}, // ok
+	{ "ICON_REPEAT"   , ICON_REPEAT    , 0x3c, 0x03, 0xff, 0x00}, // ok
+	{ "ICON_PM_Play"  , ICON_Play      , 0x20, 0x02, 0xff, 0x00}, // ok
+	{ "ICON_PM_1Uhr"  , ICON_PM_1Uhr   , 0x23, 0x04, 0xff, 0x00}, // ok
+/*------------------------ SetIcon noch offen --------------------------*/
+	{ "ICON_TER"      , ICON_TER       , 0xff, 0x00, 0xff, 0x00},
+	{ "ICON_FILE"     , ICON_FILE      , 0xff, 0x00, 0xff, 0x00},
+	{ "ICON_480i"     , ICON_480i      , 0xff, 0x00, 0xff, 0x00},
+	{ "ICON_480p"     , ICON_480p      , 0xff, 0x00, 0xff, 0x00},
+	{ "ICON_576i"     , ICON_576i      , 0xff, 0x00, 0xff, 0x00},
+	{ "ICON_576p"     , ICON_576p      , 0xff, 0x00, 0xff, 0x00},
+	{ "ICON_720p"     , ICON_720p      , 0xff, 0x00, 0xff, 0x00},
+	{ "ICON_1080i"    , ICON_1080i     , 0xff, 0x00, 0xff, 0x00},
+	{ "ICON_1080p"    , ICON_1080p     , 0xff, 0x00, 0xff, 0x00},
 };
 
 /* to the fp */
@@ -199,9 +215,10 @@ struct iconToInternal {
 #define cCommandSetPort          0xb3
 
 #ifdef OCTAGON1008
-#define cCommandSetIcon          0xc4 //0xc2
+#define cCommandSetIcon          0xc4
 #else
-#define cCommandSetIcon          0xc2
+#define cCommandSetIconI         0xc2 /* 0xc2 0xc7 0xcb 0xcc */
+#define cCommandSetIconII        0xc7
 #endif
 
 #ifdef OCTAGON1008
@@ -357,7 +374,7 @@ int nuvotonSetIcon(int which, int on)
 int nuvotonSetIcon(int which, int on)
 {
     char buffer[128];
-    u8   internalCode1, internalCode2;
+    u8 internalCode1, SymbolData1, internalCode2, SymbolData2;
     int  vLoop, res = 0;
 
     dprintk(5, "%s > %d, %d\n", __func__, which, on);
@@ -370,12 +387,16 @@ int nuvotonSetIcon(int which, int on)
 
     internalCode1 = 0xff;
     internalCode2 = 0xff;
+    SymbolData1 = 0x00;
+    SymbolData2 = 0x00;
     for (vLoop = 0; vLoop < ARRAY_SIZE(nuvotonIcons); vLoop++)
     {
         if ((which & 0xff) == nuvotonIcons[vLoop].icon)
         {
             internalCode1 = nuvotonIcons[vLoop].internalCode1;
             internalCode2 = nuvotonIcons[vLoop].internalCode2;
+            SymbolData1 = nuvotonIcons[vLoop].SymbolData1;
+            SymbolData2 = nuvotonIcons[vLoop].SymbolData2;
             if (internalCode1 == 0xff)
             {
                 printk("%s: not known or not supported icon %d ->%s\n", __func__, which, nuvotonIcons[vLoop].name);
@@ -395,10 +416,10 @@ int nuvotonSetIcon(int which, int on)
     memset(buffer, 0, 128);
 
     buffer[0] = SOP;
-    buffer[1] = cCommandSetIcon;
+    buffer[1] = cCommandSetIconI;
     buffer[2] = internalCode1;
     if (on)
-        buffer[3] = 0x02;
+        buffer[3] = SymbolData1;
     else
         buffer[3] = 0x00;
 
@@ -412,10 +433,10 @@ int nuvotonSetIcon(int which, int on)
         memset(buffer, 0, 128);
 
         buffer[0] = SOP;
-        buffer[1] = cCommandSetIcon;
+        buffer[1] = cCommandSetIconI;
         buffer[2] = internalCode2;
         if (on)
-            buffer[3] = 0x02;
+            buffer[3] = SymbolData2;
         else
             buffer[3] = 0x00;
 
@@ -677,6 +698,12 @@ int nuvotonWriteString(unsigned char* aBuf, int len)
                 break;
             case 0xc3:
                 UTF_Char_Table = UTF_C3;
+                break;
+            case 0xc4:
+                UTF_Char_Table = UTF_C4;
+                break;
+            case 0xc5:
+                UTF_Char_Table = UTF_C5;
                 break;
             case 0xd0:
                 UTF_Char_Table = UTF_D0;
