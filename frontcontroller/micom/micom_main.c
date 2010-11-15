@@ -69,6 +69,7 @@ two not implemented commands:
 #define EVENT_OK2                  0xF1
 #define EVENT_ANSWER_GETTIME       0xB9
 #define EVENT_ANSWER_WAKEUP_REASON 0x77
+#define EVENT_ANSWER_VERSION       0x85
 
 #define DATA_BTN_EVENT   0
 #define DATA_BTN_KEYCODE 1
@@ -83,8 +84,11 @@ static unsigned char expectEventId = 1;
 struct semaphore     waitForAck;
 
 #define cPackageSize         8
-#define cGetTimeSize         6
+#define cGetTimeSize         8
 #define cGetWakeupReasonSize 8
+#define cGetVersionSize      8
+
+#define cMinimumSize         6
 
 #define BUFFERSIZE   256     //must be 2 ^ n
 static unsigned char RCVBuffer [BUFFERSIZE];
@@ -111,7 +115,7 @@ int ack_sem_down(void)
 EXPORT_SYMBOL(ack_sem_down);
 
 //------------------------------------------------------------------
-int getLen(void)
+int getLen(int expectedLen)
 {
     int i,j, len;
     
@@ -121,7 +125,8 @@ int getLen(void)
     while (1)  
     {
          if (RCVBuffer[j] == 0xd)
-            break;
+            if ((expectedLen == -1) || (i == expectedLen - 1))
+                break;
          
          j++; i++;
          
@@ -138,12 +143,56 @@ int getLen(void)
 
     len = i + 1;
 
-    dprintk(200, "(len %d): ", len);
+    return len;
+}
 
+void handleCopyData(int len)
+{
+    int i,j;
+    
+    unsigned char* data = kmalloc(len, GFP_KERNEL);
+    
+    i = 0;
+    j = RCVBufferEnd;
+    
+    while (i != len)
+    {
+        data[i] = RCVBuffer[j];
+        j++;
+        i++;
+
+        if (j >= BUFFERSIZE)
+            j = 0;
+
+        if (j == RCVBufferStart)
+        {
+            break;
+        }
+    }
+
+    copyData(data, len);
+    
+    kfree(data);
+}
+
+void dumpValues(void)
+{
+    dprintk(150, "BuffersStart %d, BufferEnd %d, len %d\n", RCVBufferStart, RCVBufferEnd, getLen(-1));
+}
+
+void dumpData(void)
+{
+    int i, j, len;
+    
+    if (paramDebug < 100)
+        return;
+    
+    len = getLen(-1);
+    
     i = RCVBufferEnd;
     for (j = 0; j < len; j++)
     {
-        dprintk(200, "0x%02x ", RCVBuffer[i]);
+        printk("0x%02x ", RCVBuffer[i]);
 
         i++;
 
@@ -151,20 +200,14 @@ int getLen(void)
         {
             i = 0;
         }
-        
+
         if (i == RCVBufferStart)
         {
-           i = -1;
-           break;
+            i = -1;
+            break;
         }
     }
-    dprintk(200, "\n");
-    return len;
-}
-
-void dumpValues(void)
-{
-    dprintk(150, "BuffersStart %d, BufferEnd %d, len %d\n", RCVBufferStart, RCVBufferEnd, getLen());
+    printk("\n");
 }
 
 void getRCData(unsigned char* data, int* len)
@@ -175,14 +218,14 @@ void getRCData(unsigned char* data, int* len)
     {
         dprintk(200, "%s %d - %d\n", __func__, RCVBufferStart, RCVBufferEnd);
 
-        if (wait_event_interruptible(wq, (RCVBufferStart != RCVBufferEnd) && (getLen() == cPackageSize)))
+        if (wait_event_interruptible(wq, (RCVBufferStart != RCVBufferEnd) && (getLen(cPackageSize) == cPackageSize)))
         {
             printk("wait_event_interruptible failed\n");
             return;
         }
     }    
 
-    *len = getLen();    
+    *len = getLen(cPackageSize);    
 
     if (*len != cPackageSize)
     {
@@ -215,12 +258,17 @@ void getRCData(unsigned char* data, int* len)
 
 static void processResponse(void)
 {
-    unsigned char* data = &RCVBuffer[RCVBufferEnd];
     int len;
+
+    dumpData();
 
     if (expectEventId)
     {
-        expectEventData = data[DATA_BTN_EVENT];
+        /* DATA_BTN_EVENT can be wrapped to start */
+        int index = (RCVBufferEnd + DATA_BTN_EVENT) % BUFFERSIZE;
+        
+        expectEventData = RCVBuffer[index];
+
         expectEventId = 0;
     }
 
@@ -232,8 +280,7 @@ static void processResponse(void)
         {
         case EVENT_BTN:
         {
-/* no longkeypress for frontpanel buttons! */
-            len = getLen();
+            len = getLen(cPackageSize);
             
             if (len == 0)
                 goto out_switch;
@@ -246,7 +293,7 @@ static void processResponse(void)
         break;
         case EVENT_RC:
         {
-            len = getLen();
+            len = getLen(cPackageSize);
 
             if (len == 0)
                 goto out_switch;
@@ -259,7 +306,7 @@ static void processResponse(void)
         break;
         case EVENT_ERR:
         {
-            len = getLen();
+            len = getLen(-1);
 
             if (len == 0)
                 goto out_switch;
@@ -281,7 +328,7 @@ static void processResponse(void)
         case EVENT_OK1:
         case EVENT_OK2:
         {
-            len = getLen();
+            len = getLen(-1);
 
             if (len == 0)
                 goto out_switch;
@@ -300,7 +347,7 @@ static void processResponse(void)
         break;
         case EVENT_ANSWER_GETTIME:
 
-            len = getLen();
+            len = getLen(cGetTimeSize);
 
             if (len == 0)
                 goto out_switch;
@@ -308,7 +355,7 @@ static void processResponse(void)
             if (len < cGetTimeSize)
                 goto out_switch;
 
-            copyData(data, len);
+            handleCopyData(len);
 
             /* if there is a waiter for an acknowledge ... */
             if(atomic_read(&waitForAck.count) < 0)
@@ -325,7 +372,7 @@ static void processResponse(void)
         break;
         case EVENT_ANSWER_WAKEUP_REASON:
         
-            len = getLen();
+            len = getLen(cGetWakeupReasonSize);
 
             if (len == 0)
                 goto out_switch;
@@ -333,7 +380,7 @@ static void processResponse(void)
             if (len < cGetWakeupReasonSize)
                 goto out_switch;
 
-            copyData(data, len);
+            handleCopyData(len);
 
             /* if there is a waiter for an acknowledge ... */
             if(atomic_read(&waitForAck.count) < 0)
@@ -349,16 +396,43 @@ static void processResponse(void)
             RCVBufferEnd = (RCVBufferEnd + cGetWakeupReasonSize) % BUFFERSIZE;
         
         break;
+        case EVENT_ANSWER_VERSION:
+        
+            len = getLen(cGetVersionSize);
+
+            if (len == 0)
+                goto out_switch;
+
+            if (len < cGetVersionSize)
+                goto out_switch;
+
+            handleCopyData(len);
+
+            /* if there is a waiter for an acknowledge ... */
+            if(atomic_read(&waitForAck.count) < 0)
+            {
+              dprintk(1, "Pos. response received\n");
+              errorOccured = 0;
+              ack_sem_up();
+            } else
+            {
+                printk("[micom] receive answer not waiting for\n");
+            }
+
+            RCVBufferEnd = (RCVBufferEnd + cGetVersionSize) % BUFFERSIZE;
+        
+        
+        break;
         default: // Ignore Response
             /* increase until we found a new valid answer */
             RCVBufferEnd = (RCVBufferEnd + 1) % BUFFERSIZE;
             dprintk(1, "Invalid Response %02x\n", expectEventData);
             break;
         }
+    }
 out_switch:
         expectEventId = 1;
         expectEventData = 0;
-    }
 }
 
 static irqreturn_t FP_interrupt(int irq, void *dev_id)
