@@ -1,7 +1,44 @@
+#ifndef _123_nuvoton
+#define _123_nuvoton
 /*
  */
 
-#define VFD_MAJOR			147
+extern short paramDebug;
+
+#define TAGDEBUG "[nuvoton] "
+
+#ifndef dprintk
+#define dprintk(level, x...) do { \
+        if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
+    } while (0)
+#endif
+
+extern int nuvoton_init_func(void);
+extern void copyData(unsigned char* data, int len);
+extern void getRCData(unsigned char* data, int* len);
+void dumpValues(void);
+
+extern int                  errorOccured;
+
+extern struct file_operations vfd_fops;
+
+typedef struct
+{
+    struct file*      fp;
+    int               read;
+    struct semaphore  sem;
+
+} tFrontPanelOpen;
+
+#define FRONTPANEL_MINOR_RC   1
+#define LASTMINOR             2
+
+extern tFrontPanelOpen FrontPanelOpen[LASTMINOR];
+
+#define VFD_MAJOR           147
+
+#define SOP              0x02
+#define EOP              0x03
 
 /* ioctl numbers ->hacky */
 #define VFDBRIGHTNESS         0xc0425a03
@@ -20,21 +57,21 @@
 #define VFDSETMODE            0xc0425aff
 
 struct set_brightness_s {
-	int level;
+    int level;
 };
 
 struct set_pwrled_s {
-	int level;
+    int level;
 };
 
 struct set_icon_s {
-	int icon_nr;
-	int on;
+    int icon_nr;
+    int on;
 };
 
 struct set_led_s {
-	int led_nr;
-	int on;
+    int led_nr;
+    int on;
 };
 
 /* time must be given as follows:
@@ -44,11 +81,11 @@ struct set_led_s {
  * time[4] = sec
  */
 struct set_standby_s {
-	char time[5];
+    char time[5];
 };
 
 struct set_time_s {
-	char time[5];
+    char time[5];
 };
 
 /* this setups the mode temporarily (for one ioctl)
@@ -56,33 +93,35 @@ struct set_time_s {
  * is the compatible vfd mode
  */
 struct set_mode_s {
-	int compat; /* 0 = compatibility mode to vfd driver; 1 = nuvoton mode */
+    int compat; /* 0 = compatibility mode to vfd driver; 1 = nuvoton mode */
 };
 
 struct nuvoton_ioctl_data {
-	union
-	{
-		struct set_icon_s icon;
-		struct set_led_s led;
-		struct set_brightness_s brightness;
-		struct set_pwrled_s pwrled;
-		struct set_mode_s mode;
-		struct set_standby_s standby;
-		struct set_time_s time;
-	} u;
+    union
+    {
+        struct set_icon_s icon;
+        struct set_led_s led;
+        struct set_brightness_s brightness;
+        struct set_pwrled_s pwrled;
+        struct set_mode_s mode;
+        struct set_standby_s standby;
+        struct set_time_s time;
+    } u;
 };
 
 struct vfd_ioctl_data {
-	unsigned char start_address;
-	unsigned char data[64];
-	unsigned char length;
+    unsigned char start_address;
+    unsigned char data[64];
+    unsigned char length;
 };
 
 #ifdef OCTAGON1008
 struct vfd_buffer {
-	int aktiv;
-	int which;
-	unsigned char *buf1;
-	unsigned char *buf2;
+    int aktiv;
+    int which;
+    unsigned char *buf1;
+    unsigned char *buf2;
 };
+#endif
+
 #endif
