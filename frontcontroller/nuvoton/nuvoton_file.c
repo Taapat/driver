@@ -150,7 +150,7 @@ enum {
 	ICON_720p,
 	ICON_1080i,
 	ICON_1080p,
-	ICON_PM_1Uhr,
+	ICON_Play_1,
 	ICON_MAX
 };
 
@@ -177,8 +177,8 @@ struct iconToInternal {
 	{ "ICON_TUNER2"   , ICON_TUNER2    , 0x3a, 0x03, 0xff, 0x00}, // ok
 	{ "ICON_MP3"      , ICON_MP3       , 0x3b, 0x03, 0xff, 0x00}, // ok
 	{ "ICON_REPEAT"   , ICON_REPEAT    , 0x3c, 0x03, 0xff, 0x00}, // ok
-	{ "ICON_PM_Play"  , ICON_Play      , 0x20, 0x02, 0xff, 0x00}, // ok
-	{ "ICON_PM_1Uhr"  , ICON_PM_1Uhr   , 0x23, 0x04, 0xff, 0x00}, // ok
+	{ "ICON_Play"     , ICON_Play      , 0x20, 0x02, 0xff, 0x00}, // ok
+	{ "ICON_Play_1"   , ICON_Play_1    , 0x23, 0x04, 0xff, 0x00}, // ok
 /*------------------------ SetIcon noch offen --------------------------*/
 	{ "ICON_TER"      , ICON_TER       , 0xff, 0x00, 0xff, 0x00},
 	{ "ICON_FILE"     , ICON_FILE      , 0xff, 0x00, 0xff, 0x00},
@@ -1066,12 +1066,9 @@ static int NUVOTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int
     static int mode = 0;
     struct nuvoton_ioctl_data * nuvoton = (struct nuvoton_ioctl_data *)arg;
     int res = 0;
-
     dprintk(5, "%s > 0x%.8x\n", __func__, cmd);
-
     if(down_interruptible (&write_sem))
         return -ERESTARTSYS;
-
     switch(cmd) {
     case VFDSETMODE:
         mode = nuvoton->u.mode.compat;
@@ -1083,7 +1080,6 @@ static int NUVOTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int
         if (mode == 0)
         {
             struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;
-
             res = nuvotonSetBrightness(data->start_address);
         } else
         {
@@ -1095,7 +1091,6 @@ static int NUVOTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int
         if (mode == 0)
         {
             struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;
-
             res = nuvotonSetPwrLed(data->start_address);
         } else
         {
@@ -1113,13 +1108,11 @@ static int NUVOTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int
             struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;
             int icon_nr = (data->data[0] & 0xf) + 1;
             int on = data->data[4];
-
             res = nuvotonSetIcon(icon_nr, on);
         } else
         {
             res = nuvotonSetIcon(nuvoton->u.icon.icon_nr, nuvoton->u.icon.on);
         }
-
         mode = 0;
         break;
     case VFDSTANDBY:
@@ -1141,15 +1134,12 @@ static int NUVOTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int
         if (mode == 0)
         {
             struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;
-
             res = nuvotonWriteString(data->data, data->length);
         } else
         {
             //not suppoerted
         }
-
         mode = 0;
-
         break;
     case VFDDISPLAYWRITEONOFF:
         /* ->alles abschalten ? VFD_Display_Write_On_Off */
@@ -1157,13 +1147,10 @@ static int NUVOTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int
         break;
     default:
         printk("VFD/Nuvoton: unknown IOCTL 0x%x\n", cmd);
-
         mode = 0;
         break;
     }
-
     up(&write_sem);
-
     dprintk(5, "%s <\n", __func__);
     return res;
 }
