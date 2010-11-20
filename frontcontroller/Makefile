@@ -13,6 +13,10 @@ else
 CFLAGS += $(CCFLAGSY)
 endif
 
+ifdef FLASH_UFS910
+obj-y	+= vfd/
+endif
+
 ifdef UFS910
 obj-y	+= vfd/
 endif
