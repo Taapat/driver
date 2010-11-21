@@ -176,14 +176,14 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 #elif (defined(CONFIG_CPU_SUBTYPE_STB7100) || defined (CONFIG_CPU_SUBTYPE_STX7100)) && !defined CONFIG_DUAL_DISPLAY
 
 static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
-	{
-		{
+   {
+      {
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
-	#if defined(__TDT__)
-			CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
-			CARD        ("Analog",  1, 0,  48000, 2),
-			CARD        ("HDMI",    0, 0,  48000, 2),
-	#else
+   #if defined(__TDT__) && ! defined(UFS922)
+      CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
+      CARD        ("Analog",  1, 0,  48000, 2),
+      CARD        ("HDMI",    0, 0,  48000, 2),
+   #else
 			CARD_SPDIF  ("SPDIF",   0, 2,  48000, 2),
 			CARD        ("Analog",  0, 1,  48000, 2),
 			CARD        ("HDMI",    0, 0,  48000, 2),
