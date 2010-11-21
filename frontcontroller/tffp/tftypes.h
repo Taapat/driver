@@ -1,6 +1,8 @@
 #ifndef TFTYPES_H
 #define TFTYPES_H
 
+#include <linux/version.h>
+
 #define ulong64 		unsigned long long
 #define sulong64		static unsigned long long
 
@@ -13,7 +15,7 @@ typedef unsigned short	word;
 #ifndef byte
 typedef unsigned char	byte;
 #endif
-#ifndef bool
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,17)
 typedef unsigned char   bool;
 #endif
 
