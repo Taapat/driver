@@ -402,6 +402,18 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/video/plane/psi_saturation"  , NULL, NULL, NULL, NULL, "psi_saturation"},
 	{cProcEntry, "stb/video/plane/psi_contrast"    , NULL, NULL, NULL, NULL, "psi_saturation"},
 	{cProcEntry, "stb/video/plane/psi_tint"        , NULL, NULL, NULL, NULL, "psi_tint"}
+#ifdef UFS912
+        ,
+	{cProcDir  , "stb/cec"   	                   , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/cec/state_activesource"   	               , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/cec/state_standby"   	               , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/cec/state_cecaddress"   	               , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/cec/onetouchplay"   	               , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/cec/systemstandby"   	               , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/cec/event_poll"   	               , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/cec/send"   	               , NULL, NULL, NULL, NULL, ""}
+#endif
+
 #ifdef UFS922
         ,
 /* dagobert: the dei settings can be used for all 7109 architectures to affec the de-interlacer */
