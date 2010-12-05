@@ -76,12 +76,16 @@ two not implemented commands:
 #define DATA_BTN_NEXTKEY 4
 
 //----------------------------------------------
-short paramDebug = 100;
+short paramDebug = 50;
 
 static unsigned char expectEventData = 0;
 static unsigned char expectEventId = 1;
 
-struct semaphore     waitForAck;
+struct semaphore     waitForAck; /* stop caller task if waiting for ack */
+
+static struct timer_list ackTimer; /* release sema after a given time */
+
+#define ACK_WAIT_TIME msecs_to_jiffies(500)
 
 #define cPackageSize         8
 #define cGetTimeSize         8
@@ -95,20 +99,21 @@ static unsigned char RCVBuffer [BUFFERSIZE];
 static int           RCVBufferStart = 0, RCVBufferEnd = 0;
 
 static wait_queue_head_t   wq;
+static wait_queue_head_t   rx_wq;
 
 //----------------------------------------------
 
 void ack_sem_up(void)
 {
+    del_timer(&ackTimer);
     up(&waitForAck);
 }
 
 int ack_sem_down(void)
 {
-/* fixme: we should supervise this in the irq (time based) 
- * to avoid blocking for ever for the abnormal case when
- * no answer is reached from the rc ->see processResponse
- */
+	ackTimer.expires = jiffies + ACK_WAIT_TIME;
+	add_timer(&ackTimer);
+
     return down_interruptible (&waitForAck);
 }
 
@@ -175,21 +180,17 @@ void handleCopyData(int len)
     kfree(data);
 }
 
-void dumpValues(void)
-{
-    dprintk(150, "BuffersStart %d, BufferEnd %d, len %d\n", RCVBufferStart, RCVBufferEnd, getLen(-1));
-}
-
 void dumpData(void)
 {
     int i, j, len;
     
-    if (paramDebug < 100)
-        return;
-    
     len = getLen(-1);
+
+    if (len == 0) 
+       return;
     
     i = RCVBufferEnd;
+    
     for (j = 0; j < len; j++)
     {
         printk("0x%02x ", RCVBuffer[i]);
@@ -208,6 +209,15 @@ void dumpData(void)
         }
     }
     printk("\n");
+}
+
+void dumpValues(void)
+{
+    dprintk(50, "BuffersStart %d, BufferEnd %d, len %d\n", RCVBufferStart, RCVBufferEnd, getLen(-1));
+    
+    if (RCVBufferStart != RCVBufferEnd)
+       if (paramDebug >= 50)
+           dumpData();
 }
 
 void getRCData(unsigned char* data, int* len)
@@ -253,14 +263,15 @@ void getRCData(unsigned char* data, int* len)
 
     RCVBufferEnd = (RCVBufferEnd + cPackageSize) % BUFFERSIZE;
 
-    dprintk(150, " <len %d, End %d\n", *len, RCVBufferEnd);
+    dprintk(50, "%s <len %d, Start %d End %d\n", __func__, *len, RCVBufferStart, RCVBufferEnd);
 }
 
 static void processResponse(void)
 {
     int len;
 
-    dumpData();
+    if (paramDebug >= 100)
+       dumpData();
 
     if (expectEventId)
     {
@@ -288,6 +299,11 @@ static void processResponse(void)
             if (len < cPackageSize)
                 goto out_switch;
 
+            dprintk(1, "EVENT_RC complete\n");
+
+            if (paramDebug >= 50)
+                dumpData();
+
             wake_up_interruptible(&wq);
         }
         break;
@@ -301,6 +317,12 @@ static void processResponse(void)
             if (len < cPackageSize)
                 goto out_switch;
 
+            dprintk(1, "EVENT_RC complete\n");
+            dprintk(1, "start %d end %d\n",  RCVBufferStart,  RCVBufferEnd);  
+
+            if (paramDebug >= 50)
+                dumpData();
+                
             wake_up_interruptible(&wq);
         }
         break;
@@ -333,7 +355,7 @@ static void processResponse(void)
             if (len == 0)
                 goto out_switch;
 
-            dprintk(20, "Pos. response received\n");
+            dprintk(20, "EVENT_OK1/2: Pos. response received\n");
             
             /* if there is a waiter for an acknowledge ... */
             if(atomic_read(&waitForAck.count) < 0)
@@ -360,7 +382,7 @@ static void processResponse(void)
             /* if there is a waiter for an acknowledge ... */
             if(atomic_read(&waitForAck.count) < 0)
             {
-              dprintk(20, "Pos. response received\n");
+              dprintk(20, "EVENT_ANSWER_GETTIME: Pos. response received\n");
               errorOccured = 0;
               ack_sem_up();
             } else
@@ -385,7 +407,7 @@ static void processResponse(void)
             /* if there is a waiter for an acknowledge ... */
             if(atomic_read(&waitForAck.count) < 0)
             {
-              dprintk(1, "Pos. response received\n");
+              dprintk(1, "EVENT_ANSWER_WAKEUP_REASON: Pos. response received\n");
               errorOccured = 0;
               ack_sem_up();
             } else
@@ -411,7 +433,7 @@ static void processResponse(void)
             /* if there is a waiter for an acknowledge ... */
             if(atomic_read(&waitForAck.count) < 0)
             {
-              dprintk(1, "Pos. response received\n");
+              dprintk(1, "EVENT_ANSWER_VERSION: Pos. response received\n");
               errorOccured = 0;
               ack_sem_up();
             } else
@@ -424,9 +446,15 @@ static void processResponse(void)
         
         break;
         default: // Ignore Response
-            /* increase until we found a new valid answer */
-            RCVBufferEnd = (RCVBufferEnd + 1) % BUFFERSIZE;
             dprintk(1, "Invalid Response %02x\n", expectEventData);
+            dprintk(1, "start %d end %d\n",  RCVBufferStart,  RCVBufferEnd);  
+            dumpData();
+
+            /* discard all data, because this happens currently
+             * sometimes. dont know the problem here.
+             */
+            RCVBufferEnd = RCVBufferStart;
+
             break;
         }
     }
@@ -441,7 +469,7 @@ static irqreturn_t FP_interrupt(int irq, void *dev_id)
     char         *ASC_X_RX_BUFF = (char*)        (ASCXBaseAddress + ASC_RX_BUFF);
     int          dataArrived = 0;
     
-    if (paramDebug > 100) 
+    if (paramDebug >= 100) 
         printk("i - ");
 
     while (*ASC_X_INT_STA & ASC_INT_STA_RBF)
@@ -458,14 +486,56 @@ static irqreturn_t FP_interrupt(int irq, void *dev_id)
     }
 
     if (dataArrived)
-        processResponse();
-
+    {
+        wake_up_interruptible(&rx_wq);
+    }
 /* konfetti comment: in normal case we would also
  * check the transmission state and send queued
  * data, but I think this is not necessary in this case
  */
 
     return IRQ_HANDLED;
+}
+
+int micomTask(void * dummy)
+{
+  daemonize("micomTask");
+
+  allow_signal(SIGTERM);
+
+  while(1)
+  {
+     int dataAvailable = 0;
+     
+     if (wait_event_interruptible(rx_wq, (RCVBufferStart != RCVBufferEnd)))
+     {
+         printk("wait_event_interruptible failed\n");
+         continue;
+     }
+
+     if (RCVBufferStart != RCVBufferEnd)
+        dataAvailable = 1;
+     
+     while (dataAvailable)
+     {
+        processResponse();
+        
+        if (RCVBufferStart == RCVBufferEnd)
+            dataAvailable = 0;
+            
+        dprintk(150, "start %d end %d\n",  RCVBufferStart,  RCVBufferEnd);  
+     }
+  }
+
+  printk("micomTask died!\n");
+
+  return 0;
+}
+
+static void ack_timer(unsigned long data)
+{
+    printk("%s: timeout waiting on data for %lu milliseconds\n", __func__, ACK_WAIT_TIME);
+    ack_sem_up();
 }
 
 //----------------------------------------------
@@ -487,11 +557,18 @@ static int __init micom_init_module(void)
     serial_init();
 
     init_waitqueue_head(&wq);
+    init_waitqueue_head(&rx_wq);
 
     sema_init(&waitForAck, 0);
 
     for (i = 0; i < LASTMINOR; i++)
         sema_init(&FrontPanelOpen[i].sem, 1);
+
+    kernel_thread(micomTask, NULL, 0);
+
+    init_timer(&ackTimer);
+    ackTimer.function = ack_timer;
+    ackTimer.data = 0;
 
     //Enable the FIFO
     *ASC_X_CTRL = *ASC_X_CTRL | ASC_CTRL_FIFO_EN;

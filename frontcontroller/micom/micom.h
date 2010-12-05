@@ -9,7 +9,7 @@ extern short paramDebug;
 
 #ifndef dprintk
 #define dprintk(level, x...) do { \
-        if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
+        if ((paramDebug) && (paramDebug >= level)) printk(TAGDEBUG x); \
     } while (0)
 #endif
 

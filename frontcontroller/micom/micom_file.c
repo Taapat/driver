@@ -81,7 +81,7 @@ int micomWriteCommand(char command, char* buffer, int len, int needAck)
 {
     int i;
 
-    dprintk(5, "%s >\n", __func__);
+    dprintk(100, "%s >\n", __func__);
 
     serial_putc(command);
 
@@ -94,7 +94,7 @@ int micomWriteCommand(char command, char* buffer, int len, int needAck)
         if (ack_sem_down())
            return -ERESTARTSYS;
 
-    dprintk(10, "%s < \n", __func__);
+    dprintk(100, "%s < \n", __func__);
 
     return 0;
 }
@@ -104,7 +104,7 @@ int micomSetIcon(int which, int on)
     char buffer[8];
     int  res = 0;
 
-    dprintk(5, "%s > %d, %d\n", __func__, which, on);
+    dprintk(100, "%s > %d, %d\n", __func__, which, on);
     if (which < 1 || which > 16)
     {
         printk("VFD/MICOM icon number out of range %d\n", which);
@@ -119,7 +119,7 @@ int micomSetIcon(int which, int on)
     else
         res = micomWriteCommand(0x12, buffer, 7, 1);
 
-    dprintk(10, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
 
     return res;
 }
@@ -132,7 +132,7 @@ int micomSetLED(int which, int on)
     char buffer[8];
     int  res = 0;
 
-    dprintk(5, "%s > %d, %d\n", __func__, which, on);
+    dprintk(100, "%s > %d, %d\n", __func__, which, on);
 
 #ifndef UFS912
     if (which < 1 || which > 6)
@@ -159,7 +159,7 @@ int micomSetLED(int which, int on)
     else
         res = micomWriteCommand(0x22, buffer, 7, 1);
 
-    dprintk(10, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
 
     return res;
 }
@@ -456,7 +456,7 @@ int micomWriteString(unsigned char* aBuf, int len)
     int j =0;
     int res = 0;
 
-    dprintk(5, "%s >\n", __func__);
+    dprintk(100, "%s >\n", __func__);
 
 //utf8: if (len > 16 || len < 0)
 //  {
@@ -520,7 +520,7 @@ int micomWriteString(unsigned char* aBuf, int len)
     }
     res = micomWriteCommand(0x21, bBuf, 16, 1);
 
-    dprintk(10, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
 
     return res;
 }
@@ -561,7 +561,7 @@ static ssize_t MICOMdev_write(struct file *filp, const char *buff, size_t len, l
     char* kernel_buf;
     int minor, vLoop, res = 0;
 
-    dprintk(5, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
+    dprintk(100, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
 
     if (len == 0)
         return len;
@@ -581,7 +581,7 @@ static ssize_t MICOMdev_write(struct file *filp, const char *buff, size_t len, l
         return -1; //FIXME
     }
 
-    dprintk(1, "minor = %d\n", minor);
+    dprintk(70, "minor = %d\n", minor);
 
     /* dont write to the remote control */
     if (minor == FRONTPANEL_MINOR_RC)
@@ -611,7 +611,7 @@ static ssize_t MICOMdev_write(struct file *filp, const char *buff, size_t len, l
 
     write_sem_up();
 
-    dprintk(10, "%s < res %d len %d\n", __func__, res, len);
+    dprintk(100, "%s < res %d len %d\n", __func__, res, len);
 
     if (res < 0)
         return res;
@@ -622,7 +622,7 @@ static ssize_t MICOMdev_write(struct file *filp, const char *buff, size_t len, l
 static ssize_t MICOMdev_read(struct file *filp, char __user *buff, size_t len, loff_t *off)
 {
     int minor, vLoop;
-    dprintk(5, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
+    dprintk(100, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
 
     minor = -1;
     for (vLoop = 0; vLoop < LASTMINOR; vLoop++)
@@ -696,28 +696,37 @@ static ssize_t MICOMdev_read(struct file *filp, char __user *buff, size_t len, l
 
     up (&FrontPanelOpen[minor].sem);
 
-    dprintk(10, "%s < (len %d)\n", __func__, len);
+    dprintk(100, "%s < (len %d)\n", __func__, len);
     return len;
 }
 
 int MICOMdev_open(struct inode *inode, struct file *filp)
 {
     int minor;
-    dprintk(5, "%s >\n", __func__);
+
+    dprintk(100, "%s >\n", __func__);
+
+    /* needed! otherwise a racecondition can occur */
+    if(down_interruptible (&write_sem))
+        return -ERESTARTSYS;
 
     minor = MINOR(inode->i_rdev);
 
-    dprintk(1, "open minor %d\n", minor);
+    dprintk(70, "open minor %d\n", minor);
 
     if (FrontPanelOpen[minor].fp != NULL)
     {
         printk("EUSER\n");
+        up(&write_sem);
         return -EUSERS;
     }
     FrontPanelOpen[minor].fp = filp;
     FrontPanelOpen[minor].read = 0;
 
-    dprintk(10, "%s <\n", __func__);
+    up(&write_sem);
+    
+    dprintk(100, "%s <\n", __func__);
+
     return 0;
 
 }
@@ -725,21 +734,23 @@ int MICOMdev_open(struct inode *inode, struct file *filp)
 int MICOMdev_close(struct inode *inode, struct file *filp)
 {
     int minor;
-    dprintk(5, "%s >\n", __func__);
+
+    dprintk(100, "%s >\n", __func__);
 
     minor = MINOR(inode->i_rdev);
 
-    dprintk(1, "close minor %d\n", minor);
+    dprintk(70, "close minor %d\n", minor);
 
     if (FrontPanelOpen[minor].fp == NULL)
     {
         printk("EUSER\n");
         return -EUSERS;
     }
+    
     FrontPanelOpen[minor].fp = NULL;
     FrontPanelOpen[minor].read = 0;
 
-    dprintk(10, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
     return 0;
 }
 
@@ -749,7 +760,7 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
     struct micom_ioctl_data * micom = (struct micom_ioctl_data *)arg;
     int res = 0;
 
-    dprintk(5, "%s > 0x%.8x\n", __func__, cmd);
+    dprintk(100, "%s > 0x%.8x\n", __func__, cmd);
 
     if (write_sem_down())
         return -ERESTARTSYS;
@@ -859,7 +870,7 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 
     write_sem_up();
 
-    dprintk(10, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
     return res;
 }
 
