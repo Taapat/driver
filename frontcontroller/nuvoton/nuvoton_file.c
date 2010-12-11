@@ -277,7 +277,7 @@ int nuvotonSetIcon(int which, int on)
     char buffer[128];
     int  res = 0;
 
-    dprintk(5, "%s > %d, %d\n", __func__, which, on);
+    dprintk(100, "%s > %d, %d\n", __func__, which, on);
 
     if (which < 0 || which >= 8)
     {
@@ -293,80 +293,19 @@ int nuvotonSetIcon(int which, int on)
 
     if (on) {
         buffer[3] = 0x01;
-        vfdbuf[0].aktiv = 1;
     } else
     {
         buffer[3] = 0x00;
-        vfdbuf[0].aktiv = 0;
     }
-//TRICK: FIXME
-    switch (which) {
 
-/* konfetti comment: dont know what this should do but buf1 and buf2
- * are unsigned char*. So assiging a pointer to an char cannot work.
- * here are two possibilies: 
- * 1. buf1/2 are misused as an char container. then we must cast it here.
- * 2. its an error and the programmer means buf1[0] etc.
- *
- * In current implementation writeing the pointer to e.g. buffer[4] overwrite
- * buffer[4][5][6][7] and so on.
- */
-#warning fixme fixme error error helping helping ;)
-
-    case 0x00:
-        vfdbuf[0].which = which;
-        buffer[2] = which;
-        buffer[4] = vfdbuf[0].buf1;
-        buffer[5] = vfdbuf[0].buf2;
-        break;
-    case 0x01:
-        vfdbuf[1].which = which;
-        buffer[2] = which;
-        buffer[4] = vfdbuf[1].buf1;
-        buffer[5] = vfdbuf[1].buf2;
-        break;
-    case 0x02:
-        vfdbuf[2].which = which;
-        buffer[2] = which;
-        buffer[4] = vfdbuf[2].buf1;
-        buffer[5] = vfdbuf[2].buf2;
-        break;
-    case 0x03:
-        vfdbuf[3].which = which;
-        buffer[2] = which;
-        buffer[4] = vfdbuf[3].buf1;
-        buffer[5] = vfdbuf[3].buf2;
-        break;
-    case 0x04:
-        vfdbuf[4].which = which;
-        buffer[2] = which;
-        buffer[4] = vfdbuf[4].buf1;
-        buffer[5] = vfdbuf[4].buf2;
-        break;
-    case 0x05:
-        vfdbuf[5].which = which;
-        buffer[2] = which;
-        buffer[4] = vfdbuf[5].buf1;
-        buffer[5] = vfdbuf[5].buf2;
-        break;
-    case 0x06:
-        vfdbuf[6].which = which;
-        buffer[2] = which;
-        buffer[4] = vfdbuf[6].buf1;
-        buffer[5] = vfdbuf[6].buf2;
-        break;
-    case 0x07:
-        vfdbuf[7].which = which;
-        buffer[2] = which;
-        buffer[4] = vfdbuf[7].buf1;
-        buffer[5] = vfdbuf[7].buf2;
-        break;
-    }
+    buffer[2] = which;
+    buffer[4] = vfdbuf[which].buf1;
+    buffer[5] = vfdbuf[which].buf2;
     buffer[6] = EOP;
 
     res = nuvotonWriteCommand(buffer, 7, 0);
 
-    dprintk(5, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
 
     return res;
 }
@@ -377,7 +316,7 @@ int nuvotonSetIcon(int which, int on)
     u8 internalCode1, SymbolData1, internalCode2, SymbolData2;
     int  vLoop, res = 0;
 
-    dprintk(5, "%s > %d, %d\n", __func__, which, on);
+    dprintk(100, "%s > %d, %d\n", __func__, which, on);
 
     if (which < 1 || which >= ICON_MAX)
     {
@@ -445,7 +384,7 @@ int nuvotonSetIcon(int which, int on)
         res = nuvotonWriteCommand(buffer, 5, 0);
     }
 
-    dprintk(5, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
 
     return res;
 }
@@ -459,7 +398,7 @@ int nuvotonSetLED(int which, int on)
     char buffer[8];
     int res = 0;
 
-    dprintk(5, "%s > %d, %d\n", __func__, which, on);
+    dprintk(100, "%s > %d, %d\n", __func__, which, on);
 
 //FIXME
     if (which < 1 || which > 6)
@@ -472,7 +411,7 @@ int nuvotonSetLED(int which, int on)
 
 //fixme
 
-    dprintk(5, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
 
     return res;
 }
@@ -485,7 +424,7 @@ int nuvotonSetBrightness(int level)
     char buffer[8];
     int res = 0;
 
-    dprintk(5, "%s > %d\n", __func__, level);
+    dprintk(100, "%s > %d\n", __func__, level);
 
     if (level < 0 || level > 7)
     {
@@ -504,7 +443,7 @@ int nuvotonSetBrightness(int level)
 
     res = nuvotonWriteCommand(buffer, 5, 0);
 
-    dprintk(5, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
 
     return res;
 }
@@ -516,7 +455,7 @@ int nuvotonSetPwrLed(int level)
     char buffer[8];
     int res = 0;
 
-    dprintk(5, "%s > %d\n", __func__, level);
+    dprintk(100, "%s > %d\n", __func__, level);
 
     if (level < 0 || level > 15)
     {
@@ -535,7 +474,7 @@ int nuvotonSetPwrLed(int level)
 
     res = nuvotonWriteCommand(buffer, 6, 0);
 
-    dprintk(5, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
 
     return res;
 }
@@ -548,7 +487,7 @@ int nuvotonSetStandby(char* time)
     char     power_off[] = {SOP, cCommandPowerOffReplay, 0x01, EOP};
     int      res = 0;
 
-    dprintk(5, "%s >\n", __func__);
+    dprintk(100, "%s >\n", __func__);
 
     res = nuvotonWriteString("Bye bye ...", strlen("Bye bye ..."));
 
@@ -566,7 +505,7 @@ int nuvotonSetStandby(char* time)
     /* now power off */
     res = nuvotonWriteCommand(power_off, sizeof(power_off), 0);
 
-    dprintk(5, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
 
     return res;
 }
@@ -576,7 +515,7 @@ int nuvotonSetTime(char* time)
     char       buffer[8];
     int      res = 0;
 
-    dprintk(5, "%s >\n", __func__);
+    dprintk(100, "%s >\n", __func__);
 
     memset(buffer, 0, 8);
 
@@ -588,7 +527,7 @@ int nuvotonSetTime(char* time)
 
     res = nuvotonWriteCommand(buffer, 8, 0);
 
-    dprintk(5, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
 
     return res;
 }
@@ -598,7 +537,7 @@ int nuvotonGetTime(void)
     char       buffer[3];
     int      res = 0;
 
-    dprintk(5, "%s >\n", __func__);
+    dprintk(100, "%s >\n", __func__);
 
     memset(buffer, 0, 3);
 
@@ -623,7 +562,7 @@ int nuvotonGetTime(void)
                 , ioctl_data[2], ioctl_data[3], ioctl_data[4]);
     }
 
-    dprintk(5, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
 
     return res;
 }
@@ -633,7 +572,7 @@ int nuvotonGetWakeUpMode(void)
     char       buffer[8];
     int      res = 0;
 
-    dprintk(5, "%s >\n", __func__);
+    dprintk(100, "%s >\n", __func__);
 
     memset(buffer, 0, 8);
 
@@ -657,7 +596,7 @@ int nuvotonGetWakeUpMode(void)
         dprintk(1, "time received\n");
     }
 
-    dprintk(5, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
 
     return res;
 }
@@ -670,7 +609,7 @@ int nuvotonWriteString(unsigned char* aBuf, int len)
     int j =0;
     int res = 0;
 
-    dprintk(5, "%s >\n", __func__);
+    dprintk(100, "%s >\n", __func__);
 
     memset(bBuf, ' ', 128);
 
@@ -683,7 +622,7 @@ int nuvotonWriteString(unsigned char* aBuf, int len)
     memcpy(&lastdata.data, aBuf, 128);
     lastdata.length = len;
 
-    dprintk(10, "len %d\n", len);
+    dprintk(70, "len %d\n", len);
 
     while ((i < len) && (j < 12))
     {
@@ -745,7 +684,7 @@ int nuvotonWriteString(unsigned char* aBuf, int len)
 
     res = nuvotonWriteCommand(bBuf, 17, 0);
 
-    dprintk(5, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
 
     return res;
 }
@@ -765,7 +704,7 @@ int nuvotonWriteString(unsigned char* aBuf, int len)
     int j =0;
     int res = 0;
 
-    dprintk(5, "%s > %d\n", __func__, len);
+    dprintk(100, "%s > %d\n", __func__, len);
 
     memset(bBuf, ' ', 128);
 
@@ -812,9 +751,9 @@ int nuvotonWriteString(unsigned char* aBuf, int len)
     memcpy(&lastdata.data, aBuf, 128);
     lastdata.length = len;
 
-    dprintk(10, "len %d\n", len);
+    dprintk(70, "len %d\n", len);
 
-    dprintk(5, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
 
     return res;
 }
@@ -841,7 +780,7 @@ int nuvoton_init_func(void)
     write (count=5, fd = 28): 0x02 0xc2 0x20 0x04 0x03
     */
 
-    dprintk(5, "%s >\n", __func__);
+    dprintk(100, "%s >\n", __func__);
 
     sema_init(&write_sem, 1);
 
@@ -865,7 +804,7 @@ int nuvoton_init_func(void)
     for (vLoop = ICON_MIN + 1; vLoop < ICON_MAX; vLoop++)
         res |= nuvotonSetIcon(vLoop, 0);
 
-    dprintk(5, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
 
     return 0;
 }
@@ -875,7 +814,7 @@ static ssize_t NUVOTONdev_write(struct file *filp, const char *buff, size_t len,
     char* kernel_buf;
     int minor, vLoop, res = 0;
 
-    dprintk(5, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
+    dprintk(100, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
 
     if (len == 0)
         return len;
@@ -895,7 +834,7 @@ static ssize_t NUVOTONdev_write(struct file *filp, const char *buff, size_t len,
         return -1; //FIXME
     }
 
-    dprintk(1, "minor = %d\n", minor);
+    dprintk(70, "minor = %d\n", minor);
 
     /* dont write to the remote control */
     if (minor == FRONTPANEL_MINOR_RC)
@@ -925,7 +864,7 @@ static ssize_t NUVOTONdev_write(struct file *filp, const char *buff, size_t len,
 
     write_sem_up();
 
-    dprintk(10, "%s < res %d len %d\n", __func__, res, len);
+    dprintk(70, "%s < res %d len %d\n", __func__, res, len);
 
     if (res < 0)
         return res;
@@ -937,7 +876,7 @@ static ssize_t NUVOTONdev_read(struct file *filp, char __user *buff, size_t len,
 {
     int minor, vLoop;
 
-    dprintk(5, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
+    dprintk(100, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
 
     if (len == 0)
         return len;
@@ -1014,28 +953,38 @@ static ssize_t NUVOTONdev_read(struct file *filp, char __user *buff, size_t len,
 
     up (&FrontPanelOpen[minor].sem);
 
-    dprintk(10, "%s < (len %d)\n", __func__, len);
+    dprintk(100, "%s < (len %d)\n", __func__, len);
     return len;
 }
 
 int NUVOTONdev_open(struct inode *inode, struct file *filp)
 {
     int minor;
-    dprintk(5, "%s >\n", __func__);
+
+    dprintk(100, "%s >\n", __func__);
+
+    /* needed! otherwise a racecondition can occur */
+    if(down_interruptible (&write_sem))
+        return -ERESTARTSYS;
 
     minor = MINOR(inode->i_rdev);
 
-    dprintk(1, "open minor %d\n", minor);
+    dprintk(70, "open minor %d\n", minor);
 
     if (FrontPanelOpen[minor].fp != NULL)
     {
         printk("EUSER\n");
+        up(&write_sem);
         return -EUSERS;
     }
+    
     FrontPanelOpen[minor].fp = filp;
     FrontPanelOpen[minor].read = 0;
 
-    dprintk(10, "%s <\n", __func__);
+    up(&write_sem);
+
+    dprintk(100, "%s <\n", __func__);
+
     return 0;
 
 }
@@ -1043,7 +992,8 @@ int NUVOTONdev_open(struct inode *inode, struct file *filp)
 int NUVOTONdev_close(struct inode *inode, struct file *filp)
 {
     int minor;
-    dprintk(5, "%s >\n", __func__);
+
+    dprintk(100, "%s >\n", __func__);
 
     minor = MINOR(inode->i_rdev);
 
@@ -1057,7 +1007,7 @@ int NUVOTONdev_close(struct inode *inode, struct file *filp)
     FrontPanelOpen[minor].fp = NULL;
     FrontPanelOpen[minor].read = 0;
 
-    dprintk(10, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
     return 0;
 }
 
@@ -1066,9 +1016,12 @@ static int NUVOTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int
     static int mode = 0;
     struct nuvoton_ioctl_data * nuvoton = (struct nuvoton_ioctl_data *)arg;
     int res = 0;
-    dprintk(5, "%s > 0x%.8x\n", __func__, cmd);
+    
+    dprintk(100, "%s > 0x%.8x\n", __func__, cmd);
+
     if(down_interruptible (&write_sem))
         return -ERESTARTSYS;
+
     switch(cmd) {
     case VFDSETMODE:
         mode = nuvoton->u.mode.compat;
@@ -1151,7 +1104,7 @@ static int NUVOTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int
         break;
     }
     up(&write_sem);
-    dprintk(5, "%s <\n", __func__);
+    dprintk(100, "%s <\n", __func__);
     return res;
 }
 

@@ -9,7 +9,7 @@ extern short paramDebug;
 
 #ifndef dprintk
 #define dprintk(level, x...) do { \
-        if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
+        if ((paramDebug) && (paramDebug >= level)) printk(TAGDEBUG x); \
     } while (0)
 #endif
 
@@ -117,10 +117,8 @@ struct vfd_ioctl_data {
 
 #ifdef OCTAGON1008
 struct vfd_buffer {
-    int aktiv;
-    int which;
-    unsigned char *buf1;
-    unsigned char *buf2;
+    u8 buf1;
+    u8 buf2;
 };
 #endif
 

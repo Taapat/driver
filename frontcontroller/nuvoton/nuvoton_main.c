@@ -98,12 +98,12 @@
 #define DATA_BTN_EVENT   2
 
 //----------------------------------------------
-short paramDebug = 101;
+short paramDebug = 50;
 
 static unsigned char expectEventData = 0;
 static unsigned char expectEventId = 1;
 
-struct semaphore     waitForAck;
+struct semaphore     waitForAck; /* stop caller task if waiting for ack */
 
 #define cPackageSizeRC       7
 #define cPackageSizeFP       5
@@ -119,6 +119,7 @@ static unsigned char RCVBuffer [BUFFERSIZE];
 static int           RCVBufferStart = 0, RCVBufferEnd = 0;
 
 static wait_queue_head_t   wq;
+static wait_queue_head_t   rx_wq;
 
 //----------------------------------------------
 
@@ -252,11 +253,6 @@ void handleCopyData(int len)
     kfree(data);
 }
 
-void dumpValues(void)
-{
-    dprintk(150, "BuffersStart %d, BufferEnd %d, len %d\n", RCVBufferStart, RCVBufferEnd, getLen(-1));
-}
-
 void dumpData(void)
 {
     int i, j, len;
@@ -265,6 +261,9 @@ void dumpData(void)
         return;
     
     len = getLen(-1);
+
+    if (len == 0) 
+       return;
     
     i = RCVBufferEnd;
     for (j = 0; j < len; j++)
@@ -285,6 +284,15 @@ void dumpData(void)
         }
     }
     printk("\n");
+}
+
+void dumpValues(void)
+{
+    dprintk(150, "BuffersStart %d, BufferEnd %d, len %d\n", RCVBufferStart, RCVBufferEnd, getLen(-1));
+
+    if (RCVBufferStart != RCVBufferEnd)
+       if (paramDebug >= 50)
+           dumpData();
 }
 
 static void processResponse(void)
@@ -325,6 +333,12 @@ static void processResponse(void)
             if (len < cPackageSizeFP)
                 goto out_switch;
 
+            dprintk(1, "EVENT_BTN complete\n");
+
+            if (paramDebug >= 50)
+                dumpData();
+
+
             wake_up_interruptible(&wq);
         }
         break;
@@ -337,6 +351,11 @@ static void processResponse(void)
 
             if (len < cPackageSizeRC)
                 goto out_switch;
+
+            dprintk(1, "EVENT_RC complete %d %d\n", RCVBufferStart, RCVBufferEnd);
+
+            if (paramDebug >= 50)
+                dumpData();
 
             wake_up_interruptible(&wq);
         }
@@ -396,11 +415,14 @@ static void processResponse(void)
         case EVENT_ANSWER_GETIRCODE:
         case EVENT_ANSWER_GETPORT:
         default: // Ignore Response
-            dprintk(1, "Invalid Response %02x:\n", expectEventData);
+            dprintk(1, "Invalid Response %02x\n", expectEventData);
+            dprintk(1, "start %d end %d\n",  RCVBufferStart,  RCVBufferEnd);  
             dumpData();
 
-            /* increase until we found a new valid answer */
-            RCVBufferEnd = (RCVBufferEnd + 1) % BUFFERSIZE;
+            /* discard all data, because this happens currently
+             * sometimes. dont know the problem here.
+             */
+            RCVBufferEnd = RCVBufferStart;
             break;
         }
     }
@@ -432,7 +454,9 @@ static irqreturn_t FP_interrupt(int irq, void *dev_id)
     }
 
     if (dataArrived)
-        processResponse();
+    {
+        wake_up_interruptible(&rx_wq);
+    }
 
     /* konfetti comment: in normal case we would also
      * check the transmission state and send queued
@@ -440,6 +464,41 @@ static irqreturn_t FP_interrupt(int irq, void *dev_id)
      */
 
     return IRQ_HANDLED;
+}
+
+int nuvotonTask(void * dummy)
+{
+  daemonize("nuvotonTask");
+
+  allow_signal(SIGTERM);
+
+  while(1)
+  {
+     int dataAvailable;
+     
+     if (wait_event_interruptible(rx_wq, (RCVBufferStart != RCVBufferEnd)))
+     {
+         printk("wait_event_interruptible failed\n");
+         continue;
+     }
+
+     if (RCVBufferStart != RCVBufferEnd)
+        dataAvailable = 1;
+     
+     while (dataAvailable)
+     {
+        processResponse();
+        
+        if (RCVBufferStart == RCVBufferEnd)
+            dataAvailable = 0;
+
+        dprintk(150, "start %d end %d\n",  RCVBufferStart,  RCVBufferEnd);  
+     }
+  }
+
+  printk("nuvotonTask died!\n");
+
+  return 0;
 }
 
 //----------------------------------------------
@@ -461,11 +520,14 @@ static int __init nuvoton_init_module(void)
     serial_init();
 
     init_waitqueue_head(&wq);
+    init_waitqueue_head(&rx_wq);
 
     sema_init(&waitForAck, 0);
 
     for (i = 0; i < LASTMINOR; i++)
         sema_init(&FrontPanelOpen[i].sem, 1);
+
+    kernel_thread(nuvotonTask, NULL, 0);
 
     //Enable the FIFO
     *ASC_X_CTRL = *ASC_X_CTRL | ASC_CTRL_FIFO_EN;
