@@ -32,7 +32,7 @@ static struct stv090x_config tt1600_stv090x_config = {
 	.clk_mode		= STV090x_CLK_EXT,
 
 #if defined(FORTIS_HDBOX)
-	.xtal			= 16000000/*8000000*/,
+	.xtal			= 8000000,
 #elif defined(UFS912)
 	.xtal			= 30000000,
 #else
@@ -61,6 +61,12 @@ static struct stv090x_config tt1600_stv090x_config = {
 #warning  not supported architechture
 #endif
 
+    .tuner_bbgain = 10,
+	.adc1_range	= STV090x_ADC_2Vpp,
+	.adc2_range	= STV090x_ADC_2Vpp,
+
+	.diseqc_envelope_mode = false,
+     
 	.tuner_init		= NULL,
 	.tuner_set_mode		= NULL,
 	.tuner_set_frequency	= NULL,
