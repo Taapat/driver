@@ -39,6 +39,7 @@
 #include "stv090x.h"
 #include "stv090x_priv.h"
 
+extern int bbgain;
 extern short paramDebug;
 #define TAGDEBUG "[stv090x] "
 
@@ -4829,6 +4830,10 @@ static enum stv090x_signal_state stv090x_algo(struct stv090x_state *state)
 		reg = state->config->tuner_bbgain;
 		if (reg == 0)
 			reg = 10; /* default: 10dB */
+
+        if (bbgain != -1) /* module param set by user ? */
+            reg = bbgain;
+            
 		if (state->config->tuner_set_bbgain(fe, reg) < 0)
  			goto err;
 	}
@@ -5748,7 +5753,7 @@ static int stv090x_set_mclk(struct stv090x_state *state, u32 mclk, u32 clk)
 	dprintk(10, "%s >\n", __func__);
 
 	if  (state->device == STX7111) 
-    {
+        {
 	    reg = stv090x_read_reg(state, STV090x_NCOARSE);
 	    STV090x_SETFIELD(reg, M_DIV_FIELD, 0x06);
 	    if (stv090x_write_reg(state, STV090x_NCOARSE, reg) < 0)

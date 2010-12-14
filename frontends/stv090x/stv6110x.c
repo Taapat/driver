@@ -154,6 +154,8 @@ static int stv6110x_init(struct dvb_frontend *fe)
 		return -1;
 	}
 
+    stv6110x->gain = 10;
+
 //tdt
 	stv6110x_set_refclock(fe, 2);
 
@@ -186,7 +188,7 @@ static int stv6110x_set_frequency(struct dvb_frontend *fe, u32 frequency)
 				((((stv6110x->config->refclk / 1000000) - 16) & 0x1f) << 3);
 
 	stv6110x_regs[STV6110x_CTRL2] &= ~0x0f;
-	stv6110x_regs[STV6110x_CTRL2] |= (3/* gain*/ & 0x0f);
+	stv6110x_regs[STV6110x_CTRL2] |= (stv6110x->gain & 0x0f);
 
 	if (frequency <= 1023000) {
 		p = 1;
@@ -398,7 +400,7 @@ static int stv6110x_get_bbgain(struct dvb_frontend *fe, u32 *gain)
 	dprintk(10, "%s:  >\n", __func__);
 
 	stv6110x_read_reg(stv6110x, STV6110x_CTRL2, &stv6110x_regs[STV6110x_CTRL2]);
-	*gain = 2 * STV6110x_GETFIELD(CTRL2_BBGAIN, stv6110x_regs[STV6110x_CTRL2]);
+	*gain = STV6110x_GETFIELD(CTRL2_BBGAIN, stv6110x_regs[STV6110x_CTRL2]);
 
 	dprintk(10, "%s gain = %d<\n", __func__, *gain);
 	return 0;
@@ -410,8 +412,10 @@ static int stv6110x_set_bbgain(struct dvb_frontend *fe, u32 gain)
 
 	dprintk(10, "%s: gain = %d >\n", __func__, gain);
 
-	STV6110x_SETFIELD(stv6110x_regs[STV6110x_CTRL2], CTRL2_BBGAIN, gain / 2);
+	STV6110x_SETFIELD(stv6110x_regs[STV6110x_CTRL2], CTRL2_BBGAIN, gain & 0xf);
 	stv6110x_write_reg(stv6110x, STV6110x_CTRL2, stv6110x_regs[STV6110x_CTRL2]);
+
+    stv6110x->gain = gain;
 
 	dprintk(10, "%s: <\n", __func__);
 	return 0;
