@@ -33,7 +33,7 @@ static struct stv090x_config tt1600_stv090x_config = {
 	.clk_mode		= STV090x_CLK_EXT,
 
 #if defined(FORTIS_HDBOX)
-	.xtal			= 16000000/*8000000*/,
+	.xtal			= 8000000,
 #elif defined(UFS912)
 	.xtal			= 30000000,
 #else
