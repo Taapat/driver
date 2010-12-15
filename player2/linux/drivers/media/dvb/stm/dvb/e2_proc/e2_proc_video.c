@@ -422,6 +422,8 @@ int proc_video_policy_write(struct file *file, const char __user *buf,
 		        policy_e2 = VIDEO_POL_BEST_FIT;
 		} else if (strncmp("non", myString, count - 1) == 0) {
 		        policy_e2 = VIDEO_POL_NON_LINEAR;
+		} else if (strncmp("nonlinear", myString, count - 1) == 0) { // e2 writes nonlinear
+		        policy_e2 = VIDEO_POL_NON_LINEAR;
 		}
 
 		kfree(myString);
