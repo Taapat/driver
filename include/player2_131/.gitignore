@@ -14,3 +14,6 @@
 !stm_ioctls.h
 !stm_v4l2.h
 !tkdma.h
+!JPEG_TransformerTypes.h
+!JPEG_VideoTransformerTypes.h
+!stmvout.h
