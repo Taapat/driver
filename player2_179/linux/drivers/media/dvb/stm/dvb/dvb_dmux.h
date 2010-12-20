@@ -22,5 +22,8 @@ int DmxWrite   (struct dmx_demux*       Demux,
 #endif
 int StartFeed  (struct dvb_demux_feed*  Feed);
 int StopFeed   (struct dvb_demux_feed*  Feed);
+#ifdef __TDT__ 
+int WriteToDecoder (struct dvb_demux_feed *Feed, const u8 *buf, size_t count);
+#endif
 
 #endif

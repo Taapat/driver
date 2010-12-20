@@ -176,9 +176,16 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	{
 		{
 #if defined (CONFIG_KERNELVERSION)
+  #if defined(__TDT__) && ! defined(UFS922)
+ 			 CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
+      			 CARD        ("Analog",  1, 0,  48000, 2),
+      			 CARD        ("HDMI",    0, 0,  48000, 2),
+  #else
+
 			CARD_SPDIF  ("SPDIF",   0, 2,  48000, 2),
 			CARD        ("Analog",  0, 1,  48000, 2),
 			CARD        ("HDMI",    0, 0,  48000, 2),
+  #endif
 #else /* STLinux 2.2 */
 			CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
 			CARD        ("Analog",  1, 0,  48000, 2),
@@ -194,8 +201,14 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	{
 		{
 #if defined (CONFIG_KERNELVERSION)
+  #if defined(__TDT__)
+                        CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
+                        CARD        ("Analog",  0, 0,  48000, 2),
+  #else
+
 			CARD_SPDIF  ("SPDIF",   0, 2,  48000, 2),
 			CARD        ("HDMI",    0, 0,  48000, 2),
+  #endif
 #else /* STLinux-2.2 */
 			CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
 			CARD        ("Analog",  0, 0,  48000, 2),
@@ -205,7 +218,12 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	{
 		{
 #if defined (CONFIG_KERNELVERSION)
+  #if define(__TDT__)
+                        CARD        ("Analog",  1, 0,  48000, 2),
+  #else
+
 			CARD        ("Analog",  0, 1,  48000, 2),
+  #endif
 #else /* STLinux-2.2 */
 			CARD        ("Analog",  1, 0,  48000, 2),
 #endif
@@ -916,6 +934,10 @@ static int snd_pseudo_integer_get(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
+#ifdef __TDT__
+EXPORT_SYMBOL(snd_pseudo_integer_get);
+#endif
+
 static int snd_pseudo_integer_put(struct snd_kcontrol *kcontrol,
 				struct snd_ctl_elem_value *ucontrol)
 {
@@ -954,6 +976,10 @@ static int snd_pseudo_integer_put(struct snd_kcontrol *kcontrol,
 	return changed;
 }
 
+#ifdef __TDT__
+EXPORT_SYMBOL(snd_pseudo_integer_put);
+#endif
+
 #define PSEUDO_SWITCH(xname, xindex, addr) \
 { .iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = xname, .index = xindex, \
   .info = snd_pseudo_switch_info, \
@@ -983,6 +1009,10 @@ static int snd_pseudo_switch_get(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
+#ifdef __TDT__
+EXPORT_SYMBOL(snd_pseudo_switch_get);
+#endif
+
 static int snd_pseudo_switch_put(struct snd_kcontrol *kcontrol,
 				 struct snd_ctl_elem_value *ucontrol)
 {
@@ -1000,6 +1030,10 @@ static int snd_pseudo_switch_put(struct snd_kcontrol *kcontrol,
 
 	return changed;
 }
+
+#ifdef __TDT__
+EXPORT_SYMBOL(snd_pseudo_switch_put);
+#endif
 
 #define PSEUDO_ROUTE(xname, xindex, addr) \
 { .iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = xname, .index = xindex, \
@@ -1329,6 +1363,19 @@ PSEUDO_INTEGER("Per-Speaker Playback Latency", 0, chain_delay[2]),
 PSEUDO_INTEGER("Per-Speaker Playback Latency", 0, chain_delay[3]),
 };
 
+#ifdef __TDT__
+//Dagobert: Save the controls so we can cold it from our proc handling
+struct snd_kcontrol **kcontrol = NULL;
+
+struct snd_kcontrol ** pseudoGetControls(int* numbers)
+{
+        *numbers = ARRAY_SIZE(snd_pseudo_controls);
+        return kcontrol;
+}
+
+EXPORT_SYMBOL(pseudoGetControls);
+#endif
+
 static int __init snd_card_pseudo_new_mixer(struct snd_pseudo *pseudo)
 {
 	struct snd_card *card = pseudo->card;
@@ -1339,10 +1386,22 @@ static int __init snd_card_pseudo_new_mixer(struct snd_pseudo *pseudo)
 	mutex_init(&pseudo->mixer_lock);
 	strcpy(card->mixername, "Pseudo Mixer");
 
+#ifdef __TDT__
+        //Dagobert: Save the controls so we can call it from our proc handling
+        kcontrol = kmalloc(ARRAY_SIZE(snd_pseudo_controls) * sizeof(struct snd_kcontrol), GFP_KERNEL);
+
+        for (idx = 0; idx < ARRAY_SIZE(snd_pseudo_controls); idx++)
+        {
+                kcontrol[idx] = snd_ctl_new1(&snd_pseudo_controls[idx], pseudo);
+                if ((err = snd_ctl_add(card, kcontrol[idx])) < 0)
+                        return err;
+        }
+#else
 	for (idx = 0; idx < ARRAY_SIZE(snd_pseudo_controls); idx++) {
 		if ((err = snd_ctl_add(card, snd_ctl_new1(&snd_pseudo_controls[idx], pseudo))) < 0)
 			return err;
 	}
+#endif
 	return 0;
 }
 

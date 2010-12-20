@@ -40,7 +40,11 @@
 #include <linux/stm/stmcoredisplay.h>
 #include <linux/device.h>
 
+#ifdef __TDT__
+#include "Linux/media/video/stm_v4l2.h"
+#else
 #include "stm_v4l2.h"
+#endif
 
 #include "dvb_module.h"
 #include "backend.h"

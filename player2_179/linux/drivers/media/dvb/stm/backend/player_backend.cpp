@@ -279,7 +279,12 @@ int StreamInjectData            (stream_handle_t         Stream,
 int StreamInjectDataPacket      (stream_handle_t         Stream,
                                  const unsigned char*    Data,
                                  unsigned int            DataLength,
+#ifdef __TDT__
+//FIXME
+                                 unsigned char           PresentationTimeValid,
+#else
                                  bool                    PresentationTimeValid,
+#endif
                                  unsigned long long      PresentationTime )
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
@@ -707,6 +712,20 @@ int DisplayCreate      (char*           Media,
 
     return 0;
 }
+
+#ifdef __TDT__
+//{{{  DisplayCreate
+//Dagobert
+int isDisplayCreated (char*           Media,
+                      unsigned int    SurfaceId)
+{
+    PLAYER_DEBUG("SurfaceId  = %d\n", SurfaceId);
+
+    return (HavanaPlayer->isDisplayCreated (Media, SurfaceId));
+}
+//}}}  
+#endif
+
 //}}}  
 //{{{  DisplayDelete
 int DisplayDelete      (char*           Media,

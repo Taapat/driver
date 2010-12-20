@@ -17,9 +17,18 @@ Date        Modification                                    Name
 #include <linux/dvb/video.h>
 #include "linux/dvb/stm_ioctls.h"
 
+#ifdef __TDT__
+#include <pti_public.h>
+#endif
+
 #include "dvbdev.h"
 #include "dmxdev.h"
 #include "dvb_demux.h"
+
+#ifdef __TDT__
+/* forward declaration (because used in the header files below) */
+struct DeviceContext_s;
+#endif
 
 #include "backend.h"
 #include "dvb_video.h"
@@ -124,6 +133,15 @@ struct DeviceContext_s
     unsigned char *dvr_in;
     unsigned char *dvr_out;
     unsigned int EncryptionOn;
+
+#ifdef __TDT__
+    struct PtiSession*          pPtiSession;
+    int dvr_write;
+    int                         VideoPlaySpeed;
+    int provideToDecoder;
+    int feedPesType;
+    struct mutex injectMutex;
+#endif
 
     unsigned int StartOffset;
     unsigned int EndOffset;

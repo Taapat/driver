@@ -39,7 +39,16 @@
 #include <linux/bpa2.h>
 #include <linux/delay.h>
 
+#if defined(__TDT__)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
+#include "linux/drivers/media/video/stm_v4l2.h"
+//for old stmfb
+//#include "Linux/media/video/stm_v4l2.h"
+#else
 #include "stm_v4l2.h"
+#endif
+#endif
+
 #include "stmvout.h"
 
 #include <include/stmdisplay.h>
@@ -338,6 +347,7 @@ int linuxdvb_ioctl(struct stm_v4l2_handles *handle,struct stm_v4l2_driver *drive
 	case VIDIOC_ENUMINPUT:
 	{
 		struct v4l2_input* input = arg;
+
 		int index = input->index - driver->index_offset[device];
 
 		// check consistency of index

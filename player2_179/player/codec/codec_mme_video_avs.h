@@ -48,6 +48,7 @@ Date        Modification                                    Name
 // The class definition
 //
 
+
 /// The AVS video codec proxy.
 class Codec_MmeVideoAvs_c : public Codec_MmeVideo_c
 {
@@ -58,8 +59,11 @@ protected:
     unsigned int                                DecodingWidth;
     unsigned int                                DecodingHeight;
 
+//deaktivate Video AVS - Build error
+#ifndef __TDT__
     MME_AVSVideoDecodeCapabilityParams_t        AvsTransformCapability;
     MME_AVSVideoDecodeInitParams_t              AvsInitializationParameters;
+#endif
 
     allocator_device_t                          IntraMbStructMemoryDevice;
     allocator_device_t                          MbStructMemoryDevice;

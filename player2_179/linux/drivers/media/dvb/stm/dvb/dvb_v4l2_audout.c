@@ -13,7 +13,17 @@
 \***********************************************************************/
 
 #include <linux/poll.h>
+
+#if defined(__TDT__)
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
+#include "linux/drivers/media/video/stm_v4l2.h"
+//for old stmfb
+//#include "Linux/media/video/stm_v4l2.h"
+#else
 #include "stm_v4l2.h"
+#endif
+#endif
 
 #include "dvb_module.h"
 #include "dvb_v4l2_export.h"
@@ -35,9 +45,13 @@ static struct staout_description g_aoutDevice[] = {
 	{ "MIXER1_PRIMARY",    0, 0, 0},  //<! "MIXER1_PRIMARY", audio, physically independent audio device used for second room audio output
 };
 
-
+#ifdef __TDT__
+static int dvb_v4l2_audout_ioctl(struct stm_v4l2_handles *handle, struct stm_v4l2_driver *driver,
+		     int device, int type, struct file *file, unsigned int cmd, void *arg)
+#else
 static int dvb_v4l2_audout_ioctl(struct stm_v4l2_handles *handle, struct stm_v4l2_driver *driver,
 		     int device, enum _stm_v4l2_driver_type type, struct file *file, unsigned int cmd, void *arg)
+#endif
 {
     switch(cmd)
     {

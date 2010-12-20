@@ -57,7 +57,12 @@ int StreamInjectData           (stream_handle_t         stream,
 int StreamInjectDataPacket     (stream_handle_t         stream,
                                 const unsigned char*    data,
                                 unsigned int            data_length,
+#ifdef __TDT__
+//FIXME
+                                unsigned char           PresentationTimeValid,
+#else
                                 bool                    PresentationTimeValid,
+#endif
                                 unsigned long long      PresentationTime);
 int StreamDiscontinuity        (stream_handle_t         stream,
                                 discontinuity_t         discontinuity);
@@ -124,6 +129,10 @@ int StreamGetPlayerEnvironment (stream_handle_t                 Stream,
                                 stream_handle_t*                playerstream);
 int DisplayCreate              (char*                           Media,
                                 unsigned int                    SurfaceId);
+#ifdef __TDT__
+int isDisplayCreated           (char*           Media,
+                                unsigned int    SurfaceId);
+#endif
 int DisplayDelete              (char*                           Media,
                                 unsigned int                    SurfaceId);
 int DisplaySynchronize         (char*                           Media,

@@ -544,9 +544,11 @@ ssize_t show_input_format(struct class_device *class_dev, char *buf)
 
     down(&AudioContext->DecoderStatusSemaphore);
 
+#ifndef __TDT__
     DVB_TRACE("AudioContext->LLDecoderStatus.CurrentSpdifStatus.PC %d  Reserved1 %d\n",
 	      AudioContext->LLDecoderStatus.CurrentSpdifStatus.PC,
 	      AudioContext->LLDecoderStatus.CurrentSpdifStatus.Reserved1);
+#endif
 
 #if SPDIFIN_API_VERSION >= 0x090909
     is_master_audio = ((AudioContext->LLDecoderStatus.CurrentSpdifStatus.PC == SPDIFIN_DTS4) &&
@@ -4390,8 +4392,10 @@ void AvrAudioSetInput(avr_v4l2_audio_handle_t *AudioContext, unsigned int InputI
     if (ll_force_input)
 	InputId = ll_force_input-1;
 
+#ifndef __TDT__
     if (cpu_data->type == CPU_STX7200 && cpu_data->cut_major == 1)
 	MaxId = 2;
+#endif
 
     if (InputId > 2)
 	InputId = 0;

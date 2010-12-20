@@ -154,7 +154,11 @@ va_list      list;
         set_current_state(TASK_INTERRUPTIBLE);
         schedule();
 #endif
+#ifdef __TDT__
+        while( 1 );
+#else
         while( true );
+#endif
     }
     OS_UnLockMutex( &report_lock );
 }

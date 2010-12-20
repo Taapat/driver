@@ -13,6 +13,10 @@
 
 #include "osdev_device.h"
 
+#ifdef __TDT__
+#include <linux/version.h>
+#endif
+
 /* --- */
 
 #include "h264ppio.h"
@@ -841,7 +845,21 @@ unsigned int	IntermediateEndAddress;
 
     GNBvd42331DataPhysicalAddress	= (unsigned char *)State->BufferState->Parameters.OutputBufferPhysicalAddress + 0x10000;
 
+#ifdef __TDT__
+/* found somewhere this patch which should increase performance about 1%.
+ * ->should be revised!
+ */
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
     dma_cache_wback((State->BufferState->Parameters.OutputBufferCachedAddress + 0x10000),sizeof(GNBvd42331Data));
+#else
+    writeback_ioremap_region(0, (SubContext->Parameters.BufferCachedAddress + 0x10000),
+                0, sizeof(GNBvd42331Data));
+#endif
+
+#else
+    dma_cache_wback((State->BufferState->Parameters.OutputBufferCachedAddress + 0x10000),sizeof(GNBvd42331Data));
+#endif
 
     //
     // Derive the pointers - we use the next buffer to be queued as output as our output 

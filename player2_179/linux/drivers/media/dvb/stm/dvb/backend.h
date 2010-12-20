@@ -176,6 +176,13 @@ int StreamReturnDecodeBuffer               (struct StreamContext_s*         Stre
 int StreamGetDecodeBufferPoolStatus        (struct StreamContext_s*         Stream,
                                             unsigned int*                   BuffersInPool,
                                             unsigned int*                   BuffersWithNonZeroReferenceCount);
+#ifdef __TDT__
+int StreamGetOutputWindow                  (struct StreamContext_s*         Stream,
+                                            unsigned int*                    X,
+                                            unsigned int*                    Y,
+                                            unsigned int*                    Width,
+                                            unsigned int*                    Height);
+#endif
 int StreamSetOutputWindow                  (struct StreamContext_s*         Stream,
                                             unsigned int                    X,
                                             unsigned int                    Y,

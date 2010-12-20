@@ -20,6 +20,10 @@
 #define PLAYBACK_MAX_NUMBER     8
 #define STREAM_MAX_NUMBER       16
 
+#ifdef __TDT__
+#define bool int
+#endif
+
 static int PlayerSetEvent (struct player_event_s*       Event);
 static struct mutex SysfsWriteLock;
 
@@ -85,7 +89,9 @@ static struct class player2_class = {
 static void do_notify(void)
 {
 	notify_count++;
+#ifndef __TDT__
 	sysfs_notify(&player2_class.subsys.kobj, NULL, "notify");
+#endif
 }
 /*}}}  */
 /*{{{  show_generic_attribute*/

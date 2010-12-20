@@ -339,7 +339,12 @@ struct dvb_backend_operations
     int (*stream_inject_data_packet)   (stream_handle_t         stream,
                                         unsigned const char*    data,
                                         unsigned int            data_length,
+#ifdef __TDT__
+//FIXME
+                                        unsigned char           presentation_time_valid,
+#else
                                         bool                    presentation_time_valid,
+#endif
                                         unsigned long long      presentation_time);
     int (*stream_discontinuity)        (stream_handle_t         stream,
                                         discontinuity_t         discontinuity);
@@ -411,6 +416,11 @@ struct dvb_backend_operations
     int (*display_synchronize)        (char*                   Media,
                                        unsigned int            SurfaceId);
 
+#ifdef __TDT__
+/*Dagobert */
+    int (*is_display_created)             (char*                   Media,
+                                       unsigned int            SurfaceId);
+#endif
 };
 
 int register_dvb_backend        (char                           *name,

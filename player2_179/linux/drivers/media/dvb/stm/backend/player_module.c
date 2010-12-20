@@ -34,6 +34,23 @@ MODULE_DESCRIPTION              ("Player2 backend implementation for STM streami
 MODULE_AUTHOR                   ("Julian Wilson");
 MODULE_LICENSE                  ("GPL");
 
+#ifdef __TDT__
+int noaudiosync = 0;
+module_param(noaudiosync, int, 0444);
+MODULE_PARM_DESC(noaudiosync, "Workaround, if there are problems with audio dropouts set it to 1.");
+
+/*
+deaktivate for the moment
+int discardlateframe = 2;
+module_param(discardlateframe, int, 0444);
+MODULE_PARM_DESC(discardlateframe, "Set start value for Discard Late Frame 0=never, 1=aftersync, 2=always");
+*/
+
+int useoldaudiofw = 0;
+module_param(useoldaudiofw, int, 0444);
+MODULE_PARM_DESC(useoldaudiofw, "Set to 1 if you will use old audio firmware (audio.elf)");
+#endif
+
 static struct dvb_backend_operations            DvbBackendOps        =
 {
     .owner                                      = THIS_MODULE,
@@ -78,7 +95,11 @@ static struct dvb_backend_operations            DvbBackendOps        =
     .display_create                             = DisplayCreate,
     .display_delete                             = DisplayDelete,
     .display_synchronize                        = DisplaySynchronize
-
+#ifdef __TDT__
+        ,
+/*Dagobert*/
+    .is_display_created                         = isDisplayCreated
+#endif
 };
 
 static struct player_interface_operations       PlayerInterfaceOps        =
@@ -107,7 +128,9 @@ static struct alsa_backend_operations           AlsaBackendOps          =
 
 extern void SysfsInit (void);
 
+#ifndef __TDT__
 #define CONFIG_EXPORT_PLAYER_INTERFACE
+#endif
 static int __init PlayerLoadModule (void)
 {
 

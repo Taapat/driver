@@ -29,6 +29,10 @@ Date        Modification                                    Name
 #define CODEC_TAG "Audio codec"
 #include "codec_mme_audio.h"
 
+#ifdef __TDT__
+extern int useoldaudiofw;
+#endif
+
 // /////////////////////////////////////////////////////////////////////////
 //
 // Locally defined constants
@@ -612,6 +616,11 @@ CodecStatus_t   Codec_MmeAudio_c::HandleCapabilities( void )
 	CODEC_ERROR( "%s is not capable of decoding %s\n",
 		     Configuration.TransformName[SelectedTransformer], Configuration.CodecName );
 	return CodecError;
+
+#ifdef __TDT__
+        if(useoldaudiofw == 1)
+                return CodecNoError;
+#endif
     }
 
     return CodecNoError;
@@ -705,12 +714,17 @@ MME_LxAudioDecoderInitParams_t &Params = AudioDecoderInitializationParameters;
     Params.StructSize = sizeof(MME_LxAudioDecoderInitParams_t);
     Params.CacheFlush = ACC_MME_ENABLED;
 
+//nit2005 fixme
+#ifdef __TDT__
+    Params.BlockWise = ACC_MME_FALSE;
+#else
     // Detect changes between BL025 and BL028 (delete this code when BL025 is accient history)
     #if DRV_MULTICOM_AUDIO_DECODER_VERSION >= 0x090128
     Params.BlockWise.u32 = 0;
     #else
 	Params.BlockWise = ACC_MME_FALSE;
     #endif
+#endif
 
     // upsampling must be enabled seperately for each codec since it requires frame analyser support
     Params.SfreqRange = ACC_FSRANGE_UNDEFINED;

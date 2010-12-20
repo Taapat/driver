@@ -135,6 +135,11 @@ public:
 
     player_event_signal_callback        RegisterEventSignalCallback    (player_event_signal_callback   EventSignalCallback);
     void                        EventSignalThread              (void);
+
+#ifdef __TDT__
+    int              isDisplayCreated                          (char*                   Media,
+                                                                unsigned int            SurfaceId);
+#endif
 };
 
 /*{{{  doxynote*/

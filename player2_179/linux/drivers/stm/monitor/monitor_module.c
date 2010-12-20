@@ -25,6 +25,9 @@ Date        Modification                                    Name
 #include <linux/cdev.h>
 #include <asm/uaccess.h>
 #include <linux/platform_device.h>
+#ifdef __TDT__
+#include <asm/io.h>
+#endif
 
 #include "monitor_module.h"
 

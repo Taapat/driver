@@ -41,6 +41,10 @@
 
 #include "ksound.h"
 
+#ifdef __TDT__
+#include <linux/version.h>
+#endif
+
 #if defined (CONFIG_KERNELVERSION) /* STLinux 2.3 */
 #warning Need to remove these typedefs and externs
 typedef struct snd_pcm_runtime snd_pcm_runtime_t;
@@ -153,10 +157,16 @@ static inline snd_pcm_uframes_t _ksnd_pcm_avail_update(snd_pcm_substream_t
 	snd_pcm_runtime_t *runtime = substream->runtime;
 
 /*NICK added if to remove real updates which we do not want*/
-#if 0
-	if (runtime->sleep_min == 0 &&
-	    _ksnd_pcm_state(substream) == SNDRV_PCM_STATE_RUNNING)
-		snd_pcm_update_hw_ptr(substream);
+/* Dagobert: Also add UFS922 here for the "bad" 7101BWC cpu 
+ * currently it seems so that this works for both cpu types
+ * (BWC vs. BWD)
+ */
+#if defined(__TDT__) && (defined(FORTIS_HDBOX) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(OCTAGON1008))
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+        if (runtime->sleep_min == 0 &&
+            _ksnd_pcm_state(substream) == SNDRV_PCM_STATE_RUNNING)
+                snd_pcm_update_hw_ptr(substream);
+#endif
 #endif
 
 	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
@@ -220,10 +230,15 @@ int ksnd_pcm_htimestamp(ksnd_pcm_t *kpcm, snd_pcm_uframes_t *avail, struct times
        10 or 20 us, and you correct for it by adjusting by lumps of around 160 us.
        So I set myavail to be zero always.
        Also I added a a return failure if the timestamp is set to zero. */
-#if 0
-	myavail = _ksnd_pcm_avail_update(kpcm->substream);
+
+/* Dagobert: Also add UFS922 here for the "bad" 7101BWC cpu 
+ * currently it seems so that this works for both cpu types
+ * (BWC vs. BWD)
+ */
+#if defined(__TDT__) && (defined(FORTIS_HDBOX) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(OCTAGON1008))
+        myavail = _ksnd_pcm_avail_update(kpcm->substream);
 #else
-        myavail	= 0;
+        myavail = 0;
 #endif
 /*NICK*/
 	mystamp = runtime->status->tstamp;
@@ -643,11 +658,16 @@ int ksnd_pcm_open(ksnd_pcm_t **kpcm,
 		goto _error_do_free;
 	}
 
-#if defined (CONFIG_KERNELVERSION)
-	minor = snd_find_minor(device_type, card, device);
+#ifdef __TDT__
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
+	minor = snd_get_minor(device_type, card, device);
+#else
+	minor = SNDRV_MINOR(card, device_type + device);
+#endif
 #else /* STLinux 2.2 */
 	minor = SNDRV_MINOR(card, device_type + device);
 #endif
+
 	if (minor < 0) {
 		err = -ENODEV;
 		goto _error_do_free;
