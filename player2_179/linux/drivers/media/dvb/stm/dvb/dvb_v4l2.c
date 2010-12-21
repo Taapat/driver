@@ -39,17 +39,8 @@
 #include <linux/bpa2.h>
 #include <linux/delay.h>
 
-#if defined(__TDT__)
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
-#include "linux/drivers/media/video/stm_v4l2.h"
-//for old stmfb
-//#include "Linux/media/video/stm_v4l2.h"
-#else
-#include "stm_v4l2.h"
-#endif
-#endif
-
-#include "stmvout.h"
+#include <stm_v4l2.h>
+#include <stmvout.h>
 
 #include <include/stmdisplay.h>
 #include <linux/stm/stmcoredisplay.h>

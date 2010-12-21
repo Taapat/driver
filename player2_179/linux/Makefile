@@ -1,4 +1,4 @@
-TREE_ROOT?=$(DRIVER_TOPDIR)/player2_179
+TREE_ROOT?=$(DRIVER_TOPDIR)/player2
 CONFIG_STGFB_PATH?=$(DRIVER_TOPDIR)/stgfb/stmfb
 
 ifdef UFS922 
@@ -58,7 +58,7 @@ endif
 endif
 
 ifdef PART1
-CFLAGS+=-DPLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY=0x01500000 \
+CCFLAGSY+=-DPLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY=0x01500000 \
 	-DPLAYER2_SECONDARY_VIDEO_BUFFER_MEMORY=0x00300000 \
 	-DPLAYER2_AVR_VIDEO_BUFFER_MEMORY=0x00000000 \
 	-DPLAYER2_H264_MACROBLOCK_STRUCTURE_MEMORY=0xa00000 \
@@ -71,7 +71,7 @@ endif
 
 ifdef PART2
 #UFS922, SPARK
-CFLAGS+=-DPLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY=0x02400000 \
+CCFLAGSY+=-DPLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY=0x02400000 \
 	-DPLAYER2_SECONDARY_VIDEO_BUFFER_MEMORY=0x00900000 \
 	-DPLAYER2_AVR_VIDEO_BUFFER_MEMORY=0x00000000 \
 	-DPLAYER2_H264_MACROBLOCK_STRUCTURE_MEMORY=0xa00000 \
@@ -84,7 +84,7 @@ endif
 
 ifdef PART3
 #UFS910 and others
-CFLAGS+=-DPLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY=0x01B00000 \
+CCFLAGSY+=-DPLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY=0x01B00000 \
         -DPLAYER2_SECONDARY_VIDEO_BUFFER_MEMORY=0x00000000 \
         -DPLAYER2_AVR_VIDEO_BUFFER_MEMORY=0x00000000 \
         -DPLAYER2_AVR_VIDEO_BUFFER_MEMORY=0x00000000 \
@@ -96,15 +96,15 @@ CFLAGS+=-DPLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY=0x01B00000 \
         -DPLAYER2_VIDEO_DEFAULT_CODED_MEMORY_SIZE=0x1000000
 endif
 
-CFLAGS+=-D__TDT__
+CCFLAGSY+=-D__TDT__
 
-CFLAGS+=-I$(CONFIG_KERNEL_BUILD)/include2 \
+CCFLAGSY+=-I$(CONFIG_KERNEL_BUILD)/include2 \
 	-I$(CONFIG_KERNEL_BUILD)/include \
 	-include $(KERNEL_LOCATION)/include/linux/autoconf.h \
 	-I$(CONFIG_KERNEL_PATH)/include -D__KERNEL__ \
 	-I$(DRIVER_TOPDIR)/include/player2
 
-CFLAGS+=-I$(TREE_ROOT)/linux/components/inline         \
+CCFLAGSY+=-I$(TREE_ROOT)/linux/components/inline         \
 	-I$(TREE_ROOT)/components/include              \
 	-I$(TREE_ROOT)/components/infrastructure       \
 	-I$(TREE_ROOT)/linux/drivers/media/dvb/stm/allocator \
@@ -113,7 +113,7 @@ CFLAGS+=-I$(TREE_ROOT)/linux/components/inline         \
 	-I$(TREE_ROOT)/linux/drivers/sound/ksound \
 	-I$(TREE_ROOT)/linux/drivers/sound/pcm_transcoder
 
-CFLAGS+=-I$(TREE_ROOT)/player/class_definitions        \
+CCFLAGSY+=-I$(TREE_ROOT)/player/class_definitions        \
 	-I$(TREE_ROOT)/player/buffer                   \
 	-I$(TREE_ROOT)/player/demultiplexor            \
 	-I$(TREE_ROOT)/player/collator                 \
@@ -125,41 +125,48 @@ CFLAGS+=-I$(TREE_ROOT)/player/class_definitions        \
 	-I$(TREE_ROOT)/player/output_coordinator       \
 	-I$(TREE_ROOT)/player/output_timer
 
-CFLAGS+=-I$(CONFIG_STGFB_PATH)/
-CFLAGS+=-I$(CONFIG_STGFB_PATH)/linux/include/
+CCFLAGSY+=-I$(CONFIG_STGFB_PATH)/
+CCFLAGSY+=-I$(CONFIG_STGFB_PATH)/linux/include/
 
-CFLAGS+=-I$(TREE_ROOT)/linux/include/
+CCFLAGSY+=-I$(TREE_ROOT)/linux/include/
 
-# promote CONFIG_RELAY to a CFLAGS define so that it can be observed by C++
+# promote CONFIG_RELAY to a CCFLAGSY define so that it can be observed by C++
 # code as well and appropriate inlining performed at the earliest possible
 # point.
 ifdef CONFIG_RELAY
-CFLAGS+=-DCONFIG_RELAY=1
+CCFLAGSY+=-DCONFIG_RELAY=1
 endif
 
 # CONFIG_DUAL_DISPLAY is a temporary hack to convert the existing
 # picture-in-picture and speaker-in-speaker support into two
 # independant displays also used for the compositor capture now.
 ifdef CONFIG_DUAL_DISPLAY
-CFLAGS+=-DCONFIG_DUAL_DISPLAY
+CCFLAGSY+=-DCONFIG_DUAL_DISPLAY
 endif
 
-# promote CONFIG_MONITOR to a CFLAGS define so that it can be observed by C++
+# promote CONFIG_MONITOR to a CCFLAGSY define so that it can be observed by C++
 # code as well and appropriate inlining performed at the earliest possible
 # point.
 #ifdef CONFIG_MONITOR
-CFLAGS+=-DCONFIG_MONITOR=1
+CCFLAGSY+=-DCONFIG_MONITOR=1
 #endif
 
 # Finally pick up the original system headers, these must be near the '
 # back' of the path to ensure the kernel headers are taken in 
 # preference to any system supplied ones. Items such as the MME header 
 # files (XXXX_DecoderTypes.h) form part of the system headers.
-CFLAGS += -I$(CONFIG_MODULES_PATH)/usr/include
+CCFLAGSY += -I$(CONFIG_MODULES_PATH)/usr/include
 
-CFLAGS += -D__SH4__       
+CCFLAGSY += -D__SH4__       
 
-CFLAGS += -DREPORT
+CCFLAGSY += -DREPORT
+
+ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
+ccflags-y += $(CCFLAGSY)
+else
+CFLAGS += $(CCFLAGSY)
+endif
+export CCFLAGSY
 
 obj-y += drivers/media/dvb/stm/mpeg2_hard_host_transformer/
 obj-y += drivers/media/dvb/stm/dvb/
