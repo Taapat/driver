@@ -101,6 +101,10 @@ static struct ufs912_cic_core ci_core;
 static struct ufs912_cic_state ci_state;
 static struct mutex ufs912_cic_mutex;
 
+//#define address_not_mapped
+
+static int waitMS = 200; //100 enough for AClight but not for Diablo
+
 /* *************************** */
 /* map, write & read functions */
 /* *************************** */
@@ -110,9 +114,9 @@ unsigned char ufs912_read_register_u8(unsigned long address)
     unsigned char result;
 
 #ifdef address_not_mapped
-    unsigned long mapped_register = (unsigned long) ioremap_nocache(address, 1);
+    volatile unsigned long mapped_register = (unsigned long) ioremap_nocache(address, 1);
 #else
-    unsigned long mapped_register = address;
+    volatile unsigned long mapped_register = address;
 #endif
 
     //dprintk(200, "%s > address = 0x%.8lx, mapped = 0x%.8lx\n", __FUNCTION__, (unsigned long) address, mapped_register);
@@ -129,9 +133,9 @@ unsigned char ufs912_read_register_u8(unsigned long address)
 void ufs912_write_register_u8(unsigned long address, unsigned char value)
 {
 #ifdef address_not_mapped
-    unsigned long mapped_register = (unsigned long)  ioremap_nocache(address, 1);
+    volatile unsigned long mapped_register = (unsigned long)  ioremap_nocache(address, 1);
 #else
-    unsigned long mapped_register = address;
+    volatile unsigned long mapped_register = address;
 #endif
 
     writeb(value, mapped_register);
@@ -144,9 +148,9 @@ void ufs912_write_register_u8(unsigned long address, unsigned char value)
 void ufs912_write_register_u32(unsigned long address, unsigned int value)
 {
 #ifdef address_not_mapped
-    unsigned long mapped_register = (unsigned long) ioremap_nocache(address, 4);
+    volatile unsigned long mapped_register = (unsigned long) ioremap_nocache(address, 4);
 #else
-    unsigned long mapped_register = address;
+    volatile unsigned long mapped_register = address;
 #endif
 
     writel(value, mapped_register);
@@ -178,6 +182,17 @@ static int ufs912_cic_poll_slot_status(struct dvb_ca_en50221 *ca, int slot, int 
 	   if (slot_status)
 	   {
 		   stpio_set_pin(state->slot_enable[slot], 0);
+
+                   mdelay(waitMS);
+
+                   stpio_set_pin(state->slot_reset[slot], 1);
+
+                   mdelay(waitMS);
+
+	           stpio_set_pin(state->slot_reset[slot], 0);
+                   
+                   mdelay(waitMS);
+
 		   dprintk(1, "Modul now present\n");
 	           state->module_present[slot] = 1;
 	   }
@@ -202,7 +217,7 @@ static int ufs912_cic_poll_slot_status(struct dvb_ca_en50221 *ca, int slot, int 
 	/* detected module insertion, set the detection
 	 *  timeout (500 ms) 
 	 */
-	state->detection_timeout[slot] = jiffies + HZ/2;
+	state->detection_timeout[slot] = jiffies + HZ / 2;
       }
       else
       {
@@ -245,15 +260,16 @@ static int ufs912_cic_slot_reset(struct dvb_ca_en50221 *ca, int slot)
 
 	mutex_lock(&ufs912_cic_mutex);
 
-	stpio_set_pin(state->slot_reset[slot], 1);
-	mdelay(50);
+        stpio_set_pin(state->slot_reset[slot], 1);
+        mdelay(waitMS);
 	stpio_set_pin(state->slot_reset[slot], 0);
+        mdelay(waitMS);
+        stpio_set_pin(state->slot_enable[slot], 1);
+        mdelay(waitMS);
 
-	stpio_set_pin(state->slot_enable[slot], 1);
-
-       /* reset status variables because module detection has to
-        * be reported after a delay 
-	*/
+        /* reset status variables because module detection has to
+         * be reported after a delay 
+	 */
         state->module_ready[slot] = 0;
         state->module_present[slot] = 0;
         state->detection_timeout[slot] = 0;
@@ -373,7 +389,7 @@ static int ufs912_cic_slot_shutdown(struct dvb_ca_en50221 *ca, int slot)
 	dprintk(20, "%s > slot = %d\n", __FUNCTION__, slot);
 	mutex_lock(&ufs912_cic_mutex);
 
-//fixme
+        stpio_set_pin(state->slot_enable[slot], 1);
 
 	mutex_unlock(&ufs912_cic_mutex);
 	return 0;
@@ -448,14 +464,6 @@ int cic_init_hw(void)
         ufs912_write_register_u32(EMIConfigBaseAddress + EMIBank3 + EMI_CFG_DATA2, 0xfd88ffff);
         ufs912_write_register_u32(EMIConfigBaseAddress + EMIBank3 + EMI_CFG_DATA3, 0x00000000);
 
-/* fixme: use constants here */
-        ufs912_write_register_u32(EMIConfigBaseAddress + 0x800, 0x00000000);
-        ufs912_write_register_u32(EMIConfigBaseAddress + 0x810, 0x00000008);
-        ufs912_write_register_u32(EMIConfigBaseAddress + 0x820, 0x0000000c);
-        ufs912_write_register_u32(EMIConfigBaseAddress + 0x830, 0x00000010);
-        ufs912_write_register_u32(EMIConfigBaseAddress + 0x840, 0x00000012);
-        ufs912_write_register_u32(EMIConfigBaseAddress + 0x850, 0x000000ff);
-
         ufs912_write_register_u32(EMIConfigBaseAddress + EMI_LCK, 0x1f);
    
         state->module_ready[0] = 0;
@@ -487,11 +495,11 @@ int cic_init_hw(void)
 	state->slot_enable[1] = stpio_request_pin (6, 5, "SLOT_B_EN", STPIO_OUT);
 	
 	stpio_set_pin(state->slot_enable[0], 0);
-	msleep(50);
+	mdelay(50);
 	stpio_set_pin(state->slot_enable[0], 1);
 	
 	stpio_set_pin(state->slot_enable[1], 0);
-	msleep(50);
+	mdelay(50);
 	stpio_set_pin(state->slot_enable[1], 1);
 
 #ifdef use_poll_irq
@@ -611,5 +619,8 @@ MODULE_LICENSE          ("GPL");
 
 module_param(debug, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 MODULE_PARM_DESC(debug, "Debug Output 0=disabled >0=enabled(debuglevel)");
+
+module_param(waitMS, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(waitMS, "waiting time between pio settings for reset/enable purpos in milliseconds (default=200)");
 
 #endif
