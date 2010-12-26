@@ -1152,11 +1152,16 @@ cx24116_firmware_ondemand (struct dvb_frontend *fe)
   }
 
   gotreset = cx24116_readreg (state, 0x20);  // implicit watchdog
+
+#ifdef __TDT__
+  if (gotreset > 0) {
+#endif
+
   syschipid = cx24116_readreg (state, 0x94);
 
   if (gotreset || syschipid != 5 || state->not_responding >= cMaxError)
   {
-    dprintk (10, "%s: Start Firmware upload ... \n", __FUNCTION__);
+    printk ("%s: Start Firmware upload ... \n", __FUNCTION__);
 
 #ifndef ASCII_FW
     ret =
@@ -1191,7 +1196,14 @@ cx24116_firmware_ondemand (struct dvb_frontend *fe)
   {
     dprintk (30, "%s: Firmware upload not needed\n", __FUNCTION__);
   }
+#ifdef __TDT__
+  } else {
+    ret = gotreset;
+    printk ("%s: gotreset failed, error %d!\n", __FUNCTION__, ret);
+  }
+#endif
 
+  /* unlock semaphore */
   up(&state->fw_load_sem);
 
   dprintk (10, "%s <()\n", __FUNCTION__);
@@ -1703,6 +1715,36 @@ cx24116_set_symbolrate (struct cx24116_state *state, struct dvbfe_params *p)
 
   dprintk (10, "%s()\n", __FUNCTION__);
 
+#ifdef __TDT__
+  switch (p->delivery)
+  {
+  case DVBFE_DELSYS_DVBS:
+    /*  check if symbol rate is within limits */
+    if ((p->delsys.dvbs.symbol_rate > state->frontend.ops.info.symbol_rate_max) ||
+        (p->delsys.dvbs.symbol_rate < state->frontend.ops.info.symbol_rate_min)) {
+      printk("%s symbol rate %lu not in range (%lu/%lu)\n", __FUNCTION__,p->delsys.dvbs.symbol_rate,state->frontend.ops.info.symbol_rate_min,state->frontend.ops.info.symbol_rate_max);
+      ret = -EOPNOTSUPP;
+    } else
+      state->dnxt.symbol_rate = p->delsys.dvbs.symbol_rate;
+    break;
+  case DVBFE_DELSYS_DVBS2:
+    /*  check if symbol rate is within limits */
+    if ((p->delsys.dvbs2.symbol_rate > state->frontend.ops.info.symbol_rate_max) ||
+        (p->delsys.dvbs2.symbol_rate < state->frontend.ops.info.symbol_rate_min)) {
+      printk("%s symbol rate %lu not in range (%lu/%lu)\n", __FUNCTION__,p->delsys.dvbs.symbol_rate,state->frontend.ops.info.symbol_rate_min,state->frontend.ops.info.symbol_rate_max);
+      ret = -EOPNOTSUPP;
+    } else
+      state->dnxt.symbol_rate = p->delsys.dvbs2.symbol_rate;
+    break;
+  default:
+    printk ("%s(return enotsupp)\n", __FUNCTION__);
+    ret = -EOPNOTSUPP;
+  }
+
+  dprintk (10, "%s() symbol_rate = %lu\n", __FUNCTION__, state->dnxt.symbol_rate);
+
+#else
+
   switch (p->delivery)
   {
   case DVBFE_DELSYS_DVBS:
@@ -1722,6 +1764,7 @@ cx24116_set_symbolrate (struct cx24116_state *state, struct dvbfe_params *p)
   if ((state->dnxt.symbol_rate > state->frontend.ops.info.symbol_rate_max) ||
       (state->dnxt.symbol_rate < state->frontend.ops.info.symbol_rate_min))
     ret = -EOPNOTSUPP;
+#endif
 
   return ret;
 }
