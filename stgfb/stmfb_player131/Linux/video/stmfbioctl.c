@@ -9,6 +9,9 @@
  *
 \***********************************************************************/
 
+#ifdef __TDT__
+#include <linux/mm.h>
+#endif
 #include <linux/version.h>
 #include <linux/module.h>
 #include <linux/init.h>
@@ -108,6 +111,387 @@ static int stmfbio_draw_rectangle(stm_display_blitter_t *blitter,
 
   return ret;
 }
+
+#ifdef __TDT__
+
+static int stmfbio_draw_rectangle_extern(stm_display_blitter_t *blitter,
+                                  stm_blitter_surface_t *basesurface,
+                                  STMFBIO_BLT_EXTERN_DATA      *pData)
+{
+  stm_blitter_operation_t op = {0};
+  stm_rect_t dst;
+  int ret;
+
+  DPRINTK("dstOffset = %lu ulFlags = 0x%08lx\n",pData->dstOffset,pData->ulFlags);
+
+
+  if(pData->dst_left < pData->dst_right)
+  {
+    dst.left   = pData->dst_left;
+    dst.right  = pData->dst_right;
+  }
+  else
+  {
+    dst.left   = pData->dst_right;
+    dst.right  = pData->dst_left;
+  }
+
+  if(pData->dst_top < pData->dst_bottom)
+  {
+    dst.top    = pData->dst_top;
+    dst.bottom = pData->dst_bottom;
+  }
+  else
+  {
+    dst.top    = pData->dst_bottom;
+    dst.bottom = pData->dst_top;
+  }
+
+  DPRINTK("dst(%lu,%lu,%lu,%lu)\n",dst.left, dst.top, dst.right, dst.bottom);
+
+  op.dstSurface.ulOffset = pData->dstOffset;
+  op.dstSurface.ulWidth  = (ULONG)dst.right;
+  op.dstSurface.ulHeight = (ULONG)dst.bottom;
+  op.dstSurface.ulStride = pData->dstPitch;
+  op.dstSurface.format   = pData->dstFormat;
+
+  if(stm_create_subsurface(basesurface, &op.dstSurface)<0)
+  {
+    DPRINTK("Drawing area not contained in base surface\n");
+    return -1;
+  }
+
+  setDrawingState(&op, pData);
+
+  if (pData->operation == BLT_OP_FILL)
+    ret = stm_display_blitter_fill_rect(blitter, &op, &dst);
+  else
+    ret = stm_display_blitter_draw_rect(blitter, &op, &dst);
+
+  return ret;
+}
+
+static int stmfbio_do_blit_extern(stm_display_blitter_t *blitter,
+                           stm_blitter_surface_t *basesrcsurf,
+                           stm_blitter_surface_t *basedstsurf,
+                           unsigned long          clutaddress,
+                           STMFBIO_BLT_EXTERN_DATA      *pData)
+{
+  stm_blitter_operation_t op = {0};
+  stm_rect_t srcrect;
+  stm_rect_t dstrect;
+  int ret = 0;
+
+  printk("src_off = 0x%lx src_pitch = 0x%lx\n", pData->srcOffset, pData->srcPitch);
+  printk("dst_off = 0x%lx dst_pitch = 0x%lx\n", pData->dstOffset, pData->dstPitch);
+
+  if(pData->dst_left < pData->dst_right)
+  {
+    dstrect.left   = pData->dst_left;
+    dstrect.right  = pData->dst_right;
+  }
+  else
+  {
+    dstrect.left   = pData->dst_right;
+    dstrect.right  = pData->dst_left;
+  }
+
+  if(pData->dst_top < pData->dst_bottom)
+  {
+    dstrect.top    = pData->dst_top;
+    dstrect.bottom = pData->dst_bottom;
+  }
+  else
+  {
+    dstrect.top    = pData->dst_bottom;
+    dstrect.bottom = pData->dst_top;
+  }
+
+  if(pData->src_left < pData->src_right)
+  {
+    srcrect.left   = pData->src_left;
+    srcrect.right  = pData->src_right;
+  }
+  else
+  {
+    srcrect.left   = pData->src_right;
+    srcrect.right  = pData->src_left;
+  }
+
+  if(pData->src_top < pData->src_bottom)
+  {
+    srcrect.top    = pData->src_top;
+    srcrect.bottom = pData->src_bottom;
+  }
+  else
+  {
+    srcrect.top    = pData->src_bottom;
+    srcrect.bottom = pData->src_top;
+  }
+
+  op.dstSurface.ulOffset = pData->dstOffset;
+  op.dstSurface.ulWidth  = dstrect.right;
+  op.dstSurface.ulHeight = dstrect.bottom;
+  op.dstSurface.ulStride = pData->dstPitch;
+  op.dstSurface.format   = pData->dstFormat;
+
+  if(stm_create_subsurface(basedstsurf, &op.dstSurface)<0)
+  {
+    printk("Destination area is outside of dest surface offset = %ld height = %ld stride = %ld\n",op.dstSurface.ulOffset,op.dstSurface.ulHeight,op.dstSurface.ulStride);
+    return -1;
+  }
+
+  op.srcSurface.ulOffset = pData->srcOffset;
+  op.srcSurface.ulWidth  = srcrect.right;
+  op.srcSurface.ulHeight = srcrect.bottom;
+  op.srcSurface.ulStride = pData->srcPitch;
+  op.srcSurface.format   = pData->srcFormat;
+
+  if(stm_create_subsurface(basesrcsurf, &op.srcSurface)<0)
+  {
+    printk("Src area is outside of source surface\n");
+    return -1;
+  }
+
+  setDrawingState(&op, pData);
+
+  op.ulCLUT = clutaddress;
+
+  ret = stm_display_blitter_blit(blitter, &op, &srcrect, &dstrect);
+
+  return ret;
+}
+
+#define VTOP_SUCCESS 0
+#define VTOP_INVALID_ARG 1
+#define VTOP_INCOHERENT_MEM 2
+
+int VirtToPhys(void *vaddr, int *paddrp)
+{
+#if defined(__KERNEL__)
+
+    unsigned long addr = (unsigned long) vaddr;
+
+    if (addr < P1SEG || ((addr >= VMALLOC_START) && (addr < VMALLOC_END)))
+    {
+	/*
+	 * Find the virtual address of either a user page (<P1SEG) or VMALLOC (P3SEG)
+	 *
+	 * This code is based on vmalloc_to_page() in mm/memory.c
+	 */
+	struct mm_struct *mm;
+
+	pgd_t *pgd;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,10)
+	pud_t *pud;
+#endif
+	pmd_t *pmd;
+	pte_t *ptep, pte;
+	
+	/* Must use the correct mm based on whether this is a kernel or a userspace address */
+	if (addr >= VMALLOC_START)
+	    mm = &init_mm;
+	else
+	    mm = current->mm;
+
+	/* Safety first! */
+	if (mm == NULL)
+	    return VTOP_INVALID_ARG;
+
+	spin_lock(&mm->page_table_lock);
+	
+	pgd = pgd_offset(mm, addr);
+	if (pgd_none(*pgd) || pgd_bad(*pgd))
+	    goto out;
+
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,10)
+	pud = pud_offset(pgd, addr);
+	if (pud_none(*pud) || pud_bad(*pud))
+	    goto out;
+	
+	pmd = pmd_offset(pud, addr);
+#else
+	pmd = pmd_offset(pgd, addr);
+#endif
+	if (pmd_none(*pmd) || pmd_bad(*pmd))
+	    goto out;
+	
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,9)
+	ptep = pte_offset(pmd, addr);
+#else
+	ptep = pte_offset_map(pmd, addr);
+#endif
+	if (!ptep) 
+	    goto out;
+
+	pte = *ptep;
+	if (pte_present(pte)) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,9)
+	    pte_unmap(ptep);
+#endif
+	    spin_unlock(&mm->page_table_lock);
+	    
+	    /* pte_page() macro is broken for SH in linux 2.6.20 and later */
+	    *paddrp = page_to_phys(pfn_to_page(pte_pfn(pte))) | (addr & (PAGE_SIZE-1));
+	    
+	    /* INSbl28636: P3 segment pages cannot be looked up with pmb_virt_to_phys()
+	     * instead we need to examine the _PAGE_CACHABLE bit in the pte
+	     */
+	    return ((pte_val(pte) & _PAGE_CACHABLE) ? VTOP_INCOHERENT_MEM : VTOP_SUCCESS);
+	}
+	
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,9)
+	pte_unmap(ptep);
+#endif
+	
+    out:
+	spin_unlock(&mm->page_table_lock);
+
+	/* Failed to find a pte */
+	return VTOP_INVALID_ARG;
+    }
+    else
+#if defined(CONFIG_32BIT)
+    {
+	unsigned long flags;
+	
+	/* Try looking for an ioremap() via the PMB */
+	if (pmb_virt_to_phys(vaddr, (unsigned long *)paddrp, &flags) == 0)
+	{
+	    /* Success: Test the returned PMB flags */
+	    return ((flags & PMB_C) ? VTOP_INCOHERENT_MEM : VTOP_SUCCESS);
+	}
+
+	/* Failed to find a mapping */
+	return VTOP_INVALID_ARG;
+    }
+#else
+    {
+	unsigned long addr = (unsigned long) vaddr;
+	
+	/* Assume 29-bit SH4 Linux */
+	*(paddrp)= PHYSADDR(addr);
+	
+	/* only the P2SEG is uncached (doubt we will see P4SEG addresses) */
+	return ((PXSEG(addr) == P2SEG) ? VTOP_SUCCESS: VTOP_INCOHERENT_MEM);
+    }
+#endif /* CONFIG_32BIT */
+
+#endif /* __KERNEL__ */
+
+    /* Not implemented */
+    return VTOP_INVALID_ARG;
+}
+
+static int ValidatePagesContiguous(unsigned virtAddress, unsigned size, unsigned* physBase) {
+	/* Iterate over the pages ensuring they are physically contiguous */
+        int result = 0;
+
+	unsigned virtBase  = (virtAddress / PAGE_SIZE) * PAGE_SIZE;
+	unsigned offset    = virtAddress - virtBase;
+	unsigned range     = offset + size;
+	unsigned pageCount = range/PAGE_SIZE + ((range%PAGE_SIZE)?1:0);
+	unsigned lastPhys  = 0xffffffff;
+	unsigned thisPage;
+
+	for (thisPage=0; thisPage<pageCount; thisPage++, virtBase += PAGE_SIZE) {
+		int res;
+		unsigned long phys;
+		
+		/* Perform a Virtual to physical translation of the user address */
+		res = VirtToPhys((void *)virtBase, &phys);
+		
+		if (res == VTOP_INVALID_ARG) 
+		{
+                	printk("Page lookup failed for address 0x%08x\n", virtBase);
+			result = -EFAULT;
+			break;
+		}
+		
+		if (lastPhys == 0xffffffff) {
+			lastPhys  = phys;
+			*physBase = offset + lastPhys;
+#ifdef NO_PAGE_CHECK
+			return 0;
+#endif
+		} else if (phys == (lastPhys + PAGE_SIZE)) {
+			lastPhys += PAGE_SIZE;		
+		} else {
+                	printk("Page discontinuous virtual 0x%08x, last phys 0x%08x, phys 0x%08x, pageCount %d\n", 
+                	       virtBase, lastPhys, phys, pageCount);
+                	
+			result = -EFAULT;
+			break;
+		}
+	}        
+
+	return result;
+}
+
+static int stmfbio_blt_extern(struct stmfb_info* i, u_long arg)
+{
+  STMFBIO_BLT_EXTERN_DATA      bltData;
+  stm_blitter_surface_t dst;
+
+  if (!i->pBlitter)
+  {
+    printk("noblitter\n");
+    return -ENODEV;
+  }
+
+  if (!copy_from_user(&bltData,(void*)arg,sizeof(bltData)))
+  {  
+    if(ValidatePagesContiguous(bltData.dstMemBase, bltData.dstMemSize, &dst.ulMemory) != 0)
+    {
+    	printk("Could not get the physical address of your dst mem\n"); 
+    	return -EINVAL;
+    }
+   
+    dst.ulSize = bltData.dstMemSize;
+
+    switch(bltData.operation)
+    {
+      case BLT_OP_DRAW_RECTANGLE:
+      case BLT_OP_FILL:
+      {
+        if(stmfbio_draw_rectangle_extern(i->pBlitter, &dst, &bltData) < 0)
+          return -EINVAL;
+
+        break;
+      }
+      case BLT_OP_COPY:
+      {
+        stm_blitter_surface_t src;
+
+        if(ValidatePagesContiguous(bltData.srcMemBase, bltData.srcMemSize, &src.ulMemory) != 0)
+	{
+	    printk("Could not get the physical address of your src mem\n"); 
+	    return -EINVAL;
+	}
+
+    	src.ulSize = bltData.srcMemSize;
+
+        if(stmfbio_do_blit_extern(i->pBlitter, &src, &dst, i->dmaBlitterCLUT, &bltData) < 0)
+          return -EINVAL;
+
+        break;
+      }
+      default:
+      {
+        return -ENOIOCTLCMD;
+      }
+    }
+
+  }
+  else
+  {
+    printk("failed to copy from user data.\n");
+    return -EFAULT;
+  }
+
+  return 0;
+}
+#endif
 
 
 static int stmfbio_do_blit(stm_display_blitter_t *blitter,
@@ -737,6 +1121,30 @@ int stmfb_ioctl(struct fb_info* fb, u_int cmd, u_long arg)
 
       break;
     }
+
+#ifdef __TDT__
+    case STMFBIO_BLT_EXTERN:
+    {
+      int ret;
+
+      if(down_interruptible(&i->framebufferLock))
+        return -ERESTARTSYS;
+
+      ret = stmfbio_blt_extern(i, arg);
+
+      up(&i->framebufferLock);
+
+      if(ret<0)
+      {
+        if(signal_pending(current))
+          return -ERESTARTSYS;
+        else
+          return ret;
+      }
+
+      break;
+    }
+#endif
 
     case STMFBIO_SET_BLITTER_PALETTE:
       return stmfbio_set_blitter_palette(i, arg);

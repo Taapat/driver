@@ -136,6 +136,37 @@ typedef struct
   unsigned short  dst_right;
 } STMFBIO_BLT_DATA;
 
+//#ifdef __TDT__ 
+typedef struct
+{
+  STMFBIO_BLT_OP  operation;
+  unsigned long   ulFlags;
+  unsigned long   colour;
+  unsigned long   globalAlpha;
+  unsigned long   colourKey;
+  unsigned long   planeMask;
+  char		 *srcMemBase;
+  unsigned long   srcMemSize;
+  unsigned long   srcOffset;
+  unsigned long   srcPitch;
+  char 		 *dstMemBase;
+  unsigned long   dstMemSize;
+  unsigned long   dstOffset;
+  unsigned long   dstPitch;
+  SURF_FMT        srcFormat;
+  SURF_FMT        dstFormat;
+
+  unsigned short  src_top;
+  unsigned short  src_bottom;
+  unsigned short  src_left;
+  unsigned short  src_right;
+  unsigned short  dst_top;
+  unsigned short  dst_bottom;
+  unsigned short  dst_left;
+  unsigned short  dst_right;
+} STMFBIO_BLT_EXTERN_DATA;
+//#endif
+
 
 /*
  * Defined for STMFBIO_CGMS_ANALOG (use as bitfield)
@@ -528,6 +559,9 @@ typedef volatile struct
 #define STMFBIO_SET_DAC_HD_POWER        _IO  ('B', 0xd)
 #define STMFBIO_SET_CGMS_ANALOG         _IO  ('B', 0xe)
 #define STMFBIO_SET_DAC_HD_FILTER       _IO  ('B', 0xf)
+//#ifdef __TDT__ 
+#define STMFBIO_BLT_EXTERN              _IOW ('B', 0x33,  STMFBIO_BLT_EXTERN_DATA)
+//#endif
 
 /*
  * Implement the matrox FB extension for VSync synchronisation, again for

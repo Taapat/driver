@@ -607,8 +607,10 @@ bool CGammaBlitter::CopyRectComplex(const stm_blitter_operation_t &op,
      * This avoid an apparent hardware bug in all chips containing the
      * gamma blitter. This is under further investigation.
      */
+#ifndef __TDT__	// this bug never occurred to me with ufs910
     if(ulScalew > (2<<10))
       return false;
+#endif
       
     DEBUGF2(2, ("CGammaBlitter::CopyRectComplex() Scaleh = 0x%08lx Scalew = 0x%08lx.\n",ulScaleh,ulScalew));
 
