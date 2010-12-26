@@ -95,6 +95,7 @@ obj-y	+= frontcontroller/
 obj-y	+= pti/
 #obj-y	+= pti_np/
 obj-y	+= compcache/
+obj-y	+= bpamem/
 
 ifdef STM22
 obj-y	+= logfs/
