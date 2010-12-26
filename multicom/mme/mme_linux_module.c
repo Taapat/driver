@@ -4,7 +4,6 @@
 
 #include <asm/uaccess.h>
 
-#include <linux/version.h>
 #include <linux/fs.h>
 #include <linux/netdevice.h>
 #include <linux/ioctl.h>
@@ -145,11 +144,7 @@ static struct file_operations mme_ops = {
 static struct cdev mme_cdev;
 static dev_t       mme_devid;
 static struct class *mme_class;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
 static struct class_device *mme_class_dev;
-#else
-static struct device *mme_class_dev;
-#endif
 
 /* ==========================================================================
  * 
@@ -166,9 +161,7 @@ int init_module(void)
 
 	MME_Info(MME_INFO_LINUX_MODULE, (DEBUG_NOTIFY_STR "Initializing /dev/%s - major num %d\n", 
 					 MME_DEV_NAME, major));
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)
-	SET_MODULE_OWNER(&mme_ops);
-#endif
+        SET_MODULE_OWNER(&mme_ops);
 
 	/* If we want to use the API entirely in kernel mode, skip the init */
 	if (doNotInit) {
@@ -228,11 +221,7 @@ int init_module(void)
 	/* class_device_create() causes the /dev/mme file to appear when using udev
 	 * however it is a GPL only function.
 	 */
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
 	mme_class_dev = class_device_create(mme_class, NULL, mme_devid, NULL, MME_DEV_NAME);
-#else
-	mme_class_dev = device_create(mme_class, NULL, mme_devid, NULL, MME_DEV_NAME);
-#endif
 	if((result = IS_ERR(mme_class_dev)))
 	{
 		printk(KERN_ERR "mme: class_device_create failed : %d\n", result);

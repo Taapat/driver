@@ -10,9 +10,6 @@
 
 #include "embx_osinterface.h"
 #include "debug_ctrl.h"
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
-#include <asm/cacheflush.h>
-#endif
 
 #if defined(__KERNEL__)
 #ifndef ioremap_cache
@@ -24,7 +21,9 @@
 /*
  * This header is needed to collect the prototype for memalign.
  */
-//#include <malloc.h>
+#ifndef __TDT__
+#include <malloc.h>
+#endif
 
 EMBX_VOID *EMBX_OS_ContigMemAlloc(EMBX_UINT size, EMBX_UINT align)
 {
@@ -45,11 +44,7 @@ EMBX_VOID *EMBX_OS_ContigMemAlloc(EMBX_UINT size, EMBX_UINT align)
 
 	if (alignedAddr) {
 	    /* ensure there are no cache entries covering this address */
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
 	    dma_cache_wback_inv(alignedAddr, size);
-#else
-	    flush_ioremap_region(0, alignedAddr, 0, size);
-#endif
 	}
     }
 
@@ -343,12 +338,8 @@ static void SetPriority(struct ThreadInfo *t, int policy, struct sched_param *sp
     int res;
 
 #ifdef MULTICOM_GPL
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
     res = sched_setscheduler(t->kthread, policy, &sp); 	/* GPL only function */
 #else
-    res = sched_setscheduler(t->kthread, policy, sp); 	/* GPL only function */
-#endif
-#else /* MULTICOM_GPL */
     /* Call sched_setscheduler() via an in kernel syscall */
     register long __sc0 __asm__ ("r3") = __NR_sched_setscheduler;
     register long __sc4 __asm__ ("r4") = (long) t->kthread->pid;
@@ -424,6 +415,7 @@ EMBX_THREAD EMBX_OS_ThreadCreate(void (*entry)(void *), void *param, EMBX_INT pr
     }
 
     t->kthread = kthread_create(ThreadHelper, t, "%s", name);
+    t->kthread->flags |= PF_NOFREEZE;
 
     if (IS_ERR(t->kthread)) {
 	EMBX_OS_MemFree(t);

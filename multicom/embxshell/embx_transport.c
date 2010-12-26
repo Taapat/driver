@@ -426,7 +426,7 @@ EMBX_ERROR res = EMBX_INVALID_TRANSPORT;
 		if (tp->transportInfo.usesZeroCopy)
 		{
 		    /* MULTICOM_32BIT_SUPPORT: The Warp range is now a physical address range */
-		    res = tp->methods->virttophys(tp, address, (EMBX_UINT *)offset);
+		    res = tp->methods->virt_to_phys(tp, address, (EMBX_UINT *)offset);
 		}
 		else if (tp->transportInfo.allowsPointerTranslation)
 		{
@@ -508,7 +508,7 @@ EMBX_ERROR res = EMBX_INVALID_TRANSPORT;
 		if (tp->transportInfo.usesZeroCopy)
 		{
 		    /* MULTICOM_32BIT_SUPPORT: The Warp range is now a physical address range */
-		    res = tp->methods->phystovirt(tp, offset, address);
+		    res = tp->methods->phys_to_virt(tp, offset, address);
 		}
 		else if (tp->transportInfo.allowsPointerTranslation)
 		{
