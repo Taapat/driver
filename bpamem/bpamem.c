@@ -195,9 +195,13 @@ static void __exit bpamem_exit(void)
 	for(i = 0; i < MAX_BPA_ALLOCS; i++)
 		bpamemio_deallocmem(i);
 		
+#if 0 // [schischu] function does not return an value for stlinux23
 	ret = unregister_chrdev(BPAMEM_MAJOR, "BPAMem");
 	if (ret < 0)
 		DEBUG_PRINTK("error in unregister_chrdev: %d\n", ret);
+#else
+	unregister_chrdev(BPAMEM_MAJOR, "BPAMem");
+#endif
 }
 
 module_init(bpamem_init);
