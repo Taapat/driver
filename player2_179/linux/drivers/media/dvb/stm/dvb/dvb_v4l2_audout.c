@@ -14,16 +14,7 @@
 
 #include <linux/poll.h>
 
-#if defined(__TDT__)
-#include <linux/version.h>
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
-#include "linux/drivers/media/video/stm_v4l2.h"
-//for old stmfb
-//#include "Linux/media/video/stm_v4l2.h"
-#else
 #include "stm_v4l2.h"
-#endif
-#endif
 
 #include "dvb_module.h"
 #include "dvb_v4l2_export.h"
