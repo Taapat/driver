@@ -52,6 +52,9 @@ fe-core-objs +=        vip1_v2/stv6110x.o
 fe-core-objs +=        vip1_v2/ix7306.o
 fe-core-objs +=        vip1_v2/zl10353.o
 fe-core-objs +=        vip1_v2/cx24116.o
+fe-core-objs +=        base/sharp6465.o
+fe-core-objs +=        base/tda10023.o
+fe-core-objs +=        base/lg031.o
 fe-core-objs +=        vip1_v2/core.o
 obj-m += fe-core.o
 else ifdef VIP2_V1

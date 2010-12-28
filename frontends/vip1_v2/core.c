@@ -11,6 +11,10 @@
 #include "stb6100_cfg.h"
 #include "stv6110x.h"
 #include "ix7306.h"
+#include "zl10353.h"
+#include "../base/sharp6465.h"
+#include "../base/tda1002x.h"
+#include "../base/lg031.h"
 
 #include <linux/platform_device.h>
 #include <asm/system.h>
@@ -26,10 +30,10 @@ static int tunerType;
 static char *tuner = "stb6100";
 
 module_param(demod,charp,0);
-MODULE_PARM_DESC(demod, "demodelator type: stb0899, stv090x, cx24116 (default stb0899");
+MODULE_PARM_DESC(demod, "demodelator type: stb0899, stv090x, cx24116, ce6353, tda10023(default stb0899)");
 
 module_param(tuner,charp,0);
-MODULE_PARM_DESC(tuner, "tuner type: stb6100, stv6110x, sharp7306 (default stb6100");
+MODULE_PARM_DESC(tuner, "tuner type: stb6100, stv6110x, sharp7306, sharp6465, lg031(default stb6100)");
 
 #define I2C_ADDR_STB0899 	(0xd4 >> 1)
 #define I2C_ADDR_STB6100 	(0xc0 >> 1)
@@ -37,6 +41,10 @@ MODULE_PARM_DESC(tuner, "tuner type: stb6100, stv6110x, sharp7306 (default stb61
 #define I2C_ADDR_STV6110X	(0xc0 >> 1)
 #define I2C_ADDR_CX24116	(0x0a >> 1)
 #define I2C_ADDR_IX7306		(0xc0 >> 1)
+#define I2C_ADDR_CE6353		(0x1e >> 1)
+#define I2C_ADDR_SHARP6465	(0xc2 >> 1)
+#define I2C_ADDR_TDA10023	(0x18 >> 1)
+#define I2C_ADDR_LG031		(0xc6 >> 1)
 
 #define CLK_EXT_IX7306 		 4000000
 
@@ -44,12 +52,16 @@ enum {
 	STV090X,
 	STB0899,
 	CX24116,
+	CE6353,
+	TDA10023,
 };
 
 enum {
 	STB6100,
 	STV6110X,
 	SHARP7306,
+	SHARP6465,
+	LG031,
 };
 
 static struct core *core[MAX_DVB_ADAPTERS];
@@ -625,6 +637,32 @@ static const struct ix7306_config bs2s7hz7306a_config = {
 	.bb_gain	= IX7306_GAIN_2dB,
 };
 
+static struct zl10353_config ce6353_config = {
+	.demod_address = I2C_ADDR_CE6353,
+	.no_tuner = 1,
+	.parallel_ts = 1,
+
+};
+
+static const struct sharp6465_config s6465_config = {
+	.name		= "Sharp 6465",
+	.addr		= I2C_ADDR_SHARP6465,
+	.bandwidth		= BANDWIDTH_8_MHZ,
+
+	.Frequency	= 500000,
+	.IF			= 36167,
+	.TunerStep	= 16667,
+};
+
+static struct tda10023_config philips_tda10023_config = {
+	.demod_address = I2C_ADDR_TDA10023,
+	.invert = 1,
+};
+
+static struct lg031_config lg_lg031_config = {
+	.addr = I2C_ADDR_LG031,
+};
+
 static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 {
 	struct dvb_frontend *frontend = NULL;
@@ -708,6 +746,70 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 			stb0899_config.lnb_enable  = cfg->lnb_enable;
 			stb0899_config.lnb_vsel    = cfg->lnb_vsel;
 		  break;
+	}
+	case CE6353:
+	{
+		frontend = dvb_attach(zl10353_attach, &ce6353_config, cfg->i2c_adap);
+		if (frontend) {
+			printk("%s: ce6353 attached\n", __FUNCTION__);
+			switch (tunerType) {
+			case SHARP6465:
+				if(dvb_attach(sharp6465_attach, frontend, &s6465_config, cfg->i2c_adap))
+				{
+					printk("%s: SHARP6465 attached\n", __FUNCTION__);
+				}
+				else
+				{
+					printk (KERN_INFO "%s: error attaching SHARP6465\n", __FUNCTION__);
+					goto error_out;
+				}
+				break;
+			default:
+			{
+				printk (KERN_INFO "%s: error unknown tuner\n", __FUNCTION__);
+				goto error_out;
+			}
+			}
+		} else {
+			printk (KERN_INFO "%s: error attaching ce6353\n", __FUNCTION__);
+			goto error_out;
+		}
+		break;
+	}
+	case TDA10023:
+	{
+		frontend = dvb_attach(tda10023_attach, &philips_tda10023_config,
+		      					cfg->i2c_adap, 0x48);
+		if (frontend) {
+			printk("%s: tda10023 attached\n", __FUNCTION__);
+			switch (tunerType) {
+			case LG031:
+				if(dvb_attach(lg031_attach, frontend, &lg_lg031_config, cfg->i2c_adap))
+				{
+					printk("%s: lg031 attached\n", __FUNCTION__);
+				}
+				else
+				{
+					printk (KERN_INFO "%s: error attaching lg031\n", __FUNCTION__);
+					goto error_out;
+				}
+				break;
+			default:
+			{
+				printk (KERN_INFO "%s: error unknown tuner\n", __FUNCTION__);
+				goto error_out;
+			}
+			}
+		} else {
+			printk (KERN_INFO "%s: error attaching tda10023\n", __FUNCTION__);
+			goto error_out;
+		}
+		break;
+	}
+	default:
+	{
+		printk (KERN_INFO "%s: error unknown demod\n", __FUNCTION__);
+		goto error_out;
 	  }
 	}
 
@@ -894,6 +996,21 @@ int __init fe_core_init(void)
 		printk("demodelator: cx24116 dvb-s2    ");
 		demodType = CX24116;
 	}
+	else if(strcmp("ce6353", demod) == 0)
+	{
+		printk("demodelator: ce6353 dvb-t    ");
+		demodType = CE6353;
+	}
+	else if(strcmp("tda10023", demod) == 0)
+	{
+		printk("demodelator: tda10023 dvb-c    ");
+		demodType = TDA10023;
+	}
+	else
+	{
+		printk("demodelator: stb0899 dvb-s2    ");
+		demodType = STB0899;
+	}
 
 	if((tuner[0] == 0) || (strcmp("stb6100", tuner) == 0))
 	{
@@ -909,6 +1026,21 @@ int __init fe_core_init(void)
 	{
 		printk("tuner: sharp7306\n");
 		tunerType = SHARP7306;
+	}
+	else if(strcmp("sharp6465", tuner) == 0)
+	{
+		printk("tuner: sharp6465\n");
+		tunerType = SHARP6465;
+	}
+	else if(strcmp("lg031", tuner) == 0)
+	{
+		printk("tuner: lg031\n");
+		tunerType = LG031;
+	}
+	else
+	{
+		printk("tuner: stb6100\n");
+		tunerType = STB6100;
 	}
 
     printk("frontend core loaded\n");
