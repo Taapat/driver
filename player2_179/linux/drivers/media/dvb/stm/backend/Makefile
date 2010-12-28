@@ -1,4 +1,4 @@
-TREE_ROOT?=$(DRIVER_TOPDIR)/player2_179
+TREE_ROOT?=$(DRIVER_TOPDIR)/player2
 
 
 CFLAGS+=-I$(DRIVER_TOPDIR)/stgfb/stmfb/Linux/include
