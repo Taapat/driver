@@ -240,9 +240,7 @@ int StartFeed (struct dvb_demux_feed* Feed)
               (Feed->pes_type == DMX_TS_PES_OTHER))
             {
               mutex_lock (&(DvbContext->Lock));
-
               stpti_start_feed (Feed, Context);
-
               mutex_unlock (&(DvbContext->Lock));
 
               break;
@@ -259,11 +257,13 @@ int StartFeed (struct dvb_demux_feed* Feed)
             }
 
             mutex_lock (&(DvbContext->Lock));
+#ifndef __TDT__
             if ((Video && !Context->VideoOpenWrite) || (Audio && !Context->AudioOpenWrite))
             {
                 mutex_unlock (&(DvbContext->Lock));
                 return -EBADF;
             }
+#endif
 
             if ((Context->Playback == NULL) && (Context->SyncContext->Playback == NULL))
             {
@@ -288,6 +288,18 @@ int StartFeed (struct dvb_demux_feed* Feed)
                         return Result;
 #endif
                 }
+#ifdef __TDT__
+		if ((Context->VideoPlayInterval.start != DVB_TIME_NOT_BOUNDED) ||
+                    (Context->VideoPlayInterval.end   != DVB_TIME_NOT_BOUNDED))
+		{
+                    Result = VideoIoctlSetPlayInterval (Context, &Context->AudioPlayInterval);
+		    if (Result < 0)
+                    {
+                  	mutex_unlock (&(DvbContext->Lock));
+                  	return Result;
+                    }
+		}
+#endif
             }
             else if (Context->Playback == NULL)
                 Context->Playback               = Context->SyncContext->Playback;
@@ -312,14 +324,14 @@ int StartFeed (struct dvb_demux_feed* Feed)
 		stpti_start_feed (Feed, Context);
 
 		if(Feed->ts_type & TS_DECODER)
-		VideoIoctlSetId (Context, Feed->pid);
+		  VideoIoctlSetId (Context, Feed->pid);
 	    }
 	    else if (Audio)
 	    {
 		stpti_start_feed (Feed, Context);
 
 		if(Feed->ts_type & TS_DECODER)
-		AudioIoctlSetId (Context, Feed->pid);
+		  AudioIoctlSetId (Context, Feed->pid);
 	    }
 #else
             if (Video)
