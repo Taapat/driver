@@ -62,6 +62,9 @@ fe-core-objs +=        vip2/stv090x.o
 fe-core-objs +=        vip2/stv6110x.o
 fe-core-objs +=        vip2/ix7306.o
 fe-core-objs +=        vip2/zl10353.o
+fe-core-objs +=        base/sharp6465.o
+fe-core-objs +=        base/tda10023.o
+fe-core-objs +=        base/lg031.o
 fe-core-objs +=        vip2/core.o
 obj-m += fe-core.o
 else ifdef CUBEREVO

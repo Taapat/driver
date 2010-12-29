@@ -3,6 +3,9 @@
 #include "stv090x.h"
 #include "ix7306.h"
 #include "zl10353.h"
+#include "../base/sharp6465.h"
+#include "../base/tda1002x.h"
+#include "../base/lg031.h"
 
 #include <linux/platform_device.h>
 #include <asm/system.h>
@@ -16,6 +19,9 @@
 #define I2C_ADDR_STV6110X	(0xc0 >> 1)
 #define I2C_ADDR_IX7306		(0xc0 >> 1)
 #define I2C_ADDR_CE6353		(0x1e >> 1)
+#define I2C_ADDR_SHARP6465	(0xc2 >> 1)
+#define I2C_ADDR_TDA10023	(0x18 >> 1)
+#define I2C_ADDR_LG031		(0xc6 >> 1)
 
 /* On this framework, We can't support dual tuner,
  * so we can only use one. In order to support dual tuner,
@@ -46,23 +52,40 @@ static struct core *core[MAX_DVB_ADAPTERS];
 
 module_param(demod1,charp,0);
 module_param(demod2,charp,0);
-MODULE_PARM_DESC(demod1, "demodelator1 (default stv090x");// DVB-S2
-MODULE_PARM_DESC(demod1, "demodelator2 (default ce6353"); // DVB-T
+MODULE_PARM_DESC(demod1, "demodelator1 stv090x, ce6353, tda10023(default stv090x");// DVB-S2
+MODULE_PARM_DESC(demod1, "demodelator2 stv090x, ce6353, tda10023(default ce6353"); // DVB-T
 
 module_param(tuner1,charp,0);
 module_param(tuner2,charp,0);
-MODULE_PARM_DESC(tuner1, "tuner1 (default sharp7306"); // DVB-S2
-MODULE_PARM_DESC(tuner2, "tuner2 (default sharp6465"); // DVB-T
+MODULE_PARM_DESC(tuner1, "tuner1 sharp7306, stv6110x, sharp6465, lg031(default sharp7306"); // DVB-S2
+MODULE_PARM_DESC(tuner2, "tuner2 sharp7306, stv6110x, sharp6465, lg031(default sharp6465"); // DVB-T
 
 enum {
 	STV090X,
 	CE6353,
+	TDA10023,
+};
+
+static char *demod_name[] =
+{
+	"stv090x",
+	"ce6353",
+	"tda10023",
 };
 
 enum {
-	STV6110X,
 	SHARP7306,
+	STV6110X,
 	SHARP6465,
+	LG031,
+};
+
+static char *tuner_name[] =
+{
+	"sharp7306",
+	"stv6110x",
+	"sharp6465",
+	"lg031",
 };
 
 enum fe_ctl {
@@ -180,169 +203,205 @@ static const struct ix7306_config bs2s7hz7306a_config = {
 
 static struct zl10353_config ce6353_config = {
 	.demod_address = I2C_ADDR_CE6353,
+	.no_tuner = 1,
 	.parallel_ts = 1,
 };
 
+static const struct sharp6465_config s6465_config = {
+	.name		= "Sharp 6465",
+	.addr		= I2C_ADDR_SHARP6465,
+	.bandwidth		= BANDWIDTH_8_MHZ,
+
+	.Frequency	= 500000,
+	.IF			= 36167,
+	.TunerStep	= 16667,
+};
+
+static struct tda10023_config philips_tda10023_config = {
+	.demod_address = I2C_ADDR_TDA10023,
+	.invert = 1,
+};
+
+static struct lg031_config lg_lg031_config = {
+	.addr = I2C_ADDR_LG031,
+};
+
+static struct dvb_frontend *frontend_get_by_type(struct core_config *cfg,
+														int iDemodType,
+														int iTunerType)
+{
+	struct stv6110x_devctl *ctl = NULL;
+	struct dvb_frontend *frontend = NULL;
+	switch (iDemodType)
+	{
+		case STV090X:
+		{
+			frontend = dvb_attach(stv090x_attach, &stv090x_config,
+					cfg->i2c_adap, STV090x_DEMODULATOR_0);
+			if (frontend)
+			{
+				printk("%s: stv090x attached\n", __FUNCTION__);
+
+				stv090x_config.fe_rst 	 = cfg->tuner->fe_rst;
+				stv090x_config.fe_1318 	 = cfg->tuner->fe_1318;
+				stv090x_config.fe_1419 	 = cfg->tuner->fe_1419;
+				stv090x_config.fe_lnb_en = cfg->tuner->fe_lnb_en;
+
+				switch (iTunerType)
+				{
+					case SHARP7306:
+					{
+						if(dvb_attach(ix7306_attach, frontend, &bs2s7hz7306a_config, cfg->i2c_adap))
+						{
+							printk("%s: IX7306 attached\n", __FUNCTION__);
+							stv090x_config.tuner_set_frequency 	= ix7306_set_frequency;
+							stv090x_config.tuner_get_frequency 	= ix7306_get_frequency;
+							stv090x_config.tuner_set_bandwidth 	= ix7306_set_bandwidth;
+							stv090x_config.tuner_get_bandwidth 	= ix7306_get_bandwidth;
+							stv090x_config.tuner_get_status	  	= frontend->ops.tuner_ops.get_status;
+						}
+						else
+						{
+							printk (KERN_INFO "%s: error attaching IX7306\n", __FUNCTION__);
+							goto error_out;
+						}
+						break;
+					}
+					case STV6110X:
+					default:
+					{
+						ctl = dvb_attach(stv6110x_attach, frontend, &stv6110x_config, cfg->i2c_adap);
+						if(ctl)
+						{
+							printk("%s: stv6110x attached\n", __FUNCTION__);
+							stv090x_config.tuner_init	  	  	= ctl->tuner_init;
+							stv090x_config.tuner_set_mode	  	= ctl->tuner_set_mode;
+							stv090x_config.tuner_set_frequency 	= ctl->tuner_set_frequency;
+							stv090x_config.tuner_get_frequency 	= ctl->tuner_get_frequency;
+							stv090x_config.tuner_set_bandwidth 	= ctl->tuner_set_bandwidth;
+							stv090x_config.tuner_get_bandwidth 	= ctl->tuner_get_bandwidth;
+							stv090x_config.tuner_set_bbgain	  	= ctl->tuner_set_bbgain;
+							stv090x_config.tuner_get_bbgain	  	= ctl->tuner_get_bbgain;
+							stv090x_config.tuner_set_refclk	  	= ctl->tuner_set_refclk;
+							stv090x_config.tuner_get_status	  	= ctl->tuner_get_status;
+						}
+						else
+						{
+							printk (KERN_INFO "%s: error attaching stv6110x\n", __FUNCTION__);
+							goto error_out;
+						}
+						break;
+					}
+				}
+			}
+			else
+			{
+				printk (KERN_INFO "%s: error attaching stv090x\n", __FUNCTION__);
+				goto error_out;
+			}
+			break;
+		}
+		case CE6353:
+		{
+			frontend = dvb_attach(zl10353_attach, &ce6353_config, cfg->i2c_adap);
+			if (frontend)
+			{
+				printk("%s: ce6353 attached\n", __FUNCTION__);
+				switch (iTunerType)
+				{
+					case SHARP6465:
+					{
+						if(dvb_attach(sharp6465_attach, frontend, &s6465_config, cfg->i2c_adap))
+						{
+							printk("%s: SHARP6465 attached\n", __FUNCTION__);
+						}
+						else
+						{
+							printk (KERN_INFO "%s: error attaching SHARP6465\n", __FUNCTION__);
+							goto error_out;
+						}
+						break;
+					}
+					default:
+					{
+						printk (KERN_INFO "%s: error unknown tuner\n", __FUNCTION__);
+						goto error_out;
+					}
+				}
+			}
+			else
+			{
+				printk (KERN_INFO "%s: error attaching ce6353\n", __FUNCTION__);
+				goto error_out;
+			}
+			break;
+		}
+		case TDA10023:
+		{
+			frontend = dvb_attach(tda10023_attach, &philips_tda10023_config,
+			      					cfg->i2c_adap, 0x48);
+			if (frontend)
+			{
+				printk("%s: tda10023 attached\n", __FUNCTION__);
+				switch (iTunerType)
+				{
+					case LG031:
+					{
+						if(dvb_attach(lg031_attach, frontend, &lg_lg031_config, cfg->i2c_adap))
+						{
+							printk("%s: lg031 attached\n", __FUNCTION__);
+						}
+						else
+						{
+							printk (KERN_INFO "%s: error attaching lg031\n", __FUNCTION__);
+							goto error_out;
+						}
+						break;
+					}
+					default:
+					{
+						printk (KERN_INFO "%s: error unknown tuner\n", __FUNCTION__);
+						goto error_out;
+					}
+				}
+			}
+			else
+			{
+				printk (KERN_INFO "%s: error attaching tda10023\n", __FUNCTION__);
+				goto error_out;
+			}
+			break;
+		}
+		default:
+		{
+			printk (KERN_INFO "%s: error unknown demod\n", __FUNCTION__);
+			goto error_out;
+		}
+	}
+	return frontend;
+error_out:
+	printk("core: Frontend registration failed!\n");
+	if (frontend)
+		dvb_frontend_detach(frontend);
+	return NULL;
+}
+
 static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 {
-	struct stv6110x_devctl *ctl;
 	struct dvb_frontend *frontend = NULL;
 
 	printk (KERN_INFO "%s >\n", __FUNCTION__);
 
 	if (i== 0)
 	{
-		switch (demodType1) {
-		case STV090X:
-		{
-			frontend = dvb_attach(stv090x_attach, &stv090x_config,
-					cfg->i2c_adap, STV090x_DEMODULATOR_0);
-			if (frontend) {
-				printk("%s: stv090x attached\n", __FUNCTION__);
-
-				stv090x_config.fe_rst 	 = cfg->tuner->fe_rst;
-				stv090x_config.fe_1318 	 = cfg->tuner->fe_1318;
-				stv090x_config.fe_1419 	 = cfg->tuner->fe_1419;
-				stv090x_config.fe_lnb_en = cfg->tuner->fe_lnb_en;
-
-				switch (tunerType1) {
-				case SHARP7306:
-					if(dvb_attach(ix7306_attach, frontend, &bs2s7hz7306a_config, cfg->i2c_adap))
-					{
-						printk("%s: IX7306 attached\n", __FUNCTION__);
-						stv090x_config.tuner_set_frequency 	= ix7306_set_frequency;
-						stv090x_config.tuner_get_frequency 	= ix7306_get_frequency;
-						stv090x_config.tuner_set_bandwidth 	= ix7306_set_bandwidth;
-						stv090x_config.tuner_get_bandwidth 	= ix7306_get_bandwidth;
-						stv090x_config.tuner_get_status	  	= frontend->ops.tuner_ops.get_status;
-					}else{
-						printk (KERN_INFO "%s: error attaching IX7306\n", __FUNCTION__);
-						goto error_out;
-					}
-					break;
-				case STV6110X:
-				default:
-					ctl = dvb_attach(stv6110x_attach, frontend, &stv6110x_config, cfg->i2c_adap);
-					if(ctl)	{
-						printk("%s: stv6110x attached\n", __FUNCTION__);
-						stv090x_config.tuner_init	  	  	= ctl->tuner_init;
-						stv090x_config.tuner_set_mode	  	= ctl->tuner_set_mode;
-						stv090x_config.tuner_set_frequency 	= ctl->tuner_set_frequency;
-						stv090x_config.tuner_get_frequency 	= ctl->tuner_get_frequency;
-						stv090x_config.tuner_set_bandwidth 	= ctl->tuner_set_bandwidth;
-						stv090x_config.tuner_get_bandwidth 	= ctl->tuner_get_bandwidth;
-						stv090x_config.tuner_set_bbgain	  	= ctl->tuner_set_bbgain;
-						stv090x_config.tuner_get_bbgain	  	= ctl->tuner_get_bbgain;
-						stv090x_config.tuner_set_refclk	  	= ctl->tuner_set_refclk;
-						stv090x_config.tuner_get_status	  	= ctl->tuner_get_status;
-					} else {
-						printk (KERN_INFO "%s: error attaching stv6110x\n", __FUNCTION__);
-						goto error_out;
-					}
-				}
-			} else {
-				printk (KERN_INFO "%s: error attaching stv090x\n", __FUNCTION__);
-				goto error_out;
-			}
-			break;
-		}
-		case CE6353:
-		{
-			frontend = dvb_attach(zl10353_attach, &ce6353_config, cfg->i2c_adap);
-			if (frontend) {
-				printk("%s: ce6353 attached\n", __FUNCTION__);
-				switch (tunerType1) {
-				case SHARP6465: // TODO
-					break;
-				}
-			} else {
-				printk (KERN_INFO "%s: error attaching ce6353\n", __FUNCTION__);
-				goto error_out;
-			}
-			break;
-		}
-		}
+		frontend = frontend_get_by_type(cfg, demodType1, tunerType1);
 	}
 	else
 	{
-		switch (demodType2) {
-		case STV090X:
-		{
-			frontend = dvb_attach(stv090x_attach, &stv090x_config,
-					cfg->i2c_adap, STV090x_DEMODULATOR_1);
-			if (frontend) {
-				printk("%s: stv090x attached\n", __FUNCTION__);
-
-				stv090x_config.fe_rst 	 = cfg->tuner->fe_rst;
-				stv090x_config.fe_1318 	 = cfg->tuner->fe_1318;
-				stv090x_config.fe_1419 	 = cfg->tuner->fe_1419;
-				stv090x_config.fe_lnb_en = cfg->tuner->fe_lnb_en;
-
-				switch (tunerType2) {
-				case SHARP7306:
-					if(dvb_attach(ix7306_attach, frontend, &bs2s7hz7306a_config, cfg->i2c_adap))
-					{
-						printk("%s: IX7306 attached\n", __FUNCTION__);
-						stv090x_config.tuner_set_frequency 	= ix7306_set_frequency;
-						stv090x_config.tuner_get_frequency 	= ix7306_get_frequency;
-						stv090x_config.tuner_get_bandwidth 	= ix7306_get_bandwidth;
-						stv090x_config.tuner_get_status	  	= frontend->ops.tuner_ops.get_status;
-					}else{
-						printk (KERN_INFO "%s: error attaching IX7306\n", __FUNCTION__);
-						goto error_out;
-					}
-					break;
-				case STV6110X:
-				default:
-					ctl = dvb_attach(stv6110x_attach, frontend, &stv6110x_config, cfg->i2c_adap);
-					if(ctl)	{
-						printk("%s: stv6110x attached\n", __FUNCTION__);
-						stv090x_config.tuner_init	  	  	= ctl->tuner_init;
-						stv090x_config.tuner_set_mode	  	= ctl->tuner_set_mode;
-						stv090x_config.tuner_set_frequency 	= ctl->tuner_set_frequency;
-						stv090x_config.tuner_get_frequency 	= ctl->tuner_get_frequency;
-						stv090x_config.tuner_set_bandwidth 	= ctl->tuner_set_bandwidth;
-						stv090x_config.tuner_get_bandwidth 	= ctl->tuner_get_bandwidth;
-						stv090x_config.tuner_set_bbgain	  	= ctl->tuner_set_bbgain;
-						stv090x_config.tuner_get_bbgain	  	= ctl->tuner_get_bbgain;
-						stv090x_config.tuner_set_refclk	  	= ctl->tuner_set_refclk;
-						stv090x_config.tuner_get_status	  	= ctl->tuner_get_status;
-					} else {
-						printk (KERN_INFO "%s: error attaching stv6110x\n", __FUNCTION__);
-						goto error_out;
-					}
-				}
-			} else {
-				printk (KERN_INFO "%s: error attaching stv090x\n", __FUNCTION__);
-				goto error_out;
-			}
-			break;
-		}
-		case CE6353:
-		{
-			frontend = dvb_attach(zl10353_attach, &ce6353_config, cfg->i2c_adap);
-			if (frontend) {
-				printk("%s: ce6353 attached\n", __FUNCTION__);
-				switch (tunerType2) {
-				case SHARP6465: // TODO
-					break;
-				}
-			} else {
-				printk (KERN_INFO "%s: error attaching ce6353\n", __FUNCTION__);
-				goto error_out;
-			}
-			break;
-		}
-		}
+		frontend = frontend_get_by_type(cfg, demodType2, tunerType2);
 	}
 
 	return frontend;
-
-error_out:
-	printk("core: Frontend registration failed!\n");
-	if (frontend)
-		dvb_frontend_detach(frontend);
-	return NULL;
 }
 
 static struct dvb_frontend *init_fe_device (struct dvb_adapter *adapter,
@@ -364,7 +423,7 @@ static struct dvb_frontend *init_fe_device (struct dvb_adapter *adapter,
   /* initialize the config data */
   cfg->tuner = tuner_cfg;
   cfg->i2c_adap = i2c_get_adapter (tuner_cfg->i2c_bus);
-  printk("i2c adapter = 0x%0x\n", cfg->i2c_adap);
+  printk("i2c adapter = 0x%0x\n", (int)cfg->i2c_adap);
 
   if (cfg->i2c_adap == NULL)
   {
@@ -484,65 +543,89 @@ void fe_core_register_frontend(struct dvb_adapter *dvb_adap)
 	return;
 }
 
+static int fe_get_demod_type(char *pcDemod)
+{
+	int iDemodType = STV090X;
+	if((pcDemod[0] == 0) || (strcmp("stv090x", pcDemod) == 0))
+	{
+		iDemodType = STV090X;
+	}
+	else if(strcmp("ce6353", pcDemod) == 0)
+	{
+		iDemodType = CE6353;
+	}
+	else if(strcmp("tda10023", pcDemod) == 0)
+	{
+		iDemodType = TDA10023;
+	}
+	else
+	{
+		iDemodType = STV090X;
+	}
+	return iDemodType;
+}
+
+static int fe_get_tuner_type(char *pcTuner)
+{
+	int iTunerType = SHARP7306;
+	if((pcTuner[0] == 0) || (strcmp("sharp7306", pcTuner) == 0))
+	{
+		iTunerType = SHARP7306;
+	}
+	else if(strcmp("stv6110x", pcTuner) == 0)
+	{
+		iTunerType = STV6110X;
+	}
+	else if(strcmp("sharp6465", pcTuner) == 0)
+	{
+		iTunerType = SHARP6465;
+	}
+	else if(strcmp("lg031", pcTuner) == 0)
+	{
+		iTunerType = LG031;
+	}
+	else
+	{
+		iTunerType = SHARP7306;
+	}
+	return iTunerType;
+}
+
+static void printk_demod_name_and_type(int iDemodType)
+{
+	switch (iDemodType)
+	{
+		case STV090X:
+			printk("stv090x dvb-s2    ");
+		break;
+		case CE6353:
+			printk("ce6353 dvb-t    ");
+		break;
+		case TDA10023:
+			printk("tda10023 dvb-c    ");
+		break;
+	}
+}
+
 EXPORT_SYMBOL(fe_core_register_frontend);
 
 int __init fe_core_init(void)
 {
 	/****** FRONT 0 ********/
-	if((demod1[0] == 0) || (strcmp("stv090x", demod1) == 0))
-	{
-		printk("demodelator1: stv090x dvb-s2    ");
-		demodType1 = STV090X;
-	}
-	else if(strcmp("ce6353", demod1) == 0)
-	{
-		printk("demodelator1: ce6353 dvb-t    ");
-		demodType1 = CE6353;
-	}
+	demodType1 = fe_get_demod_type(demod1);
+	tunerType1 = fe_get_tuner_type(tuner1);
 
-	if((tuner1[0] == 0) || (strcmp("sharp7306", tuner1) == 0))
-	{
-		printk("tuner1: sharp7306\n");
-		tunerType1 = SHARP7306;
-	}
-	else if(strcmp("stv6110x", tuner1) == 0)
-	{
-		printk("tuner1: stv6110x\n");
-		tunerType1 = STV6110X;
-	}
-	else if(strcmp("sharp6465", tuner1) == 0)
-	{
-		printk("tuner1: sharp6465\n");
-		tunerType1 = SHARP6465;
-	}
+	printk("demodelator1: ");
+	printk_demod_name_and_type(demodType1);
+	printk("tuner1: %s\n", tuner_name[tunerType1]);
 
 	/****** FRONT 1 ********/
-	if((demod2[0] == 0) || (strcmp("stv090x", demod2) == 0))
-	{
-		printk("demodelator2: stv090x dvb-s2    ");
-		demodType2 = STV090X;
-	}
-	else if(strcmp("ce6353", demod2) == 0)
-	{
-		printk("demodelator2: ce6353 dvb-t    ");
-		demodType2 = CE6353;
-	}
+	demodType2 = fe_get_demod_type(demod2);
+	tunerType2 = fe_get_tuner_type(tuner2);
 
-	if((tuner2[0] == 0) || (strcmp("sharp7306", tuner2) == 0))
-	{
-		printk("tuner2: sharp7306\n");
-		tunerType2 = SHARP7306;
-	}
-	else if(strcmp("stv6110x", tuner2) == 0)
-	{
-		printk("tuner2: stv6110x\n");
-		tunerType2 = STV6110X;
-	}
-	else if(strcmp("sharp6465", tuner2) == 0)
-	{
-		printk("tuner2: sharp6465\n");
-		tunerType2 = SHARP6465;
-	}
+	printk("demodelator2: ");
+	printk_demod_name_and_type(demodType2);
+	printk("tuner2: %s\n", tuner_name[tunerType2]);
 
 	printk("frontend core loaded\n");
     return 0;
