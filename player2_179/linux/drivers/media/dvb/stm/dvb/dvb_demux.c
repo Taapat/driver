@@ -197,6 +197,9 @@ int StartFeed (struct dvb_demux_feed* Feed)
     int                                 i;
     unsigned int                        Video           = false;
     unsigned int                        Audio           = false;
+#ifdef __TDT__
+    struct DeviceContext_s *AvContext = NULL;
+#endif
 
     DVB_DEBUG ("(demux%d)\n", Context->Id);
 
@@ -235,6 +238,9 @@ int StartFeed (struct dvb_demux_feed* Feed)
             }
 
 #ifdef __TDT__
+          AvContext = &Context->DvbContext->DeviceContext[i];
+          AvContext->DemuxContext      = Context;
+
           //videotext & subtitles (other)
           if ((Feed->pes_type == DMX_TS_PES_TELETEXT) ||
               (Feed->pes_type == DMX_TS_PES_OTHER))
@@ -324,14 +330,14 @@ int StartFeed (struct dvb_demux_feed* Feed)
 		stpti_start_feed (Feed, Context);
 
 		if(Feed->ts_type & TS_DECODER)
-		  VideoIoctlSetId (Context, Feed->pid);
+		  VideoIoctlSetId (AvContext, Feed->pid);
 	    }
 	    else if (Audio)
 	    {
 		stpti_start_feed (Feed, Context);
 
 		if(Feed->ts_type & TS_DECODER)
-		  AudioIoctlSetId (Context, Feed->pid);
+		  AudioIoctlSetId (AvContext, Feed->pid);
 	    }
 #else
             if (Video)
