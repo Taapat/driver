@@ -106,7 +106,7 @@ struct stfe *stfe_create( void *private_data, void *start_feed, void *stop_feed 
    DMX_TS_FILTERING | DMX_SECTION_FILTERING | DMX_MEMORY_BASED_FILTERING;
  stfe->dvb_demux.priv = private_data;
 
- stfe->dvb_demux.filternum = 32;
+ stfe->dvb_demux.filternum = 40;
 
  stfe->dvb_demux.feednum = STFE_MAXCHANNEL;
 

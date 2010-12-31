@@ -26,7 +26,7 @@ extern int debug ;
 
 /* Maximum number of channels */
 #define STFE_MAXADAPTER (4)
-#define STFE_MAXCHANNEL 32
+#define STFE_MAXCHANNEL 40
 
 struct stfe {
   struct dvb_demux        dvb_demux;
