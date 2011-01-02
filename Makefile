@@ -72,6 +72,9 @@ endif
 ifdef FORTIS_HDBOX
 CCFLAGSY += -DFORTIS_HDBOX
 endif
+ifdef ATEVIO7500
+CCFLAGSY += -DATEVIO7500
+endif
 ifdef HOMECAST5101
 CCFLAGSY += -DHOMECAST5101
 endif
@@ -111,10 +114,12 @@ endif
 
 ifndef HOMECAST5101
 ifndef FORTIS_HDBOX
+ifndef ATEVIO7500
 ifndef UFS922
 ifndef TF7700
 obj-y	+= button/
 obj-y	+= led/
+endif
 endif
 endif
 endif
