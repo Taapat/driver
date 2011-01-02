@@ -148,6 +148,7 @@ static int bpamem_mmap(struct file *file, struct vm_area_struct *vma)
 		return -1;	// Not allocated
 	}
 	
+	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
 	vma->vm_flags |= VM_IO | VM_RESERVED | VM_DONTEXPAND;
 
   	start = bpamem_dev[dev].phys_addr + (vma->vm_pgoff << PAGE_SHIFT);
