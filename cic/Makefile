@@ -50,6 +50,9 @@ starci-objs:= starci2win/starci2win.o
 else ifdef HL101
 cimax-objs += cimax/cimax.o
 obj-m += cimax.o
+else ifdef ATEVIO7500
+obj-m += starci.o
+starci-objs:= starci2win/starci2win.o
 else
 cimax-objs += cimax/cimax.o
 obj-m += cimax.o

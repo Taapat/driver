@@ -51,7 +51,7 @@ static int debug;
 		if (debug) printk (args); \
 	} while (0)
 
-#ifdef FORTIS_HDBOX
+#if defined(FORTIS_HDBOX) || defined(ATEVIO7500)
 struct stpio_pin*	cic_enable_pin;
 struct stpio_pin*	module_A_pin;
 struct stpio_pin*	module_B_pin;
@@ -106,6 +106,15 @@ unsigned char default_values[33] =
   0x00, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
   0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00
 };
+#elif defined (ATEVIO7500)
+unsigned char default_values[33] =
+{
+  0x00, /* register address for block transfer */
+  0x00, 0x00, 0x02, 0x00, 0x00, 0x44, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x02, 0x00, 0x02, 0x44, 0x00,
+  0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+  0x00, 0x00, 0x00, 0x03, 0x06, 0x00, 0x03, 0x01
+};
 #elif defined (HOMECAST5101)
 unsigned char default_values[33] =
 {
@@ -120,6 +129,11 @@ unsigned char default_values[33] =
 /* EMI configuration */
 unsigned long reg_config = 0;
 unsigned long reg_buffer = 0;
+
+#if defined(ATEVIO7500)
+unsigned long reg_sysconfig = 0;
+#endif
+
 #if defined(FORTIS_HDBOX)
 static unsigned char *slot_membase[2];
 #else
@@ -156,7 +170,12 @@ static unsigned short *slot_membase[2];
 #define EMI_DATA2_BEE1_WRITE(a)		(a<<4)
 #define EMI_DATA2_BEE2_WRITE(a)		(a<<0)
 
+#if defined(ATEVIO7500)
+#define EMIConfigBaseAddress 0xfe700000
+#define SysConfigBaseAddress 0xFE001000
+#else
 #define EMIConfigBaseAddress 0x1A100000
+#endif
 
 #define EMIBufferBaseAddress 0x1A100800
 
@@ -391,6 +410,32 @@ static int starci_poll_slot_status(struct dvb_ca_en50221 *ca, int slot, int open
 
   slot_status = starci_readreg(state, ctrlReg[slot]) & 0x01;
 
+#ifdef ATEVIO7500
+  if (slot_status != state->module_present[slot])
+  {
+	  if (slot_status)
+	  {
+              if (slot == 0)
+		  stpio_set_pin(module_A_pin, 1);
+	      else
+		  stpio_set_pin(module_B_pin, 1);
+
+              dprintk(1, "Modul now present\n");
+	      state->module_present[slot] = 1;
+	  }
+	  else
+	  {
+              if (slot == 0)
+		  stpio_set_pin(module_A_pin, 0);
+	      else
+		  stpio_set_pin(module_B_pin, 0);
+
+    	      dprintk(1, "Modul now not present\n");
+	      state->module_present[slot] = 0;
+	  }
+   }
+#endif
+
   /* Phantomias: an insertion should not be reported immediately
     because the module needs time to power up. Therefore the
     detection is reported after the module has been present for
@@ -475,6 +520,9 @@ static int starci_slot_reset(struct dvb_ca_en50221 *ca, int slot)
   /* reset status variables because module detection has to
      be reported after a delay */
   state->module_ready[slot] = 0;
+#ifdef ATEVIO7500
+  state->module_present[slot] = 0;
+#endif
   state->detection_timeout[slot] = 0;
 
   mutex_unlock(&starci_mutex);
@@ -668,7 +716,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   mutex_init (&starci_mutex);
 
   state->dvb_adap = dvb_adap;
-#if defined(FORTIS_HDBOX)
+#if defined(FORTIS_HDBOX) || defined(ATEVIO7500)
   state->i2c = i2c_get_adapter(2);
 #else
   state->i2c = i2c_get_adapter(0);
@@ -692,6 +740,10 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 
   state->ca.data 		= state;
 
+#ifdef ATEVIO7500
+  state->module_present[0] = 0;
+  state->module_present[1] = 0;
+#endif
   state->module_ready[0] = 0;
   state->module_ready[1] = 0;
 
@@ -699,10 +751,19 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   state->detection_timeout[1] = 0;
 
   reg_config = (unsigned long)ioremap(EMIConfigBaseAddress, 0x7ff);
+
+#ifndef ATEVIO7500
   reg_buffer = (unsigned long)ioremap(EMIBufferBaseAddress, 0x40);
+#endif
+
+#ifdef ATEVIO7500
+  reg_sysconfig = (unsigned long)ioremap(SysConfigBaseAddress, 0x200);
+#endif
 
   dprintk (KERN_ERR "ioremap 0x%.8x -> 0x%.8lx\n", EMIConfigBaseAddress, reg_config);	
+#ifndef ATEVIO7500
   dprintk (KERN_ERR "ioremap 0x%.8x -> 0x%.8lx\n", EMIBufferBaseAddress, reg_buffer);	
+#endif
 
 #if defined(FORTIS_HDBOX)
   cic_enable_pin = stpio_request_pin (3, 6, "StarCI", STPIO_OUT);
@@ -713,6 +774,19 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 
   module_A_pin = stpio_request_pin (1, 2, "StarCI_ModA", STPIO_OUT);
   module_B_pin = stpio_request_pin (2, 7, "StarCI_ModB", STPIO_OUT);
+#elif defined(ATEVIO7500)
+  module_A_pin = stpio_request_pin (11, 0, "StarCI_ModA", STPIO_OUT);
+  module_B_pin = stpio_request_pin (11, 1, "StarCI_ModB", STPIO_OUT);
+
+  cic_enable_pin = stpio_request_pin (15, 1, "StarCI", STPIO_OUT);
+  stpio_set_pin (cic_enable_pin, 1);
+  msleep(250);
+  stpio_set_pin (cic_enable_pin, 0);
+  msleep(250);
+
+  stpio_set_pin (module_A_pin, 0);
+  stpio_set_pin (module_B_pin, 0);
+
 #endif
 
   /* reset the chip */
@@ -725,7 +799,13 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 
   /* power on (only possible with LOCK = 1)
      other bits cannot be set when LOCK is = 1 */
+     
+#ifdef ATEVIO7500
+  starci_writereg(state, 0x18, 0x21);
+#else
   starci_writereg(state, 0x18, 0x01);
+#endif
+
 
   ctrl_outl(0x0, reg_config + EMI_LCK);
   ctrl_outl(0x0, reg_config + EMI_GEN_CFG);
@@ -738,6 +818,14 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   ctrl_outl(0x9d220000,reg_config + EMIBank1 + EMI_CFG_DATA1);
   ctrl_outl(0x9d220000,reg_config + EMIBank1 + EMI_CFG_DATA2);
   ctrl_outl(0x8,reg_config + EMIBank1 + EMI_CFG_DATA3);
+
+#elif defined(ATEVIO7500)
+/* not sure if this sysconfig settings is part of ci handling ... */
+  ctrl_outl(0x1c, reg_sysconfig + 0x160);
+
+  ctrl_outl(0x8486d9, reg_config + EMIBank3 + EMI_CFG_DATA0);
+  ctrl_outl(0x9d220000,reg_config + EMIBank3 + EMI_CFG_DATA2);
+  ctrl_outl(0x8,reg_config + EMIBank3 + EMI_CFG_DATA3);
 #elif defined(HOMECAST5101)
 /* FIXME: Not sure about this at the moment */
   ctrl_outl(0x002046f9, reg_config + EMIBank2 + EMI_CFG_DATA0);
@@ -779,12 +867,13 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 
   ctrl_outl(0x1, reg_config + EMI_CLK_EN);
 
-
 #if defined(FORTIS_HDBOX)
 //is [0] = top slot?
   slot_membase[0] = ioremap( 0xa2000000, 0x1000 );
 #elif defined(HOMECAST5101)
   slot_membase[0] = ioremap( 0xa3000000, 0x1000 );
+#elif defined(ATEVIO7500)
+  slot_membase[0] = ioremap( 0x06800000, 0x1000 );
 #else
   slot_membase[0] = ioremap( 0xa3000000, 0x1000 );
 #endif
@@ -800,6 +889,8 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   slot_membase[1] = ioremap( 0xa2010000, 0x1000 );
 #elif defined(HOMECAST5101)
   slot_membase[1] = ioremap( 0xa3010000, 0x1000 );
+#elif defined(ATEVIO7500)
+  slot_membase[1] = ioremap( 0x06810000, 0x1000 );
 #else
   slot_membase[1] = ioremap( 0xa3010000, 0x1000 );
 #endif
