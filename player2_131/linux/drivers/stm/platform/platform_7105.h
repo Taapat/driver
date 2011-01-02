@@ -88,14 +88,17 @@ static struct platform_device frontend_device = {
 };
 
 static struct platform_device *platform_7105[] __initdata = {
+#ifndef __TDT__
 	&frontend_device,
+#endif
 	&h264pp_device_7105,
+#ifndef __TDT__
 	&tkdma_device_7105
+#endif
 };
 
 static __init int platform_init_7105(void)
 {
-
     printk( "Switching Preprocessor clock to full speed.\n" );
     {
 	// iomap so memory available

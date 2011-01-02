@@ -56,7 +56,7 @@ extern void stv090x_register_frontend(struct dvb_adapter *dvb_adap);
 extern void fe_core_register_frontend(struct dvb_adapter *dvb_adap);
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
 extern void tuner_register_frontend(struct dvb_adapter *dvb_adap);
-#elif defined(OCTAGON1008)
+#elif defined(OCTAGON1008) || defined(ATEVIO7500)
 extern void avl2108_register_frontend(struct dvb_adapter *dvb_adap);
 #else
 extern void cx24116_register_frontend(struct dvb_adapter *dvb_adap);
@@ -349,7 +349,7 @@ static int convert_source ( const dmx_source_t source)
   switch ( source )
   {
   case DMX_SOURCE_FRONT0:
-#if defined(UFS910) || defined(OCTAGON1008) || defined(UFS912) || defined(SPARK)
+#if defined(UFS910) || defined(OCTAGON1008) || defined(UFS912) || defined(SPARK) || defined(ATEVIO7500)
     /* in UFS910 the CIMAX output is connected to TSIN2 */
     tag = TSIN2;
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
@@ -384,7 +384,7 @@ static struct stpti pti;
 
 void ptiInit ( struct DeviceContext_s *pContext )
 {
-#if defined(UFS912) || defined(SPARK)
+#if defined(UFS912) || defined(SPARK) || defined(ATEVIO7500)
   unsigned long start = 0xfe230000;
 #else
   unsigned long start = 0x19230000;
@@ -430,7 +430,7 @@ void ptiInit ( struct DeviceContext_s *pContext )
     fe_core_register_frontend( &pContext->DvbContext->DvbAdapter);
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
     tuner_register_frontend( &pContext->DvbContext->DvbAdapter);	
-#elif defined(OCTAGON1008)
+#elif defined(OCTAGON1008) || defined(ATEVIO7500)
     avl2108_register_frontend( &pContext->DvbContext->DvbAdapter);
 #elif !defined(UFS922)
     cx24116_register_frontend( &pContext->DvbContext->DvbAdapter);
