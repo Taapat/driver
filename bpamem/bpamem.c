@@ -54,7 +54,6 @@ int bpamemio_allocmem(BPAMemAllocMemData *in_data)
 	if(dev == -1)	// nothing left
 	{
 		DEBUG_PRINTK("memory already allocated\n");
-		bpamem_dev[dev].used = 0;
 		return -1;
 	}
 	
