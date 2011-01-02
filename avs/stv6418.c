@@ -275,7 +275,9 @@ inline int stv6418_set_mute( struct i2c_client *client, int type )
 		   set_bits(regs, cReg1, 0, 0, 2); /* tv cinch mute */
 		   set_bits(regs, cReg1, 0, 3, 2); /* vcr mute */
 		}
+#ifndef ATEVIO7500
 		MUTE_SET();
+#endif
 	}
 	else /* unmute with old values */
 	{
@@ -287,7 +289,9 @@ inline int stv6418_set_mute( struct i2c_client *client, int type )
 			tv_value = 0xff;
 			vcr_value = 0xff;
 		}
+#ifndef ATEVIO7500
 		MUTE_CLR();
+#endif
 	}
 
 	dprintk("[AVS]: %s <\n", __func__);
@@ -924,11 +928,13 @@ int stv6418_init(struct i2c_client *client)
 	regs[9] = 0xc0;
 	regs[10]= 0x00;
 
+#ifndef ATEVIO7500
 	eMute= stpio_request_pin (2, 2, "AVS_MUTE", STPIO_OUT);
 	if (eMute == NULL)
 	{
 		dprintk("[AVS]: request mute bin failed!\n");
 		return -EIO;
 	}
+#endif    
     return stv6418_set(client);
 }
