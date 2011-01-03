@@ -43,9 +43,7 @@
 
 #include "dvb_ca_core.h"
 
-//#define  my_debug
-
-static int debug;
+static int debug = 0;
 #define dprintk(args...) \
 	do { \
 		if (debug) printk (args); \
@@ -109,11 +107,11 @@ unsigned char default_values[33] =
 #elif defined (ATEVIO7500)
 unsigned char default_values[33] =
 {
-  0x00, /* register address for block transfer */
-  0x00, 0x00, 0x02, 0x00, 0x00, 0x44, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x02, 0x00, 0x02, 0x44, 0x00,
-  0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
-  0x00, 0x00, 0x00, 0x03, 0x06, 0x00, 0x03, 0x01
+  0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x44, 0x00, 
+  0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x02, 0x44, 
+  0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 
+  0x01, 0x00, 0x00, 0x00, 0x03, 0x06, 0x00, 0x03, 
+  0x01
 };
 #elif defined (HOMECAST5101)
 unsigned char default_values[33] =
@@ -134,7 +132,7 @@ unsigned long reg_buffer = 0;
 unsigned long reg_sysconfig = 0;
 #endif
 
-#if defined(FORTIS_HDBOX)
+#if defined(FORTIS_HDBOX) || defined(ATEVIO7500)
 static unsigned char *slot_membase[2];
 #else
 /* for whatever reason the access has to be done though a short pointer */
@@ -420,7 +418,7 @@ static int starci_poll_slot_status(struct dvb_ca_en50221 *ca, int slot, int open
 	      else
 		  stpio_set_pin(module_B_pin, 1);
 
-              dprintk(1, "Modul now present\n");
+              dprintk("Modul now present\n");
 	      state->module_present[slot] = 1;
 	  }
 	  else
@@ -430,7 +428,7 @@ static int starci_poll_slot_status(struct dvb_ca_en50221 *ca, int slot, int open
 	      else
 		  stpio_set_pin(module_B_pin, 0);
 
-    	      dprintk(1, "Modul now not present\n");
+    	      dprintk("Modul now not present\n");
 	      state->module_present[slot] = 0;
 	  }
    }
@@ -686,9 +684,11 @@ static int starci_slot_ts_enable(struct dvb_ca_en50221 *ca, int slot)
 
   result = starci_readreg(state, reg[slot]);
 
+#ifndef ATEVIO7500
   starci_writereg(state, reg[slot], 0x23);
 
   printk("%s: writing 0x%x\n", __func__, 0x23);
+#endif
 
   /* reading back from the register implements the delay */
   result = starci_readreg(state, reg[slot]);
@@ -789,6 +789,11 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 
 #endif
 
+#if defined(ATEVIO7500)
+  /* necessary to access i2c register */
+  ctrl_outl(0x1c, reg_sysconfig + 0x160);
+#endif
+
   /* reset the chip */
   starci_writereg(state, 0x1f, 0x80);
 
@@ -820,9 +825,6 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   ctrl_outl(0x8,reg_config + EMIBank1 + EMI_CFG_DATA3);
 
 #elif defined(ATEVIO7500)
-/* not sure if this sysconfig settings is part of ci handling ... */
-  ctrl_outl(0x1c, reg_sysconfig + 0x160);
-
   ctrl_outl(0x8486d9, reg_config + EMIBank3 + EMI_CFG_DATA0);
   ctrl_outl(0x9d220000,reg_config + EMIBank3 + EMI_CFG_DATA2);
   ctrl_outl(0x8,reg_config + EMIBank3 + EMI_CFG_DATA3);
