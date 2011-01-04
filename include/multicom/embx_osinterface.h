@@ -303,8 +303,19 @@ EMBX_VOID EMBX_OS_PurgeCache(EMBX_VOID *ptr, EMBX_UINT sz);
 
 #elif defined __LINUX__ && defined __KERNEL__
 
+#ifdef __TDT__
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
+/* the cache functions have been replaced after stm23 */
+#define EMBX_OS_PurgeCache(ptr, sz) __flush_purge_region(ptr, sz)
+#define EMBX_OS_FlushCache(ptr, sz) __flush_wback_region(ptr, sz)
+#else
 #define EMBX_OS_PurgeCache(ptr, sz) dma_cache_wback_inv(ptr, sz)
 #define EMBX_OS_FlushCache(ptr, sz) dma_cache_wback(ptr, sz)
+#endif
+#else
+#define EMBX_OS_PurgeCache(ptr, sz) dma_cache_wback_inv(ptr, sz)
+#define EMBX_OS_FlushCache(ptr, sz) dma_cache_wback(ptr, sz)
+#endif
 
 #define EMBX_OS_PurgeCacheWithPrecomputableLength(ptr, sz) EMBX_OS_PurgeCache(ptr, sz)
 #define EMBX_OS_FlushCacheWithPrecomputableLength(ptr, sz) EMBX_OS_FlushCache(ptr, sz)

@@ -161,7 +161,12 @@ int init_module(void)
 
 	MME_Info(MME_INFO_LINUX_MODULE, (DEBUG_NOTIFY_STR "Initializing /dev/%s - major num %d\n", 
 					 MME_DEV_NAME, major));
+#ifndef __TDT__
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
+	/* the macro does not exit after stlinux23 (there seems to be no replacement) */
         SET_MODULE_OWNER(&mme_ops);
+#endif
+#endif
 
 	/* If we want to use the API entirely in kernel mode, skip the init */
 	if (doNotInit) {
@@ -221,7 +226,12 @@ int init_module(void)
 	/* class_device_create() causes the /dev/mme file to appear when using udev
 	 * however it is a GPL only function.
 	 */
+#ifdef __TDT__
+	/* class_device_create does not exist anymore after stlinux23 */
+	mme_class_dev = device_create(mme_class, NULL, mme_devid, NULL, MME_DEV_NAME);
+#else
 	mme_class_dev = class_device_create(mme_class, NULL, mme_devid, NULL, MME_DEV_NAME);
+#endif
 	if((result = IS_ERR(mme_class_dev)))
 	{
 		printk(KERN_ERR "mme: class_device_create failed : %d\n", result);

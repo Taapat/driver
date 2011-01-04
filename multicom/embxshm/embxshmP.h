@@ -54,7 +54,12 @@ typedef struct EMBXSHM_HeapControlBlock_s       EMBXSHM_HeapControlBlock_t;
 typedef EMBX_TransportHandle_t                  EMBXSHM_TransportHandle_t;
 
 #if !defined(__SOLARIS__)
+#ifdef __TDT__
+/* allow type definition only for kernel version below 2.6.30 */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 typedef unsigned uintptr_t;
+#endif
+#endif
 #endif
 
 /*

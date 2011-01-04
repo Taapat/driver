@@ -528,7 +528,11 @@ static EMBX_ERROR registerObject (EMBX_Transport_t *tp,
 	 *   
 	 *   res indicates the cache mode (e.g. EMBX_SUCCESS == coherent)
 	 */
+#ifdef __TDT__
+	res = tp->methods->virt_to_phys_alt(tp, object, &paddr);
+#else
 	res = tp->methods->virt_to_phys(tp, object, &paddr);
+#endif
 
         /*
          * If it resides entirely in shared memory, no need to mirror it
@@ -715,7 +719,11 @@ static EMBX_ERROR getObject (EMBX_Transport_t *tp,
 #if 0
             *object = BUS_TO_LOCAL (obj->sharedData, tpshm->pointerWarp);
 #else
+#ifdef __TDT__
+            res = tp->methods->phys_to_virt_alt (tp, (EMBX_UINT)obj->sharedData, object);
+#else
             res = tp->methods->phys_to_virt (tp, (EMBX_UINT)obj->sharedData, object);
+#endif
 #endif
         }
         *size = obj->size;
