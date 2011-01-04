@@ -15,7 +15,7 @@ endif
 ifeq (,$(findstring 2.6.3,$(KERNELVERSION)))
 # < 2.6.30
 ifdef UFS922
-cx21143-objs +=	cx21143/cx21143.o
+cx21143-objs +=	cx24116/cx24116.o
 obj-m += cx21143.o
 else ifdef UFS912
 stv090x-objs +=	stv090x/stv090x.o
@@ -122,9 +122,6 @@ fe-core-objs +=        vip2/ix7306.o
 fe-core-objs +=        vip2/zl10353.o
 fe-core-objs +=        vip2/core.o
 obj-m += fe-core.o
-else ifdef TF7700
-cx24116-objs +=	cx24116/cx24116.o
-obj-m += cx24116.o
 endif
 # other drivers already in kernel
 
