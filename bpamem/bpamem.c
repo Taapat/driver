@@ -200,7 +200,7 @@ static void __exit bpamem_exit(void)
 	for(i = 0; i < MAX_BPA_ALLOCS; i++)
 		bpamemio_deallocmem(i);
 		
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,17)
 	ret = unregister_chrdev(BPAMEM_MAJOR, "BPAMem");
 	if (ret < 0)
 		DEBUG_PRINTK("error in unregister_chrdev: %d\n", ret);
