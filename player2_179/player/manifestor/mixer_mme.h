@@ -54,6 +54,14 @@
 
 #define MIXER_NUM_PERIODS 2
 
+#elif (defined(FORTIS_HDBOX) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(OCTAGON1008))
+
+#define MIXER_NUM_PERIODS 2
+
+#elif defined(__TDT__)
+
+#define MIXER_NUM_PERIODS 3
+
 #endif
 
 #elif defined(__TDT__) && (defined(FORTIS_HDBOX) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(OCTAGON1008))
