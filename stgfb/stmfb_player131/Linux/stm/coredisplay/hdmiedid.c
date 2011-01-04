@@ -916,6 +916,16 @@ int stmhdmi_read_edid(struct stm_hdmi *hdmi)
 int stmhdmi_safe_edid(struct stm_hdmi *hdmi)
 {
   DPRINTK("Setting Safe EDID\n");
+  #ifdef SPARK //YWDRIVER_MODI d26lf 2011-01-04 hdmi audio out for board 1.4
+  hdmi->edid_info.display_type = STM_DISPLAY_HDMI;
+  strcpy(hdmi->edid_info.monitor_name, "SAFEMODE");
+  hdmi->edid_info.tv_aspect        = STM_WSS_4_3;
+  hdmi->edid_info.cea_capabilities = STM_CEA_CAPS_SRGB | STM_CEA_CAPS_BASIC_AUDIO | STM_CEA_CAPS_UNDERSCAN;
+  hdmi->edid_info.max_clock        = 26;
+  hdmi->edid_info.max_tmds_clock   = 25200000;
+  stmhdmi_cea_process_video_short_codes(hdmi, 1);
+  hdmi->edid_info.cea_codes[1]     = STM_CEA_VIDEO_CODE_NON_NATIVE;
+  #else
   hdmi->edid_info.display_type     = hdmi->hdmi_safe_mode?STM_DISPLAY_HDMI:STM_DISPLAY_DVI;
   strcpy(hdmi->edid_info.monitor_name,"SAFEMODE");
   hdmi->edid_info.tv_aspect        = STM_WSS_4_3;
@@ -924,6 +934,7 @@ int stmhdmi_safe_edid(struct stm_hdmi *hdmi)
   hdmi->edid_info.max_tmds_clock   = 25200000;
   stmhdmi_cea_process_video_short_codes(hdmi, 1);
   hdmi->edid_info.cea_codes[1]     = STM_CEA_VIDEO_CODE_NON_NATIVE;
+  #endif
 
   return 0;
 }
