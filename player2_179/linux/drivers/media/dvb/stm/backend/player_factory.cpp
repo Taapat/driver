@@ -781,13 +781,10 @@ HavanaStatus_t RegisterBuiltInFactories (class  HavanaPlayer_c* HavanaPlayer)
     HavanaPlayer->RegisterFactory (BACKEND_DVP_ID,  FACTORY_ANY_ID,  StreamTypeVideo, ComponentFrameParser, 0, false, FrameParserVideoDvpFactory);
     HavanaPlayer->RegisterFactory (BACKEND_PES_ID,  BACKEND_DVP_ID,  StreamTypeVideo, ComponentCollator,    0, false, CollatorPacketDvpFactory);
 
-//deaktivate Video AVS - Build error
-#ifndef __TDT__
     // Avs video
     HavanaPlayer->RegisterFactory (BACKEND_AVS_ID,  FACTORY_ANY_ID,    StreamTypeVideo, ComponentCodec,       0, false, CodecMMEVideoAvsFactory);
     HavanaPlayer->RegisterFactory (BACKEND_AVS_ID,  FACTORY_ANY_ID,    StreamTypeVideo, ComponentFrameParser, 0, false, FrameParserVideoAvsFactory);
     HavanaPlayer->RegisterFactory (BACKEND_PES_ID,  BACKEND_AVS_ID,    StreamTypeVideo, ComponentCollator,    0, false, CollatorPesVideoAvsFactory);
-#endif
 
     // Mjpeg video
     HavanaPlayer->RegisterFactory (BACKEND_MJPEG_ID,  FACTORY_ANY_ID,    StreamTypeVideo, ComponentCodec,       0, false, CodecMMEVideoMjpegFactory);

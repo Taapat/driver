@@ -5,6 +5,7 @@ collator-objs:= collator_base.o \
 		collator_pes_video_h264.o \
 		collator_pes_video_vc1.o \
 		collator_pes_video_divx.o \
+		collator_pes_video_avs.o \
 		collator_pes_audio.o \
 		collator_pes_audio_aac.o \
 		collator_pes_audio_mpeg.o \

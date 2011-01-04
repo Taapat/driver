@@ -4,6 +4,7 @@ frame_parser-objs:=     frame_parser_base.o \
                         frame_parser_video_h264.o \
                         frame_parser_video_vc1.o \
                         frame_parser_video_divx.o \
+                        frame_parser_video_avs.o \
                         frame_parser_audio.o \
                         frame_parser_audio_aac.o \
                         frame_parser_audio_mpeg.o \
