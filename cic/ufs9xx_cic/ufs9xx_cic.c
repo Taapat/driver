@@ -1,5 +1,5 @@
 /*
- * ufs9xx ci controller handling.
+ * ufs912/922 ci controller handling.
  *
  * Registers:
  *
@@ -53,7 +53,7 @@
 #include "dvb_net.h"
 #include "dvb_ca_en50221.h"
 
-#include "ufs912_cic.h"
+#include "ufs9xx_cic.h"
 
 static int debug=0;
 
