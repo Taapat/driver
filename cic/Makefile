@@ -12,10 +12,10 @@ CFLAGS += $(CCFLAGSY)
 endif
 
 ifdef UFS922
-ufs922_cic-objs += ufs922_cic/ufs922_cic.o
+ufs922_cic-objs += ufs9xx_cic/ufs9xx_cic.o
 obj-m += ufs922_cic.o
 else ifdef UFS912
-ufs912_cic-objs += ufs912_cic/ufs912_cic.o
+ufs912_cic-objs += ufs9xx_cic/ufs9xx_cic.o
 obj-m += ufs912_cic.o
 else ifdef FORTIS_HDBOX
 cimax-objs += cimax/cimax.o

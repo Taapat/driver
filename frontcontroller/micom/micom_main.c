@@ -98,6 +98,9 @@ static struct timer_list ackTimer; /* release sema after a given time */
 static unsigned char RCVBuffer [BUFFERSIZE];
 static int           RCVBufferStart = 0, RCVBufferEnd = 0;
 
+static unsigned char KeyBuffer [BUFFERSIZE];
+static int           KeyBufferStart = 0, KeyBufferEnd = 0;
+
 static wait_queue_head_t   wq;
 static wait_queue_head_t   rx_wq;
 
@@ -224,51 +227,47 @@ void getRCData(unsigned char* data, int* len)
 {
     int i, j;
     
-    while(RCVBufferStart == RCVBufferEnd)
-    {
-        dprintk(200, "%s %d - %d\n", __func__, RCVBufferStart, RCVBufferEnd);
+    dprintk(50, "%s >, KeyStart %d KeyEnd %d\n", __func__, KeyBufferStart, KeyBufferEnd);
 
-        if (wait_event_interruptible(wq, (RCVBufferStart != RCVBufferEnd) && (getLen(cPackageSize) == cPackageSize)))
+    while(KeyBufferStart == KeyBufferEnd)
+    {
+        dprintk(200, "%s %d - %d\n", __func__, KeyBufferStart, KeyBufferEnd);
+
+        if (wait_event_interruptible(wq, KeyBufferStart != KeyBufferEnd))
         {
             printk("wait_event_interruptible failed\n");
             return;
         }
     }    
 
-    *len = getLen(cPackageSize);    
+    dprintk(50, "%s up\n", __func__);
 
-    if (*len != cPackageSize)
-    {
-        *len = 0;
-        return;
-    }
-    
     i = 0;
-    j = RCVBufferEnd;
-
+    j = KeyBufferEnd;
+    *len = cPackageSize;
+    
     while (i != *len)  
     {
-         data[i] = RCVBuffer[j];
+         data[i] = KeyBuffer[j];
          j++; i++;
 
          if (j >= BUFFERSIZE)
              j = 0;
 
-         if (j == RCVBufferStart)
+         if (j == KeyBufferStart)
          {
             break;
          }
     }
 
+    KeyBufferEnd = (KeyBufferEnd + cPackageSize) % BUFFERSIZE;
 
-    RCVBufferEnd = (RCVBufferEnd + cPackageSize) % BUFFERSIZE;
-
-    dprintk(50, "%s <len %d, Start %d End %d\n", __func__, *len, RCVBufferStart, RCVBufferEnd);
+    dprintk(50, "%s <len %d, Start %d End %d\n", __func__, *len, KeyBufferStart, KeyBufferEnd);
 }
 
 static void processResponse(void)
 {
-    int len;
+    int len, i;
 
     if (paramDebug >= 100)
        dumpData();
@@ -299,12 +298,27 @@ static void processResponse(void)
             if (len < cPackageSize)
                 goto out_switch;
 
-            dprintk(1, "EVENT_RC complete\n");
+            dprintk(1, "EVENT_BTN complete\n");
 
             if (paramDebug >= 50)
                 dumpData();
 
+            /* copy data */    
+            for (i = 0; i < cPackageSize; i++)
+            {
+                int from, to;
+                
+                from = (RCVBufferEnd + i) % BUFFERSIZE;
+                to = KeyBufferStart % BUFFERSIZE;
+                
+                KeyBuffer[to] = RCVBuffer[from];
+
+                KeyBufferStart = (KeyBufferStart + 1) % BUFFERSIZE;
+            }
+
             wake_up_interruptible(&wq);
+
+            RCVBufferEnd = (RCVBufferEnd + cPackageSize) % BUFFERSIZE;
         }
         break;
         case EVENT_RC:
@@ -323,7 +337,21 @@ static void processResponse(void)
             if (paramDebug >= 50)
                 dumpData();
                 
+            /* copy data */    
+            for (i = 0; i < cPackageSize; i++)
+            {
+                int from, to;
+                
+                from = (RCVBufferEnd + i) % BUFFERSIZE;
+                to = KeyBufferStart % BUFFERSIZE;
+                
+                KeyBuffer[to] = RCVBuffer[from];
+                
+                KeyBufferStart = (KeyBufferStart + 1) % BUFFERSIZE;
+            }
             wake_up_interruptible(&wq);
+
+            RCVBufferEnd = (RCVBufferEnd + cPackageSize) % BUFFERSIZE;
         }
         break;
         case EVENT_ERR:

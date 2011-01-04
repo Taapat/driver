@@ -76,6 +76,7 @@ collator-objs :=        collator_base.o \
 			collator_pes_video_mjpeg.o \
 			collator_pes_frame.o \
 			collator_pes_video_divx.o \
+			collator_pes_video_avs.o \
 			collator_pes_audio.o \
 			collator_pes_audio_aac.o \
 			collator_pes_audio_dvd.o \
@@ -85,8 +86,6 @@ collator-objs :=        collator_base.o \
 			collator_pes_audio_lpcm.o \
 			collator_pes_audio_wma.o \
 			collator_pes_audio_mlp.o \
-			#deaktivate Video AVS - Build error
-			#collator_pes_video_avs.o
 
 
 frame_parser-objs :=    frame_parser_base.o \
@@ -104,6 +103,7 @@ frame_parser-objs :=    frame_parser_base.o \
 			frame_parser_video_rmv.o \
 			frame_parser_video_theora.o \
 			frame_parser_video_mjpeg.o \
+			frame_parser_video_avs.o \
 			frame_parser_audio.o \
 			frame_parser_audio_aac.o \
 			frame_parser_audio_mpeg.o \
@@ -117,8 +117,6 @@ frame_parser-objs :=    frame_parser_base.o \
 			frame_parser_audio_rma.o \
 			frame_parser_audio_vorbis.o \
 			frame_parser_audio_pcm.o \
-			#deaktivate Video AVS - Build error
-			#frame_parser_video_avs.o
 
 codec-objs :=           codec_mme_base.o        \
 			codec_mme_video.o       \
@@ -133,6 +131,7 @@ codec-objs :=           codec_mme_base.o        \
 			codec_mme_video_rmv.o  \
 			codec_mme_video_theora.o  \
 			codec_mme_video_mjpeg.o  \
+			codec_mme_video_avs.o \
 			codec_dvp_video.o       \
 			codec_mme_audio.o       \
 			codec_mme_audio_stream.o \
@@ -148,8 +147,6 @@ codec-objs :=           codec_mme_base.o        \
 			codec_mme_audio_rma.o \
 			codec_mme_audio_vorbis.o \
 			codec_mme_audio_pcm.o \
-			#deaktivate Video AVS - Build error
-			#codec_mme_video_avs.o
 
 manifestor-objs :=      manifestor_base.o \
 			manifestor_video.o \

@@ -4,6 +4,7 @@ codec-objs :=   codec_mme_base.o        \
 		codec_mme_video_h264.o \
 		codec_mme_video_vc1.o \
 		codec_mme_video_divx.o \
+		codec_mme_video_avs.o \
 		codec_mme_audio.o \
 		codec_mme_audio_stream.o \
 		codec_mme_audio_aac.o \
