@@ -118,6 +118,9 @@ struct semaphore     waitForAck; /* stop caller task if waiting for ack */
 static unsigned char RCVBuffer [BUFFERSIZE];
 static int           RCVBufferStart = 0, RCVBufferEnd = 0;
 
+static unsigned char KeyBuffer [BUFFERSIZE];
+static int           KeyBufferStart = 0, KeyBufferEnd = 0;
+
 static wait_queue_head_t   wq;
 static wait_queue_head_t   rx_wq;
 
@@ -180,18 +183,25 @@ void getRCData(unsigned char* data, int* len)
     int i, j;
 
     *len = 0;
-    while(RCVBufferStart == RCVBufferEnd)
+    
+    while(KeyBufferStart == KeyBufferEnd)
     {
-        dprintk(200, "%s %d - %d\n", __func__, RCVBufferStart, RCVBufferEnd);
+        dprintk(200, "%s %d - %d\n", __func__, KeyBufferStart, KeyBufferEnd);
 
-        if (wait_event_interruptible(wq, (RCVBufferStart != RCVBufferEnd) && (getLen(-1) != 0)))
+        if (wait_event_interruptible(wq, KeyBufferStart != KeyBufferEnd))
         {
             printk("wait_event_interruptible failed\n");
             return;
         }
     }
 
-    *len = getLen(-1); /* use -1 here because of differen len from RC and Buttons */
+    i = (KeyBufferEnd + DATA_BTN_EVENT) % BUFFERSIZE;
+
+    if (KeyBuffer[i] == EVENT_BTN)
+       *len = cPackageSizeFP;
+    else
+    if (KeyBuffer[i] == EVENT_RC)
+       *len = cPackageSizeRC;
 
     if (*len <= 0)
     {
@@ -200,26 +210,26 @@ void getRCData(unsigned char* data, int* len)
     }
     
     i = 0;
-    j = RCVBufferEnd;
+    j = KeyBufferEnd;
 
     while (i != *len)
     {
-        data[i] = RCVBuffer[j];
+        data[i] = KeyBuffer[j];
         j++;
         i++;
 
         if (j >= BUFFERSIZE)
             j = 0;
 
-        if (j == RCVBufferStart)
+        if (j == KeyBufferStart)
         {
             break;
         }
     }
 
-    RCVBufferEnd = (RCVBufferEnd + *len) % BUFFERSIZE;
+    KeyBufferEnd = (KeyBufferEnd + *len) % BUFFERSIZE;
 
-    dprintk(150, " <len %d, End %d\n", *len, RCVBufferEnd);
+    dprintk(150, " <len %d, End %d\n", *len, KeyBufferEnd);
 }
 
 void handleCopyData(int len)
@@ -297,7 +307,7 @@ void dumpValues(void)
 
 static void processResponse(void)
 {
-    int len;
+    int len, i;
 
     dumpData();
     len = getLen(-1);
@@ -338,8 +348,22 @@ static void processResponse(void)
             if (paramDebug >= 50)
                 dumpData();
 
+            /* copy data */    
+            for (i = 0; i < cPackageSizeFP; i++)
+            {
+                int from, to;
+                
+                from = (RCVBufferEnd + i) % BUFFERSIZE;
+                to = KeyBufferStart % BUFFERSIZE;
+                
+                KeyBuffer[to] = RCVBuffer[from];
+
+                KeyBufferStart = (KeyBufferStart + 1) % BUFFERSIZE;
+            }
 
             wake_up_interruptible(&wq);
+
+            RCVBufferEnd = (RCVBufferEnd + cPackageSizeFP) % BUFFERSIZE;
         }
         break;
         case EVENT_RC:
@@ -357,7 +381,22 @@ static void processResponse(void)
             if (paramDebug >= 50)
                 dumpData();
 
+            /* copy data */    
+            for (i = 0; i < cPackageSizeRC; i++)
+            {
+                int from, to;
+                
+                from = (RCVBufferEnd + i) % BUFFERSIZE;
+                to = KeyBufferStart % BUFFERSIZE;
+                
+                KeyBuffer[to] = RCVBuffer[from];
+                
+                KeyBufferStart = (KeyBufferStart + 1) % BUFFERSIZE;
+            }
+
             wake_up_interruptible(&wq);
+
+            RCVBufferEnd = (RCVBufferEnd + cPackageSizeRC) % BUFFERSIZE;
         }
         break;
         case EVENT_ANSWER_GETTIME:
@@ -474,7 +513,7 @@ int nuvotonTask(void * dummy)
 
   while(1)
   {
-     int dataAvailable;
+     int dataAvailable = 0;
      
      if (wait_event_interruptible(rx_wq, (RCVBufferStart != RCVBufferEnd)))
      {
