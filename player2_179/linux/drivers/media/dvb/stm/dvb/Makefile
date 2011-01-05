@@ -15,8 +15,8 @@ CCFLAGSY += -I$(CONFIG_STGFB_PATH)/linux/include/linux/stm
 CCFLAGSY += -I$(CONFIG_STGFB_PATH)/linux/drivers/media/video
 CCFLAGSY += -I$(KERNEL_LOCATION)/drivers/media/dvb/dvb-core 
 CCFLAGSY += -I$(TREE_ROOT)/linux/include/linux/stm/
+CCFLAGSY += -I$(TREE_ROOT)/linux/include/linux/dvb
 CCFLAGSY += -DDEBUG_DVB
-
 
 ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
 ccflags-y += $(CCFLAGSY)

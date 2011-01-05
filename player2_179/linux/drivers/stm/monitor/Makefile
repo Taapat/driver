@@ -1,9 +1,15 @@
-CFLAGS += -I$(TREE_ROOT)/linux/include/linux/stm/
+TREE_ROOT?=$(DRIVER_TOPDIR)/player2
+CCFLAGSY += -I$(TREE_ROOT)/linux/include/linux/stm/
 
 CONFIG_MONITOR_HAVANA=m
 
-CFLAGS += -DDEBUG_MONITOR
+CCFLAGSY += -DDEBUG_MONITOR
 
+ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
+ccflags-y += $(CCFLAGSY)
+else
+CFLAGS += $(CCFLAGSY)
+endif
 
 obj-$(CONFIG_MONITOR_HAVANA)+= stm_monitor.o
 
