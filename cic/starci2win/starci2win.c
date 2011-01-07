@@ -107,11 +107,11 @@ unsigned char default_values[33] =
 #elif defined (ATEVIO7500)
 unsigned char default_values[33] =
 {
-  0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x44, 0x00, 
-  0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x02, 0x44, 
-  0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 
-  0x01, 0x00, 0x00, 0x00, 0x03, 0x06, 0x00, 0x03, 
-  0x01
+  0x00, 
+  0x00, 0x00, 0x02, 0x00, 0x00, 0x44, 0x00, 0x00, 
+  0x00, 0x00, 0x00, 0x02, 0x00, 0x02, 0x44, 0x00, 
+  0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 
+  0x00, 0x00, 0x00, 0x03, 0x06, 0x00, 0x03, 0x01
 };
 #elif defined (HOMECAST5101)
 unsigned char default_values[33] =
@@ -325,6 +325,7 @@ int setCiSource(int slot, int source)
 {
   int val;
 
+#ifndef ATEVIO7500
   if((slot < 0) || (slot > 1) ||
      (source < 0) || (source > 1))
     return -1;
@@ -351,6 +352,9 @@ int setCiSource(int slot, int source)
   }
 
   return starci_writereg(&ca_state, TWIN_MODE_CTRL_REG, val);
+#else
+  return 0;
+#endif
 }
 
 void setDestination(struct dvb_ca_state *state, int slot)
@@ -362,6 +366,7 @@ void setDestination(struct dvb_ca_state *state, int slot)
    
    dprintk("%s (slot = %d)>\n", __func__, slot);
 
+#ifndef ATEVIO7500
    if((slot < 0) || (slot > 1))
      return;
 
@@ -390,6 +395,7 @@ void setDestination(struct dvb_ca_state *state, int slot)
       	}
    }
 
+#endif
    dprintk("%s (slot = %d)<\n", __func__, slot);
 }
 
@@ -682,13 +688,12 @@ static int starci_slot_ts_enable(struct dvb_ca_en50221 *ca, int slot)
 
   mutex_lock(&starci_mutex);
 
+#ifndef ATEVIO7500
   result = starci_readreg(state, reg[slot]);
 
-#ifndef ATEVIO7500
   starci_writereg(state, reg[slot], 0x23);
 
   printk("%s: writing 0x%x\n", __func__, 0x23);
-#endif
 
   /* reading back from the register implements the delay */
   result = starci_readreg(state, reg[slot]);
@@ -701,6 +706,8 @@ static int starci_slot_ts_enable(struct dvb_ca_en50221 *ca, int slot)
 
   if (!(result & 0x40))
       printk("Error setting ts enable on slot 0\n");
+
+#endif
 
   mutex_unlock(&starci_mutex);
   return 0;
