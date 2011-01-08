@@ -1,22 +1,28 @@
 TREE_ROOT?=$(DRIVER_TOPDIR)/player2
 
 
-CFLAGS+=-I$(DRIVER_TOPDIR)/stgfb/stmfb/Linux/include
-CFLAGS+=-I$(TREE_ROOT)/linux/include/linux/stm/
-CFLAGS+=-I$(TREE_ROOT)/linux/drivers/media/dvb/stm/dvb/
-CFLAGS+=-I$(TREE_ROOT)/linux/drivers/media/dvb/stm/allocator/
-CFLAGS+=-I$(TREE_ROOT)/linux/drivers/media/dvb/stm/h264_preprocessor/
-CFLAGS+=-I$(TREE_ROOT)/linux/drivers/sound/pseudocard/
-CFLAGS+=-I$(TREE_ROOT)/linux/drivers/stm/mmelog/
-CFLAGS+=-I$(TREE_ROOT)/linux/drivers/stm/monitor/
-CFLAGS+=-I$(TREE_ROOT)/linux/drivers/media/sysfs/stm/
-CFLAGS+=-DREPORT
+CCFLAGSY+=-I$(DRIVER_TOPDIR)/stgfb/stmfb/Linux/include
+CCFLAGSY+=-I$(TREE_ROOT)/linux/include/linux/stm/
+CCFLAGSY+=-I$(TREE_ROOT)/linux/drivers/media/dvb/stm/dvb/
+CCFLAGSY+=-I$(TREE_ROOT)/linux/drivers/media/dvb/stm/allocator/
+CCFLAGSY+=-I$(TREE_ROOT)/linux/drivers/media/dvb/stm/h264_preprocessor/
+CCFLAGSY+=-I$(TREE_ROOT)/linux/drivers/sound/pseudocard/
+CCFLAGSY+=-I$(TREE_ROOT)/linux/drivers/stm/mmelog/
+CCFLAGSY+=-I$(TREE_ROOT)/linux/drivers/stm/monitor/
+CCFLAGSY+=-I$(TREE_ROOT)/linux/drivers/media/sysfs/stm/
+CCFLAGSY+=-DREPORT
 
-CFLAGS+= -fno-exceptions
+CCFLAGSY+= -fno-exceptions
 
 ## It would be good to make this CXXFLAGS however, this generates some missing cxx symbols???
 ## Somebody is using c++ in c code.
-CFLAGS+= -fno-rtti
+CCFLAGSY+= -fno-rtti
+
+ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
+ccflags-y += $(CCFLAGSY)
+else
+CFLAGS += $(CCFLAGSY)
+endif
 
 infrastructure-objs := \
 			crc32.o \
@@ -76,7 +82,6 @@ collator-objs :=        collator_base.o \
 			collator_pes_video_mjpeg.o \
 			collator_pes_frame.o \
 			collator_pes_video_divx.o \
-			collator_pes_video_avs.o \
 			collator_pes_audio.o \
 			collator_pes_audio_aac.o \
 			collator_pes_audio_dvd.o \
@@ -86,6 +91,10 @@ collator-objs :=        collator_base.o \
 			collator_pes_audio_lpcm.o \
 			collator_pes_audio_wma.o \
 			collator_pes_audio_mlp.o \
+
+ifdef !STM24
+	collator-objs +=        collator_pes_video_avs.o
+endif
 
 
 frame_parser-objs :=    frame_parser_base.o \
@@ -131,7 +140,6 @@ codec-objs :=           codec_mme_base.o        \
 			codec_mme_video_rmv.o  \
 			codec_mme_video_theora.o  \
 			codec_mme_video_mjpeg.o  \
-			codec_mme_video_avs.o \
 			codec_dvp_video.o       \
 			codec_mme_audio.o       \
 			codec_mme_audio_stream.o \
@@ -147,6 +155,10 @@ codec-objs :=           codec_mme_base.o        \
 			codec_mme_audio_rma.o \
 			codec_mme_audio_vorbis.o \
 			codec_mme_audio_pcm.o \
+
+ifdef !STM24
+codec-objs +=           codec_mme_video_avs.o
+endif
 
 manifestor-objs :=      manifestor_base.o \
 			manifestor_video.o \

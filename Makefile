@@ -69,9 +69,6 @@ endif
 ifdef SPARK
 CCFLAGSY+=-DSPARK
 endif
-ifdef REMOTE_RC08
-CCFLAGSY += -DREMOTE_RC08
-endif
 ifdef FORTIS_HDBOX
 CCFLAGSY += -DFORTIS_HDBOX
 endif
@@ -92,7 +89,7 @@ export CCFLAGSY
 obj-y	:= avs/ 
 obj-y	+= multicom/
 obj-y	+= stgfb/
-#obj-y	+= player2/
+obj-y	+= player2/
 obj-y	+= boxtype/
 obj-y	+= simu_button/
 obj-y	+= e2_proc/
