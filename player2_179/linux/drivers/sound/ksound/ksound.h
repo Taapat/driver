@@ -224,8 +224,9 @@ struct snd_pcm_hw_params {
 #else
 //#warning KSOUND.H AS C INCLUDE
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
 // sound/driver.h does not exist in stlinux24
-#if !defined(__TDT__) || (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30))
+#else
 #include <sound/driver.h>
 #endif
 #include <sound/core.h>
@@ -240,7 +241,7 @@ struct snd_pcm_hw_params {
 //#include <sound/typedefs.h>
 #include <sound/asound.h>
 
-#if defined(__TDT__) || (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
 typedef struct snd_kcontrol snd_kcontrol_t;
 typedef struct snd_ctl_elem_value snd_ctl_elem_value_t;
 typedef struct snd_ctl_elem_id snd_ctl_elem_id_t;

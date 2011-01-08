@@ -21,7 +21,9 @@
 #ifdef __TDT__
 #include <linux/version.h>
 #endif
-#if defined(__TDT__) && (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30))
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+// sound/driver.h does not exist in stlinux24
+#else
 #include <sound/driver.h>
 #endif
 #include <linux/init.h>
