@@ -25,6 +25,7 @@ Date        Modification                                    Name
 
 #ifdef __TDT__
 //Dagobert Hack
+#include <linux/version.h>
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 #include <sound/driver.h>
 #endif

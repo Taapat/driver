@@ -20,7 +20,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifdef __TDT__
+#include <linux/version.h>
+#endif
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+/* sound/driver.h not available in stlinux24 */
+#else
 #include <sound/driver.h>
+#endif
 #include <linux/ioport.h>
 #include <linux/bpa2.h>
 #include <linux/init.h>
@@ -54,10 +61,16 @@ MODULE_DESCRIPTION("Pseudo soundcard");
 MODULE_LICENSE("GPL");
 MODULE_SUPPORTED_DEVICE("{{ALSA,Pseudo soundcard}}");
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+#warning Need to remove these typedefs
+typedef struct snd_pcm_substream snd_pcm_substream_t;
+typedef struct snd_pcm_runtime   snd_pcm_runtime_t;
+#else
 #if defined (CONFIG_KERNELVERSION) /* STLinux 2.3 */
 #warning Need to remove these typedefs
 typedef struct snd_pcm_substream snd_pcm_substream_t;
 typedef struct snd_pcm_runtime   snd_pcm_runtime_t;
+#endif
 #endif
 
 #define MAX_PCM_DEVICES		4
@@ -175,6 +188,17 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	{
 		{
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+  #if ! defined(UFS922)
+ 			 CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
+      			 CARD        ("Analog",  1, 0,  48000, 2),
+      			 CARD        ("HDMI",    0, 0,  48000, 2),
+  #else
+			CARD_SPDIF  ("SPDIF",   0, 2,  48000, 2),
+			CARD        ("Analog",  0, 1,  48000, 2),
+			CARD        ("HDMI",    0, 0,  48000, 2),
+  #endif
+#else
 #if defined (CONFIG_KERNELVERSION)
   #if defined(__TDT__) && ! defined(UFS922)
  			 CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
@@ -191,6 +215,7 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 			CARD        ("Analog",  1, 0,  48000, 2),
 			CARD        ("HDMI",    3, 0,  48000, 2),
 #endif
+#endif
 		},
 	},
 };
@@ -200,6 +225,10 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	{
 		{
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+                        CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
+                        CARD        ("Analog",  0, 0,  48000, 2),
+#else
 #if defined (CONFIG_KERNELVERSION)
   #if defined(__TDT__)
                         CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
@@ -213,10 +242,14 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 			CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
 			CARD        ("Analog",  0, 0,  48000, 2),
 #endif
+#endif
 		},
 	},
 	{
 		{
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+                        CARD        ("Analog",  1, 0,  48000, 2),
+#else
 #if defined (CONFIG_KERNELVERSION)
   #if define(__TDT__)
                         CARD        ("Analog",  1, 0,  48000, 2),
@@ -226,6 +259,7 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
   #endif
 #else /* STLinux-2.2 */
 			CARD        ("Analog",  1, 0,  48000, 2),
+#endif
 #endif
 		},
 	},
@@ -602,6 +636,39 @@ static int snd_card_pseudo_hw_free(struct snd_pcm_substream *substream)
 /*
  * Copied verbaitum from snd_pcm_mmap_data_nopage()
  */
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+/* copied from player2_131 */
+static int snd_card_pseudo_pcm_mmap_data_nopage(struct vm_area_struct *vma, struct vm_fault *vmf)
+{
+	struct snd_pcm_substream *substream = vma->vm_private_data;
+	struct snd_pcm_runtime *runtime;
+	unsigned long offset;
+	struct page * page;
+	void *vaddr;
+	size_t dma_bytes;
+
+	if (substream == NULL)
+		return VM_FAULT_SIGBUS;
+	runtime = substream->runtime;
+	offset = vma->vm_pgoff << PAGE_SHIFT;
+	offset += (unsigned long) vmf->virtual_address - vma->vm_start;
+	snd_assert((offset % PAGE_SIZE) == 0, return VM_FAULT_SIGBUS);
+	dma_bytes = PAGE_ALIGN(runtime->dma_bytes);
+	if (offset > dma_bytes - PAGE_SIZE)
+		return VM_FAULT_SIGBUS;
+	if (substream->ops->page) {
+		page = substream->ops->page(substream, offset);
+		if (! page)
+			return VM_FAULT_OOM; /* XXX: is this really due to OOM? */
+	} else {
+		vaddr = runtime->dma_area + offset;
+		page = virt_to_page(vaddr);
+	}
+	get_page(page);
+	vmf->page = page;
+	return 0;
+}
+#else
 static struct page *snd_card_pseudo_pcm_mmap_data_nopage(struct vm_area_struct *area,
                                              unsigned long address, int *type)
 {
@@ -634,12 +701,17 @@ static struct page *snd_card_pseudo_pcm_mmap_data_nopage(struct vm_area_struct *
                 *type = VM_FAULT_MINOR;
         return page;
 }
+#endif
 
 static struct vm_operations_struct snd_card_pseudo_pcm_vm_ops_data =
 {
         .open =         snd_pcm_mmap_data_open,
         .close =        snd_pcm_mmap_data_close,
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        .fault =        snd_card_pseudo_pcm_mmap_data_nopage,
+#else
         .nopage =       snd_card_pseudo_pcm_mmap_data_nopage,
+#endif
 };
 
 /*
@@ -653,10 +725,14 @@ static int snd_card_pseudo_pcm_mmap(struct snd_pcm_substream *substream,
         area->vm_ops = &snd_card_pseudo_pcm_vm_ops_data;
         area->vm_private_data = substream;
         area->vm_flags |= VM_RESERVED;
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        atomic_inc(&substream->mmap_count);
+#else
 #if defined (CONFIG_KERNELVERSION)
         atomic_inc(&substream->mmap_count);
 #else /* STLinux 2.2 kernel */
         atomic_inc(&substream->runtime->mmap_count);
+#endif
 #endif
         return 0;
 }
@@ -1674,10 +1750,19 @@ static int __init snd_pseudo_probe(struct platform_device *devptr)
 	int idx, err;
 	int dev = devptr->id;
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+	int result;
+	result = snd_card_create(index[dev], id[dev], THIS_MODULE,
+				 sizeof(struct snd_pseudo),
+				 &card);
+	if (result != 0)
+		return result;
+#else
 	card = snd_card_new(index[dev], id[dev], THIS_MODULE,
 			    sizeof(struct snd_pseudo));
 	if (card == NULL)
 		return -ENOMEM;
+#endif
 	pseudo = card->private_data;
 
 	pseudo->card = card;

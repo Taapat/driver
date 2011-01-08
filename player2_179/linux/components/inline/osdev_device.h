@@ -17,6 +17,9 @@ Date        Modification                                    Name
 #ifndef H_OSDEV_DEVICE
 #define H_OSDEV_DEVICE
 
+#if defined(__TDT__)
+#include <linux/version.h>
+#endif
 
 /* --- Include the os specific headers we will need --- */
 
@@ -896,14 +899,22 @@ STATIC_INLINE void OSDEV_PurgeCacheAll(void)
 
 STATIC_INLINE void OSDEV_FlushCacheRange(void *start, int size)
 {
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+    __flush_wback_region(start, size);
+#else
     dma_cache_wback(start, size);
+#endif
 }
 
 // -----------------------------------------------------------------------------------------------
 
 STATIC_INLINE void OSDEV_InvalidateCacheRange(void *start, int size)
 {
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+    __flush_invalidate_region(start, size);
+#else
     dma_cache_inv(start, size);
+#endif
 }
 
 // -----------------------------------------------------------------------------------------------
@@ -923,7 +934,11 @@ STATIC_INLINE void OSDEV_SnoopCacheRange(void *start, int size)
 
 STATIC_INLINE void OSDEV_PurgeCacheRange(void *start, int size)
 {
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+    __flush_purge_region(start, size);
+#else
     dma_cache_wback_inv(start, size);
+#endif
 }
 
 // -----------------------------------------------------------------------------------------------
