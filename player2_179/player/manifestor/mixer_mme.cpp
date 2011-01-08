@@ -19,9 +19,6 @@
 #include "mixer_mme.h"
 #include "../codec/codec_mme_base.h"
 #include <include/stmdisplay.h>
-#ifdef __TDT__
-#include <linux/string.h>
-#endif
 
 // /////////////////////////////////////////////////////////////////////////
 //
