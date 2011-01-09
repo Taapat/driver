@@ -33,6 +33,11 @@ stmdvb-objs:=   backend.o \
 		dvb_ca.o \
 		dvb_v4l2.o \
 		dvb_v4l2_audout.o \
+		dvb_cap.o \
+		dvb_cap_video.o \
+		dvb_avr.o \
+		dvb_avr_video.o \
+		dvb_avr_audio.o \
 		e2_proc/e2_proc_bus.o \
 		e2_proc/e2_proc_misc.o \
 		e2_proc/e2_proc_audio.o \
@@ -50,11 +55,5 @@ stmdvb-objs:=   backend.o \
 		st-merger.o \
 		st-common.o
 ##		stmdvp.o
-#		dvb_cap.o \
-#		dvb_cap_video.o \
-#		dvb_avr.o \
-#		dvb_avr_video.o \
-#		dvb_avr_audio.o \
-
 
 obj-m += stmdvb.o
