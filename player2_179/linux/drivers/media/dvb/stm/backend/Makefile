@@ -92,7 +92,7 @@ collator-objs :=        collator_base.o \
 			collator_pes_audio_wma.o \
 			collator_pes_audio_mlp.o \
 
-ifdef !STM24
+ifndef STM24
 	collator-objs +=        collator_pes_video_avs.o
 endif
 
@@ -156,7 +156,7 @@ codec-objs :=           codec_mme_base.o        \
 			codec_mme_audio_vorbis.o \
 			codec_mme_audio_pcm.o \
 
-ifdef !STM24
+ifndef STM24
 codec-objs +=           codec_mme_video_avs.o
 endif
 
