@@ -90,10 +90,10 @@ collator-objs :=        collator_base.o \
 			collator_pes_audio_dtshd.o \
 			collator_pes_audio_lpcm.o \
 			collator_pes_audio_wma.o \
-			collator_pes_audio_mlp.o \
+			collator_pes_audio_mlp.o
 
-ifndef STM24
-	collator-objs +=        collator_pes_video_avs.o
+ifeq (,$(findstring 2.6.3,$(KERNELVERSION)))
+collator-objs +=        collator_pes_video_avs.o
 endif
 
 
@@ -154,9 +154,9 @@ codec-objs :=           codec_mme_base.o        \
 			codec_mme_audio_mlp.o \
 			codec_mme_audio_rma.o \
 			codec_mme_audio_vorbis.o \
-			codec_mme_audio_pcm.o \
+			codec_mme_audio_pcm.o
 
-ifndef STM24
+ifeq (,$(findstring 2.6.3,$(KERNELVERSION)))
 codec-objs +=           codec_mme_video_avs.o
 endif
 

@@ -183,9 +183,6 @@ obj-y += drivers/media/dvb/stm/allocator/
 obj-y += drivers/media/dvb/stm/h264_preprocessor/
 obj-y += drivers/media/sysfs/stm/
 obj-y += drivers/sound/ksound/
-ifdef !STM24
-obj-y += drivers/sound/kreplay/
-endif
 obj-y += drivers/sound/pseudocard/
 obj-y += drivers/sound/silencegen/
 obj-y += drivers/sound/pcm_transcoder/
