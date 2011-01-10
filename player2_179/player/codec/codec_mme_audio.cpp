@@ -716,18 +716,10 @@ MME_LxAudioDecoderInitParams_t &Params = AudioDecoderInitializationParameters;
 
 
     // Detect changes between BL025 and BL028 (delete this code when BL025 is accient history)
-#ifdef __TDT__
-	#if DRV_MULTICOM_AUDIO_DECODER_VERSION > 0x090228
-		Params.BlockWise = ACC_MME_FALSE;
-	#else
+#if DRV_MULTICOM_AUDIO_DECODER_VERSION > 0x090228
 		Params.BlockWise.u32 = 0;
-	#endif
 #else
-	#if DRV_MULTICOM_AUDIO_DECODER_VERSION >= 0x090128
-		Params.BlockWise.u32 = 0;
-	#else
 		Params.BlockWise = ACC_MME_FALSE;
-	#endif
 #endif
 
     // upsampling must be enabled seperately for each codec since it requires frame analyser support
