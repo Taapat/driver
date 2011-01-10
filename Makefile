@@ -69,6 +69,9 @@ endif
 ifdef SPARK
 CCFLAGSY+=-DSPARK
 endif
+ifdef REMOTE_RC08
+CCFLAGSY += -DREMOTE_RC08
+endif
 ifdef FORTIS_HDBOX
 CCFLAGSY += -DFORTIS_HDBOX
 endif
