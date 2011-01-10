@@ -161,13 +161,7 @@ static struct stmcore_display_pipeline_data platform_data[] = {
     .hdmi_irq                 = -1, 
     .hdmi_i2c_adapter_id      = -1,
     .main_output_id           = 1,
-#ifdef __TDT__
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,18)
     .aux_output_id            = -1,
-#endif
-#else
-    .aux_output_id            = -1,
-#endif
     .hdmi_output_id           = -1,
     .dvo_output_id            = -1,
 
