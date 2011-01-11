@@ -479,7 +479,7 @@ void stm_tsm_init (int use_cimax)
 
       ctrl_outl(0x0, reg_sys_config + 0x1c0);
       ctrl_outl(0x0, reg_sys_config + 0x1c4);
-      ctrl_outl(0x04, reg_sys_config + SYS_CFG0);
+      ctrl_outl(0x00, reg_sys_config + SYS_CFG0);
 
 #elif defined(OCTAGON1008)
       ctrl_outl(0x6, reg_sys_config + SYS_CFG0);
@@ -662,7 +662,7 @@ void stm_tsm_init (int use_cimax)
 #if !defined(FORTIS_HDBOX) && !defined(UFS912) && !defined(SPARK) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA) && !defined(ATEVIO7500)
       /* swts_req_trigger + pace cycles (1101) */
       ctrl_outl(0x800000d, reg_config + SWTS_CFG(0));
-#elif defined (UFS912) || defined(SPARK)
+#elif defined (UFS912) || defined(SPARK) || defined(ATEVIO7500)
       ctrl_outl(0x8f0000e, reg_config + SWTS_CFG(0));
       ctrl_outl(0x8000000, reg_config + SWTS_CFG(1));
       ctrl_outl(0x8000000, reg_config + SWTS_CFG(2));
@@ -709,7 +709,7 @@ void stm_tsm_init (int use_cimax)
       ret = ctrl_inl(reg_config + TSM_1394_DEST);
       ctrl_outl(ret | 0x1 , reg_config + TSM_1394_DEST);
 
-#elif defined(UFS912) || defined(SPARK) || defined(ATEVIO7500)
+#elif defined(UFS912) || defined(SPARK)
       ctrl_outl(0x15 ,reg_config + TSM_PTI_SEL);
 
       /* set stream 2 on */
@@ -831,6 +831,14 @@ void stm_tsm_init (int use_cimax)
 
       ret = ctrl_inl(reg_config + TSM_1394_DEST);
       ctrl_outl(ret | 0x38 , reg_config + TSM_1394_DEST);
+#elif defined(ATEVIO7500)
+
+      /* set stream 1 on */
+      ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
+      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM1_CFG);
+
+      /* route stream 0/1 to PTI */
+      ctrl_outl(0x3, reg_config + TSM_PTI_SEL);
 
 #endif
 
