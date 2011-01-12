@@ -283,14 +283,13 @@ int StartFeed (struct dvb_demux_feed* Feed)
                 if (Context->PlaySpeed != DVB_SPEED_NORMAL_PLAY)
                 {
                     Result      = VideoIoctlSetSpeed (Context, Context->PlaySpeed);
-#ifdef __TDT__
                     if (Result < 0)
+#ifdef __TDT__
 		    {
                         mutex_unlock (&(DvbContext->Lock));
                         return Result;
 		    }
 #else
-                    if (Result < 0)
                         return Result;
 #endif
                 }
@@ -368,17 +367,13 @@ int StartFeed (struct dvb_demux_feed* Feed)
             break;
         case DMX_TYPE_SEC:
 #ifdef __TDT__
-	   {
-              //DVB_DEBUG ("feed type = SEC\n");
+            //DVB_DEBUG ("feed type = SEC\n");
 
-              mutex_lock (&(DvbContext->Lock));
-              stpti_start_feed (Feed, Context);
-              mutex_unlock (&(DvbContext->Lock));
-              break;
-	   }
-#else
-            break;
+            mutex_lock (&(DvbContext->Lock));
+            stpti_start_feed (Feed, Context);
+            mutex_unlock (&(DvbContext->Lock));
 #endif
+            break;
         default:
 #ifdef __TDT
 	    DVB_DEBUG ("< (type = %d unknown\n", Feed->type);
@@ -402,71 +397,87 @@ int StopFeed (struct dvb_demux_feed* Feed)
     struct DeviceContext_s*     Context         = (struct DeviceContext_s*)DvbDemux->priv;
     struct DvbContext_s*        DvbContext      = Context->DvbContext;
     /*int                         Result          = 0;*/
+#ifdef __TDT__
+    int i                                       = 0;
+#endif
 
     switch (Feed->type)
     {
         case DMX_TYPE_TS:
-#ifndef __TDT__
+#ifdef __TDT__
+            for (i = 0; i < DVB_MAX_DEVICES_PER_ADAPTER; i++)
+            {
+                if (Feed->pes_type == AudioId[i])
+                {
+                    mutex_lock (&(DvbContext->Lock));
+                    /*AvContext = &Context->DvbContext->DeviceContext[i];
+                    if(Feed->ts_type & TS_DECODER)
+                    {
+                      AudioIoctlSetAvSync (AvContext, 0);
+                      AudioIoctlStop (AvContext);
+                    }*/
+                    stpti_stop_feed(Feed, Context);
+                    mutex_unlock (&(DvbContext->Lock));
+                    break;
+                }
+                if (Feed->pes_type == VideoId[i])
+                {
+                    mutex_lock (&(DvbContext->Lock));
+                    /*AvContext = &Context->DvbContext->DeviceContext[i];
+                    if(Feed->ts_type & TS_DECODER)
+                      VideoIoctlStop(AvContext, AvContext->VideoState.video_blank);*/
+                    stpti_stop_feed(Feed, Context);
+                    mutex_unlock (&(DvbContext->Lock));
+                    break;
+                }
+                //videotext & subtitles (other)
+                // FIXME: TTX1, TTX2, TTX3, PCR1 etc.
+                if ((Feed->pes_type == DMX_TS_PES_TELETEXT) ||
+                    (Feed->pes_type == DMX_TS_PES_OTHER))
+                {
+                    mutex_lock (&(DvbContext->Lock));
+                    stpti_stop_feed(Feed, Context);
+                    mutex_unlock (&(DvbContext->Lock));
+                    break;
+                }
+                else if (Feed->pes_type == DMX_TS_PES_PCR)
+                        break;
+            }
+
+            if (i >= DVB_MAX_DEVICES_PER_ADAPTER)
+            {
+                printk("%s(): INVALID PES TYPE (%d, %d)\n", __func__, Feed->pid, Feed->pes_type);
+                return -EINVAL;
+            }
+            break;
+#else
             mutex_lock (&(DvbContext->Lock));
-#endif
 
             if (((Feed->pes_type == DMX_TS_PES_VIDEO) && !Context->VideoOpenWrite) ||
                 ((Feed->pes_type == DMX_TS_PES_AUDIO) && !Context->AudioOpenWrite))
             {
-#ifndef __TDT__
                 mutex_unlock (&(DvbContext->Lock));
-#endif
                 return -EBADF;
             }
 
             switch (Feed->pes_type)
             {
                 case DMX_TS_PES_VIDEO:
-#ifdef __TDT__
-		    mutex_lock (&(DvbContext->Lock));
-		    stpti_stop_feed(Feed, Context);
-                    mutex_unlock (&(DvbContext->Lock));
-#else
                     VideoIoctlStop (Context, Context->VideoState.video_blank);
-#endif
                     break;
                 case DMX_TS_PES_AUDIO:
-#ifdef __TDT__
-		    mutex_lock (&(DvbContext->Lock));
-		    stpti_stop_feed(Feed, Context);
-                    mutex_unlock (&(DvbContext->Lock));
-#else
                     AudioIoctlStop (Context);
-#endif
                     break;
                 case DMX_TS_PES_TELETEXT:
-#ifdef __TDT__
-		    // FIXME: TTX1, TTX2, TTX3, PCR1 etc.
-		    mutex_lock (&(DvbContext->Lock));
-		    stpti_stop_feed(Feed, Context);
-                    mutex_unlock (&(DvbContext->Lock));
-		    break;
-#endif
                 case DMX_TS_PES_PCR:
-#ifdef __TDT__
-		    break;
-#endif
                 case DMX_TS_PES_OTHER:
-#ifdef __TDT__
-		    mutex_lock (&(DvbContext->Lock));
-		    stpti_stop_feed(Feed, Context);
-                    mutex_unlock (&(DvbContext->Lock));
-#endif
                     break;
                 default:
-#ifndef __TDT__
                     mutex_unlock (&(DvbContext->Lock));
-#endif
                     return -EINVAL;
             }
-#ifndef __TDT__
             mutex_unlock (&(DvbContext->Lock));
-#endif
+
             /*
             if ((Context->AudioId == DEMUX_INVALID_ID) && (Context->VideoId == DEMUX_INVALID_ID) &&
                 (Context->DemuxStream != NULL))
@@ -478,15 +489,14 @@ int StopFeed (struct dvb_demux_feed* Feed)
             }
             */
             break;
+#endif
         case DMX_TYPE_SEC:
 #ifdef __TDT__
             mutex_lock (&(DvbContext->Lock));
             stpti_stop_feed(Feed, Context);
             mutex_unlock (&(DvbContext->Lock));
-            break;
-#else
-            break;
 #endif
+            break;
         default:
 #ifdef __TDT
 	    printk("%s(): INVALID FEED TYPE (%d)\n", __func__, Feed->type);
