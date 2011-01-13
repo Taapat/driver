@@ -615,12 +615,11 @@ CodecStatus_t   Codec_MmeAudio_c::HandleCapabilities( void )
     {
 	CODEC_ERROR( "%s is not capable of decoding %s\n",
 		     Configuration.TransformName[SelectedTransformer], Configuration.CodecName );
-	return CodecError;
-
 #ifdef __TDT__
         if(useoldaudiofw == 1)
                 return CodecNoError;
 #endif
+	return CodecError;
     }
 
     return CodecNoError;
