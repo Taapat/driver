@@ -316,6 +316,51 @@ static int starci_readreg(struct dvb_ca_state* state, u8 reg)
 	return b1[0];
 }
 
+/* This function gets the CI source
+   Params:
+     slot - CI slot number (0|1)
+     source - tuner number (0|1)
+*/
+void getCiSource(int slot, int* source)
+{
+  int val;
+
+#ifndef ATEVIO7500
+  val = starci_readreg(&ca_state, TWIN_MODE_CTRL_REG);
+  val &= 0x20;
+
+  if(slot == 0)
+  {
+#if defined(TF7700)
+    if(val != 0)
+      *source = 1;
+    else
+      *source = 0;
+#else
+    if(val != 0) 
+      *source = 0;
+    else
+      *source = 1;
+#endif
+  }
+
+  if(slot == 1)
+  {
+#if defined(TF7700)
+    if(val != 0)
+      *source = 0;
+    else
+      *source = 1;
+#else
+    if(val != 0)
+      *source = 1;
+    else
+      *source = 0;
+#endif
+  }
+#endif
+}
+
 /* This function sets the CI source
    Params:
      slot - CI slot number (0|1)
@@ -935,6 +980,7 @@ error:
 
 EXPORT_SYMBOL(init_ci_controller);
 EXPORT_SYMBOL(setCiSource);
+EXPORT_SYMBOL(getCiSource);
 
 int starci2win_init(void)
 {
