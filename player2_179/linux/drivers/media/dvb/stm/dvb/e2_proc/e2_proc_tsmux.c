@@ -184,7 +184,7 @@ int proc_tsmux_ci0_input_read (char *page, char **start, off_t off, int count,
 	int len = 0;
 	printk("%s\n", __FUNCTION__);
 
-#if defined(UFS922)
+#if defined(TF7700) || defined(UFS922) || defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_9500HD) || defined(FORTIS_HDBOX) || defined(HL101) || defined(VIP1_V2) || defined(ATEVIO7500)
 	{
 		int source = 0;
 		getCiSource(0, &source);
@@ -238,7 +238,7 @@ int proc_tsmux_ci1_input_read (char *page, char **start, off_t off, int count,
 	int len = 0;
 	printk("%s\n", __FUNCTION__);
 
-#if defined(UFS922)
+#if defined(TF7700) || defined(UFS922) || defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_9500HD) || defined(FORTIS_HDBOX) || defined(HL101) || defined(VIP1_V2) || defined(ATEVIO7500)
 	{
 		int source = 0;
 		getCiSource(1, &source);
