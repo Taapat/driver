@@ -292,6 +292,51 @@ static int cimax_readreg(struct cimax_state* state, u8 reg)
 	return b1[0];
 }
 
+/* This function gets the CI source
+   Params:
+     slot - CI slot number (0|1)
+     source - tuner number (0|1)
+*/
+void getCiSource(int slot, int* source)
+{
+#if defined(TF7700) || defined(FORTIS_HDBOX) || defined(HL101) || defined(VIP1_V2)
+  int val;
+
+  val = cimax_readreg(&ci_state, 0x11);
+  val &= 0x20;
+
+  if(slot == 0)
+  {
+#if defined(TF7700) || defined(FORTIS_HDBOX) || defined(HL101) || defined(VIP1_V2)
+    if(val != 0)
+      *source = 1;
+    else
+      *source = 0;
+#else
+    if(val != 0) 
+      *source = 0;
+    else
+      *source = 1;
+#endif
+  }
+
+  if(slot == 1)
+  {
+#if defined(TF7700) || defined(FORTIS_HDBOX) || defined(HL101) || defined(VIP1_V2)
+    if(val != 0)
+      *source = 0;
+    else
+      *source = 1;
+#else
+    if(val != 0)
+      *source = 1;
+    else
+      *source = 0;
+#endif
+  }
+#endif
+}
+
 /* This function sets the CI source
    Params:
      slot - CI slot number (0|1)
@@ -1233,6 +1278,7 @@ error:
 
 EXPORT_SYMBOL(init_ci_controller);
 EXPORT_SYMBOL(setCiSource);
+EXPORT_SYMBOL(getCiSource);
 
 /* ******************** */
 /* konfetti: End cimax */
