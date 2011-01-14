@@ -239,7 +239,8 @@ int StartFeed (struct dvb_demux_feed* Feed)
 
 #ifdef __TDT__
           AvContext = &Context->DvbContext->DeviceContext[i];
-          AvContext->DemuxContext      = Context;
+          //fix freeze if record starts in background
+          //AvContext->DemuxContext      = Context;
 
           //videotext & subtitles (other)
           if ((Feed->pes_type == DMX_TS_PES_TELETEXT) ||
