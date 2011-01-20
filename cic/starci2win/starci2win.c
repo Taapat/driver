@@ -832,8 +832,14 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   module_A_pin = stpio_request_pin (1, 2, "StarCI_ModA", STPIO_OUT);
   module_B_pin = stpio_request_pin (2, 7, "StarCI_ModB", STPIO_OUT);
 #elif defined(ATEVIO7500)
+  /* the magic potion - some clkb settings */
+  ctrl_outl(0x0000c0de, 0xfe000010);
+  ctrl_outl(0x00000008, 0xfe0000b4);
+  ctrl_outl(0x0000c1a0, 0xfe000010);
+
   /* necessary to access i2c register */
   ctrl_outl(0x1c, reg_sysconfig + 0x160);
+
   module_A_pin = stpio_request_pin (11, 0, "StarCI_ModA", STPIO_OUT);
   module_B_pin = stpio_request_pin (11, 1, "StarCI_ModB", STPIO_OUT);
 
