@@ -501,7 +501,7 @@ int Manifestor_VideoStmfb_c::set_dei_fmd(struct file *file, const char __user *b
                                                   value)) < 0)
                         MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
                 else
-                        MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
+                        MANIFESTOR_TRACE("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
 
                 OS_Free(myString);
         }
@@ -562,7 +562,7 @@ int Manifestor_VideoStmfb_c::set_dei_mode(struct file *file, const char __user *
                                                   value)) < 0)
                         MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
                 else
-                        MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
+                        MANIFESTOR_TRACE("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
 
                 OS_Free(myString);
         }
@@ -621,7 +621,7 @@ int Manifestor_VideoStmfb_c::set_dei_ctrl(struct file *file, const char __user *
                                                   value)) < 0)
                         MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
                 else
-                        MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
+                        MANIFESTOR_TRACE("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
 
                 OS_Free(myString);
         }
@@ -677,7 +677,7 @@ int Manifestor_VideoStmfb_c::set_psi_brightness(struct file *file, const char __
                                                      value)) < 0)
                            MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
                    else
-                           MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
+                           MANIFESTOR_TRACE("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
                 }
                 OS_Free(myString);
         }
@@ -731,7 +731,7 @@ int Manifestor_VideoStmfb_c::set_psi_saturation(struct file *file, const char __
                                                      value)) < 0)
                            MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
                    else
-                           MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
+                           MANIFESTOR_TRACE("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
                 }
                 OS_Free(myString);
         }
@@ -784,7 +784,7 @@ int Manifestor_VideoStmfb_c::set_psi_contrast(struct file *file, const char __us
                                                      value)) < 0)
                            MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
                    else
-                           MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
+                           MANIFESTOR_TRACE("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
                 }
 
                 OS_Free(myString);
@@ -838,7 +838,7 @@ int Manifestor_VideoStmfb_c::set_psi_tint(struct file *file, const char __user *
                                                      value)) < 0)
                            MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
                    else
-                           MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
+                           MANIFESTOR_TRACE("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
                 }
 
                 OS_Free(myString);
