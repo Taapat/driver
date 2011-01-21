@@ -842,6 +842,7 @@ static void stmhdmi_vsync_cb(stm_vsync_context_handle_t context, stm_field_t fie
         stm_display_output_set_status(hdmi_data->hdmi_output, hdmi_status);
       }
     }
+#endif
   }
 
   if(hdmi_status != hdmi_data->status)
