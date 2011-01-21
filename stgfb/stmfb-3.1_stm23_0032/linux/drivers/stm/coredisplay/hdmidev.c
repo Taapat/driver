@@ -803,6 +803,33 @@ static void stmhdmi_vsync_cb(stm_vsync_context_handle_t context, stm_field_t fie
   if(hdmi_data->display_runtime->hotplug_poll_pio)
   {
     unsigned hotplugstate = stpio_get_pin(hdmi_data->display_runtime->hotplug_poll_pio);
+#if defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(SPARK)
+    if(hdmi_status == STM_DISPLAY_DISCONNECTED)
+    {
+      /*
+       * If the device has just been plugged in, flag that we now need to
+       * start the output.
+       */
+      if(hotplugstate == 0)
+      {
+        hdmi_status = STM_DISPLAY_NEEDS_RESTART;
+        stm_display_output_set_status(hdmi_data->hdmi_output, hdmi_status);
+      }
+    }
+    else
+    {
+      /*
+       * We may either be waiting for the output to be started, or already
+       * started, so only change the state if the device has now been
+       * disconnected.
+       */
+      if(hotplugstate != 0)
+      {
+        hdmi_status = STM_DISPLAY_DISCONNECTED;
+        stm_display_output_set_status(hdmi_data->hdmi_output, hdmi_status);
+      }
+    }
+#else
     if(hdmi_status == STM_DISPLAY_DISCONNECTED)
     {
       /*
@@ -828,6 +855,7 @@ static void stmhdmi_vsync_cb(stm_vsync_context_handle_t context, stm_field_t fie
         stm_display_output_set_status(hdmi_data->hdmi_output, hdmi_status);
       }
     }
+#endif
   }
 
   if(hdmi_status != hdmi_data->status)
