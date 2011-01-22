@@ -470,17 +470,21 @@ void stm_tsm_init (int use_cimax)
 #elif defined(UFS912) || defined(SPARK)
       ctrl_outl(0x3, reg_sys_config + SYS_CFG0);
 #elif defined(ATEVIO7500)
-/* mysterious settings ;) */
-      ctrl_outl(0x0, reg_sys_config + 0x1c0);
-      ctrl_outl(0x0, reg_sys_config + 0x1c4);
-      ctrl_outl(0xec00, reg_sys_config + 0x154);
-      ctrl_outl(0xf0, reg_sys_config + 0x164 /*SYS_CFG25*/);
-      ctrl_outl(0x50a08, reg_sys_config + 0x140);
+/* pio12 */
+      ctrl_outl(0x0, 0xfe015020);
+      ctrl_outl(0x0, 0xfe015030);
+      ctrl_outl(0x0, 0xfe015040);
 
-      ctrl_outl(0x0, reg_sys_config + 0x1c0);
-      ctrl_outl(0x0, reg_sys_config + 0x1c4);
-      ctrl_outl(0x04, reg_sys_config + SYS_CFG0);
+/* pio13 */
+      ctrl_outl(0x0, 0xfe016020);
+      ctrl_outl(0x0, 0xfe016030);
+      ctrl_outl(0x0, 0xfe016040);
 
+      ctrl_outl(0x0, reg_sys_config + 0x1c0); /* sys_cfg48 */
+      ctrl_outl(0x0, reg_sys_config + 0x1c4); /* sys_cfg49 */
+
+      ctrl_outl(0x4, reg_sys_config + SYS_CFG0); /* tsin2 ->tsin0 mux */
+      
 #elif defined(OCTAGON1008)
       ctrl_outl(0x6, reg_sys_config + SYS_CFG0);
 #else
@@ -557,13 +561,32 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x1300, reg_config + TSM_STREAM4_CFG);  //256kb (4*64)
       ctrl_outl(0x1700, reg_config + TSM_STREAM5_CFG);  //192kb (3*64)
       ctrl_outl(0x1a00, reg_config + TSM_STREAM6_CFG);  //384kb (5*64)
-#elif defined (UFS912) || defined(SPARK) || defined(ATEVIO7500)
+#elif defined (UFS912) || defined(SPARK)
       /* RAM partitioning of streams */
       ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG);
       ctrl_outl(0x400, reg_config + TSM_STREAM1_CFG);
       ctrl_outl(0x500, reg_config + TSM_STREAM2_CFG);
       ctrl_outl(0xb00, reg_config + TSM_STREAM3_CFG);
       ctrl_outl(0xc00, reg_config + TSM_STREAM4_CFG);
+      ctrl_outl(0x1d00, reg_config + TSM_STREAM5_CFG);
+      ctrl_outl(0x1e00, reg_config + TSM_STREAM6_CFG);
+      ctrl_outl(0x1f00, reg_config + TSM_STREAM7_CFG);
+
+      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM1_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM2_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM3_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM4_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM5_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM6_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM7_CFG2);
+#elif defined(ATEVIO7500)
+      /* RAM partitioning of streams */
+      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG);
+      ctrl_outl(0x400, reg_config + TSM_STREAM1_CFG);
+      ctrl_outl(0x800, reg_config + TSM_STREAM2_CFG);
+      ctrl_outl(0xc00, reg_config + TSM_STREAM3_CFG);
+      ctrl_outl(0x1300, reg_config + TSM_STREAM4_CFG);
       ctrl_outl(0x1d00, reg_config + TSM_STREAM5_CFG);
       ctrl_outl(0x1e00, reg_config + TSM_STREAM6_CFG);
       ctrl_outl(0x1f00, reg_config + TSM_STREAM7_CFG);
@@ -595,6 +618,10 @@ void stm_tsm_init (int use_cimax)
 
       ret = ctrl_inl(reg_config + TSM_STREAM5_CFG);
       ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM5_CFG);
+#elif defined(ATEVIO7500)
+      /* add tag bytes to stream + stream priority */
+      ret = ctrl_inl(reg_config + TSM_STREAM0_CFG);
+      ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM0_CFG);
 #else
       /* configure streams: */
       /* add tag bytes to stream + stream priority */
@@ -605,7 +632,7 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(stream_sync, reg_config + TSM_STREAM0_SYNC);
       ctrl_outl(0x0, reg_config + 0x18 /* reserved ??? */);
 
-#if defined(FORTIS_HDBOX) || defined(OCTAGON1008)
+#if defined(FORTIS_HDBOX) || defined(OCTAGON1008) || defined(ATEVIO7500)
       /* add tag bytes to stream + stream priority */
       ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
       ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM1_CFG);
@@ -619,10 +646,10 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x0, reg_config + 0x38 /* reserved ??? */);
 
       /* add tag bytes to stream + stream priority */
-#if defined(FORTIS_HDBOX) || defined(OCTAGON1008)
+#if defined(FORTIS_HDBOX) || defined(OCTAGON1008) || defined(ATEVIO7500)
       ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
       ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM2_CFG);
-#elif defined(UFS912) || defined(SPARK) || defined(ATEVIO7500)
+#elif defined(UFS912) || defined(SPARK)
       ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
       ctrl_outl(ret | (0x20020), reg_config + TSM_STREAM2_CFG);
 #else
@@ -709,7 +736,7 @@ void stm_tsm_init (int use_cimax)
       ret = ctrl_inl(reg_config + TSM_1394_DEST);
       ctrl_outl(ret | 0x1 , reg_config + TSM_1394_DEST);
 
-#elif defined(UFS912) || defined(SPARK) || defined(ATEVIO7500)
+#elif defined(UFS912) || defined(SPARK)
       ctrl_outl(0x15 ,reg_config + TSM_PTI_SEL);
 
       /* set stream 2 on */
@@ -831,6 +858,18 @@ void stm_tsm_init (int use_cimax)
 
       ret = ctrl_inl(reg_config + TSM_1394_DEST);
       ctrl_outl(ret | 0x38 , reg_config + TSM_1394_DEST);
+#elif defined(ATEVIO7500)
+
+      /* set stream 1 on */
+      ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
+      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM1_CFG);
+
+      /* set stream 2 on */
+      ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
+      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM2_CFG);
+
+      /* route stream 0/1/2 to PTI */
+      ctrl_outl(0x7, reg_config + TSM_PTI_SEL);
 
 #endif
 
@@ -838,6 +877,7 @@ void stm_tsm_init (int use_cimax)
       ret = ctrl_inl(reg_config + TSM_STREAM0_CFG);
       ctrl_outl(ret | 0x80,reg_config + TSM_STREAM0_CFG);
 
+#ifndef ATEVIO7500 //later on enable also for atevio
       /* Dagobert: set-up swts */
       ctrl_outl( TSM_SWTS_REQ_TRIG(128/16) | 0x10, reg_config + TSM_SWTS_CFG(0));
 
@@ -870,7 +910,7 @@ void stm_tsm_init (int use_cimax)
          dma_params_DIM_1_x_0(&tsm_handle.swts_params[n]);
          dma_params_req(&tsm_handle.swts_params[n],tsm_handle.fdma_req);
       }
-
+#endif
    } else
    {
    	/* bypass cimax */

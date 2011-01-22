@@ -33,11 +33,6 @@ stmdvb-objs:=   backend.o \
 		dvb_ca.o \
 		dvb_v4l2.o \
 		dvb_v4l2_audout.o \
-		dvb_cap.o \
-		dvb_cap_video.o \
-		dvb_avr.o \
-		dvb_avr_video.o \
-		dvb_avr_audio.o \
 		e2_proc/e2_proc_bus.o \
 		e2_proc/e2_proc_misc.o \
 		e2_proc/e2_proc_audio.o \
@@ -55,5 +50,14 @@ stmdvb-objs:=   backend.o \
 		st-merger.o \
 		st-common.o
 ##		stmdvp.o
+
+ifeq (,$(findstring 2.6.3,$(KERNELVERSION)))
+# these object files are required for stm22/stm23 according to BPanther 
+stmdvb-objs +=	dvb_cap.o \
+		dvb_cap_video.o \
+		dvb_avr.o \
+		dvb_avr_video.o \
+		dvb_avr_audio.o
+endif
 
 obj-m += stmdvb.o

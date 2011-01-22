@@ -2917,7 +2917,7 @@ static int stv090x_get_agc2_min_level(struct stv090x_state *state)
 			goto err;
 		if (STV090x_WRITE_DEMOD(state, DMDISTATE, 0x58) < 0) /* Demod RESET */
 			goto err;
-		msleep(10);
+		msleep(1);
 
 		agc2 = 0;
 		for (j = 0; j < 10; j++) {
@@ -3060,7 +3060,7 @@ static u32 stv090x_srate_srch_coarse(struct stv090x_state *state)
 		/* trigger acquisition */
 		if (STV090x_WRITE_DEMOD(state, DMDISTATE, 0x40) < 0)
 			goto err;
-		msleep(50);
+		msleep(2);
 		for (i = 0; i < 10; i++) {
 			reg = STV090x_READ_DEMOD(state, DSTATUS);
 			if (STV090x_GETFIELD_Px(reg, TMGLOCK_QUALITY_FIELD) >= 2)
@@ -3092,7 +3092,7 @@ static u32 stv090x_srate_srch_coarse(struct stv090x_state *state)
 					goto err;
 			}
 
-			msleep(50);
+			msleep(2);
 
 			if (state->config->tuner_get_status) {
 				if (state->config->tuner_get_status(fe, &reg) < 0)
@@ -3247,7 +3247,7 @@ static int stv090x_get_dmdlock(struct stv090x_state *state, s32 timeout)
 		}
 
 		if (!lock)
-			msleep(10);
+			msleep(1);
 		else
 			printk("Demodulator acquired LOCK\n");
 
@@ -3379,7 +3379,7 @@ static int stv090x_chk_tmg(struct stv090x_state *state)
 
 	if (STV090x_WRITE_DEMOD(state, DMDISTATE, 0x18) < 0) /* trigger acquisition */
 		goto err;
-	msleep(10);
+	msleep(1);
 
 	for (i = 0; i < 10; i++) {
 		reg = STV090x_READ_DEMOD(state, DSTATUS);
@@ -3480,7 +3480,7 @@ static int stv090x_get_coldlock(struct stv090x_state *state, s32 timeout_dmd)
 							goto err;
 					}
 
-					msleep(50);
+					msleep(2);
 
 					if (state->config->tuner_get_status) {
 						if (state->config->tuner_get_status(fe, &reg) < 0)
@@ -3922,14 +3922,14 @@ static enum stv090x_signal_state stv090x_get_sig_params(struct stv090x_state *st
 
 	dprintk(10, "%s: >\n", __func__);
 
-	msleep(5);
+	msleep(1);
 
 	if (state->algo == STV090x_BLIND_SEARCH) {
 		tmg = STV090x_READ_DEMOD(state, TMGREG2);
 		STV090x_WRITE_DEMOD(state, SFRSTEP, 0x5c);
 		while ((i <= 50) && (tmg != 0) && (tmg != 0xff)) {
 			tmg = STV090x_READ_DEMOD(state, TMGREG2);
-			msleep(5);
+			msleep(1);
 			i += 5;
 		}
 	}
@@ -4488,9 +4488,9 @@ static int stv090x_optimize_track(struct stv090x_state *state)
 			}
 		}
 		if ((state->algo == STV090x_BLIND_SEARCH) || (state->srate < 10000000))
-			msleep(50); /* blind search: wait 50ms for SR stabilization */
+			msleep(2); /* blind search: wait 50ms for SR stabilization */
 		else
-			msleep(5);
+			msleep(1);
 
 		stv090x_get_lock_tmg(state);
 
@@ -4573,8 +4573,8 @@ static int stv090x_get_feclock(struct stv090x_state *state, s32 timeout)
 			break;
 		}
 		if (!lock) {
-			msleep(10);
-			timer += 10;
+			msleep(2);
+			timer += 2;
 		}
 	}
 	dprintk(10, "%s lock %d<\n", __func__, lock);
@@ -4931,7 +4931,7 @@ static enum stv090x_signal_state stv090x_algo(struct stv090x_state *state)
 	   if (STV090x_WRITE_DEMOD(state, TSCFGH, reg) < 0)
   		   goto err;
 
-       msleep(3);
+       msleep(1);
        
 	   STV090x_SETFIELD_Px(reg, RST_HWARE_FIELD, 0x01);
 	   if (STV090x_WRITE_DEMOD(state, TSCFGH, reg) < 0)
@@ -4980,7 +4980,7 @@ static enum stv090x_signal_state stv090x_algo(struct stv090x_state *state)
 			if (STV090x_WRITE_DEMOD(state, TSCFGH, reg) < 0)
 				goto err;
 
-			msleep(3);
+			msleep(1);
 
 			STV090x_SETFIELD_Px(reg, RST_HWARE_FIELD, 1); /* merger reset */
 			if (STV090x_WRITE_DEMOD(state, TSCFGH, reg) < 0)
@@ -5302,7 +5302,7 @@ static int stv090x_read_cnr(struct dvb_frontend *fe, u16 *cnr)
 		reg = STV090x_READ_DEMOD(state, DSTATUS);
 		lock_f = STV090x_GETFIELD_Px(reg, LOCK_DEFINITIF_FIELD);
 		if (lock_f) {
-			msleep(5);
+			msleep(1);
 			for (i = 0; i < 16; i++) {
 				reg_1 = STV090x_READ_DEMOD(state, NNOSPLHT1);
 				val_1 = STV090x_GETFIELD_Px(reg_1, NOSPLHT_NORMED_FIELD);
@@ -5324,7 +5324,7 @@ static int stv090x_read_cnr(struct dvb_frontend *fe, u16 *cnr)
 		reg = STV090x_READ_DEMOD(state, DSTATUS);
 		lock_f = STV090x_GETFIELD_Px(reg, LOCK_DEFINITIF_FIELD);
 		if (lock_f) {
-			msleep(5);
+			msleep(1);
 			for (i = 0; i < 16; i++) {
 				reg_1 = STV090x_READ_DEMOD(state, NOSDATAT1);
 				val_1 = STV090x_GETFIELD_Px(reg_1, NOSDATAT_UNNORMED_FIELD);
@@ -5435,7 +5435,7 @@ static int stv090x_send_diseqc_msg(struct dvb_frontend *fe, struct dvb_diseqc_ma
 	while ((!idle) && (i < 10)) {
 		reg = STV090x_READ_DEMOD(state, DISTXSTATUS);
 		idle = STV090x_GETFIELD_Px(reg, TX_IDLE_FIELD);
-		msleep(10);
+		msleep(2);
 		i++;
 	}
 
@@ -5494,7 +5494,7 @@ static int stv090x_send_diseqc_burst(struct dvb_frontend *fe, fe_sec_mini_cmd_t 
 	while ((!idle) && (i < 10)) {
 		reg = STV090x_READ_DEMOD(state, DISTXSTATUS);
 		idle = STV090x_GETFIELD_Px(reg, TX_IDLE_FIELD);
-		msleep(10);
+		msleep(2);
 		i++;
 	}
 
@@ -5513,7 +5513,7 @@ static int stv090x_recv_slave_reply(struct dvb_frontend *fe, struct dvb_diseqc_s
 	dprintk(10, "%s >\n", __FUNCTION__);
 
 	while ((rx_end != 1) && (i < 10)) {
-		msleep(10);
+		msleep(2);
 		i++;
 		reg = STV090x_READ_DEMOD(state, DISRX_ST0);
 		rx_end = STV090x_GETFIELD_Px(reg, RX_END_FIELD);
@@ -6094,7 +6094,7 @@ static int stv090x_init(struct dvb_frontend *fe)
 
 	    stv090x_set_mclk(state, 135000000, config->xtal); /* 135 Mhz */
 
-		msleep(5);
+		msleep(1);
 		if (stv090x_write_reg(state, STV090x_SYNTCTRL,
 				      0x20 | config->clk_mode) < 0)
 			goto err;
@@ -6131,7 +6131,7 @@ static int stv090x_init(struct dvb_frontend *fe)
 
 #if defined(UFS912)
     writereg_lnb_supply (state, 0xc8);
-	msleep(5);
+	msleep(1);
     writereg_lnb_supply (state, 0xe8);
 
 #endif             
@@ -6187,7 +6187,7 @@ static int stv090x_setup(struct dvb_frontend *fe)
 	if (stv090x_write_reg(state, STV090x_P2_DMDISTATE, 0x5c) < 0)
 		goto err;
 
-	msleep(5);
+	msleep(1);
 
 	/* Set No Tuner Mode */
 	if (stv090x_write_reg(state, STV090x_P1_TNRCFG, 0x6c) < 0)
@@ -6208,7 +6208,7 @@ static int stv090x_setup(struct dvb_frontend *fe)
 
 	if (stv090x_write_reg(state, STV090x_NCOARSE, 0x13) < 0) /* set PLL divider */
 		goto err;
-	msleep(5);
+	msleep(1);
 	if (stv090x_write_reg(state, STV090x_I2CCFG, 0x08) < 0) /* 1/41 oversampling */
 		goto err;
 #if defined(UFS912)
@@ -6218,7 +6218,7 @@ static int stv090x_setup(struct dvb_frontend *fe)
 	if (stv090x_write_reg(state, STV090x_SYNTCTRL, 0x20 | config->clk_mode) < 0) /* enable PLL */
 		goto err;
 #endif
-	msleep(5);
+	msleep(1);
 
 	/* write initval */
 	dprintk(10, "Setting up initial values\n");
@@ -6446,13 +6446,13 @@ static int lnbh23_set_voltage(struct dvb_frontend *fe, enum fe_sec_voltage volta
       case SEC_VOLTAGE_13: /* vertical */
 	 dprintk(10, "set_voltage_vertical \n");
 	   writereg_lnb_supply(state, 0x94);
-	   msleep(5);
+	   msleep(1);
 	   writereg_lnb_supply(state, 0xd4);
       break;
       case SEC_VOLTAGE_18: /* horizontal */
            dprintk(10, "set_voltage_horizontal\n");
 	   writereg_lnb_supply(state, 0x9c);
-	   msleep(5);
+	   msleep(1);
 	   writereg_lnb_supply(state, 0xdc);
       break;
       default:

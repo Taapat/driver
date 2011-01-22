@@ -32,11 +32,15 @@
 #include "soc/sti7111/sti7111reg.h"
 #include "soc/sti7111/sti7111device.h"
 
-#if defined(UFS912) && defined(__TDT__)
+#if defined(__TDT__)
+#if defined(UFS912) || defined(SPARK)
 #define HAS_DSUB 0
 #warning fixme: take a look if we have DSUB
 #else
 #define HAS_DSUB 1
+#endif
+#else
+#define HAS_DSUB 0
 #endif
 
 static const unsigned long whitelist[] = {
@@ -58,8 +62,10 @@ static struct stmcore_display_pipeline_data platform_data[] = {
     .blitter_irq              = evt2irq(0x1580),
     .blitter_irq_kernel       = evt2irq(0x1580),
     .hdmi_irq                 = evt2irq(0x15C0),
-#if defined(UFS912) && defined(__TDT__)
+#if defined(UFS912)
     .hdmi_i2c_adapter_id      = 3,
+#elif defined(SPARK)
+	.hdmi_i2c_adapter_id	  = 2,
 #else
     .hdmi_i2c_adapter_id      = 0,
 #warning not supported architecture

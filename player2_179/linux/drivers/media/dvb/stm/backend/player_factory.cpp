@@ -11,6 +11,9 @@
 ///
 /// ////////////////////////////////////////////////////////////////////
 
+#ifdef __TDT__
+#include <linux/version.h>
+#endif
 #include "backend_ops.h"
 #include "player.h"
 #include "collator_pes_video_mpeg2.h"
@@ -74,7 +77,10 @@
 #include "codec_mme_video_vp6.h"
 #include "codec_mme_video_rmv.h"
 #include "codec_mme_video_theora.h"
+//#if defined(__TDT__) include only for kernels before stlinux24
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
 #include "codec_mme_video_avs.h"
+#endif
 #include "codec_mme_video_mjpeg.h"
 #include "codec_dvp_video.h"
 #include "codec_mme_audio_aac.h"
@@ -516,11 +522,14 @@ static void* CodecMMEVideoTheoraFactory (void)
     return new Codec_MmeVideoTheora_c ();
 }
 
+//#if defined(__TDT__) use only for kernels before stlinux24
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
 static void* CodecMMEVideoAvsFactory (void)
 {
     PLAYER_DEBUG("\n");
     return new Codec_MmeVideoAvs_c ();
 }
+#endif
 
 static void* CodecMMEVideoMjpegFactory (void)
 {
@@ -781,10 +790,13 @@ HavanaStatus_t RegisterBuiltInFactories (class  HavanaPlayer_c* HavanaPlayer)
     HavanaPlayer->RegisterFactory (BACKEND_DVP_ID,  FACTORY_ANY_ID,  StreamTypeVideo, ComponentFrameParser, 0, false, FrameParserVideoDvpFactory);
     HavanaPlayer->RegisterFactory (BACKEND_PES_ID,  BACKEND_DVP_ID,  StreamTypeVideo, ComponentCollator,    0, false, CollatorPacketDvpFactory);
 
+//#if defined(__TDT__) use only for kernels before stlinux24
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
     // Avs video
     HavanaPlayer->RegisterFactory (BACKEND_AVS_ID,  FACTORY_ANY_ID,    StreamTypeVideo, ComponentCodec,       0, false, CodecMMEVideoAvsFactory);
     HavanaPlayer->RegisterFactory (BACKEND_AVS_ID,  FACTORY_ANY_ID,    StreamTypeVideo, ComponentFrameParser, 0, false, FrameParserVideoAvsFactory);
     HavanaPlayer->RegisterFactory (BACKEND_PES_ID,  BACKEND_AVS_ID,    StreamTypeVideo, ComponentCollator,    0, false, CollatorPesVideoAvsFactory);
+#endif
 
     // Mjpeg video
     HavanaPlayer->RegisterFactory (BACKEND_MJPEG_ID,  FACTORY_ANY_ID,    StreamTypeVideo, ComponentCodec,       0, false, CodecMMEVideoMjpegFactory);

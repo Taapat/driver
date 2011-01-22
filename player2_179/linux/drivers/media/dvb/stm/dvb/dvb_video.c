@@ -28,6 +28,10 @@ Date        Modification                                    Name
 
 #ifdef __TDT__
 #include "e2_proc/e2_proc.h"
+#include <linux/version.h>
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
+#include <linux/mm.h>
+#endif
 #endif
 
 /*{{{  prototypes*/

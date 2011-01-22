@@ -261,19 +261,6 @@ static int info_model_read(char *page, char **start, off_t off, int count,
   return len;
 }
 
-#ifdef SPARK
-static int info_remote_read(char *page, char **start, off_t off, int count,
-                           int *eof, void *data)
-{
-#if defined(REMOTE_RC08)
-  int len = sprintf(page, "rc08\n");
-#else
-  int len = sprintf(page, "spark\n");
-#endif
-  return len;
-}
-#endif
-
 static int zero_read(char *page, char **start, off_t off, int count,
                            int *eof, void *data)
 {
@@ -437,11 +424,6 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/video/plane/dei_ctrl"        , NULL, NULL, NULL, NULL, "dei_ctrl"},
 	{cProcDir  , "stb/fan"   	                    , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/fan/fan_ctrl"   	           , NULL, NULL, NULL, NULL, ""}
-#endif
-
-#ifdef SPARK
-		,
-	{cProcEntry, "stb/info/remote"                                                   , NULL, info_remote_read, NULL, NULL, ""},
 #endif
 
 };

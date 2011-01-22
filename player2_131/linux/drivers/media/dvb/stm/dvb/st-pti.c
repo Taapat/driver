@@ -349,7 +349,7 @@ static int convert_source ( const dmx_source_t source)
   switch ( source )
   {
   case DMX_SOURCE_FRONT0:
-#if defined(UFS910) || defined(OCTAGON1008) || defined(UFS912) || defined(SPARK) || defined(ATEVIO7500)
+#if defined(UFS910) || defined(OCTAGON1008) || defined(UFS912) || defined(SPARK)
     /* in UFS910 the CIMAX output is connected to TSIN2 */
     tag = TSIN2;
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
@@ -418,7 +418,7 @@ void ptiInit ( struct DeviceContext_s *pContext )
      */
     stm_tsm_init (  /*config */ 1 );
 
-#if defined(TF7700) || defined(UFS922) || defined(FORTIS_HDBOX) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
+#if defined(TF7700) || defined(UFS922) || defined(FORTIS_HDBOX) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA) || defined(ATEVIO7500)
     pti_hal_init ( &pti, &pContext->DvbDemux, demultiplexDvbPackets, 2);
 #else
     pti_hal_init ( &pti, &pContext->DvbDemux, demultiplexDvbPackets, 1);

@@ -383,6 +383,7 @@ static struct i2c_driver avs_i2c_driver = {
 	.detect = avs_detect,
 	.remove = avs_remove,
 	.id_table = avs_id,
+	.address_data = &addr_data,
 #endif
 	.command = avs_command_ioctl
 };

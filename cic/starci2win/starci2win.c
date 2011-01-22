@@ -316,6 +316,51 @@ static int starci_readreg(struct dvb_ca_state* state, u8 reg)
 	return b1[0];
 }
 
+/* This function gets the CI source
+   Params:
+     slot - CI slot number (0|1)
+     source - tuner number (0|1)
+*/
+void getCiSource(int slot, int* source)
+{
+  int val;
+
+#ifndef ATEVIO7500
+  val = starci_readreg(&ca_state, TWIN_MODE_CTRL_REG);
+  val &= 0x20;
+
+  if(slot == 0)
+  {
+#if defined(TF7700)
+    if(val != 0)
+      *source = 1;
+    else
+      *source = 0;
+#else
+    if(val != 0) 
+      *source = 0;
+    else
+      *source = 1;
+#endif
+  }
+
+  if(slot == 1)
+  {
+#if defined(TF7700)
+    if(val != 0)
+      *source = 0;
+    else
+      *source = 1;
+#else
+    if(val != 0)
+      *source = 1;
+    else
+      *source = 0;
+#endif
+  }
+#endif
+}
+
 /* This function sets the CI source
    Params:
      slot - CI slot number (0|1)
@@ -325,7 +370,8 @@ int setCiSource(int slot, int source)
 {
   int val;
 
-#ifndef ATEVIO7500
+  printk("%s> %d %d\n", __func__, slot, source);
+
   if((slot < 0) || (slot > 1) ||
      (source < 0) || (source > 1))
     return -1;
@@ -334,7 +380,7 @@ int setCiSource(int slot, int source)
   if(slot != source)
   {
     /* send stream A through module B and stream B through module A */
-#if defined(TF7700)
+#if defined(TF7700) || defined(ATEVIO7500)
     val |= 0x20;
 #else
     val &= ~0x20;
@@ -344,7 +390,7 @@ int setCiSource(int slot, int source)
   {
     /* enforce direct mapping */
     /* send stream A through module A and stream B through module B */
-#if defined(TF7700)
+#if defined(TF7700) || defined(ATEVIO7500)
     val &= ~0x20;
 #else
     val |= 0x20;
@@ -352,9 +398,6 @@ int setCiSource(int slot, int source)
   }
 
   return starci_writereg(&ca_state, TWIN_MODE_CTRL_REG, val);
-#else
-  return 0;
-#endif
 }
 
 void setDestination(struct dvb_ca_state *state, int slot)
@@ -366,7 +409,6 @@ void setDestination(struct dvb_ca_state *state, int slot)
    
    dprintk("%s (slot = %d)>\n", __func__, slot);
 
-#ifndef ATEVIO7500
    if((slot < 0) || (slot > 1))
      return;
 
@@ -395,7 +437,6 @@ void setDestination(struct dvb_ca_state *state, int slot)
       	}
    }
 
-#endif
    dprintk("%s (slot = %d)<\n", __func__, slot);
 }
 
@@ -420,12 +461,18 @@ static int starci_poll_slot_status(struct dvb_ca_en50221 *ca, int slot, int open
 	  if (slot_status)
 	  {
               if (slot == 0)
+              {
 		  stpio_set_pin(module_A_pin, 1);
-	      else
+                  dprintk("Modul A now present\n");
+	      }
+              else
+              {
 		  stpio_set_pin(module_B_pin, 1);
-
-              dprintk("Modul now present\n");
+                  dprintk("Modul B now present\n");
+              }
 	      state->module_present[slot] = 1;
+
+              msleep(200);
 	  }
 	  else
 	  {
@@ -512,7 +559,11 @@ static int starci_slot_reset(struct dvb_ca_en50221 *ca, int slot)
     starci_writereg(state, reg[slot], result | 0x80);
 
     starci_writereg(state, DEST_SEL_REG, 0x0);
+#ifdef ATEVIO7500
+    msleep(200);
+#else
     msleep(60);
+#endif
     
     /* reset "rst" bit */
     result = starci_readreg(state, reg[slot]);
@@ -688,26 +739,25 @@ static int starci_slot_ts_enable(struct dvb_ca_en50221 *ca, int slot)
 
   mutex_lock(&starci_mutex);
 
-#ifndef ATEVIO7500
   result = starci_readreg(state, reg[slot]);
 
+#ifndef ATEVIO7500
   starci_writereg(state, reg[slot], 0x23);
-
-  printk("%s: writing 0x%x\n", __func__, 0x23);
+#else
+  starci_writereg(state, reg[slot], 0x21);
+#endif
 
   /* reading back from the register implements the delay */
   result = starci_readreg(state, reg[slot]);
 
-  printk("%s: writing 0x%x\n", __func__, result | 0x40);
+  dprintk("%s: writing 0x%x\n", __func__, result | 0x40);
   starci_writereg(state, reg[slot], result | 0x40);
   result = starci_readreg(state, reg[slot]);
 
-  printk("%s: result 0x%x (%d)\n", __func__, result, slot);
+  dprintk("%s: result 0x%x (%d)\n", __func__, result, slot);
 
   if (!(result & 0x40))
       printk("Error setting ts enable on slot 0\n");
-
-#endif
 
   mutex_unlock(&starci_mutex);
   return 0;
@@ -782,6 +832,14 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   module_A_pin = stpio_request_pin (1, 2, "StarCI_ModA", STPIO_OUT);
   module_B_pin = stpio_request_pin (2, 7, "StarCI_ModB", STPIO_OUT);
 #elif defined(ATEVIO7500)
+  /* the magic potion - some clkb settings */
+  ctrl_outl(0x0000c0de, 0xfe000010);
+  ctrl_outl(0x00000008, 0xfe0000b4);
+  ctrl_outl(0x0000c1a0, 0xfe000010);
+
+  /* necessary to access i2c register */
+  ctrl_outl(0x1c, reg_sysconfig + 0x160);
+
   module_A_pin = stpio_request_pin (11, 0, "StarCI_ModA", STPIO_OUT);
   module_B_pin = stpio_request_pin (11, 1, "StarCI_ModB", STPIO_OUT);
 
@@ -794,11 +852,6 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   stpio_set_pin (module_A_pin, 0);
   stpio_set_pin (module_B_pin, 0);
 
-#endif
-
-#if defined(ATEVIO7500)
-  /* necessary to access i2c register */
-  ctrl_outl(0x1c, reg_sysconfig + 0x160);
 #endif
 
   /* reset the chip */
@@ -818,9 +871,10 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   starci_writereg(state, 0x18, 0x01);
 #endif
 
-
+#ifndef ATEVIO7500
   ctrl_outl(0x0, reg_config + EMI_LCK);
   ctrl_outl(0x0, reg_config + EMI_GEN_CFG);
+#endif
 
 #if defined(FORTIS_HDBOX)
 /* fixme: this is mysterious on HDBOX! there is no lock setting EMI_LCK and there is
@@ -835,6 +889,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   ctrl_outl(0x8486d9, reg_config + EMIBank3 + EMI_CFG_DATA0);
   ctrl_outl(0x9d220000,reg_config + EMIBank3 + EMI_CFG_DATA2);
   ctrl_outl(0x8,reg_config + EMIBank3 + EMI_CFG_DATA3);
+  ctrl_outl(0x0, reg_config + EMI_GEN_CFG);
 #elif defined(HOMECAST5101)
 /* FIXME: Not sure about this at the moment */
   ctrl_outl(0x002046f9, reg_config + EMIBank2 + EMI_CFG_DATA0);
@@ -874,7 +929,9 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   ctrl_outl(0x0, reg_config + EMI_FLASH_CLK_SEL);
 #endif
 
+#ifndef ATEVIO7500
   ctrl_outl(0x1, reg_config + EMI_CLK_EN);
+#endif
 
 #if defined(FORTIS_HDBOX)
 //is [0] = top slot?
@@ -910,7 +967,9 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 	  goto error;
   }
 
+#ifndef ATEVIO7500
   ctrl_outl(0x1F,reg_config + EMI_LCK);
+#endif
 
   dprintk("init_cimax: call dvb_ca_en50221_init\n");
   
@@ -935,6 +994,7 @@ error:
 
 EXPORT_SYMBOL(init_ci_controller);
 EXPORT_SYMBOL(setCiSource);
+EXPORT_SYMBOL(getCiSource);
 
 int starci2win_init(void)
 {

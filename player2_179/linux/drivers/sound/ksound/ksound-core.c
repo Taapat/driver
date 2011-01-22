@@ -18,7 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifdef __TDT__
+#include <linux/version.h>
+#endif
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+// sound/driver.h does not exist in stlinux24
+#else
 #include <sound/driver.h>
+#endif
 #include <linux/init.h>
 #include <linux/smp_lock.h>
 #include <linux/slab.h>
@@ -41,10 +48,14 @@
 
 #include "ksound.h"
 
-#ifdef __TDT__
-#include <linux/version.h>
-#endif
-
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+#warning Need to remove these typedefs and externs
+typedef struct snd_pcm_runtime snd_pcm_runtime_t;
+typedef struct snd_pcm snd_pcm_t;
+typedef struct snd_mask snd_mask_t;
+typedef struct snd_pcm_sw_params snd_pcm_sw_params_t;
+typedef struct snd_pcm_hw_params snd_pcm_hw_params_t;
+#else
 #if defined (CONFIG_KERNELVERSION) /* STLinux 2.3 */
 #warning Need to remove these typedefs and externs
 typedef struct snd_pcm_runtime snd_pcm_runtime_t;
@@ -52,6 +63,7 @@ typedef struct snd_pcm snd_pcm_t;
 typedef struct snd_mask snd_mask_t;
 typedef struct snd_pcm_sw_params snd_pcm_sw_params_t;
 typedef struct snd_pcm_hw_params snd_pcm_hw_params_t;
+#endif
 #endif
 
 extern int _snd_pcm_hw_param_setinteger(struct snd_pcm_hw_params *params,
@@ -185,8 +197,12 @@ snd_pcm_uframes_t ksnd_pcm_avail_update(ksnd_pcm_t *kpcm)
 	avail = _ksnd_pcm_avail_update(substream);
 	snd_pcm_stream_unlock_irq(substream);
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        /* attribute xfer_align not available in stlinux24 */
+#else
 	if (avail > runtime->xfer_align)
 		avail -= avail % runtime->xfer_align;
+#endif
 
 	return avail;
 }
@@ -250,8 +266,12 @@ int ksnd_pcm_htimestamp(ksnd_pcm_t *kpcm, snd_pcm_uframes_t *avail, struct times
 	if (myavail < 0)
 		return myavail;
 	
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        /* attribute xfer_align not available in stlinux24 */
+#else
 	if (myavail > runtime->xfer_align)
 		myavail -= myavail % runtime->xfer_align;
+#endif
 	
 	*avail = myavail;
 	*tstamp = mystamp;
@@ -398,9 +418,12 @@ static void _ksnd_pcm_mmap_begin(snd_pcm_substream_t *substream,
 		avail = snd_pcm_playback_avail(runtime);
 	else
 		avail = snd_pcm_capture_avail(runtime);
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        /* attribute xfer_align not available in stlinux24 */
+#else
 	if (avail > runtime->xfer_align)
 		avail -= avail % runtime->xfer_align;
-
+#endif
 	f = *frames;
 	if (f > avail)
 		f = avail;
@@ -462,9 +485,13 @@ static int _ksnd_pcm_update_appl_ptr(snd_pcm_substream_t *substream,
 			return err;
 	}
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        /* attribute sleep_min not available in stlinux24 */
+#else
 	if (runtime->sleep_min &&
 	    runtime->status->state == SNDRV_PCM_STATE_RUNNING)
 		snd_pcm_tick_prepare(substream);
+#endif
 
 	return 0;
 }
@@ -839,9 +866,15 @@ static int _ksnd_pcm_writei1(snd_pcm_substream_t *substream,
 
 		avail = _ksnd_pcm_avail_update(substream);
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+		/* attribute xfer_align not available in stlinux24 */
+#warning Do we have to check the values 'size' and 'avail'?
+		if ((avail < runtime->control->avail_min) && (size > avail)) {
+#else
 		if (((avail < runtime->control->avail_min && size > avail) ||
 		     (size >= runtime->xfer_align
 		      && avail < runtime->xfer_align))) {
+#endif
 			int res;
 
 			snd_pcm_stream_unlock_irq(substream);
@@ -873,8 +906,12 @@ static int _ksnd_pcm_writei1(snd_pcm_substream_t *substream,
 			avail = snd_pcm_playback_avail(runtime);
 		}
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        /* attribute xfer_align not available in stlinux24 */
+#else
 		if (avail > runtime->xfer_align)
 			avail -= avail % runtime->xfer_align;
+#endif
 
 		frames = size > avail ? avail : size;
 		cont =
@@ -934,9 +971,13 @@ static int _ksnd_pcm_writei1(snd_pcm_substream_t *substream,
 				goto _end_unlock;
 		}
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        /* attribute sleep_min not available in stlinux24 */
+#else
 		if (runtime->sleep_min &&
 		    _ksnd_pcm_state(substream) == SNDRV_PCM_STATE_RUNNING)
 			snd_pcm_tick_prepare(substream);
+#endif
 	}
 
       _end_unlock:
@@ -978,8 +1019,12 @@ int ksnd_pcm_writei(ksnd_pcm_t *kpcm,
 	if (size == 0)
 		return 0;
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        /* attribute xfer_align not available in stlinux24 */
+#else
 	if (size > runtime->xfer_align)
 		size -= size % runtime->xfer_align;
+#endif
 
 	do {
 		err =
@@ -1266,11 +1311,19 @@ int ksnd_pcm_set_params(ksnd_pcm_t *pcm,
 			    (runtime->buffer_size - (runtime->period_size * 2));
 
 	sw_params->stop_threshold = runtime->buffer_size;
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        /* SNDRV_PCM_TSTAMP_MMAP not available in stlinux24 */
+#else
 	sw_params->tstamp_mode = SNDRV_PCM_TSTAMP_MMAP;
+#endif
 	sw_params->period_step = 1;
 	sw_params->sleep_min = 0;
 	sw_params->avail_min = runtime->period_size;
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        /* attribute xfer_align not available in stlinux24 */
+#else
 	sw_params->xfer_align = 1;
+#endif
 	sw_params->silence_threshold = runtime->period_size;
 	sw_params->silence_size = runtime->period_size;
 

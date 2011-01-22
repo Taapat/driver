@@ -99,6 +99,11 @@ CCFLAGSY+=-DPLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY=0x01B00000 \
         -DPLAYER2_VIDEO_DEFAULT_CODED_MEMORY_SIZE=0x800000
 endif
 
+# workaround for stm24
+ifdef CONFIG_CPU_SUBTYPE_STX7100
+CCFLAGSY+=-DCONFIG_CPU_SUBTYPE_STB7100
+endif
+
 CCFLAGSY+=-D__TDT__
 
 CCFLAGSY+=-I$(CONFIG_KERNEL_BUILD)/include2 \
@@ -178,7 +183,6 @@ obj-y += drivers/media/dvb/stm/allocator/
 obj-y += drivers/media/dvb/stm/h264_preprocessor/
 obj-y += drivers/media/sysfs/stm/
 obj-y += drivers/sound/ksound/
-obj-y += drivers/sound/kreplay/
 obj-y += drivers/sound/pseudocard/
 obj-y += drivers/sound/silencegen/
 obj-y += drivers/sound/pcm_transcoder/

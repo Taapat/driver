@@ -55,7 +55,11 @@ static struct stmcore_display_pipeline_data platform_data[] = {
 #if defined(CONFIG_SH_ST_MB680)
     .hdmi_i2c_adapter_id      = 2,
 #elif defined(CONFIG_SH_ST_PDK7105)
+#if defined(ATEVIO7500) && defined(__TDT__)
+    .hdmi_i2c_adapter_id      = 2,
+#else
     .hdmi_i2c_adapter_id      = 0,
+#endif
 #elif defined(CONFIG_SH_ST_IPTV7105)
     .hdmi_i2c_adapter_id      = 1,
 #else

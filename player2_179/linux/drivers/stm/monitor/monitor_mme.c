@@ -12,6 +12,10 @@ Date        Modification                                    Name
 
 ************************************************************************/
 
+#ifdef __TDT__
+#include <linux/version.h>
+#endif
+
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/ioport.h>
@@ -21,7 +25,11 @@ Date        Modification                                    Name
 #include <linux/cdev.h>
 #include <linux/kthread.h>
 #include <asm/uaccess.h>
+#if defined(__TDT__) && (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30))
 #include <asm/timer.h>
+#else
+#include <linux/timer.h>
+#endif
 #include <asm/clock.h>
 #include <linux/delay.h>
 
@@ -30,10 +38,6 @@ Date        Modification                                    Name
 #include "monitor_inline.h"
 #include "monitor_module.h"
 #include "monitor_device.h"
-
-#ifdef __TDT__
-#include <linux/version.h>
-#endif
 
 #define MONITOR_MME_THREAD_NAME         "MonitorMMEThread"
 

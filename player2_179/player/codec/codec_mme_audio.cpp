@@ -615,12 +615,11 @@ CodecStatus_t   Codec_MmeAudio_c::HandleCapabilities( void )
     {
 	CODEC_ERROR( "%s is not capable of decoding %s\n",
 		     Configuration.TransformName[SelectedTransformer], Configuration.CodecName );
-	return CodecError;
-
 #ifdef __TDT__
         if(useoldaudiofw == 1)
                 return CodecNoError;
 #endif
+	return CodecError;
     }
 
     return CodecNoError;
@@ -716,11 +715,11 @@ MME_LxAudioDecoderInitParams_t &Params = AudioDecoderInitializationParameters;
 
 
     // Detect changes between BL025 and BL028 (delete this code when BL025 is accient history)
-    #if DRV_MULTICOM_AUDIO_DECODER_VERSION >= 0x090128
-	Params.BlockWise.u32 = 0;
-    #else
-	Params.BlockWise = ACC_MME_FALSE;
-    #endif
+#if DRV_MULTICOM_AUDIO_DECODER_VERSION >= 0x090128
+		Params.BlockWise.u32 = 0;
+#else
+		Params.BlockWise = ACC_MME_FALSE;
+#endif
 
     // upsampling must be enabled seperately for each codec since it requires frame analyser support
     Params.SfreqRange = ACC_FSRANGE_UNDEFINED;

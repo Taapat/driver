@@ -16,6 +16,7 @@ Date        Modification                                    Name
 #include <linux/syscalls.h>
 #include <linux/ioport.h>
 #ifdef __TDT__
+#include <linux/dvb/version.h>
 #include <linux/version.h>
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #include <linux/bpa2.h>
@@ -111,7 +112,11 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
 
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
   #if (DVB_API_VERSION > 3)
+#ifdef __TDT__
+    Result      = dvb_register_adapter (&DvbContext->DvbAdapter, MODULE_NAME, THIS_MODULE,NULL, AdapterNumbers);
+#else
     Result      = dvb_register_adapter (&DvbContext->DvbAdapter, MODULE_NAME, THIS_MODULE,NULL, adapter_num);
+#endif
   #else
     Result      = dvb_register_adapter (&DvbContext->DvbAdapter, MODULE_NAME, THIS_MODULE,NULL);
   #endif
