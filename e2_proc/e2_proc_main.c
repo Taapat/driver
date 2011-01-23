@@ -437,7 +437,7 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/fan/fan_ctrl"   	           , NULL, NULL, NULL, NULL, ""},
 #endif
 	{cProcDir  , "stb/player"                      , NULL, NULL, NULL, NULL, ""},
-	{cProcEntry, "stb/player/version"              , NULL, get_player_version, NULL, NULL, ""},
+	{cProcEntry, "stb/player/version"              , NULL, get_player_version, NULL, NULL, ""}
 
 };
 
