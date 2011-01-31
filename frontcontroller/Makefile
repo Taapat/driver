@@ -60,3 +60,7 @@ endif
 ifdef OCTAGON1008
 obj-y	+= nuvoton/
 endif
+
+ifdef ATEVIO7500
+obj-y	+= nuvoton/
+endif
