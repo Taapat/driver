@@ -178,6 +178,9 @@ static inline snd_pcm_uframes_t _ksnd_pcm_avail_update(snd_pcm_substream_t
         if (runtime->sleep_min == 0 &&
             _ksnd_pcm_state(substream) == SNDRV_PCM_STATE_RUNNING)
                 snd_pcm_update_hw_ptr(substream);
+#else
+	if (_ksnd_pcm_state(substream) == SNDRV_PCM_STATE_RUNNING)
+                snd_pcm_update_hw_ptr(substream);
 #endif
 #endif
 
@@ -198,7 +201,7 @@ snd_pcm_uframes_t ksnd_pcm_avail_update(ksnd_pcm_t *kpcm)
 	snd_pcm_stream_unlock_irq(substream);
 
 #if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
-        /* attribute xfer_align not available in stlinux24 */
+        // attribute xfer_align is not used any more
 #else
 	if (avail > runtime->xfer_align)
 		avail -= avail % runtime->xfer_align;
@@ -267,7 +270,7 @@ int ksnd_pcm_htimestamp(ksnd_pcm_t *kpcm, snd_pcm_uframes_t *avail, struct times
 		return myavail;
 	
 #if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
-        /* attribute xfer_align not available in stlinux24 */
+        // attribute xfer_align is not used any more
 #else
 	if (myavail > runtime->xfer_align)
 		myavail -= myavail % runtime->xfer_align;
@@ -419,7 +422,7 @@ static void _ksnd_pcm_mmap_begin(snd_pcm_substream_t *substream,
 	else
 		avail = snd_pcm_capture_avail(runtime);
 #if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
-        /* attribute xfer_align not available in stlinux24 */
+        // attribute xfer_align is not used any more
 #else
 	if (avail > runtime->xfer_align)
 		avail -= avail % runtime->xfer_align;
@@ -446,7 +449,7 @@ int ksnd_pcm_mmap_begin(ksnd_pcm_t *pcm, const snd_pcm_channel_area_t **areas,
 	snd_pcm_substream_t *substream = pcm->substream;
 	snd_pcm_channel_area_t *xareas = pcm->hwareas;
 
-	snd_assert(substream && areas && offset && frames, return -EFAULT);
+	//snd_assert(substream && areas && offset && frames, return -EFAULT);
 
 	snd_pcm_stream_lock_irq(substream);
 	_ksnd_pcm_mmap_begin(substream, offset, frames);
@@ -486,7 +489,7 @@ static int _ksnd_pcm_update_appl_ptr(snd_pcm_substream_t *substream,
 	}
 
 #if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
-        /* attribute sleep_min not available in stlinux24 */
+        // snd_pcm_tick_prepare is not used any more
 #else
 	if (runtime->sleep_min &&
 	    runtime->status->state == SNDRV_PCM_STATE_RUNNING)
@@ -506,7 +509,7 @@ snd_pcm_sframes_t ksnd_pcm_mmap_commit(ksnd_pcm_t *pcm,
 	snd_pcm_sframes_t res = frames;
 	int err;
 
-	snd_assert(substream, return -EFAULT);
+	//snd_assert(substream, return -EFAULT);
 
 	/* for SPDIF we need to run though the just committed PCM samples and
 	 * add formating (unless raw mode is enabled)
@@ -867,7 +870,7 @@ static int _ksnd_pcm_writei1(snd_pcm_substream_t *substream,
 		avail = _ksnd_pcm_avail_update(substream);
 
 #if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
-		/* attribute xfer_align not available in stlinux24 */
+		// attribute xfer_align is not used any more
 #warning Do we have to check the values 'size' and 'avail'?
 		if ((avail < runtime->control->avail_min) && (size > avail)) {
 #else
@@ -907,7 +910,7 @@ static int _ksnd_pcm_writei1(snd_pcm_substream_t *substream,
 		}
 
 #if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
-        /* attribute xfer_align not available in stlinux24 */
+        // attribute xfer_align is not used any more
 #else
 		if (avail > runtime->xfer_align)
 			avail -= avail % runtime->xfer_align;
@@ -921,8 +924,8 @@ static int _ksnd_pcm_writei1(snd_pcm_substream_t *substream,
 		if (frames > cont)
 			frames = cont;
 
-		snd_assert(frames != 0, snd_pcm_stream_unlock_irq(substream);
-			   return -EINVAL);
+		//snd_assert(frames != 0, snd_pcm_stream_unlock_irq(substream);
+		//	   return -EINVAL);
 
 		appl_ptr = runtime->control->appl_ptr;
 		appl_ofs = appl_ptr % runtime->buffer_size;
@@ -972,7 +975,7 @@ static int _ksnd_pcm_writei1(snd_pcm_substream_t *substream,
 		}
 
 #if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
-        /* attribute sleep_min not available in stlinux24 */
+        // snd_pcm_tick_prepare is not used any more 
 #else
 		if (runtime->sleep_min &&
 		    _ksnd_pcm_state(substream) == SNDRV_PCM_STATE_RUNNING)
@@ -993,12 +996,12 @@ int ksnd_pcm_writei(ksnd_pcm_t *kpcm,
 	snd_pcm_runtime_t *runtime;
 	int err;
 	transfer_f out_func = 0;
-	snd_assert(substream != NULL, return -ENXIO);
+	//snd_assert(substream != NULL, return -ENXIO);
 
 	runtime = substream->runtime;
-	snd_assert(runtime != NULL, return -ENXIO);
-	snd_assert(runtime->dma_area != NULL, return -EINVAL);
-	snd_assert(runtime->dma_addr != 0, return -EINVAL);
+	//snd_assert(runtime != NULL, return -ENXIO);
+	//snd_assert(runtime->dma_area != NULL, return -EINVAL);
+	//snd_assert(runtime->dma_addr != 0, return -EINVAL);
 
 	if (substream->pcm->card->number == 2) {
 		out_func = _ksnd_pcm_IEC60958_transfer;
@@ -1020,7 +1023,7 @@ int ksnd_pcm_writei(ksnd_pcm_t *kpcm,
 		return 0;
 
 #if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
-        /* attribute xfer_align not available in stlinux24 */
+        // attribute xfer_align is not used any more
 #else
 	if (size > runtime->xfer_align)
 		size -= size % runtime->xfer_align;
@@ -1251,7 +1254,7 @@ int ksnd_pcm_set_params(ksnd_pcm_t *pcm,
 	}
 
 	err = ksnd_pcm_hw_params_any(pcm, hw_params);
-	snd_assert(err >= 0, goto failure);
+	//snd_assert(err >= 0, goto failure);
 
 	_snd_pcm_hw_param_setinteger(hw_params, SNDRV_PCM_HW_PARAM_PERIODS);
 	_snd_pcm_hw_param_min(hw_params, SNDRV_PCM_HW_PARAM_PERIODS, 2, 0);
@@ -1270,30 +1273,30 @@ int ksnd_pcm_set_params(ksnd_pcm_t *pcm,
 	err =
 	    snd_pcm_hw_param_set(substream, hw_params, SNDRV_PCM_HW_PARAM_RATE,
 				 samplerate, 0);
-	snd_assert(err >= 0, goto failure);
+	//snd_assert(err >= 0, goto failure);
 
 	err =
 	    snd_pcm_hw_param_near(substream, hw_params,
 				  SNDRV_PCM_HW_PARAM_CHANNELS, nrchannels,
 				  NULL);
-	snd_assert(err >= 0, goto failure);
+	//snd_assert(err >= 0, goto failure);
 
 	err =
 	    snd_pcm_hw_param_near(substream, hw_params,
 				  SNDRV_PCM_HW_PARAM_FORMAT, format, 0);
-	snd_assert(err >= 0, goto failure);
+	//snd_assert(err >= 0, goto failure);
 
 	err =
 	    snd_pcm_hw_param_near(substream, hw_params,
 				  SNDRV_PCM_HW_PARAM_PERIOD_SIZE, periodsize,
 				  NULL);
-	snd_assert(err >= 0, goto failure);
+	//snd_assert(err >= 0, goto failure);
 
 	err =
 	    snd_pcm_hw_param_near(substream, hw_params,
 				  SNDRV_PCM_HW_PARAM_BUFFER_SIZE, buffersize,
 				  NULL);
-	snd_assert(err >= 0, goto failure);
+	//snd_assert(err >= 0, goto failure);
 
 	_ksnd_pcm_drop(substream);
 
@@ -1312,7 +1315,7 @@ int ksnd_pcm_set_params(ksnd_pcm_t *pcm,
 
 	sw_params->stop_threshold = runtime->buffer_size;
 #if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
-        /* SNDRV_PCM_TSTAMP_MMAP not available in stlinux24 */
+        sw_params->tstamp_mode = SNDRV_PCM_TSTAMP_ENABLE;
 #else
 	sw_params->tstamp_mode = SNDRV_PCM_TSTAMP_MMAP;
 #endif
@@ -1320,7 +1323,7 @@ int ksnd_pcm_set_params(ksnd_pcm_t *pcm,
 	sw_params->sleep_min = 0;
 	sw_params->avail_min = runtime->period_size;
 #if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
-        /* attribute xfer_align not available in stlinux24 */
+        // attribute xfer_align is not used any more
 #else
 	sw_params->xfer_align = 1;
 #endif
@@ -1473,7 +1476,7 @@ void ksnd_ctl_elem_id_alloca(snd_ctl_elem_id_t **id)
  */
 void ksnd_ctl_elem_id_set_name(snd_ctl_elem_id_t *obj, const char *val)
 {
-    	snd_assert(obj);
+    	//snd_assert(obj);
 	strncpy((char *)obj->name, val, sizeof(obj->name));
 }
 
@@ -1484,7 +1487,7 @@ void ksnd_ctl_elem_id_set_name(snd_ctl_elem_id_t *obj, const char *val)
  */
 void ksnd_ctl_elem_id_set_interface(snd_ctl_elem_id_t *obj, snd_ctl_elem_iface_t val)
 {
-    	snd_assert(obj);
+    	//snd_assert(obj);
 	obj->iface = val;
 }
 
@@ -1495,7 +1498,7 @@ void ksnd_ctl_elem_id_set_interface(snd_ctl_elem_id_t *obj, snd_ctl_elem_iface_t
  */
 void ksnd_ctl_elem_id_set_device(snd_ctl_elem_id_t *obj, unsigned int val)
 {
-	snd_assert(obj);
+	//snd_assert(obj);
 	obj->device = val;
 }
 /**
@@ -1505,7 +1508,7 @@ void ksnd_ctl_elem_id_set_device(snd_ctl_elem_id_t *obj, unsigned int val)
  */
 void ksnd_ctl_elem_id_set_index(snd_ctl_elem_id_t *obj, unsigned int val)
 {
-	snd_assert(obj);
+	//snd_assert(obj);
 	obj->index = val;
 }
 
@@ -1555,7 +1558,7 @@ void ksnd_ctl_elem_value_set_integer(snd_ctl_elem_value_t *obj, unsigned int idx
  */ 
 void ksnd_ctl_elem_value_set_iec958(snd_ctl_elem_value_t *obj, const struct snd_aes_iec958 *ptr)
 {
-	snd_assert(obj && ptr, return);
+	//snd_assert(obj && ptr, return);
 	memcpy(&obj->value.iec958, ptr, sizeof(obj->value.iec958));
 }
 

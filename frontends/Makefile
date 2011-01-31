@@ -122,6 +122,9 @@ fe-core-objs +=        vip2/ix7306.o
 fe-core-objs +=        vip2/zl10353.o
 fe-core-objs +=        vip2/core.o
 obj-m += fe-core.o
+else
+cx24116-objs +=	cx24116_dvbapi5/cx24116.o
+obj-m += cx24116.o
 endif
 # other drivers already in kernel
 

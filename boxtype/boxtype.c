@@ -114,10 +114,13 @@ int __init boxtype_init(void)
 
 	dprintk("[BOXTYPE] initializing ...\n");
 
+// TODO: FIX THIS
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	if (driver_register (&boxtype_driver) < 0)
 	{
 	  printk ("%s(): error registering device driver\n", __func__);
 	}
+#endif
 
 	if(boxtype == 0)
 	{
@@ -135,7 +138,7 @@ int __init boxtype_init(void)
 void __exit boxtype_exit(void)
 {
 	dprintk("[BOXTYPE] unloading ...\n");
-	driver_unregister (&boxtype_driver);
+	//driver_unregister (&boxtype_driver);
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
 	remove_proc_entry(procfs_name, &proc_root);
 #else

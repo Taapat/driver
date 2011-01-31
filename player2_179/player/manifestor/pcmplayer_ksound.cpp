@@ -25,7 +25,7 @@ extern "C" int sprintf(char * buf, const char * fmt, ...);
 
 #define MAX_TIME_TO_GET_AUDIO_DELAY (500ull)
 
-#if defined (CONFIG_KERNELVERSION)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #define FSYNTH_CONTROL_NAME "PCM Playback Oversampling Freq. Adjustment"
 #define FSYNTH_CONTROL_UNITY 0
 #else
@@ -473,7 +473,7 @@ PlayerStatus_t PcmPlayer_Ksound_c::SetIec60958StatusBits(struct snd_pseudo_mixer
 		default:
 			Status.status[3] |= 1;
 #undef C
-		}
+		};
 
 		//
 		// Issue the update
