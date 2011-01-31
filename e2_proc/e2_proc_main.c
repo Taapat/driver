@@ -214,6 +214,19 @@ struct ProcStructure_s
 	void* identifier; /* needed for cpp stuff */
 };
 
+static int get_player_version(char *page, char **start, off_t off, int count,
+                           int *eof, void *data)
+{
+#if defined(PLAYER_179)
+	int len = sprintf(page, "player179\n");
+#elif defined(PLAYER_131)
+	int len = sprintf(page, "player131\n");
+#else
+  int len = sprintf(page, "unknown\n");
+#endif
+
+  return len;
+}
 
 static int info_model_read(char *page, char **start, off_t off, int count,
                            int *eof, void *data)
@@ -403,9 +416,8 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/video/plane/psi_brightness"  , NULL, NULL, NULL, NULL, "psi_brightness"},
 	{cProcEntry, "stb/video/plane/psi_saturation"  , NULL, NULL, NULL, NULL, "psi_saturation"},
 	{cProcEntry, "stb/video/plane/psi_contrast"    , NULL, NULL, NULL, NULL, "psi_saturation"},
-	{cProcEntry, "stb/video/plane/psi_tint"        , NULL, NULL, NULL, NULL, "psi_tint"}
+	{cProcEntry, "stb/video/plane/psi_tint"        , NULL, NULL, NULL, NULL, "psi_tint"},
 #ifdef UFS912
-        ,
 	{cProcDir  , "stb/cec"   	                   , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/cec/state_activesource"   	               , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/cec/state_standby"   	               , NULL, NULL, NULL, NULL, ""},
@@ -413,18 +425,19 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/cec/onetouchplay"   	               , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/cec/systemstandby"   	               , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/cec/event_poll"   	               , NULL, NULL, NULL, NULL, ""},
-	{cProcEntry, "stb/cec/send"   	               , NULL, NULL, NULL, NULL, ""}
+	{cProcEntry, "stb/cec/send"   	               , NULL, NULL, NULL, NULL, ""},
 #endif
 
 #ifdef UFS922
-        ,
 /* dagobert: the dei settings can be used for all 7109 architectures to affec the de-interlacer */
 	{cProcEntry, "stb/video/plane/dei_fmd"         , NULL, NULL, NULL, NULL, "dei_fmd"},
 	{cProcEntry, "stb/video/plane/dei_mode"        , NULL, NULL, NULL, NULL, "dei_mode"},
 	{cProcEntry, "stb/video/plane/dei_ctrl"        , NULL, NULL, NULL, NULL, "dei_ctrl"},
 	{cProcDir  , "stb/fan"   	                    , NULL, NULL, NULL, NULL, ""},
-	{cProcEntry, "stb/fan/fan_ctrl"   	           , NULL, NULL, NULL, NULL, ""}
+	{cProcEntry, "stb/fan/fan_ctrl"   	           , NULL, NULL, NULL, NULL, ""},
 #endif
+	{cProcDir  , "stb/player"                      , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/player/version"              , NULL, get_player_version, NULL, NULL, ""}
 
 };
 

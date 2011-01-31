@@ -79,7 +79,7 @@ static short paramDebug = 0;
 #define TAGDEBUG "[cx24116] "
 
 #define dprintk(level, x...) do { \
-if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
+if (paramDebug > level) printk(TAGDEBUG x); \
 } while (0)
 
 // Fast i2c delay (1ms ~ 1MHz) is only used to speed up the firmware
@@ -439,7 +439,7 @@ cx24116_writereg (struct cx24116_state *state, int reg, int data)
   if ((err = i2c_transfer (state->config->i2c_adap, &msg, 1)) != 1)
   {
     printk ("%s: writereg error(err == %i, reg == 0x%02x,"
-            " data == 0x%02x)\n", __FUNCTION__, err, reg, data);
+            " data == 0x%02x), bus %d\n", __FUNCTION__, err, reg, data, state->config->i2c_bus);
     err = -EREMOTEIO;
   }
 
@@ -456,9 +456,12 @@ cx24116_writeregN (struct cx24116_state *state, int reg, u8 * data, u16 len)
   int ret = -EREMOTEIO;
   struct i2c_msg msg;
   u8 *buf;
+  u32 timeout;
+  
+#ifndef CONFIG_I2C_STM
   struct i2c_algo_bit_data *algo_data = state->config->i2c_adap->algo_data;
   int udelay = algo_data->udelay;
-
+#endif
   buf = kmalloc (len + 1, GFP_KERNEL);
 
   if (buf == NULL)
@@ -476,11 +479,16 @@ cx24116_writeregN (struct cx24116_state *state, int reg, u8 * data, u16 len)
   msg.buf = buf;
   msg.len = len + 1;
 
-  dprintk (100, "cx24116: %s:  write regN 0x%02x, len = %d\n", __FUNCTION__, reg,
-           len);
+  dprintk (100, "cx24116: %s:  write regN 0x%02x, len = %d, bus %d\n", __FUNCTION__, reg, len, state->config->i2c_bus);
 
+#ifndef CONFIG_I2C_STM
   /* temporarily increase the bus speed */
   algo_data->udelay = I2C_FAST_DELAY;
+#else
+  timeout = state->config->i2c_adap->timeout;
+  printk("old timeout %d\n", timeout);
+  state->config->i2c_adap->timeout = 20;
+#endif
 
   if ((ret = i2c_transfer (state->config->i2c_adap, &msg, 1)) != 1)
   {
@@ -489,8 +497,12 @@ cx24116_writeregN (struct cx24116_state *state, int reg, u8 * data, u16 len)
     ret = -EREMOTEIO;
   }
 
+#ifndef CONFIG_I2C_STM
   /* restore the bus speed */
   algo_data->udelay = udelay;
+#else
+  state->config->i2c_adap->timeout = timeout;
+#endif
 
 error:
   kfree (buf);
@@ -1160,20 +1172,20 @@ cx24116_firmware_ondemand (struct dvb_frontend *fe)
   /* lock semaphore to ensure data consistency */
   if(down_trylock(&state->fw_load_sem))
   {
+    dprintk (10, "%s fw upload already running<()\n", __FUNCTION__);
     return 0;
   }
 
   gotreset = cx24116_readreg (state, 0x20);  // implicit watchdog
-
-#ifdef __TDT__
-  if (gotreset > 0) {
-#endif
-
   syschipid = cx24116_readreg (state, 0x94);
 
-  if (gotreset || syschipid != 5 || state->not_responding >= cMaxError)
+  printk("gotreset %d, syschipid %d\n", gotreset, syschipid);
+
+  if ((gotreset || syschipid != 5) && (state->not_responding <= cMaxError))
   {
-    printk ("%s: Start Firmware upload ... \n", __FUNCTION__);
+    state->not_responding++;
+
+    printk ("%s: Start Firmware upload on tuner %d ... %d\n", __FUNCTION__, state->config->i2c_bus, state->not_responding);
 
     ret =
       request_firmware (&fw, cx24116_DEFAULT_FIRMWARE,
@@ -1201,12 +1213,6 @@ cx24116_firmware_ondemand (struct dvb_frontend *fe)
   {
     dprintk (30, "%s: Firmware upload not needed\n", __FUNCTION__);
   }
-#ifdef __TDT__
-  } else {
-    ret = gotreset;
-    printk ("%s: gotreset failed, error %d!\n", __FUNCTION__, ret);
-  }
-#endif
 
   /* unlock semaphore */
   up(&state->fw_load_sem);
@@ -1268,7 +1274,7 @@ cx24116_cmd_execute (struct dvb_frontend *fe, struct cx24116_cmd *cmd)
   cmd->args[0x00] = cmd->id;
 
   /* Write the command */
-  for (i = 0; i < 0x1f /*cmd->len */ ; i++)
+  for (i = 0; i < cmd->len; i++)
   {
     if (i < cmd->len)
     {
@@ -1289,7 +1295,6 @@ cx24116_cmd_execute (struct dvb_frontend *fe, struct cx24116_cmd *cmd)
     {
       /* Avoid looping forever if the firmware does no respond */
       printk ("%s() Firmware not responding\n", __FUNCTION__);
-      state->not_responding++;
 
       return -EREMOTEIO;
     }
@@ -1463,6 +1468,7 @@ cx24116_load_firmware (struct dvb_frontend *fe, const struct firmware *fw)
   if (ret != 0)
     return ret;
 
+  state->not_responding = 0;
   return 0;
 }
 
@@ -2521,6 +2527,8 @@ init_cx24116_device (struct dvb_adapter *adapter,
 
   /* initialize the config data */
   cfg->i2c_adap = i2c_get_adapter (tuner_cfg->i2c_bus);
+  cfg->i2c_bus = tuner_cfg->i2c_bus
+  ;
   cfg->i2c_addr = tuner_cfg->i2c_addr;
 #if defined(HOMECAST5101)
   cfg->tuner_enable_pin = NULL;

@@ -79,6 +79,7 @@ struct cx24116_config
 {
 	struct i2c_adapter	*i2c_adap; /* i2c bus of the tuner */
 	u8			i2c_addr; /* i2c address of the tuner */
+	u8			i2c_bus;
 	u8			i2c_addr_lnb_supply; /* i2c address of the lnb_supply */
 	u8			vertical; /* i2c value */
 	u8			horizontal; /* i2c value */

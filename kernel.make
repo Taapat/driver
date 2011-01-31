@@ -33,11 +33,6 @@ export KERNEL_LOCATION
 export INSTALL_MOD_PATH
 export DRIVER_TOPDIR
 
-CONFIGFILE := $(DRIVER_TOPDIR)/.config
-
-include $(CONFIGFILE)
-
-
 # set KBUILD_VERBOSE to 1 to get all the dirty details
 
 all:
@@ -49,9 +44,13 @@ install: all
 clean:
 	@$(MAKE) -C $(KERNEL_LOCATION) M=$(shell pwd) KBUILD_VERBOSE=0 clean
 
-$(DRIVER_TOPDIR)/.config:
-	@echo export CONFIG_ZD1211REV_B=y 	> $(CONFIGFILE); \
-	echo export CONFIG_ZD1211=n		>> $(CONFIGFILE);
+# Spider-Team:
+# not clean config file, we use it for other modules
+# init config file must be done when run make.sh
+#
+#$(DRIVER_TOPDIR)/.config:
+#	@echo export CONFIG_ZD1211REV_B=y 	> $(CONFIGFILE); \
+#	echo export CONFIG_ZD1211=n		>> $(CONFIGFILE);
 
 # for CDK compatibility, there is no useable distclean from here
 distclean:	clean
