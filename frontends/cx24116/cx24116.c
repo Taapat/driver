@@ -72,7 +72,12 @@
  */
 static short useUnknown = 0;
 #else
+#ifdef UFS910
+// useUnknown leads to very bad reception on 910
+static short useUnknown = 0;
+#else
 static short useUnknown = 1;
+#endif
 #endif
 
 static short paramDebug = 0;
