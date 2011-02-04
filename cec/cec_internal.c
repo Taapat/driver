@@ -52,6 +52,7 @@
 #define PIO_PC1                0x34
 #define PIO_PC2                0x44
 
+#define SYS_CFG2               0x108
 #define SYS_CFG5               0x114
 
 #define CEC_PRESCALER_LEFT     0x00
@@ -186,11 +187,11 @@ printk("\tSEND_SOMSG\n");
 }
 
 
-#define CEC_ERROR_SEND_BTF          64
-#define CEC_ERROR_ON_LINE          32
-#define CEC_ERROR_ACK     16
-#define CEC_ERROR_START         8
-#define CEC_ERROR_RECV_BTF          4
+#define CEC_ERROR_SEND_BTF 64
+#define CEC_ERROR_ON_LINE  32
+#define CEC_ERROR_ACK      16
+#define CEC_ERROR_START     8
+#define CEC_ERROR_RECV_BTF  4
 #define CEC_ERROR_PERIOD    2
 #define CEC_ERROR_TIMING    1
 
@@ -221,6 +222,13 @@ int cec_internal_init(void)
     
     // The org firmware sets the following register
 
+#ifdef STx7105
+    res = cec_read_register_u32( SysConfigBaseAddress + SYS_CFG2 );
+    /* hdmi cec rx enable */
+    res |= ( 1 << (29) );
+    cec_write_register_u32( SysConfigBaseAddress + SYS_CFG2, res );
+#endif
+#ifdef STx7111
     /* pio 1.7 open drain */
     cec_write_register_u32( PIO1BaseAddress + PIO_PC0, 128 );
     cec_write_register_u32( PIO1BaseAddress + PIO_PC1, 128 );
@@ -235,6 +243,8 @@ int cec_internal_init(void)
     /* pio 1.7 alt */
     res |= ( 1 << (24) );
     cec_write_register_u32( SysConfigBaseAddress + SYS_CFG5, res );
+#endif
+
 
     res = cec_read_register_u32(CECBaseAddress + CEC_CFG );
     /* enable */
@@ -251,11 +261,21 @@ int cec_internal_init(void)
 void cec_internal_exit(void)
 {  
     u32 res = 0;
+#ifdef STx7105
+    /* hdmi cec rx disable */
+    res = cec_read_register_u32( SysConfigBaseAddress + SYS_CFG2);
+    res &= ~( 1 << (29) );
+    cec_write_register_u32( SysConfigBaseAddress + SYS_CFG2, res);
+#endif
+#ifdef STx7111
+    /* pio 1.7 close drain */
     res = cec_read_register_u32( SysConfigBaseAddress + SYS_CFG5);
     res &= ~( 256);
     cec_write_register_u32( SysConfigBaseAddress + SYS_CFG5, res);
+#endif
 
     res = cec_read_register_u32(CECBaseAddress + CEC_CFG);
+    /* disable */
     res &= (u32)~ 0x03;
     cec_write_register_u32(CECBaseAddress + CEC_CFG, res);
 
