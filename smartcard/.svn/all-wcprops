@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svnroot/qboxhd/!svn/ver/45/trunk/src/drivers/smartcard
+END
+sci_params.c
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svnroot/qboxhd/!svn/ver/45/trunk/src/drivers/smartcard/sci_params.c
+END
+sci.h
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svnroot/qboxhd/!svn/ver/45/trunk/src/drivers/smartcard/sci.h
+END
+sci_types.h
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svnroot/qboxhd/!svn/ver/45/trunk/src/drivers/smartcard/sci_types.h
+END
+sci_drv.c
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svnroot/qboxhd/!svn/ver/45/trunk/src/drivers/smartcard/sci_drv.c
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svnroot/qboxhd/!svn/ver/45/trunk/src/drivers/smartcard/Makefile
+END
