@@ -103,6 +103,7 @@ obj-y	+= pti/
 #obj-y	+= pti_np/
 obj-y	+= compcache/
 obj-y	+= bpamem/
+obj-y	+= smartcard/
 
 ifdef STM22
 obj-y	+= logfs/
