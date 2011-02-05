@@ -50,7 +50,7 @@ static unsigned char cancelStart = 0;
 
 int __init cec_init(void)
 {
-    printk("[CEC] init - starting syslog\n");
+    printk("[CEC] init - starting\n");
 
     cec_internal_init();
 
@@ -60,17 +60,20 @@ int __init cec_init(void)
 
     /* ********* */
     /* irq setup */
+
+   printk("[CEC] init - starting intterrupt (%d)\n", CEC_IRQ);
+
 #if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
-    if (!request_irq(CEC_IRQ, (void*)cec_interrupt, IRQF_DISABLED, "CEC", NULL))
+    if (!request_irq(CEC_IRQ, (void*)cec_interrupt, IRQF_DISABLED, "cec", NULL))
 #else
-    if (!request_irq(CEC_IRQ, (void*)cec_interrupt, SA_INTERRUPT, "CEC", NULL))
+    if (!request_irq(CEC_IRQ, (void*)cec_interrupt, SA_INTERRUPT, "cec", NULL))
 #endif
     {
 
     }
     else 
     {
-       printk("cec: Can't get irq\n");
+       printk("[CEC] Can't get irq\n");
     }
     
     init_e2_proc();
@@ -86,7 +89,7 @@ int __init cec_init(void)
 
 static void __exit cec_exit(void)
 {  
-    printk("cec unloaded\n");
+    printk("[CEC] unloaded\n");
 
     cancelStart = 1;
     msleep(200);

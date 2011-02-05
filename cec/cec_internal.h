@@ -21,7 +21,15 @@
 #ifndef CEC_INTERNAL_H_
 #define CEC_INTERNAL_H_
 
+#define CEC_IRQ_7111                143
+#define CEC_IRQ_7105                159
+
+#ifdef STx7105
+#define CEC_IRQ                159
+#endif
+#ifdef STx7111
 #define CEC_IRQ                143
+#endif
 
 #define CEC_STATUS_RECV_BTF 128
 #define CEC_STATUS_RECV_ERR 64

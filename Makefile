@@ -103,7 +103,6 @@ obj-y	+= pti/
 #obj-y	+= pti_np/
 obj-y	+= compcache/
 obj-y	+= bpamem/
-obj-y	+= smartcard/
 
 ifdef STM22
 obj-y	+= logfs/
@@ -140,12 +139,15 @@ obj-y	+= player2/linux/drivers/media/dvb/stm/dvb
 endif
 
 ifdef UFS912
-#obj-y	+= cec/
-obj-y	+= clk/
+obj-y	+= cec/
+endif
+
+ifdef ATEVIO7500
+obj-y	+= cec/
 endif
 
 ifdef SPARK
-obj-y   += clk/
+obj-y	+= smartcard/
 endif
 
 endif

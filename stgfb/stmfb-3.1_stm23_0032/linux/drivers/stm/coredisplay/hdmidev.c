@@ -508,6 +508,27 @@ long stmhdmiio_get_edid_handling(unsigned int * arg)
 }
 EXPORT_SYMBOL(stmhdmiio_get_edid_handling);
 
+long stmhdmiio_get_cec_address(unsigned int * arg)
+{
+  long retval=0;
+  struct stm_hdmi *dev = HACK_dev;
+
+  printk("%s - %p\n", __func__, dev);
+
+  if(mutex_lock_interruptible(&dev->lock))
+    return -ERESTARTSYS;
+
+  *arg = (dev->edid_info.cec_address[0] << 12) +
+         (dev->edid_info.cec_address[1] << 8) +
+         (dev->edid_info.cec_address[2] << 4) +
+         (dev->edid_info.cec_address[3]);
+
+  mutex_unlock(&dev->lock);
+  return retval;
+
+}
+EXPORT_SYMBOL(stmhdmiio_get_cec_address);
+
 //HACK <-
 #endif
 
