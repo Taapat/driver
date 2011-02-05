@@ -22,10 +22,10 @@
 #define CEC_INTERNAL_H_
 
 #define CEC_IRQ_7111                143
-#define CEC_IRQ_7105                159
+#define CEC_IRQ_7105                157
 
 #ifdef STx7105
-#define CEC_IRQ                159
+#define CEC_IRQ                157
 #endif
 #ifdef STx7111
 #define CEC_IRQ                143

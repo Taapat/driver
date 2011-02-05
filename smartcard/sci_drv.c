@@ -2148,6 +2148,7 @@ int sci_ioctl(struct inode *inode,
             
         case IOCTL_SET_PARAMETERS://4
             dprintk(1, "ioctl IOCTL_SET_PARAMETERS: sci_id[%d]\n", sci->id);
+
             copy_from_user((void *)&sci_param, (const void *)ioctl_param, sizeof(SCI_PARAMETERS));
 
             if (sci_set_parameters(sci, &sci_param) == SCI_ERROR_OK)
@@ -2422,11 +2423,10 @@ static void __exit sci_module_cleanup(void)
 
     cdev_del(&sci_cdev);
 
+    unregister_chrdev_region(dev, SCI_NUMBER_OF_CONTROLLERS);
+
     for(i = 0; i < SCI_NUMBER_OF_CONTROLLERS; i++)
-    {
-        unregister_chrdev_region(dev, i);
         class_device_destroy(sci_module_class, dev);
-    }
 
     class_destroy(sci_module_class);
 
