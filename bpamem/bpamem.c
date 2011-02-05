@@ -19,6 +19,8 @@
 #endif
 #include <linux/major.h>
 
+#include <linux/device.h> /* class_creatre */
+#include <linux/cdev.h> /* cdev_init */
 
 #define MAX_BPA_ALLOCS 32
 
@@ -169,44 +171,76 @@ static int bpamem_mmap(struct file *file, struct vm_area_struct *vma)
 
 static struct file_operations bpamem_devops = 
 {
-	.owner   	= THIS_MODULE,
+	.owner	= THIS_MODULE,
 	.open		= bpamem_open,
 	.release	= bpamem_release,
-	.ioctl		= bpamem_ioctl,
+	.ioctl	= bpamem_ioctl,
 	.mmap		= bpamem_mmap,
 };
 
+#define DEVICE_NAME "bpamem"
+
+static        dev_t  bpamem_dev_num;
+static struct cdev   bpamem_cdev;
+static struct class *bpamem_class = 0;
+
 static int __init bpamem_init(void)
 {
-	int ret;
+	int result;
 	unsigned int i;
 	for(i = 0; i < MAX_BPA_ALLOCS; i++)
 	{
 		bpamem_dev[i].used = 0;
 		bpamem_dev[i].phys_addr = 0;
 	}
-		
-	ret = register_chrdev(BPAMEM_MAJOR, "BPAMem", &bpamem_devops);
 	
+	bpamem_dev_num = MKDEV(BPAMEM_MAJOR, 0);
+
+	result = register_chrdev_region(bpamem_dev_num, MAX_BPA_ALLOCS, DEVICE_NAME);
+	if (result < 0) {
+		printk( KERN_ALERT "BPAMem cannot register device (%d)\n", result);
+		return result;
+	}
+
+	cdev_init(&bpamem_cdev, &bpamem_devops);
+	bpamem_cdev.owner = THIS_MODULE;
+	bpamem_cdev.ops = &bpamem_devops;
+	if (cdev_add(&bpamem_cdev, bpamem_dev_num, MAX_BPA_ALLOCS) < 0)
+	{
+		printk("BPAMem couldn't register '%s' driver\n", DEVICE_NAME);
+		return -1;
+	}
+
+	bpamem_class = class_create(THIS_MODULE, DEVICE_NAME);
+	for(i = 0; i < MAX_BPA_ALLOCS; i++)
+		class_device_create(bpamem_class, NULL, bpamem_dev_num, NULL, "bpamem%d", i);
+
 	sema_init(&sem_find_dev, 1);
 	
-	DEBUG_PRINTK("BPAMem driver register result = %d", ret);
-	return ret;
+	DEBUG_PRINTK("BPAMem driver register result = %d", result);
+	return result;
 }
 
 static void __exit bpamem_exit(void)
 {
 	int ret, i;
+
+	printk("Unregistering device '%s', major '%d'", DEVICE_NAME, BPAMEM_MAJOR);
+
 	for(i = 0; i < MAX_BPA_ALLOCS; i++)
 		bpamemio_deallocmem(i);
+
+	cdev_del(&bpamem_cdev);
+
+	unregister_chrdev_region(bpamem_dev_num, MAX_BPA_ALLOCS);
+
+	for(i = 0; i < MAX_BPA_ALLOCS; i++)
+	{
 		
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,17)
-	ret = unregister_chrdev(BPAMEM_MAJOR, "BPAMem");
-	if (ret < 0)
-		DEBUG_PRINTK("error in unregister_chrdev: %d\n", ret);
-#else
-	unregister_chrdev(BPAMEM_MAJOR, "BPAMem");
-#endif
+		class_device_destroy(bpamem_class, bpamem_dev_num);
+	}
+
+	class_destroy(bpamem_class);
 }
 
 module_init(bpamem_init);
