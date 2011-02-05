@@ -24,6 +24,8 @@
 #include "sci_7100.h"
 #elif defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(CONFIG_SH_ST_MB618)
 #include "sci_7111.h"
+#elif defined(CONFIG_CPU_SUBTYPE_STX7105) || defined(ATEVIO7500)
+#include "sci_7111.h"
 #endif
 
 #define MAIN_FREQ			100000000

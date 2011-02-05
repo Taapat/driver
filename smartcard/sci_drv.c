@@ -50,7 +50,7 @@
 #include <asm/io.h>
 #include <linux/kthread.h>
 #include <linux/workqueue.h>
-
+#include <linux/device.h> /* class_creatre */
 
 #include "sci_types.h"
 #include "sci.h"
@@ -59,6 +59,8 @@
 #if defined(CONFIG_CPU_SUBTYPE_STB7100) || defined(CONFIG_SH_ST_MB442) || defined(CONFIG_SH_ST_MB411)
 #include "sci_7100.h"
 #elif defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(UFS912) || defined(SPARK)
+#include "sci_7111.h"
+#elif defined(CONFIG_CPU_SUBTYPE_STX7105) || defined(ATEVIO7500)
 #include "sci_7111.h"
 #endif
 
@@ -437,14 +439,14 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
         if (vcc == SCI_VCC_3)
         {
             sci->sci_atr_class=SCI_CLASS_B;
-#if !defined(SPARK) || !defined(HL101)  // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO4, PIO_CLR_P4OUT, 0x40);
 #endif
         }
         else if (vcc == SCI_VCC_5)
         {
             sci->sci_atr_class=SCI_CLASS_A;
-#if !defined(SPARK) || !defined(HL101)  // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO4, PIO_SET_P4OUT, 0x40);
 #endif
         }
@@ -452,7 +454,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
         {
             PERROR("Invalid Vcc value '%d', set Vcc 5V", vcc);
             sci->sci_atr_class=SCI_CLASS_A;
-#if !defined(SPARK) || !defined(HL101)  // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO4, PIO_SET_P4OUT, 0x40);
 #endif
             return SCI_ERROR_VCC_INVALID;
@@ -463,7 +465,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
         if (vcc == SCI_VCC_3)
         {
 			sci->sci_atr_class=SCI_CLASS_B;
-#if !defined(SPARK) || !defined(HL101)  // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO3, PIO_CLR_P3OUT, 0x40);
 #endif
 
@@ -471,7 +473,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
         else if (vcc == SCI_VCC_5)
         {
 			sci->sci_atr_class=SCI_CLASS_A;
-#if !defined(SPARK) || !defined(HL101)  // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO3, PIO_SET_P3OUT, 0x40);
 #endif
         }
@@ -479,7 +481,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
         {
             PERROR("Invalid Vcc value '%d', set Vcc 5V", vcc);
             sci->sci_atr_class=SCI_CLASS_A;
-#if !defined(SPARK) || !defined(HL101)  // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO3, PIO_CLR_P3OUT, 0x40);
 #endif
             return SCI_ERROR_VCC_INVALID;
@@ -1065,7 +1067,7 @@ static int SCI_SetClockSource(SCI_CONTROL_BLOCK *sci)
 
     iounmap((void *)reg_address);
 
-#if defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(UFS912) || defined(SPARK)
+#if defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(UFS912) || defined(SPARK) || defined(CONFIG_CPU_SUBTYPE_STX7105) || defined(ATEVIO7500)
 	reg_address = (U32)checked_ioremap(SYS_CFG_BASE_ADDRESS+0x114, 4);
 	if(!reg_address)
 		return 0;
@@ -2340,8 +2342,8 @@ int sci_read_proc(char *buffer, char **start, off_t offset,  int size,  int *eof
 }
 #endif
 
-
-
+static struct class *sci_module_class = 0;
+static dev_t dev;
 static struct file_operations Fops = 
 {
     .owner   = THIS_MODULE,
@@ -2354,23 +2356,7 @@ static struct file_operations Fops =
     .llseek  = NULL
 };
 
-
-#ifdef CONFIG_CPU_SUBTYPE_STX7111
-	#ifdef CONFIG_SH_ST_MB618
-		#define STR               "-STX7111-MB618"
-	#else
-		#define STR               "-STX7111"
-	#endif
-#elif  CONFIG_CPU_SUBTYPE_STB7100
-	#ifdef HL101
-		#define STR               "-STB7100-HL101"
-	#else
-		#define STR               "-STB7100"
-	#endif
-#define STR               ""
-#endif
-
-#define SMARTCARD_VERSION       "1.0.1"STR
+#define SMARTCARD_VERSION       "1.0.1"
 
 /**************************************************************************
  * Module init/exit
@@ -2378,13 +2364,14 @@ static struct file_operations Fops =
 
 static int __init sci_module_init(void)
 {
-    dev_t dev = MKDEV(MAJOR_NUM, MINOR_START);
+    int i;
+    dev = MKDEV(MAJOR_NUM, MINOR_START);
 
     sci_driver_init = 0;
 
     if (sci_init() == SCI_ERROR_OK)
     {
-		if(register_chrdev_region(dev, SCI_NUMBER_OF_CONTROLLERS, DEVICE_NAME) < 0)
+        if(register_chrdev_region(dev, SCI_NUMBER_OF_CONTROLLERS, DEVICE_NAME) < 0)
         {
             printk("Couldn't register '%s' driver region\n", DEVICE_NAME);
             return -1;
@@ -2398,6 +2385,11 @@ static int __init sci_module_init(void)
             return -1;
         }
         printk("Registering device '%s', major '%d'\n", DEVICE_NAME, MAJOR_NUM);
+
+        // Register with sysfs so udev can create the proper devices 
+        sci_module_class = class_create(THIS_MODULE, DEVICE_NAME);
+        for(i = 0; i < SCI_NUMBER_OF_CONTROLLERS; i++)
+            class_device_create(sci_module_class, NULL, dev, NULL, "sci%d", i);
     }
     else
     {
@@ -2418,7 +2410,7 @@ static int __init sci_module_init(void)
 
 static void __exit sci_module_cleanup(void)
 {
-    dev_t dev = MKDEV(MAJOR_NUM, MINOR_START);
+    int i;
 
 #ifdef CONFIG_PROC_FS
     remove_proc_entry(SCI_PROC_FILENAME, NULL);
@@ -2428,10 +2420,17 @@ static void __exit sci_module_cleanup(void)
 
     printk("Unregistering device '%s', major '%d'", DEVICE_NAME, MAJOR_NUM);
 
-    unregister_chrdev_region(dev, SCI_NUMBER_OF_CONTROLLERS);
-    
     cdev_del(&sci_cdev);
-	printk("Smartcard Driver v.[%s] removed. \n",SMARTCARD_VERSION );
+
+    for(i = 0; i < SCI_NUMBER_OF_CONTROLLERS; i++)
+    {
+        unregister_chrdev_region(dev, i);
+        class_device_destroy(sci_module_class, dev);
+    }
+
+    class_destroy(sci_module_class);
+
+    printk("Smartcard Driver v.[%s] removed. \n",SMARTCARD_VERSION );
 }
 
 module_init(sci_module_init);

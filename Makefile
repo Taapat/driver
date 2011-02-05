@@ -144,6 +144,7 @@ endif
 
 ifdef ATEVIO7500
 obj-y	+= cec/
+obj-y	+= smartcard/
 endif
 
 ifdef SPARK
