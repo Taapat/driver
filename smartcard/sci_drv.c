@@ -64,6 +64,8 @@
 #include "sci_7105.h"
 #endif
 
+
+
 /*****************************
  * MACROS
  *****************************/
@@ -439,23 +441,29 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
         if (vcc == SCI_VCC_3)
         {
             sci->sci_atr_class=SCI_CLASS_B;
+#if !defined(SUPPORT_NO_VOLTAGE)
 #if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO4, PIO_CLR_P4OUT, 0x40);
+#endif
 #endif
         }
         else if (vcc == SCI_VCC_5)
         {
             sci->sci_atr_class=SCI_CLASS_A;
+#if !defined(SUPPORT_NO_VOLTAGE)
 #if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO4, PIO_SET_P4OUT, 0x40);
+#endif
 #endif
         }
         else
         {
             PERROR("Invalid Vcc value '%d', set Vcc 5V", vcc);
             sci->sci_atr_class=SCI_CLASS_A;
+#if !defined(SUPPORT_NO_VOLTAGE)
 #if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO4, PIO_SET_P4OUT, 0x40);
+#endif
 #endif
             return SCI_ERROR_VCC_INVALID;
         }
@@ -465,24 +473,30 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
         if (vcc == SCI_VCC_3)
         {
 			sci->sci_atr_class=SCI_CLASS_B;
+#if !defined(SUPPORT_NO_VOLTAGE)
 #if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO3, PIO_CLR_P3OUT, 0x40);
+#endif
 #endif
 
         }
         else if (vcc == SCI_VCC_5)
         {
 			sci->sci_atr_class=SCI_CLASS_A;
+#if !defined(SUPPORT_NO_VOLTAGE)
 #if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO3, PIO_SET_P3OUT, 0x40);
+#endif
 #endif
         }
         else 
         {
             PERROR("Invalid Vcc value '%d', set Vcc 5V", vcc);
             sci->sci_atr_class=SCI_CLASS_A;
+#if !defined(SUPPORT_NO_VOLTAGE)
 #if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO3, PIO_CLR_P3OUT, 0x40);
+#endif
 #endif
             return SCI_ERROR_VCC_INVALID;
         }
@@ -1083,23 +1097,27 @@ static int SCI_SetClockSource(SCI_CONTROL_BLOCK *sci)
 #endif
 
 #if defined(CONFIG_CPU_SUBTYPE_STX7105) || defined(ATEVIO7500)
-	reg_address = (U32)checked_ioremap(EPLD_BASE_ADDRESS+EPLD_SCREG, 4);
-	if(!reg_address)
-		return 0;
-	val = ctrl_inl(reg_address);
-	val = (val & ~0x77) | 0x77;
-	ctrl_outl(val, reg_address);
-	iounmap((void *)reg_address);
-
+	reg_address = (U32)checked_ioremap(EPLD_BASE_ADDRESS/+EPLD_SCREG, 4);
+	if(reg_address) {
+		val = ctrl_inl(reg_address);
+		val = (val & ~0x77) | 0x77;
+		ctrl_outl(val, reg_address);
+		iounmap((void *)reg_address);
+	}
 
 	reg_address = (U32)checked_ioremap(SYS_CFG_BASE_ADDRESS+SYS_CFG7, 4);
 	if(!reg_address)
 		return 0;
 	val = ctrl_inl(reg_address);
 	val = (val & ~0xdf8) | 0xdf8;
+#ifdef STX7105_SETPOWERLOW
+	val &= ~(1 << 7);
+	val &= ~(1 << 11);
+	val |= (1 << 3);
+	val |= (1 << 8);
+#endif
 	ctrl_outl(val, reg_address);
 	iounmap((void *)reg_address);
-
 
 	reg_address = (U32)checked_ioremap(SYS_CFG_BASE_ADDRESS+SYS_CFG19, 4);
 	if(!reg_address)
@@ -1117,6 +1135,16 @@ static int SCI_SetClockSource(SCI_CONTROL_BLOCK *sci)
 	val = (val & ~0xff00) | 0xff00;
 	ctrl_outl(val, reg_address);
 	iounmap((void *)reg_address);
+
+#ifdef STX7105_SETPOWERLOW
+	reg_address = (U32)checked_ioremap(SYS_CFG_BASE_ADDRESS+SYS_CFG7, 4);
+	if(!reg_address)
+		return 0;
+	val = ctrl_inl(reg_address);
+	ctrl_outl(val&~(1<<23), reg_address);
+	iounmap((void *)reg_address);
+#endif
+
 #endif
 
 

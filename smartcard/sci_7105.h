@@ -1,6 +1,9 @@
 #ifndef _SCI_7105_H
 #define _SCI_7105_H
 
+#define SUPPORT_NO_VOLTAGE
+#define STX7105_SETPOWERLOW
+
 #define SYS_CFG_BASE_ADDRESS       0xFE001000
 #define SYS_CFG5                   0x114
 #define SYS_CFG7                   0x11C
