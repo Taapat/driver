@@ -213,7 +213,11 @@ static int __init bpamem_init(void)
 
 	bpamem_class = class_create(THIS_MODULE, DEVICE_NAME);
 	for(i = 0; i < MAX_BPA_ALLOCS; i++)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
+		device_create(bpamem_class, NULL, bpamem_dev_num, NULL, "bpamem%d", i);
+#else
 		class_device_create(bpamem_class, NULL, bpamem_dev_num, NULL, "bpamem%d", i);
+#endif
 
 	sema_init(&sem_find_dev, 1);
 	
@@ -223,7 +227,7 @@ static int __init bpamem_init(void)
 
 static void __exit bpamem_exit(void)
 {
-	int ret, i;
+	int i;
 
 	printk("Unregistering device '%s', major '%d'", DEVICE_NAME, BPAMEM_MAJOR);
 
@@ -235,10 +239,11 @@ static void __exit bpamem_exit(void)
 	unregister_chrdev_region(bpamem_dev_num, MAX_BPA_ALLOCS);
 
 	for(i = 0; i < MAX_BPA_ALLOCS; i++)
-	{
-		
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
+		device_destroy(bpamem_class, bpamem_dev_num);
+#else
 		class_device_destroy(bpamem_class, bpamem_dev_num);
-	}
+#endif
 
 	class_destroy(bpamem_class);
 }
