@@ -61,7 +61,7 @@
 #elif defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(UFS912) || defined(SPARK)
 #include "sci_7111.h"
 #elif defined(CONFIG_CPU_SUBTYPE_STX7105) || defined(ATEVIO7500)
-#include "sci_7111.h"
+#include "sci_7105.h"
 #endif
 
 /*****************************
@@ -1052,30 +1052,73 @@ static int SCI_SetClockSource(SCI_CONTROL_BLOCK *sci)
 	PDEBUG(" ...\n");
 
 	/* Configure smart clock coming from smartclock generator */
-	U32 reg_address = (U32)checked_ioremap(SYS_CFG_BASE_ADDRESS+0x11c, 4);
+	U32 reg_address = 0;
+	U32 val = 0;
+
+#if defined(CONFIG_CPU_SUBTYPE_STB7100) || defined(CONFIG_SH_ST_MB442) || defined(CONFIG_SH_ST_MB411) || defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(UFS912) || defined(SPARK) 
+	reg_address = (U32)checked_ioremap(SYS_CFG_BASE_ADDRESS+SYS_CFG7, 4);
 	if(!reg_address)
 		return 0;
 
-	U32 val = ctrl_inl(reg_address);
-    val|=0x1B0;
+	Uval = ctrl_inl(reg_address);
+	val|=0x1B0;
 
 	/* configure SC0_nSETVCC: derived from SC0_DETECT input */
 	val &= ~(1 << 7);
 	/* set polarity of SC0_nSETVCC: SC0_nSETVCC = NOT(SC0_DETECT) */
 	val |= (1 << 8);
-    ctrl_outl(val, reg_address);
+	ctrl_outl(val, reg_address);
 
-    iounmap((void *)reg_address);
+	iounmap((void *)reg_address);
 
-#if defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(UFS912) || defined(SPARK) || defined(CONFIG_CPU_SUBTYPE_STX7105) || defined(ATEVIO7500)
-	reg_address = (U32)checked_ioremap(SYS_CFG_BASE_ADDRESS+0x114, 4);
+#if defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(UFS912) || defined(SPARK)
+	reg_address = (U32)checked_ioremap(SYS_CFG_BASE_ADDRESS+SYS_CFG5, 4);
 	if(!reg_address)
 		return 0;
 #endif
 
 	val = ctrl_inl(reg_address);
-    ctrl_outl(val&~(1<<23), reg_address);
-    iounmap((void *)reg_address);
+	ctrl_outl(val&~(1<<23), reg_address);
+	iounmap((void *)reg_address);
+#endif
+
+#if defined(CONFIG_CPU_SUBTYPE_STX7105) || defined(ATEVIO7500)
+	reg_address = (U32)checked_ioremap(EPLD_BASE_ADDRESS+EPLD_SCREG, 4);
+	if(!reg_address)
+		return 0;
+	val = ctrl_inl(reg_address);
+	val = (val & ~0x77) | 0x77;
+	ctrl_outl(val, reg_address);
+	iounmap((void *)reg_address);
+
+
+	reg_address = (U32)checked_ioremap(SYS_CFG_BASE_ADDRESS+SYS_CFG7, 4);
+	if(!reg_address)
+		return 0;
+	val = ctrl_inl(reg_address);
+	val = (val & ~0xdf8) | 0xdf8;
+	ctrl_outl(val, reg_address);
+	iounmap((void *)reg_address);
+
+
+	reg_address = (U32)checked_ioremap(SYS_CFG_BASE_ADDRESS+SYS_CFG19, 4);
+	if(!reg_address)
+		return 0;
+	val = ctrl_inl(reg_address);
+	val = (val & ~0xff00) | 0xff00;
+	ctrl_outl(val, reg_address);
+	iounmap((void *)reg_address);
+
+
+	reg_address = (U32)checked_ioremap(SYS_CFG_BASE_ADDRESS+SYS_CFG20, 4);
+	if(!reg_address)
+		return 0;
+	val = ctrl_inl(reg_address);
+	val = (val & ~0xff00) | 0xff00;
+	ctrl_outl(val, reg_address);
+	iounmap((void *)reg_address);
+#endif
+
 
     /* Configure smartcard control register */
 	reg_address = (U32)checked_ioremap(sci->base_address_sci+4, 4); // SCI_n_CLK_CTRL
