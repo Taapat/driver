@@ -117,7 +117,7 @@ SCI_ERROR sci_set_para(SCI_CONTROL_BLOCK *sci, SCI_PARAMETERS *p_sci_parameters)
 		printk("ATR wasn't read\n");
 		return (rc);
 	}
-
+#if !defined(SUPPORT_NO_AUTOSET)
     if((p_sci_parameters != 0) && (sci->id < SCI_NUMBER_OF_CONTROLLERS))
     {
         rc = sci_set_para_T    (sci, p_sci_parameters);
@@ -138,7 +138,7 @@ SCI_ERROR sci_set_para(SCI_CONTROL_BLOCK *sci, SCI_PARAMETERS *p_sci_parameters)
     {
         rc = SCI_ERROR_PARAMETER_OUT_OF_RANGE;
     }
-
+#endif
     PDEBUG(" OK\n");
 
     return(rc);
