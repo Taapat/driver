@@ -1060,7 +1060,7 @@ static int SCI_SetClockSource(SCI_CONTROL_BLOCK *sci)
 	if(!reg_address)
 		return 0;
 
-	Uval = ctrl_inl(reg_address);
+	val = ctrl_inl(reg_address);
 	val|=0x1B0;
 
 	/* configure SC0_nSETVCC: derived from SC0_DETECT input */
