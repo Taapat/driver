@@ -110,6 +110,10 @@ endif
 
 #obj-y	+= proc_register/
 
+ifdef  HL101
+obj-y	+= smartcard/
+endif
+
 ifndef VIP2_V1
 ifndef SPARK
 obj-y	+= cic/
