@@ -180,7 +180,6 @@ static struct file_operations bpamem_devops =
 
 #define DEVICE_NAME "bpamem"
 
-static        dev_t  bpamem_dev_num;
 static struct cdev   bpamem_cdev;
 static struct class *bpamem_class = 0;
 
@@ -194,9 +193,7 @@ static int __init bpamem_init(void)
 		bpamem_dev[i].phys_addr = 0;
 	}
 	
-	bpamem_dev_num = MKDEV(BPAMEM_MAJOR, 0);
-
-	result = register_chrdev_region(bpamem_dev_num, MAX_BPA_ALLOCS, DEVICE_NAME);
+	result = register_chrdev_region(MKDEV(BPAMEM_MAJOR, 0), MAX_BPA_ALLOCS, DEVICE_NAME);
 	if (result < 0) {
 		printk( KERN_ALERT "BPAMem cannot register device (%d)\n", result);
 		return result;
@@ -205,7 +202,7 @@ static int __init bpamem_init(void)
 	cdev_init(&bpamem_cdev, &bpamem_devops);
 	bpamem_cdev.owner = THIS_MODULE;
 	bpamem_cdev.ops = &bpamem_devops;
-	if (cdev_add(&bpamem_cdev, bpamem_dev_num, MAX_BPA_ALLOCS) < 0)
+	if (cdev_add(&bpamem_cdev, MKDEV(BPAMEM_MAJOR, 0), MAX_BPA_ALLOCS) < 0)
 	{
 		printk("BPAMem couldn't register '%s' driver\n", DEVICE_NAME);
 		return -1;
@@ -214,9 +211,9 @@ static int __init bpamem_init(void)
 	bpamem_class = class_create(THIS_MODULE, DEVICE_NAME);
 	for(i = 0; i < MAX_BPA_ALLOCS; i++)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
-		device_create(bpamem_class, NULL, bpamem_dev_num, NULL, "bpamem%d", i);
+		device_create(bpamem_class, NULL, MKDEV(BPAMEM_MAJOR, i), NULL, "bpamem%d", i);
 #else
-		class_device_create(bpamem_class, NULL, bpamem_dev_num, NULL, "bpamem%d", i);
+		class_device_create(bpamem_class, NULL, MKDEV(BPAMEM_MAJOR, i), NULL, "bpamem%d", i);
 #endif
 
 	sema_init(&sem_find_dev, 1);
@@ -236,13 +233,13 @@ static void __exit bpamem_exit(void)
 
 	cdev_del(&bpamem_cdev);
 
-	unregister_chrdev_region(bpamem_dev_num, MAX_BPA_ALLOCS);
+	unregister_chrdev_region(MKDEV(BPAMEM_MAJOR, 0), MAX_BPA_ALLOCS);
 
 	for(i = 0; i < MAX_BPA_ALLOCS; i++)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
-		device_destroy(bpamem_class, bpamem_dev_num);
+		device_destroy(bpamem_class, MKDEV(BPAMEM_MAJOR, i));
 #else
-		class_device_destroy(bpamem_class, bpamem_dev_num);
+		class_device_destroy(bpamem_class, MKDEV(BPAMEM_MAJOR, i));
 #endif
 
 	class_destroy(bpamem_class);
