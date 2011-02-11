@@ -61,6 +61,7 @@ two not implemented commands:
 #include "micom.h"
 #include "micom_asc.h"
 
+
 //----------------------------------------------
 #define EVENT_BTN                  0xd1
 #define EVENT_RC                   0xd2
@@ -76,14 +77,10 @@ two not implemented commands:
 #define DATA_BTN_NEXTKEY 4
 
 //----------------------------------------------
-short paramDebug = 50;
+short paramDebug = 20;
 
 static unsigned char expectEventData = 0;
 static unsigned char expectEventId = 1;
-
-struct semaphore     waitForAck; /* stop caller task if waiting for ack */
-
-static struct timer_list ackTimer; /* release sema after a given time */
 
 #define ACK_WAIT_TIME msecs_to_jiffies(500)
 
@@ -103,21 +100,36 @@ static int           KeyBufferStart = 0, KeyBufferEnd = 0;
 
 static wait_queue_head_t   wq;
 static wait_queue_head_t   rx_wq;
+static wait_queue_head_t   ack_wq;
+static int dataReady = 0;
 
 //----------------------------------------------
 
 void ack_sem_up(void)
 {
-    del_timer(&ackTimer);
-    up(&waitForAck);
+    dataReady = 1; 
+    wake_up_interruptible(&ack_wq);
 }
 
 int ack_sem_down(void)
 {
-	ackTimer.expires = jiffies + ACK_WAIT_TIME;
-	add_timer(&ackTimer);
-
-    return down_interruptible (&waitForAck);
+    int err = 0;
+    
+    dataReady = 0; 
+    
+    err  = wait_event_interruptible_timeout(ack_wq, dataReady == 1, ACK_WAIT_TIME); 
+    if (err == -ERESTARTSYS)
+    {
+         printk("wait_event_interruptible failed\n");
+         return err;
+    } else
+    if (err == 0)
+    {
+         printk("timeout waiting on ack\n");
+    } else
+         dprintk(20, "command processed - remaining jiffies %d\n", err);
+    
+    return 0;
 }
 
 EXPORT_SYMBOL(ack_sem_down);
@@ -364,11 +376,8 @@ static void processResponse(void)
             dprintk(1, "Neg. response received\n");
             
             /* if there is a waiter for an acknowledge ... */
-            if(atomic_read(&waitForAck.count) < 0)
-            {
-              errorOccured = 1;
-              ack_sem_up();
-            }
+            errorOccured = 1;
+            ack_sem_up();
 
             /* discard all data */
             RCVBufferEnd = (RCVBufferEnd + len) % BUFFERSIZE;
@@ -386,11 +395,8 @@ static void processResponse(void)
             dprintk(20, "EVENT_OK1/2: Pos. response received\n");
             
             /* if there is a waiter for an acknowledge ... */
-            if(atomic_read(&waitForAck.count) < 0)
-            {
-              errorOccured = 0;
-              ack_sem_up();
-            }
+            errorOccured = 0;
+            ack_sem_up();
 
             RCVBufferEnd = (RCVBufferEnd + len) % BUFFERSIZE;
         }
@@ -408,15 +414,9 @@ static void processResponse(void)
             handleCopyData(len);
 
             /* if there is a waiter for an acknowledge ... */
-            if(atomic_read(&waitForAck.count) < 0)
-            {
-              dprintk(20, "EVENT_ANSWER_GETTIME: Pos. response received\n");
-              errorOccured = 0;
-              ack_sem_up();
-            } else
-            {
-                printk("[micom] receive answer not waiting for\n");
-            }
+            dprintk(20, "EVENT_ANSWER_GETTIME: Pos. response received\n");
+            errorOccured = 0;
+            ack_sem_up();
 
             RCVBufferEnd = (RCVBufferEnd + cGetTimeSize) % BUFFERSIZE;
         break;
@@ -433,15 +433,9 @@ static void processResponse(void)
             handleCopyData(len);
 
             /* if there is a waiter for an acknowledge ... */
-            if(atomic_read(&waitForAck.count) < 0)
-            {
-              dprintk(1, "EVENT_ANSWER_WAKEUP_REASON: Pos. response received\n");
-              errorOccured = 0;
-              ack_sem_up();
-            } else
-            {
-                printk("[micom] receive answer not waiting for\n");
-            }
+            dprintk(1, "EVENT_ANSWER_WAKEUP_REASON: Pos. response received\n");
+            errorOccured = 0;
+            ack_sem_up();
 
             RCVBufferEnd = (RCVBufferEnd + cGetWakeupReasonSize) % BUFFERSIZE;
         
@@ -459,15 +453,9 @@ static void processResponse(void)
             handleCopyData(len);
 
             /* if there is a waiter for an acknowledge ... */
-            if(atomic_read(&waitForAck.count) < 0)
-            {
-              dprintk(1, "EVENT_ANSWER_VERSION: Pos. response received\n");
-              errorOccured = 0;
-              ack_sem_up();
-            } else
-            {
-                printk("[micom] receive answer not waiting for\n");
-            }
+            dprintk(1, "EVENT_ANSWER_VERSION: Pos. response received\n");
+            errorOccured = 0;
+            ack_sem_up();
 
             RCVBufferEnd = (RCVBufferEnd + cGetVersionSize) % BUFFERSIZE;
         
@@ -560,12 +548,6 @@ int micomTask(void * dummy)
   return 0;
 }
 
-static void ack_timer(unsigned long data)
-{
-    printk("%s: timeout waiting on data for %lu milliseconds\n", __func__, ACK_WAIT_TIME);
-    ack_sem_up();
-}
-
 //----------------------------------------------
 
 static int __init micom_init_module(void)
@@ -586,17 +568,12 @@ static int __init micom_init_module(void)
 
     init_waitqueue_head(&wq);
     init_waitqueue_head(&rx_wq);
-
-    sema_init(&waitForAck, 0);
+    init_waitqueue_head(&ack_wq);
 
     for (i = 0; i < LASTMINOR; i++)
         sema_init(&FrontPanelOpen[i].sem, 1);
 
     kernel_thread(micomTask, NULL, 0);
-
-    init_timer(&ackTimer);
-    ackTimer.function = ack_timer;
-    ackTimer.data = 0;
 
     //Enable the FIFO
     *ASC_X_CTRL = *ASC_X_CTRL | ASC_CTRL_FIFO_EN;
