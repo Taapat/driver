@@ -12,6 +12,16 @@
 #ifndef _STI7111REG_H
 #define _STI7111REG_H
 
+#if defined(__TDT__) && defined(UFS912)
+#define USE_FS1_FOR_SD
+
+#define CKGB_FS1_EN3	0x88
+#define CKGB_FS1_MD3	0x80
+#define CKGB_FS1_PE3    0x84
+#define CKGB_FS1_SDIV3  0x8C
+
+#endif
+
 /* STi7111 Base addresses ----------------------------------------------------*/
 #define STi7111_REGISTER_BASE          0xFD000000
 

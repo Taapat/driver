@@ -67,8 +67,11 @@ static struct stmcore_display_pipeline_data platform_data[] = {
 #endif
     .main_output_id           = STi7111_OUTPUT_IDX_VDP0_MAIN,
     .hdmi_output_id           = STi7111_OUTPUT_IDX_VDP0_HDMI,
+#if defined(UFS912) && defined(__TDT__)
+    .dvo_output_id            = -1,
+#else
     .dvo_output_id            = STi7111_OUTPUT_IDX_DVO0,
-
+#endif
     .blitter_id               = STi7111_BLITTER_IDX_VDP0_MAIN,
     .blitter_id_kernel        = STi7111_BLITTER_IDX_KERNEL,
     .blitter_type             = STMCORE_BLITTER_BDISPII,
