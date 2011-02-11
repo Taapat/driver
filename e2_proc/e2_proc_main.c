@@ -757,7 +757,7 @@ static int __init e2_proc_init_module(void)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
         e2Proc[i].entry = create_proc_entry(name, 0, proc_bus);
 #else
-        e2Proc[i].entry = create_proc_entry(name, 0, NULL);
+        e2Proc[i].entry = create_proc_entry(e2Proc[i].name, 0, NULL);
 #endif
       }
       else
