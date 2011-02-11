@@ -28,6 +28,8 @@
 #include <linux/mutex.h>
 #include <linux/platform_device.h>
 
+#include <linux/dvb/version.h>
+
 #include <asm/io.h> /* ctrl_xy */
 
 #include <linux/dvb/frontend.h>
@@ -5048,6 +5050,7 @@ err:
 	return -1;
 }
 
+#if DVB_API_VERSION < 5
 static enum dvbfe_search stv090x_search(struct dvb_frontend *fe, struct dvbfe_params *p)
 {
 	struct stv090x_state *state = fe->demodulator_priv;
@@ -5103,6 +5106,40 @@ static enum dvbfe_search stv090x_search(struct dvb_frontend *fe, struct dvbfe_pa
 
 	return DVBFE_ALGO_SEARCH_ERROR;
 }
+#else
+static enum dvbfe_search stv090x_search(struct dvb_frontend *fe, struct dvb_frontend_parameters *p)
+{
+    struct stv090x_state *state = fe->demodulator_priv;
+    struct dtv_frontend_properties *props = &fe->dtv_property_cache;
+
+    if (p->frequency == 0)
+        return DVBFE_ALGO_SEARCH_INVALID;
+
+    state->delsys = props->delivery_system;
+    state->frequency = p->frequency;
+    state->srate = p->u.qpsk.symbol_rate;
+    state->search_mode = STV090x_SEARCH_AUTO;
+    state->algo = STV090x_COLD_SEARCH;
+    state->fec = STV090x_PRERR;
+    if (state->srate > 10000000) {
+        dprintk(1, "Search range: 10 MHz");
+        state->search_range = 10000000;
+    } else {
+        dprintk(1, "Search range: 5 MHz");
+        state->search_range = 5000000;
+    }
+
+    if (stv090x_algo(state) == STV090x_RANGEOK) {
+        dprintk(1, "Search success!");
+        return DVBFE_ALGO_SEARCH_SUCCESS;
+    } else {
+        dprintk(1, "Search failed!");
+        return DVBFE_ALGO_SEARCH_FAILED;
+    }
+
+    return DVBFE_ALGO_SEARCH_ERROR;
+}
+#endif
 
 static int stv090x_read_status(struct dvb_frontend *fe, enum fe_status *status)
 {
@@ -6275,6 +6312,8 @@ err:
 	return -1;
 }
 
+#if DVB_API_VERSION < 5
+
 static struct dvbfe_info dvbs_info = {
   .name = "STV090x Multistandard",
   .delivery = DVBFE_DELSYS_DVBS,
@@ -6283,7 +6322,6 @@ static struct dvbfe_info dvbs_info = {
              .dvbs.fec = DVBFE_FEC_1_2 | DVBFE_FEC_2_3 |
              DVBFE_FEC_3_4 | DVBFE_FEC_4_5 |
              DVBFE_FEC_5_6 | DVBFE_FEC_6_7 | DVBFE_FEC_7_8 | DVBFE_FEC_AUTO},
-
   .frequency_min = 950000,
   .frequency_max = 2150000,
   .frequency_step = 0,
@@ -6304,7 +6342,6 @@ static const struct dvbfe_info dvbs2_info = {
              DVBFE_FEC_3_5 | DVBFE_FEC_2_3 |
              DVBFE_FEC_3_4 | DVBFE_FEC_4_5 |
              DVBFE_FEC_5_6 | DVBFE_FEC_8_9 | DVBFE_FEC_9_10,
-
              },
 
   .frequency_min = 950000,
@@ -6332,6 +6369,7 @@ static int stv090x_get_info (struct dvb_frontend *fe, struct dvbfe_info *fe_info
 
   return 0;
 }
+#endif
 
     static int hdbox_set_voltage(struct dvb_frontend *fe, enum fe_sec_voltage voltage)
     {
@@ -6502,7 +6540,9 @@ static struct dvb_frontend_ops stv090x_ops = {
 	.read_ber			= stv090x_read_per,
 	.read_signal_strength		= stv090x_read_signal_strength,
 	.read_snr			= stv090x_read_cnr,
+#if DVB_API_VERSION < 5
 	.get_info                       = stv090x_get_info,
+#endif
 
 #if defined(FORTIS_HDBOX)
 /* hdbox special */

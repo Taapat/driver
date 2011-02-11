@@ -138,7 +138,6 @@ static struct dvb_frontend *
 init_stv090x_device (struct dvb_adapter *adapter,
                      struct plat_tuner_config *tuner_cfg, int i)
 {
-  struct core_state *state;
   struct dvb_frontend *frontend;
   struct core_config *cfg;
 
@@ -211,8 +210,6 @@ init_stv090x_device (struct dvb_adapter *adapter,
       frontend->ops.release (frontend);
     return NULL;
   }
-
-  state = frontend->demodulator_priv;
 
   return frontend;
 }

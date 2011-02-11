@@ -14,7 +14,13 @@
 #include "dvb_frontend.h"
 
 #include <linux/module.h>
+
+#include <linux/dvb/version.h>
+
+#if DVB_API_VERSION < 5
 #include "compat.h"
+#endif
+
 #include <linux/mutex.h>
 #include "stv090x.h"
 
@@ -27,18 +33,6 @@ struct core_config
 	u8			horizontal; /* i2c value */
 	struct stpio_pin*	tuner_enable_pin;
 	u8			tuner_enable_act; /* active state of the pin */
-
-};
-
-struct core_state {
-	struct dvb_frontend_ops 		ops;
-	struct dvb_frontend 			frontend;
-
-	const struct core_config* 		config;
-
-	int					thread_id;
-
-	int				       	not_responding;
 
 };
 
