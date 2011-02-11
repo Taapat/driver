@@ -127,6 +127,8 @@ void* tsm_io;
 
 extern int highSR;
 
+extern void paceSwtsByPti(void);
+
 /* ****************************************
  * Dagobert:
  * Taken from new player - frontend
