@@ -28,8 +28,6 @@
 #include <linux/mutex.h>
 #include <linux/platform_device.h>
 
-#include <linux/dvb/version.h>
-
 #include <asm/io.h> /* ctrl_xy */
 
 #include <linux/dvb/frontend.h>
@@ -2922,7 +2920,7 @@ static int stv090x_get_agc2_min_level(struct stv090x_state *state)
 		msleep(1);
 
 		agc2 = 0;
-		for (j = 0; j < 10; j++) {
+		for (j = 0; j < 4; j++) {
 			agc2 += (STV090x_READ_DEMOD(state, AGC2I1) << 8) |
 				STV090x_READ_DEMOD(state, AGC2I0);
 		}
@@ -3062,8 +3060,8 @@ static u32 stv090x_srate_srch_coarse(struct stv090x_state *state)
 		/* trigger acquisition */
 		if (STV090x_WRITE_DEMOD(state, DMDISTATE, 0x40) < 0)
 			goto err;
-		msleep(2);
-		for (i = 0; i < 10; i++) {
+		msleep(1);
+		for (i = 0; i < 4; i++) {
 			reg = STV090x_READ_DEMOD(state, DSTATUS);
 			if (STV090x_GETFIELD_Px(reg, TMGLOCK_QUALITY_FIELD) >= 2)
 				tmg_cpt++;
@@ -3094,7 +3092,7 @@ static u32 stv090x_srate_srch_coarse(struct stv090x_state *state)
 					goto err;
 			}
 
-			msleep(2);
+			msleep(1);
 
 			if (state->config->tuner_get_status) {
 				if (state->config->tuner_get_status(fe, &reg) < 0)
@@ -3253,7 +3251,7 @@ static int stv090x_get_dmdlock(struct stv090x_state *state, s32 timeout)
 		else
 			printk("Demodulator acquired LOCK\n");
 
-		timer += 10;
+		timer += 4;
 	}
 	if (lock) 
 	   dprintk(50, "%s lock %d<\n", __func__, lock);
@@ -3316,7 +3314,7 @@ static int stv090x_blind_search(struct stv090x_state *state)
 			} else {
 				cpt_fail = 0;
 				agc2_ovflw = 0;
-				for (i = 0; i < 10; i++) {
+				for (i = 0; i < 4; i++) {
 					agc2 += (STV090x_READ_DEMOD(state, AGC2I1) << 8) |
 						STV090x_READ_DEMOD(state, AGC2I0);
 					if (agc2 >= 0xff00)
@@ -3383,7 +3381,7 @@ static int stv090x_chk_tmg(struct stv090x_state *state)
 		goto err;
 	msleep(1);
 
-	for (i = 0; i < 10; i++) {
+	for (i = 0; i < 4; i++) {
 		reg = STV090x_READ_DEMOD(state, DSTATUS);
 		if (STV090x_GETFIELD_Px(reg, TMGLOCK_QUALITY_FIELD) >= 2)
 			tmg_cpt++;
@@ -3482,7 +3480,7 @@ static int stv090x_get_coldlock(struct stv090x_state *state, s32 timeout_dmd)
 							goto err;
 					}
 
-					msleep(2);
+					msleep(1);
 
 					if (state->config->tuner_get_status) {
 						if (state->config->tuner_get_status(fe, &reg) < 0)
@@ -5050,7 +5048,6 @@ err:
 	return -1;
 }
 
-#if DVB_API_VERSION < 5
 static enum dvbfe_search stv090x_search(struct dvb_frontend *fe, struct dvbfe_params *p)
 {
 	struct stv090x_state *state = fe->demodulator_priv;
@@ -5106,40 +5103,6 @@ static enum dvbfe_search stv090x_search(struct dvb_frontend *fe, struct dvbfe_pa
 
 	return DVBFE_ALGO_SEARCH_ERROR;
 }
-#else
-static enum dvbfe_search stv090x_search(struct dvb_frontend *fe, struct dvb_frontend_parameters *p)
-{
-    struct stv090x_state *state = fe->demodulator_priv;
-    struct dtv_frontend_properties *props = &fe->dtv_property_cache;
-
-    if (p->frequency == 0)
-        return DVBFE_ALGO_SEARCH_INVALID;
-
-    state->delsys = props->delivery_system;
-    state->frequency = p->frequency;
-    state->srate = p->u.qpsk.symbol_rate;
-    state->search_mode = STV090x_SEARCH_AUTO;
-    state->algo = STV090x_COLD_SEARCH;
-    state->fec = STV090x_PRERR;
-    if (state->srate > 10000000) {
-        dprintk(1, "Search range: 10 MHz");
-        state->search_range = 10000000;
-    } else {
-        dprintk(1, "Search range: 5 MHz");
-        state->search_range = 5000000;
-    }
-
-    if (stv090x_algo(state) == STV090x_RANGEOK) {
-        dprintk(1, "Search success!");
-        return DVBFE_ALGO_SEARCH_SUCCESS;
-    } else {
-        dprintk(1, "Search failed!");
-        return DVBFE_ALGO_SEARCH_FAILED;
-    }
-
-    return DVBFE_ALGO_SEARCH_ERROR;
-}
-#endif
 
 static int stv090x_read_status(struct dvb_frontend *fe, enum fe_status *status)
 {
@@ -5340,7 +5303,7 @@ static int stv090x_read_cnr(struct dvb_frontend *fe, u16 *cnr)
 		lock_f = STV090x_GETFIELD_Px(reg, LOCK_DEFINITIF_FIELD);
 		if (lock_f) {
 			msleep(1);
-			for (i = 0; i < 16; i++) {
+			for (i = 0; i < 6; i++) {
 				reg_1 = STV090x_READ_DEMOD(state, NNOSPLHT1);
 				val_1 = STV090x_GETFIELD_Px(reg_1, NOSPLHT_NORMED_FIELD);
 				reg_0 = STV090x_READ_DEMOD(state, NNOSPLHT0);
@@ -5362,7 +5325,7 @@ static int stv090x_read_cnr(struct dvb_frontend *fe, u16 *cnr)
 		lock_f = STV090x_GETFIELD_Px(reg, LOCK_DEFINITIF_FIELD);
 		if (lock_f) {
 			msleep(1);
-			for (i = 0; i < 16; i++) {
+			for (i = 0; i < 6; i++) {
 				reg_1 = STV090x_READ_DEMOD(state, NOSDATAT1);
 				val_1 = STV090x_GETFIELD_Px(reg_1, NOSDATAT_UNNORMED_FIELD);
 				reg_0 = STV090x_READ_DEMOD(state, NOSDATAT0);
@@ -5469,7 +5432,7 @@ static int stv090x_send_diseqc_msg(struct dvb_frontend *fe, struct dvb_diseqc_ma
 
 	i = 0;
 
-	while ((!idle) && (i < 10)) {
+	while ((!idle) && (i < 4)) {
 		reg = STV090x_READ_DEMOD(state, DISTXSTATUS);
 		idle = STV090x_GETFIELD_Px(reg, TX_IDLE_FIELD);
 		msleep(2);
@@ -5528,7 +5491,7 @@ static int stv090x_send_diseqc_burst(struct dvb_frontend *fe, fe_sec_mini_cmd_t 
 
 	i = 0;
 
-	while ((!idle) && (i < 10)) {
+	while ((!idle) && (i < 4)) {
 		reg = STV090x_READ_DEMOD(state, DISTXSTATUS);
 		idle = STV090x_GETFIELD_Px(reg, TX_IDLE_FIELD);
 		msleep(2);
@@ -5549,7 +5512,7 @@ static int stv090x_recv_slave_reply(struct dvb_frontend *fe, struct dvb_diseqc_s
 
 	dprintk(10, "%s >\n", __FUNCTION__);
 
-	while ((rx_end != 1) && (i < 10)) {
+	while ((rx_end != 1) && (i < 4)) {
 		msleep(2);
 		i++;
 		reg = STV090x_READ_DEMOD(state, DISRX_ST0);
@@ -6312,8 +6275,6 @@ err:
 	return -1;
 }
 
-#if DVB_API_VERSION < 5
-
 static struct dvbfe_info dvbs_info = {
   .name = "STV090x Multistandard",
   .delivery = DVBFE_DELSYS_DVBS,
@@ -6322,6 +6283,7 @@ static struct dvbfe_info dvbs_info = {
              .dvbs.fec = DVBFE_FEC_1_2 | DVBFE_FEC_2_3 |
              DVBFE_FEC_3_4 | DVBFE_FEC_4_5 |
              DVBFE_FEC_5_6 | DVBFE_FEC_6_7 | DVBFE_FEC_7_8 | DVBFE_FEC_AUTO},
+
   .frequency_min = 950000,
   .frequency_max = 2150000,
   .frequency_step = 0,
@@ -6342,6 +6304,7 @@ static const struct dvbfe_info dvbs2_info = {
              DVBFE_FEC_3_5 | DVBFE_FEC_2_3 |
              DVBFE_FEC_3_4 | DVBFE_FEC_4_5 |
              DVBFE_FEC_5_6 | DVBFE_FEC_8_9 | DVBFE_FEC_9_10,
+
              },
 
   .frequency_min = 950000,
@@ -6369,7 +6332,6 @@ static int stv090x_get_info (struct dvb_frontend *fe, struct dvbfe_info *fe_info
 
   return 0;
 }
-#endif
 
     static int hdbox_set_voltage(struct dvb_frontend *fe, enum fe_sec_voltage voltage)
     {
@@ -6540,9 +6502,7 @@ static struct dvb_frontend_ops stv090x_ops = {
 	.read_ber			= stv090x_read_per,
 	.read_signal_strength		= stv090x_read_signal_strength,
 	.read_snr			= stv090x_read_cnr,
-#if DVB_API_VERSION < 5
 	.get_info                       = stv090x_get_info,
-#endif
 
 #if defined(FORTIS_HDBOX)
 /* hdbox special */
