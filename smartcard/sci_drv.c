@@ -1918,7 +1918,7 @@ static ssize_t sci_read(struct file *file, char *buffer, size_t length, loff_t *
 	real_num_bytes=sci->rx_rptr - sci->rx_wptr;
 
 	if( !((file->f_flags&O_NONBLOCK)>>0xB) )
-	{
+	{	
 		if(real_num_bytes<length)
 		{
 			unsigned char cnt_tmp=0;
@@ -1943,6 +1943,10 @@ static ssize_t sci_read(struct file *file, char *buffer, size_t length, loff_t *
 	{
 		sci->rx_wptr=0;
 		sci->rx_rptr=0;
+#if defined(ATEVIO7500)
+		mdelay(3);   /*Hellmaster1024: on Atevio we seem to have some timing probs without that delay */
+#endif
+
 	}
 	return (ssize_t) real_num_bytes;
 }
@@ -2222,9 +2226,18 @@ int sci_ioctl(struct inode *inode,
 
             copy_from_user((void *)&sci_param, (const void *)ioctl_param, sizeof(SCI_PARAMETERS));
 
-            if (sci_set_parameters(sci, &sci_param) == SCI_ERROR_OK)
+            if (sci_set_parameters(sci, &sci_param) == SCI_ERROR_OK){
                 rc = 0;
-            else
+		dprintk(1, "f is set to %d\n", sci_param.f);
+		switch(sci_param.f){
+			case 3:
+				smartcard_clock_config(sci,357);
+				break;
+			default:
+				smartcard_clock_config(sci,sci_param.f*100);
+				break;
+		}
+            }else
                 rc = -1;
             break;
 

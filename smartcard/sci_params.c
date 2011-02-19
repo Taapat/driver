@@ -117,13 +117,15 @@ SCI_ERROR sci_set_para(SCI_CONTROL_BLOCK *sci, SCI_PARAMETERS *p_sci_parameters)
 		printk("ATR wasn't read\n");
 		return (rc);
 	}
-#if !defined(SUPPORT_NO_AUTOSET)
+
     if((p_sci_parameters != 0) && (sci->id < SCI_NUMBER_OF_CONTROLLERS))
     {
         rc = sci_set_para_T    (sci, p_sci_parameters);
         rc = sci_set_para_f    (sci, p_sci_parameters);
         rc = sci_set_para_ETU  (sci, p_sci_parameters);
+#if !defined(SUPPORT_NO_AUTOSET)
         rc = sci_set_para_WWT  (sci, p_sci_parameters);
+#endif
         rc = sci_set_para_CWT  (sci, p_sci_parameters);
         rc = sci_set_para_BWT  (sci, p_sci_parameters);
         rc = sci_set_para_EGT  (sci, p_sci_parameters);
@@ -138,7 +140,7 @@ SCI_ERROR sci_set_para(SCI_CONTROL_BLOCK *sci, SCI_PARAMETERS *p_sci_parameters)
     {
         rc = SCI_ERROR_PARAMETER_OUT_OF_RANGE;
     }
-#endif
+
     PDEBUG(" OK\n");
 
     return(rc);
@@ -297,8 +299,8 @@ SCI_ERROR sci_set_para_f(SCI_CONTROL_BLOCK *sci, SCI_PARAMETERS *p_sci_parameter
     SCI_ERROR rc = SCI_ERROR_OK;
 
     /* set the f of sci */
-    if((p_sci_parameters->f >= SCI_MIN_F) &&
-       (p_sci_parameters->f <= SCI_MAX_F) &&
+    if((p_sci_parameters->f >= SCI_MIN_F/1000000) &&
+       (p_sci_parameters->f <= SCI_MAX_F/1000000) &&
        (p_sci_parameters->f <= (__STB_SYS_CLK / 2)))
     {
         if(sci->sci_parameters.f != p_sci_parameters->f)
