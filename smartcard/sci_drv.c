@@ -2474,7 +2474,11 @@ static int __init sci_module_init(void)
         // Register with sysfs so udev can create the proper devices 
         sci_module_class = class_create(THIS_MODULE, DEVICE_NAME);
         for(i = 0; i < SCI_NUMBER_OF_CONTROLLERS; i++)
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+            device_create(sci_module_class, NULL, dev, NULL, "sci%d", i);
+#else
             class_device_create(sci_module_class, NULL, dev, NULL, "sci%d", i);
+#endif            
     }
     else
     {
@@ -2510,7 +2514,11 @@ static void __exit sci_module_cleanup(void)
     unregister_chrdev_region(dev, SCI_NUMBER_OF_CONTROLLERS);
 
     for(i = 0; i < SCI_NUMBER_OF_CONTROLLERS; i++)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
+		device_destroy(sci_module_class, dev);
+#else
         class_device_destroy(sci_module_class, dev);
+#endif
 
     class_destroy(sci_module_class);
 
