@@ -6369,6 +6369,25 @@ static int stv090x_get_info (struct dvb_frontend *fe, struct dvbfe_info *fe_info
 
   return 0;
 }
+#else
+static int stv090x_get_property(struct dvb_frontend *fe, struct dtv_property* tvp)
+{
+	/* get delivery system info */
+	if(tvp->cmd==DTV_DELIVERY_SYSTEM){
+		switch (tvp->u.data) {
+		case SYS_DVBS2:
+		case SYS_DVBS:
+		case SYS_DSS:
+			break;
+		default:
+			return -EINVAL;
+		}
+	}
+
+	dprintk(20, "%s()\n", __func__);
+	return 0;
+}
+
 #endif
 
     static int hdbox_set_voltage(struct dvb_frontend *fe, enum fe_sec_voltage voltage)
@@ -6542,6 +6561,8 @@ static struct dvb_frontend_ops stv090x_ops = {
 	.read_snr			= stv090x_read_cnr,
 #if DVB_API_VERSION < 5
 	.get_info                       = stv090x_get_info,
+#else
+	.get_property = stv090x_get_property,
 #endif
 
 #if defined(FORTIS_HDBOX)
