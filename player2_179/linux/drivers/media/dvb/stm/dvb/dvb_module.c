@@ -300,9 +300,13 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
     avr_init();
 #endif 
 
+#ifndef __TDT__
+
 #if defined (CONFIG_CPU_SUBTYPE_STX7105) // || defined (CONFIG_CPU_SUBTYPE_STX7200)
     cap_init();
 #endif  
+
+#endif
 
     linuxdvb_v4l2_init();
 
