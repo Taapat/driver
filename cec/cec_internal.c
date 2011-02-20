@@ -29,13 +29,14 @@
 #include <linux/init.h>
 #include <linux/kernel.h>
 #include <linux/string.h>
+#include <linux/version.h>
 
 #include <linux/platform_device.h>
 
 #include <asm/system.h>
 #include <asm/io.h>
 
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
+#if defined (CONFIG_KERNELVERSION) || LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
 #include <linux/stm/pio.h>
 #else
 #include <linux/stpio.h>

@@ -35,6 +35,7 @@
 #include <asm/io.h>
 
 #include <linux/interrupt.h>
+#include <linux/version.h>
 
 #include "cec_debug.h"
 #include "cec_worker.h"
@@ -63,7 +64,7 @@ int __init cec_init(void)
 
    printk("[CEC] init - starting intterrupt (%d)\n", CEC_IRQ);
 
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
+#if defined (CONFIG_KERNELVERSION) || LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
     if (!request_irq(CEC_IRQ, (void*)cec_interrupt, IRQF_DISABLED, "cec", NULL))
 #else
     if (!request_irq(CEC_IRQ, (void*)cec_interrupt, SA_INTERRUPT, "cec", NULL))
