@@ -58,14 +58,15 @@ struct cx24116_tuning
 
 	enum dvbfe_delsys 	delivery;
 	enum dvbfe_rolloff 	rolloff;
-#else
-	fe_code_rate_t		fec;
-        fe_modulation_t         modulation;
-	fe_delivery_system_t 	delivery;
-	fe_rolloff_t 	        rolloff;
-#endif
 
 	int		 	pilot; // 0: off, 1: on (only used for S2)
+#else
+	fe_code_rate_t		 fec;
+	fe_delivery_system_t delsys;
+    fe_modulation_t      modulation;
+	fe_pilot_t           pilot;
+	fe_rolloff_t 	     rolloff;
+#endif
 
 	/* Demod values */
 	u8 			fec_val;
@@ -73,6 +74,11 @@ struct cx24116_tuning
 	u8 			inversion_val;
 	u8			fec_numb;
 	u8			U1[6];
+
+#if DVB_API_VERSION >= 5
+	u8 pilot_val;
+	u8 rolloff_val;
+#endif
 };
 
 struct cx24116_config
