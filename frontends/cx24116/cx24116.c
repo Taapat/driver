@@ -92,6 +92,15 @@ if (paramDebug > level) printk(TAGDEBUG x); \
 // i2c bus speed (100kHz ~ 10ms).
 #define I2C_FAST_DELAY 1
 
+/* rolloff */
+#define CX24116_ROLLOFF_020 (0x00)
+#define CX24116_ROLLOFF_025 (0x01)
+#define CX24116_ROLLOFF_035 (0x02)
+
+/* pilot bit */
+#define CX24116_PILOT_OFF (0x00)
+#define CX24116_PILOT_ON (0x40)
+
 /* known registers */
 #define CX24116_REG_QUALITY (0xd5)
 #define CX24116_REG_STATUS  (0x9d)  /* signal high : status */
@@ -1785,38 +1794,6 @@ cx24116_set_symbolrate (struct cx24116_state *state, struct dvbfe_params *p)
   return ret;
 }
 
-/* GA Hack: Inversion is nwo implicitely auto. The set_inversion-call is used via the 
-   zig zag scan to find the correct the pilot on/off-modes for S2 tuning.  
-   The demod can't detect it on its own :-(
-*/
-
-static int
-cx24116_set_inversion (struct cx24116_state *state,
-                      fe_spectral_inversion_t inversion)
-{
-  dprintk (10, "%s(%d)\n", __FUNCTION__, inversion);
-
-  switch (inversion)
-  {
-  case INVERSION_OFF:
-    state->dnxt.inversion_val = 0x00;
-    break;
-  case INVERSION_ON:
-    state->dnxt.inversion_val = 0x04;
-    break;
-  case INVERSION_AUTO:
-    state->dnxt.inversion_val = 0x0C;
-    break;
-  default:
-    printk ("%s: ret einval\n", __FUNCTION__);
-    return -EINVAL;
-  }
-
-  state->dnxt.inversion = inversion;
-
-  return 0;
-}
-
 static int
 cx24116_get_inversion (struct cx24116_state *state,
                       fe_spectral_inversion_t * inversion)
@@ -2148,14 +2125,102 @@ cx24116_get_frontend (struct dvb_frontend *fe,
 
   return cx24116_create_old_qpsk_feparams (fe, &feparams, p);
 }
+#else
+static int
+cx24116_set_inversion (struct cx24116_state *state,
+                      fe_spectral_inversion_t inversion)
+{
+  dprintk (10, "%s(%d)\n", __FUNCTION__, inversion);
+
+  switch (inversion)
+  {
+  case INVERSION_OFF:
+    state->dnxt.inversion_val = 0x00;
+    break;
+  case INVERSION_ON:
+    state->dnxt.inversion_val = 0x04;
+    break;
+  case INVERSION_AUTO:
+    state->dnxt.inversion_val = 0x0C;
+    break;
+  default:
+    printk ("%s: ret einval\n", __FUNCTION__);
+    return -EINVAL;
+  }
+
+  state->dnxt.inversion = inversion;
+
+  return 0;
+}
+
+static int cx24116_lookup_fecmod(struct cx24116_state *state,
+	fe_delivery_system_t d, fe_modulation_t m, fe_code_rate_t f)
+{
+	int i, ret = -EOPNOTSUPP;
+
+	dprintk(1, "%s(0x%02x,0x%02x)\n", __func__, m, f);
+
+	for (i = 0; i < ARRAY_SIZE(cx24116_MODFEC_MODES); i++) {
+		if ((d == cx24116_MODFEC_MODES[i].delsys) &&
+			(m == cx24116_MODFEC_MODES[i].modulation) &&
+			(f == cx24116_MODFEC_MODES[i].fec)) {
+				ret = i;
+				break;
+			}
+	}
+
+	return ret;
+}
+
+static int cx24116_set_fec(struct cx24116_state *state,
+	fe_delivery_system_t delsys, fe_modulation_t mod, fe_code_rate_t fec)
+{
+	int ret = 0;
+
+	dprintk(1, "%s(0x%02x,0x%02x)\n", __func__, mod, fec);
+
+	ret = cx24116_lookup_fecmod(state, delsys, mod, fec);
+
+	if (ret < 0)
+    {
+	    printk("%s failed\n", __func__);
+		return ret;
+    }
+	state->dnxt.fec = fec;
+	state->dnxt.fec_val = cx24116_MODFEC_MODES[ret].val;
+	state->dnxt.fec_mask = cx24116_MODFEC_MODES[ret].mask;
+	dprintk(1, "%s() mask/val = 0x%02x/0x%02x\n", __func__,
+		state->dnxt.fec_mask, state->dnxt.fec_val);
+
+    state->dnxt.fec_numb = ret;
+
+	return 0;
+}
+
+static int cx24116_set_symbolrate(struct cx24116_state *state, u32 rate)
+{
+	dprintk(1, "%s(%d)\n", __func__, rate);
+
+	/*  check if symbol rate is within limits */
+	if ((rate > state->frontend.ops.info.symbol_rate_max) ||
+	    (rate < state->frontend.ops.info.symbol_rate_min)) {
+		printk("%s() unsupported symbol_rate = %d\n", __func__, rate);
+		return -EOPNOTSUPP;
+	}
+
+	state->dnxt.symbol_rate = rate;
+	dprintk(1, "%s() symbol_rate = %d\n", __func__, rate);
+
+	return 0;
+}
 #endif
 
 static int
 cx24116_set_frontend (struct dvb_frontend *fe,
                      struct dvb_frontend_parameters *p)
 {
-  int ret = 0;
 #if DVB_API_VERSION < 5
+  int ret = 0;
   struct dvbfe_params newfe;
 
   dprintk (10, "%s: > \n", __FUNCTION__);
@@ -2167,7 +2232,325 @@ cx24116_set_frontend (struct dvb_frontend *fe,
 
   return cx24116_set_params (fe, &newfe);
 #else
-#warning set_frontend must be implemented
+	struct cx24116_state *state = fe->demodulator_priv;
+	struct dtv_frontend_properties *c = &fe->dtv_property_cache;
+	struct cx24116_cmd cmd;
+	fe_status_t tunerstat;
+	int i, status, ret, retune = 1;
+    int above30msps;
+    
+	dprintk(10, "%s()\n", __func__);
+
+	switch (c->delivery_system) {
+	case SYS_DVBS:
+		dprintk(10, "%s: DVB-S delivery system selected\n", __func__);
+
+		/* Only QPSK is supported for DVB-S */
+		if (c->modulation != QPSK) {
+			printk("%s: unsupported modulation selected (%d)\n",
+				__func__, c->modulation);
+			return -EOPNOTSUPP;
+		}
+
+		/* Pilot doesn't exist in DVB-S, turn bit off */
+		state->dnxt.pilot_val = CX24116_PILOT_OFF;
+
+		/* DVB-S only supports 0.35 */
+		if (c->rolloff != ROLLOFF_35) {
+			printk("%s: unsupported rolloff selected (%d)\n",
+				__func__, c->rolloff);
+			return -EOPNOTSUPP;
+		}
+		state->dnxt.rolloff_val = CX24116_ROLLOFF_035;
+		break;
+
+	case SYS_DVBS2:
+		dprintk(10, "%s: DVB-S2 delivery system selected\n", __func__);
+
+		/*
+		 * NBC 8PSK/QPSK with DVB-S is supported for DVB-S2,
+		 * but not hardware auto detection
+		 */
+		if (c->modulation != PSK_8 && c->modulation != QPSK) {
+			printk("%s: unsupported modulation selected (%d)\n",
+				__func__, c->modulation);
+			return -EOPNOTSUPP;
+		}
+
+		switch (c->pilot) {
+		case PILOT_AUTO:	/* Not supported but emulated */
+			state->dnxt.pilot_val = (c->modulation == QPSK)
+				? CX24116_PILOT_OFF : CX24116_PILOT_ON;
+			retune++;
+			break;
+		case PILOT_OFF:
+			state->dnxt.pilot_val = CX24116_PILOT_OFF;
+			break;
+		case PILOT_ON:
+			state->dnxt.pilot_val = CX24116_PILOT_ON;
+			break;
+		default:
+			printk("%s: unsupported pilot mode selected (%d)\n",
+				__func__, c->pilot);
+			return -EOPNOTSUPP;
+		}
+
+		switch (c->rolloff) {
+		case ROLLOFF_20:
+			state->dnxt.rolloff_val = CX24116_ROLLOFF_020;
+			break;
+		case ROLLOFF_25:
+			state->dnxt.rolloff_val = CX24116_ROLLOFF_025;
+			break;
+		case ROLLOFF_35:
+			state->dnxt.rolloff_val = CX24116_ROLLOFF_035;
+			break;
+		case ROLLOFF_AUTO:	/* Rolloff must be explicit */
+		default:
+			printk("%s: unsupported rolloff selected (%d)\n",
+				__func__, c->rolloff);
+			return -EOPNOTSUPP;
+		}
+		break;
+
+	default:
+		printk("%s: unsupported delivery system selected (%d)\n",
+			__func__, c->delivery_system);
+		return -EOPNOTSUPP;
+	}
+	state->dnxt.delsys = c->delivery_system;
+	state->dnxt.modulation = c->modulation;
+	state->dnxt.frequency = c->frequency;
+	state->dnxt.pilot = c->pilot;
+	state->dnxt.rolloff = c->rolloff;
+
+	ret = cx24116_set_inversion(state, c->inversion);
+	if (ret !=  0)
+		return ret;
+
+	/* FEC_NONE/AUTO for DVB-S2 is not supported and detected here */
+	ret = cx24116_set_fec(state, c->delivery_system, c->modulation, c->fec_inner);
+	if (ret !=  0)
+		return ret;
+
+	ret = cx24116_set_symbolrate(state, c->symbol_rate);
+	if (ret !=  0)
+		return ret;
+
+    /* discard the 'current' tuning parameters and prepare to tune */
+    memcpy (&state->dcur, &state->dnxt, sizeof (state->dcur));
+
+	dprintk(10, "%s:   delsys      = %d\n", __func__, state->dcur.delsys);
+	dprintk(10, "%s:   modulation  = %d\n", __func__, state->dcur.modulation);
+	dprintk(10, "%s:   frequency   = %d\n", __func__, state->dcur.frequency);
+	dprintk(10, "%s:   pilot       = %d (val = 0x%02x)\n", __func__,
+		state->dcur.pilot, state->dcur.pilot_val);
+	dprintk(10, "%s:   retune      = %d\n", __func__, retune);
+	dprintk(10, "%s:   rolloff     = %d (val = 0x%02x)\n", __func__,
+		state->dcur.rolloff, state->dcur.rolloff_val);
+	dprintk(10, "%s:   symbol_rate = %d\n", __func__, state->dcur.symbol_rate);
+	dprintk(10, "%s:   FEC         = %d (mask/val = 0x%02x/0x%02x)\n", __func__,
+		state->dcur.fec, state->dcur.fec_mask, state->dcur.fec_val);
+	dprintk(10, "%s:   Inversion   = %d (val = 0x%02x)\n", __func__,
+		state->dcur.inversion, state->dcur.inversion_val);
+
+  /* Prepare a tune request */
+  cmd.id = CMD_TUNEREQUEST;
+
+  /* Frequency */
+  cmd.args[0x01] = (state->dcur.frequency & 0xff0000) >> 16;
+  cmd.args[0x02] = (state->dcur.frequency & 0x00ff00) >> 8;
+  cmd.args[0x03] = (state->dcur.frequency & 0x0000ff);
+
+  /* Symbol Rate */
+  cmd.args[0x04] = ((state->dcur.symbol_rate / 1000) & 0xff00) >> 8;
+  cmd.args[0x05] = ((state->dcur.symbol_rate / 1000) & 0x00ff);
+
+  /* Automatic Inversion */
+  cmd.args[0x06] = state->dcur.inversion_val;
+
+  /* Modulation / FEC */
+  cmd.args[0x07] = state->dcur.fec_val | state->dcur.pilot_val;
+  cmd.args[0x08] = cx24116_SEARCH_RANGE_KHZ >> 8;
+  cmd.args[0x09] = cx24116_SEARCH_RANGE_KHZ & 0xff;
+  cmd.args[0x0a] = 0x00;
+  cmd.args[0x0b] = 0x00;
+  cmd.args[0x0c] = state->dcur.rolloff_val;;
+  cmd.args[0x0d] = state->dcur.fec_mask;
+
+  above30msps = (state->dcur.symbol_rate > 30000000);
+
+#if defined(UFS910) /* use this unless UFS910 is not defined */
+  if (reg_tsm_config == 0)
+      reg_tsm_config = (unsigned long) ioremap(TSMergerBaseAddress, 0x0900);
+
+  reg = ctrl_inl(reg_tsm_config + TS_1394_CFG);
+  /* disable pace */
+  reg &= ~0xFFFF;
+#endif
+  
+#if defined(UFS910) /* use this unless UFS910 is not defined */
+  if (state->dcur.symbol_rate >= 30000000)  
+  {
+     ctrl_outl(reg | 0xF ,reg_tsm_config + TS_1394_CFG);
+  }
+  else
+  {
+     ctrl_outl(reg | 0x14 ,reg_tsm_config + TS_1394_CFG);
+  }
+#endif  
+  
+  if (above30msps)
+  {
+
+/* 2010/01/07: should be revised with new fw202rc !!!!!
+ * currently I does not get channels with this
+ * symbol rates so I cant test.
+ *  
+ */
+     cmd.args[0x0e] = 0x04;
+     cmd.args[0x0f] = 0x00;
+     cmd.args[0x10] = 0x01;
+     cmd.args[0x11] = 0x77 /* 0xEC */ ;
+     cmd.args[0x12] = 0x36 /* 0xFA */ ;
+
+     /* Set Reset unknown */
+     cx24116_writereg (state, 0xF9, 0x01); /* DVB S1/2 Mode */
+     cx24116_writereg (state, 0xF3, 0x44); /* Clock Devider */
+  } else
+  {
+ 
+     cmd.args[0x0e] = 0x06;
+     cmd.args[0x0f] = 0x00;
+     cmd.args[0x10] = 0x00;
+
+     if (useUnknown == 0)
+     {
+	    cmd.args[0x11] = 0xFA /* 0xEC */ ;
+	    cmd.args[0x12] = 0x24 /* 0xFA */ ;
+     } else
+     {
+	    cmd.args[0x11] = 0xec;
+	    cmd.args[0x12] = 0xfa;
+     }
+     
+     /* Set/Reset unknown */
+     cx24116_writereg (state, 0xF9, 0x00); /* DVB S1/2 Mode */
+     cx24116_writereg (state, 0xF3, 0x46); /* Clock Devider */
+  }
+
+  do
+  {
+    /* Reset status register */
+    status = cx24116_readreg (state, CX24116_REG_STATUS) & 0xc0;
+    cx24116_writereg (state, CX24116_REG_STATUS, status);
+
+    /* Tune */
+    ret = cx24116_cmd_execute (fe, &cmd);
+    if (ret != 0)
+      return ret;
+
+    /* Wait for up to 500 ms */
+    for (i = 0; i < 50; i++)
+    {
+      if (cx24116_is_tuned (fe))
+      {
+          printk("tuned retune counte = %d\n", retune);
+          goto tuned;
+      }
+      msleep (10);
+    }
+
+    printk("retuned %d\n", retune);
+    
+	/* Toggle pilot bit when in auto-pilot */
+	if ((state->dcur.pilot == PILOT_AUTO) || (c->delivery_system == SYS_DVBS2))
+    {
+		cmd.args[0x07] ^= CX24116_PILOT_ON;
+        printk("toggle pilot\n");
+    }
+    else
+    if (c->delivery_system != SYS_DVBS2)
+    {
+      /* dvbs try fec_auto on second try */
+      cmd.args[0x07] =0x2e;
+      cmd.args[0x0d] =0xfe;
+      state->dcur.fec = FEC_AUTO;
+      state->dcur.fec_numb = 9;
+    }
+  }
+  while (--retune);
+
+tuned:                         /* Set/Reset B/W */
+  if (useUnknown == 1)
+  {
+    cmd.id = CMD_GETAGC;
+    ret = cx24116_cmd_execute (fe, &cmd);
+    cx24116_writereg (state, CX24116_REG_STATUS, 0x0f);
+  }
+  cmd.id = CMD_BANDWIDTH;
+  cmd.args[0x01] = 0x00;
+  cmd.len = 0x02;
+  ret = cx24116_cmd_execute (fe, &cmd);
+  if (ret != 0)
+    return ret;
+
+  if (useUnknown == 1)
+  {
+     status = cx24116_readreg (state, CX24116_REG_FECSTATUS);
+     dprintk(1, "tuned fec=%02x new fec=%02x\n",state->dcur.fec_numb,status);
+
+     if ((state->dcur.fec_numb != (status & CX24116_FEC_FECMASK)) && (c->delivery_system == SYS_DVBS))
+     {
+       state->dcur.fec_numb = status & CX24116_FEC_FECMASK;
+       state->dcur.fec=cx24116_MODFEC_MODES[state->dcur.fec_numb].fec;
+       
+       dprintk(1, "fec=%02x fec_numb=%02x\n",state->dcur.fec, state->dcur.fec_numb);
+     }
+
+     cmd.id = CMD_U1;
+     ret = cx24116_cmd_execute (fe, &cmd);
+     dprintk(1, "U1 data %02x ",cmd.args[0x07]);
+     for (i = 0; i < 6; i++)
+     {
+         state->dcur.U1[i]=cx24116_readreg(state,i+1);
+         dprintk(1, " %02x",state->dcur.U1[i]);
+     }
+
+     ret = state->dcur.fec_numb * 2;
+
+     if ((cmd.args[0x07] & 0x40) == 0x40)
+     {
+         ret++;
+         pilot = 1;
+     }
+     else
+         pilot = 0;
+
+     dprintk(1, "cmd_u2 index = %d\n", ret);    
+
+     cmd.id = CMD_U2;
+     cmd.args[1] = cx24116_U2_TABLE[ret].U2_1;
+     cmd.args[2] = cx24116_U2_TABLE[ret].U2_2;
+     cmd.args[3] = cx24116_U2_TABLE[ret].U2_3;
+     cmd.args[4] = cx24116_U2_TABLE[ret].U2_4;
+     cmd.args[5] = cx24116_U2_TABLE[ret].U2_5;
+     cmd.args[6] = cx24116_U2_TABLE[ret].U2_6;
+     cmd.args[7] = cx24116_U2_TABLE[ret].U2_7;
+     cmd.args[8] = cx24116_U2_TABLE[ret].U2_8;
+     cmd.args[9] = cx24116_U2_TABLE[ret].U2_9;
+
+     ret = cx24116_cmd_execute (fe, &cmd);
+
+     printk("U2 data (pilot = %d): ", pilot);
+     for (i = 0; i < 10 ; i++)
+	    printk("0x%02x ", cmd.args[i]);
+     printk("\n");
+
+  }
+
+  dprintk (10, "%s < %d\n", __FUNCTION__, ret);
+
   return ret;
 #endif
 }
@@ -2176,6 +2559,8 @@ cx24116_set_frontend (struct dvb_frontend *fe,
 static int cx24116_tune(struct dvb_frontend *fe, struct dvb_frontend_parameters *params,
 	unsigned int mode_flags, unsigned int *delay, fe_status_t *status)
 {
+	dprintk(20, "%s()\n", __func__);
+
 	*delay = HZ / 5;
 	if (params) {
 		int ret = cx24116_set_frontend(fe, params);
@@ -2185,17 +2570,27 @@ static int cx24116_tune(struct dvb_frontend *fe, struct dvb_frontend_parameters 
 	return cx24116_read_status(fe, status);
 }
 
-static int cx24116_set_property(struct dvb_frontend *fe,
-	struct dtv_property *tvp)
-{
-	dprintk(10, "%s(..)\n", __func__);
-	return 0;
-}
-
 static int cx24116_get_property(struct dvb_frontend *fe,
 	struct dtv_property *tvp)
 {
-	dprintk(10, "%s(..)\n", __func__);
+	dprintk(20, "%s()\n", __func__);
+
+	/* get delivery system info */
+	if(tvp->cmd==DTV_DELIVERY_SYSTEM){
+		switch (tvp->u.data) {
+		case SYS_DVBS2:
+		case SYS_DVBS:
+		case SYS_DSS:
+			break;
+		default:
+        {
+	        printk("%s() EINVAL\n", __func__);
+			return -EINVAL;
+		}
+        }
+	}
+
+	dprintk(20, "%s()\n", __func__);
 	return 0;
 }
 #endif
@@ -2521,7 +2916,7 @@ init_cx24116_device (struct dvb_adapter *adapter,
   struct dvb_frontend *frontend;
   struct cx24116_config *cfg;
 
-  dprintk (10, "> %s\n", __FUNCTION__);
+  dprintk (10, "> %s(%d)\n", __FUNCTION__, tuner_cfg->i2c_bus);
 
   cfg = kmalloc (sizeof (struct cx24116_config), GFP_KERNEL);
   if (cfg == NULL)
@@ -2568,7 +2963,11 @@ init_cx24116_device (struct dvb_adapter *adapter,
 #endif
       )
   {
-    printk ("cx24116: failed to allocate resources\n");
+    printk ("cx24116: failed to allocate resources %x %p\n", cfg->i2c_addr_lnb_supply, cfg->i2c_adap );
+
+    printk ("cx24116: %x\n", cfg->i2c_addr_lnb_supply);
+    printk ("cx24116: %p\n", cfg->i2c_adap );
+
     if(cfg->tuner_enable_pin != NULL)
       stpio_free_pin (cfg->tuner_enable_pin);
     if(cfg->lnb_enable_pin != NULL)
@@ -2667,10 +3066,15 @@ update_cx24116_devices (void)
 /*
 * This function only retrieves the configuration data.
 */
-static int
-cx24116_probe (struct device *dev)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
+static int cx24116_probe (struct platform_device *pdev)
+#else
+static int cx24116_probe (struct device *dev)
+#endif
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
   struct platform_device *pdev = to_platform_device (dev);
+#endif
   struct plat_tuner_data *plat_data = pdev->dev.platform_data;
   int i;
 
@@ -2725,8 +3129,11 @@ cx24116_probe (struct device *dev)
   return 0;
 }
 
-static int
-cx24116_remove (struct device *dev)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
+static int cx24116_remove (struct platform_device *pdev)
+#else
+static int cx24116_remove (struct device *dev)
+#endif
 {
   /* TODO: add code to free resources */
 
@@ -2734,6 +3141,17 @@ cx24116_remove (struct device *dev)
   return 0;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
+static struct platform_driver cx24116_driver = {
+  .probe = cx24116_probe,
+  .remove = cx24116_remove,
+  .driver	= {
+		.name	= "cx24116",
+		.owner  = THIS_MODULE,
+  },
+};
+
+#else
 static struct device_driver cx24116_driver = {
   .name = "cx24116",
   .bus = &platform_bus_type,
@@ -2741,6 +3159,7 @@ static struct device_driver cx24116_driver = {
   .probe = cx24116_probe,
   .remove = cx24116_remove,
 };
+#endif
 
 /* FIXME: move the tuner configuration data either to the
    board/stb71xx/setup.c or to a module handling configuration */
@@ -2857,7 +3276,11 @@ void cx24116_register_frontend(struct dvb_adapter *dvb_adap)
 
   dvb_adap->priv = core[i];
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
+  if (platform_driver_register (&cx24116_driver) < 0)
+#else
   if (driver_register (&cx24116_driver) < 0)
+#endif
   {
     printk ("cx24116: error registering device driver\n");
   }
@@ -2927,9 +3350,7 @@ static struct dvb_frontend_ops dvb_cx24116_fe_qpsk_ops = {
   .get_params = cx24116_get_params,
 #else
   .tune = cx24116_tune,
-  .set_property = cx24116_set_property,
   .get_property = cx24116_get_property,
-
 #endif
 };
 
