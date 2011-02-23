@@ -12,6 +12,12 @@ else
 CFLAGS += $(CCFLAGSY)
 endif
 
+ifeq ($(CONFIG_PLAYER_131),y)
+CCFLAGSY+= -DPLAYER_131
+else ifeq ($(CONFIG_PLAYER_179),y)
+CCFLAGSY+= -DPLAYER_179
+endif
+
 pti-objs:= pti_main.o
 
 obj-m += pti.o

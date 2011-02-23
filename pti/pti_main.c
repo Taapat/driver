@@ -47,6 +47,14 @@ struct StreamContext_s;
 
 #include "pti.h"
 
+#if defined(PLAYER_179)
+#if (defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(SPARK) )
+static int waitMS=20;
+static int videoMem=4096;
+#endif
+#elif defined(PLAYER_131)
+#else
+#endif
 
 int debug ;
 #define dprintk(x...) do { if (debug) printk(KERN_WARNING x); } while (0)
@@ -1035,6 +1043,18 @@ static void __exit pti_exit(void)
 
 module_init             (pti_init);
 module_exit             (pti_exit);
+
+#if defined(PLAYER_179)
+#if (defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(SPARK) )
+module_param(waitMS, int, 0444);
+MODULE_PARM_DESC(waitMS, "waitMS");
+
+module_param(videoMem, int, 0444);
+MODULE_PARM_DESC(videoMem, "videoMem\n");
+#endif
+#elif defined(PLAYER_131)
+#else
+#endif
 
 MODULE_AUTHOR("Peter Bennett <peter.bennett@st.com>; adapted by TDT");
 MODULE_DESCRIPTION("STPTI DVB Driver");
