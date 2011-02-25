@@ -130,7 +130,7 @@ obj-m += stv090x.o
 else ifdef UFS922
 cx21143-objs +=	cx24116/cx24116.o
 obj-m += cx21143.o
-else
+else ifdef UFS910
 cx24116-objs +=	cx24116_dvbapi5/cx24116.o
 obj-m += cx24116.o
 endif
