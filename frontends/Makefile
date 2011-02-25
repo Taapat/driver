@@ -97,8 +97,6 @@ obj-m += cx24116.o
 else ifdef TF7700
 cx24116-objs +=	cx24116/cx24116.o
 obj-m += cx24116.o
-else
-touch noTuner.ko
 endif
 
 else
@@ -141,8 +139,6 @@ obj-m += cx24116.o
 else ifdef TF7700
 cx24116-objs +=	cx24116_dvbapi5/cx24116.o
 obj-m += cx24116.o
-else
-touch noTuner.ko
 endif
 # other drivers already in kernel
 
