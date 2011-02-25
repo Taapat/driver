@@ -1694,6 +1694,33 @@ cx24116_release (struct dvb_frontend *fe)
   kfree (state);
 }
 
+static int
+cx24116_set_inversion (struct cx24116_state *state,
+                      fe_spectral_inversion_t inversion)
+{
+  dprintk (10, "%s(%d)\n", __FUNCTION__, inversion);
+
+  switch (inversion)
+  {
+  case INVERSION_OFF:
+    state->dnxt.inversion_val = 0x00;
+    break;
+  case INVERSION_ON:
+    state->dnxt.inversion_val = 0x04;
+    break;
+  case INVERSION_AUTO:
+    state->dnxt.inversion_val = 0x0C;
+    break;
+  default:
+    printk ("%s: ret einval\n", __FUNCTION__);
+    return -EINVAL;
+  }
+
+  state->dnxt.inversion = inversion;
+
+  return 0;
+}
+
 #if DVB_API_VERSION < 5
 static int
 cx24116_set_fec (struct cx24116_state *state, struct dvbfe_params *p)
@@ -2126,32 +2153,6 @@ cx24116_get_frontend (struct dvb_frontend *fe,
   return cx24116_create_old_qpsk_feparams (fe, &feparams, p);
 }
 #else
-static int
-cx24116_set_inversion (struct cx24116_state *state,
-                      fe_spectral_inversion_t inversion)
-{
-  dprintk (10, "%s(%d)\n", __FUNCTION__, inversion);
-
-  switch (inversion)
-  {
-  case INVERSION_OFF:
-    state->dnxt.inversion_val = 0x00;
-    break;
-  case INVERSION_ON:
-    state->dnxt.inversion_val = 0x04;
-    break;
-  case INVERSION_AUTO:
-    state->dnxt.inversion_val = 0x0C;
-    break;
-  default:
-    printk ("%s: ret einval\n", __FUNCTION__);
-    return -EINVAL;
-  }
-
-  state->dnxt.inversion = inversion;
-
-  return 0;
-}
 
 static int cx24116_lookup_fecmod(struct cx24116_state *state,
 	fe_delivery_system_t d, fe_modulation_t m, fe_code_rate_t f)
