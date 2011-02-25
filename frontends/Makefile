@@ -94,6 +94,9 @@ else ifdef OCTAGON1008
 else ifdef UFS910
 cx24116-objs +=	cx24116/cx24116.o
 obj-m += cx24116.o
+else ifdef FLASH_UFS910
+cx24116-objs +=	cx24116/cx24116.o
+obj-m += cx24116.o
 else ifdef TF7700
 cx24116-objs +=	cx24116/cx24116.o
 obj-m += cx24116.o
@@ -136,6 +139,9 @@ obj-m += cx21143.o
 else ifdef UFS910
 cx24116-objs +=	cx24116_dvbapi5/cx24116.o
 obj-m += cx24116.o
+else ifdef FLASH_UFS910
+cx24116-objs +=	cx24116_dvbapi5/cx24116.o
+obj-m += cx24116.o
 else ifdef TF7700
 cx24116-objs +=	cx24116_dvbapi5/cx24116.o
 obj-m += cx24116.o
@@ -143,4 +149,3 @@ endif
 # other drivers already in kernel
 
 endif
-
