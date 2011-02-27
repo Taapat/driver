@@ -128,6 +128,12 @@ fe-core-objs +=        vip2/ix7306.o
 fe-core-objs +=        vip2/zl10353.o
 fe-core-objs +=        vip2/core.o
 obj-m += fe-core.o
+else ifdef SPARK
+stv090x-objs +=	spark_dvbapi5/stv090x.o
+stv090x-objs +=	spark_dvbapi5/stv6110x.o
+stv090x-objs +=	spark_dvbapi5/core.o
+stv090x-objs +=	spark_dvbapi5/ix7306.o
+obj-m += stv090x.o
 else ifdef UFS912
 stv090x-objs +=	stv090x/stv090x.o
 stv090x-objs +=	stv090x/stv6110x.o

@@ -28,7 +28,7 @@
 
 #if defined(CONFIG_SH_ST_MB618)
 
-#if defined(UFS912) && defined(__TDT__)
+#if (defined(UFS912) || defined(SPARK)) && defined(__TDT__)
 #define HAS_DSUB 0
 #warning fixme: take a look if we have DSUB
 #else
@@ -61,6 +61,8 @@ static struct stmcore_display_pipeline_data platform_data[] = {
     .hdmi_irq                 = evt2irq(0x15C0),
 #if defined(UFS912) && defined(__TDT__)
     .hdmi_i2c_adapter_id      = 3,
+#elif defined(SPARK)
+	.hdmi_i2c_adapter_id	  = 2,
 #else
     .hdmi_i2c_adapter_id      = 0,
 #warning not supported architecture
