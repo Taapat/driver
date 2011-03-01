@@ -118,7 +118,7 @@ u8 c;
    {0x01, 0xc0, '-'},
    {0x40, 0x00, '_'},
    {0x08, 0x82, '<'},
-   {0x20, 0x88, '>'},
+   {0x20, 0x88, '<'},
    {0x00, 0x00, ' '}
 };
 
@@ -217,7 +217,7 @@ struct iconToInternal {
 #ifdef OCTAGON1008
 #define cCommandSetIcon          0xc4
 #else
-#define cCommandSetIconI         0xc2 /* 0xc2 0xc7 0xcb 0xcc */
+#define cCommandSetIconI         0xc2 /* 0xc2 0xc7 0xcb 0xcc */ /* display cgram */
 #define cCommandSetIconII        0xc7
 #endif
 
@@ -227,9 +227,14 @@ struct iconToInternal {
 #define cCommandSetVFD           0xce /* 0xc0 */
 #endif
 
+
 #define cCommandSetVFDBrightness 0xd2
 
+#ifdef ATEVIO7500
+#define cCommandGetFrontInfo     0xd0
+#else
 #define cCommandGetFrontInfo     0xe0
+#endif
 
 #define cCommandSetPwrLed        0x93 /* added by zeroone, only used in this file; set PowerLed Brightness on HDBOX */
 
@@ -760,6 +765,7 @@ int nuvotonWriteString(unsigned char* aBuf, int len)
 
 #endif
 
+#ifndef ATEVIO7500
 int nuvoton_init_func(void)
 {
     char standby_disable[] = {SOP, cCommandPowerOffReplay, 0x02, EOP};
@@ -767,7 +773,7 @@ int nuvoton_init_func(void)
     char init2[] = {SOP, cCommandSetTimeFormat, 0x81, EOP};
     char init3[] = {SOP, cCommandSetWakeupTime, 0xff, 0xff, EOP}; /* delete/invalidate wakeup time ? */
     char init4[] = {SOP, 0x93, 0x01, 0x00, 0x08, EOP};
-#ifdef OCTAGON1008
+#if defined(OCTAGON1008)
     char init5[] = {SOP, 0x93, 0xf2, 0x08, 0x00, EOP};
 #else
     char init5[] = {SOP, 0x93, 0xf2, 0x0a, 0x00, EOP};
@@ -808,6 +814,45 @@ int nuvoton_init_func(void)
 
     return 0;
 }
+#else
+int nuvoton_init_func(void)
+{
+    char standby_disable[] = {SOP, cCommandPowerOffReplay, 0x02, EOP};
+
+    char init1[] = {SOP, 0xc2, 0x10, 0x00, EOP}; /* display cgram */
+    char init2[] = {SOP, cCommandSetIrCode, 0x01, 0x02, 0xf9, 0x10, 0x0b, EOP};
+
+    char init3[] = {SOP, cCommandSetTimeFormat, 0x81, EOP};
+    char init4[] = {SOP, cCommandSetWakeupTime, 0xff, 0xff, EOP}; /* delete/invalidate wakeup time ? */
+
+    int  vLoop;
+    int  res = 0;
+
+    dprintk(100, "%s >\n", __func__);
+
+    sema_init(&write_sem, 1);
+
+    printk("ATEVIO7500 VFD/Nuvoton module initializing\n");
+
+    /* must be called before standby_disable */
+    res = nuvotonWriteCommand(init1, sizeof(init1), 0);
+
+    res = nuvotonWriteCommand(init2, sizeof(init2), 0);
+
+    /* setup: frontpanel should not power down the receiver if standby is selected */
+    res = nuvotonWriteCommand(standby_disable, sizeof(standby_disable), 0);
+
+    res |= nuvotonWriteCommand(init3, sizeof(init3), 0);
+    res |= nuvotonWriteCommand(init4, sizeof(init4), 0);
+    res |= nuvotonSetBrightness(1);
+
+    res |= nuvotonWriteString("T.-Ducktales", strlen("T.-Ducktales"));
+
+    dprintk(100, "%s <\n", __func__);
+
+    return 0;
+}
+#endif
 
 static ssize_t NUVOTONdev_write(struct file *filp, const char *buff, size_t len, loff_t *off)
 {
@@ -997,7 +1042,7 @@ int NUVOTONdev_close(struct inode *inode, struct file *filp)
 
     minor = MINOR(inode->i_rdev);
 
-    dprintk(1, "close minor %d\n", minor);
+    dprintk(20, "close minor %d\n", minor);
 
     if (FrontPanelOpen[minor].fp == NULL)
     {
@@ -1056,6 +1101,7 @@ static int NUVOTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int
         mode = 0;
         break;
     case VFDICONDISPLAYONOFF:
+#ifndef ATEVIO7500
         if (mode == 0)
         {
             struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;
@@ -1066,6 +1112,9 @@ static int NUVOTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int
         {
             res = nuvotonSetIcon(nuvoton->u.icon.icon_nr, nuvoton->u.icon.on);
         }
+#else
+        res = 0;
+#endif
         mode = 0;
         break;
     case VFDSTANDBY:

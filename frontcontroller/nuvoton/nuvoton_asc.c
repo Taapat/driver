@@ -43,13 +43,24 @@
 
 //-------------------------------------
 
+#ifdef ATEVIO7500
+unsigned int InterruptLine = 120;
+unsigned int ASCXBaseAddress = ASC3BaseAddress;
+#else
 unsigned int InterruptLine = 121;
 unsigned int ASCXBaseAddress = ASC2BaseAddress;
+#endif
 
 //-------------------------------------
 
 void serial_init (void)
 {
+#ifdef OCTAGON1008
+    /* Configure the PIO pins */
+    stpio_request_pin(4, 3,  "ASC_TX", STPIO_ALT_OUT); /* Tx */
+    stpio_request_pin(4, 2,  "ASC_RX", STPIO_IN);      /* Rx */
+#endif
+
     // Configure the asc input/output settings
     *(unsigned int*)(ASCXBaseAddress + ASC_INT_EN)   = 0x00000000; // TODO: Why do we set here the INT_EN again ???
     *(unsigned int*)(ASCXBaseAddress + ASC_CTRL)     = 0x00001589;
@@ -61,8 +72,8 @@ void serial_init (void)
 
 int serial_putc (char Data)
 {
-    char                  *ASCn_TX_BUFF = (char*)(ASC2BaseAddress + ASC_TX_BUFF);
-    unsigned int          *ASCn_INT_STA = (unsigned int*)(ASC2BaseAddress + ASC_INT_STA);
+    char                  *ASCn_TX_BUFF = (char*)(ASCXBaseAddress + ASC_TX_BUFF);
+    unsigned int          *ASCn_INT_STA = (unsigned int*)(ASCXBaseAddress + ASC_INT_STA);
     unsigned long         Counter = 200000;
 
     while (((*ASCn_INT_STA & ASC_INT_STA_THE) == 0) && --Counter)

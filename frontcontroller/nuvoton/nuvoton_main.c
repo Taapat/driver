@@ -98,12 +98,12 @@
 #define DATA_BTN_EVENT   2
 
 //----------------------------------------------
-short paramDebug = 50;
+short paramDebug = 10;
 
 static unsigned char expectEventData = 0;
 static unsigned char expectEventId = 1;
 
-struct semaphore     waitForAck; /* stop caller task if waiting for ack */
+#define ACK_WAIT_TIME msecs_to_jiffies(500)
 
 #define cPackageSizeRC       7
 #define cPackageSizeFP       5
@@ -123,21 +123,36 @@ static int           KeyBufferStart = 0, KeyBufferEnd = 0;
 
 static wait_queue_head_t   wq;
 static wait_queue_head_t   rx_wq;
+static wait_queue_head_t   ack_wq;
+static int dataReady = 0;
 
 //----------------------------------------------
 
 void ack_sem_up(void)
 {
-    up(&waitForAck);
+    dataReady = 1; 
+    wake_up_interruptible(&ack_wq);
 }
 
 int ack_sem_down(void)
 {
-    /* fixme: we should supervise this in the irq (time based)
-     * to avoid blocking for ever for the abnormal case when
-     * no answer is reached from the rc ->see processResponse
-     */
-    return down_interruptible (&waitForAck);
+    int err = 0;
+    
+    dataReady = 0; 
+    
+    err  = wait_event_interruptible_timeout(ack_wq, dataReady == 1, ACK_WAIT_TIME); 
+    if (err == -ERESTARTSYS)
+    {
+         printk("wait_event_interruptible failed\n");
+         return err;
+    } else
+    if (err == 0)
+    {
+         printk("timeout waiting on ack\n");
+    } else
+         dprintk(20, "command processed - remaining jiffies %d\n", err);
+    
+    return 0;
 }
 
 EXPORT_SYMBOL(ack_sem_down);
@@ -411,16 +426,9 @@ static void processResponse(void)
 
             handleCopyData(len);
 
-            /* if there is a waiter for an acknowledge ... */
-            if(atomic_read(&waitForAck.count) < 0)
-            {
-                dprintk(20, "Pos. response received\n");
-                errorOccured = 0;
-                ack_sem_up();
-            } else
-            {
-                printk("[nuvoton] receive answer not waiting for\n");
-            }
+            dprintk(20, "Pos. response received\n");
+            errorOccured = 0;
+            ack_sem_up();
 
             RCVBufferEnd = (RCVBufferEnd + cGetTimeSize) % BUFFERSIZE;
             break;
@@ -436,16 +444,9 @@ static void processResponse(void)
 
             handleCopyData(len);
 
-            /* if there is a waiter for an acknowledge ... */
-            if(atomic_read(&waitForAck.count) < 0)
-            {
-                dprintk(1, "Pos. response received\n");
-                errorOccured = 0;
-                ack_sem_up();
-            } else
-            {
-                printk("[nuvoton] receive answer not waiting for\n");
-            }
+            dprintk(1, "Pos. response received\n");
+            errorOccured = 0;
+            ack_sem_up();
 
             RCVBufferEnd = (RCVBufferEnd + cGetWakeupReasonSize) % BUFFERSIZE;
 
@@ -560,8 +561,7 @@ static int __init nuvoton_init_module(void)
 
     init_waitqueue_head(&wq);
     init_waitqueue_head(&rx_wq);
-
-    sema_init(&waitForAck, 0);
+    init_waitqueue_head(&ack_wq);
 
     for (i = 0; i < LASTMINOR; i++)
         sema_init(&FrontPanelOpen[i].sem, 1);
