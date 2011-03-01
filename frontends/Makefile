@@ -1,157 +1,55 @@
-TREE_ROOT?=$(DRIVER_TOPDIR)/
-CONFIG_STGFB_PATH?=$(DRIVER_TOPDIR)/stgfb/stmfb
-CCFLAGSY += -I$(TREE_ROOT)/linux/include/linux/stm/ 
-CCFLAGSY += -I$(TREE_ROOT)/linux/drivers/media/video/stm/ 
-CCFLAGSY += -I$(KERNEL_LOCATION)/drivers/media/dvb/dvb-core 
-CCFLAGSY += -I$(CONFIG_STGFB_PATH)/include 
-CCFLAGSY += -DDEBUG_DVB
-CCFLAGSY += -I$(TREE_ROOT)/include 
-ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
-ccflags-y += $(CCFLAGSY)
-else
-CFLAGS += $(CCFLAGSY)
-endif
-
-ifeq (,$(findstring 2.6.3,$(KERNELVERSION)))
-# < 2.6.30
-ifdef UFS922
-cx21143-objs +=	cx24116/cx24116.o
-obj-m += cx21143.o
-else ifdef UFS912
-stv090x-objs +=	stv090x/stv090x.o
-stv090x-objs +=	stv090x/stv6110x.o
-stv090x-objs +=	stv090x/core.o
-obj-m += stv090x.o
-else ifdef SPARK
-stv090x-objs +=	spark/stv090x.o
-stv090x-objs +=	spark/stv6110x.o
-stv090x-objs +=	spark/core.o
-stv090x-objs +=	spark/ix7306.o
-obj-m += stv090x.o
-else ifdef FORTIS_HDBOX
-stv090x-objs +=	stv090x/stv090x.o
-stv090x-objs +=	stv090x/stv6110x.o
-stv090x-objs +=	stv090x/core.o
-obj-m += stv090x.o
-else ifdef HL101
-fe-core-objs +=        hl101/stb0899_algo.o
-fe-core-objs +=        hl101/stb0899_drv.o
-fe-core-objs +=        hl101/stb6100.o
-fe-core-objs +=        hl101/stv090x.o
-fe-core-objs +=        hl101/stv6110x.o
-fe-core-objs +=        hl101/ix7306.o
-fe-core-objs +=        hl101/cx24116.o
-fe-core-objs +=        hl101/core.o
-obj-m += fe-core.o
-else ifdef VIP1_V2
-fe-core-objs +=        vip1_v2/stb0899_algo.o
-fe-core-objs +=        vip1_v2/stb0899_drv.o
-fe-core-objs +=        vip1_v2/stb6100.o
-fe-core-objs +=        vip1_v2/stv090x.o
-fe-core-objs +=        vip1_v2/stv6110x.o
-fe-core-objs +=        vip1_v2/ix7306.o
-fe-core-objs +=        vip1_v2/zl10353.o
-fe-core-objs +=        vip1_v2/cx24116.o
-fe-core-objs +=        base/sharp6465.o
-fe-core-objs +=        base/tda10023.o
-fe-core-objs +=        base/lg031.o
-fe-core-objs +=        vip1_v2/core.o
-obj-m += fe-core.o
-else ifdef VIP2_V1
-fe-core-objs +=        vip2/stv090x.o
-fe-core-objs +=        vip2/stv6110x.o
-fe-core-objs +=        vip2/ix7306.o
-fe-core-objs +=        vip2/zl10353.o
-fe-core-objs +=        base/sharp6465.o
-fe-core-objs +=        base/tda10023.o
-fe-core-objs +=        base/lg031.o
-fe-core-objs +=        vip2/core.o
-obj-m += fe-core.o
-else ifdef CUBEREVO
-tuner-objs +=	tuner/tuner.o
-obj-m += tuner.o
-else ifdef CUBEREVO_MINI
-tuner-objs +=	tuner/tuner.o
-obj-m += tuner.o
-else ifdef CUBEREVO_MINI2
-tuner-objs +=	tuner/tuner.o
-obj-m += tuner.o
-else ifdef CUBEREVO_250HD
-tuner-objs +=	tuner/tuner.o
-obj-m += tuner.o
-else ifdef CUBEREVO_9500HD
-tuner-objs +=	tuner/tuner.o
-obj-m += tuner.o
-else ifdef CUBEREVO_2000HD
-tuner-objs +=	tuner/tuner.o
-obj-m += tuner.o
-else ifdef CUBEREVO_MINI_FTA
-tuner-objs +=	tuner/tuner.o
-obj-m += tuner.o
-else ifdef OCTAGON1008
-#avl2108-objs +=        avl2108/avl2108.o
-#obj-m += avl2108.o
-else ifdef UFS910
-cx24116-objs +=	cx24116/cx24116.o
-obj-m += cx24116.o
-else ifdef FLASH_UFS910
-cx24116-objs +=	cx24116/cx24116.o
-obj-m += cx24116.o
-else ifdef TF7700
-cx24116-objs +=	cx24116/cx24116.o
-obj-m += cx24116.o
-endif
-
-else
-
-# >= 2.6.30
-ifdef HL101
-fe-core-objs +=        hl101/stb0899_algo.o
-fe-core-objs +=        hl101/stb0899_drv.o
-fe-core-objs +=        hl101/stb6100.o
-fe-core-objs +=        hl101/stv090x.o
-fe-core-objs +=        hl101/stv6110x.o
-fe-core-objs +=        hl101/cx24116.o
-fe-core-objs +=        hl101/core.o
-obj-m += fe-core.o
-else ifdef VIP1_V2
-fe-core-objs +=        vip2/stv090x.o
-fe-core-objs +=        vip2/stv6110x.o
-fe-core-objs +=        vip2/ix7306.o
-fe-core-objs +=        vip2/zl10353.o
-fe-core-objs +=        vip2/core.o
-obj-m += fe-core.o
-else ifdef VIP2_V1
-fe-core-objs +=        vip2/stv090x.o
-fe-core-objs +=        vip2/stv6110x.o
-fe-core-objs +=        vip2/ix7306.o
-fe-core-objs +=        vip2/zl10353.o
-fe-core-objs +=        vip2/core.o
-obj-m += fe-core.o
-else ifdef SPARK
-stv090x-objs +=	spark_dvbapi5/stv090x.o
-stv090x-objs +=	spark_dvbapi5/stv6110x.o
-stv090x-objs +=	spark_dvbapi5/core.o
-stv090x-objs +=	spark_dvbapi5/ix7306.o
-obj-m += stv090x.o
-else ifdef UFS912
-stv090x-objs +=	stv090x/stv090x.o
-stv090x-objs +=	stv090x/stv6110x.o
-stv090x-objs +=	stv090x/core.o
-obj-m += stv090x.o
-else ifdef UFS922
-cx21143-objs +=	cx24116/cx24116.o
-obj-m += cx21143.o
-else ifdef UFS910
-cx24116-objs +=	cx24116_dvbapi5/cx24116.o
-obj-m += cx24116.o
-else ifdef FLASH_UFS910
-cx24116-objs +=	cx24116_dvbapi5/cx24116.o
-obj-m += cx24116.o
-else ifdef TF7700
-cx24116-objs +=	cx24116_dvbapi5/cx24116.o
-obj-m += cx24116.o
-endif
-# other drivers already in kernel
-
-endif
+[?1049h[?1h=[1;57r[?12;25h[?12l[?25h[27m[m[H[2J[?25l[57;1H".git/COMMIT_EDITMSG" 87L, 3738C[2;1H[34m# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+# Explicit paths specified without -i nor -o; assuming --only paths...
+# On branch [m[35mmaster[m
+[34m# [m[35mChanges to be committed:[m
+[34m#   (use "git reset HEAD <file>..." to unstage)
+#
+#       [m[32mnew file[m[34m: [m[31m  root/firmware/dvb-fe-avl2108.fw[m
+[34m#
+# [m[35mChanged but not updated:[m
+[34m#   (use "git add <file>..." to update what will be committed)
+#   (use "git checkout -- <file>..." to discard changes in working directory)
+#
+#       [m[32mmodified[m[34m: [m[31m  make/release.mk[m
+[34m#       [m[32mmodified[m[34m: [m[31m  make/release_neutrino.mk[m
+[34m#       [m[32mmodified[m[34m: [m[31m  root/release/rcS_atevio7500[m
+[34m#       [m[32mmodified[m[34m: [m[31m  root/release/rcS_neutrino_octagon1008[m
+[34m#       [m[32mmodified[m[34m: [m[31m  root/release/rcS_octagon1008[m
+[34m#       [m[32mmodified[m[34m: [m[31m  root/release/rcS_stm23_atevio7500[m
+[34m#       [m[32mmodified[m[34m: [m[31m  root/release/rcS_stm23_neutrino_atevio7500[m
+[34m#       [m[32mmodified[m[34m: [m[31m  root/release/rcS_stm23_neutrino_octagon1008[m
+[34m#       [m[32mmodified[m[34m: [m[31m  ../driver/Makefile[m
+[34m#       [m[32mmodified[m[34m: [m[31m  ../driver/frontcontroller/nuvoton/nuvoton_asc.c[m
+[34m#       [m[32mmodified[m[34m: [m[31m  ../driver/frontcontroller/nuvoton/nuvoton_asc.h[m
+[34m#       [m[32mmodified[m[34m: [m[31m  ../driver/frontcontroller/nuvoton/nuvoton_file.c[m
+[34m#       [m[32mmodified[m[34m: [m[31m  ../driver/frontcontroller/nuvoton/nuvoton_main.c[m
+[34m#       [m[32mmodified[m[34m: [m[31m  ../driver/frontends/Makefile[m
+[34m#
+# [m[35mUntracked files:[m
+[34m#   (use "git add <file>..." to include in what will be committed)
+#
+#       ../apps/enigma2-nightly.patched/
+#       ../apps/misc/tools/libeplayer3/Makefile
+#       ../apps/misc/tools/libeplayer3/eplayer3
+#       ../apps/misc/tools/libeplayer3/meta
+#       ../apps/misc/tools/libmme_host/Makefile
+#       ../apps/misc/tools/libmmeimage/Makefile
+#       ../apps/misc/tools/vfdctl/Makefile
+#       ../apps/misc/tools/vfdctl/vfdctl
+#       ffmpeg-0.6/
+#       libass-0.9.11/
+#       linux-sh4-2.6.32.16_stm24_0205/
+#       root/firmware/dvb-fe-stv6306.fw
+#       ttt
+#       ../driver/avs/modules.order
+#       ../driver/boxtype/modules.order
+#       ../driver/bpamem/modules.order
+#       ../driver/cic/modules.order
+#       ../driver/compcache/modules.order
+#       ../driver/e2_proc/modules.order
+#       ../driver/frontcontroller/micom/modules.order
+#       ../driver/frontcontroller/modules.order
+#       ../driver/frontends/avl2108/
+#       ../driver/frontends/modules.order
+#       ../driver/include/player2[m[57;229H1,0-1      Anfang[1;1H[?12l[?25h[?25l[57;229H2,1  [2;1H[?12l[?25h[?25l[57;229H3[3;1H[?12l[?25h[?25l[57;229H4[4;1H[?12l[?25h[?25l[57;1HBitte  :quit<Enter>  eingeben um Vim zu verlassen[57;229H[K[57;229H4,1[8CAnfang[4;1H[?12l[?25h[?25l[57;229H5[5;1H[?12l[?25h[?25l[57;229H6[6;1H[?12l[?25h[?25l[57;229H7[7;1H[?12l[?25h[?25l[57;1H[K[57;1H:[?12l[?25hq[?25l[?12l[?25h[?25l[57;1H[K[57;1H[?1l>[?12l[?25h[?1049l
