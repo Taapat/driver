@@ -770,7 +770,7 @@ void button_bad_polling(void)
 		}
 	}
 }
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 static DECLARE_WORK(button_obj, button_bad_polling);
 #else
 static DECLARE_WORK(button_obj, button_bad_polling, NULL);
