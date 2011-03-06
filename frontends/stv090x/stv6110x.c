@@ -59,7 +59,7 @@ static int stv6110x_set_refclock(struct dvb_frontend *fe, u32 refclock);
 static int stv6110x_get_frequency(struct dvb_frontend *fe, u32 *frequency);
 static int stv6110x_set_bandwidth(struct dvb_frontend *fe, u32 bandwidth);
 
-static u8 stv6110x_regs[] = {0x07, 0x11, 0xdc, 0x85, 0x17, 0x01, 0xe6, 0x1e};
+//static u8 stv6110x_regs[] = {0x07, 0x11, 0xdc, 0x85, 0x17, 0x01, 0xe6, 0x1e};
 
 static int stv6110x_read_reg(struct stv6110x_state *stv6110x, u8 reg, u8 *data)
 {
@@ -121,6 +121,14 @@ static int stv6110x_write_init(struct stv6110x_state *stv6110x)
 	int ret;
 	const struct stv6110x_config *config = stv6110x->config;
 	static u8 init_data[] = {0x00, 0x07, 0x11, 0xdc, 0x85, 0x17, 0x01, 0xe6, 0x1e};
+    stv6110x->stv6110x_regs[0] = 0x07;
+	stv6110x->stv6110x_regs[1] = 0x11;
+	stv6110x->stv6110x_regs[2] = 0xdc;
+	stv6110x->stv6110x_regs[3] = 0x85;
+	stv6110x->stv6110x_regs[4] = 0x17;
+	stv6110x->stv6110x_regs[5] = 0x01;
+	stv6110x->stv6110x_regs[6] = 0xe6;
+	stv6110x->stv6110x_regs[7] = 0x1e;
 	struct i2c_msg msg = { .addr = config->addr, .flags = 0, . buf = init_data, .len = 9};
 
 	dprintk(10, "stv6110x_write_regN >\n");
@@ -183,12 +191,12 @@ static int stv6110x_set_frequency(struct dvb_frontend *fe, u32 frequency)
 						frequency, stv6110x->config->refclk);
 
 	/* K = (Reference / 1000000) - 16 */
-	stv6110x_regs[STV6110x_CTRL1] &= ~(0x1f << 3);
-	stv6110x_regs[STV6110x_CTRL1] |=
+	stv6110x->stv6110x_regs[STV6110x_CTRL1] &= ~(0x1f << 3);
+	stv6110x->stv6110x_regs[STV6110x_CTRL1] |=
 				((((stv6110x->config->refclk / 1000000) - 16) & 0x1f) << 3);
 
-	stv6110x_regs[STV6110x_CTRL2] &= ~0x0f;
-	stv6110x_regs[STV6110x_CTRL2] |= (stv6110x->gain & 0x0f);
+	stv6110x->stv6110x_regs[STV6110x_CTRL2] &= ~0x0f;
+	stv6110x->stv6110x_regs[STV6110x_CTRL2] |= (stv6110x->gain & 0x0f);
 
 	if (frequency <= 1023000) {
 		p = 1;
@@ -204,12 +212,12 @@ static int stv6110x_set_frequency(struct dvb_frontend *fe, u32 frequency)
 		presc = 1;
 	}
 	/* DIV4SEL = p*/
-	stv6110x_regs[STV6110x_TNG1] &= ~(1 << 4);
-	stv6110x_regs[STV6110x_TNG1] |= (p << 4);
+	stv6110x->stv6110x_regs[STV6110x_TNG1] &= ~(1 << 4);
+	stv6110x->stv6110x_regs[STV6110x_TNG1] |= (p << 4);
 
 	/* PRESC32ON = presc */
-	stv6110x_regs[STV6110x_TNG1] &= ~(1 << 5);
-	stv6110x_regs[STV6110x_TNG1] |= (presc << 5);
+	stv6110x->stv6110x_regs[STV6110x_TNG1] &= ~(1 << 5);
+	stv6110x->stv6110x_regs[STV6110x_TNG1] |= (presc << 5);
 
 	p_val = (int)(1 << (p + 1)) * 10;/* P = 2 or P = 4 */
 	for (r_div = 0; r_div <= 3; r_div++) {
@@ -228,50 +236,50 @@ static int stv6110x_set_frequency(struct dvb_frontend *fe, u32 frequency)
 	divider = (((frequency * 1000)) / ref);
 
 	/* RDIV = r_div_opt */
-	stv6110x_regs[STV6110x_TNG1] &= ~(3 << 6);
-	stv6110x_regs[STV6110x_TNG1] |= (((r_div_opt) & 3) << 6);
+	stv6110x->stv6110x_regs[STV6110x_TNG1] &= ~(3 << 6);
+	stv6110x->stv6110x_regs[STV6110x_TNG1] |= (((r_div_opt) & 3) << 6);
 
 	/* NDIV_MSB = MSB(divider) */
-	stv6110x_regs[STV6110x_TNG1] &= ~0x0f;
-	stv6110x_regs[STV6110x_TNG1] |= (((divider) >> 8) & 0x0f);
+	stv6110x->stv6110x_regs[STV6110x_TNG1] &= ~0x0f;
+	stv6110x->stv6110x_regs[STV6110x_TNG1] |= (((divider) >> 8) & 0x0f);
 
 	/* NDIV_LSB, LSB(divider) */
-	stv6110x_regs[STV6110x_TNG0] = (divider & 0xff);
+	stv6110x->stv6110x_regs[STV6110x_TNG0] = (divider & 0xff);
 
 	/* CALVCOSTRT = 1 VCO Auto Calibration */
 	
-	stv6110x_regs[STV6110x_STAT1] |= 0x04;
+	stv6110x->stv6110x_regs[STV6110x_STAT1] |= 0x04;
 
-	stv6110x_write_reg(stv6110x, STV6110x_CTRL2, stv6110x_regs[STV6110x_CTRL2]);
-	stv6110x_write_reg(stv6110x, STV6110x_CTRL1, stv6110x_regs[STV6110x_CTRL1]);
+	stv6110x_write_reg(stv6110x, STV6110x_CTRL2, stv6110x->stv6110x_regs[STV6110x_CTRL2]);
+	stv6110x_write_reg(stv6110x, STV6110x_CTRL1, stv6110x->stv6110x_regs[STV6110x_CTRL1]);
 
 // TDT from app 
 
-	stv6110x_write_reg(stv6110x, STV6110x_TNG1, stv6110x_regs[STV6110x_TNG1]);
+	stv6110x_write_reg(stv6110x, STV6110x_TNG1, stv6110x->stv6110x_regs[STV6110x_TNG1]);
 
-	stv6110x_regs[STV6110x_CTRL3] |= 0x40;
-	stv6110x_write_reg(stv6110x, STV6110x_CTRL3, stv6110x_regs[STV6110x_CTRL3]);
+	stv6110x->stv6110x_regs[STV6110x_CTRL3] |= 0x40;
+	stv6110x_write_reg(stv6110x, STV6110x_CTRL3, stv6110x->stv6110x_regs[STV6110x_CTRL3]);
 
 	for (i = 0; i < TRIALS; i++) {
 		u8 reg;
 		
 		stv6110x_read_reg(stv6110x, STV6110x_TNG1, &reg);
-		if (reg == stv6110x_regs[STV6110x_TNG1])
+		if (reg == stv6110x->stv6110x_regs[STV6110x_TNG1])
 			break;
 		msleep(1);
 	}
 
-	stv6110x_regs[STV6110x_CTRL3] &= ~0x40;
-	stv6110x_write_reg(stv6110x, STV6110x_CTRL3, stv6110x_regs[STV6110x_CTRL3]);
+	stv6110x->stv6110x_regs[STV6110x_CTRL3] &= ~0x40;
+	stv6110x_write_reg(stv6110x, STV6110x_CTRL3, stv6110x->stv6110x_regs[STV6110x_CTRL3]);
 
 //end tdt
 
-	stv6110x_write_reg(stv6110x, STV6110x_TNG0, stv6110x_regs[STV6110x_TNG0]);
-	stv6110x_write_reg(stv6110x, STV6110x_STAT1, stv6110x_regs[STV6110x_STAT1]);
+	stv6110x_write_reg(stv6110x, STV6110x_TNG0, stv6110x->stv6110x_regs[STV6110x_TNG0]);
+	stv6110x_write_reg(stv6110x, STV6110x_STAT1, stv6110x->stv6110x_regs[STV6110x_STAT1]);
 
 	for (i = 0; i < TRIALS; i++) {
-		stv6110x_read_reg(stv6110x, STV6110x_STAT1, &stv6110x_regs[STV6110x_STAT1]);
-		if (!STV6110x_GETFIELD(STAT1_CALVCO_STRT, stv6110x_regs[STV6110x_STAT1]))
+		stv6110x_read_reg(stv6110x, STV6110x_STAT1, &stv6110x->stv6110x_regs[STV6110x_STAT1]);
+		if (!STV6110x_GETFIELD(STAT1_CALVCO_STRT, stv6110x->stv6110x_regs[STV6110x_STAT1]))
 				break;
 		msleep(1);
 	}
@@ -292,14 +300,14 @@ static int stv6110x_get_frequency(struct dvb_frontend *fe, u32 *frequency)
 
 	dprintk(10, "stv6110x_get_frequency >\n");
 
-	stv6110x_read_reg(stv6110x, STV6110x_TNG1, &stv6110x_regs[STV6110x_TNG1]);
-	stv6110x_read_reg(stv6110x, STV6110x_TNG0, &stv6110x_regs[STV6110x_TNG0]);
+	stv6110x_read_reg(stv6110x, STV6110x_TNG1, &stv6110x->stv6110x_regs[STV6110x_TNG1]);
+	stv6110x_read_reg(stv6110x, STV6110x_TNG0, &stv6110x->stv6110x_regs[STV6110x_TNG0]);
 
-	*frequency = (MAKEWORD16(STV6110x_GETFIELD(TNG1_N_DIV_11_8, stv6110x_regs[STV6110x_TNG1]),
-				 STV6110x_GETFIELD(TNG0_N_DIV_7_0, stv6110x_regs[STV6110x_TNG0]))) * REFCLOCK_kHz;
+	*frequency = (MAKEWORD16(STV6110x_GETFIELD(TNG1_N_DIV_11_8, stv6110x->stv6110x_regs[STV6110x_TNG1]),
+				 STV6110x_GETFIELD(TNG0_N_DIV_7_0, stv6110x->stv6110x_regs[STV6110x_TNG0]))) * REFCLOCK_kHz;
 
-	*frequency /= (1 << (STV6110x_GETFIELD(TNG1_R_DIV, stv6110x_regs[STV6110x_TNG1]) +
-			     STV6110x_GETFIELD(TNG1_DIV4SEL, stv6110x_regs[STV6110x_TNG1])));
+	*frequency /= (1 << (STV6110x_GETFIELD(TNG1_R_DIV, stv6110x->stv6110x_regs[STV6110x_TNG1]) +
+			     STV6110x_GETFIELD(TNG1_DIV4SEL, stv6110x->stv6110x_regs[STV6110x_TNG1])));
 
 	*frequency >>= 2;
 
@@ -325,13 +333,13 @@ static int stv6110x_set_bandwidth(struct dvb_frontend *fe, u32 bandwidth)
 
 	/* ctrl3, RCCLKOFF = 0 Activate the calibration Clock */
 	/* ctrl3, CF = r8 Set the LPF value */
-	stv6110x_regs[STV6110x_CTRL3] &= ~((1 << 6) | 0x1f);
-	stv6110x_regs[STV6110x_CTRL3] |= (r8 & 0x1f);
-	stv6110x_write_reg(stv6110x, STV6110x_CTRL3, stv6110x_regs[STV6110x_CTRL3]);
+	stv6110x->stv6110x_regs[STV6110x_CTRL3] &= ~((1 << 6) | 0x1f);
+	stv6110x->stv6110x_regs[STV6110x_CTRL3] |= (r8 & 0x1f);
+	stv6110x_write_reg(stv6110x, STV6110x_CTRL3, stv6110x->stv6110x_regs[STV6110x_CTRL3]);
 	
 	/* stat1, CALRCSTRT = 1 Start LPF auto calibration*/
-	stv6110x_regs[STV6110x_STAT1] |= 0x02;
-	stv6110x_write_reg(stv6110x, STV6110x_STAT1, stv6110x_regs[STV6110x_STAT1]);
+	stv6110x->stv6110x_regs[STV6110x_STAT1] |= 0x02;
+	stv6110x_write_reg(stv6110x, STV6110x_STAT1, stv6110x->stv6110x_regs[STV6110x_STAT1]);
 
 	i = 0;
 	/* Wait for CALRCSTRT == 0 */
@@ -343,8 +351,8 @@ static int stv6110x_set_bandwidth(struct dvb_frontend *fe, u32 bandwidth)
 	}
 
 	/* RCCLKOFF = 1 calibration done, desactivate the calibration Clock */
-	stv6110x_regs[STV6110x_CTRL3] |= (1 << 6);
-	stv6110x_write_reg(stv6110x, STV6110x_CTRL3, stv6110x_regs[STV6110x_CTRL3]);
+	stv6110x->stv6110x_regs[STV6110x_CTRL3] |= (1 << 6);
+	stv6110x_write_reg(stv6110x, STV6110x_CTRL3, stv6110x->stv6110x_regs[STV6110x_CTRL3]);
 
 	dprintk(10, "%s <\n", __FUNCTION__);
 	return 0;
@@ -356,8 +364,8 @@ static int stv6110x_get_bandwidth(struct dvb_frontend *fe, u32 *bandwidth)
 
 	dprintk(10, "%s: >\n", __func__);
 
-	stv6110x_read_reg(stv6110x, STV6110x_CTRL3, &stv6110x_regs[STV6110x_CTRL3]);
-	*bandwidth = (STV6110x_GETFIELD(CTRL3_CF, stv6110x_regs[STV6110x_CTRL3]) + 5) * 2000000;
+	stv6110x_read_reg(stv6110x, STV6110x_CTRL3, &stv6110x->stv6110x_regs[STV6110x_CTRL3]);
+	*bandwidth = (STV6110x_GETFIELD(CTRL3_CF, stv6110x->stv6110x_regs[STV6110x_CTRL3]) + 5) * 2000000;
 
 	dprintk(10, "%s: bandwidth = %d <\n", __func__, *bandwidth);
 
@@ -374,20 +382,20 @@ static int stv6110x_set_refclock(struct dvb_frontend *fe, u32 refclock)
 	switch (refclock) {
 	default:
 	case 1:
-		STV6110x_SETFIELD(stv6110x_regs[STV6110x_CTRL2], CTRL2_CO_DIV, 0);
+		STV6110x_SETFIELD(stv6110x->stv6110x_regs[STV6110x_CTRL2], CTRL2_CO_DIV, 0);
 		break;
 	case 2:
-		STV6110x_SETFIELD(stv6110x_regs[STV6110x_CTRL2], CTRL2_CO_DIV, 1);
+		STV6110x_SETFIELD(stv6110x->stv6110x_regs[STV6110x_CTRL2], CTRL2_CO_DIV, 1);
 		break;
 	case 4:
-		STV6110x_SETFIELD(stv6110x_regs[STV6110x_CTRL2], CTRL2_CO_DIV, 2);
+		STV6110x_SETFIELD(stv6110x->stv6110x_regs[STV6110x_CTRL2], CTRL2_CO_DIV, 2);
 		break;
 	case 8:
 	case 0:
-		STV6110x_SETFIELD(stv6110x_regs[STV6110x_CTRL2], CTRL2_CO_DIV, 3);
+		STV6110x_SETFIELD(stv6110x->stv6110x_regs[STV6110x_CTRL2], CTRL2_CO_DIV, 3);
 		break;
 	}
-	stv6110x_write_reg(stv6110x, STV6110x_CTRL2, stv6110x_regs[STV6110x_CTRL2]);
+	stv6110x_write_reg(stv6110x, STV6110x_CTRL2, stv6110x->stv6110x_regs[STV6110x_CTRL2]);
 
 	dprintk(10, "%s: <\n", __func__);
 	return 0;
@@ -399,8 +407,8 @@ static int stv6110x_get_bbgain(struct dvb_frontend *fe, u32 *gain)
 
 	dprintk(10, "%s:  >\n", __func__);
 
-	stv6110x_read_reg(stv6110x, STV6110x_CTRL2, &stv6110x_regs[STV6110x_CTRL2]);
-	*gain = STV6110x_GETFIELD(CTRL2_BBGAIN, stv6110x_regs[STV6110x_CTRL2]);
+	stv6110x_read_reg(stv6110x, STV6110x_CTRL2, &stv6110x->stv6110x_regs[STV6110x_CTRL2]);
+	*gain = STV6110x_GETFIELD(CTRL2_BBGAIN, stv6110x->stv6110x_regs[STV6110x_CTRL2]);
 
 	dprintk(10, "%s gain = %d<\n", __func__, *gain);
 	return 0;
@@ -412,8 +420,8 @@ static int stv6110x_set_bbgain(struct dvb_frontend *fe, u32 gain)
 
 	dprintk(10, "%s: gain = %d >\n", __func__, gain);
 
-	STV6110x_SETFIELD(stv6110x_regs[STV6110x_CTRL2], CTRL2_BBGAIN, gain & 0xf);
-	stv6110x_write_reg(stv6110x, STV6110x_CTRL2, stv6110x_regs[STV6110x_CTRL2]);
+	STV6110x_SETFIELD(stv6110x->stv6110x_regs[STV6110x_CTRL2], CTRL2_BBGAIN, gain & 0xf);
+	stv6110x_write_reg(stv6110x, STV6110x_CTRL2, stv6110x->stv6110x_regs[STV6110x_CTRL2]);
 
     stv6110x->gain = gain;
 
@@ -430,19 +438,19 @@ static int stv6110x_set_mode(struct dvb_frontend *fe, enum tuner_mode mode)
 
 	switch (mode) {
 	case TUNER_SLEEP:
-		STV6110x_SETFIELD(stv6110x_regs[STV6110x_CTRL1], CTRL1_SYN, 0);
-		STV6110x_SETFIELD(stv6110x_regs[STV6110x_CTRL1], CTRL1_RX, 0);
-		STV6110x_SETFIELD(stv6110x_regs[STV6110x_CTRL1], CTRL1_LPT, 0);
+		STV6110x_SETFIELD(stv6110x->stv6110x_regs[STV6110x_CTRL1], CTRL1_SYN, 0);
+		STV6110x_SETFIELD(stv6110x->stv6110x_regs[STV6110x_CTRL1], CTRL1_RX, 0);
+		STV6110x_SETFIELD(stv6110x->stv6110x_regs[STV6110x_CTRL1], CTRL1_LPT, 0);
 		break;
 
 	case TUNER_WAKE:
-		STV6110x_SETFIELD(stv6110x_regs[STV6110x_CTRL1], CTRL1_SYN, 1);
-		STV6110x_SETFIELD(stv6110x_regs[STV6110x_CTRL1], CTRL1_RX, 1);
-		STV6110x_SETFIELD(stv6110x_regs[STV6110x_CTRL1], CTRL1_LPT, 1);
+		STV6110x_SETFIELD(stv6110x->stv6110x_regs[STV6110x_CTRL1], CTRL1_SYN, 1);
+		STV6110x_SETFIELD(stv6110x->stv6110x_regs[STV6110x_CTRL1], CTRL1_RX, 1);
+		STV6110x_SETFIELD(stv6110x->stv6110x_regs[STV6110x_CTRL1], CTRL1_LPT, 1);
 		break;
 	}
 
-	ret = stv6110x_write_reg(stv6110x, STV6110x_CTRL1, stv6110x_regs[STV6110x_CTRL1]);
+	ret = stv6110x_write_reg(stv6110x, STV6110x_CTRL1, stv6110x->stv6110x_regs[STV6110x_CTRL1]);
 	if (ret < 0) {
 		printk("stv6110x_set_mode I/O Error\n");
 		return -EIO;
@@ -469,9 +477,9 @@ static int stv6110x_get_status(struct dvb_frontend *fe, u32 *status)
 
 	dprintk(10, "%s: >\n", __func__);
 
-	stv6110x_read_reg(stv6110x, STV6110x_STAT1, &stv6110x_regs[STV6110x_STAT1]);
+	stv6110x_read_reg(stv6110x, STV6110x_STAT1, &stv6110x->stv6110x_regs[STV6110x_STAT1]);
 
-	if (STV6110x_GETFIELD(STAT1_LOCK, stv6110x_regs[STV6110x_STAT1]))
+	if (STV6110x_GETFIELD(STAT1_LOCK, stv6110x->stv6110x_regs[STV6110x_STAT1]))
 		*status = TUNER_PHASELOCKED;
 	else
 		*status = 0;

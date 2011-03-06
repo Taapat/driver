@@ -56,6 +56,7 @@ struct stv6110x_state {
 	struct dvb_frontend *fe;
     
     u32 gain;
+	u8 stv6110x_regs[8];
 };
 
 #endif /* __STV6110x_PRIV_H */
