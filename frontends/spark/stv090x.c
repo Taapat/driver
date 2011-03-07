@@ -1678,9 +1678,6 @@ static int stv090x_i2c_gate_ctrl(struct dvb_frontend *fe, int enable)
 	struct stv090x_state *state = fe->demodulator_priv;
 	u32 reg;
 
-//	if (enable)
-//		mutex_lock(&state->internal->tuner_lock);
-
 	reg = STV090x_READ_DEMOD(state, I2CRPT);
 	if (enable) {
 		if (!(reg & 0x80))
@@ -1691,7 +1688,6 @@ static int stv090x_i2c_gate_ctrl(struct dvb_frontend *fe, int enable)
 			   goto err;
 		}
 	} else {
-#warning fixme fixme remove this for hdbox too? at least the msleep can be removed!
 		if (state->device != STX7111)
 		{
 		   dprintk(250, "Disable Gate\n");
@@ -1700,15 +1696,12 @@ static int stv090x_i2c_gate_ctrl(struct dvb_frontend *fe, int enable)
 			   goto err;
 
 		   msleep(50);
-                }
+       }
 	}
-//	if (!enable)
-//		mutex_unlock(&state->internal->tuner_lock);
 
 	return 0;
 err:
-	dprintk(250, "I/O error");
-//	mutex_unlock(&state->internal->tuner_lock);
+	dprintk(250, "I/O error\n");
 	return -1;
 }
 
@@ -1946,7 +1939,7 @@ static int stv090x_set_viterbi(struct stv090x_state *state)
 			   goto err;
 		   if (STV090x_WRITE_DEMOD(state, PRVIT, 0x2f) < 0) /* all puncture rate */
 			   goto err;
-                }
+        }
 		break;
 	case STV090x_SEARCH_DVBS1:
 		if (STV090x_WRITE_DEMOD(state, FECM, 0x00) < 0) /* disable DSS */
@@ -2064,7 +2057,7 @@ static int stv090x_activate_modcod(struct stv090x_state *state)
 {
 	dprintk(10, "%s >\n", __func__);
 
-        if (state->device == STX7111)
+    if (state->device == STX7111)
 	{
 	   if (STV090x_WRITE_DEMOD(state, MODCODLST0, 0xff) < 0)
 		   goto err;
@@ -2099,7 +2092,8 @@ static int stv090x_activate_modcod(struct stv090x_state *state)
 	   if (STV090x_WRITE_DEMOD(state, MODCODLSTF, 0xff) < 0)
 		   goto err;
 
-        } else
+    } 
+	else
 	{
 	   if (STV090x_WRITE_DEMOD(state, MODCODLST0, 0xff) < 0)
 		   goto err;
@@ -2254,7 +2248,8 @@ static int stv090x_dvbs_track_crl(struct stv090x_state *state)
 			   goto err;
 		   if (STV090x_WRITE_DEMOD(state, BCLC, 0x1a) < 0)
 			   goto err;
-                } else
+        } 
+		else
 		{
 		   if (STV090x_WRITE_DEMOD(state, ACLC, 0x1a) < 0)
 			   goto err;
@@ -2477,7 +2472,7 @@ static int stv090x_start_search(struct stv090x_state *state)
 			{
 			   if (STV090x_WRITE_DEMOD(state, CARCFG, 0x46) < 0)
 				   goto err;
-                        } else
+            } else
 			{
 			   if (STV090x_WRITE_DEMOD(state, CARCFG, 0x44) < 0)
 				   goto err;
@@ -2599,30 +2594,26 @@ static int stv090x_start_search(struct stv090x_state *state)
 	if (STV090x_WRITE_DEMOD(state, DMDCFG2, reg) < 0)
 		goto err;
 
-        if (state->device == STX7111)
+    if (state->device == STX7111)
 	{
 	   if (STV090x_WRITE_DEMOD(state, RTC, 0x88) < 0)
 		   goto err;
-        }
+    }
 	
 	if (state->dev_ver >= 0x20) {
 		/*Frequency offset detector setting*/
 		if (state->srate < 2000000) {
 			if (state->dev_ver <= 0x20) {
 				/* Cut 2 */
-//#ifdef alt
 				if (STV090x_WRITE_DEMOD(state, CARFREQ, 0x39) < 0)
 					goto err;
-//#endif
 			} else {
 				/* Cut 2 */
 				if (STV090x_WRITE_DEMOD(state, CARFREQ, 0x89) < 0)
 					goto err;
 			}
-//#ifdef alt
 			if (STV090x_WRITE_DEMOD(state, CARHDR, 0x40) < 0)
 				goto err;
-//#endif
 		}
 
 		if (state->srate < 10000000) {
@@ -2649,10 +2640,6 @@ static int stv090x_start_search(struct stv090x_state *state)
 		 */
 		if (STV090x_WRITE_DEMOD(state, DMDISTATE, 0x1f) < 0)
 			goto err;
-/*old
-		if (STV090x_WRITE_DEMOD(state, DMDISTATE, 0x18) < 0)
-			goto err;
-*/
 		if (STV090x_WRITE_DEMOD(state, DMDISTATE, 0x15) < 0)
 			goto err;
 		break;
