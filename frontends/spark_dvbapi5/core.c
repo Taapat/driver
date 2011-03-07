@@ -18,48 +18,19 @@ short paramDebug = 0;
 static struct core *core[MAX_DVB_ADAPTERS];
 
 static struct stv090x_config tt1600_stv090x_config = {
-#if defined(FORTIS_HDBOX)
-	.device			= STV0903,
-	.demod_mode		= STV090x_DUAL/*STV090x_SINGLE*/,
-#elif defined(UFS912) || defined(SPARK)
 	.device			= STX7111,
 	.demod_mode		= STV090x_DUAL,
-#else
-#warning  not supported architechture
-#endif
 	.clk_mode		= STV090x_CLK_EXT,
-
-#if defined(FORTIS_HDBOX)
-	.xtal			= 16000000/*8000000*/,
-#elif defined(UFS912) || defined(SPARK)
 	.xtal			= 30000000,
-#else
-#warning  not supported architechture
-#endif
 	.address		= 0x68,
 	.ref_clk		= 16000000,
-
-#if defined(FORTIS_HDBOX)
-	.ts1_mode		= STV090x_TSMODE_DVBCI/*STV090x_TSMODE_SERIAL_CONTINUOUS*/,
-	.ts2_mode		= STV090x_TSMODE_DVBCI/*STV090x_TSMODE_SERIAL_CONTINUOUS*/,
-#elif defined(UFS912) || defined(SPARK)
 	.ts1_mode		= STV090x_TSMODE_DVBCI,
 	.ts2_mode		= STV090x_TSMODE_SERIAL_CONTINUOUS,
-#else
-#warning  not supported architechture
-#endif
-	.ts1_clk		= 0, /* diese regs werden in orig nicht gesetzt */
-	.ts2_clk		= 0, /* diese regs werden in orig nicht gesetzt */
-
-#if defined(FORTIS_HDBOX)
-	.repeater_level		= STV090x_RPTLEVEL_16,
-#elif defined(UFS912) || defined(SPARK)
+	.ts1_clk		= 0,
+	.ts2_clk		= 0,
 	.repeater_level		= STV090x_RPTLEVEL_64,
-#else
-#warning  not supported architechture
-#endif
 
-	.tuner_init		= NULL,
+	.tuner_init			= NULL,
 	.tuner_set_mode		= NULL,
 	.tuner_set_frequency	= NULL,
 	.tuner_get_frequency	= NULL,
@@ -92,15 +63,8 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 
 	printk (KERN_INFO "%s >\n", __FUNCTION__);
 	
-#if  defined(UFS912) || defined(SPARK)
-		frontend = stv090x_attach(&tt1600_stv090x_config, cfg->i2c_adap, STV090x_DEMODULATOR_0, STV090x_TUNER1);
-#else
-	if (i== 0)
-		frontend = stv090x_attach(&tt1600_stv090x_config, cfg->i2c_adap, STV090x_DEMODULATOR_0, STV090x_TUNER1);
-	else
-/* Dagobert commented: is this correct? second tuner uses demod0 ??? */
-		frontend = stv090x_attach(&tt1600_stv090x_config, cfg->i2c_adap, STV090x_DEMODULATOR_0, STV090x_TUNER2);
-#endif	
+	frontend = stv090x_attach(&tt1600_stv090x_config, cfg->i2c_adap, STV090x_DEMODULATOR_0, STV090x_TUNER1);
+
 	if (frontend) {
 		printk("%s: attached\n", __FUNCTION__);
 		
