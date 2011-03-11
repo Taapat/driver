@@ -6,16 +6,16 @@ CCFLAGSY += -I$(KERNEL_LOCATION)/drivers/media/dvb/dvb-core
 CCFLAGSY += -I$(CONFIG_STGFB_PATH)/include 
 CCFLAGSY += -DDEBUG_DVB
 
-ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
-ccflags-y += $(CCFLAGSY)
-else
-CFLAGS += $(CCFLAGSY)
-endif
-
 ifeq ($(CONFIG_PLAYER_131),y)
 CCFLAGSY+= -DPLAYER_131
 else ifeq ($(CONFIG_PLAYER_179),y)
 CCFLAGSY+= -DPLAYER_179
+endif
+
+ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
+ccflags-y += $(CCFLAGSY)
+else
+CFLAGS += $(CCFLAGSY)
 endif
 
 pti-objs:= pti_main.o
