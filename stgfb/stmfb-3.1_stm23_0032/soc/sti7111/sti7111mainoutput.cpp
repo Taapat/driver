@@ -60,36 +60,36 @@ CSTi7111MainOutput::~CSTi7111MainOutput() {}
 
 void CSTi7111MainOutput::StartSDInterlacedClocks(const stm_mode_line_t *mode)
 {
-//#if defined(UFS912)
+#if defined(UFS912)
 /* from old stmfb; h264 problem appears with new version */
-//  ULONG val;
+  ULONG val;
 
-//  DENTRY();
+  DENTRY();
 
-//  val = ReadClkReg(CKGB_DISPLAY_CFG);
+  val = ReadClkReg(CKGB_DISPLAY_CFG);
   /*
    * Save the SD divider configuration, zero everything else including
    * PIX_HD source mux, which will put it back to FS0.
    *
    * TODO: support SD on HDMI/DVO without using DENC/Aux pipeline?
    */
-//  val &= (CKGB_CFG_PIX_SD_FS1(CKGB_CFG_MASK) | CKGB_CFG_DISP_ID(CKGB_CFG_MASK));
+  val &= (CKGB_CFG_PIX_SD_FS1(CKGB_CFG_MASK) | CKGB_CFG_DISP_ID(CKGB_CFG_MASK));
 
-//  val |= CKGB_CFG_TMDS_HDMI(CKGB_CFG_DIV4);
-//  val |= CKGB_CFG_DISP_HD(CKGB_CFG_DIV8);
-//  val |= CKGB_CFG_656(CKGB_CFG_DIV4);
-//  val |= CKGB_CFG_PIX_SD_FS0(CKGB_CFG_DIV4);
+  val |= CKGB_CFG_TMDS_HDMI(CKGB_CFG_DIV4);
+  val |= CKGB_CFG_DISP_HD(CKGB_CFG_DIV8);
+  val |= CKGB_CFG_656(CKGB_CFG_DIV4);
+  val |= CKGB_CFG_PIX_SD_FS0(CKGB_CFG_DIV4);
 
-//  WriteClkReg(CKGB_DISPLAY_CFG, val);
+  WriteClkReg(CKGB_DISPLAY_CFG, val);
 
-//  val = ReadClkReg(CKGB_CLK_SRC) & ~CKGB_SRC_PIXSD_FS1_NOT_FS0;
-//  WriteClkReg(CKGB_CLK_SRC,val);
+  val = ReadClkReg(CKGB_CLK_SRC) & ~CKGB_SRC_PIXSD_FS1_NOT_FS0;
+  WriteClkReg(CKGB_CLK_SRC,val);
 
   // Ensure Aux pipeline clock is at the correct frequency for shared GDP.
-//  m_pFSynthAux->Start(mode->TimingParams.ulPixelClock);
+  m_pFSynthAux->Start(mode->TimingParams.ulPixelClock);
 
-//  DEXIT();
-//#else
+  DEXIT();
+#else
   ULONG val = 0;
 
   DENTRY();
@@ -121,7 +121,7 @@ void CSTi7111MainOutput::StartSDInterlacedClocks(const stm_mode_line_t *mode)
   m_pFSynthAux->Start(mode->TimingParams.ulPixelClock);
 
   DEXIT();
-//#endif
+#endif
 }
 
 
@@ -131,16 +131,16 @@ void CSTi7111MainOutput::StartSDProgressiveClocks(const stm_mode_line_t *mode)
 
   DENTRY();
 
-//#if defined(__TDT__) && (defined(UFS912))
-//  WriteClkReg(CKGB_LCK, CKGB_LCK_UNLOCK);
+#if defined(__TDT__) && (defined(UFS912))
+  WriteClkReg(CKGB_LCK, CKGB_LCK_UNLOCK);
 
-//  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_DISPLAY_CFG, 0x3011);
+  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_DISPLAY_CFG, 0x3011);
 
 /* maybe we must set fs1_md3 and co here too? especially
  * if 576p is set as default?
  */
 
-//#else
+#else
   WriteClkReg(CKGB_LCK, CKGB_LCK_UNLOCK);
 
   val = ReadClkReg(CKGB_DISPLAY_CFG);
@@ -156,7 +156,7 @@ void CSTi7111MainOutput::StartSDProgressiveClocks(const stm_mode_line_t *mode)
   val |= CKGB_CFG_656(CKGB_CFG_DIV2);
   val |= CKGB_CFG_PIX_SD_FS0(CKGB_CFG_DIV4);
   WriteClkReg(CKGB_DISPLAY_CFG, val);
-//#endif
+#endif
   DEXIT();
 }
 
