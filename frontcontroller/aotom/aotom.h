@@ -229,6 +229,7 @@ extern int YWPANEL_VFD_ShowString(char* str);
 extern int YWPANEL_VFD_ShowTime(u8 hh, u8 mm);
 extern int YWPANEL_VFD_ShowTimeOff(void);
 extern int YWPANEL_VFD_SetBrightness(int level);
+extern int YWPANEL_VFD_SetLed(int which, int on);
 extern bool YWPANEL_FP_ControlTimer(bool on);
 extern u32  YWPANEL_FP_GetTime(void);
 extern bool YWPANEL_FP_SetTime(u32 value);

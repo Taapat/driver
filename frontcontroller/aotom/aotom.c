@@ -196,7 +196,7 @@ static int VFD_Show_Ico(LogNum_T log_num, int log_stat)
 	return YWPANEL_VFD_ShowIco(log_num, log_stat);
 }
 
-static struct task_struct *thread; 
+static struct task_struct *thread;
 static int thread_stop  = 1;
 int aotomSetIcon(int which, int on);
 
@@ -220,16 +220,16 @@ void draw_thread(void *arg)
   struct vfd_ioctl_data *data;
   struct vfd_ioctl_data draw_data;
   unsigned char buf[9];
-  int count = 0; 
+  int count = 0;
   int pos = 0;
-  
-  
+
+
   data = (struct vfd_ioctl_data *)arg;
-  
+
   draw_data.length = data->length;
   memset(draw_data.data, 0, sizeof(draw_data.data));
   memcpy(draw_data.data,data->data,data->length);
-  
+
   thread_stop = 0;
 
   count = draw_data.length;
@@ -246,7 +246,7 @@ void draw_thread(void *arg)
     	   thread_stop = 1;
     	   return;
        }
-      
+
        clear_display();
        memset(buf,0, sizeof(buf));
        memcpy(buf, &draw_data.data[pos], 8);
@@ -269,27 +269,27 @@ void draw_thread(void *arg)
       memcpy(buf, draw_data.data, 8);
       YWPANEL_VFD_ShowString(buf);
   }
- 
+
   thread_stop = 1;
 }
- 
+
 int run_draw_thread(struct vfd_ioctl_data *draw_data)
 {
     if(!thread_stop)
       kthread_stop(thread);
-	  
+
     //wait thread stop
     while(!thread_stop)
     {msleep(1);}
 
-  
+
     thread_stop = 2;
     thread=kthread_run(draw_thread,draw_data,"draw thread",NULL,true);
 
     //wait thread run
     while(thread_stop == 2)
     {msleep(1);}
-	
+
     return 0;
 }
 
@@ -355,7 +355,13 @@ int aotomSetTime(char* time)
 	dprintk(5, "%s time: %02d:%02d\n", __func__, time[2], time[3]);
 	res= VFD_Show_Time(time[2], time[3]);
 	dprintk(5, "%s <\n", __func__);
-
+#if defined(SPARK)
+	{
+		char buf[5];
+		snprintf(buf, 5, "%02d%02d\n", time[2], time[3]);
+		YWPANEL_VFD_ShowString(buf);
+	}
+#endif
    return res;
 }
 
@@ -398,9 +404,9 @@ static ssize_t AOTOMdev_write(struct file *filp, const char *buff, size_t len, l
 {
 	char* kernel_buf;
 	int minor, vLoop, res = 0;
-        
+
 	struct vfd_ioctl_data data;
-	
+
 	dprintk(5, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
 
 	minor = -1;
@@ -436,14 +442,14 @@ static ssize_t AOTOMdev_write(struct file *filp, const char *buff, size_t len, l
       return -ERESTARTSYS;
 
       	data.length = len;
-	if (kernel_buf[len-1] == '\n') 
+	if (kernel_buf[len-1] == '\n')
 	{
 	  kernel_buf[len-1] = 0;
 	  data.length--;
 	}
-	
+
 	if(len <0)
-	{ 
+	{
 	  res = -1;
 	  dprintk(2, "empty string\n");
 	}
@@ -452,7 +458,7 @@ static ssize_t AOTOMdev_write(struct file *filp, const char *buff, size_t len, l
 	  memcpy(data.data,kernel_buf,len);
 	  res=run_draw_thread(&data);
 	}
-	
+
 	kfree(kernel_buf);
 
 	up(&write_sem);
@@ -605,16 +611,23 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		mode = aotom->u.mode.compat;
 		break;
 	case VFDSETLED:
+	{
+#if defined(SPARK)
+		res = YWPANEL_VFD_SetLed(aotom->u.led.led_nr, aotom->u.led.on);
+		//printk("res = %d\n", res);
+#endif
 		break;
+	}
 	case VFDBRIGHTNESS:
 		break;
 	case VFDICONDISPLAYONOFF:
-		{
-		  //struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;	
-//		  res = aotomSetIcon(aotom->u.icon.icon_nr, aotom->u.icon.on);
-		}
+	{
+	 	//struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;
+		//res = aotomSetIcon(aotom->u.icon.icon_nr, aotom->u.icon.on);
 
 		mode = 0;
+		break;
+	}
 	case VFDSTANDBY:
 	   break;
 	case VFDSETTIME:
@@ -628,9 +641,9 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 	case VFDDISPLAYCHARS:
 		if (mode == 0)
 		{
-	 	  struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg; 
+	 	  struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;
 		  if(data->length <0)
-	            { 
+	            {
 	              res = -1;
 	              dprintk(2, "empty string\n");
 	            }
@@ -649,7 +662,7 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 	case VFDDISPLAYCLR:
 		if(!thread_stop)
 		  kthread_stop(thread);
-	  
+
 		//wait thread stop
 		while(!thread_stop)
 		  {msleep(1);}
@@ -846,9 +859,9 @@ void button_dev_exit(void)
 static int __init aotom_init_module(void)
 {
 	int i;
-	
+
 	dprintk(5, "%s >\n", __func__);
-        
+
 	printk("Edisio argus vip2 second stage front panel driver\n");
 
 	sema_init(&display_sem,1);
@@ -871,9 +884,9 @@ static int __init aotom_init_module(void)
 	for (i = 0; i < LASTMINOR; i++)
 	    sema_init(&FrontPanelOpen[i].sem, 1);
 
-	
+
 	dprintk(5, "%s <\n", __func__);
-	
+
 	return 0;
 }
 
@@ -881,9 +894,9 @@ static void __exit aotom_cleanup_module(void)
 {
 	dprintk(5, "[BTN] unloading ...\n");
 	button_dev_exit();
-        
+
 	//kthread_stop(time_thread);
-	
+
 	unregister_chrdev(VFD_MAJOR,"VFD");
 	printk("Edision argus vip2 front panel module unloading\n");
 }
