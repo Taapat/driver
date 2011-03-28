@@ -357,9 +357,7 @@ int aotomSetTime(char* time)
 	dprintk(5, "%s <\n", __func__);
 #if defined(SPARK)
 	{
-		char buf[5];
-		snprintf(buf, 5, "%02d%02d\n", time[2], time[3]);
-		YWPANEL_VFD_ShowString(buf);
+		YWPANEL_FP_ControlTimer(true);
 	}
 #endif
    return res;
