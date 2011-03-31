@@ -116,7 +116,7 @@ enum {
 		LED_POWER,
 		LED_TV_R,
 		LED_VOL,
-		LED_WHEEL,
+		LED_WHEEL
 };
 
 enum {

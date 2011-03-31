@@ -87,9 +87,8 @@ typedef enum
 	REMOTE_OLD= 0,
 	REMOTE_NEW,
 	REMOTE_TOPFIELD,
-
-    REMOTE_UNKNOWN,
-}REMOTE_TYPE;
+	REMOTE_UNKNOWN
+} REMOTE_TYPE;
 
 enum
 {
@@ -141,7 +140,7 @@ enum
 	RED_KEY 		= 44,	//Z
 	GREEN_KEY 		= 45,	//X
 	YELLOW_KEY 		= 46,	//C
-	BLUE_KEY 		= 47,	//V
+	BLUE_KEY 		= 47	//V
 };
 
 enum

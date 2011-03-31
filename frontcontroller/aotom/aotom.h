@@ -141,7 +141,7 @@ enum
 	RED_KEY 		= 44,	//Z
 	GREEN_KEY 		= 45,	//X
 	YELLOW_KEY 		= 46,	//C
-	BLUE_KEY 		= 47,	//V
+	BLUE_KEY 		= 47	//V
 };
 
 enum

@@ -454,7 +454,7 @@ static const uint8_t pt6302_007_rom_table[256] = {
   0x10,//0xfc, reserved
   0x10,//0xfd, reserved
   0x10,//0xfe, reserved
-  0x00,//0xff, reserved
+  0x00 //0xff, reserved
 };
 
 struct pt6302_driver {

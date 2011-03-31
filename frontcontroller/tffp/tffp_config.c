@@ -27,7 +27,7 @@ static tTffpConfig defaultConfig = {
       .typematicRate    =   1,
       .scrollMode       =   1,
       .scrollPause      = 100,
-      .scrollDelay      =  10,
+      .scrollDelay      =  10
 };
 
 int readEepromByte(u8 offset, u8 *pData)

@@ -335,6 +335,5 @@ unsigned char ROM_KATHREIN[256] =
         0x10,//0xfc, reserved
         0x10,//0xfd,  reserved
         0x10,//0xfe,  reserved
-        0x10,//0xff, reservedr
+        0x10 //0xff, reservedr
 };
-
