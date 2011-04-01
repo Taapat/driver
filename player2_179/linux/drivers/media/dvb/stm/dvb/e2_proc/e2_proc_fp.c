@@ -217,6 +217,7 @@ int proc_fp_was_timer_wakeup_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
+	int cmpcount;
 	/* int		result; */
 	
 	printk("%s %ld\n", __FUNCTION__, count);
@@ -234,11 +235,16 @@ int proc_fp_was_timer_wakeup_write(struct file *file, const char __user *buf,
 		myString[count] = '\0';
 
 		printk("%s\n", myString);
+		
+		if(count - 1 == 0)
+			cmpcount = 1;
+		else
+			cmpcount = count - 1;
 
-		if (strncmp("1", page, count - 1) == 0)
+		if (strncmp("1", page, cmpcount) == 0)
 		{
 			was_timer_wakeup = 1;
-		} else if (strncmp("0", page, count - 1) == 0)
+		} else if (strncmp("0", page, cmpcount) == 0)
 		{
 			was_timer_wakeup = 0;
 		}
