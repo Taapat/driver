@@ -625,9 +625,18 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 #if defined(SPARK)
 		switch (aotom->u.icon.icon_nr)
 		{
-			case 0x1e:
-				res = YWPANEL_VFD_SetLed(0, aotom->u.led.on);
+			case 0:
+			{
+   				struct vfd_ioctl_data * vfd = (struct vfd_ioctl_data *)arg;
+				if (5 == vfd->length)
+				{
+					if ((0x1e & 0xf) == vfd->data[0])
+					{
+						res = YWPANEL_VFD_SetLed(0, vfd->data[4]);
+					}
+				}
 				break;
+			}
 			case 35:
 				res = YWPANEL_VFD_SetLed(1, aotom->u.led.on);
 				break;
