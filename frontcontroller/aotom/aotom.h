@@ -241,4 +241,5 @@ extern bool YWPANEL_FP_SetBlueKey(u8 index,u8 key);
 extern u32  YWPANEL_FP_GetIRKey(void);
 extern bool YWPANEL_FP_SetPowerOnTime(u32 Value);
 extern u32  YWPANEL_FP_GetPowerOnTime(void);
+bool  YWPANEL_FP_SetCpuStatus(u32 state);
 extern int  YWPANEL_VFD_GetKeyValue(void);

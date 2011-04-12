@@ -649,13 +649,53 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		break;
 	}
 	case VFDSTANDBY:
+	{
+#if defined(SPARK)
+		u32 uTime = 0;
+		u32 uStandByKey = 0;
+		u32 uPowerOnTime = 0;
+		get_user(uTime, (int *) arg);
+		//printk("uTime = %d\n", uTime);
+
+		uPowerOnTime = YWPANEL_FP_GetPowerOnTime();
+		//printk("1uPowerOnTime = %d\n", uPowerOnTime);
+
+		YWPANEL_FP_SetPowerOnTime(uTime);
+
+		uPowerOnTime = YWPANEL_FP_GetPowerOnTime();
+		//printk("2uPowerOnTime = %d\n", uPowerOnTime);
+		#if 0
+		uStandByKey = YWPANEL_FP_GetStandByKey(0);
+		printk("uStandByKey = %d\n", uStandByKey);
+		uStandByKey = YWPANEL_FP_GetStandByKey(1);
+		printk("uStandByKey = %d\n", uStandByKey);
+		uStandByKey = YWPANEL_FP_GetStandByKey(2);
+		printk("uStandByKey = %d\n", uStandByKey);
+		uStandByKey = YWPANEL_FP_GetStandByKey(3);
+		printk("uStandByKey = %d\n", uStandByKey);
+		uStandByKey = YWPANEL_FP_GetStandByKey(4);
+		printk("uStandByKey = %d\n", uStandByKey);
+		#endif
+		YWPANEL_FP_SetCpuStatus(0x02);
+
+#endif
 	   break;
+	}
 	case VFDSETTIME:
-		   //struct set_time_s *data2 = (struct set_time_s *) arg;
-		   res = aotomSetTime((char *)arg);
+		//struct set_time_s *data2 = (struct set_time_s *) arg;
+		res = aotomSetTime((char *)arg);
 		break;
 	case VFDGETTIME:
+	{
+#if defined(SPARK)
+		u32 uTime = 0;
+		char cTime[5];
+		uTime = YWPANEL_FP_GetTime();
+		//printk("uTime = %d\n", uTime);
+		put_user(uTime, (int *) arg);
+#endif
 		break;
+	}
 	case VFDGETWAKEUPMODE:
 		break;
 	case VFDDISPLAYCHARS:
