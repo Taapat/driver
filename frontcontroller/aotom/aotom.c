@@ -676,6 +676,7 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		uStandByKey = YWPANEL_FP_GetStandByKey(4);
 		printk("uStandByKey = %d\n", uStandByKey);
 		#endif
+		YWPANEL_FP_ControlTimer(true);
 		YWPANEL_FP_SetCpuStatus(0x02);
 
 #endif
