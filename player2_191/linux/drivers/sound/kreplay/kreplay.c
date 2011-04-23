@@ -1,7 +1,11 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/kthread.h>
-#include "ksound.h"
+//#ifdef __TDT__
+#include "../ksound/ksound.h"
+//#else
+//#include "ksound.h"
+//#endif
 
 MODULE_LICENSE("GPL");
 

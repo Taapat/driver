@@ -122,7 +122,7 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
       printk("no swts ->routing streams from dvr0 direct to the player\n");
 #endif
 
-#if defined (CONFIG_KERNELVERSION)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #if DVB_API_VERSION < 5
     Result      = dvb_register_adapter (&DvbContext->DvbAdapter, MODULE_NAME, THIS_MODULE, NULL);
 #else   

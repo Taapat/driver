@@ -6,7 +6,7 @@ endif
 pseudocard-objs := pseudo_mixer.o
 
 CONFIG_STGFB_PATH?=$(DRIVER_TOPDIR)/stgfb/stmfb
-CFLAGS+=-I$(CONFIG_STGFB_PATH)/include
-CFLAGS+=-I$(DRIVER_TOPDIR)/include/player2
+EXTRA_CFLAGS+=-I$(CONFIG_STGFB_PATH)/include
+EXTRA_CFLAGS+=-I$(DRIVER_TOPDIR)/include/player2
 
 obj-$(CONFIG_STM_UNIFY_PSEUDOCARD) := pseudocard.o

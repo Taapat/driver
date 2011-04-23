@@ -39,6 +39,7 @@ Date        Modification                                    Name
 #include "dvb_ca.h"
 
 #ifdef __TDT__
+#include <linux/version.h>
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #include "../../../../../../../pti/pti_hal.h"
 #endif

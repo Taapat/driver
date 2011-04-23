@@ -196,8 +196,12 @@ snd_pcm_uframes_t ksnd_pcm_avail_update(ksnd_pcm_t *kpcm)
 	avail = _ksnd_pcm_avail_update(substream);
 	snd_pcm_stream_unlock_irq(substream);
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        // attribute xfer_align is not used any more
+#else
 	if (avail > runtime->xfer_align)
 		avail -= avail % runtime->xfer_align;
+#endif
 
 	return avail;
 }
@@ -843,8 +847,12 @@ static int _ksnd_pcm_writei1(snd_pcm_substream_t *substream,
 			avail = snd_pcm_playback_avail(runtime);
 		}
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        // attribute xfer_align is not used any more
+#else
 		if (avail > runtime->xfer_align)
 			avail -= avail % runtime->xfer_align;
+#endif
 
 		frames = size > avail ? avail : size;
 		cont =
