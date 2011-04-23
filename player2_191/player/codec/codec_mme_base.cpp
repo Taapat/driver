@@ -114,7 +114,7 @@ Codec_MmeBase_c::Codec_MmeBase_c( void )
 
     Configuration.CodecName                             = "Unspecified";
 
-#ifdef __TDT__
+#if defined(__TDT__) && defined(UFS910)
 //Dagobert 16.11.2009: This must stay also for 7109er (ufs922). Removing
 //this hack leads to mysterious dropouts of audio and video.
 //must compile with debug to see details here.
