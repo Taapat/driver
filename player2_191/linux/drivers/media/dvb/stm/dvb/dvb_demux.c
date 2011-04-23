@@ -381,6 +381,13 @@ int StartFeed (struct dvb_demux_feed* Feed)
 
             break;
         case DMX_TYPE_SEC:
+#ifdef __TDT__
+            //DVB_DEBUG ("feed type = SEC\n");
+
+            mutex_lock (&(DvbContext->Lock));
+            stpti_start_feed (Feed, Context);
+            mutex_unlock (&(DvbContext->Lock));
+#endif
             break;
         default:
 #ifdef __TDT
