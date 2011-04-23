@@ -125,6 +125,29 @@ public:
     void                DoneCallback                   (struct StreamBuffer_s*  Buffer,
                                                         TIME64                  VsyncTime,
                                                         unsigned int            Status);
+#ifdef __TDT__
+#ifdef UFS922
+    int get_dei_fmd(char *page, char **start, off_t off, int count,int *eof);
+    int set_dei_fmd(struct file *file, const char __user *buf, unsigned long count);
+
+    int get_dei_mode(char *page, char **start, off_t off, int count,int *eof);
+    int set_dei_mode(struct file *file, const char __user *buf, unsigned long count);
+
+    int get_dei_ctrl(char *page, char **start, off_t off, int count,int *eof);
+    int set_dei_ctrl(struct file *file, const char __user *buf, unsigned long count);
+#endif
+    int get_psi_brightness(char *page, char **start, off_t off, int count,int *eof);
+    int set_psi_brightness(struct file *file, const char __user *buf, unsigned long count);
+
+    int get_psi_saturation(char *page, char **start, off_t off, int count,int *eof);
+    int set_psi_saturation(struct file *file, const char __user *buf, unsigned long count);
+
+    int get_psi_contrast(char *page, char **start, off_t off, int count,int *eof);
+    int set_psi_contrast(struct file *file, const char __user *buf, unsigned long count);
+
+    int get_psi_tint(char *page, char **start, off_t off, int count,int *eof);
+    int set_psi_tint(struct file *file, const char __user *buf, unsigned long count);
+#endif
  protected:
     void                SelectDisplayBufferPointers    (struct BufferStructure_s*   BufferStructure,
                                                         struct StreamBuffer_s*       StreamBuff,

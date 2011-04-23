@@ -40,6 +40,13 @@ Date        Modification                                    Name
 #include "backend.h"
 #include "backend_ops.h"
 
+#if defined(__TDT__) 
+#include <linux/version.h>
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+#include <linux/mm.h>
+#endif
+#endif
+
 /*{{{  static data*/
 static unsigned char            ASFHeaderObjectGuid[]   = {0x30, 0x26, 0xb2, 0x75,
                                                            0x8e, 0x66, 0xcf, 0x11,
@@ -718,6 +725,27 @@ int DvbStreamGetDecodeBufferPoolStatus     (struct StreamContext_s*         Stre
 }
 
 /*}}}*/
+#ifdef __TDT__
+/*{{{  StreamGetOutputWindow*/
+int StreamGetOutputWindow      (struct StreamContext_s*         Stream,
+                                unsigned int*                   X,
+                                unsigned int*                   Y,
+                                unsigned int*                   Width,
+                                unsigned int*                   Height)
+{
+    int         Result;
+
+    if ((Stream == NULL) || (Stream->Handle == NULL))           /* No stream to set id */
+        return -EINVAL;
+
+    Result      = Backend->Ops->stream_get_output_window (Stream->Handle, X, Y, Width, Height);
+    if (Result < 0)
+        BACKEND_ERROR("Unable to get output window (%d)\n", Result);
+
+    return Result;
+}
+/*}}}  */
+#endif
 /*{{{  DvbStreamSetOutputWindow*/
 int DvbStreamSetOutputWindow   (struct StreamContext_s*         Stream,
                                 unsigned int                    X,
@@ -912,6 +940,42 @@ int DvbDisplayDelete   (char*           Media,
     return Result;
 }
 /*}}}*/
+
+#ifdef __TDT__
+/*{{{  Dagobert: DisplayCreate */
+int DisplayCreate      (char*           Media,
+                        unsigned int    SurfaceId)
+{
+    int         Result  = 0;
+
+    if (Backend->Ops == NULL)
+        return -ENODEV;
+
+    BACKEND_DEBUG("Media %s, SurfaceId  = %d\n", Media, SurfaceId);
+
+    Result = Backend->Ops->display_create (Media, SurfaceId);
+    if (Result < 0)
+        BACKEND_ERROR("Failed to open %s surface\n", Media);
+
+    return Result;
+}
+
+/*{{{  Dagobert: isDisplayCreated */
+int isDisplayCreated      (char*           Media,
+                           unsigned int    SurfaceId)
+{
+    int         Result  = 0;
+
+    if (Backend->Ops == NULL)
+        return -ENODEV;
+
+    BACKEND_DEBUG("Media %s, SurfaceId  = %d\n", Media, SurfaceId);
+
+    Result = Backend->Ops->is_display_created (Media, SurfaceId);
+
+    return Result;
+}
+#endif
 
 /*{{{  DisplaySynchronize*/
 int DvbDisplaySynchronize   (char*           Media,

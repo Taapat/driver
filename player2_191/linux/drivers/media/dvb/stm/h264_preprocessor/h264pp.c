@@ -13,6 +13,10 @@
 
 #include "osdev_device.h"
 
+#ifdef __TDT__
+#include <linux/version.h>
+#endif
+
 /* --- */
 
 #include "h264ppio.h"
@@ -654,7 +658,11 @@ int		Status;
 #if defined (CONFIG_KERNELVERSION) // STLinux 2.3
 	Status  = request_irq( DeviceContext.InterruptNumber[N], H264ppInterruptHandler, IRQF_DISABLED, "H264 PP", (void *)N );
 #else
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+	Status  = request_irq( DeviceContext.InterruptNumber[N], H264ppInterruptHandler, IRQF_DISABLED, "H264 PP", (void *)N );
+#else
 	Status  = request_irq( DeviceContext.InterruptNumber[N], H264ppInterruptHandler, SA_INTERRUPT, "H264 PP", (void *)N );
+#endif
 #endif
 
 	if( Status != 0 )
@@ -731,8 +739,13 @@ unsigned int	 IntermediateEndAddress;
     // Standard pre-processor initialization
     //
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+    __flush_wback_region(Buffer->Parameters.InputBufferCachedAddress,Buffer->Parameters.InputSize);
+    __flush_wback_region(Buffer->Parameters.OutputBufferCachedAddress,H264_PP_SESB_SIZE);
+#else
     dma_cache_wback(Buffer->Parameters.InputBufferCachedAddress,Buffer->Parameters.InputSize);
     dma_cache_wback(Buffer->Parameters.OutputBufferCachedAddress,H264_PP_SESB_SIZE);
+#endif
 
     OSDEV_WriteLong( PP_ITS(N),                 0xffffffff );                           // Clear interrupt status
 
@@ -841,7 +854,11 @@ unsigned int	IntermediateEndAddress;
 
     GNBvd42331DataPhysicalAddress	= (unsigned char *)State->BufferState->Parameters.OutputBufferPhysicalAddress + 0x10000;
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+    __flush_wback_region((State->BufferState->Parameters.OutputBufferCachedAddress + 0x10000),sizeof(GNBvd42331Data));
+#else
     dma_cache_wback((State->BufferState->Parameters.OutputBufferCachedAddress + 0x10000),sizeof(GNBvd42331Data));
+#endif
 
     //
     // Derive the pointers - we use the next buffer to be queued as output as our output 

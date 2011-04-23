@@ -20,7 +20,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifdef __TDT__
+#include <linux/version.h>
+#endif
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+/* sound/driver.h not available in stlinux24 */
+#else
 #include <sound/driver.h>
+#endif
 #include <linux/ioport.h>
 #include <linux/bpa2.h>
 #include <linux/init.h>
@@ -54,10 +61,16 @@ MODULE_DESCRIPTION("Pseudo soundcard");
 MODULE_LICENSE("GPL");
 MODULE_SUPPORTED_DEVICE("{{ALSA,Pseudo soundcard}}");
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+#warning Need to remove these typedefs
+typedef struct snd_pcm_substream snd_pcm_substream_t;
+typedef struct snd_pcm_runtime   snd_pcm_runtime_t;
+#else
 #if defined (CONFIG_KERNELVERSION) /* STLinux 2.3 */
 #warning Need to remove these typedefs
 typedef struct snd_pcm_substream snd_pcm_substream_t;
 typedef struct snd_pcm_runtime   snd_pcm_runtime_t;
+#endif
 #endif
 
 #define MAX_PCM_DEVICES		4
@@ -175,14 +188,27 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	{
 		{
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+	CARD_SPDIF  ("SPDIF",   0, 2,  48000, 2),
+	CARD        ("Analog",  0, 1,  48000, 2),
+	CARD        ("HDMI",    0, 0,  48000, 2),
+#else
 #if defined (CONFIG_KERNELVERSION)
+  #if defined(__TDT__) && ! defined(UFS922)  && !defined(OCTAGON1008) && !defined(UFS910)
+ 			 CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
+      			 CARD        ("Analog",  1, 0,  48000, 2),
+      			 CARD        ("HDMI",    0, 0,  48000, 2),
+  #else
+
 			CARD_SPDIF  ("SPDIF",   0, 2,  48000, 2),
 			CARD        ("Analog",  0, 1,  48000, 2),
 			CARD        ("HDMI",    0, 0,  48000, 2),
+  #endif
 #else /* STLinux 2.2 */
 			CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
 			CARD        ("Analog",  1, 0,  48000, 2),
 			CARD        ("HDMI",    3, 0,  48000, 2),
+#endif
 #endif
 		},
 	},
@@ -193,21 +219,41 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	{
 		{
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+                        CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
+                        CARD        ("Analog",  0, 0,  48000, 2),
+#else
 #if defined (CONFIG_KERNELVERSION)
+  #if defined(__TDT__)
+                        CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
+                        CARD        ("Analog",  0, 0,  48000, 2),
+  #else
+
 			CARD_SPDIF  ("SPDIF",   0, 2,  48000, 2),
 			CARD        ("HDMI",    0, 0,  48000, 2),
+  #endif
 #else /* STLinux-2.2 */
 			CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
 			CARD        ("Analog",  0, 0,  48000, 2),
+#endif
 #endif
 		},
 	},
 	{
 		{
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+                        CARD        ("Analog",  1, 0,  48000, 2),
+#else
 #if defined (CONFIG_KERNELVERSION)
+  #if define(__TDT__)
+                        CARD        ("Analog",  1, 0,  48000, 2),
+  #else
+
 			CARD        ("Analog",  0, 1,  48000, 2),
+  #endif
 #else /* STLinux-2.2 */
 			CARD        ("Analog",  1, 0,  48000, 2),
+#endif
 #endif
 		},
 	},
@@ -593,6 +639,39 @@ static int snd_card_pseudo_hw_free(struct snd_pcm_substream *substream)
 	return 0;
 }
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+/* copied from player2_131 */
+static int snd_card_pseudo_pcm_mmap_data_nopage(struct vm_area_struct *vma, struct vm_fault *vmf)
+{
+	struct snd_pcm_substream *substream = vma->vm_private_data;
+	struct snd_pcm_runtime *runtime;
+	unsigned long offset;
+	struct page * page;
+	void *vaddr;
+	size_t dma_bytes;
+
+	if (substream == NULL)
+		return VM_FAULT_SIGBUS;
+	runtime = substream->runtime;
+	offset = vma->vm_pgoff << PAGE_SHIFT;
+	offset += (unsigned long) vmf->virtual_address - vma->vm_start;
+	snd_assert((offset % PAGE_SIZE) == 0, return VM_FAULT_SIGBUS);
+	dma_bytes = PAGE_ALIGN(runtime->dma_bytes);
+	if (offset > dma_bytes - PAGE_SIZE)
+		return VM_FAULT_SIGBUS;
+	if (substream->ops->page) {
+		page = substream->ops->page(substream, offset);
+		if (! page)
+			return VM_FAULT_OOM; /* XXX: is this really due to OOM? */
+	} else {
+		vaddr = runtime->dma_area + offset;
+		page = virt_to_page(vaddr);
+	}
+	get_page(page);
+	vmf->page = page;
+	return 0;
+}
+#else
 /*
  * Copied verbaitum from snd_pcm_mmap_data_nopage()
  */
@@ -628,12 +707,16 @@ static struct page *snd_card_pseudo_pcm_mmap_data_nopage(struct vm_area_struct *
                 *type = VM_FAULT_MINOR;
         return page;
 }
-
+#endif
 static struct vm_operations_struct snd_card_pseudo_pcm_vm_ops_data =
 {
         .open =         snd_pcm_mmap_data_open,
         .close =        snd_pcm_mmap_data_close,
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        .fault =        snd_card_pseudo_pcm_mmap_data_nopage,
+#else
         .nopage =       snd_card_pseudo_pcm_mmap_data_nopage,
+#endif
 };
 
 /*
@@ -647,10 +730,14 @@ static int snd_card_pseudo_pcm_mmap(struct snd_pcm_substream *substream,
         area->vm_ops = &snd_card_pseudo_pcm_vm_ops_data;
         area->vm_private_data = substream;
         area->vm_flags |= VM_RESERVED;
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        atomic_inc(&substream->mmap_count);
+#else
 #if defined (CONFIG_KERNELVERSION)
         atomic_inc(&substream->mmap_count);
 #else /* STLinux 2.2 kernel */
         atomic_inc(&substream->runtime->mmap_count);
+#endif
 #endif
         return 0;
 }
@@ -928,6 +1015,10 @@ static int snd_pseudo_integer_get(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
+#ifdef __TDT__
+EXPORT_SYMBOL(snd_pseudo_integer_get);
+#endif
+
 static int snd_pseudo_integer_put(struct snd_kcontrol *kcontrol,
 				struct snd_ctl_elem_value *ucontrol)
 {
@@ -966,6 +1057,10 @@ static int snd_pseudo_integer_put(struct snd_kcontrol *kcontrol,
 	return changed;
 }
 
+#ifdef __TDT__
+EXPORT_SYMBOL(snd_pseudo_integer_put);
+#endif
+
 #define PSEUDO_SWITCH(xname, xindex, addr) \
 { .iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = xname, .index = xindex, \
   .info = snd_pseudo_switch_info, \
@@ -995,6 +1090,10 @@ static int snd_pseudo_switch_get(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
+#ifdef __TDT__
+EXPORT_SYMBOL(snd_pseudo_switch_get);
+#endif
+
 static int snd_pseudo_switch_put(struct snd_kcontrol *kcontrol,
 				 struct snd_ctl_elem_value *ucontrol)
 {
@@ -1012,6 +1111,10 @@ static int snd_pseudo_switch_put(struct snd_kcontrol *kcontrol,
 
 	return changed;
 }
+
+#ifdef __TDT__
+EXPORT_SYMBOL(snd_pseudo_switch_put);
+#endif
 
 #define PSEUDO_ROUTE(xname, xindex, addr) \
 { .iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = xname, .index = xindex, \
@@ -1341,6 +1444,19 @@ PSEUDO_INTEGER("Per-Speaker Playback Latency", 0, chain_delay[2]),
 PSEUDO_INTEGER("Per-Speaker Playback Latency", 0, chain_delay[3]),
 };
 
+#ifdef __TDT__
+//Dagobert: Save the controls so we can cold it from our proc handling
+struct snd_kcontrol **kcontrol = NULL;
+
+struct snd_kcontrol ** pseudoGetControls(int* numbers)
+{
+        *numbers = ARRAY_SIZE(snd_pseudo_controls);
+        return kcontrol;
+}
+
+EXPORT_SYMBOL(pseudoGetControls);
+#endif
+
 static int __init snd_card_pseudo_new_mixer(struct snd_pseudo *pseudo)
 {
 	struct snd_card *card = pseudo->card;
@@ -1351,10 +1467,22 @@ static int __init snd_card_pseudo_new_mixer(struct snd_pseudo *pseudo)
 	mutex_init(&pseudo->mixer_lock);
 	strcpy(card->mixername, "Pseudo Mixer");
 
+#ifdef __TDT__
+        //Dagobert: Save the controls so we can call it from our proc handling
+        kcontrol = kmalloc(ARRAY_SIZE(snd_pseudo_controls) * sizeof(struct snd_kcontrol), GFP_KERNEL);
+
+        for (idx = 0; idx < ARRAY_SIZE(snd_pseudo_controls); idx++)
+        {
+                kcontrol[idx] = snd_ctl_new1(&snd_pseudo_controls[idx], pseudo);
+                if ((err = snd_ctl_add(card, kcontrol[idx])) < 0)
+                        return err;
+        }
+#else
 	for (idx = 0; idx < ARRAY_SIZE(snd_pseudo_controls); idx++) {
 		if ((err = snd_ctl_add(card, snd_ctl_new1(&snd_pseudo_controls[idx], pseudo))) < 0)
 			return err;
 	}
+#endif
 	return 0;
 }
 
@@ -1628,10 +1756,19 @@ static int __init snd_pseudo_probe(struct platform_device *devptr)
 	int idx, err;
 	int dev = devptr->id;
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+	int result;
+	result = snd_card_create(index[dev], id[dev], THIS_MODULE,
+				 sizeof(struct snd_pseudo),
+				 &card);
+	if (result != 0)
+		return result;
+#else
 	card = snd_card_new(index[dev], id[dev], THIS_MODULE,
 			    sizeof(struct snd_pseudo));
 	if (card == NULL)
 		return -ENOMEM;
+#endif
 	pseudo = card->private_data;
 
 	pseudo->card = card;

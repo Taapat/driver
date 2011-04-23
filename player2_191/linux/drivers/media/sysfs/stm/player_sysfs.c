@@ -30,6 +30,14 @@ license from ST.
 #define PLAYBACK_MAX_NUMBER     8
 #define STREAM_MAX_NUMBER       16
 
+#ifdef __TDT__
+#include <linux/version.h>
+#include <linux/device.h>
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30))
+#define bool int
+#endif
+#endif
+
 static int PlayerSetEvent (struct player_event_s*       Event);
 static struct mutex SysfsWriteLock;
 
@@ -55,7 +63,11 @@ struct stream_data_s
 {
     unsigned int                id;
     player_stream_handle_t     *stream;
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+    struct device         stream_class_device;
+#else
     struct class_device         stream_class_device;
+#endif
     dev_t                       stream_dev_t;
     struct attribute_data_s     attribute_data[ATTRIBUTE_ID_MAX];
     bool			notify_on_destroy; //!< True, if the stream has attributes
@@ -65,7 +77,11 @@ struct playback_data_s
 {
     unsigned int                id;
     player_playback_handle_t   *playback;
+#if defined(__TDT__) //&& (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+    struct device        *playback_class_device;
+#else
     struct class_device        *playback_class_device;
+#endif
     dev_t                       playback_dev_t;
     struct stream_data_s        stream_data[STREAM_MAX_NUMBER];
 };
@@ -95,11 +111,17 @@ static struct class player2_class = {
 static void do_notify(void)
 {
 	notify_count++;
+#ifndef __TDT__
 	sysfs_notify(&player2_class.subsys.kobj, NULL, "notify");
+#endif
 }
 /*}}}  */
 /*{{{  show_generic_attribute*/
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+ssize_t show_generic_attribute (struct device *class_dev, char *buf, enum attribute_id_e attr_id, const char *attr_name)
+#else
 ssize_t show_generic_attribute (struct class_device *class_dev, char *buf, enum attribute_id_e attr_id, const char *attr_name)
+#endif
 {
     int Result = 0;
     union attribute_descriptor_u value;
@@ -136,7 +158,11 @@ ssize_t show_generic_attribute (struct class_device *class_dev, char *buf, enum 
 }
 /*}}}  */
 /*{{{  store_generic_attribute*/
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+ssize_t store_generic_attribute (struct device *class_dev, const char *buf, enum attribute_id_e attr_id, const char *attr_name, size_t count)
+#else
 ssize_t store_generic_attribute (struct class_device *class_dev, const char *buf, enum attribute_id_e attr_id, const char *attr_name, size_t count)
+#endif
 {
     int Result = 0;
 
@@ -167,6 +193,19 @@ ssize_t store_generic_attribute (struct class_device *class_dev, const char *buf
 }
 /*}}}  */
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+#define SHOW(x) 								\
+    ssize_t show_ ## x (struct device *class_dev, struct device_attribute *attr, char *buf) 		\
+    {										\
+	return show_generic_attribute(class_dev, buf, ATTRIBUTE_ID_ ## x, #x);  \
+    }
+
+#define STORE(x) 								\
+    ssize_t store_ ## x (struct device *class_dev, struct device_attribute *attr, const char *buf, size_t count) 		\
+    {										\
+	return store_generic_attribute(class_dev, buf, ATTRIBUTE_ID_ ## x, #x, count);\
+    }
+#else
 #define SHOW(x) 								\
     ssize_t show_ ## x (struct class_device *class_dev, char *buf) 		\
     {										\
@@ -178,6 +217,7 @@ ssize_t store_generic_attribute (struct class_device *class_dev, const char *buf
     {										\
 	return store_generic_attribute(class_dev, buf, ATTRIBUTE_ID_ ## x, #x, count);\
     }
+#endif
 
 /* creation of show_xx methods */
 
@@ -194,12 +234,21 @@ STORE(decode_errors);
 
 /* creation of class_device_attr_xx attributes */
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+DEVICE_ATTR(input_format, S_IRUGO, show_input_format, NULL);
+DEVICE_ATTR(supported_input_format, S_IRUGO, show_supported_input_format, NULL);
+DEVICE_ATTR(decode_errors, S_IWUSR | S_IRUGO, show_decode_errors, store_decode_errors);
+DEVICE_ATTR(sample_frequency, S_IRUGO, show_sample_frequency, NULL);
+DEVICE_ATTR(number_channels, S_IRUGO, show_number_channels, NULL);
+DEVICE_ATTR(number_of_samples_processed, S_IRUGO, show_number_of_samples_processed, NULL);
+#else
 CLASS_DEVICE_ATTR(input_format, S_IRUGO, show_input_format, NULL);
 CLASS_DEVICE_ATTR(supported_input_format, S_IRUGO, show_supported_input_format, NULL);
 CLASS_DEVICE_ATTR(decode_errors, S_IWUSR | S_IRUGO, show_decode_errors, store_decode_errors);
 CLASS_DEVICE_ATTR(sample_frequency, S_IRUGO, show_sample_frequency, NULL);
 CLASS_DEVICE_ATTR(number_channels, S_IRUGO, show_number_channels, NULL);
 CLASS_DEVICE_ATTR(number_of_samples_processed, S_IRUGO, show_number_of_samples_processed, NULL);
+#endif
 
 /*{{{  get_playback*/
 struct playback_data_s* get_playback (void *playback)
@@ -244,7 +293,11 @@ struct stream_data_s* get_stream (struct playback_data_s* PlaybackData, void* st
  */
 
 /*{{{  player_sysfs_get_class_device*/
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+struct device* player_sysfs_get_class_device(void *playback, void* stream)
+#else
 struct class_device* player_sysfs_get_class_device(void *playback, void* stream)
+#endif
 {
     struct playback_data_s* 	PlaybackData;
     struct stream_data_s*	StreamData;
@@ -294,7 +347,11 @@ struct class * player_sysfs_get_player_class(void)
 /*}}}  */
 
 /*{{{  player_sysfs_get_class_id*/
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+int player_sysfs_get_stream_id(struct device* stream_dev)
+#else
 int player_sysfs_get_stream_id(struct class_device* stream_dev)
+#endif
 {
      struct stream_data_s *streamdata = NULL;
 
@@ -308,7 +365,11 @@ int player_sysfs_get_stream_id(struct class_device* stream_dev)
 }
 /*}}}  */
 /*{{{  player_sysfs_new_attribute_notification */
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+void player_sysfs_new_attribute_notification(struct device* stream_dev)
+#else
 void player_sysfs_new_attribute_notification(struct class_device* stream_dev)
+#endif
 {
     if (stream_dev) {
 	struct stream_data_s *streamdata;
@@ -357,11 +418,19 @@ int event_playback_created_handler(struct player_event_s* Event)
 
     /* Create a class device and register it with sysfs ( = sysfs/class/player2/playback0,1,2,3....) */
     PlaybackData->playback_dev_t            = MKDEV(0,0);
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+    PlaybackData->playback_class_device     = device_create(&player2_class,            // pointer to the struct class that this device should be registered to
+                                                      NULL,                                 // pointer to the parent struct class_device of this new device, if any
+                                                      PlaybackData->playback_dev_t,         // the dev_t for the (char) device to be added
+                                                      NULL,                                 // a pointer to a struct device that is associated with this class device
+                                                      "playback%d", PlaybackData->id);      // string for the class device's name
+#else
     PlaybackData->playback_class_device     = class_device_create(&player2_class,            // pointer to the struct class that this device should be registered to
                                                       NULL,                                 // pointer to the parent struct class_device of this new device, if any
                                                       PlaybackData->playback_dev_t,         // the dev_t for the (char) device to be added
                                                       NULL,                                 // a pointer to a struct device that is associated with this class device
                                                       "playback%d", PlaybackData->id);      // string for the class device's name
+#endif
     if (IS_ERR(PlaybackData->playback_class_device))
     {
         SYSFS_ERROR("Unable to create playback class device (%d)\n", (int)PlaybackData->playback_class_device);
@@ -400,7 +469,11 @@ int event_playback_terminated_handler(struct player_event_s* Event)
     //class_device_destroy (player2_class, PlaybackData->playback_dev_t);
 
     //SYSFS_DEBUG("Unregistering %p\n", PlaybackData->playback_class_device);
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+    device_unregister (PlaybackData->playback_class_device);
+#else
     class_device_unregister (PlaybackData->playback_class_device);
+#endif
 
     /* Zero playback entry in table */
     PlaybackData->playback_class_device             = NULL;
@@ -418,6 +491,9 @@ int event_stream_created_handler(struct player_event_s* Event)
     int Result = 0;
     struct playback_data_s* 	PlaybackData;
     struct stream_data_s*	StreamData;
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+    static char init_name[256];
+#endif
 
     if ((!Event->playback) || (!Event->stream))
     {
@@ -459,6 +535,17 @@ int event_stream_created_handler(struct player_event_s* Event)
 #endif
 
     // Populate the class structure in similar way to class_device_create()
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+    memset(&StreamData->stream_class_device, 0, sizeof(struct device));
+    StreamData->stream_class_device.devt = StreamData->stream_dev_t = MKDEV(0,0);
+    StreamData->stream_class_device.class = &player2_class;
+    StreamData->stream_class_device.parent = PlaybackData->playback_class_device;
+    //StreamData->stream_class_device.release = class_device_create_release;
+    //StreamData->stream_class_device.uevent = class_device_create_uevent;
+    snprintf (init_name, sizeof(init_name), "stream%d", StreamData->id);
+    StreamData->stream_class_device.init_name = init_name;
+    Result = device_register (&StreamData->stream_class_device);
+#else
     memset(&StreamData->stream_class_device, 0, sizeof(struct class_device));
     StreamData->stream_class_device.devt = StreamData->stream_dev_t = MKDEV(0,0);
     StreamData->stream_class_device.dev = NULL;
@@ -468,6 +555,7 @@ int event_stream_created_handler(struct player_event_s* Event)
     //StreamData->stream_class_device.uevent = class_device_create_uevent;
     snprintf(StreamData->stream_class_device.class_id, BUS_ID_SIZE, "stream%d", StreamData->id);
     Result = class_device_register (&StreamData->stream_class_device);
+#endif
     if (Result || IS_ERR(&StreamData->stream_class_device))
     {
         SYSFS_ERROR("Unable to create stream_class_device %d (%d)\n", StreamData->id, (int)&StreamData->stream_class_device);
@@ -510,10 +598,14 @@ int event_stream_terminated_handler(struct player_event_s* Event)
     // SYSFS_DEBUG("Unregistering %p\n", StreamData->stream_class_device);
     // NOTE: I suspect a bug in class_device_unregister, infact class_device_del works fine,
     // but if I add class_device_put I have a segemntation fault. It should be investigated better.
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+    device_unregister (&StreamData->stream_class_device);
+#else
     // class_device_unregister (&StreamData->stream_class_device);
 
     class_device_del(&StreamData->stream_class_device);
     //class_device_put(&StreamData->stream_class_device);
+#endif
 
     if (StreamData->notify_on_destroy)
 	    do_notify();
@@ -529,7 +621,11 @@ int event_attribute_created_handler(struct player_event_s* Event)
 {
     struct playback_data_s* 			PlaybackData;
     struct stream_data_s*			StreamData;
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+    const struct device_attribute*              attribute       = NULL;
+#else
     const struct class_device_attribute*        attribute       = NULL;
+#endif
     unsigned int 				attribute_id    = 0;
     int 					Result 		= 0;
 
@@ -546,32 +642,56 @@ int event_attribute_created_handler(struct player_event_s* Event)
     case PLAYER_EVENT_INPUT_FORMAT_CREATED:
         SYSFS_DEBUG("PLAYER_EVENT_INPUT_FORMAT_CREATED\n");
         attribute_id 	    = ATTRIBUTE_ID_input_format;
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        attribute           = &dev_attr_input_format;
+#else
         attribute           = &class_device_attr_input_format;
+#endif
     	break;
     case PLAYER_EVENT_SUPPORTED_INPUT_FORMAT_CREATED:
         SYSFS_DEBUG("PLAYER_EVENT_SUPPORTED_INPUT_FORMAT_CREATED\n");
         attribute_id 	    = ATTRIBUTE_ID_supported_input_format;
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        attribute           = &dev_attr_supported_input_format;
+#else
         attribute           = &class_device_attr_supported_input_format;
+#endif
     	break;
     case PLAYER_EVENT_DECODE_ERRORS_CREATED:
         SYSFS_DEBUG("PLAYER_EVENT_DECODE_ERRORS_CREATED\n");
         attribute_id 	    = ATTRIBUTE_ID_decode_errors;
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        attribute           = &dev_attr_decode_errors;
+#else
         attribute           = &class_device_attr_decode_errors;
+#endif
     	break;
     case PLAYER_EVENT_SAMPLE_FREQUENCY_CREATED:
         SYSFS_DEBUG("PLAYER_EVENT_SAMPLE_FREQUENCY_CREATED\n");
         attribute_id 	    = ATTRIBUTE_ID_sample_frequency;
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        attribute           = &dev_attr_sample_frequency;
+#else
         attribute           = &class_device_attr_sample_frequency;
+#endif
     	break;
     case PLAYER_EVENT_NUMBER_OF_SAMPLES_PROCESSED:
         SYSFS_DEBUG("PLAYER_EVENT_NUMBER_OF_SAMPLES_PROCESSED\n");
         attribute_id 	    = ATTRIBUTE_ID_number_of_samples_processed;
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        attribute           = &dev_attr_number_of_samples_processed;
+#else
         attribute           = &class_device_attr_number_of_samples_processed;
+#endif
     	break;
     default:
         SYSFS_DEBUG("PLAYER_EVENT_NUMBER_CHANNELS_CREATED\n");
         attribute_id 	    = ATTRIBUTE_ID_number_channels;
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+        attribute           = &dev_attr_number_channels;
+#else
         attribute           = &class_device_attr_number_channels;
+#endif
     	break;
     }
 
@@ -607,7 +727,11 @@ int event_attribute_created_handler(struct player_event_s* Event)
     StreamData->attribute_data[attribute_id].component   = Event->component;
 
     /* Create attribute */
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+    Result  = device_create_file(&StreamData->stream_class_device, (struct device_attribute*) attribute);
+#else
     Result  = class_device_create_file(&StreamData->stream_class_device, attribute);
+#endif
     if (Result)
     {
         SYSFS_ERROR("class_device_create_file failed (%d)\n", Result);

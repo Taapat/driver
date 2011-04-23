@@ -44,7 +44,11 @@ Date        Modification                                    Name
 //      Useful defines/macros that need not be user visible
 //
 
+#ifdef __TDT__
+#define AssertNonZeroReferenceCount( s )                do { if( ReferenceCount == 0 ) {report( severity_fatal, "%s - Attempt to act on a buffer that has a reference count of zero.\n", s ); /*dagobert try this->Dump(); Manager->Dump();*/}/*return BufferError;*/ } while(0)
+#else
 #define AssertNonZeroReferenceCount( s )		do { if( ReferenceCount == 0 ) {this->Dump(); report( severity_fatal, "%s - Attempt to act on a buffer that has a reference count of zero.\n", s ); Manager->Dump();}/*return BufferError;*/ } while(0)
+#endif
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //

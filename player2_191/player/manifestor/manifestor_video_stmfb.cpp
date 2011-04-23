@@ -36,12 +36,30 @@ Date        Modification                                    Name
 #include "monitor_inline.h"
 #include "manifestor_video_stmfb.h"
 
+#ifdef __TDT__
+//dagobert
+typedef int (read_proc_t)(char *page, char **start, off_t off,
+                          int count, int *eof, void *data);
+typedef int (write_proc_t)(struct file *file, const char __user *buffer,
+                           unsigned long count, void *data);
+#endif
+
 extern "C" {
   extern int sprintf(char * buf, const char * fmt, ...);
 
   /// A hack until Nick gives us a nice interface, that we can request a decoded buffer
   /// from the buffer pool, sorry Julian, I have tried to make it as tidy looking as possible.
   extern volatile stm_display_buffer_t *ManifestorLastDisplayedBuffer;
+#ifdef __TDT__
+
+  extern int sscanf(const char *, const char *, ...)
+        __attribute__ ((format (scanf, 2, 3)));
+
+//Dagobert
+  extern int cpp_install_e2_procs(const char *path, read_proc_t *read_func, write_proc_t *write_func, void* instance);
+  extern int cpp_remove_e2_procs(const char *path, read_proc_t *read_func, write_proc_t *write_func);
+#endif
+
   typedef struct __wait_queue_head wait_queue_head_t;
 #define TASK_INTERRUPTIBLE      1
 extern void __wake_up(wait_queue_head_t *q, unsigned int mode,
@@ -71,6 +89,117 @@ static void display_callback                   (void*           Buffer,
 static void done_callback                      (void*           Buffer,
                                 const stm_buffer_presentation_stats_t *Data);
 
+#ifdef __TDT__
+extern "C" {
+
+#ifdef UFS922
+int videoStmfb_dei_set_fmd_read(char *page, char **start, off_t off, int count,int *eof, void* data)
+{
+        Manifestor_VideoStmfb_c* instance = (Manifestor_VideoStmfb_c*) data;
+
+        return instance->get_dei_fmd(page, start, off, count, eof);
+}
+
+
+int videoStmfb_dei_set_fmd_write(struct file *file, const char __user *buf, unsigned long count, void* data)
+{
+        Manifestor_VideoStmfb_c* instance = (Manifestor_VideoStmfb_c*) data;
+
+        return instance->set_dei_fmd(file, buf, count);
+}
+
+int videoStmfb_dei_set_mode_read(char *page, char **start, off_t off, int count,int *eof, void* data)
+{
+        Manifestor_VideoStmfb_c* instance = (Manifestor_VideoStmfb_c*) data;
+
+        return instance->get_dei_mode(page, start, off, count, eof);
+}
+
+int videoStmfb_dei_set_mode_write(struct file *file, const char __user *buf, unsigned long count, void* data)
+{
+        Manifestor_VideoStmfb_c* instance = (Manifestor_VideoStmfb_c*) data;
+
+        return instance->set_dei_mode(file, buf, count);
+}
+
+
+int videoStmfb_dei_set_ctrl_read(char *page, char **start, off_t off, int count,int *eof, void* data)
+{
+        Manifestor_VideoStmfb_c* instance = (Manifestor_VideoStmfb_c*) data;
+
+        return instance->get_dei_ctrl(page, start, off, count, eof);
+}
+
+
+int videoStmfb_dei_set_ctrl_write(struct file *file, const char __user *buf, unsigned long count, void* data)
+{
+        Manifestor_VideoStmfb_c* instance = (Manifestor_VideoStmfb_c*) data;
+
+        return instance->set_dei_ctrl(file, buf, count);
+}
+#endif
+
+int videoStmfb_psi_brightness_read(char *page, char **start, off_t off, int count,int *eof, void* data)
+{
+        Manifestor_VideoStmfb_c* instance = (Manifestor_VideoStmfb_c*) data;
+
+        return instance->get_psi_brightness(page, start, off, count, eof);
+}
+
+
+int videoStmfb_psi_brightness_write(struct file *file, const char __user *buf, unsigned long count, void* data)
+{
+        Manifestor_VideoStmfb_c* instance = (Manifestor_VideoStmfb_c*) data;
+
+        return instance->set_psi_brightness(file, buf, count);
+}
+
+int videoStmfb_psi_saturation_read(char *page, char **start, off_t off, int count,int *eof, void* data)
+{
+        Manifestor_VideoStmfb_c* instance = (Manifestor_VideoStmfb_c*) data;
+
+        return instance->get_psi_saturation(page, start, off, count, eof);
+}
+
+
+int videoStmfb_psi_saturation_write(struct file *file, const char __user *buf, unsigned long count, void* data)
+{
+        Manifestor_VideoStmfb_c* instance = (Manifestor_VideoStmfb_c*) data;
+
+        return instance->set_psi_saturation(file, buf, count);
+}
+
+int videoStmfb_psi_contrast_read(char *page, char **start, off_t off, int count,int *eof, void* data)
+{
+        Manifestor_VideoStmfb_c* instance = (Manifestor_VideoStmfb_c*) data;
+
+        return instance->get_psi_contrast(page, start, off, count, eof);
+}
+
+int videoStmfb_psi_contrast_write(struct file *file, const char __user *buf, unsigned long count, void* data)
+{
+        Manifestor_VideoStmfb_c* instance = (Manifestor_VideoStmfb_c*) data;
+
+        return instance->set_psi_contrast(file, buf, count);
+}
+
+int videoStmfb_psi_tint_read(char *page, char **start, off_t off, int count,int *eof, void* data)
+{
+        Manifestor_VideoStmfb_c* instance = (Manifestor_VideoStmfb_c*) data;
+
+        return instance->get_psi_tint(page, start, off, count, eof);
+}
+
+
+int videoStmfb_psi_tint_write(struct file *file, const char __user *buf, unsigned long count, void* data)
+{
+        Manifestor_VideoStmfb_c* instance = (Manifestor_VideoStmfb_c*) data;
+
+        return instance->set_psi_tint(file, buf, count);
+}
+
+} //extern c
+#endif
 //{{{  Constructor
 // /////////////////////////////////////////////////////////////////////////
 //
@@ -147,6 +276,18 @@ Manifestor_VideoStmfb_c::~Manifestor_VideoStmfb_c   (void)
 #endif
 
     CloseOutputSurface ();
+
+#ifdef __TDT__
+#ifdef UFS922
+    cpp_remove_e2_procs("stb/video/plane/dei_fmd", videoStmfb_dei_set_fmd_read, videoStmfb_dei_set_fmd_write);
+    cpp_remove_e2_procs("stb/video/plane/dei_mode", videoStmfb_dei_set_mode_read, videoStmfb_dei_set_mode_write);
+    cpp_remove_e2_procs("stb/video/plane/dei_ctrl", videoStmfb_dei_set_ctrl_read, videoStmfb_dei_set_ctrl_write);
+#endif
+    cpp_remove_e2_procs("stb/video/plane/psi_brightness", videoStmfb_psi_brightness_read, videoStmfb_psi_brightness_write);
+    cpp_remove_e2_procs("stb/video/plane/psi_saturation", videoStmfb_psi_saturation_read, videoStmfb_psi_saturation_write);
+    cpp_remove_e2_procs("stb/video/plane/psi_contrast", videoStmfb_psi_contrast_read, videoStmfb_psi_contrast_write);
+    cpp_remove_e2_procs("stb/video/plane/psi_tint", videoStmfb_psi_tint_read, videoStmfb_psi_tint_write);
+#endif
 
     // Again Julian, a hack...
     ManifestorLastDisplayedBuffer = NULL;
@@ -308,9 +449,439 @@ ManifestorStatus_t Manifestor_VideoStmfb_c::OpenOutputSurface    (DeviceHandle_t
 
     Visible             = false;
 
+#ifdef __TDT__
+    //Dagobert
+    //Maybe there can be multiple planes so I should use the plane id or something like
+    //that in the die name ->current plane id is 32
+    char proc_name[256];
+
+#ifdef UFS922
+    sprintf(proc_name, "stb/video/plane/dei_fmd");
+    cpp_install_e2_procs(proc_name, videoStmfb_dei_set_fmd_read, videoStmfb_dei_set_fmd_write, this);
+
+    sprintf(proc_name, "stb/video/plane/dei_mode");
+    cpp_install_e2_procs(proc_name, videoStmfb_dei_set_mode_read, videoStmfb_dei_set_mode_write, this);
+
+    sprintf(proc_name, "stb/video/plane/dei_ctrl");
+    cpp_install_e2_procs(proc_name, videoStmfb_dei_set_ctrl_read, videoStmfb_dei_set_ctrl_write, this);
+#endif
+    sprintf(proc_name, "stb/video/plane/psi_brightness");
+    cpp_install_e2_procs(proc_name, videoStmfb_psi_brightness_read, videoStmfb_psi_brightness_write, this);
+
+    sprintf(proc_name, "stb/video/plane/psi_saturation");
+    cpp_install_e2_procs(proc_name, videoStmfb_psi_saturation_read, videoStmfb_psi_saturation_write, this);
+
+    sprintf(proc_name, "stb/video/plane/psi_contrast");
+    cpp_install_e2_procs(proc_name, videoStmfb_psi_contrast_read, videoStmfb_psi_contrast_write, this);
+
+    sprintf(proc_name, "stb/video/plane/psi_tint");
+    cpp_install_e2_procs(proc_name, videoStmfb_psi_tint_read, videoStmfb_psi_tint_write, this);
+#endif
+
     return ManifestorNoError;
 }
 //}}}
+#ifdef __TDT__
+
+#ifdef UFS922
+int Manifestor_VideoStmfb_c::set_dei_fmd(struct file *file, const char __user *buf, unsigned long count)
+{
+        char            *page;
+        char            *myString;
+        ssize_t         ret = -1;
+        bool            value = true;
+
+        //the calling fuction has copied the data to buf from user
+        //so cast it here to get the data
+        page = (char*) buf;
+
+        if (page)
+        {
+                int err;
+
+                myString = (char *) OS_Malloc(count + 1);
+                strncpy(myString, page, count);
+                myString[count] = '\0';
+
+                if ((strncmp("0", myString, count - 1) == 0) ||
+                    ((strncmp("false", myString, count - 1) == 0)) ||
+                    ((strncmp("disable", myString, count - 1) == 0)))
+                        value = false;
+                else
+                if ((strncmp("1", myString, count - 1) == 0) ||
+                    ((strncmp("true", myString, count - 1) == 0)) ||
+                    ((strncmp("enable", myString, count - 1) == 0)))
+                        value = true;
+
+                if ((err = stm_display_plane_set_control(Plane,
+                                                  PLANE_CTRL_DEI_FMD_ENABLE,
+                                                  value)) < 0)
+                        MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
+                else
+                        MANIFESTOR_TRACE("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
+
+                OS_Free(myString);
+        }
+
+        ret = count;
+
+        return ret;
+}
+
+int Manifestor_VideoStmfb_c::get_dei_fmd(char *page, char **start, off_t off, int count,int *eof)
+{
+        int   len = 0;
+        ULONG value;
+        int   err;
+
+        if ((err = stm_display_plane_get_control(Plane, PLANE_CTRL_DEI_FMD_ENABLE, &value)) == 0)
+        {
+                if (value != 0)
+                        len = sprintf(page, "enabled\n");
+                else
+                        len = sprintf(page, "disabled\n");
+        } else
+           MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
+
+        return len;
+}
+
+int Manifestor_VideoStmfb_c::set_dei_mode(struct file *file, const char __user *buf, unsigned long count)
+{
+        char            *page;
+        char            *myString;
+        ssize_t         ret = -1;
+        int             value = PCDEIC_3DMOTION;
+
+        //the calling fuction has copied the data to buf from user
+        //so cast it here to get the data
+        page = (char*) buf;
+
+        if (page)
+        {
+                int err;
+
+                myString = (char *) OS_Malloc(count + 1);
+                strncpy(myString, page, count);
+                myString[count] = '\0';
+
+                if ((strncmp("0", myString, count - 1) == 0) || ((strncmp("3dmotion", myString, count - 1) == 0)))
+                        value = PCDEIC_3DMOTION;
+                else
+                if ((strncmp("1", myString, count - 1) == 0) || ((strncmp("disable", myString, count - 1) == 0)))
+                        value = PCDEIC_DISABLED;
+                else
+                if ((strncmp("2", myString, count - 1) == 0) || ((strncmp("median", myString, count - 1) == 0)))
+                        value = PCDEIC_MEDIAN;
+
+                if ((err = stm_display_plane_set_control(Plane,
+                                                  PLANE_CTRL_DEI_MODE,
+                                                  value)) < 0)
+                        MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
+                else
+                        MANIFESTOR_TRACE("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
+
+                OS_Free(myString);
+        }
+
+        ret = count;
+
+        return ret;
+
+}
+
+int Manifestor_VideoStmfb_c::get_dei_mode(char *page, char **start, off_t off, int count,int *eof)
+{
+        int   len = 0;
+        ULONG value;
+        int   err;
+
+        if ((err = stm_display_plane_get_control(Plane, PLANE_CTRL_DEI_MODE, &value)) == 0)
+        {
+                if (value == PCDEIC_3DMOTION)
+                        len = sprintf(page, "3dmotion\n");
+                else
+                if (value == PCDEIC_DISABLED)
+                        len = sprintf(page, "disabled\n");
+                else
+                if (value == PCDEIC_MEDIAN)
+                        len = sprintf(page, "median\n");
+        } else
+           MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
+
+        return len;
+}
+
+int Manifestor_VideoStmfb_c::set_dei_ctrl(struct file *file, const char __user *buf, unsigned long count)
+{
+        char            *page;
+        char            *myString;
+        ssize_t         ret = -1;
+        int             value = 0;
+
+        //the calling fuction has copied the data to buf from user
+        //so cast it here to get the data
+        page = (char*) buf;
+
+        if (page)
+        {
+                int err;
+
+                myString = (char *) OS_Malloc(count + 1);
+                strncpy(myString, page, count);
+                myString[count] = '\0';
+
+                sscanf(myString, "%d", &value);
+
+                if ((err = stm_display_plane_set_control(Plane,
+                                                  PLANE_CTRL_DEI_CTRLREG,
+                                                  value)) < 0)
+                        MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
+                else
+                        MANIFESTOR_TRACE("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
+
+                OS_Free(myString);
+        }
+
+        ret = count;
+
+        return ret;
+
+}
+
+int Manifestor_VideoStmfb_c::get_dei_ctrl(char *page, char **start, off_t off, int count,int *eof)
+{
+        int   len = 0;
+        ULONG value;
+        int   err;
+
+        if ((err = stm_display_plane_get_control(Plane, PLANE_CTRL_DEI_CTRLREG, &value)) == 0)
+        {
+                len = sprintf(page, "%d\n", value);
+        } else
+           MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
+
+
+        return len;
+}
+#endif
+
+int Manifestor_VideoStmfb_c::set_psi_brightness(struct file *file, const char __user *buf, unsigned long count)
+{
+        char            *page;
+        char            *myString;
+        ssize_t         ret = -1;
+        int             value = 0;
+
+        //the calling fuction has copied the data to buf from user
+        //so cast it here to get the data
+        page = (char*) buf;
+
+        if (page)
+        {
+                int err;
+
+                myString = (char *) OS_Malloc(count + 1);
+                strncpy(myString, page, count);
+                myString[count] = '\0';
+
+                sscanf(myString, "%d", &value);
+
+                if ((value >= 0) && (value <= 255))
+                {
+                   if ((err = stm_display_plane_set_control(Plane,
+                                                     PLANE_CTRL_PSI_BRIGHTNESS,
+                                                     value)) < 0)
+                           MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
+                   else
+                           MANIFESTOR_TRACE("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
+                }
+                OS_Free(myString);
+        }
+
+        ret = count;
+
+        return ret;
+}
+
+int Manifestor_VideoStmfb_c::get_psi_brightness(char *page, char **start, off_t off, int count,int *eof)
+{
+        int   len = 0;
+        ULONG value;
+        int   err;
+
+        if ((err = stm_display_plane_get_control(Plane, PLANE_CTRL_PSI_BRIGHTNESS, &value)) == 0)
+        {
+                len = sprintf(page, "%ld\n", value);
+        } else
+           MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
+
+        return len;
+}
+
+
+int Manifestor_VideoStmfb_c::set_psi_saturation(struct file *file, const char __user *buf, unsigned long count)
+{
+        char            *page;
+        char            *myString;
+        ssize_t         ret = -1;
+        int             value = 0;
+
+        //the calling fuction has copied the data to buf from user
+        //so cast it here to get the data
+        page = (char*) buf;
+
+        if (page)
+        {
+                int err;
+
+                myString = (char *) OS_Malloc(count + 1);
+                strncpy(myString, page, count);
+                myString[count] = '\0';
+
+                sscanf(myString, "%d", &value);
+
+                if ((value >= 0) && (value <= 255))
+                {
+                   if ((err = stm_display_plane_set_control(Plane,
+                                                     PLANE_CTRL_PSI_SATURATION,
+                                                     value)) < 0)
+                           MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
+                   else
+                           MANIFESTOR_TRACE("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
+                }
+                OS_Free(myString);
+        }
+
+        ret = count;
+
+        return ret;
+}
+
+int Manifestor_VideoStmfb_c::get_psi_saturation(char *page, char **start, off_t off, int count,int *eof)
+{
+        int   len = 0;
+        ULONG value;
+        int   err;
+
+        if ((err = stm_display_plane_get_control(Plane, PLANE_CTRL_PSI_SATURATION, &value)) == 0)
+        {
+                len = sprintf(page, "%ld\n", value);
+        } else
+           MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
+
+        return len;
+}
+
+int Manifestor_VideoStmfb_c::set_psi_contrast(struct file *file, const char __user *buf, unsigned long count)
+{
+        char            *page;
+        char            *myString;
+        ssize_t         ret = -1;
+        int             value = 0;
+
+        //the calling fuction has copied the data to buf from user
+        //so cast it here to get the data
+        page = (char*) buf;
+
+        if (page)
+        {
+                int err;
+
+                myString = (char *) OS_Malloc(count + 1);
+                strncpy(myString, page, count);
+                myString[count] = '\0';
+
+                sscanf(myString, "%d", &value);
+
+                if ((value >= 0) && (value <= 255))
+                {
+                   if ((err = stm_display_plane_set_control(Plane,
+                                                     PLANE_CTRL_PSI_CONTRAST,
+                                                     value)) < 0)
+                           MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
+                   else
+                           MANIFESTOR_TRACE("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
+                }
+
+                OS_Free(myString);
+        }
+
+        ret = count;
+
+        return ret;
+}
+
+int Manifestor_VideoStmfb_c::get_psi_contrast(char *page, char **start, off_t off, int count,int *eof)
+{
+        int   len = 0;
+        ULONG value;
+        int   err;
+
+        if ((err = stm_display_plane_get_control(Plane, PLANE_CTRL_PSI_CONTRAST, &value)) == 0)
+        {
+                len = sprintf(page, "%ld\n", value);
+        } else
+           MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
+
+        return len;
+}
+
+int Manifestor_VideoStmfb_c::set_psi_tint(struct file *file, const char __user *buf, unsigned long count)
+{
+        char            *page;
+        char            *myString;
+        ssize_t         ret = -1;
+        int             value = 0;
+
+        //the calling fuction has copied the data to buf from user
+        //so cast it here to get the data
+        page = (char*) buf;
+
+        if (page)
+        {
+                int err;
+
+                myString = (char *) OS_Malloc(count + 1);
+                strncpy(myString, page, count);
+                myString[count] = '\0';
+
+                sscanf(myString, "%d", &value);
+
+                if ((value >= 0) && (value <= 255))
+                {
+                   if ((err = stm_display_plane_set_control(Plane,
+                                                     PLANE_CTRL_PSI_TINT,
+                                                     value)) < 0)
+                           MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
+                   else
+                           MANIFESTOR_TRACE("Manifestor_VideoStmfb_c::%s - setting value %s ok\n", __func__, myString);
+                }
+
+                OS_Free(myString);
+        }
+
+        ret = count;
+
+        return ret;
+}
+
+int Manifestor_VideoStmfb_c::get_psi_tint(char *page, char **start, off_t off, int count,int *eof)
+{
+        int   len = 0;
+        ULONG value;
+        int   err;
+
+        if ((err = stm_display_plane_get_control(Plane, PLANE_CTRL_PSI_TINT, &value)) == 0)
+        {
+                len = sprintf(page, "%ld\n", value);
+        } else
+           MANIFESTOR_ERROR("Manifestor_VideoStmfb_c::%s - error %d\n", __func__, err);
+
+        return len;
+}
+#endif
+
 //{{{  CloseOutputSurface
 //{{{  doxynote
 /// \brief              Release all frame buffer resources

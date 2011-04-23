@@ -43,6 +43,13 @@ typedef bool _Bool;
 #define bool  linux_types_bool
 #include <linux/stddef.h>
 #include <linux/types.h>
+#ifdef __TDT__
+/* we need linux/string.h here as "extern C" because "extern C" has been removed
+   from the header file in stlinux24. This change is compatible with stlinux22/23. */
+extern "C" {
+#include <linux/string.h>
+}
+#endif
 #undef  true
 #undef  false
 #undef  bool

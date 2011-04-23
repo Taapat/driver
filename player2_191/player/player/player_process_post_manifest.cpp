@@ -226,7 +226,9 @@ report( severity_info, "Post Dn = %d %d, I = %d, TFF = %d, DS= %6lld, DAS = %6ll
 	    MaximumActualSequenceNumberSeen			= max(SequenceNumber, MaximumActualSequenceNumberSeen);
 	    Time						= ParsedFrameParameters->NativePlaybackTime;
 
+#ifndef __TDT__
 	    ProcessStatistics( Stream, SequenceNumberStructure );
+#endif
 
 	    if( SequenceNumberStructure->MarkerFrame )
 	    {

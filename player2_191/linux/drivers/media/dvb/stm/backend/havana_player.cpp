@@ -529,6 +529,33 @@ HavanaStatus_t HavanaPlayer_c::CreateDisplay   (char*                           
     return HavanaNoError;
 }
 //}}}  
+#ifdef __TDT__
+//Dagobert
+//{{{  isDisplayCreated
+int HavanaPlayer_c::isDisplayCreated   (char*                           Media,
+                                         unsigned int                    SurfaceId)
+{
+    HavanaDisplay_c**   Display = NULL;
+
+    if (SurfaceId > MAX_DISPLAYS)
+        return 0;
+
+    if (strcmp (Media, BACKEND_AUDIO_ID) == 0)
+        Display                 = (HavanaDisplay_c**)AudioDisplays;
+    else if (strcmp (Media, BACKEND_VIDEO_ID) == 0)
+        Display                 = (HavanaDisplay_c**)VideoDisplays;
+    else
+        Display                 = (HavanaDisplay_c**)OtherDisplays;
+
+    if (Display[SurfaceId] == NULL)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+//}}}  
+#endif
 //{{{  DeleteDisplay
 HavanaStatus_t HavanaPlayer_c::DeleteDisplay   (char*           Media,
                                                 unsigned int    SurfaceId)

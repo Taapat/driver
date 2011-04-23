@@ -43,6 +43,9 @@ Date        Modification                                    Name
 #include <linux/dvb/audio.h>
 #include <linux/dvb/video.h>
 #include <linux/dvb/version.h>
+#ifdef __TDT__
+#include <linux/version.h>
+#endif
 
 #include "dvb_demux.h"          /* provides kernel demux types */
 
@@ -60,6 +63,12 @@ extern int __init avr_init(void);
 extern int __init cap_init(void);
 extern void linuxdvb_v4l2_init(void);
 
+#ifdef __TDT__
+extern void init_e2_proc(struct DeviceContext_s* DC);
+extern void ptiInit ( struct DeviceContext_s *pContext);
+extern int SetSource (struct dmx_demux* demux, const dmx_source_t *src);
+#endif
+
 /*static*/ int  __init      StmLoadModule (void);
 static void __exit      StmUnloadModule (void);
 
@@ -72,6 +81,16 @@ MODULE_LICENSE          ("GPL");
 
 #define MODULE_NAME     "STM Streamer"
 
+#ifdef __TDT__
+int highSR = 0;
+int swts = 0;
+
+module_param(highSR, int, 0444);
+MODULE_PARM_DESC(highSR, "Start Driver with support for Symbol Rates 30000.\nIf 1 then some CAMS will not work.");
+
+module_param(swts, int, 0444);
+MODULE_PARM_DESC(swts, "Do not route injected data through the tsm/pti\n");
+#endif
 
 struct DvbContext_s*     DvbContext;
 
@@ -92,6 +111,16 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
         DVB_ERROR("Unable to allocate device memory\n");
         return -ENOMEM;
     }
+#ifdef __TDT__
+    memset(DvbContext, 0, sizeof*DvbContext);
+#endif
+
+#ifdef __TDT__
+    if (swts)
+      printk("swts ->routing streams from dvr0 to tsm to pti to player\n");
+    else
+      printk("no swts ->routing streams from dvr0 direct to the player\n");
+#endif
 
 #if defined (CONFIG_KERNELVERSION)
 #if DVB_API_VERSION < 5
@@ -120,16 +149,33 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
         struct dmxdev*          DmxDevice       = &DeviceContext->DmxDevice;
         struct dvb_device*      DvrDevice;
 
+#ifdef __TDT__
+               //sylvester: wenn der stream vom user kommt soll WriteToDecoder nix
+                //tun, da das ja hier schon passiert. keine ahnung wie man das ansonsten
+                //verhindern soll;-)
+                DeviceContext->dvr_write = 0;
+#endif
+
         DeviceContext->DvbContext               = DvbContext;
     #if defined (USE_KERNEL_DEMUX)
         memset (DvbDemux, 0, sizeof (struct dvb_demux));
+#ifdef __TDT__
+        DvbDemux->dmx.capabilities              = DMX_TS_FILTERING | DMX_SECTION_FILTERING | DMX_MEMORY_BASED_FILTERING | DMX_TS_DESCRAMBLING;
+        /* currently only dummy to avoid EINVAL error. Later we need it for second frontend ?! */
+        DvbDemux->dmx.set_source                   = SetSource;
+#else
         DvbDemux->dmx.capabilities              = DMX_TS_FILTERING | DMX_SECTION_FILTERING | DMX_MEMORY_BASED_FILTERING;
+#endif
         DvbDemux->priv                          = DeviceContext;
         DvbDemux->filternum                     = 32;
         DvbDemux->feednum                       = 32;
         DvbDemux->start_feed                    = StartFeed;
         DvbDemux->stop_feed                     = StopFeed;
-        DvbDemux->write_to_decoder              = NULL;
+#ifndef __TDT__
+	    DvbDemux->write_to_decoder              = NULL;
+#else
+        DvbDemux->write_to_decoder              = WriteToDecoder;
+#endif
         Result                                  = dvb_dmx_init (DvbDemux);
         if (Result < 0)
         {
@@ -149,6 +195,9 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
             return Result;
         }
         DvrDevice                               = DvrInit (DmxDevice->dvr_dvbdev->fops);
+#ifdef __TDT__
+        printk("%d: DeviceContext %p, DvbDemux %p, DmxDevice %p\n", i, DeviceContext, DvbDemux, DmxDevice);
+#endif
         /* Unregister the built-in dvr device and replace it with our own version */
         dvb_unregister_device  (DmxDevice->dvr_dvbdev);
         dvb_register_device (&DvbContext->DvbAdapter,
@@ -187,11 +236,24 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
                              DeviceContext,
                              DVB_DEVICE_AUDIO);
 
-        dvb_register_device (&DvbContext->DvbAdapter,
-                             &DeviceContext->CaDevice,
-                             CaInit (DeviceContext),
-                             DeviceContext,
-                             DVB_DEVICE_CA);
+#ifdef __TDT__
+        /* register the CA device (e.g. CIMAX) */
+        if(i < 2)
+#ifndef VIP2_V1
+	       dvb_register_device (&DvbContext->DvbAdapter,
+			            &DeviceContext->CaDevice,
+			            CaInit (DeviceContext),
+			            DeviceContext,
+			            DVB_DEVICE_CA);
+#endif
+
+#else
+	    dvb_register_device (&DvbContext->DvbAdapter,
+			         &DeviceContext->CaDevice,
+			         CaInit (DeviceContext),
+			         DeviceContext,
+			         DVB_DEVICE_CA);
+#endif
 
         dvb_register_device (&DvbContext->DvbAdapter,
                              &DeviceContext->VideoDevice,
@@ -212,6 +274,22 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
         DeviceContext->dvr_in                   = kmalloc(65536,GFP_KERNEL); // 128Kbytes is quite a lot per device.
         DeviceContext->dvr_out                  = kmalloc(65536,GFP_KERNEL); // However allocating on each write is expensive.
         DeviceContext->EncryptionOn             = 0;
+#ifdef __TDT__
+        DeviceContext->VideoPlaySpeed           = DVB_SPEED_NORMAL_PLAY;
+        DeviceContext->provideToDecoder = 0;
+        DeviceContext->feedPesType = 0;
+        mutex_init(&DeviceContext->injectMutex);
+
+        if(i < 3)
+        {
+          ptiInit(DeviceContext);
+        }
+
+        if(i < 1)
+        {
+          init_e2_proc(DeviceContext);
+        }
+#endif
 
     }
 
@@ -224,10 +302,13 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
     avr_init();
 #endif 
 
+#ifndef __TDT__
+
 #if defined (CONFIG_CPU_SUBTYPE_STX7105) // || defined (CONFIG_CPU_SUBTYPE_STX7200)
     cap_init();
 #endif  
 
+#endif
     linuxdvb_v4l2_init();
 
     DVB_DEBUG("STM stream device loaded\n");

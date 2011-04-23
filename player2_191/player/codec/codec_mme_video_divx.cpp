@@ -60,10 +60,16 @@ static BufferDataDescriptor_t           DivxCodecDecodeContextDescriptor = BUFFE
 
 Codec_MmeVideoDivx_c::Codec_MmeVideoDivx_c( void)
 {
+#ifndef __TDT__
 		const unsigned int Width = ((960 + 32) + 63) & ~0x3F;
 		const unsigned int Height = ((576 + 32) + 31) & ~0x1F;
 		// This is the maximum size of a frame... currently PAL which is 720x576.  aligned to 1kb boundry
 		MaxBytesPerFrame = (((Width * Height) + ((Width * Height) >> 1)) + 1023) & ~0x3FF;
+#else
+        MaxBytesPerFrame = 0x17A000; //1548288; Aligned value for 1280x720 frames
+        //MaxBytesPerFrame = 2000000;
+        report (severity_info,"MaxBytesPerFrame =%d\n",MaxBytesPerFrame);
+#endif
 
 		CurrentWidth   = 720;
 		CurrentHeight  = 576;
@@ -260,7 +266,11 @@ CodecStatus_t  Codec_MmeVideoDivx_c::FillOutSetStreamParametersCommand( void )
 {
 		Mpeg4VideoStreamParameters_t  *Parsed  = (Mpeg4VideoStreamParameters_t *)ParsedFrameParameters->StreamParameterStructure;
 
+#ifndef __TDT__
 		if ( (Parsed->VolHeader.width > 960) ||  (Parsed->VolHeader.height > 576) )
+#else
+    		if ( (Parsed->VolHeader.width > 1280) || (Parsed->VolHeader.height > 720) )
+#endif
 		{
 				report(severity_error,"Stream dimensions too large for playback (%d x %d)\n",Parsed->VolHeader.width,Parsed->VolHeader.height);
 				Player->MarkStreamUnPlayable( Stream );

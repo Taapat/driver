@@ -21,6 +21,10 @@
 #ifndef _SOUND_KSOUND_H_
 #define _SOUND_KSOUND_H_
 
+#if defined(__TDT__)
+#include <linux/version.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 	
@@ -220,7 +224,11 @@ struct snd_pcm_hw_params {
 #else
 //#warning KSOUND.H AS C INCLUDE
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+// sound/driver.h does not exist in stlinux24
+#else
 #include <sound/driver.h>
+#endif
 #include <sound/core.h>
 #include <sound/minors.h>
 #include <sound/pcm.h>
@@ -233,6 +241,14 @@ struct snd_pcm_hw_params {
 //#include <sound/typedefs.h>
 #include <sound/asound.h>
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+typedef struct snd_kcontrol snd_kcontrol_t;
+typedef struct snd_ctl_elem_value snd_ctl_elem_value_t;
+typedef struct snd_ctl_elem_id snd_ctl_elem_id_t;
+/************* sound/typedef.h ************/
+typedef struct snd_pcm_substream snd_pcm_substream_t;
+/******************************************/
+#else
 #if defined (CONFIG_KERNELVERSION)    
 typedef struct snd_kcontrol snd_kcontrol_t;
 typedef struct snd_ctl_elem_value snd_ctl_elem_value_t;
@@ -241,7 +257,7 @@ typedef struct snd_ctl_elem_id snd_ctl_elem_id_t;
 typedef struct snd_pcm_substream snd_pcm_substream_t;
 /******************************************/
 #endif     
-    
+#endif    
 #endif
 
 typedef struct _ksnd_pcm ksnd_pcm_t;
@@ -267,7 +283,11 @@ typedef struct _snd_pcm_channel_area {
 } snd_pcm_channel_area_t;
 
 struct _ksnd_pcm {
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+	struct snd_pcm_substream *substream;
+#else
 	snd_pcm_substream_t *substream;
+#endif
 	snd_pcm_channel_area_t hwareas[10];
 	ksnd_pcm_hw_params_t actual_hwparams;
 	ksnd_pcm_streaming_t streaming;
@@ -336,6 +356,20 @@ int ksnd_pcm_hw_params_get_buffer_size(const ksnd_pcm_hw_params_t *params, snd_p
 /*
  * control functions
  */
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+// structure types are not defined in stlinux24
+void ksnd_ctl_elem_id_alloca(struct snd_ctl_elem_id **id);
+void ksnd_ctl_elem_id_set_interface(struct snd_ctl_elem_id *obj, snd_ctl_elem_iface_t val);
+void ksnd_ctl_elem_id_set_name(struct snd_ctl_elem_id *obj, const char *val);
+void ksnd_ctl_elem_id_set_device(struct snd_ctl_elem_id *obj, unsigned int val);
+void ksnd_ctl_elem_id_set_index(struct snd_ctl_elem_id *obj, unsigned int val);
+struct snd_kcontrol *ksnd_substream_find_elem(struct snd_pcm_substream *substream, struct snd_ctl_elem_id *id);
+void ksnd_ctl_elem_value_alloca(struct snd_ctl_elem_value **id);
+void ksnd_ctl_elem_value_set_id(struct snd_ctl_elem_value *obj, const struct snd_ctl_elem_id *ptr);
+void ksnd_ctl_elem_value_set_integer(struct snd_ctl_elem_value *obj, unsigned int idx, long val);
+void ksnd_ctl_elem_value_set_iec958(struct snd_ctl_elem_value *obj, const struct snd_aes_iec958 *ptr);
+int ksnd_hctl_elem_write(struct snd_kcontrol *elem, struct snd_ctl_elem_value *control);
+#else
 void ksnd_ctl_elem_id_alloca(snd_ctl_elem_id_t **id);
 void ksnd_ctl_elem_id_set_interface(snd_ctl_elem_id_t *obj, snd_ctl_elem_iface_t val);
 void ksnd_ctl_elem_id_set_name(snd_ctl_elem_id_t *obj, const char *val);
@@ -347,7 +381,7 @@ void ksnd_ctl_elem_value_set_id(snd_ctl_elem_value_t *obj, const snd_ctl_elem_id
 void ksnd_ctl_elem_value_set_integer(snd_ctl_elem_value_t *obj, unsigned int idx, long val);
 void ksnd_ctl_elem_value_set_iec958(snd_ctl_elem_value_t *obj, const struct snd_aes_iec958 *ptr);
 int ksnd_hctl_elem_write(snd_kcontrol_t *elem, snd_ctl_elem_value_t *control);
-
+#endif
 
 /*
  * capture -> playback stream redirection

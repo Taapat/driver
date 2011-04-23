@@ -16,17 +16,6 @@
 #include "../dvb_module.h"
 #include "linux/dvb/stm_ioctls.h"
 
-extern int StreamSetOutputWindow      (stream_handle_t         Stream,
-                                unsigned int            X,
-                                unsigned int            Y,
-                                unsigned int            Width,
-                                unsigned int            Height);
-extern int StreamGetOutputWindow      (stream_handle_t         Stream,
-                                unsigned int*           X,
-                                unsigned int*           Y,
-                                unsigned int*           Width,
-                                unsigned int*           Height);
-
 extern struct stmfb_info* stmfb_get_fbinfo_ptr(void);
 
 int proc_vmpeg_0_dst_left_write(struct file *file, const char __user *buf,
@@ -85,7 +74,7 @@ int proc_vmpeg_0_dst_left_write(struct file *file, const char __user *buf,
 
 			l = x*value/720;
 
-			err = StreamSetOutputWindow(pContext->VideoStream, l, t, w, h);
+			err = DvbStreamSetOutputWindow(pContext->VideoStream, l, t, w, h);
 				
 			if (err != 0)
 				printk("failed to set output window %d\n", err);
@@ -207,7 +196,7 @@ int proc_vmpeg_0_dst_top_write(struct file *file, const char __user *buf,
 
 			t = y*value/576;
 
-		    	err = StreamSetOutputWindow(pContext->VideoStream, l, t, w, h);
+		    	err = DvbStreamSetOutputWindow(pContext->VideoStream, l, t, w, h);
 				
 			if (err != 0)
 				printk("failed to set output window %d\n", err);
@@ -331,7 +320,7 @@ int proc_vmpeg_0_dst_width_write(struct file *file, const char __user *buf,
 
 			w = x*value/720;
 
-		    	err = StreamSetOutputWindow(pContext->VideoStream, l, t, w, h);
+		    	err = DvbStreamSetOutputWindow(pContext->VideoStream, l, t, w, h);
 				
 			if (err != 0)
 				printk("failed to set output window %d\n", err);
@@ -454,7 +443,7 @@ int proc_vmpeg_0_dst_height_write(struct file *file, const char __user *buf,
 
 			h = y*value/576;
 
-		    	err = StreamSetOutputWindow(pContext->VideoStream, l, t, w, h);
+		    	err = DvbStreamSetOutputWindow(pContext->VideoStream, l, t, w, h);
 				
 			if (err != 0)
 				printk("failed to set output window %d\n", err);
@@ -658,7 +647,7 @@ int proc_vmpeg_0_dst_all_write(struct file *file, const char __user *buf,
 
                         printk("%x, %x, %x, %x\n", l, t, w, h);
 
-		    	err = StreamSetOutputWindow(pContext->VideoStream, l, t, w, h);
+		    	err = DvbStreamSetOutputWindow(pContext->VideoStream, l, t, w, h);
 				
 			if (err != 0)
 				printk("failed to set output window %d\n", err);

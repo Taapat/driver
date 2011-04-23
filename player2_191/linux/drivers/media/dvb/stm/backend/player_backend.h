@@ -144,6 +144,10 @@ int StreamGetPlayerEnvironment (stream_handle_t                 Stream,
                                 stream_handle_t*                playerstream);
 int DisplayCreate              (char*                           Media,
                                 unsigned int                    SurfaceId);
+#ifdef __TDT__
+int isDisplayCreated           (char*           Media,
+                                unsigned int    SurfaceId);
+#endif
 int DisplayDelete              (char*                           Media,
                                 unsigned int                    SurfaceId);
 int DisplaySynchronize         (char*                           Media,

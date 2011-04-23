@@ -810,6 +810,18 @@ int DisplayCreate      (char*           Media,
     return 0;
 }
 //}}}
+#ifdef __TDT__
+//{{{  DisplayCreate
+//Dagobert
+int isDisplayCreated (char*           Media,
+                      unsigned int    SurfaceId)
+{
+    PLAYER_DEBUG("SurfaceId  = %d\n", SurfaceId);
+
+    return (HavanaPlayer->isDisplayCreated (Media, SurfaceId));
+}
+//}}}  
+#endif
 //{{{  DisplayDelete
 int DisplayDelete      (char*           Media,
                         unsigned int    SurfaceId)

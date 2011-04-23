@@ -35,6 +35,10 @@ Date        Modification                                    Name
 #include "player_generic.h"
 #include "st_relay.h"
 
+#ifdef __TDT__
+extern int discardlateframe;
+#endif
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //      Useful defines/macros that need not be user visible
@@ -159,6 +163,29 @@ unsigned int    i;
 #endif
 
 //
+#ifdef __TDT__
+    // Overwrite default settings (see class_definitions/player_types.h for definitions
+    // and descriptions).
+
+    // Discarding late frames significantly improves the H.264 deadlock behavior.
+    // Obviously late frames cause the player to run out of buffers if not discarded
+    // immediately. It even does not matter how many decode buffers are available -
+    // all of them will be used (up to 32 if enough memory is availble in LMI_VID).
+    if(discardlateframe == 0)
+        SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyDiscardLateFrames,                                       PolicyValueDiscardLateFramesNever );
+    else if(discardlateframe == 1)
+        SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyDiscardLateFrames,                                       PolicyValueDiscardLateFramesAlways );
+    else
+        SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyDiscardLateFrames,                                       PolicyValueDiscardLateFramesAfterSynchronize );
+    // Usage of the immediate start depends on the LateFrame policy. Though, it is not
+    // quite clear what is meant by "agressive policy".
+    SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyVideoStartImmediate,                                 PolicyValueApply );
+
+    // This will fix N24 an hopefully every other interlaced-progressive miss interpretertation 
+    SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyMPEG2DoNotHonourProgressiveFrameFlag,                PolicyValueApply );
+
+    //SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyLimitInputInjectAhead,                             PolicyValueApply );
+#endif
 
     InitializationStatus        = BufferNoError;
 }

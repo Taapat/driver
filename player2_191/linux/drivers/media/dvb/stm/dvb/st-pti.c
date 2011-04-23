@@ -57,8 +57,8 @@ extern void fe_core_register_frontend(struct dvb_adapter *dvb_adap);
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
 extern void tuner_register_frontend(struct dvb_adapter *dvb_adap);
 #elif defined(OCTAGON1008) || defined(ATEVIO7500)
-extern void avl2108_register_frontend(struct dvb_adapter *dvb_adap);
-//extern void socket_register_adapter(struct dvb_adapter *dvb_adap);
+//extern void avl2108_register_frontend(struct dvb_adapter *dvb_adap);
+extern void socket_register_adapter(struct dvb_adapter *dvb_adap);
 #else
 extern void cx24116_register_frontend(struct dvb_adapter *dvb_adap);
 #endif

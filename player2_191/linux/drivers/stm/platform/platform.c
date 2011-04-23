@@ -12,7 +12,13 @@
 #include <linux/init.h>
 #include <linux/platform_device.h>
 #include <linux/autoconf.h>
+#ifdef __TDT__
+#include <linux/version.h>
+#endif
+#if  defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+#else
 #include <asm-sh/processor.h>
+#endif
 
 #if defined (CONFIG_KERNELVERSION)
 #include <asm-sh/irq-ilc.h>

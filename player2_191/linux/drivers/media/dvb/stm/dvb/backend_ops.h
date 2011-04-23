@@ -449,6 +449,11 @@ struct dvb_backend_operations
     int (*display_synchronize)        (char*                   Media,
                                        unsigned int            SurfaceId);
 
+#ifdef __TDT__
+/*Dagobert */
+    int (*is_display_created)             (char*                   Media,
+                                       unsigned int            SurfaceId);
+#endif
 };
 
 int register_dvb_backend        (char                           *name,

@@ -177,8 +177,11 @@ OutputTimerStatus_t   OutputTimer_Video_c::InitializeConfiguration(  void )
 
     Configuration.ReversePlaySupported                          = true;
     Configuration.MinimumSpeedSupported                         = Rational_t(   1,100000);
+#ifdef __TDT__
+    Configuration.MaximumSpeedSupported                         = Rational_t( 128,     1);
+#else
     Configuration.MaximumSpeedSupported                         = Rational_t(  32,     1);
-
+#endif
 //
 
     return OutputTimerNoError;

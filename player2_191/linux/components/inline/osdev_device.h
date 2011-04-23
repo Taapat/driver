@@ -35,6 +35,9 @@ Date        Modification                                    Name
 #ifndef H_OSDEV_DEVICE
 #define H_OSDEV_DEVICE
 
+#if defined(__TDT__)
+#include <linux/version.h>
+#endif
 
 /* --- Include the os specific headers we will need --- */
 
@@ -247,6 +250,54 @@ typedef struct PlatformData_s
 
 #define OSDEV_PlatformUnloadEntrypoint(fn) static void fn( void )
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+/* in stlinux24 we have to use platform device pointers instead of device pointers */
+#define OSDEV_RegisterPlatformDriverFn( name2, Loadfn, Unloadfn )       \
+	OSDEV_PlatformLoadEntrypoint(Loadfn);                           \
+	OSDEV_PlatformUnloadEntrypoint(Unloadfn);                       \
+	static int plat_probe(struct platform_device *dev) {                     \
+		PlatformData_t PData;                                   \
+		struct resource *res;                                   \
+		if (!dev || !dev->name) OSDEV_Print("Error No Platform Data\n"); \
+		PData.PrivateData = dev->dev.platform_data;     \
+		PData.NumberBaseAddresses = 0;                          \
+		do {                                                    \
+			res = platform_get_resource(dev,IORESOURCE_MEM,PData.NumberBaseAddresses); \
+			if (res) { \
+				PData.BaseAddress[PData.NumberBaseAddresses] = res->start; \
+				PData.NumberBaseAddresses++;            \
+			}                                               \
+		} while (res);                                          \
+		PData.NumberInterrupts = 0;                             \
+		do {                                                    \
+			res = platform_get_resource(dev,IORESOURCE_IRQ,PData.NumberInterrupts); \
+			if (res) { \
+				PData.Interrupt[PData.NumberInterrupts] = res->start; \
+				PData.NumberInterrupts++;               \
+			}                                               \
+		} while (res);                                          \
+		return Loadfn(&PData);                                  \
+	}                                                               \
+	static int plat_remove(struct platform_device *dev) {                    \
+		Unloadfn();                                             \
+		return 0;                                               \
+	}                                                               \
+	static struct platform_driver plat_driver = {                     \
+		.driver = { .owner  = THIS_MODULE,                           \
+			.name   = name2                                        \
+		},							\
+		.probe  = plat_probe,                                   \
+		.remove = plat_remove                                   \
+	};                                                              \
+	static int plat_init(void) {                                    \
+		return platform_driver_register(&plat_driver);                   \
+	}                                                               \
+	static void plat_cleanup(void) {                                \
+		platform_driver_unregister(&plat_driver);                        \
+	}                                                               \
+	module_init(plat_init);                                         \
+	module_exit(plat_cleanup);
+#else /* !stlinux24 */
 #define OSDEV_RegisterPlatformDriverFn( name2, Loadfn, Unloadfn )       \
 	OSDEV_PlatformLoadEntrypoint(Loadfn);                           \
 	OSDEV_PlatformUnloadEntrypoint(Unloadfn);                       \
@@ -292,7 +343,7 @@ typedef struct PlatformData_s
 	}                                                               \
 	module_init(plat_init);                                         \
 	module_exit(plat_cleanup);
-
+#endif
 // -----------------------------------------------------------------------------------------------
 //
 // malloc and free used later
@@ -914,14 +965,22 @@ STATIC_INLINE void OSDEV_PurgeCacheAll(void)
 
 STATIC_INLINE void OSDEV_FlushCacheRange(void *start, int size)
 {
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+    __flush_wback_region(start, size);
+#else
     dma_cache_wback(start, size);
+#endif
 }
 
 // -----------------------------------------------------------------------------------------------
 
 STATIC_INLINE void OSDEV_InvalidateCacheRange(void *start, int size)
 {
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+    __flush_invalidate_region(start, size);
+#else
     dma_cache_inv(start, size);
+#endif
 }
 
 // -----------------------------------------------------------------------------------------------
@@ -941,7 +1000,11 @@ STATIC_INLINE void OSDEV_SnoopCacheRange(void *start, int size)
 
 STATIC_INLINE void OSDEV_PurgeCacheRange(void *start, int size)
 {
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+    __flush_purge_region(start, size);
+#else
     dma_cache_wback_inv(start, size);
+#endif
 }
 
 // -----------------------------------------------------------------------------------------------

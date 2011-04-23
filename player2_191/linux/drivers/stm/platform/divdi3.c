@@ -6,6 +6,10 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 
+#ifdef __TDT__
+#include <linux/version.h>
+#endif
+
 extern u64 __xdiv64_32(u64 n, u32 d);
 
 s64 __divdi3(s64 n, s64 d)
@@ -32,8 +36,12 @@ s64 __divdi3(s64 n, s64 d)
 	return res;
 }
 
+#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+EXPORT_SYMBOL(__divdi3);
+#else
 #if defined (CONFIG_KERNELVERSION) /* STLinux 2.3 or later */
 EXPORT_SYMBOL(__divdi3);
+#endif
 #endif
 
 MODULE_DESCRIPTION("Player2 64Bit Divide Driver");

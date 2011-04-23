@@ -22,6 +22,28 @@ static struct platform_device *platform_7109[] __initdata = {
 	&h264pp_device_7109,
 };
 
+#ifdef __TDT__
+static struct resource h264pp_resource_7100[] = {
+        [0] = { .start = 0x19214000,
+                .end   = 0x19215000,
+                .flags = IORESOURCE_MEM,     },
+        [1] = { .start = 149,
+                .end   = 149,
+                .flags = IORESOURCE_IRQ, },
+};
+
+struct platform_device h264pp_device_7100 = {
+        .name          = "h264pp",
+        .id            = -1,
+        .num_resources = ARRAY_SIZE(h264pp_resource_7100),
+        .resource      = h264pp_resource_7100
+};
+
+static struct platform_device *platform_7100[] __initdata = {
+        &h264pp_device_7100
+};
+#endif
+
 static __init int platform_init_710x(void)
 {
     //
@@ -73,7 +95,18 @@ static __init int platform_init_710x(void)
         register_board_drivers();     
 #endif
 
+#ifdef __TDT__
+       if (chip_7109) {
+           return platform_add_devices(platform_7109,sizeof(platform_7109)/sizeof(struct platform_device*));
+       }
+       else
+       {
+           printk("No 7109 chip so assuming 7100 chip\n");
+           return platform_add_devices(platform_7100,sizeof(platform_7100)/sizeof(struct platform_device*));
+       }
+#else
         return platform_add_devices(platform_7109,sizeof(platform_7109)/sizeof(struct platform_device*));
+#endif
     }
 }
 

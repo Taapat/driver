@@ -64,16 +64,6 @@ extern int avs_command_kernel(unsigned int cmd, void *arg);
 #include "linux/dvb/stm_ioctls.h"
 
 
-extern int StreamSetOption            (stream_handle_t         stream,
-                                play_option_t           option,
-                                unsigned int            value);
-
-extern int StreamSetOutputWindow      (stream_handle_t         Stream,
-                                unsigned int            X,
-                                unsigned int            Y,
-                                unsigned int            Width,
-                                unsigned int            Height);
-
 		/* fixme: 
 			 * brauchen wir für die stmfb aufrufe: 
 			 * void* fb =  stmfb_get_fbinfo_ptr();
@@ -83,7 +73,7 @@ extern int StreamSetOutputWindow      (stream_handle_t         Stream,
 
 extern int DisplayCreate              (char*                   Media,
                                 unsigned int            SurfaceId);
-extern int DisplayDelete              (char*                   Media,
+extern int DvbDisplayDelete              (char*                   Media,
                                 unsigned int            SurfaceId);
 
 /* FIXME Header ? */
@@ -444,16 +434,16 @@ int proc_video_policy_write(struct file *file, const char __user *buf,
 		{
 		   policy_ply = proc_video_policy_get();
 		   aspect_ply = proc_video_aspect_get();
-		    //printk("Calling StreamSetOption ->PLAY_OPTION_VIDEO_ASPECT_RATIO\n");
+		    //printk("Calling DvbStreamSetOption ->PLAY_OPTION_VIDEO_ASPECT_RATIO\n");
         	    
-		   result  = StreamSetOption (ProcDeviceContext->VideoStream, PLAY_OPTION_VIDEO_ASPECT_RATIO, aspect_ply);
+		   result  = DvbStreamSetOption (ProcDeviceContext->VideoStream, PLAY_OPTION_VIDEO_ASPECT_RATIO, aspect_ply);
 	    	   	if (result != 0)
 				printk("Error setting stream option %d\n", result);
 			else
 	    			ProcDeviceContext->VideoState.video_format = (video_format_t)aspect_ply;
 
 
-			result  = StreamSetOption (ProcDeviceContext->VideoStream, PLAY_OPTION_VIDEO_DISPLAY_FORMAT, policy_ply);
+			result  = DvbStreamSetOption (ProcDeviceContext->VideoStream, PLAY_OPTION_VIDEO_DISPLAY_FORMAT, policy_ply);
 
 	    		if (result != 0)
 				printk("Failed to set option %d\n", result);
@@ -595,7 +585,7 @@ int proc_video_videomode_write(struct file *file, const char __user *buf,
 					{
 						createNew = 1;
 						printk("delete display\n");					
-						DisplayDelete (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
+						DvbDisplayDelete (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
 					} 
 				}
 
@@ -629,7 +619,7 @@ int proc_video_videomode_write(struct file *file, const char __user *buf,
 
 					VideoIoctlPlay(ProcDeviceContext);
 
-				    	err = StreamSetOutputWindow(ProcDeviceContext->VideoStream,
+				    	err = DvbStreamSetOutputWindow(ProcDeviceContext->VideoStream,
 				    		0,0, Options[modeToSet].xres, Options[modeToSet].yres);
 				
 				    	if (err != 0)
@@ -771,7 +761,7 @@ int proc_video_pal_h_start_write(struct file *file, const char __user *buf,
 				{
 					createNew = 1;
 					printk("delete display\n");					
-					DisplayDelete (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
+					DvbDisplayDelete (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
 				} 
 			}
 
@@ -791,7 +781,7 @@ int proc_video_pal_h_start_write(struct file *file, const char __user *buf,
 
 				VideoIoctlPlay(ProcDeviceContext);
 
-			    	err = StreamSetOutputWindow(ProcDeviceContext->VideoStream,
+			    	err = DvbStreamSetOutputWindow(ProcDeviceContext->VideoStream,
 			    		0,0, screen_info.xres, screen_info.yres);
 				
 			    	if (err != 0)
@@ -871,7 +861,7 @@ int proc_video_pal_h_end_write(struct file *file, const char __user *buf,
 				{
 					createNew = 1;
 					printk("delete display\n");					
-					DisplayDelete (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
+					DvbDisplayDelete (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
 				} 
 			}
 
@@ -891,7 +881,7 @@ int proc_video_pal_h_end_write(struct file *file, const char __user *buf,
 
 				VideoIoctlPlay(ProcDeviceContext);
 
-			    	err = StreamSetOutputWindow(ProcDeviceContext->VideoStream,
+			    	err = DvbStreamSetOutputWindow(ProcDeviceContext->VideoStream,
 			    		0,0, screen_info.xres, screen_info.yres);
 				
 			    	if (err != 0)
@@ -971,7 +961,7 @@ int proc_video_pal_v_start_write(struct file *file, const char __user *buf,
 				{
 					createNew = 1;
 					printk("delete display\n");					
-					DisplayDelete (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
+					DvbDisplayDelete (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
 				} 
 			}
 
@@ -991,7 +981,7 @@ int proc_video_pal_v_start_write(struct file *file, const char __user *buf,
 
 				VideoIoctlPlay(ProcDeviceContext);
 
-			    	err = StreamSetOutputWindow(ProcDeviceContext->VideoStream,
+			    	err = DvbStreamSetOutputWindow(ProcDeviceContext->VideoStream,
 			    		0,0, screen_info.xres, screen_info.yres);
 				
 			    	if (err != 0)
@@ -1071,7 +1061,7 @@ int proc_video_pal_v_end_write(struct file *file, const char __user *buf,
 				{
 					createNew = 1;
 					printk("delete display\n");					
-					DisplayDelete (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
+					DvbDisplayDelete (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
 				} 
 			}
 
@@ -1091,7 +1081,7 @@ int proc_video_pal_v_end_write(struct file *file, const char __user *buf,
 
 				VideoIoctlPlay(ProcDeviceContext);
 
-			    	err = StreamSetOutputWindow(ProcDeviceContext->VideoStream,
+			    	err = DvbStreamSetOutputWindow(ProcDeviceContext->VideoStream,
 			    		0,0, screen_info.xres, screen_info.yres);
 				
 			    	if (err != 0)

@@ -69,6 +69,25 @@ static BufferDataDescriptor_t     PictureParameterSetDescriptor = BUFFER_PICTURE
 //             the compiler will silently ignore them..........
 static unsigned int     H264AspectRatioValues[][2]     =
     {
+#ifdef __TDT__
+        {  1,  1 },// Not strictly specified
+        {  1,  1 },// normal 16/9 and 640x480
+        { 16, 15 },// 720x576 to 4/3 =768x576
+        {  8,  9 },// 720x480 to 4/3 =640x480  
+        { 64, 45 },// 720x576 to 16/9 =1024x576
+        { 40, 33 },// 528x480 to 4/3 =640x480
+        { 24, 11 },// 352x576 to 4/3 =768x576
+        { 20, 11 },// 352x480 to 4/3=640x480
+        { 32, 11 },// 352x576 to 16/9 =1024x576
+        { 80, 33 },// 352x480 to 16/9 =853x480
+        { 24, 15 },// 480x576 to 4/3 =768x576
+        {  4,  3 },// 480x480 to 4/3 =640x480
+        { 64, 33 },// 528x576 to 16/9 =1024x576
+        {160, 99 },// 528x480 to 16/9 =853x480
+        {  4,  3 },// 1440x1080 to 1920x1088
+        {  3,  2 },// 1280x1080 to 1920x1088
+        {  2,  1 } // 960x1080 to 1920x1088
+#else
         {  1,  1 },			// Not strictly specified
         {  1,  1 },
         { 12, 11 },
@@ -86,6 +105,7 @@ static unsigned int     H264AspectRatioValues[][2]     =
         {  4,  3 }, 
         {  3,  2 }, 
         {  2,  1 } 
+#endif
     };
 
 #define H264AspectRatios(N) Rational_t(H264AspectRatioValues[N][0],H264AspectRatioValues[N][1])
@@ -2978,6 +2998,12 @@ unsigned int	TimeDelta;
 		TimeDelta		|= Bits.Get(16);
 		MarkerBits( 8, 0xff );
 
+#ifdef __TDT__
+//I would say that this is wrong implemented in libeplayer, but if so why did it work up until now?
+                if(TimeDelta > 10000)
+                        DefaultFrameRate        = Rational_t( TimeDelta, TimeScale );
+                else
+#endif
 		DefaultFrameRate		= Rational_t( TimeScale, TimeDelta ); 
 		UserSpecifiedDefaultFrameRate	= true;
 		break;

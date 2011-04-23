@@ -58,7 +58,33 @@ Date        Modification                                    Name
 #define MIXER_STAGE_MAX (MIXER_STAGE_POST_MIX+1)
 
 #define MIXER_MAX_48K_GRANULE 1536
+/* Dagobert: Also add UFS922 here for the "bad" 7101BWC cpu 
+ * currently it seems so that this works for both cpu types
+ * (BWC vs. BWD)
+ */
+#if defined (CONFIG_KERNELVERSION) && defined(__TDT__)
+
+#if (defined(FORTIS_HDBOX) || defined(OCTAGON1008))
+
+#define MIXER_NUM_PERIODS 3
+
+#elif defined(UFS922)
+
 #define MIXER_NUM_PERIODS 2
+
+#elif defined(__TDT__)
+
+#define MIXER_NUM_PERIODS 3
+
+#endif
+
+#elif defined(__TDT__) && (defined(FORTIS_HDBOX) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(OCTAGON1008))
+#define MIXER_NUM_PERIODS 4
+#elif defined(__TDT__)
+#define MIXER_NUM_PERIODS 3
+#else
+#define MIXER_NUM_PERIODS 2
+#endif
 
 #undef  MIXER_TAG
 #define MIXER_TAG                          "Mixer_Mme_c::"
@@ -67,7 +93,11 @@ Date        Modification                                    Name
 #define MIXER_AUDIO_MAX_OUTPUT_BUFFERS 4
 #define MIXER_AUDIO_MAX_BUFFERS        (MIXER_AUDIO_MAX_INPUT_BUFFERS +\
                                              MIXER_AUDIO_MAX_OUTPUT_BUFFERS)
+#if defined(__TDT__) 
+#define MIXER_AUDIO_PAGES_PER_BUFFER   32 
+#else
 #define MIXER_AUDIO_PAGES_PER_BUFFER   8
+#endif
 #define MIXER_AUDIO_MAX_PAGES          (MIXER_AUDIO_PAGES_PER_BUFFER * MIXER_AUDIO_MAX_BUFFERS)
 
 #define MIXER_AUDIO_MAX_OUTPUT_ATTENUATION    -96

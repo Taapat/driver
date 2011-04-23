@@ -45,8 +45,13 @@ static struct staout_description g_aoutDevice[] = {
 };
 
 
+#ifdef __TDT__
+static int dvb_v4l2_audout_ioctl(struct stm_v4l2_handles *handle, struct stm_v4l2_driver *driver,
+		     int device, int type, struct file *file, unsigned int cmd, void *arg)
+#else
 static int dvb_v4l2_audout_ioctl(struct stm_v4l2_handles *handle, struct stm_v4l2_driver *driver,
 		     int device, enum _stm_v4l2_driver_type type, struct file *file, unsigned int cmd, void *arg)
+#endif
 {
     switch(cmd)
     {

@@ -47,6 +47,10 @@ Date        Modification                                    Name
 #define CODEC_TAG "Audio codec"
 #include "codec_mme_audio.h"
 
+#ifdef __TDT__
+extern int useoldaudiofw;
+#endif
+
 // /////////////////////////////////////////////////////////////////////////
 //
 // Locally defined constants
@@ -629,6 +633,10 @@ CodecStatus_t   Codec_MmeAudio_c::HandleCapabilities( void )
     {
 	CODEC_ERROR( "%s is not capable of decoding %s\n",
 		     Configuration.TransformName[SelectedTransformer], Configuration.CodecName );
+#ifdef __TDT__
+        if(useoldaudiofw == 1)
+                return CodecNoError;
+#endif
 	return CodecError;
     }
 

@@ -45,6 +45,14 @@ Date        Modification                                    Name
 
 #include "dvb_v4l2.h"
 
+#ifdef __TDT__
+#include "e2_proc/e2_proc.h"
+#include <linux/version.h>
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
+#include <linux/mm.h>
+#endif
+#endif
+
 /*{{{  prototypes*/
 static int VideoOpen                    (struct inode           *Inode,
                                          struct file            *File);
@@ -72,6 +80,11 @@ int VideoIoctlSetPlayInterval           (struct DeviceContext_s* Context,
 
 static void VideoSetEvent               (struct DeviceContext_s* Context,
                                          struct stream_event_s*  Event);
+#ifdef __TDT__
+int VideoIoctlClearBuffer        (struct DeviceContext_s* Context);
+static int VideoIoctlDiscontinuity      (struct DeviceContext_s* Context,
+                                         video_discontinuity_t Discontinuity);
+#endif
 /*}}}*/
 
 /*{{{  static data*/
@@ -164,9 +177,14 @@ struct dvb_device* VideoInit (struct DeviceContext_s* Context)
     Context->VideoState.video_blank             = 0;
     Context->VideoState.play_state              = VIDEO_STOPPED;
     Context->VideoState.stream_source           = VIDEO_SOURCE_DEMUX;
+#ifdef __TDT__
+ /* Set 16:9 as standard */
+    Context->VideoState.video_format            = VIDEO_FORMAT_16_9;
+    Context->VideoState.display_format          = VIDEO_LETTER_BOX;
+#else
     Context->VideoState.video_format            = VIDEO_FORMAT_4_3;
     Context->VideoState.display_format          = VIDEO_CENTER_CUT_OUT;
-
+#endif
     Context->VideoSize.w                        = 0;
     Context->VideoSize.h                        = 0;
     Context->VideoSize.aspect_ratio             = 0;
@@ -202,6 +220,9 @@ struct dvb_device* VideoInit (struct DeviceContext_s* Context)
     Context->VideoEvents.Write                  = 0;
     Context->VideoEvents.Read                   = 0;
     Context->VideoEvents.Overflow               = 0;
+#ifdef __TDT__
+    Context->VideoPlaySpeed                     = DVB_SPEED_NORMAL_PLAY;
+#endif
 
     mutex_init   (&(Context->VideoWriteLock));
     Context->ActiveVideoWriteLock               = &(Context->VideoWriteLock);
@@ -325,6 +346,9 @@ int VideoIoctlStop (struct DeviceContext_s* Context, unsigned int Mode)
         }
         mutex_unlock (WriteLock);
     }
+#ifdef __TDT__
+    VideoIoctlClearBuffer(Context);
+#endif
     DVB_DEBUG("Play state = %d\n", Context->VideoState.play_state);
 
     return Result;
@@ -462,7 +486,11 @@ int VideoIoctlPlay (struct DeviceContext_s* Context)
 }
 /*}}}*/
 /*{{{  VideoIoctlFreeze*/
+#ifdef __TDT__
+int VideoIoctlFreeze (struct DeviceContext_s* Context)
+#else
 static int VideoIoctlFreeze (struct DeviceContext_s* Context)
+#endif
 {
     int Result  = 0;
 
@@ -478,7 +506,11 @@ static int VideoIoctlFreeze (struct DeviceContext_s* Context)
 }
 /*}}}*/
 /*{{{  VideoIoctlContinue*/
+#ifdef __TDT__
+int VideoIoctlContinue (struct DeviceContext_s* Context)
+#else
 static int VideoIoctlContinue (struct DeviceContext_s* Context)
+#endif
 {
     int Result  = 0;
 
@@ -716,11 +748,20 @@ int VideoIoctlSetSpeed (struct DeviceContext_s* Context, int Speed)
 {
     int DirectionChange;
     int Result;
+#ifdef __TDT__
+    int prevSpeed;
+#endif
 
     DVB_DEBUG ("(video%d)\n", Context->Id);
     if (Context->Playback == NULL)
     {
+#ifdef __TDT__
+        DVB_DEBUG("Context->Playback == NULL, Speed set to %d (%d)\n", Speed, Context->PlaySpeed);
+#endif
         Context->PlaySpeed      = Speed;
+#ifdef __TDT__
+        Context->VideoPlaySpeed = Speed;
+#endif
         return 0;
     }
 
@@ -734,6 +775,11 @@ int VideoIoctlSetSpeed (struct DeviceContext_s* Context, int Speed)
             return -ERESTARTSYS;                /* Give up for now. */
     }
 
+#ifdef __TDT__
+    prevSpeed = Context->VideoPlaySpeed;
+    Context->VideoPlaySpeed = Speed;
+#endif
+
     Result      = DvbPlaybackSetSpeed (Context->Playback, Speed);
     if (Result >= 0)
         Result  = DvbPlaybackGetSpeed (Context->Playback, &Context->PlaySpeed);
@@ -742,7 +788,19 @@ int VideoIoctlSetSpeed (struct DeviceContext_s* Context, int Speed)
     if (DirectionChange)
         mutex_unlock (Context->ActiveVideoWriteLock);
 
+#ifdef __TDT__
+    /* Phantomias: quick hack to improve resynchronization after
+       fast forward */
+    if((prevSpeed != Speed) && (prevSpeed != DVB_SPEED_STOPPED) &&
+       (Context->PlaySpeed == DVB_SPEED_NORMAL_PLAY))
+    {
+      VideoIoctlClearBuffer(Context);
+    }
+
+    DVB_DEBUG("Speed set to %d (%d, %p, %p)\n", Context->PlaySpeed, prevSpeed, Context, Context->Playback);
+#else
     DVB_DEBUG("Speed set to %d\n", Context->PlaySpeed);
+#endif
 
     return Result;
 }
@@ -860,12 +918,24 @@ int VideoIoctlSetId (struct DeviceContext_s* Context, int Id)
 }
 /*}}}*/
 /*{{{  VideoIoctlClearBuffer*/
+#ifdef __TDT__
+int VideoIoctlClearBuffer (struct DeviceContext_s* Context)
+#else
 static int VideoIoctlClearBuffer (struct DeviceContext_s* Context)
+#endif
 {
     int                 Result  = 0;
     dvb_discontinuity_t Discontinuity   = DVB_DISCONTINUITY_SKIP | DVB_DISCONTINUITY_SURPLUS_DATA;
+#ifdef __TDT__
+    int prevSpeed = 0;
+#endif
 
     DVB_DEBUG ("(video%d)\n", Context->Id);
+
+#ifdef __TDT__
+    prevSpeed = Context->VideoState.play_state;
+#endif
+
     /*
     Clear buffer is used to flush the current stream from the pipeline.  This is accomplished
     by draining the stream with discard and indicating that a discontinuity will occur.
@@ -880,6 +950,13 @@ static int VideoIoctlClearBuffer (struct DeviceContext_s* Context)
         Result  = DvbStreamDiscontinuity (Context->VideoStream, Discontinuity);
     mutex_unlock (Context->ActiveVideoWriteLock);
 
+#ifdef __TDT__
+    //it seems like the player forgets our current status after clear buffer
+    if(prevSpeed == VIDEO_FREEZED)
+    {
+      VideoIoctlSetSpeed (Context, DVB_SPEED_STOPPED);
+    }
+#endif
     return Result;
 }
 /*}}}*/
@@ -888,11 +965,23 @@ static int VideoIoctlSetStreamType (struct DeviceContext_s* Context, unsigned in
 {
     DVB_DEBUG("(video%d) Set type to %d\n", Context->Id, Type);
 
+#ifdef __TDT__
+    Context->StreamType     = Type;
+
+    //e2: VIDEO_STREAMTYPE_MPEG2=0, VIDEO_STREAMTYPE_MPEG4_H264=1
+    //player: MPEG2=2 H264=8
+    DVB_DEBUG("Set streamtype to %d\n", Type);
+    if (Type == 1)
+        Context->VideoEncoding      = (video_encoding_t) 8;
+    else
+        Context->VideoEncoding      = (video_encoding_t) 2;
+#else
     /*if ((Type < STREAM_TYPE_TRANSPORT) || (Type > STREAM_TYPE_PES))*/
     if ((Type < STREAM_TYPE_NONE) || (Type > STREAM_TYPE_RAW))
         return  -EINVAL;
 
     Context->StreamType     = (stream_type_t)Type;
+#endif
 
     return 0;
 }
@@ -1356,6 +1445,11 @@ static int VideoIoctl (struct inode*    Inode,
             case    VIDEO_GET_EVENT:
             case    VIDEO_GET_SIZE:
             case    VIDEO_GET_FRAME_RATE:
+#ifdef __TDT__
+            /* hack to allow notifications from another process/thread
+               in read-only mode */
+            case    VIDEO_DISCONTINUITY:
+#endif
             /*  Not allowed as they require an active player
             case    VIDEO_GET_PTS:
             case    VIDEO_GET_PLAY_TIME:
@@ -1577,6 +1671,18 @@ static void VideoSetEvent (struct DeviceContext_s* Context,
             Context->VideoSize.h                        = Event->u.size.height;
             Context->VideoSize.aspect_ratio             = Event->u.size.aspect_ratio;
             Context->VideoState.video_format            = Event->u.size.aspect_ratio;
+
+#ifdef __TDT__
+             /* For Enigma2, the driver handles all the aspect changes, 
+                the only thing E2 is going to do with this event is displaying 
+                the 16/9 icon or not */
+
+                Context->VideoState.display_format = (video_displayformat_t) proc_video_policy_get();
+                Context->VideoState.video_format = (video_format_t) proc_video_aspect_get();
+
+                VideoIoctlSetDisplayFormat (Context, (unsigned int)Context->VideoState.display_format);
+                VideoIoctlSetFormat        (Context, Context->VideoState.video_format);
+#endif
 
             Context->PixelAspectRatio.Numerator         = Event->u.size.pixel_aspect_ratio_numerator;
             Context->PixelAspectRatio.Denominator       = Event->u.size.pixel_aspect_ratio_denominator;

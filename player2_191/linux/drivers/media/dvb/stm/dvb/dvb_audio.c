@@ -41,6 +41,36 @@ Date        Modification                                    Name
 
 #include "dvb_v4l2.h"
 
+#ifdef __TDT__
+//Dagobert Hack
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+#include <sound/driver.h>
+#endif
+#include <sound/core.h>
+#include <sound/control.h>
+#include <sound/pcm.h>
+#include <sound/pcm_params.h>
+#include <sound/rawmidi.h>
+#include <sound/initval.h>
+
+#include <stm_ioctls.h>
+
+#include "e2_proc/e2_proc.h"
+
+#include "../../../../sound/pseudocard/pseudo_mixer.h"
+
+
+extern struct snd_kcontrol ** pseudoGetControls(int* numbers);
+extern int snd_pseudo_switch_put(struct snd_kcontrol *kcontrol,
+                                struct snd_ctl_elem_value *ucontrol);
+extern int snd_pseudo_integer_put(struct snd_kcontrol *kcontrol,
+                                struct snd_ctl_elem_value *ucontrol);
+
+#define PSEUDO_ADDR(x) (offsetof(struct snd_pseudo_mixer_settings, x))
+extern struct DeviceContext_s* DeviceContext;
+#endif
+
 /*{{{  prototypes*/
 static int AudioOpen                    (struct inode           *Inode,
                                          struct file            *File);
@@ -56,8 +86,13 @@ static ssize_t AudioWrite               (struct file            *File,
                                          loff_t                 *ppos);
 static unsigned int AudioPoll           (struct file            *File,
                                          poll_table             *Wait);
+#ifdef __TDT__
+int AudioIoctlSetAvSync (struct DeviceContext_s* Context, unsigned int State);
+#else
 static int AudioIoctlSetAvSync          (struct DeviceContext_s* Context,
                                          unsigned int            State);
+#endif
+
 static int AudioIoctlChannelSelect      (struct DeviceContext_s* Context,
                                          audio_channel_select_t  Channel);
 static int AudioIoctlSetSpeed           (struct DeviceContext_s* Context,
@@ -270,7 +305,11 @@ int AudioIoctlPlay (struct DeviceContext_s* Context)
 }
 /*}}}*/
 /*{{{  AudioIoctlPause*/
+#ifdef __TDT__
+int AudioIoctlPause (struct DeviceContext_s* Context)
+#else
 static int AudioIoctlPause (struct DeviceContext_s* Context)
+#endif
 {
     int Result  = 0;
 
@@ -287,7 +326,11 @@ static int AudioIoctlPause (struct DeviceContext_s* Context)
 }
 /*}}}*/
 /*{{{  AudioIoctlContinue*/
+#ifdef __TDT__
+int AudioIoctlContinue (struct DeviceContext_s* Context)
+#else
 static int AudioIoctlContinue (struct DeviceContext_s* Context)
+#endif
 {
     int Result  = 0;
 
@@ -334,7 +377,11 @@ static int AudioIoctlSetMute (struct DeviceContext_s* Context, unsigned int Stat
 }
 /*}}}*/
 /*{{{  AudioIoctlSetAvSync*/
+#ifdef __TDT__
+int AudioIoctlSetAvSync (struct DeviceContext_s* Context, unsigned int State)
+#else
 static int AudioIoctlSetAvSync (struct DeviceContext_s* Context, unsigned int State)
+#endif
 {
     int Result  = 0;
 
@@ -356,11 +403,82 @@ static int AudioIoctlSetAvSync (struct DeviceContext_s* Context, unsigned int St
 }
 /*}}}*/
 /*{{{  AudioIoctlSetBypassMode*/
+#ifdef __TDT__
+int AudioIoctlSetBypassMode (struct DeviceContext_s* Context, unsigned int Mode)
+#else
 static int AudioIoctlSetBypassMode (struct DeviceContext_s* Context, unsigned int Mode)
+#endif
 {
+#ifdef __TDT__
+    int vLoop;
+    int number = 0;
+    struct snd_kcontrol *single_control = NULL;
+    struct snd_kcontrol ** kcontrol = pseudoGetControls(&number);
+
+    //DVB_DEBUG("(not implemented)\n");
+    //mpeg2=4, ac3=6
+    //e2 : 1=mpegm 0=ac3, 2=dts, 8=aac, 9=aache, 6=lpcm
+    //libdreamdvd : 5=dts 6=lpcm
+    DVB_DEBUG("Set BypassMode to %d\n", Mode);
+
+    if (Mode == 0)
+                        Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_AC3;
+    else if (Mode == 5 || Mode == 2)
+      Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_DTS;
+    else if (Mode == 6)
+      Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_LPCM;
+    else if (Mode == 8)
+      Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_AAC;
+    else
+      Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_MPEG2;
+
+//before we jump to any conclusions, does the user really want passtrough, its possible that he wants downmix!
+//ask e2_proc_audio what the user wants
+    for (vLoop = 0; vLoop < number; vLoop++) {
+        if (kcontrol[vLoop]->private_value == PSEUDO_ADDR(spdif_bypass)) {
+            single_control = kcontrol[vLoop];
+            printk("Find spdif_bypass control at %p\n", single_control);
+            break;
+        }
+    }
+
+    if ((kcontrol != NULL) && (single_control != NULL)) {
+        struct snd_ctl_elem_value ucontrol;
+        ucontrol.value.integer.value[0] = e2_proc_audio_getPassthrough();
+
+        snd_pseudo_switch_put(single_control, &ucontrol);
+
+    } else {
+        printk("Pseudo Mixer does not deliver controls\n");
+    }
+
+#ifdef use_hdmi_bypass
+/* Dagobert; set hdmi bypass, maybe we need another prco for this? */
+    for (vLoop = 0; vLoop < number; vLoop++) {
+        if (kcontrol[vLoop]->private_value == PSEUDO_ADDR(hdmi_bypass)) {
+            single_control = kcontrol[vLoop];
+            printk("Find hdmi_bypass control at %p\n", single_control);
+            break;
+        }
+    }
+
+    if ((kcontrol != NULL) && (single_control != NULL)) {
+        struct snd_ctl_elem_value ucontrol;
+        ucontrol.value.integer.value[0] = e2_proc_audio_getPassthrough();
+
+        snd_pseudo_switch_put(single_control, &ucontrol);
+
+    } else {
+        printk("Pseudo Mixer does not deliver controls\n");
+    }
+#endif
+
+    return 0;
+#else
     DVB_DEBUG("(not implemented)\n");
 
     return -EPERM;
+#endif
 }
 /*}}}*/
 /*{{{  AudioIoctlChannelSelect*/
@@ -453,12 +571,24 @@ static int AudioIoctlGetPlayInfo (struct DeviceContext_s* Context, audio_play_in
 }
 /*}}}*/
 /*{{{  AudioIoctlClearBuffer*/
+#ifdef __TDT__
+int AudioIoctlClearBuffer (struct DeviceContext_s* Context)
+#else
 static int AudioIoctlClearBuffer (struct DeviceContext_s* Context)
+#endif
 {
     int                 Result  = 0;
     dvb_discontinuity_t Discontinuity   = DVB_DISCONTINUITY_SKIP | DVB_DISCONTINUITY_SURPLUS_DATA;
 
+#ifdef __TDT__
+    int prevSpeed = 0;
+#endif
+
     DVB_DEBUG ("(audio%d)\n", Context->Id);
+
+#ifdef __TDT__
+    prevSpeed = Context->AudioState.play_state;
+#endif
 
     /* Discard previously injected data to free the lock. */
     DvbStreamDrain (Context->AudioStream, true);
@@ -472,6 +602,13 @@ static int AudioIoctlClearBuffer (struct DeviceContext_s* Context)
         Result  = DvbStreamDiscontinuity (Context->AudioStream, Discontinuity);
     mutex_unlock (Context->ActiveAudioWriteLock);
 
+#ifdef __TDT__
+    //it seems like the player forgets our current status after clear buffer
+    if(prevSpeed == AUDIO_PAUSED)
+    {
+      AudioIoctlSetSpeed (Context, DVB_SPEED_STOPPED);
+    }
+#endif
     return Result;
 }
 /*}}}*/
@@ -497,8 +634,18 @@ int AudioIoctlSetId (struct DeviceContext_s* Context, int Id)
 /*{{{  AudioIoctlSetMixer*/
 static int AudioIoctlSetMixer (struct DeviceContext_s* Context, audio_mixer_t* Mix)
 {
+#ifdef __TDT__
+/* HACK
+ * set volume over avs.
+ */
+    char buf[3];
+    snprintf(buf, 3, "%d", Mix->volume_left);
+    proc_avs_0_volume_write(NULL, buf, strlen(buf), NULL);
+    return 0;
+#else
     DVB_DEBUG("(audio%d) Volume left = %d, Volume right = %d (not yet implemented)\n", Context->Id, Mix->volume_left, Mix->volume_right);
     return -EPERM;
+#endif
 }
 /*}}}*/
 /*{{{  AudioIoctlSetStreamType*/

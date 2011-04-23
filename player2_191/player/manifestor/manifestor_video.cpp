@@ -1149,7 +1149,11 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
         DisplayEventRequested              |= EventSourceSizeChangeManifest;
         DisplayEvent.Value[0].UnsignedInt   = SourceWidth;
         DisplayEvent.Value[1].UnsignedInt   = SourceHeight;
+#ifdef __TDT__
+        DisplayEvent.Rational               = PictureAspectRatio;
+#else
         DisplayEvent.Rational               = VideoParameters->PixelAspectRatio;
+#endif
     }
     memcpy ((void*)&StreamDisplayParameters, (void*)VideoParameters, sizeof (struct VideoDisplayParameters_s));
 
