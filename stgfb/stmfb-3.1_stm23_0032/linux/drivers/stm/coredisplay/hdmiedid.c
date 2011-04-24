@@ -102,6 +102,13 @@
 #define STM_CEA_BLOCK_EXT_TAG_VCDB        0x0
 #define STM_CEA_BLOCK_EXT_TAG_COLORIMETRY 0x5
 
+#if defined(CONFIG_KERNELVERSION)  && defined(FORTIS_HDBOX)/* STLinux 2.3 */
+void ctrl_fn_using_non_p3_address(void)
+{
+	printk("ctrl_fn_using_non_p3_address FRONTEND OK\n");
+}
+#endif
+
 /******************************************************************************
  * A quick and dirty determination of is the TV aspect ratio
  * is 4:3 or 16:9, using integer maths.
