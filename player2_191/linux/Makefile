@@ -198,7 +198,7 @@ obj-y += drivers/stm/platform/
 obj-y += drivers/stm/unify-end/
 
 ifeq ($(CONFIG_PRINTK),)
-CONFIG_STM_UNIFY:=y
+CONFIG_STM_UNIFY:=n
 endif
 
 ##CONFIG_STM_UNIFY can be set, or you can override
