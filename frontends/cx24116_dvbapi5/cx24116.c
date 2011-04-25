@@ -40,11 +40,17 @@
 #include <linux/moduleparam.h>
 #include <linux/init.h>
 #include <linux/firmware.h>
+#include <linux/i2c-algo-bit.h>
 
 #include "dvb_frontend.h"
 #include <linux/stm/pio.h>
 #include <pvr_config.h>
 #include <linux/platform_device.h>
+
+// Fast i2c delay (1ms ~ 1MHz) is only used to speed up the firmware
+// download. All other read/write operations are executed with the default
+// i2c bus speed (100kHz ~ 10ms).
+#define I2C_FAST_DELAY 1
 
 static int debug;
 module_param(debug, int, 0644);
@@ -236,6 +242,11 @@ static int cx24116_writeregN(struct cx24116_state *state, int reg,
 	int ret = -EREMOTEIO;
 	struct i2c_msg msg;
 	u8 *buf;
+	
+#ifndef CONFIG_I2C_STM
+	struct i2c_algo_bit_data *algo_data = state->i2c->algo_data;
+	int udelay = algo_data->udelay;
+#endif
 
 	buf = kmalloc(len + 1, GFP_KERNEL);
 	if (buf == NULL) {
@@ -252,16 +263,26 @@ static int cx24116_writeregN(struct cx24116_state *state, int reg,
 	msg.buf = buf;
 	msg.len = len + 1;
 	
+#ifndef CONFIG_I2C_STM
+	// temporarily increase the bus speed 
+	algo_data->udelay = I2C_FAST_DELAY;
+#else
 	// increase the transfer timeout
 	state->i2c->timeout = 20;
+#endif
 	if (debug > 1)
 		printk(KERN_INFO "cx24116: %s:  write regN 0x%02x, len = %d\n",
 			__func__, reg, len);
 
 	ret = i2c_transfer(state->i2c, &msg, 1);
-	
-	// reset transfer timeout
+
+#ifndef CONFIG_I2C_STM
+	// restore restore the bus speed
+	algo_data->udelay = udelay;
+#else	
+	// restore transfer timeout
 	state->i2c->timeout = 2;
+#endif
 	
 	if (ret != 1) {
 		printk(KERN_ERR "%s: writereg error(err == %i, reg == 0x%02x\n",
@@ -1170,6 +1191,7 @@ static int cx24116_probe(struct platform_device *pdev)
 		
 	state->demod_address = tuner_cfg->i2c_addr;
 	state->i2c = i2c_get_adapter (tuner_cfg->i2c_bus);
+	printk("i2c-->%x\n", state->i2c);
 
 	state->tuner_enable_pin = stpio_request_pin (tuner_cfg->tuner_enable[0],
 		                          tuner_cfg->tuner_enable[1],
