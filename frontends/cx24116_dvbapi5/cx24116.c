@@ -1151,7 +1151,7 @@ static int cx24116_diseqc_send_burst(struct dvb_frontend *fe,
 static void cx24116_release(struct dvb_frontend *fe)
 {
 	struct cx24116_state *state = fe->demodulator_priv;
-	dprintk("%s\n", __func__);
+
 	if(state->tuner_enable_pin != NULL)
 		stpio_free_pin (state->tuner_enable_pin);
 	if(state->lnb_enable_pin != NULL)
@@ -1191,7 +1191,6 @@ static int cx24116_probe(struct platform_device *pdev)
 		
 	state->demod_address = tuner_cfg->i2c_addr;
 	state->i2c = i2c_get_adapter (tuner_cfg->i2c_bus);
-	printk("i2c-->%x\n", state->i2c);
 
 	state->tuner_enable_pin = stpio_request_pin (tuner_cfg->tuner_enable[0],
 		                          tuner_cfg->tuner_enable[1],
