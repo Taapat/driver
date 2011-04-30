@@ -56,7 +56,9 @@ extern void stv090x_register_frontend(struct dvb_adapter *dvb_adap);
 extern void fe_core_register_frontend(struct dvb_adapter *dvb_adap);
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
 extern void tuner_register_frontend(struct dvb_adapter *dvb_adap);
-#elif defined(OCTAGON1008) || defined(ATEVIO7500)
+#elif defined(OCTAGON1008) 
+extern void avl2108_register_frontend(struct dvb_adapter *dvb_adap);
+#elif defined(ATEVIO7500)
 //extern void avl2108_register_frontend(struct dvb_adapter *dvb_adap);
 extern void socket_register_adapter(struct dvb_adapter *dvb_adap);
 #else
@@ -431,7 +433,9 @@ void ptiInit ( struct DeviceContext_s *pContext )
     fe_core_register_frontend( &pContext->DvbContext->DvbAdapter);
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
     tuner_register_frontend( &pContext->DvbContext->DvbAdapter);	
-#elif defined(OCTAGON1008) || defined(ATEVIO7500)
+#elif defined(OCTAGON1008)
+    avl2108_register_frontend( &pContext->DvbContext->DvbAdapter);
+#elif defined(ATEVIO7500)
 //    avl2108_register_frontend( &pContext->DvbContext->DvbAdapter);
       socket_register_adapter(&pContext->DvbContext->DvbAdapter);
 #elif !defined(UFS922)

@@ -86,7 +86,7 @@ Date        Modification                                    Name
 #define PLAYER_AUDIO_DEFAULT_CODED_FRAME_COUNT		256	// These default values are derived from the maximum existing values in the specific codecs
 #define PLAYER_AUDIO_DEFAULT_CODED_MEMORY_SIZE		PLAYER2_AUDIO_DEFAULT_CODED_MEMORY_SIZE /* 0x400000 */
 #define PLAYER_AUDIO_DEFAULT_CODED_FRAME_MAXIMUM_SIZE	0x40000
-#if defined(__TDT__) && (defined(UFS910) || defined(FORTIS_HDBOX))
+#if defined(__TDT__) && (defined(UFS910) || defined(FORTIS_HDBOX) || defined(OCTAGON1008))
 #define PLAYER_AUDIO_DEFAULT_CODED_FRAME_PARTITION_NAME	"BPA2_Region1"
 #else
 #define PLAYER_AUDIO_DEFAULT_CODED_FRAME_PARTITION_NAME	"BPA2_Region0"
@@ -95,7 +95,7 @@ Date        Modification                                    Name
 #define PLAYER_VIDEO_DEFAULT_CODED_FRAME_COUNT		1024
 #define PLAYER_VIDEO_DEFAULT_CODED_MEMORY_SIZE		PLAYER2_VIDEO_DEFAULT_CODED_MEMORY_SIZE /* 0x1000000 */
 #define PLAYER_VIDEO_DEFAULT_CODED_FRAME_MAXIMUM_SIZE	0x100000
-#if defined(__TDT__) && (defined(UFS910) || defined(FORTIS_HDBOX))
+#if defined(__TDT__) && (defined(UFS910) || defined(FORTIS_HDBOX) || defined(OCTAGON1008))
 #define PLAYER_VIDEO_DEFAULT_CODED_FRAME_PARTITION_NAME	"BPA2_Region1"
 #else
 #define PLAYER_VIDEO_DEFAULT_CODED_FRAME_PARTITION_NAME	"BPA2_Region0"
