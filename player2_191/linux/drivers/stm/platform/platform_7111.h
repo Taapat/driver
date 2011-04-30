@@ -1,6 +1,10 @@
 #ifndef PLATFORM_7111_H
 #define PLATFORM_7111_H
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
+#include <linux/irq.h>
+#endif 
+
 static struct resource h264pp_resource_7111[] = {
         [0] = { .start = 0xFE540000,
                 .end   = 0xFE5FFFFF,
