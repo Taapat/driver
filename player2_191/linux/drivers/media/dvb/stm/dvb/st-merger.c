@@ -509,7 +509,7 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x0, reg_sys_config + SYS_CFG0);
 #endif
 
-#if !defined(ATEVIO7500) && !defined(UFS912)
+#if !defined(ATEVIO7500) && !defined(UFS912) && !defined(SPARK)
       ctrl_outl(0x0, reg_sys_config + SYS_CFG1);
 #endif
 
