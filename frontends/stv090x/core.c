@@ -177,7 +177,7 @@ init_stv090x_device (struct dvb_adapter *adapter,
     printk ("stv090x: failed to allocate resources\n");
     if(cfg->tuner_enable_pin != NULL)
     {
-      printk("freeing ping\n");
+      printk("freeing pin\n");
       stpio_free_pin (cfg->tuner_enable_pin);
     }
     
@@ -191,6 +191,13 @@ init_stv090x_device (struct dvb_adapter *adapter,
   {
     stpio_set_pin (cfg->tuner_enable_pin, !cfg->tuner_enable_act);
     stpio_set_pin (cfg->tuner_enable_pin, cfg->tuner_enable_act);
+#ifdef UFS912
+/* give the tuner some time to power up. trial fix for tuner
+ * not available after boot on some boxes.
+ * 
+ */
+    msleep(250); 
+#endif
   }
 
   frontend = frontend_init(cfg, i);
