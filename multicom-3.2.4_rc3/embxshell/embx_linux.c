@@ -45,7 +45,12 @@ EMBX_VOID *EMBX_OS_ContigMemAlloc(EMBX_UINT size, EMBX_UINT align)
 
 	if (alignedAddr) {
 	    /* ensure there are no cache entries covering this address */
+#ifdef __TDT__
+	    /* dma_cache_wback_inv has been replaced by an arch specific API */
+	    __flush_purge_region(alignedAddr, size);
+#else
 	    dma_cache_wback_inv(alignedAddr, size);
+#endif
 	}
     }
 

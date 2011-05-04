@@ -73,7 +73,11 @@
 
 #include <asm/cacheflush.h>
 #include <asm/system.h>   /* cli(), *_flags */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
+#include <linux/semaphore.h>
+#else
 #include <asm/semaphore.h>
+#endif
 #include <asm/io.h>
 
 #include <asm/pgtable.h> /* VMALLOC_START */

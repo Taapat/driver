@@ -287,9 +287,15 @@ struct EMBX_TransportMethods_s {
 
     EMBX_ERROR (*test_state)        (EMBX_Transport_t *, EMBX_VOID *);
 
+#ifdef __TDT__
+    /* stlinux24 has phys_to_virt and virt_to_phys macros hiding these function pointers */
     /* MULTICOM_32BIT_SUPPORT: Zero copy address translation methods */
+    EMBX_ERROR (*virt_to_phys_alt)      (EMBX_Transport_t *, EMBX_VOID *, EMBX_UINT *);
+    EMBX_ERROR (*phys_to_virt_alt)      (EMBX_Transport_t *, EMBX_UINT, EMBX_VOID **);
+#else
     EMBX_ERROR (*virt_to_phys)      (EMBX_Transport_t *, EMBX_VOID *, EMBX_UINT *);
     EMBX_ERROR (*phys_to_virt)      (EMBX_Transport_t *, EMBX_UINT, EMBX_VOID **);
+#endif
 };
 
 
