@@ -67,6 +67,8 @@ extern void cx24116_register_frontend(struct dvb_adapter *dvb_adap);
 
 extern void demultiplexDvbPackets(struct dvb_demux* demux, const u8 *buf, int count);
 
+extern void pti_hal_init ( struct stpti *pti , struct dvb_demux* demux, void (*_demultiplexDvbPackets)(struct dvb_demux* demux, const u8 *buf, int count), int numVideoBuffers);
+
 extern int swts;
 
 int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
