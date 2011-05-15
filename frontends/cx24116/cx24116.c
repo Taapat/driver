@@ -496,8 +496,10 @@ cx24116_writeregN (struct cx24116_state *state, int reg, u8 * data, u16 len)
   dprintk (100, "cx24116: %s:  write regN 0x%02x, len = %d, bus %d\n", __FUNCTION__, reg, len, state->config->i2c_bus);
 
 #ifndef CONFIG_I2C_STM
+#ifndef UFS922
   /* temporarily increase the bus speed */
   algo_data->udelay = I2C_FAST_DELAY;
+#endif  
 #else
   timeout = state->config->i2c_adap->timeout;
   printk("old timeout %d\n", timeout);
@@ -512,8 +514,10 @@ cx24116_writeregN (struct cx24116_state *state, int reg, u8 * data, u16 len)
   }
 
 #ifndef CONFIG_I2C_STM
+#ifndef UFS922
   /* restore the bus speed */
   algo_data->udelay = udelay;
+#endif  
 #else
   state->config->i2c_adap->timeout = timeout;
 #endif
