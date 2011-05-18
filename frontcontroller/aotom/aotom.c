@@ -729,6 +729,8 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		  {msleep(1);}
 		VFD_clr();
 		break;
+	case 0x5401:
+		break;
 	default:
 		printk("VFD/AOTOM: unknown IOCTL 0x%x\n", cmd);
 
