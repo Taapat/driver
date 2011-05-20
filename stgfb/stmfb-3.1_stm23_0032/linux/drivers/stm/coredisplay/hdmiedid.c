@@ -306,17 +306,17 @@ static int stmhdmi_read_edid_block0(struct stm_hdmi *hdmi, edid_block_t rawedid)
   if((header1 != 0xffffff00) && (header2 != 0x00ffffff))
   {
     DPRINTK("Invalid EDID header 0x%08lx 0x%08lx\n",header1,header2);
-#ifdef __TDT__ 
-    DPRINTK("Checking for defect header\n"); 
-        if((header1 != 0xffffffff) && (header2 != 0x00ffffff)) 
-    { 
-#endif 
+#ifdef __TDT__
+    DPRINTK("Checking for defect header\n");
+        if((header1 != 0xffffffff) && (header2 != 0x00ffffff))
+    {
+#endif
     stmhdmi_invalidate_edid_info(hdmi);
     return -EINVAL;
-#ifdef __TDT__ 
-    } 
-    DPRINTK("Found\n"); 
-#endif 
+#ifdef __TDT__
+    }
+    DPRINTK("Found\n");
+#endif
   }
 
   manufacturer_id = rawedid[STM_EDID_MANUFACTURER] |
@@ -409,13 +409,13 @@ static int stmhdmi_cea_process_blocks(struct stm_hdmi *hdmi, edid_block_t rawedi
   int block_pos = 4;
   int offset;
 
-#ifdef __TDT__ 
-  //HACK 
-  //stmhdmi_cea_process_video_short_codes(hdmi, 60); 
-  //stmhdmi_cea_process_video_short_codes(hdmi, 33); 
-  //stmhdmi_cea_process_video_short_codes(hdmi, 34); 
-  stmhdmi_cea_process_video_short_codes(hdmi, 21); 
-#endif 
+#ifdef __TDT__
+  //HACK
+  //stmhdmi_cea_process_video_short_codes(hdmi, 60);
+  //stmhdmi_cea_process_video_short_codes(hdmi, 33);
+  //stmhdmi_cea_process_video_short_codes(hdmi, 34);
+  stmhdmi_cea_process_video_short_codes(hdmi, 21);
+#endif
 
   while(block_pos < block_end)
   {
@@ -918,7 +918,7 @@ int stmhdmi_read_edid(struct stm_hdmi *hdmi)
 int stmhdmi_safe_edid(struct stm_hdmi *hdmi)
 {
   DPRINTK("Setting Safe EDID\n");
-#ifdef SPARK //YWDRIVER_MODI d26lf 2011-01-04 hdmi audio out for board 1.4
+#if defined(SPARK) || defined(SPARK2) //YWDRIVER_MODI d26lf 2011-01-04 hdmi audio out for board 1.4
   hdmi->edid_info.display_type = STM_DISPLAY_HDMI;
   strcpy(hdmi->edid_info.monitor_name, "SAFEMODE");
   hdmi->edid_info.tv_aspect        = STM_WSS_4_3;

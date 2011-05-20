@@ -62,7 +62,7 @@ int spark_avs_src_sel(int src)
 		stpio_set_pin(scart_tv_sat, 1);
 	else if(src == SAA_SRC_SCART)
 		stpio_set_pin(scart_tv_sat, 0);
-	
+
 	return 0;
 }
 
@@ -72,8 +72,8 @@ inline int spark_avs_standby(int type)
 	{
 		return -EINVAL;
 	}
- 
-	if (type==1) 
+
+	if (type==1)
 	{
 		if (ft_stnby == 0)
 		{
@@ -81,7 +81,7 @@ inline int spark_avs_standby(int type)
 			ft_stnby = 1;
 		}
 		else
-			return -EINVAL;		
+			return -EINVAL;
 	}
 	else
 	{
@@ -96,34 +96,34 @@ inline int spark_avs_standby(int type)
 
 	return 0;
 }
- 
+
 int spark_avs_set_volume(int vol)
 {
 	int c=0;
- 
+
 	dprintk("[AVS]: %s (%d)\n", __func__, vol);
 	c = vol;
- 
+
 	if (c > 63 || c < 0)
 		return -EINVAL;
- 
+
 	c = 63 - c;
- 
+
 	c=c/2;
- 
+
 	t_vol = c;
- 
+
 	return 0;
 }
- 
+
 inline int spark_avs_set_mute(int type)
 {
 	if ((type<0) || (type>1))
 	{
 		return -EINVAL;
 	}
- 
-	if (type==AVS_MUTE) 
+
+	if (type==AVS_MUTE)
 	{
 		t_mute = 1;
 	}
@@ -136,21 +136,21 @@ inline int spark_avs_set_mute(int type)
 	stpio_set_pin(scart_mute, t_mute);
 	return 0;
 }
- 
+
 int spark_avs_get_volume(void)
 {
 	int c;
- 
+
 	c = t_vol;
- 
+
 	return c;
 }
- 
+
 inline int spark_avs_get_mute(void)
 {
 	return t_mute;
 }
- 
+
 int spark_avs_set_mode(int vol)
 {
 	switch(vol)
@@ -165,15 +165,15 @@ int spark_avs_set_mode(int vol)
 		break;
 
 	}
- 
+
 	return 0;
 }
- 
+
 int spark_avs_set_encoder(int vol)
 {
 	return 0;
 }
- 
+
 int spark_avs_set_wss(int vol)
 {
 	dprintk("[AVS]: %s\n", __func__);
@@ -194,7 +194,7 @@ int spark_avs_set_wss(int vol)
 	{
 		return  -EINVAL;
 	}
- 
+
 	return 0;
 }
 
@@ -271,7 +271,7 @@ int spark_avs_command(unsigned int cmd, void *arg )
 int spark_avs_command_kernel(unsigned int cmd, void *arg)
 {
     int val=0;
-	
+
 	if (cmd & AVSIOSET)
 	{
 		val = (int) arg;
@@ -337,10 +337,17 @@ int spark_avs_command_kernel(unsigned int cmd, void *arg)
 int spark_avs_init(void)
 {
 //	scart_tv_sat	= stpio_request_pin (6, 1, "scart_tv_sat", STPIO_OUT);
+#if defined(SPARK2)
+	scart_cvbs_rgb	= stpio_request_pin (11, 5, "scart_cvbs_rgb", STPIO_OUT);
+	scart_169_43	= stpio_request_pin (11, 4, "scart_169_43", STPIO_OUT);
+	scart_mute	= stpio_request_pin (11, 2, "scart_mute", STPIO_OUT);
+	scart_standby	= stpio_request_pin (11, 3, "scart_standby", STPIO_OUT);
+#else
 	scart_cvbs_rgb	= stpio_request_pin (6, 0, "scart_cvbs_rgb", STPIO_OUT);
 	scart_169_43	= stpio_request_pin (6, 2, "scart_169_43", STPIO_OUT);
 	scart_mute	= stpio_request_pin (2, 4, "scart_mute", STPIO_OUT);
 	scart_standby	= stpio_request_pin (6, 1, "scart_standby", STPIO_OUT);
+#endif
 
 
 	if (/*(scart_tv_sat == NULL) || */(scart_cvbs_rgb == NULL)

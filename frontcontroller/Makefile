@@ -57,6 +57,10 @@ ifdef SPARK
 obj-y   += aotom/
 endif
 
+ifdef SPARK2
+obj-y   += aotom/
+endif
+
 ifdef OCTAGON1008
 obj-y	+= nuvoton/
 endif

@@ -1,9 +1,9 @@
-/* 
+/*
  * e2_proc_video.c
  */
 
 #include <linux/version.h>
-#include <linux/proc_fs.h>  	/* proc fs */ 
+#include <linux/proc_fs.h>  	/* proc fs */
 #include <asm/uaccess.h>    	/* copy_from_user */
 
 #include <linux/dvb/video.h>	/* Video Format etc */
@@ -18,7 +18,7 @@
 
 struct stmfbio_var_screeninfo_ex
 {
-  /* 
+  /*
    * Display layer to operate on, 0 is always the layer showing the framebuffer.
    * No other layers have to be defined and the IOCTL will return ENODEV
    * if given an invalid layerid.
@@ -27,7 +27,7 @@ struct stmfbio_var_screeninfo_ex
   __u32 caps;                    /* Valid entries in structure               */
   __u32 failed;                  /* Indicates entries that failed during set */
   __u32 activate;
-  
+
   /*
    * STMFBIO_VAR_CAPS_COLOURKEY
    */
@@ -39,7 +39,7 @@ struct stmfbio_var_screeninfo_ex
 
   __u8 premultiplied_alpha;           /* STMFBIO_VAR_CAPS_PREMULTIPLIED       */
   __u8 rescale_colour_to_video_range; /* STBFBIO_VAR_CAPS_RESCALE_COLOUR_...  */
-  
+
   __u8 opacity;                       /* STMFBIO_VAR_CAPS_OPACITY             */
   __u8 gain;                          /* STMFBIO_VAR_CAPS_GAIN                */
   __u8 brightness;                    /* STMFBIO_VAR_CAPS_BRIGHTNESS          */
@@ -64,11 +64,11 @@ extern int avs_command_kernel(unsigned int cmd, void *arg);
 #include "linux/dvb/stm_ioctls.h"
 
 
-		/* fixme: 
-			 * brauchen wir für die stmfb aufrufe: 
+		/* fixme:
+			 * brauchen wir für die stmfb aufrufe:
 			 * void* fb =  stmfb_get_fbinfo_ptr();
 			 * stmfb_ioctl((void*) fb , YourRequest, &screen_info);
-			 */          
+			 */
 
 
 extern int DisplayCreate              (char*                   Media,
@@ -150,55 +150,55 @@ static struct Modes {
     { 17, "1600x1200_60", 1600, 1200, 1600, 1200, 8, 6411, 256, 32, 52, 10, 160, 8,
 	FB_VMODE_NONINTERLACED | FB_VMODE_CONUPDATE},
 
-    { 16, "1080p60", 1920, 1080, 1920, 1080, 16, 6734, 148,  88, 35, 5, 44, 5, 
+    { 16, "1080p60", 1920, 1080, 1920, 1080, 16, 6734, 148,  88, 35, 5, 44, 5,
 	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_CONUPDATE},
-    { 15, "1080p59", 1920, 1080, 1920, 1080, 16, 6741, 148,  88, 35, 5, 44, 5, 
+    { 15, "1080p59", 1920, 1080, 1920, 1080, 16, 6741, 148,  88, 35, 5, 44, 5,
 	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_CONUPDATE},
-    { 14, "1080p50", 1920, 1080, 1920, 1080, 16, 6734, 148,  528, 35, 5, 44, 5, 
-	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_CONUPDATE},
-
-    { 13, "1080p30", 1920, 1080, 1920, 1080, 16, 13468, 148,  88, 36, 4, 44, 5, 
-	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_CONUPDATE},
-    { 12, "1080p29", 1920, 1080, 1920, 1080, 16, 13481, 148,  88, 36, 4, 44, 5, 
-	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_CONUPDATE},
-    { 11, "1080p25", 1920, 1080, 1920, 1080, 16, 13468, 148, 528, 36, 4, 44, 5, 
-	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_CONUPDATE},
-    { 10, "1080p24", 1920, 1080, 1920, 1080, 16, 13468, 148, 638, 36, 4, 44, 5, 
-	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_CONUPDATE},
-    {  9, "1080p23", 1920, 1080, 1920, 1080, 16, 13481, 148, 638, 36, 4, 44, 5, 
+    { 14, "1080p50", 1920, 1080, 1920, 1080, 16, 6734, 148,  528, 35, 5, 44, 5,
 	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_CONUPDATE},
 
-    { 8, "1080i60", 1920, 1080, 1920, 1080, 16, 13468, 148,  88, 35, 5, 44, 5, 
+    { 13, "1080p30", 1920, 1080, 1920, 1080, 16, 13468, 148,  88, 36, 4, 44, 5,
+	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_CONUPDATE},
+    { 12, "1080p29", 1920, 1080, 1920, 1080, 16, 13481, 148,  88, 36, 4, 44, 5,
+	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_CONUPDATE},
+    { 11, "1080p25", 1920, 1080, 1920, 1080, 16, 13468, 148, 528, 36, 4, 44, 5,
+	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_CONUPDATE},
+    { 10, "1080p24", 1920, 1080, 1920, 1080, 16, 13468, 148, 638, 36, 4, 44, 5,
+	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_CONUPDATE},
+    {  9, "1080p23", 1920, 1080, 1920, 1080, 16, 13481, 148, 638, 36, 4, 44, 5,
+	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_CONUPDATE},
+
+    { 8, "1080i60", 1920, 1080, 1920, 1080, 16, 13468, 148,  88, 35, 5, 44, 5,
 	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_INTERLACED | FB_VMODE_CONUPDATE},
-    { 7, "1080i59", 1920, 1080, 1920, 1080, 16, 13481, 148,  88, 35, 5, 44, 5, 
+    { 7, "1080i59", 1920, 1080, 1920, 1080, 16, 13481, 148,  88, 35, 5, 44, 5,
 	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_INTERLACED | FB_VMODE_CONUPDATE},
-    { 6, "1080i50", 1920, 1080, 1920, 1080, 16, 13468, 148, 528, 35, 5, 44, 5, 
+    { 6, "1080i50", 1920, 1080, 1920, 1080, 16, 13468, 148, 528, 35, 5, 44, 5,
 	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_INTERLACED | FB_VMODE_CONUPDATE},
 
-    { 5, "720p60", 1280, 720, 1280, 720, 16, 13468, 220, 110, 20, 5, 40, 5, 
+    { 5, "720p60", 1280, 720, 1280, 720, 16, 13468, 220, 110, 20, 5, 40, 5,
 	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_NONINTERLACED | FB_VMODE_CONUPDATE},
-    { 4, "720p50", 1280, 720, 1280, 720, 16, 13468, 220, 440, 20, 5, 40, 5, 
+    { 4, "720p50", 1280, 720, 1280, 720, 16, 13468, 220, 440, 20, 5, 40, 5,
 	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_NONINTERLACED | FB_VMODE_CONUPDATE},
 
 /* @donald: where are these values taken from? I'm not sure if these are device dependant?!?!
  * these one are taken from ufs922
  */
 #ifdef alter_tobak
-    { 3, "576p50", 720, 576, 720, 576, 16, 37037, 68, 12, 34, 10, 64, 5, 0, 
+    { 3, "576p50", 720, 576, 720, 576, 16, 37037, 68, 12, 34, 10, 64, 5, 0,
 	FB_VMODE_NONINTERLACED | FB_VMODE_CONUPDATE},
 #else
-    { 3, "576p50", 720, 576, 720, 576, 16, 37037, 68, 12, 39, 5, 64, 5, 0, 
+    { 3, "576p50", 720, 576, 720, 576, 16, 37037, 68, 12, 39, 5, 64, 5, 0,
 	FB_VMODE_NONINTERLACED | FB_VMODE_CONUPDATE},
 #endif
 
 #ifdef alter_tobak
-    { 2, "576i50", 720, 576, 720, 576, 16, 74074, 68, 12, 38, 5, 64, 6, 0, 
+    { 2, "576i50", 720, 576, 720, 576, 16, 74074, 68, 12, 38, 5, 64, 6, 0,
 	FB_VMODE_INTERLACED | FB_VMODE_CONUPDATE},
 #else
-    { 2, "576i50", 720, 576, 720, 576, 16, 74074, 69, 12, 41, 5, 63, 3, 0, 
+    { 2, "576i50", 720, 576, 720, 576, 16, 74074, 69, 12, 41, 5, 63, 3, 0,
 	FB_VMODE_INTERLACED | FB_VMODE_CONUPDATE},
 #endif
-    { 1, "pal"   , 720, 576, 720, 576, 16, 74074, 68, 12, 38, 5, 64, 6, 0, 
+    { 1, "pal"   , 720, 576, 720, 576, 16, 74074, 68, 12, 38, 5, 64, 6, 0,
 	FB_VMODE_INTERLACED | FB_VMODE_CONUPDATE},
     { 0, NULL,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
@@ -297,7 +297,7 @@ int proc_video_aspect_write(struct file *file, const char __user *buf,
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
 	/* int		result; */
-	
+
 	printk("%s %ld - ", __FUNCTION__, count);
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
@@ -309,7 +309,7 @@ int proc_video_aspect_write(struct file *file, const char __user *buf,
     	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
@@ -319,17 +319,17 @@ int proc_video_aspect_write(struct file *file, const char __user *buf,
 		strncpy(myString, page, count);
 		myString[count] = '\0';
 		//printk("%s\n", myString);
-		
+
 
 		aspect_e2 = VIDEO_FORMAT_16_9;
-		
+
 		printk("%s\n", myString);
-		
+
 		if (strncmp("4:3", myString, count - 1) == 0)
 		{
 			aspect_e2 = VIDEO_FORMAT_4_3;
 		}
-		
+
 		if (strncmp("16:9", myString, count - 1) == 0)
 		{
 			aspect_e2 = VIDEO_FORMAT_16_9;
@@ -339,7 +339,7 @@ int proc_video_aspect_write(struct file *file, const char __user *buf,
 		{
 			aspect_e2 = VIDEO_FORMAT_221_1;
 		}*/
-		
+
 		//we dont support any, whatever this is
 		if (strncmp("any", myString, count - 1) == 0)
 		{
@@ -350,9 +350,9 @@ int proc_video_aspect_write(struct file *file, const char __user *buf,
 
 		/* always return count to avoid endless loop */
 		ret = count;
-		kfree(myString);	
+		kfree(myString);
 	}
-	
+
 out:
 	free_page((unsigned long)page);
     	mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
@@ -374,7 +374,7 @@ int proc_video_aspect_read (char *page, char **start, off_t off, int count,
 		len = sprintf(page, "221:1\n");*/
 	} else { //should never occur
 		len = sprintf(page, "any\n");
-	} 
+	}
 
         return len;
 }
@@ -400,13 +400,13 @@ int proc_video_policy_write(struct file *file, const char __user *buf,
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
 	int		result;
-	
+
 	printk("%s %ld - ", __FUNCTION__, count);
 
     	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		if (copy_from_user(page, buf, count))
 			goto out;
@@ -435,7 +435,7 @@ int proc_video_policy_write(struct file *file, const char __user *buf,
 		   policy_ply = proc_video_policy_get();
 		   aspect_ply = proc_video_aspect_get();
 		    //printk("Calling DvbStreamSetOption ->PLAY_OPTION_VIDEO_ASPECT_RATIO\n");
-        	    
+
 		   result  = DvbStreamSetOption (ProcDeviceContext->VideoStream, PLAY_OPTION_VIDEO_ASPECT_RATIO, aspect_ply);
 	    	   	if (result != 0)
 				printk("Error setting stream option %d\n", result);
@@ -449,11 +449,11 @@ int proc_video_policy_write(struct file *file, const char __user *buf,
 				printk("Failed to set option %d\n", result);
 			else
 	    			ProcDeviceContext->VideoState.display_format = (video_displayformat_t)policy_ply;
-		   
+
 		} else
 		   printk("Can't set policy, VideoStream NULL\n");
 	}
-	
+
 	ret = count;
 out:
 	free_page((unsigned long)page);
@@ -467,7 +467,7 @@ int proc_video_policy_read (char *page, char **start, off_t off, int count,
 {
 	int len = 0;
 	printk("%s\n", __FUNCTION__);
-	
+
 	if (policy_e2 == VIDEO_POL_LETTER_BOX) {
 		len = sprintf(page, "letterbox\n");
 	} else if (policy_e2 == VIDEO_POL_PAN_SCAN) {
@@ -477,7 +477,7 @@ int proc_video_policy_read (char *page, char **start, off_t off, int count,
 	} else if (policy_e2 == VIDEO_POL_BEST_FIT) {
 		len = sprintf(page, "bestfit\n");
 	}
-	
+
         return len;
 }
 
@@ -501,27 +501,27 @@ int proc_video_videomode_write(struct file *file, const char __user *buf,
 	/* int		result; */
 	int		vLoop;
         int             new_count;
-	
+
 	char* myString = kmalloc(count + 1, GFP_KERNEL);
 
 	printk("%s %ld - ", __FUNCTION__, count);
 
 	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
-	
+
 	void* fb = stmfb_get_fbinfo_ptr();
 	struct fb_info *info = (struct fb_info*) fb;
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
-		int modeToSet = -1;	
+		int modeToSet = -1;
 		int aktmode = -1;
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
 			goto out;
 
         	/* Dagobert: echo add a \n which will be counted as a char
-		 */ 
+		 */
 		if (page[count - 1] == '\n')
 		   new_count = count - 1;
                 else
@@ -535,7 +535,7 @@ int proc_video_videomode_write(struct file *file, const char __user *buf,
 		//whithout -1 write a unsupportet string hangs the driver
 		for (vLoop = 0; vLoop < (sizeof(Options) / sizeof(struct Modes)) - 1; vLoop++)
 		{
-		
+
 			if (Options[vLoop].xres     == info->var.xres &&
 					Options[vLoop].yres     == info->var.yres &&
 					Options[vLoop].vxres    == info->var.xres_virtual &&
@@ -552,24 +552,24 @@ int proc_video_videomode_write(struct file *file, const char __user *buf,
 			{
 				aktmode = vLoop;
 			}
-		
+
 			if (strncmp(myString, Options[vLoop].name, new_count) == 0)
 			{
 				printk("Found mode to set %s at %d\n",  Options[vLoop].name, vLoop);
 				modeToSet = vLoop;
 			}
 		}
-		
+
 		if(aktmode == modeToSet)
 			modeToSet = -1;
-		
+
 		if (modeToSet != -1)
 		{
 			struct fb_var_screeninfo screen_info;
 			int createNew = 0;
 
 			memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
-		
+
 			if (fb != NULL)
 			{
 				int err;
@@ -580,23 +580,23 @@ int proc_video_videomode_write(struct file *file, const char __user *buf,
 				{
 					if (ProcDeviceContext->VideoState.play_state != VIDEO_STOPPED)
 					   VideoIoctlStop (ProcDeviceContext, 1);
-			       
-			       		if (isDisplayCreated(BACKEND_VIDEO_ID, ProcDeviceContext->Id)) 	
+
+			       		if (isDisplayCreated(BACKEND_VIDEO_ID, ProcDeviceContext->Id))
 					{
 						createNew = 1;
-						printk("delete display\n");					
+						printk("delete display\n");
 						DvbDisplayDelete (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
-					} 
+					}
 				}
 
 				info->flags |= FBINFO_MISC_USEREVENT;
-				
+
 				screen_info.xres = Options[modeToSet].xres;			/* visible resolution		*/
 				screen_info.yres = Options[modeToSet].yres;
 				screen_info.xres_virtual = Options[modeToSet].vxres;		/* virtual resolution		*/
 				screen_info.yres_virtual = Options[modeToSet].vyres;
-	
-				screen_info.pixclock = Options[modeToSet].pixclock;	
+
+				screen_info.pixclock = Options[modeToSet].pixclock;
 				screen_info.left_margin = Options[modeToSet].left;
 				screen_info.right_margin = Options[modeToSet].right;
 				screen_info.upper_margin = Options[modeToSet].upper;
@@ -608,37 +608,37 @@ int proc_video_videomode_write(struct file *file, const char __user *buf,
 				screen_info.activate = FB_ACTIVATE_FORCE;
 
 				err = fb_set_var(fb, &screen_info);
-				
+
 				if (err != 0)
 					printk("error setting new resolution %d\n", err);
-				
+
 				if ((ProcDeviceContext != NULL) && (createNew == 1))
 				{
-					printk("create new display\n");					
+					printk("create new display\n");
 					DisplayCreate (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
 
 					VideoIoctlPlay(ProcDeviceContext);
 
 				    	err = DvbStreamSetOutputWindow(ProcDeviceContext->VideoStream,
 				    		0,0, Options[modeToSet].xres, Options[modeToSet].yres);
-				
+
 				    	if (err != 0)
 				    	{
 				    		printk("failed to set output window %d, %d, %d\n",  Options[modeToSet].xres,  Options[modeToSet].yres, err);
-				    	} else	
+				    	} else
 				    		printk("set output window to %d, %d ok\n",  Options[modeToSet].xres,  Options[modeToSet].yres);
-				
+
 				}
 			} else
 			{
-				printk("Cannot get stmfb_info struct\n");	
+				printk("Cannot get stmfb_info struct\n");
 			}
 		}
-		
+
 		/* always return count to avoid endless loop */
-		ret = count;	
+		ret = count;
 	}
-	
+
 out:
 	free_page((unsigned long)page);
 	kfree(myString);
@@ -658,8 +658,8 @@ int proc_video_videomode_read (char *page, char **start, off_t off, int count,
 	printk("%s\n", __FUNCTION__);
 
    fb = stmfb_get_fbinfo_ptr(); /* cannot return a NULL pointer */
-   
-	/* Dagobert: 
+
+	/* Dagobert:
 	 * dirty hack, does only work because fb->info is first param of struct stmfb_info
 	 * we should include a header here instead ...
 	 */
@@ -722,7 +722,7 @@ int proc_video_pal_h_start_write(struct file *file, const char __user *buf,
     	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		void* fb;
 		struct fb_info *info;
@@ -741,11 +741,11 @@ int proc_video_pal_h_start_write(struct file *file, const char __user *buf,
 		sscanf(myString, "%x", &value);
 
 		fb =  stmfb_get_fbinfo_ptr();
-			
+
 		info = (struct fb_info*) fb;
 
 		memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
-		
+
 		if (fb != NULL)
 		{
 			int err;
@@ -756,50 +756,50 @@ int proc_video_pal_h_start_write(struct file *file, const char __user *buf,
 			{
 				if (ProcDeviceContext->VideoState.play_state != VIDEO_STOPPED)
 				   VideoIoctlStop (ProcDeviceContext, 1);
-			       
-		       		if (isDisplayCreated(BACKEND_VIDEO_ID, ProcDeviceContext->Id)) 	
+
+		       		if (isDisplayCreated(BACKEND_VIDEO_ID, ProcDeviceContext->Id))
 				{
 					createNew = 1;
-					printk("delete display\n");					
+					printk("delete display\n");
 					DvbDisplayDelete (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
-				} 
+				}
 			}
 
 			info->flags |= FBINFO_MISC_USEREVENT;
-				
+
 			screen_info.left_margin = value;
-		
+
 			err = fb_set_var(fb, &screen_info);
-				
+
 			if (err != 0)
 				printk("error setting new resolution %d\n", err);
-				
+
 			if ((ProcDeviceContext != NULL) && (createNew == 1))
 			{
-				printk("create new display\n");					
+				printk("create new display\n");
 				DisplayCreate (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
 
 				VideoIoctlPlay(ProcDeviceContext);
 
 			    	err = DvbStreamSetOutputWindow(ProcDeviceContext->VideoStream,
 			    		0,0, screen_info.xres, screen_info.yres);
-				
+
 			    	if (err != 0)
 			    	{
 			    		printk("failed to set output window %d, %d, %d\n",  screen_info.xres,  screen_info.yres, err);
-			    	} else	
+			    	} else
 			    		printk("set output window to %d, %d ok\n",  screen_info.xres,  screen_info.yres);
-				
+
 			}
 		} else
 		{
-			printk("Cannot get stmfb_info struct\n");	
+			printk("Cannot get stmfb_info struct\n");
 		}
-		
+
 		/* always return count to avoid endless loop */
-		ret = count;	
+		ret = count;
 	}
-	
+
 out:
 	free_page((unsigned long)page);
 	kfree(myString);
@@ -822,7 +822,7 @@ int proc_video_pal_h_end_write(struct file *file, const char __user *buf,
     	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		void* fb;
 		struct fb_info *info;
@@ -841,11 +841,11 @@ int proc_video_pal_h_end_write(struct file *file, const char __user *buf,
 		sscanf(myString, "%x", &value);
 
 		fb =  stmfb_get_fbinfo_ptr();
-			
+
 		info = (struct fb_info*) fb;
 
 		memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
-		
+
 		if (fb != NULL)
 		{
 			int err;
@@ -856,50 +856,50 @@ int proc_video_pal_h_end_write(struct file *file, const char __user *buf,
 			{
 				if (ProcDeviceContext->VideoState.play_state != VIDEO_STOPPED)
 				   VideoIoctlStop (ProcDeviceContext, 1);
-			       
-		       		if (isDisplayCreated(BACKEND_VIDEO_ID, ProcDeviceContext->Id)) 	
+
+		       		if (isDisplayCreated(BACKEND_VIDEO_ID, ProcDeviceContext->Id))
 				{
 					createNew = 1;
-					printk("delete display\n");					
+					printk("delete display\n");
 					DvbDisplayDelete (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
-				} 
+				}
 			}
 
 			info->flags |= FBINFO_MISC_USEREVENT;
-				
+
 			screen_info.right_margin = value;
-		
+
 			err = fb_set_var(fb, &screen_info);
-				
+
 			if (err != 0)
 				printk("error setting new resolution %d\n", err);
-				
+
 			if ((ProcDeviceContext != NULL) && (createNew == 1))
 			{
-				printk("create new display\n");					
+				printk("create new display\n");
 				DisplayCreate (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
 
 				VideoIoctlPlay(ProcDeviceContext);
 
 			    	err = DvbStreamSetOutputWindow(ProcDeviceContext->VideoStream,
 			    		0,0, screen_info.xres, screen_info.yres);
-				
+
 			    	if (err != 0)
 			    	{
 			    		printk("failed to set output window %d, %d, %d\n",  screen_info.xres,  screen_info.yres, err);
-			    	} else	
+			    	} else
 			    		printk("set output window to %d, %d ok\n",  screen_info.xres,  screen_info.yres);
-				
+
 			}
 		} else
 		{
-			printk("Cannot get stmfb_info struct\n");	
+			printk("Cannot get stmfb_info struct\n");
 		}
-		
+
 		/* always return count to avoid endless loop */
-		ret = count;	
+		ret = count;
 	}
-	
+
 out:
 	free_page((unsigned long)page);
 	kfree(myString);
@@ -922,7 +922,7 @@ int proc_video_pal_v_start_write(struct file *file, const char __user *buf,
     	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		void *fb;
 		struct fb_info *info;
@@ -941,11 +941,11 @@ int proc_video_pal_v_start_write(struct file *file, const char __user *buf,
 		sscanf(myString, "%x", &value);
 
 		fb =  stmfb_get_fbinfo_ptr();
-			
+
 		info = (struct fb_info*) fb;
 
 		memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
-		
+
 		if (fb != NULL)
 		{
 			int err;
@@ -956,50 +956,50 @@ int proc_video_pal_v_start_write(struct file *file, const char __user *buf,
 			{
 				if (ProcDeviceContext->VideoState.play_state != VIDEO_STOPPED)
 				   VideoIoctlStop (ProcDeviceContext, 1);
-			       
-		       		if (isDisplayCreated(BACKEND_VIDEO_ID, ProcDeviceContext->Id)) 	
+
+		       		if (isDisplayCreated(BACKEND_VIDEO_ID, ProcDeviceContext->Id))
 				{
 					createNew = 1;
-					printk("delete display\n");					
+					printk("delete display\n");
 					DvbDisplayDelete (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
-				} 
+				}
 			}
 
 			info->flags |= FBINFO_MISC_USEREVENT;
-				
+
 			screen_info.upper_margin = value;
-		
+
 			err = fb_set_var(fb, &screen_info);
-				
+
 			if (err != 0)
 				printk("error setting new resolution %d\n", err);
-				
+
 			if ((ProcDeviceContext != NULL) && (createNew == 1))
 			{
-				printk("create new display\n");					
+				printk("create new display\n");
 				DisplayCreate (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
 
 				VideoIoctlPlay(ProcDeviceContext);
 
 			    	err = DvbStreamSetOutputWindow(ProcDeviceContext->VideoStream,
 			    		0,0, screen_info.xres, screen_info.yres);
-				
+
 			    	if (err != 0)
 			    	{
 			    		printk("failed to set output window %d, %d, %d\n",  screen_info.xres,  screen_info.yres, err);
-			    	} else	
+			    	} else
 			    		printk("set output window to %d, %d ok\n",  screen_info.xres,  screen_info.yres);
-				
+
 			}
 		} else
 		{
-			printk("Cannot get stmfb_info struct\n");	
+			printk("Cannot get stmfb_info struct\n");
 		}
-		
+
 		/* always return count to avoid endless loop */
-		ret = count;	
+		ret = count;
 	}
-	
+
 out:
 	free_page((unsigned long)page);
 	kfree(myString);
@@ -1022,7 +1022,7 @@ int proc_video_pal_v_end_write(struct file *file, const char __user *buf,
     	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		void *fb;
 		struct fb_info *info;
@@ -1041,11 +1041,11 @@ int proc_video_pal_v_end_write(struct file *file, const char __user *buf,
 		sscanf(myString, "%x", &value);
 
 		fb =  stmfb_get_fbinfo_ptr();
-			
+
 		info = (struct fb_info*) fb;
 
 		memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
-		
+
 		if (fb != NULL)
 		{
 			int err;
@@ -1056,50 +1056,50 @@ int proc_video_pal_v_end_write(struct file *file, const char __user *buf,
 			{
 				if (ProcDeviceContext->VideoState.play_state != VIDEO_STOPPED)
 				   VideoIoctlStop (ProcDeviceContext, 1);
-			       
-		       		if (isDisplayCreated(BACKEND_VIDEO_ID, ProcDeviceContext->Id)) 	
+
+		       		if (isDisplayCreated(BACKEND_VIDEO_ID, ProcDeviceContext->Id))
 				{
 					createNew = 1;
-					printk("delete display\n");					
+					printk("delete display\n");
 					DvbDisplayDelete (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
-				} 
+				}
 			}
 
 			info->flags |= FBINFO_MISC_USEREVENT;
-				
+
 			screen_info.lower_margin = value;
-		
+
 			err = fb_set_var(fb, &screen_info);
-				
+
 			if (err != 0)
 				printk("error setting new resolution %d\n", err);
-				
+
 			if ((ProcDeviceContext != NULL) && (createNew == 1))
 			{
-				printk("create new display\n");					
+				printk("create new display\n");
 				DisplayCreate (BACKEND_VIDEO_ID, ProcDeviceContext->Id);
 
 				VideoIoctlPlay(ProcDeviceContext);
 
 			    	err = DvbStreamSetOutputWindow(ProcDeviceContext->VideoStream,
 			    		0,0, screen_info.xres, screen_info.yres);
-				
+
 			    	if (err != 0)
 			    	{
 			    		printk("failed to set output window %d, %d, %d\n",  screen_info.xres,  screen_info.yres, err);
-			    	} else	
+			    	} else
 			    		printk("set output window to %d, %d ok\n",  screen_info.xres,  screen_info.yres);
-				
+
 			}
 		} else
 		{
-			printk("Cannot get stmfb_info struct\n");	
+			printk("Cannot get stmfb_info struct\n");
 		}
-		
+
 		/* always return count to avoid endless loop */
-		ret = count;	
+		ret = count;
 	}
-	
+
 out:
 	free_page((unsigned long)page);
 	kfree(myString);
@@ -1117,8 +1117,8 @@ int proc_video_pal_h_start_read (char *page, char **start, off_t off, int count,
 	printk("%s\n", __FUNCTION__);
 
    	fb = stmfb_get_fbinfo_ptr(); /* cannot return a NULL pointer */
-   
-	/* 
+
+	/*
 	 * dirty hack, does only work because fb->info is first param of struct stmfb_info
 	 * we should include a header here instead ...
 	 */
@@ -1139,8 +1139,8 @@ int proc_video_pal_h_end_read (char *page, char **start, off_t off, int count,
 	printk("%s\n", __FUNCTION__);
 
    	fb = stmfb_get_fbinfo_ptr(); /* cannot return a NULL pointer */
-   
-	/* 
+
+	/*
 	 * dirty hack, does only work because fb->info is first param of struct stmfb_info
 	 * we should include a header here instead ...
 	 */
@@ -1161,8 +1161,8 @@ int proc_video_pal_v_start_read (char *page, char **start, off_t off, int count,
 	printk("%s\n", __FUNCTION__);
 
    	fb = stmfb_get_fbinfo_ptr(); /* cannot return a NULL pointer */
-   
-	/* 
+
+	/*
 	 * dirty hack, does only work because fb->info is first param of struct stmfb_info
 	 * we should include a header here instead ...
 	 */
@@ -1183,8 +1183,8 @@ int proc_video_pal_v_end_read (char *page, char **start, off_t off, int count,
 	printk("%s\n", __FUNCTION__);
 
    	fb = stmfb_get_fbinfo_ptr(); /* cannot return a NULL pointer */
-   
-	/* 
+
+	/*
 	 * dirty hack, does only work because fb->info is first param of struct stmfb_info
 	 * we should include a header here instead ...
 	 */
@@ -1201,18 +1201,18 @@ int proc_video_videomode_choices_write(struct file *file, const char __user *buf
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
 	/* int		result; */
-	
+
 	printk("%s %ld - ", __FUNCTION__, count);
 
     	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		/* always return count to avoid endless loop */
-		ret = count;	
+		ret = count;
 	}
-	
+
 	free_page((unsigned long)page);
     	mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
 	return ret;
@@ -1224,7 +1224,7 @@ int proc_video_videomode_choices_read (char *page, char **start, off_t off, int 
 {
 	int len = 0;
 	printk("%s %d\n", __FUNCTION__, count);
-#if defined(UFS912) || defined(SPARK) || defined(ATEVIO7500)
+#if defined(UFS912) || defined(SPARK) || defined (SPARK2) || defined(ATEVIO7500)
 	len = sprintf(page, "pal 1080i50 720p50 576p50 576i50 1080i60 720p60 1080p24 1080p25 1080p30 1080p50 1080p59 1080p60 PC\n");
 #else
 	len = sprintf(page, "pal 1080i50 720p50 576p50 576i50 1080i60 720p60 1080p24 1080p25 1080p30 PC\n");
@@ -1240,13 +1240,13 @@ int proc_video_videomode_preferred_write(struct file *file, const char __user *b
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
 	/* int		result; */
-	
+
 	printk("%s %ld - ", __FUNCTION__, count);
 
     	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
@@ -1259,7 +1259,7 @@ int proc_video_videomode_preferred_write(struct file *file, const char __user *b
 		printk("%s\n", myString);
 		kfree(myString);
 	}
-	
+
 out:
 	free_page((unsigned long)page);
     	mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
@@ -1285,11 +1285,11 @@ int proc_video_alpha_write(struct file *file, const char __user *buf,
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
 	/* int		result; */
-	
+
 	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		struct stmfb_info *info = stmfb_get_fbinfo_ptr();
 
@@ -1306,25 +1306,25 @@ int proc_video_alpha_write(struct file *file, const char __user *buf,
 		myString[count] = '\0';
 
 		printk("%s\n", myString);
-		
+
 		sscanf(myString, "%d", &alpha);
 
-	
+
 
 		varEx.layerid  = 0;
 		varEx.caps     = 0;
 		varEx.activate = 0; //STMFBIO_ACTIVATE_IMMEDIATE;
 		varEx.caps |= STMFBIO_VAR_CAPS_OPACITY;
-		varEx.opacity = alpha;	
+		varEx.opacity = alpha;
 
 		err = stmfb_set_var_ex(&varEx, info);
 
 		kfree(myString);
 	}
-	
+
 	ret = count;
 out:
-	
+
 	free_page((unsigned long)page);
 	return ret;
 }
@@ -1337,12 +1337,12 @@ int proc_video_alpha_read (char *page, char **start, off_t off, int count,
 	printk("%s\n", __FUNCTION__);
 
 	/*void* fb =  stmfb_get_fbinfo_ptr();
-			
+
 	struct stmfb_info *info = (struct stmfb_info*) fb;
 
 	struct stmfbio_var_screeninfo_ex screen_info;
 	memcpy(&screen_info, &info->current_var_ex, sizeof(struct stmfbio_var_screeninfo_ex));
-		
+
 	if (fb != NULL)
 	{
 		len = sprintf(page, "%d\n", screen_info.opacity);

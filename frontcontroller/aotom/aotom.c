@@ -355,7 +355,7 @@ int aotomSetTime(char* time)
 	dprintk(5, "%s time: %02d:%02d\n", __func__, time[2], time[3]);
 	res= VFD_Show_Time(time[2], time[3]);
 	dprintk(5, "%s <\n", __func__);
-#if defined(SPARK)
+#if defined(SPARK) || defined(SPARK2)
 	{
 		YWPANEL_FP_ControlTimer(true);
 	}
@@ -610,7 +610,7 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		break;
 	case VFDSETLED:
 	{
-#if defined(SPARK)
+#if defined(SPARK) || defined(SPARK2)
 		res = YWPANEL_VFD_SetLed(aotom->u.led.led_nr, aotom->u.led.on);
 		//printk("res = %d\n", res);
 #endif
@@ -622,7 +622,7 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 	{
 	 	//struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;
 		//res = aotomSetIcon(aotom->u.icon.icon_nr, aotom->u.icon.on);
-#if defined(SPARK)
+#if defined(SPARK) || defined(SPARK2)
 		switch (aotom->u.icon.icon_nr)
 		{
 			case 0:
@@ -650,7 +650,7 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 	}
 	case VFDSTANDBY:
 	{
-#if defined(SPARK)
+#if defined(SPARK) || defined(SPARK2)
 		u32 uTime = 0;
 		u32 uStandByKey = 0;
 		u32 uPowerOnTime = 0;
@@ -688,7 +688,7 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		break;
 	case VFDGETTIME:
 	{
-#if defined(SPARK)
+#if defined(SPARK) || defined(SPARK2)
 		u32 uTime = 0;
 		char cTime[5];
 		uTime = YWPANEL_FP_GetTime();

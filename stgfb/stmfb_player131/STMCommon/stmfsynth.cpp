@@ -2,7 +2,7 @@
  *
  * File: stgfb/STMCommon/stmfsynth.cpp
  * Copyright (c) 2005, 2007, 2008 STMicroelectronics Limited.
- * 
+ *
  * This file is subject to the terms and conditions of the GNU General Public
  * License.  See the file COPYING in the main directory of this archive for
  * more details.
@@ -26,7 +26,7 @@ CSTmFSynth::CSTmFSynth(CDisplayDevice *pDev, ULONG ulRegOffset)
   m_pDevRegs = (ULONG*)pDev->GetCtrlRegisterBase();
   m_ulFSynthOffset = ulRegOffset;
 
-#if  defined(__TDT__) && !defined(SPARK)
+#if  defined(__TDT__) && !defined(SPARK) && !defined(SPARK2)
 #ifdef USE_EXT_CLK
   m_refClock    = STM_CLOCK_REF_27MHZ;
 #else
@@ -211,12 +211,12 @@ bool CSTmFSynth::SolveFsynthEqn(ULONG Fout,stm_clock_fsynth_timing_t *timing)
   timing->sdiv = sdiv;
   timing->md   = md;
   timing->pe   = pe;
-  
-#ifdef __TDT__ 
+
+#ifdef __TDT__
 #ifdef USE_EXT_CLK
    /* fixing wrong freq calc formula. hard coded.*/
    switch(Fout)
-   {  
+   {
    	case 8192000:
    		timing->sdiv = 4;
    		timing->md=-6;
@@ -227,7 +227,7 @@ bool CSTmFSynth::SolveFsynthEqn(ULONG Fout,stm_clock_fsynth_timing_t *timing)
    		timing->md=-6;
    		timing->pe=20736;
    		break;
-   }  
+   }
 #endif
 #endif
 
@@ -309,7 +309,7 @@ bool CSTmFSynth::SetAdjustment(int ppm)
 
     if(ppm< -500 || ppm > 500)
       return false;
-      
+
     ULONG f = AdjustFrequency(m_NominalOutputFrequency*m_divider,ppm);
     if(!SolveFsynthEqn(f, &timing))
     {
@@ -322,7 +322,7 @@ bool CSTmFSynth::SetAdjustment(int ppm)
     ProgramClock();
     return true;
   }
-  
+
   return false;
 }
 
@@ -354,7 +354,7 @@ void CSTmFSynthType1::ProgramClock(void)
 #define FSYNTH_TYPE2_CFG_SDIV_MASK    (0x7 << FSYNTH_TYPE2_CFG_SDIV_SHIFT)
 #define FSYNTH_TYPE2_CFG_EN_PRG       (1L << 21)
 #define FSYNTH_TYPE2_CFG_SELCLKOUT    (1L << 25)
-#define FSYNTH_TYPE2_CFG_SDIV3        (1L << 27) 
+#define FSYNTH_TYPE2_CFG_SDIV3        (1L << 27)
 
 void CSTmFSynthType2::ProgramClock(void)
 {

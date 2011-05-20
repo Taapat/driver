@@ -1,8 +1,8 @@
-/* 
+/*
  * e2_proc_audio
  */
- 
-#include <linux/proc_fs.h>  	/* proc fs */ 
+
+#include <linux/proc_fs.h>  	/* proc fs */
 #include <asm/uaccess.h>    	/* copy_from_user */
 
 #include <linux/dvb/video.h>	/* Video Format etc */
@@ -55,11 +55,11 @@ int proc_audio_delay_pcm_write(struct file *file, const char __user *buf,
 	char 		*page;
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
-	
+
 	printk("%s %d - ", __FUNCTION__, (int) count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
@@ -73,10 +73,10 @@ int proc_audio_delay_pcm_write(struct file *file, const char __user *buf,
 		kfree(myString);
 		//result = sscanf(page, "%3s %3s %3s %3s %3s", s1, s2, s3, s4, s5);
 	}
-	
+
 	ret = count;
 out:
-	
+
 	free_page((unsigned long)page);
 	return ret;
 }
@@ -97,11 +97,11 @@ int proc_audio_delay_bitstream_write(struct file *file, const char __user *buf,
 	char 		*page;
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
-	
+
 	printk("%s %d - ", __FUNCTION__, (int) count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
@@ -115,10 +115,10 @@ int proc_audio_delay_bitstream_write(struct file *file, const char __user *buf,
 		kfree(myString);
 		//result = sscanf(page, "%3s %3s %3s %3s %3s", s1, s2, s3, s4, s5);
 	}
-	
+
 	ret = count;
 out:
-	
+
 	free_page((unsigned long)page);
 	return ret;
 }
@@ -145,7 +145,7 @@ static void WriteRegister(volatile unsigned long *reg,unsigned long val)
   writel(val, (unsigned long)reg);
 }
 
-#if defined(UFS912) || defined(SPARK) || defined(ATEVIO7500)
+#if defined(UFS912) || defined(SPARK) || defined (SPARK2) || defined(ATEVIO7500)
 void spdif_out_mute(int mute)
 {
 #warning fixme search the audio mute register for 7111 arch
@@ -188,12 +188,12 @@ int proc_audio_j1_mute_write(struct file *file, const char __user *buf,
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
 	unsigned int 	State;
-	
+
 	printk("%s %d - ", __FUNCTION__, (int) count);
 	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
@@ -205,13 +205,13 @@ int proc_audio_j1_mute_write(struct file *file, const char __user *buf,
 
 		printk("%s\n", myString);
 		sscanf(myString, "%d", &State);
-		
+
 		if (State == 1) { //MUTE
 			int number = 0;
 			struct snd_kcontrol *single_control = NULL;
 			struct snd_kcontrol ** kcontrol = pseudoGetControls(&number);
 			int vLoop;
-		
+
 			for (vLoop = 0; vLoop < number; vLoop++)
 			{
 				if (kcontrol[vLoop]->private_value == PSEUDO_ADDR(master_volume))
@@ -219,15 +219,15 @@ int proc_audio_j1_mute_write(struct file *file, const char __user *buf,
 					single_control = kcontrol[vLoop];
 					//printk("Finde master_volume control at %p\n", single_control);
 					break;
-				}		
-			}	
-	
+				}
+			}
+
 	                if ((kcontrol != NULL) && (single_control != NULL))
 			{
 				struct snd_ctl_elem_value ucontrol;
 				//printk("Pseudo Mixer controls = %p\n", kcontrol);
 				snd_pseudo_integer_get(single_control, &ucontrol);
-	
+
 				volume = ucontrol.value.integer.value[0];
 
 				ucontrol.value.integer.value[0] = -63;
@@ -251,19 +251,19 @@ int proc_audio_j1_mute_write(struct file *file, const char __user *buf,
 			struct snd_kcontrol *single_control = NULL;
 			struct snd_kcontrol ** kcontrol = pseudoGetControls(&number);
 			int vLoop;
-		
+
 			for (vLoop = 0; vLoop < number; vLoop++) {
 				if (kcontrol[vLoop]->private_value == PSEUDO_ADDR(master_volume)) {
 					single_control = kcontrol[vLoop];
 					//printk("Find master_volume control at %p\n", single_control);
 					break;
-				}		
-			}	
-	
+				}
+			}
+
 			if ((kcontrol != NULL) && (single_control != NULL) ){
 				struct snd_ctl_elem_value ucontrol;
 				//printk("Pseudo Mixer controls = %p\n", kcontrol);
-				
+
 				//if volume has changed or is not in mute do nothing
 				snd_pseudo_integer_get(single_control, &ucontrol);
 				if(ucontrol.value.integer.value[0] == -63)
@@ -274,10 +274,10 @@ int proc_audio_j1_mute_write(struct file *file, const char __user *buf,
 					ucontrol.value.integer.value[3] = volume;
 					ucontrol.value.integer.value[4] = volume;
 					ucontrol.value.integer.value[5] = volume;
-	
+
 					snd_pseudo_integer_put(single_control, &ucontrol);
 				}
-	
+
 			} else {
 				printk("Pseudo Mixer does not deliver controls\n");
 			}
@@ -288,7 +288,7 @@ int proc_audio_j1_mute_write(struct file *file, const char __user *buf,
 		kfree(myString);
 		//result = sscanf(page, "%3s %3s %3s %3s %3s", s1, s2, s3, s4, s5);
 	}
-	
+
 	ret = count;
 out:
 	free_page((unsigned long)page);
@@ -301,20 +301,20 @@ int proc_audio_j1_mute_read (char *page, char **start, off_t off, int count,
 			  int *eof, void *data_unused)
 {
 	int len = 0;
-	
+
 	int number = 0;
 	struct snd_kcontrol *single_control = NULL;
 	struct snd_kcontrol ** kcontrol = pseudoGetControls(&number);
 	int vLoop;
-	
+
 	for (vLoop = 0; vLoop < number; vLoop++)
 	{
 		if (kcontrol[vLoop]->private_value == PSEUDO_ADDR(master_volume))
 		{
 			single_control = kcontrol[vLoop];
 			break;
-		}		
-	}	
+		}
+	}
 	if ((kcontrol != NULL) && (single_control != NULL))
 	{
 		struct snd_ctl_elem_value ucontrol;
@@ -343,11 +343,11 @@ int proc_audio_ac3_write(struct file *file, const char __user *buf,
 	char 		*page;
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
-	
+
 	printk("%s %d - ", __FUNCTION__, (int) count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
@@ -358,7 +358,7 @@ int proc_audio_ac3_write(struct file *file, const char __user *buf,
 		myString[count] = '\0';
 
 		printk("%s\n", myString);
-		
+
 		if (strncmp("passthrough", page, count - 1) == 0)
 		{
 			if(passthrough == 0)
@@ -367,7 +367,7 @@ int proc_audio_ac3_write(struct file *file, const char __user *buf,
 				if (ProcDeviceContext != NULL)
 				{
 			   	int last_state = ProcDeviceContext->AudioState.play_state;
-			   
+
 			   	/* avoid ugly sound */
 					if (last_state == AUDIO_PLAYING)
 					{
@@ -377,7 +377,7 @@ int proc_audio_ac3_write(struct file *file, const char __user *buf,
 			      VideoIoctlFreeze (ProcDeviceContext);
 			      VideoIoctlClearBuffer (ProcDeviceContext);
 					}
-			   
+
 					AudioIoctlSetBypassMode (ProcDeviceContext, ((ProcDeviceContext->AudioEncoding == AUDIO_ENCODING_AC3) ? 0 : 1));
 
 					if (last_state == AUDIO_PLAYING)
@@ -395,7 +395,7 @@ int proc_audio_ac3_write(struct file *file, const char __user *buf,
 				if (ProcDeviceContext != NULL)
                         {
 					int last_state = ProcDeviceContext->AudioState.play_state;
-			   
+
 			   /* avoid ugly sound */
 					if (last_state == AUDIO_PLAYING)
 					{
@@ -419,10 +419,10 @@ int proc_audio_ac3_write(struct file *file, const char __user *buf,
 		kfree(myString);
 		//result = sscanf(page, "%3s %3s %3s %3s %3s", s1, s2, s3, s4, s5);
 	}
-	
+
 	ret = count;
 out:
-	
+
 	free_page((unsigned long)page);
 	return ret;
 }

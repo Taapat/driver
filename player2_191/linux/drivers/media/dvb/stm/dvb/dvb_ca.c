@@ -78,7 +78,7 @@ static struct dvb_device CaDevice =
 #ifdef __TDT__
 static int caInitialized = 0;
 
-#if !defined(VIP2_V1) && !defined (SPARK) 
+#if !defined(VIP2_V1) && !defined (SPARK) && !defined (SPARK2)
 extern int init_ci_controller(struct dvb_adapter* dvb_adap);
 #endif
 
@@ -93,7 +93,7 @@ struct dvb_device* CaInit (struct DeviceContext_s*        DeviceContext)
     /* the following call creates ca0 associated with the cimax hardware */
     printk("Initializing CI Controller\n");
 
-#if !defined(VIP2_V1) && !defined (SPARK) 
+#if !defined(VIP2_V1) && !defined (SPARK) && !defined (SPARK2)
     init_ci_controller(&DeviceContext->DvbContext->DvbAdapter);
 #endif
 
@@ -170,7 +170,7 @@ static int CaIoctl (struct inode*    Inode,
     				{
 					if ( pSession->type[vLoop] == DMX_TYPE_TS )
   					{
-    						/* link audio/video slot to the descrambler */	
+    						/* link audio/video slot to the descrambler */
 						if ((pSession->pes_type[vLoop] == DMX_TS_PES_VIDEO) ||
         					(pSession->pes_type[vLoop] == DMX_TS_PES_AUDIO) ||
 						(pid>50)) /*dirty hack because for some reason the pes_type is changed to DMX_TS_PES_OTHER*/
@@ -223,7 +223,7 @@ static int CaIoctl (struct inode*    Inode,
 		dprintk("cw[4] = %d\n", descr->cw[4]);
 		dprintk("cw[5] = %d\n", descr->cw[5]);
 		dprintk("cw[6] = %d\n", descr->cw[6]);
-		dprintk("cw[7] = %d\n", descr->cw[7]);	
+		dprintk("cw[7] = %d\n", descr->cw[7]);
 		if(descr->index < 0 || descr->index >= NUMBER_OF_DESCRAMBLERS){
 			printk("Error descrambler %d not supported! needs to be in range 0 - %d\n", descr->index, NUMBER_OF_DESCRAMBLERS-1);
 			return -1;
@@ -264,9 +264,9 @@ static int CaIoctl (struct inode*    Inode,
 		Context->EncryptionOn = 1;
 	else if (msg->type==4)
 		Context->EncryptionOn = 0;
-	else if (msg->type==7) 
+	else if (msg->type==7)
 		memcpy(&Context->StartOffset,msg->msg,sizeof(Context->StartOffset));
-	else if (msg->type==8) 
+	else if (msg->type==8)
 		memcpy(&Context->EndOffset,msg->msg,sizeof(Context->EndOffset));
 	  return -ENOIOCTLCMD;
 

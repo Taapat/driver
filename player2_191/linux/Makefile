@@ -1,10 +1,10 @@
 TREE_ROOT?=$(DRIVER_TOPDIR)/player2
 CONFIG_STGFB_PATH?=$(DRIVER_TOPDIR)/stgfb/stmfb
 
-ifdef UFS922 
+ifdef UFS922
  PART1=1
 endif
-ifdef TF7700 
+ifdef TF7700
  PART1=1
 endif
 ifdef FORTIS_HDBOX
@@ -50,6 +50,9 @@ endif
 ifdef SPARK
  PART2=1
 endif
+ifdef SPARK2
+ PART2=1
+endif
 ifdef ATEVIO7500
  PART2=1
 endif
@@ -73,7 +76,7 @@ CCFLAGSY+=-DPLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY=0x01B00000 \
 endif
 
 ifdef PART2
-#UFS912, SPARK, atevio7500
+#UFS912, SPARK, SPARK2, atevio7500
 CCFLAGSY+=-DPLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY=0x02400000 \
 	-DPLAYER2_SECONDARY_VIDEO_BUFFER_MEMORY=0x00900000 \
 	-DPLAYER2_AVR_VIDEO_BUFFER_MEMORY=0x00000000 \
@@ -160,8 +163,8 @@ CCFLAGSY+=-DCONFIG_MONITOR=1
 #endif
 
 # Finally pick up the original system headers, these must be near the '
-# back' of the path to ensure the kernel headers are taken in 
-# preference to any system supplied ones. Items such as the MME header 
+# back' of the path to ensure the kernel headers are taken in
+# preference to any system supplied ones. Items such as the MME header
 # files (XXXX_DecoderTypes.h) form part of the system headers.
 CCFLAGSY += -I$(CONFIG_MODULES_PATH)/usr/include
 

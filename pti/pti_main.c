@@ -48,7 +48,7 @@ struct StreamContext_s;
 #include "pti.h"
 
 #if defined(PLAYER_179) || defined(PLAYER_191)
-#if (defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(SPARK) )
+#if (defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(SPARK) || defined(SPARK2))
 static int waitMS=20;
 static int videoMem=4096;
 #endif
@@ -80,13 +80,16 @@ struct tSlot
 
 struct pti_internal {
   struct  dvb_demux* demux[TAG_COUNT];
+  #if defined(SPARK2)
+  int		demux_tag[TAG_COUNT];
+  #endif
   int	  err_count;
 
   wait_queue_head_t queue;
-    
+
   char *back_buffer;
   unsigned int pti_io;
-  
+
   short int *pidtable;
   short int *num_pids;
   short int *pidsearch;
@@ -129,7 +132,7 @@ static struct timer_list ptiTimer;
 #define SLOT_HANDLE_OFFSET		20000
 #define QUEUE_SIZE 400
 
-/* The work queue is a communication means between the process 
+/* The work queue is a communication means between the process
    polling the DMA and the process injecting the TS data into the
    demultiplexer. It is assumed that the injector process is fast
    enough to process the entries in the work queue. */
@@ -181,7 +184,7 @@ static void *getsymbol(struct pti_internal *pti, const char *symbol)
   char temp[128];
   void *result = NULL;
   int n;
-  	
+
   temp[120] = 0;
   sprintf(temp,"::_%s",symbol);
 
@@ -249,10 +252,10 @@ int loop_count = 0;
   /* Do DMA Done to ensure all data has been transfered */
   writel( PTI_DMA_DONE , pti->pti_io + PTI_DMA_0_STATUS );
 
-  while( (readl(pti->pti_io + PTI_DMA_0_STATUS) & PTI_DMA_DONE) && 
-	 (loop_count<100)) 
+  while( (readl(pti->pti_io + PTI_DMA_0_STATUS) & PTI_DMA_DONE) &&
+	 (loop_count<100))
     { udelay(1000); loop_count++; };
-  
+
   /* Disable the DMA */
   writel(readl(pti->pti_io + PTI_DMA_ENABLE) & ~0x1, pti->pti_io + PTI_DMA_ENABLE);
 }
@@ -282,15 +285,15 @@ static void stpti_reset_dma(struct pti_internal *pti)
 0x1000 ----------------- <--- PTI_DMA_x_TOP
 
 0x10   ----------------- <--- PTI_DMA_x_BASE
-       |               |   
-       |               |  
+       |               |
+       |               |
        |               | <--- PTI_DMA_x_WRITE (Last address written by PTI)
        |               |   |
        |               |   | (free space)
        |               | <--- PTI_DMA_x_READ  (Last address sent to ADSC)
-       |               |   
-       |               |   
-       |               |   
+       |               |
+       |               |
+       |               |
 0x1000 ----------------- <--- PTI_DMA_x_TOP
 
 */
@@ -299,13 +302,13 @@ static int stream_injector(void *user_data)
 {
   int offset, count;
   int overflow = 0;
-  
+
 //aktivate STREAMCHECK for debug
 //#define STREAMCHECK
 #ifdef STREAMCHECK
 	u8 vpidhigh=0; //high byte of the video stream to check
 	u8 vpidlow=0x65; //low byte of the video stream to check
-	u8 apidhigh=0; //high byte of the audio stream to check 
+	u8 apidhigh=0; //high byte of the audio stream to check
 	u8 apidlow=0x66; //low byte of the audio stream to check
 	int vc=99; //video count
 	int ac=99; //audio count
@@ -318,7 +321,7 @@ static int stream_injector(void *user_data)
 
   allow_signal(SIGKILL);
   allow_signal(SIGTERM);
-  
+
 #ifdef __TDT__
   //set high thread priority
   set_user_nice(current, -20);
@@ -361,7 +364,7 @@ static int stream_injector(void *user_data)
 #ifdef STREAMCHECK
 	/* The first bytes of the packet after the header should
 	   always be a 0x47 if not we got problems */
-	if (internal->back_buffer[offset + HEADER_SIZE] != 0x47) 
+	if (internal->back_buffer[offset + HEADER_SIZE] != 0x47)
 		printk("\n!0x47\n");
 #endif
 
@@ -390,19 +393,24 @@ static int stream_injector(void *user_data)
 	       The lower two bits of the tag ID are as follows:
 	       00 - TS0
 	       01 - TS1
-	       10 - TS2 
+	       10 - TS2
 				 11 - SWTS0 */
 	    int tag = (pFrom[0] >> 2) & 0xf;
 	    /* only copy if the demux exists */
+	#if defined(SPARK2)
+	    if((tag < TAG_COUNT) &&
+	       (internal->demux[internal->demux_tag[tag]] != NULL))
+	#else
 	    if((tag < TAG_COUNT) &&
 	       (internal->demux[tag] != NULL))
+	#endif
 	    {
-	    
+
 #ifdef STREAMCHECK
 				//check for startbyte of all paket
-				if (pFrom[6] != 0x47) 
+				if (pFrom[6] != 0x47)
 					printk("[STREAMCHECK] first byte of packet not 0x47\n");
-					
+
 				//check count of the choised videostream
 				if((pFrom[7]&0x1f)==vpidhigh && pFrom[8]==vpidlow) {
 					prv++;
@@ -424,7 +432,7 @@ static int stream_injector(void *user_data)
 						}
 					}
 				}
-				
+
 				//check count of the choised audiostream
 				if((pFrom[7]&0x1f)==apidhigh && pFrom[8]==apidlow) {
 					pra++;
@@ -460,8 +468,13 @@ static int stream_injector(void *user_data)
 	      {
 		//printk("%d", tag);
 		/* inject the packets */
-		demultiplex_dvb_packets(internal->demux[tag],
-					auxbuf[tag], count1[tag]);
+	#if defined(SPARK2)
+			demultiplex_dvb_packets(internal->demux[internal->demux_tag[tag]],
+						auxbuf[tag], count1[tag]);
+	#else
+			demultiplex_dvb_packets(internal->demux[tag],
+						auxbuf[tag], count1[tag]);
+	#endif
 		pTo[tag] = auxbuf[tag];
 		count1[tag] = 0;
 	      }
@@ -471,11 +484,16 @@ static int stream_injector(void *user_data)
 	  for(n = 0; n < TAG_COUNT; n++)
 	  {
 	    /* inject remainders if any */
+	#if defined(SPARK2)
+	    if((count1[n] > 0) && (internal->demux[internal->demux_tag[n]] != NULL))
+	      demultiplex_dvb_packets(internal->demux[internal->demux_tag[n]], auxbuf[n], count1[n]);
+	#else
 	    if((count1[n] > 0) && (internal->demux[n] != NULL))
 	      demultiplex_dvb_packets(internal->demux[n], auxbuf[n], count1[n]);
+	#endif
 	  }
 	}
-	
+
 	/* increment the readIndex */
 	readIndex = (readIndex + 1) % QUEUE_SIZE;
   }
@@ -496,29 +514,29 @@ static void process_pti_dma(unsigned long data)
 {
   unsigned int pti_wp, num_packets, pti_status;
   bool buffer_round=0;
-        
+
 	/* Load the write pointers, so we know where we are in the buffers */
 	pti_wp = readl(internal->pti_io + PTI_DMA_0_WRITE);
-	
+
 	//align dma write pointer to packet size
 	pti_wp = pti_wp - ((pti_wp - dma_0_buffer_base) % PACKET_SIZE);
-	  
+
 	/* Read status registers */
 	pti_status = readl(internal->pti_io + PTI_IIF_FIFO_COUNT);
-	
+
 	/* Error if we overflow */
-	if (pti_status & PTI_IIF_FIFO_FULL) 
+	if (pti_status & PTI_IIF_FIFO_FULL)
 	{
 		internal->err_count++;
 		printk(KERN_WARNING "%s: IIF Overflow\n",__FUNCTION__);
 	}
-	  
+
 	/* If the PTI had to drop packets because we couldn't process in time error */
-	if (*internal->discard) 
-	{ 
+	if (*internal->discard)
+	{
 		printk(KERN_WARNING "%s: PTI had to discard %u packets %u %u\n",__func__,
 			*internal->discard,*internal->pread,*internal->pwrite);
-	
+
 		internal->err_count++;
 		stpti_reset_dma(internal);
 		//writeIndex = 0;
@@ -526,20 +544,20 @@ static void process_pti_dma(unsigned long data)
 		//the semaphore must by also resetet to 0, fix later
 		stpti_start_dma(internal);
 	} else
-	{	  
+	{
 		/* If we get to the bottom of the buffer wrap the pointer back to the top */
 		if ((dma_0_buffer_rp & ~0xf) == (dma_0_buffer_top & ~0xf)) dma_0_buffer_rp = dma_0_buffer_base;
-	
+
 		/* Calculate the amount of bytes used in the buffer */
 		if (dma_0_buffer_rp <= pti_wp) num_packets = (pti_wp - dma_0_buffer_rp) / PACKET_SIZE;
-		else 
+		else
 		{
 			num_packets = ((dma_0_buffer_top - dma_0_buffer_rp) + (pti_wp - dma_0_buffer_base)) / PACKET_SIZE;
 			internal->loop_count2++;
 			internal->packet_count = 0;
 			buffer_round=1;
 		}
-	
+
 		/* If we have some packets */
 		if (num_packets)
 		{
@@ -548,13 +566,13 @@ static void process_pti_dma(unsigned long data)
 			{
 				/* Increment the loop counter */
 				internal->loop_count++;
-	
+
 				/* Increment the packet_count, by the number of packets we have processed */
 				internal->packet_count+=num_packets;
-				
+
 				/* Now update the read pointer in the DMA engine */
 				writel(pti_wp, internal->pti_io + PTI_DMA_0_READ );
-	
+
 				/* Now tell the firmware how many packets we have read */
 				PtiWrite(internal->pread, num_packets);
 
@@ -580,68 +598,68 @@ static void process_pti_dma(unsigned long data)
 				dma_0_buffer_rp = pti_wp;
 			} // not read
 		} // num_packet
-	} // discard	  
+	} // discard
 
 	/* reschedule the timer */
 	ptiTimer.expires = jiffies + DMA_POLLING_INTERVAL;
 	add_timer(&ptiTimer);
 }
 
-#else  
- 
+#else
+
 static void process_pti_dma(unsigned long data)
 {
     unsigned int pti_rp, pti_wp, pti_base, pti_top, size_first, num_packets,
 		new_rp, pti_status, dma_status;
     static unsigned int pti_status_old=0;
     static unsigned int dma_status_old=0;
-        
+
 	  /* Load the read and write pointers, so we know where we are in the buffers */
 	  pti_rp   = readl(internal->pti_io + PTI_DMA_0_READ);
 	  pti_wp   = readl(internal->pti_io + PTI_DMA_0_WRITE);
 	  pti_base = readl(internal->pti_io + PTI_DMA_0_BASE);
 	  pti_top  = pti_base + PTI_BUFFER_SIZE;
-	  
+
 	  /* Read status registers */
 	  pti_status = readl(internal->pti_io + PTI_IIF_FIFO_COUNT);
 	  dma_status = readl(internal->pti_io + PTI_DMA_0_STATUS);
-	
+
 	  /* Error if we overflow */
-	  if (pti_status & PTI_IIF_FIFO_FULL) 
+	  if (pti_status & PTI_IIF_FIFO_FULL)
 	  {
 	     internal->err_count++;
 	     printk(KERN_WARNING "%s: IIF Overflow\n",__FUNCTION__);
 	  }
 
-	  if (dma_status != dma_status_old) 
+	  if (dma_status != dma_status_old)
 	  	dprintk("%s: DMA Status %x %x\n",__FUNCTION__,dma_status,internal->loop_count);
-	
+
 	  /* If the PTI had to drop packets because we couldn't process in time error */
-	  if (*internal->discard) 
-	  { 
+	  if (*internal->discard)
+	  {
 	    printk(KERN_WARNING "%s: PTI had to discard %u packets %u %u\n",__func__,
 			*internal->discard,*internal->pread,*internal->pwrite);
 	    printk(KERN_WARNING "%s: Reseting DMA\n",__FUNCTION__);
-	
+
 		internal->err_count++;
 	        stpti_reset_dma(internal);
 	        stpti_start_dma(internal);
 	  } else
 	  {
-	    
+
 	     pti_status_old = pti_status;
 	     dma_status_old = dma_status;
-	  
+
 	     /* If we get to the bottom of the buffer wrap the pointer back to the top */
 	     if ((pti_rp & ~0xf) == (pti_top & ~0xf)) pti_rp = pti_base;
-	
+
 	  /* Calculate the amount of bytes used in the buffer */
 	  if (pti_rp <= pti_wp) size_first = pti_wp - pti_rp;
 	  else size_first = pti_top - pti_rp;
-	  
+
 	  /* Calculate the number of packets in the buffer */
 	  num_packets = size_first / PACKET_SIZE;
-	
+
 	  /* If we have some packets */
 	  if (num_packets)
 	  {
@@ -652,39 +670,39 @@ static void process_pti_dma(unsigned long data)
 
 	      /* Increment the loop counter */
 	      internal->loop_count++;
-	
+
 	      /* The read pointer should always be a multiple of the packet size */
-	      if ((pti_rp - pti_base) % PACKET_SIZE) 
+	      if ((pti_rp - pti_base) % PACKET_SIZE)
 		printk(KERN_WARNING "%s: 0x%x not multiple of %d\n",__FUNCTION__,(pti_rp - pti_base),PACKET_SIZE);
-	
+
 		/* Update the read pointer based on the number of packets we have processed */
 		new_rp = pti_rp + num_packets * PACKET_SIZE;
-	
+
 		/* Increment the packet_count, by the number of packets we have processed */
 		internal->packet_count+=num_packets;
 		if (new_rp > pti_top) dprintk("You b@*tard you killed kenny\n");
-		
+
 		/* If we have gone round the buffer */
-		if (new_rp >= pti_top) 
-		{ 
+		if (new_rp >= pti_top)
+		{
 		  //printk("+");
 		  /* Update the read pointer so it now points back to the top */
-		  new_rp = pti_base + (new_rp - pti_top); internal->loop_count2++; 
-	
+		  new_rp = pti_base + (new_rp - pti_top); internal->loop_count2++;
+
 		  /* Print out some useful debug information when debugging is on */
-		  dprintk("%s: round the buffer %u times %u=pwrite %u=packet_count %u=num_packets %lu=jiffies %u %u\n",__FUNCTION__, 
-			  internal->loop_count2,*internal->pwrite,internal->packet_count,num_packets,jiffies,pti_rp,pti_wp); 
-	
+		  dprintk("%s: round the buffer %u times %u=pwrite %u=packet_count %u=num_packets %lu=jiffies %u %u\n",__FUNCTION__,
+			  internal->loop_count2,*internal->pwrite,internal->packet_count,num_packets,jiffies,pti_rp,pti_wp);
+
 		  /* Update the packet count */
-		  internal->packet_count = 0; 
+		  internal->packet_count = 0;
 		}
-	
+
 		/* Now update the read pointer in the DMA engine */
 		writel(new_rp, internal->pti_io + PTI_DMA_0_READ );
-	
+
 		/* Now tell the firmware how many packets we have read */
 		PtiWrite(internal->pread,num_packets);
-	
+
 		//printk("*");
 
 		/* notify the injector thread */
@@ -694,7 +712,7 @@ static void process_pti_dma(unsigned long data)
 		up(&workSem);
 	    } // not read
   	  } // num_packet
-        } // discard	  
+        } // discard
 
 	/* reschedule the timer */
 	ptiTimer.expires = jiffies + DMA_POLLING_INTERVAL;
@@ -717,11 +735,11 @@ void pti_hal_init ( struct stpti *pti , struct dvb_demux* demux, void (*_demulti
 
   demultiplex_dvb_packets = _demultiplex_dvb_packets;
   external = pti;
-  
+
   internal = kmalloc(sizeof(struct pti_internal), GFP_KERNEL);
 
-  memset(internal, 0, sizeof(internal));
-  
+  memset(internal, 0, sizeof(struct pti_internal));
+
   /* Allocate the back buffer */
   internal->back_buffer = (char*)bigphysarea_alloc_pages((PTI_BUFFER_SIZE+PAGE_SIZE-1) / PAGE_SIZE,0,GFP_KERNEL);
 
@@ -729,67 +747,67 @@ void pti_hal_init ( struct stpti *pti , struct dvb_demux* demux, void (*_demulti
      printk("error allocating back buffer !!!!!!!!!!!!!!!!!!!!!!!!\n");
 
   /* ioremap the pti address space */
-#if defined(UFS912) || defined(SPARK)
+#if defined(UFS912) || defined(SPARK) || defined(SPARK2)
   start = 0xfe230000;
 #else
   start = 0x19230000;
 #endif
 
-  internal->pti_io = (unsigned long)ioremap((unsigned long) start, 0xFFFF); 
+  internal->pti_io = (unsigned long)ioremap((unsigned long) start, 0xFFFF);
 
   printk("pti ioremap 0x%.8lx -> 0x%.8x\n", start, internal->pti_io);
 
   /* Resolve pointers we need for later */
   internal->pidtable    = getsymbol(internal, "pidtable");
-  internal->num_pids    = getsymbol(internal, "num_pids");	
+  internal->num_pids    = getsymbol(internal, "num_pids");
   internal->pidsearch   = getsymbol(internal, "pidsearch");
-  
+
   internal->psize       = getsymbol(internal, "psize");
   internal->pread       = getsymbol(internal, "pread");
   internal->pwrite      = getsymbol(internal, "pwrite");
   internal->packet_size = getsymbol(internal, "packet_size");
-  
+
   internal->discard     = getsymbol(internal, "discard");
   internal->header_size = getsymbol(internal, "header_size");
   internal->thrown_away = getsymbol(internal, "thrown_away");
 
   /* Setup PTI */
   writel(0x1, internal->pti_io + PTI_DMA_PTI3_PROG);
-  
+
   printk("Load TC ...\n");
 
   /* Write instructions and data */
   loadtc(internal);
-  
+
   printk("Load TC done\n");
 
   PtiWrite(internal->packet_size,PACKET_SIZE);
   PtiWrite(internal->header_size,HEADER_SIZE);
-  
+
   /* Enable IIF */
   writel(0x0,         internal->pti_io + PTI_IIF_SYNC_LOCK);
   writel(0x0,         internal->pti_io + PTI_IIF_SYNC_DROP);
   writel(PACKET_SIZE, internal->pti_io + PTI_IIF_SYNC_PERIOD);
   writel(0x0,         internal->pti_io + PTI_IIF_SYNC_CONFIG);
   writel(0x1,         internal->pti_io + PTI_IIF_FIFO_ENABLE);
-  
+
   /* Start the TC */
   writel(PTI_MODE_ENABLE, internal->pti_io + PTI_MODE );
-  
+
   /* Setup packet count */
   PtiWrite(internal->psize, (PTI_BUFFER_SIZE / (PACKET_SIZE)) - 2);
   PtiWrite(internal->num_pids,0);
-  
+
   /* Reset the DMA */
   stpti_setup_dma(internal);
   stpti_reset_dma(internal);
-  
+
   /* Enable the DMA of data */
 #ifdef __TDT__
 	stpti_start_dma(internal);
 #else
-  writel( readl(internal->pti_io + PTI_DMA_ENABLE) | 0x1, internal->pti_io + PTI_DMA_ENABLE ); 
-#endif 
+  writel( readl(internal->pti_io + PTI_DMA_ENABLE) | 0x1, internal->pti_io + PTI_DMA_ENABLE );
+#endif
 
   internal->vSlots =
       kmalloc ( sizeof ( struct tSlot * ) * 32,	GFP_KERNEL );
@@ -816,7 +834,7 @@ void pti_hal_init ( struct stpti *pti , struct dvb_demux* demux, void (*_demulti
   ptiTimer.function = process_pti_dma;
   ptiTimer.data = 0;
   add_timer(&ptiTimer);
-  
+
   return;
 
 }
@@ -848,11 +866,11 @@ int pti_hal_slot_clear_pid ( int session_handle, int slot_handle )
   int i;
 
   slot_handle -= SLOT_HANDLE_OFFSET;
-	
+
   printk("%s slot = %d, tc = %d, num = %d\n", __FUNCTION__, slot_handle,
 		internal->vSlots[slot_handle]->tcIndex,
 		*internal->num_pids);
-  	
+
   if ((internal->vSlots[slot_handle]->tcIndex < 0) ||
 	(internal->vSlots[slot_handle]->pid == 0xffff))
   {
@@ -920,11 +938,11 @@ int pti_hal_slot_link_buffer ( int session_handle, int slot_handle,
 int pti_hal_slot_set_pid ( int session_handle, int slot_handle, u16 pid )
 {
   int vLoop;
-  
+
   printk("%s: %d %d %d\n", __FUNCTION__, session_handle, slot_handle, pid);
-  
-  for (vLoop = 0; vLoop < (*internal->num_pids); vLoop++) 
-  { 
+
+  for (vLoop = 0; vLoop < (*internal->num_pids); vLoop++)
+  {
 	  if ((unsigned short) internal->pidtable[vLoop] == (unsigned short) pid)
 	  {
 		 printk("pid %d already collecting. ignoring ... \n", pid);
@@ -946,7 +964,7 @@ int pti_hal_slot_set_pid ( int session_handle, int slot_handle, u16 pid )
 	   PtiWrite(&internal->pidtable[*internal->num_pids], pid);
 	   msleep(10);
 	   PtiWrite(internal->num_pids,*internal->num_pids + 1);
-          
+
            return 0;
 	} else
 	{
@@ -955,7 +973,7 @@ int pti_hal_slot_set_pid ( int session_handle, int slot_handle, u16 pid )
         }
      }
   }
-  
+
   printk("%s failed2\n", __FUNCTION__);
   return -1;
 
@@ -967,7 +985,7 @@ int pti_hal_get_new_slot_handle ( int session_handle, int dvb_type,
 				  struct DeviceContext_s *DeviceContext )
 {
   int vLoopSlots;
-  
+
   for ( vLoopSlots = 0; vLoopSlots < 32; vLoopSlots++ )
   {
 	if ( internal->vSlots[vLoopSlots]->inUse == 0 )
@@ -976,7 +994,7 @@ int pti_hal_get_new_slot_handle ( int session_handle, int dvb_type,
           internal->vSlots[vLoopSlots]->tcIndex = -1;
 
 	  printk("ret slothandle = %d\n", internal->vSlots[vLoopSlots]->Handle);
-	  
+
           return internal->vSlots[vLoopSlots]->Handle;
 	}
   }
@@ -990,6 +1008,51 @@ int pti_hal_set_source(int session_handle, const int source)
 int pti_hal_set_source ( int session_handle, const dmx_source_t source )
 #endif
 {
+		printk("source %d, session_handle %d\n", source, session_handle);
+		#if defined(SPARK2)
+		{
+			int i;
+			int old_session;
+			int old_source = -1;
+			old_session = internal->demux_tag[source];
+			printk("before\n");
+			for (i = 0; i < TAG_COUNT; i++)
+			{
+				printk("internal->demux[%d] = 0x%x\n",
+						i, (int)internal->demux[i]);
+				printk("internal->demux_tag[%d] = %d\n",
+						i, internal->demux_tag[i]);
+			}
+			if (old_session == session_handle)
+			{
+        		return 1;
+			}
+			for (i = 0; i < TAG_COUNT; i++)
+			{
+			    if (internal->demux[i])
+			    {
+			        if (internal->demux_tag[i] == session_handle)
+			        {
+			            old_source = i;
+			        }
+			    }
+			}
+			internal->demux_tag[source] = session_handle;
+			if (old_source > -1)
+			{
+				internal->demux_tag[old_source] = old_session;
+			}
+
+			printk("after\n");
+			for (i = 0; i < TAG_COUNT; i++)
+			{
+				printk("internal->demux[%d] = 0x%x\n",
+						i, (int)internal->demux[i]);
+				printk("internal->demux_tag[%d] = %d\n",
+						i, internal->demux_tag[i]);
+			}
+		}
+		#endif
         return 1;
 }
 
@@ -1004,8 +1067,11 @@ int pti_hal_get_new_session_handle ( int source, struct dvb_demux * demux )
 	{
 		printk("session %d, demux %p\n", source, demux);
 		internal->demux[source] = demux;
+		#if defined(SPARK2)
+		internal->demux_tag[source] = source;
+		#endif
 	}
-	
+
 	return source;
 }
 
@@ -1037,7 +1103,7 @@ int __init pti_init(void)
 }
 
 static void __exit pti_exit(void)
-{  
+{
    printk("pti unloaded\n");
 }
 
@@ -1045,7 +1111,7 @@ module_init             (pti_init);
 module_exit             (pti_exit);
 
 #if defined(PLAYER_179) || defined(PLAYER_191)
-#if (defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(SPARK) )
+#if (defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(SPARK) || defined(SPARK2))
 module_param(waitMS, int, 0444);
 MODULE_PARM_DESC(waitMS, "waitMS");
 

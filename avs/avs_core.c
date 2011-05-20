@@ -61,6 +61,7 @@ enum
 	VIP1_AVS,
 	FAKE_AVS,
 	SPARK_AVS,
+	SPARK2_AVS,
 	AVS_NONE,
 };
 
@@ -74,6 +75,7 @@ static const struct i2c_device_id avs_id[] = {
         { "vip2_avs", VIP2_AVS },
 		{ "vip1_avs", VIP1_AVS },
 		{ "spark_avs", SPARK_AVS },
+		{ "spark2_avs", SPARK2_AVS },
         { "fake_avs", FAKE_AVS },
         { "avs_none", AVS_NONE },
         { }
@@ -162,7 +164,7 @@ static int avs_attach(struct i2c_adapter *adap, int addr, int kind)
 		kfree(client);
 		return err;
 	}
-	
+
 	dprintk("[AVS]: attach final\n");
 	i2c_attach_client(client);
 	dprintk("[AVS]: attach final ok\n");
@@ -196,7 +198,7 @@ static int avs_remove(struct i2c_client *client)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static int avs_detach(struct i2c_client *client)
 {
-	int err = avs_remove(client);	
+	int err = avs_remove(client);
 	i2c_detach_client(client);
 	if (client)
 		kfree(client);
@@ -213,7 +215,7 @@ static int avs_command_ioctl(struct i2c_client *client, unsigned int cmd, void *
 {
 	int err = 0;
 
-#if !defined(VIP1_V2) || !defined(VIP2_V1) || !defined(SPARK)// none i2c avs !!!
+#if !defined(VIP1_V2) || !defined(VIP2_V1) || !defined(SPARK) || !defined(SPARK2)// none i2c avs !!!
 	if (!client)
 		return -1;
 #endif
@@ -233,6 +235,7 @@ static int avs_command_ioctl(struct i2c_client *client, unsigned int cmd, void *
 	case VIP2_AVS: err = vip2_avs_command(cmd, arg); break;
 	case VIP1_AVS: err = vip1_avs_command(cmd, arg); break;
 	case SPARK_AVS:err = spark_avs_command(cmd, arg); break;
+	case SPARK2_AVS:err = spark_avs_command(cmd, arg); break;
 	}
 	return err;
 }
@@ -241,7 +244,7 @@ int avs_command_kernel(unsigned int cmd, void *arg)
 {
 	int err = 0;
 
-#if !defined(VIP1_V2) || !defined(VIP2_V1) || !defined(SPARK)// i2c avs !!!
+#if !defined(VIP1_V2) || !defined(VIP2_V1) || !defined(SPARK) || !defined(SPARK2)// i2c avs !!!
 	struct i2c_client *client = avs_client;
 	if (!client)
 		return -1;
@@ -251,7 +254,7 @@ int avs_command_kernel(unsigned int cmd, void *arg)
 
 	switch(devType)
 	{
-#if defined(VIP1_V2) || defined(VIP2_V1) || defined(SPARK) // none i2c avs !!!
+#if defined(VIP1_V2) || defined(VIP2_V1) || defined(SPARK) || defined(SPARK2) // none i2c avs !!!
 	case VIP2_AVS: err = vip2_avs_command_kernel(cmd, arg); break;
 	case VIP1_AVS: err = vip1_avs_command_kernel(cmd, arg); break;
 	case SPARK_AVS: err = spark_avs_command_kernel(cmd, arg); break;
@@ -331,6 +334,8 @@ static int avs_detect(struct i2c_client *client, int kind, struct i2c_board_info
 			kind = VIP1_AVS;
 		else if(!strcmp("spark_avs", type))
 			kind = SPARK_AVS;
+		else if(!strcmp("spark2_avs", type))
+			kind = SPARK2_AVS;
 		else if(!strcmp("fake_avs", type))
 			kind = FAKE_AVS;
 		else if(!strcmp("avs_none", type))
@@ -348,6 +353,7 @@ static int avs_detect(struct i2c_client *client, int kind, struct i2c_board_info
 	case VIP1_AVS: name = "vip1_avs"; break;
 	case FAKE_AVS: name = "fake_avs"; break;
 	case SPARK_AVS: name = "spark_avs"; break;
+	case SPARK2_AVS: name = "spark2_avs"; break;
 	case AVS_NONE: name = "avs_none"; break;
 	default: return -ENODEV;
 	}
@@ -407,7 +413,8 @@ int __init avs_init(void)
 	dprintk("[AVS]: A/V switch handling for %s\n", name);
 
 #if !defined(CUBEREVO_MINI_FTA) && !defined(CUBEREVO_250HD)
-	if ((devType != FAKE_AVS) && (devType != AVS_NONE) && (devType != VIP2_AVS) && (devType != VIP1_AVS) && (devType != SPARK_AVS)) {
+	if ((devType != FAKE_AVS) && (devType != AVS_NONE) && (devType != VIP2_AVS)
+		&& (devType != VIP1_AVS) && (devType != SPARK_AVS) && (devType != SPARK2_AVS)) {
 		if ((res = i2c_add_driver(&avs_i2c_driver))) {
 			dprintk("[AVS]: i2c add driver failed\n");
 			return res;
@@ -436,9 +443,15 @@ int __init avs_init(void)
 			printk("[AVS]: init spark avs faild!\n");
 			return -EIO;
 		}
+	}else if (devType == SPARK2_AVS){
+		if(spark_avs_init() != 0)
+		{
+			printk("[AVS]: init spark2 avs faild!\n");
+			return -EIO;
+		}
 	}
 #endif
-	
+
 #else /* >= 2.6.30 */
 	if ((res = i2c_add_driver(&avs_i2c_driver)))
 		return res;
@@ -467,5 +480,5 @@ MODULE_DESCRIPTION("Multiplatform A/V scart switch driver");
 MODULE_LICENSE("GPL");
 
 module_param(type,charp,0);
-MODULE_PARM_DESC(type, "device type (ak4705, stv6412, cxa2161, stv6417, stv6418, vip2_avs, vip1_avs, spark_avs, fake_avs, avs_none)");
+MODULE_PARM_DESC(type, "device type (ak4705, stv6412, cxa2161, stv6417, stv6418, vip2_avs, vip1_avs, spark_avs, spark2_avs, fake_avs, avs_none)");
 

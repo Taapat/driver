@@ -56,11 +56,13 @@ extern void stv090x_register_frontend(struct dvb_adapter *dvb_adap);
 extern void fe_core_register_frontend(struct dvb_adapter *dvb_adap);
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
 extern void tuner_register_frontend(struct dvb_adapter *dvb_adap);
-#elif defined(OCTAGON1008) 
+#elif defined(OCTAGON1008)
 extern void avl2108_register_frontend(struct dvb_adapter *dvb_adap);
 #elif defined(ATEVIO7500)
 //extern void avl2108_register_frontend(struct dvb_adapter *dvb_adap);
 extern void socket_register_adapter(struct dvb_adapter *dvb_adap);
+#elif defined(SPARK2)
+extern void spark2_register_frontend(struct dvb_adapter *dvb_adap);
 #else
 extern void cx24116_register_frontend(struct dvb_adapter *dvb_adap);
 #endif
@@ -358,7 +360,7 @@ static int convert_source ( const dmx_source_t source)
     /* in UFS910 the CIMAX output is connected to TSIN2 */
     tag = TSIN2;
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
-    tag = TSIN1;	
+    tag = TSIN1;
 #else
     tag = TSIN0;
 #endif
@@ -370,6 +372,11 @@ static int convert_source ( const dmx_source_t source)
     tag = TSIN1;
 #endif
     break;
+#if defined(SPARK2)
+  case DMX_SOURCE_FRONT2:
+    tag = TSIN2;
+    break;
+#endif
   case DMX_SOURCE_DVR0:
     tag = SWTS0;
     break;
@@ -389,7 +396,7 @@ static struct stpti pti;
 
 void ptiInit ( struct DeviceContext_s *pContext )
 {
-#if defined(UFS912) || defined(SPARK) || defined(ATEVIO7500)
+#if defined(UFS912) || defined(SPARK) || defined(SPARK2) || defined(ATEVIO7500)
   unsigned long start = 0xfe230000;
 #else
   unsigned long start = 0x19230000;
@@ -434,12 +441,14 @@ void ptiInit ( struct DeviceContext_s *pContext )
 #elif defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1)
     fe_core_register_frontend( &pContext->DvbContext->DvbAdapter);
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
-    tuner_register_frontend( &pContext->DvbContext->DvbAdapter);	
+    tuner_register_frontend( &pContext->DvbContext->DvbAdapter);
 #elif defined(OCTAGON1008)
     avl2108_register_frontend( &pContext->DvbContext->DvbAdapter);
 #elif defined(ATEVIO7500)
 //    avl2108_register_frontend( &pContext->DvbContext->DvbAdapter);
       socket_register_adapter(&pContext->DvbContext->DvbAdapter);
+#elif defined(SPARK2)
+    spark2_register_frontend( &pContext->DvbContext->DvbAdapter);
 #elif !defined(UFS922)
     cx24116_register_frontend( &pContext->DvbContext->DvbAdapter);
 #else

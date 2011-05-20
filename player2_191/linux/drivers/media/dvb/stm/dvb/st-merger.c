@@ -40,7 +40,7 @@ unsigned long TSM_NUM_1394_ALT_OUT;
 #define LOAD_TSM_DATA
 #endif
 
-#if defined(UFS912) || defined(SPARK) || defined(ATEVIO7500)
+#if defined(UFS912) || defined(SPARK) || defined(SPARK2) || defined(ATEVIO7500)
 #define TSMergerBaseAddress   	0xFE242000
 #else
 #define TSMergerBaseAddress   	0x19242000
@@ -108,7 +108,7 @@ unsigned long TSM_NUM_1394_ALT_OUT;
 
 #define TSM_SWTS      		0x010BE000
 
-#if defined(UFS912) || defined(SPARK) || defined(ATEVIO7500)
+#if defined(UFS912) || defined(SPARK) || defined(SPARK2) || defined(ATEVIO7500)
 #define SysConfigBaseAddress    0xFE001000
 #else
 #define SysConfigBaseAddress    0x19001000
@@ -383,7 +383,7 @@ int read_tsm(int a)
 void stm_tsm_init (int use_cimax)
 {
 
-#if defined(VIP2_V1) || defined(SPARK)// none ci targets
+#if defined(VIP2_V1) || defined(SPARK) || defined(SPARK2)// none ci targets
 	use_cimax = 0;
 #endif
 
@@ -407,7 +407,7 @@ void stm_tsm_init (int use_cimax)
       struct stpio* stream2_pin = stpio_request_pin (5, 3, "TSinterface2", STPIO_IN);
 #elif defined(ATEVIO7500)
       struct stpio* pin;
-      
+
       /* set the muxer pin otherwise startci output will
        * not properly passed to tsmerger.
        */
@@ -689,7 +689,7 @@ void stm_tsm_init (int use_cimax)
 	  /* configure streams: */
       /* add tag bytes to stream + stream priority */
       ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
-      ctrl_outl(ret | (0x70020), reg_config + TSM_STREAM3_CFG);   
+      ctrl_outl(ret | (0x70020), reg_config + TSM_STREAM3_CFG);
 #else
       ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
       ctrl_outl(ret | (0x30020), reg_config + TSM_STREAM3_CFG);
@@ -706,7 +706,7 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x8000000, reg_config + SWTS_CFG(1));
       ctrl_outl(0x8000000, reg_config + SWTS_CFG(2));
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD)
-      ctrl_outl(0x88000010, reg_config + SWTS_CFG(0));	  
+      ctrl_outl(0x88000010, reg_config + SWTS_CFG(0));
 #else
       ctrl_outl(0x8000010, reg_config + SWTS_CFG(0));
 #endif
@@ -827,7 +827,7 @@ void stm_tsm_init (int use_cimax)
       /* set stream 1 on */
       ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
       ctrl_outl(ret | 0x80,reg_config + TSM_STREAM1_CFG);
-	  
+
       /* route stream 0 to PTI */
       ret = ctrl_inl(reg_config + TSM_PTI_SEL);
       ctrl_outl(ret | 0x1, reg_config + TSM_PTI_SEL);
@@ -837,11 +837,11 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x1, reg_config + TSM_STREAM6_CFG);
       ctrl_outl(0xbc4700, reg_config + TSM_STREAM5_SYNC);
       ctrl_outl(0xbc4700, reg_config + TSM_STREAM6_SYNC);
-	  
+
       /* set 1394 stream Out */
 	  ctrl_outl(0x0001804c ,reg_config + TS_1394_CFG);
       ret = ctrl_inl(reg_config + TSM_1394_DEST);
-      ctrl_outl(ret | 0x1 , reg_config + TSM_1394_DEST);  
+      ctrl_outl(ret | 0x1 , reg_config + TSM_1394_DEST);
 #elif defined(HOMECAST5101)
       ret = ctrl_inl(reg_config + TSM_PTI_SEL);
       ctrl_outl(ret | 0x1,reg_config + TSM_PTI_SEL);
@@ -928,7 +928,7 @@ void stm_tsm_init (int use_cimax)
   	int n;
 
     printk("Bypass ci\n");
-#if	defined(SPARK)
+#if	defined(SPARK) || defined(SPARK2)
   	tsm_io = ioremap (/* config->tsm_base_address */ TSMergerBaseAddress,0x1000);
 #else
 	tsm_io = ioremap (/* config->tsm_base_address */ 0x19242000,0x1000);
