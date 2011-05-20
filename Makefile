@@ -73,8 +73,8 @@ endif
 ifdef SPARK
 CCFLAGSY+=-DSPARK
 endif
-ifdef SPARK2
-CCFLAGSY+=-DSPARK2
+ifdef SPARK7162
+CCFLAGSY+=-DSPARK7162
 endif
 ifdef FORTIS_HDBOX
 CCFLAGSY += -DFORTIS_HDBOX
@@ -119,7 +119,7 @@ endif
 
 ifndef VIP2_V1
 ifndef SPARK
-ifndef SPARK2
+ifndef SPARK7162
 obj-y	+= cic/
 endif
 endif

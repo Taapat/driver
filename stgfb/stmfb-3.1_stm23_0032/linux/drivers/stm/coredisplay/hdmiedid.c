@@ -918,7 +918,7 @@ int stmhdmi_read_edid(struct stm_hdmi *hdmi)
 int stmhdmi_safe_edid(struct stm_hdmi *hdmi)
 {
   DPRINTK("Setting Safe EDID\n");
-#if defined(SPARK) || defined(SPARK2) //YWDRIVER_MODI d26lf 2011-01-04 hdmi audio out for board 1.4
+#if defined(SPARK) || defined(SPARK7162) //YWDRIVER_MODI d26lf 2011-01-04 hdmi audio out for board 1.4
   hdmi->edid_info.display_type = STM_DISPLAY_HDMI;
   strcpy(hdmi->edid_info.monitor_name, "SAFEMODE");
   hdmi->edid_info.tv_aspect        = STM_WSS_4_3;

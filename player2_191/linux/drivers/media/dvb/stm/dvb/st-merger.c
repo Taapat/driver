@@ -40,7 +40,7 @@ unsigned long TSM_NUM_1394_ALT_OUT;
 #define LOAD_TSM_DATA
 #endif
 
-#if defined(UFS912) || defined(SPARK) || defined(SPARK2) || defined(ATEVIO7500)
+#if defined(UFS912) || defined(SPARK) || defined(SPARK7162) || defined(ATEVIO7500)
 #define TSMergerBaseAddress   	0xFE242000
 #else
 #define TSMergerBaseAddress   	0x19242000
@@ -108,7 +108,7 @@ unsigned long TSM_NUM_1394_ALT_OUT;
 
 #define TSM_SWTS      		0x010BE000
 
-#if defined(UFS912) || defined(SPARK) || defined(SPARK2) || defined(ATEVIO7500)
+#if defined(UFS912) || defined(SPARK) || defined(SPARK7162) || defined(ATEVIO7500)
 #define SysConfigBaseAddress    0xFE001000
 #else
 #define SysConfigBaseAddress    0x19001000
@@ -383,7 +383,7 @@ int read_tsm(int a)
 void stm_tsm_init (int use_cimax)
 {
 
-#if defined(VIP2_V1) || defined(SPARK) || defined(SPARK2)// none ci targets
+#if defined(VIP2_V1) || defined(SPARK) || defined(SPARK7162)// none ci targets
 	use_cimax = 0;
 #endif
 
@@ -928,7 +928,7 @@ void stm_tsm_init (int use_cimax)
   	int n;
 
     printk("Bypass ci\n");
-#if	defined(SPARK) || defined(SPARK2)
+#if	defined(SPARK) || defined(SPARK7162)
   	tsm_io = ioremap (/* config->tsm_base_address */ TSMergerBaseAddress,0x1000);
 #else
 	tsm_io = ioremap (/* config->tsm_base_address */ 0x19242000,0x1000);

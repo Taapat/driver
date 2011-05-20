@@ -26,7 +26,7 @@ CSTmFSynth::CSTmFSynth(CDisplayDevice *pDev, ULONG ulRegOffset)
   m_pDevRegs = (ULONG*)pDev->GetCtrlRegisterBase();
   m_ulFSynthOffset = ulRegOffset;
 
-#if  defined(__TDT__) && !defined(SPARK) && !defined(SPARK2)
+#if  defined(__TDT__) && !defined(SPARK) && !defined(SPARK7162)
 #ifdef USE_EXT_CLK
   m_refClock    = STM_CLOCK_REF_27MHZ;
 #else

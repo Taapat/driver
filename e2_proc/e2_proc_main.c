@@ -261,8 +261,8 @@ static int info_model_read(char *page, char **start, off_t off, int count,
   int len = sprintf(page, "ufs912\n");
 #elif defined(SPARK)
   int len = sprintf(page, "spark\n");
-#elif defined(SPARK2)
-  int len = sprintf(page, "spark2\n");
+#elif defined(SPARK7162)
+  int len = sprintf(page, "spark7162\n");
 #elif defined(FORTIS_HDBOX)
   int len = sprintf(page, "hdbox\n");
 #elif defined(HOMECAST5101)

@@ -337,7 +337,7 @@ int spark_avs_command_kernel(unsigned int cmd, void *arg)
 int spark_avs_init(void)
 {
 //	scart_tv_sat	= stpio_request_pin (6, 1, "scart_tv_sat", STPIO_OUT);
-#if defined(SPARK2)
+#if defined(SPARK7162)
 	scart_cvbs_rgb	= stpio_request_pin (11, 5, "scart_cvbs_rgb", STPIO_OUT);
 	scart_169_43	= stpio_request_pin (11, 4, "scart_169_43", STPIO_OUT);
 	scart_mute	= stpio_request_pin (11, 2, "scart_mute", STPIO_OUT);

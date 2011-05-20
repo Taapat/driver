@@ -48,7 +48,7 @@ struct StreamContext_s;
 #include "pti.h"
 
 #if defined(PLAYER_179) || defined(PLAYER_191)
-#if (defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(SPARK) || defined(SPARK2))
+#if (defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(SPARK) || defined(SPARK7162))
 static int waitMS=20;
 static int videoMem=4096;
 #endif
@@ -80,7 +80,7 @@ struct tSlot
 
 struct pti_internal {
   struct  dvb_demux* demux[TAG_COUNT];
-  #if defined(SPARK2)
+  #if defined(SPARK7162)
   int		demux_tag[TAG_COUNT];
   #endif
   int	  err_count;
@@ -397,7 +397,7 @@ static int stream_injector(void *user_data)
 				 11 - SWTS0 */
 	    int tag = (pFrom[0] >> 2) & 0xf;
 	    /* only copy if the demux exists */
-	#if defined(SPARK2)
+	#if defined(SPARK7162)
 	    if((tag < TAG_COUNT) &&
 	       (internal->demux[internal->demux_tag[tag]] != NULL))
 	#else
@@ -468,7 +468,7 @@ static int stream_injector(void *user_data)
 	      {
 		//printk("%d", tag);
 		/* inject the packets */
-	#if defined(SPARK2)
+	#if defined(SPARK7162)
 			demultiplex_dvb_packets(internal->demux[internal->demux_tag[tag]],
 						auxbuf[tag], count1[tag]);
 	#else
@@ -484,7 +484,7 @@ static int stream_injector(void *user_data)
 	  for(n = 0; n < TAG_COUNT; n++)
 	  {
 	    /* inject remainders if any */
-	#if defined(SPARK2)
+	#if defined(SPARK7162)
 	    if((count1[n] > 0) && (internal->demux[internal->demux_tag[n]] != NULL))
 	      demultiplex_dvb_packets(internal->demux[internal->demux_tag[n]], auxbuf[n], count1[n]);
 	#else
@@ -747,7 +747,7 @@ void pti_hal_init ( struct stpti *pti , struct dvb_demux* demux, void (*_demulti
      printk("error allocating back buffer !!!!!!!!!!!!!!!!!!!!!!!!\n");
 
   /* ioremap the pti address space */
-#if defined(UFS912) || defined(SPARK) || defined(SPARK2)
+#if defined(UFS912) || defined(SPARK) || defined(SPARK7162)
   start = 0xfe230000;
 #else
   start = 0x19230000;
@@ -1009,7 +1009,7 @@ int pti_hal_set_source ( int session_handle, const dmx_source_t source )
 #endif
 {
 		printk("source %d, session_handle %d\n", source, session_handle);
-		#if defined(SPARK2)
+		#if defined(SPARK7162)
 		{
 			int i;
 			int old_session;
@@ -1067,7 +1067,7 @@ int pti_hal_get_new_session_handle ( int source, struct dvb_demux * demux )
 	{
 		printk("session %d, demux %p\n", source, demux);
 		internal->demux[source] = demux;
-		#if defined(SPARK2)
+		#if defined(SPARK7162)
 		internal->demux_tag[source] = source;
 		#endif
 	}
@@ -1111,7 +1111,7 @@ module_init             (pti_init);
 module_exit             (pti_exit);
 
 #if defined(PLAYER_179) || defined(PLAYER_191)
-#if (defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(SPARK) || defined(SPARK2))
+#if (defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(SPARK) || defined(SPARK7162))
 module_param(waitMS, int, 0444);
 MODULE_PARM_DESC(waitMS, "waitMS");
 

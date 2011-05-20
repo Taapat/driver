@@ -57,7 +57,7 @@ ifdef SPARK
 obj-y   += aotom/
 endif
 
-ifdef SPARK2
+ifdef SPARK7162
 obj-y   += aotom/
 endif
 

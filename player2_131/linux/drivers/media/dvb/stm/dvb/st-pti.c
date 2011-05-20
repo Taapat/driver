@@ -58,8 +58,8 @@ extern void fe_core_register_frontend(struct dvb_adapter *dvb_adap);
 extern void tuner_register_frontend(struct dvb_adapter *dvb_adap);
 #elif defined(OCTAGON1008) || defined(ATEVIO7500)
 extern void avl2108_register_frontend(struct dvb_adapter *dvb_adap);
-#elif defined(SPARK2)
-extern void spark2_register_frontend(struct dvb_adapter *dvb_adap);
+#elif defined(SPARK7162)
+extern void spark7162_register_frontend(struct dvb_adapter *dvb_adap);
 #else
 extern void cx24116_register_frontend(struct dvb_adapter *dvb_adap);
 #endif
@@ -367,7 +367,7 @@ static int convert_source ( const dmx_source_t source)
     tag = TSIN1;
 #endif
     break;
-#if defined(SPARK2)
+#if defined(SPARK7162)
   case DMX_SOURCE_FRONT2:
     tag = TSIN2;
     break;
@@ -391,7 +391,7 @@ static struct stpti pti;
 
 void ptiInit ( struct DeviceContext_s *pContext )
 {
-#if defined(UFS912) || defined(SPARK) || defined(SPARK2) || defined(ATEVIO7500)
+#if defined(UFS912) || defined(SPARK) || defined(SPARK7162) || defined(ATEVIO7500)
   unsigned long start = 0xfe230000;
 #else
   unsigned long start = 0x19230000;
@@ -439,8 +439,8 @@ void ptiInit ( struct DeviceContext_s *pContext )
     tuner_register_frontend( &pContext->DvbContext->DvbAdapter);
 #elif defined(OCTAGON1008) || defined(ATEVIO7500)
     avl2108_register_frontend( &pContext->DvbContext->DvbAdapter);
-#elif defined(SPARK2)
-    spark2_register_frontend( &pContext->DvbContext->DvbAdapter);
+#elif defined(SPARK7162)
+    spark7162_register_frontend( &pContext->DvbContext->DvbAdapter);
 #elif !defined(UFS922)
     cx24116_register_frontend( &pContext->DvbContext->DvbAdapter);
 #else
