@@ -258,6 +258,7 @@ int avs_command_kernel(unsigned int cmd, void *arg)
 	case VIP2_AVS: err = vip2_avs_command_kernel(cmd, arg); break;
 	case VIP1_AVS: err = vip1_avs_command_kernel(cmd, arg); break;
 	case SPARK_AVS: err = spark_avs_command_kernel(cmd, arg); break;
+	case SPARK7162_AVS: err = spark_avs_command_kernel(cmd, arg); break;
 #else
 	case AK4705:   err = ak4705_command_kernel(client, cmd, arg);   break;
 	case STV6412:  err = stv6412_command_kernel(client, cmd, arg);  break;
