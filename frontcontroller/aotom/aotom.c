@@ -790,6 +790,7 @@ void button_bad_polling(void)
 		if (button_value != INVALID_KEY) {
 			dprintk(5, "got button: %X\n", button_value);
 	        VFD_Show_Ico(DOT2,LOG_ON);
+			YWPANEL_VFD_SetLed(1, LOG_ON);
 			if (1 == btn_pressed)
 			{
 				if (report_key != button_value)
@@ -849,6 +850,7 @@ void button_bad_polling(void)
 				btn_pressed = 0;
 				msleep(80);
 				VFD_Show_Ico(DOT2,LOG_OFF);
+				YWPANEL_VFD_SetLed(1, LOG_OFF);
 				input_report_key(button_dev, report_key, 0);
 			input_sync(button_dev);
 			}
