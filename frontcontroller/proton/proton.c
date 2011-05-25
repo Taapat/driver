@@ -1303,6 +1303,7 @@ static struct workqueue_struct *fpwq;
 void button_bad_polling(void)
 {
 	int btn_pressed = 0;
+	int report_key = 0;
 
 	while(bad_polling == 1)
 	{
@@ -1311,6 +1312,19 @@ void button_bad_polling(void)
 		if (button_value != INVALID_KEY) {
 		    dprintk(5, "got button: %X\n", button_value);
             VFD_Show_Ico(DOT2,LOG_ON);
+			if (1 == btn_pressed)
+			{
+				if (report_key != button_value)
+				{
+					input_report_key(button_dev, report_key, 0);
+					input_sync(button_dev);
+				}
+				else
+				{
+				    continue;
+				}
+			}
+			report_key = button_value;
             btn_pressed = 1;
 			switch(button_value) {
 				case KEY_LEFT: {
@@ -1357,15 +1371,9 @@ void button_bad_polling(void)
 				btn_pressed = 0;
 				msleep(50);
 				VFD_Show_Ico(DOT2,LOG_OFF);
+				input_report_key(button_dev, report_key, 0);
+				input_sync(button_dev);
 			}
-			input_report_key(button_dev, KEY_UP, 	0);
-			input_report_key(button_dev, KEY_DOWN, 	0);
-			input_report_key(button_dev, KEY_LEFT, 	0);
-			input_report_key(button_dev, KEY_RIGHT, 0);
-			input_report_key(button_dev, KEY_OK,	0);
-			input_report_key(button_dev, KEY_MENU, 	0);
-			input_report_key(button_dev, KEY_POWER, 0);
-			input_sync(button_dev);
 		}
 	}
 }
