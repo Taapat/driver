@@ -59,7 +59,6 @@ extern void tuner_register_frontend(struct dvb_adapter *dvb_adap);
 #elif defined(OCTAGON1008)
 extern void avl2108_register_frontend(struct dvb_adapter *dvb_adap);
 #elif defined(ATEVIO7500)
-//extern void avl2108_register_frontend(struct dvb_adapter *dvb_adap);
 extern void socket_register_adapter(struct dvb_adapter *dvb_adap);
 #elif defined(SPARK7162)
 extern void spark7162_register_frontend(struct dvb_adapter *dvb_adap);
@@ -445,8 +444,7 @@ void ptiInit ( struct DeviceContext_s *pContext )
 #elif defined(OCTAGON1008)
     avl2108_register_frontend( &pContext->DvbContext->DvbAdapter);
 #elif defined(ATEVIO7500)
-//    avl2108_register_frontend( &pContext->DvbContext->DvbAdapter);
-      socket_register_adapter(&pContext->DvbContext->DvbAdapter);
+    socket_register_adapter(&pContext->DvbContext->DvbAdapter);
 #elif defined(SPARK7162)
     spark7162_register_frontend( &pContext->DvbContext->DvbAdapter);
 #elif !defined(UFS922)
