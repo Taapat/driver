@@ -177,7 +177,7 @@ else ifdef FLASH_UFS910
 cx24116-objs +=	cx24116_dvbapi5/cx24116.o
 obj-m += cx24116.o
 else ifdef TF7700
-cx24116-objs += cx24116_dvbapi5/cx24116.o
+cx24116-objs += cx24116/cx24116.o
 obj-m += cx24116.o
 else ifdef OCTAGON1008
 avl2108-objs +=        avl2108/avl2108.o
