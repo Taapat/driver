@@ -47,6 +47,11 @@
 #include <pvr_config.h>
 #include <linux/platform_device.h>
 
+#if defined(TF7700)
+//Workaround, TF7700 crashes on high speed fw upload
+#define CONFIG_I2C_STM
+#endif
+
 // Fast i2c delay (1ms ~ 1MHz) is only used to speed up the firmware
 // download. All other read/write operations are executed with the default
 // i2c bus speed (100kHz ~ 10ms).
@@ -1163,6 +1168,25 @@ static void cx24116_release(struct dvb_frontend *fe)
 
 struct plat_tuner_config tuner_resources[] = 
 {
+#if defined(TF7700)
+	/* TF7700 tuner resources */
+        [0] = {
+                .adapter = 0,
+                .i2c_bus = 0,
+                .i2c_addr = 0x0a >> 1,
+                .tuner_enable = {2, 5, 1},
+                .lnb_enable = {3, 3, 1},
+                .lnb_vsel = {3, 6, 1},
+        },
+        [1] = {
+                .adapter = 0,
+                .i2c_bus = 1,
+                .i2c_addr = 0x0a >> 1,
+                .tuner_enable = {2, 6, 1},
+                .lnb_enable = {1, 0, 1},
+                .lnb_vsel = {1, 3, 1},
+        },
+#else
 	/* UFS910 tuner resources */
         [0] = {
                 .adapter = 0,
@@ -1172,6 +1196,13 @@ struct plat_tuner_config tuner_resources[] =
                 .lnb_enable = {1, 6, 0},
                 .lnb_vsel = {1, 7, 0},
         },
+#endif
+};
+
+struct plat_tuner_data tuner_data = 
+{
+        .num_entries = ARRAY_SIZE(tuner_resources),
+        .tuner_cfg = tuner_resources
 };
 
 static struct dvb_frontend_ops cx24116_ops;
@@ -1180,56 +1211,62 @@ static int cx24116_probe(struct platform_device *pdev)
 {
 	struct cx24116_state *state = NULL;
 	int ret;
-	struct plat_tuner_config *tuner_cfg = &tuner_resources[0];
 
-	dprintk("%s\n", __func__);
+	int tuner;
+	for(tuner = 0; tuner < ((struct plat_tuner_data *)pdev->dev.platform_data)->num_entries; tuner++) 
+	{
+		//struct plat_tuner_config *tuner_cfg = &tuner_resources[0];
+		struct plat_tuner_config *tuner_cfg = &((struct plat_tuner_data *)pdev->dev.platform_data)->tuner_cfg[tuner];
 
-	/* allocate memory for the internal state */
-	state = kzalloc(sizeof(struct cx24116_state), GFP_KERNEL);
-	if (state == NULL)
-		goto error1;
+		dprintk("%s\n", __func__);
+
+		/* allocate memory for the internal state */
+		state = kzalloc(sizeof(struct cx24116_state), GFP_KERNEL);
+		if (state == NULL)
+			goto error1;
 		
-	state->demod_address = tuner_cfg->i2c_addr;
-	state->i2c = i2c_get_adapter (tuner_cfg->i2c_bus);
+		state->demod_address = tuner_cfg->i2c_addr;
+		state->i2c = i2c_get_adapter (tuner_cfg->i2c_bus);
 
-	state->tuner_enable_pin = stpio_request_pin (tuner_cfg->tuner_enable[0],
-		                          tuner_cfg->tuner_enable[1],
-		                          "tuner enabl", STPIO_OUT);
+		state->tuner_enable_pin = stpio_request_pin (tuner_cfg->tuner_enable[0],
+				                  tuner_cfg->tuner_enable[1],
+				                  "tuner enabl", STPIO_OUT);
 
-	state->lnb_enable_pin = stpio_request_pin (tuner_cfg->lnb_enable[0],
-		                           tuner_cfg->lnb_enable[1],
-		                           "LNB enable", STPIO_OUT);
-		                           
-	state->lnb_vsel_pin = stpio_request_pin (tuner_cfg->lnb_vsel[0],
-		                         tuner_cfg->lnb_vsel[1],
-		                         "LNB vsel", STPIO_OUT);
+		state->lnb_enable_pin = stpio_request_pin (tuner_cfg->lnb_enable[0],
+				                   tuner_cfg->lnb_enable[1],
+				                   "LNB enable", STPIO_OUT);
+				                   
+		state->lnb_vsel_pin = stpio_request_pin (tuner_cfg->lnb_vsel[0],
+				                 tuner_cfg->lnb_vsel[1],
+				                 "LNB vsel", STPIO_OUT);
 
-	if ((state->i2c == NULL) || (state->tuner_enable_pin == NULL) ||
-	    (state->lnb_enable_pin == NULL) || (state->lnb_vsel_pin == NULL))
-	{
-		printk ("cx24116: failed to allocate resources\n");
-		goto error2;
-	}
+		if ((state->i2c == NULL) || (state->tuner_enable_pin == NULL) ||
+		    (state->lnb_enable_pin == NULL) || (state->lnb_vsel_pin == NULL))
+		{
+			printk ("cx24116: failed to allocate resources\n");
+			goto error2;
+		}
 
-	state->tuner_enable_act = tuner_cfg->tuner_enable[2];
-	state->lnb_enable_act = tuner_cfg->lnb_enable[2];
-	state->lnb_vsel_act = tuner_cfg->lnb_vsel[2];
+		state->tuner_enable_act = tuner_cfg->tuner_enable[2];
+		state->lnb_enable_act = tuner_cfg->lnb_enable[2];
+		state->lnb_vsel_act = tuner_cfg->lnb_vsel[2];
 
-	// enable the pins
-	cx24116_reset(state);
+		// enable the pins
+		cx24116_reset(state);
 	
-	/* check if the demod is present */
-	ret = (cx24116_readreg(state, 0xFF) << 8) | cx24116_readreg(state, 0xFE);
-	if (ret != 0x0501) 
-	{
-		printk(KERN_INFO "Invalid probe, probably not a CX24116 device\n");
-		goto error2;
-	}
+		/* check if the demod is present */
+		ret = (cx24116_readreg(state, 0xFF) << 8) | cx24116_readreg(state, 0xFE);
+		if (ret != 0x0501) 
+		{
+			printk(KERN_INFO "Invalid probe, probably not a CX24116 device\n");
+			goto error2;
+		}
 
-	/* create dvb_frontend */
-	memcpy(&state->frontend.ops, &cx24116_ops, sizeof(struct dvb_frontend_ops));
-	state->frontend.demodulator_priv = state;
-	dvb_register_frontend(adapter, &state->frontend);
+		/* create dvb_frontend */
+		memcpy(&state->frontend.ops, &cx24116_ops, sizeof(struct dvb_frontend_ops));
+		state->frontend.demodulator_priv = state;
+		dvb_register_frontend(adapter, &state->frontend);
+	}
 	return 0;
 
 error2:
@@ -1257,11 +1294,7 @@ static struct platform_driver cx24116_driver =
 	.remove = cx24116_remove,
 };
 
-struct plat_tuner_data tuner_data = 
-{
-        .num_entries = ARRAY_SIZE(tuner_resources),
-        .tuner_cfg = tuner_resources
-};
+
 
 static struct platform_device tuner_device = 
 {
