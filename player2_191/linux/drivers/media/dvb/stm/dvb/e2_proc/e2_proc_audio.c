@@ -146,10 +146,31 @@ static void WriteRegister(volatile unsigned long *reg,unsigned long val)
 }
 
 #if defined(UFS912) || defined(SPARK) || defined (SPARK7162) || defined(ATEVIO7500)
+
+#define SPDIF_EN		(1L<<3)
+#define PCM_EN   		(1L<<5)
+#define SPDIF_PCM_DIS	0xFFFFFFD7
+#define SPDIF_DIS 		0xFFFFFFF7
+#define STb7105_AUDIO_BASE	0xfe210200
+
 void spdif_out_mute(int mute)
 {
-#warning fixme search the audio mute register for 7111 arch
-   printk("warning: spdif_out_mute currently not implemented for 7111 arch\n");
+	unsigned long val;
+	unsigned long *RegMap;
+
+	RegMap = (unsigned long*)ioremap(STb7105_AUDIO_BASE,0x10);
+
+	if (mute == AVS_MUTE)
+	{
+		val = ReadRegister( RegMap );
+		WriteRegister(RegMap, val & SPDIF_DIS);
+	}
+	else
+	{
+		val = ReadRegister( RegMap );
+		WriteRegister(RegMap ,val | SPDIF_EN);
+	}
+	iounmap(RegMap);
 }
 #else
 
@@ -331,7 +352,11 @@ int proc_audio_j1_mute_read (char *page, char **start, off_t off, int count,
         return len;
 }
 
-static int passthrough = 1;
+/* konfetti: the defaul in pseudo_mixer.c is currently
+ * no passthrough (search for SND_PSEUDO_MIXER_SPDIF_ENCODING_PCM)
+ * so set the correct value here
+ */
+static int passthrough = 0;
 
 int e2_proc_audio_getPassthrough(void) {
 	return passthrough;
