@@ -278,6 +278,69 @@ static int info_model_read(char *page, char **start, off_t off, int count,
   return len;
 }
 
+static char* three_d_mode = NULL;
+
+static int three_d_mode_read(char *page, char **start, off_t off, int count,
+                           int *eof, void *data)
+{
+  int len = 0;
+  if(three_d_mode == NULL){
+     len = sprintf(page, "off\n");
+  }else{
+     len = sprintf(page, three_d_mode);
+  }
+  
+  return len;
+}
+
+static int three_d_mode_write(struct file *file, const char __user *buf,
+                           unsigned long count, void *data)
+{
+	char 		*page;
+	ssize_t 	ret = -ENOMEM;
+
+	char* myString = kmalloc(count + 1, GFP_KERNEL);
+
+	printk("%s %ld - ", __FUNCTION__, count);
+
+	page = (char *)__get_free_page(GFP_KERNEL);
+	if (page) 
+	{
+		ret = -EFAULT;
+		if (copy_from_user(page, buf, count))
+			goto out;
+
+		strncpy(myString, page, count);
+		myString[count] = '\0';
+
+		printk("%s\n", myString);
+		
+		if (strncmp("sbs", myString, 3) == 0)
+		{
+			if(three_d_mode != NULL) kfree(three_d_mode);
+			three_d_mode = myString;
+		}		
+		else if (strncmp("tab", myString, 3) == 0)
+		{
+			if(three_d_mode != NULL) kfree(three_d_mode);
+			three_d_mode = myString;
+		}
+		else if (strncmp("off", myString, 3) == 0)
+		{
+			if(three_d_mode != NULL) kfree(three_d_mode);
+			three_d_mode = myString;
+		}	
+		
+		/* always return count to avoid endless loop */
+		ret = count;	
+	}
+	
+out:
+	free_page((unsigned long)page);
+	if(three_d_mode != myString) kfree(myString);
+	return ret;
+}
+
 static int zero_read(char *page, char **start, off_t off, int count,
                            int *eof, void *data)
 {
@@ -322,6 +385,7 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/video/policy"                                                 , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/video/policy_choices"                                         , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/video/videomode"                                              , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/video/3d_mode"                                                , NULL, three_d_mode_read, three_d_mode_write, NULL, ""},
 	{cProcEntry, "stb/video/videomode_50hz"                                         , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/video/videomode_60hz"                                         , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/video/videomode_choices"                                      , NULL, NULL, NULL, NULL, ""},
