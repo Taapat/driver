@@ -664,6 +664,28 @@ static ssize_t show_tmds_status(struct device *dev, struct device_attribute *att
   return sz;
 }
 
+#if defined(__TDT__) 
+static ssize_t show_hdmi_edid(struct device *dev, struct device_attribute *attr, char *buf)
+{
+  struct stm_hdmi *hdmi = dev_get_drvdata(dev);
+  int i = 0, j = 0, offset = 0;
+
+  mutex_lock(&hdmi->lock);
+
+  for(i = 0; i < 10/*STM_MAX_EDID_BLOCKS*/; i++)
+  {
+    for(j = 0; j < 128; j++)
+    {
+      offset += sprintf(&buf[offset], "%02X%c", hdmi->edid_info.raw[i][j], (j+1)%16==0?'\n':' ');
+    }
+    offset += sprintf(&buf[offset], "\n");
+  }
+
+  mutex_unlock(&hdmi->lock);
+
+  return offset;
+}
+#endif
 
 static struct device_attribute stmhdmi_device_attrs[] = {
 __ATTR(aspect, S_IRUGO, show_hdmi_aspect, NULL),
@@ -671,6 +693,9 @@ __ATTR(cea861_codes, S_IRUGO, show_hdmi_cea861, NULL),
 __ATTR(type, S_IRUGO, show_hdmi_display_type, NULL),
 __ATTR(name, S_IRUGO, show_hdmi_display_name, NULL),
 __ATTR(hotplug, S_IRUGO, show_hdmi_hotplug, NULL),
+#if defined(__TDT__) 
+__ATTR(edid, S_IRUGO, show_hdmi_edid, NULL),
+#endif
 __ATTR(modes, S_IRUGO, show_hdmi_modes, NULL),
 __ATTR(speaker_allocation, S_IRUGO, show_hdmi_speaker_allocation, NULL),
 __ATTR(audio_capabilities, S_IRUGO, show_hdmi_audio_capabilities, NULL),

@@ -61,7 +61,7 @@ static struct stmcore_display_pipeline_data platform_data[] = {
     .hdmi_irq                 = evt2irq(0x15C0),
 #if defined(UFS912) && defined(__TDT__)
     .hdmi_i2c_adapter_id      = 3,
-#elif defined(SPARK)
+#elif defined(SPARK) && defined(__TDT__)
 	.hdmi_i2c_adapter_id	  = 2,
 #else
     .hdmi_i2c_adapter_id      = 0,
