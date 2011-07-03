@@ -87,6 +87,7 @@ int micomWriteCommand(char command, char* buffer, int len, int needAck)
 
     for (i = 0; i < len; i++)
     {
+	dprintk(201, "Put: %c\n", buffer[i]);
         serial_putc (buffer[i]);
     }
 

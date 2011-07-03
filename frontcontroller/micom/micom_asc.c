@@ -85,7 +85,11 @@ int serial_putc (char Data)
 #endif
     unsigned long         Counter = 200000;
 
-    while (((*ASC_3_INT_STA & ASC_INT_STA_THE) == 0) && --Counter);
+    while (((*ASC_3_INT_STA & ASC_INT_STA_THE) == 0) && --Counter)
+    {
+        // We are to fast, lets make a break
+        udelay(0);
+    }
 
     if (Counter == 0)
     {

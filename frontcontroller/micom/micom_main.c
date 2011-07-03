@@ -481,20 +481,33 @@ out_switch:
 
 static irqreturn_t FP_interrupt(int irq, void *dev_id)
 {
-    unsigned int *ASC_X_INT_STA = (unsigned int*)(ASCXBaseAddress + ASC_INT_STA);
-    char         *ASC_X_RX_BUFF = (char*)        (ASCXBaseAddress + ASC_RX_BUFF);
-    int          dataArrived = 0;
-    
-    if (paramDebug >= 100) 
-        printk("i - ");
+    unsigned int  *ASC_X_INT_STA = (unsigned int*)  (ASCXBaseAddress + ASC_INT_STA);
+    unsigned char *ASC_X_RX_BUFF = (unsigned char*) (ASCXBaseAddress + ASC_RX_BUFF);
+    unsigned char dataArrived = 0;
 
+    // Run this loop as long as data is ready to be read: RBF
     while (*ASC_X_INT_STA & ASC_INT_STA_RBF)
     {
-        RCVBuffer [RCVBufferStart] = *ASC_X_RX_BUFF;
+        // Safe the new read byte at the proper place in the received buffer
+        RCVBuffer[RCVBufferStart] = *ASC_X_RX_BUFF;
+
+        if (paramDebug >= 201) 
+            printk("RCVBuffer[%03u] = %02X\n", RCVBufferStart, RCVBuffer[RCVBufferStart]);
+
+        // We are to fast, lets make a break
+        udelay(0);
+
+        // Increase the received buffer counter, reset if > than max BUFFERSIZE
+        // TODO: Who resets this counter? nobody always write till buffer is full seems a bad idea
         RCVBufferStart = (RCVBufferStart + 1) % BUFFERSIZE;
+
 
         dataArrived = 1;
         
+        // If the buffer counter == the buffer end, throw error.
+        // What is this ?
+        if (paramDebug >= 201) 
+            printk("RCVBufferStart(%03u) == RCVBufferEnd(%03u)\n", RCVBufferStart, RCVBufferEnd);
         if (RCVBufferStart == RCVBufferEnd)
         {
             printk ("FP: RCV buffer overflow!!!\n");
