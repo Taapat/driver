@@ -1681,6 +1681,11 @@ static irqreturn_t FP_interrupt(int irq, void *dev_id)
 
     dataArrived = 1;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
+        // We are to fast, lets make a break
+        udelay(0);
+#endif
+
     if (RCVBufferStart == RCVBufferEnd)
       printk ("FP: RCV buffer overflow!!!\n");
   }
