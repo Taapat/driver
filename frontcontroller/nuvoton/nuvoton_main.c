@@ -485,11 +485,16 @@ static irqreturn_t FP_interrupt(int irq, void *dev_id)
         RCVBuffer [RCVBufferStart] = *ASC_X_RX_BUFF;
         RCVBufferStart = (RCVBufferStart + 1) % BUFFERSIZE;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
+        // We are to fast, lets make a break
+        udelay(0);
+#endif
+
         dataArrived = 1;
 
         if (RCVBufferStart == RCVBufferEnd)
         {
-            printk ("FP: RCV buffer overflow!!!\n");
+            printk ("FP: RCV buffer overflow!!! (%d - %d)\n", RCVBufferStart, RCVBufferEnd);
         }
     }
 
