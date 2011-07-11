@@ -119,12 +119,12 @@ int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
   {
     switch ( dvbdmxfeed->pes_type )
     {
-    case DMX_PES_VIDEO0:
-    case DMX_PES_VIDEO1:
+    case DMX_TS_PES_VIDEO0:
+    case DMX_TS_PES_VIDEO1:
       bufType = VID_BUFFER;
       break;
-    case DMX_PES_AUDIO0:
-    case DMX_PES_AUDIO1:
+    case DMX_TS_PES_AUDIO0:
+    case DMX_TS_PES_AUDIO1:
       bufType = AUD_BUFFER;
       break;
     case DMX_TS_PES_TELETEXT:
@@ -163,13 +163,17 @@ int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
       /* link audio/video slot to the descrambler */
       if ( dvbdmxfeed->type == DMX_TYPE_TS )
       {
-	if ((dvbdmxfeed->pes_type == DMX_TS_PES_VIDEO) || (dvbdmxfeed->pes_type == DMX_TS_PES_AUDIO))
-	{
-	  int err;
-	  if ((err = pti_hal_descrambler_link(pSession->session, pSession->descramblers[pSession->descramblerindex[vLoop]], pSession->slots[vLoop])) != 0)
-	    printk("Error linking slot %d to descrambler %d, err = %d\n", pSession->slots[vLoop], pSession->descramblers[pSession->descramblerindex[vLoop]], err);
-	  else dprintk("linking slot %d to descrambler %d, session = %d type = %d\n", pSession->slots[vLoop], pSession->descramblers[pSession->descramblerindex[vLoop]], pSession->session, dvbdmxfeed->pes_type);
-	}
+	     if ((dvbdmxfeed->pes_type == DMX_TS_PES_VIDEO) || (dvbdmxfeed->pes_type == DMX_TS_PES_AUDIO) ||
+             ((dvbdmxfeed->pes_type == DMX_TS_PES_OTHER) && (dvbdmxfeed->pid > 50))
+             )
+/* go hack: let's think about this (>50) maybe it is necessary to descramble this tables too ?!?! */
+         {
+	       int err;
+	       if ((err = pti_hal_descrambler_link(pSession->session, pSession->descramblers[pSession->descramblerindex[vLoop]], pSession->slots[vLoop])) != 0)
+	         printk("Error linking slot %d to descrambler %d, err = %d\n", pSession->slots[vLoop], pSession->descramblers[pSession->descramblerindex[vLoop]], err);
+	       else 
+             printk("linking slot %d to descrambler %d, session = %d type = %d\n", pSession->slots[vLoop], pSession->descramblers[pSession->descramblerindex[vLoop]], pSession->session, dvbdmxfeed->pes_type);
+	     }
       }
 
       printk ( "pid %d already collecting. references %d \n",
@@ -207,17 +211,20 @@ int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
   if ( dvbdmxfeed->type == DMX_TYPE_TS )
   {
     /* link audio/video slot to the descrambler */
-    if ((dvbdmxfeed->pes_type == DMX_TS_PES_VIDEO) ||
-        (dvbdmxfeed->pes_type == DMX_TS_PES_AUDIO))
+    if ((dvbdmxfeed->pes_type == DMX_TS_PES_VIDEO) || (dvbdmxfeed->pes_type == DMX_TS_PES_AUDIO) ||
+        ((dvbdmxfeed->pes_type == DMX_TS_PES_OTHER) && (dvbdmxfeed->pid > 50))
+/* go hack: let's think about this (>50) maybe it is necessary to descramble this tables too ?!?! */
+       )
     {
       int err;
       if ((err = pti_hal_descrambler_link(pSession->session,
                                     pSession->descramblers[pSession->descramblerindex[pSession->num_pids]],
                                     pSession->slots[pSession->num_pids])) != 0)
-	printk("Error linking slot %d to descrambler %d, err = %d\n",
+	      printk("Error linking slot %d to descrambler %d, err = %d\n",
                 pSession->slots[pSession->num_pids],
                 pSession->descramblers[pSession->descramblerindex[pSession->num_pids]], err);
-     else dprintk("linking slot %d to descrambler %d, session = %d type=%d\n", pSession->slots[pSession->num_pids], pSession->descramblers[pSession->descramblerindex[pSession->num_pids]], pSession->session, dvbdmxfeed->pes_type);
+     else 
+          printk("linking slot %d to descrambler %d, session = %d type=%d\n", pSession->slots[pSession->num_pids], pSession->descramblers[pSession->descramblerindex[pSession->num_pids]], pSession->session, dvbdmxfeed->pes_type);
     }
   }
 
