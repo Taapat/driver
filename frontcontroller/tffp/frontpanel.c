@@ -211,7 +211,14 @@ static void SendFPByte (byte Data)
   unsigned int          *ASC_3_INT_STA = (unsigned int*)(ASC3BaseAddress + ASC_INT_STA);
   dword                  Counter = 100000;
 
-  while (((*ASC_3_INT_STA & ASC_INT_STA_THE) == 0) && --Counter);
+  while (((*ASC_3_INT_STA & ASC_INT_STA_THE) == 0) && --Counter)
+  {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
+    // We are to fast, lets make a break
+    udelay(0);
+#endif
+  }
+
   *ASC_3_TX_BUFF = Data;
 }
 
@@ -1680,6 +1687,11 @@ static irqreturn_t FP_interrupt(int irq, void *dev_id)
     RCVBufferStart = (RCVBufferStart + 1) % BUFFERSIZE;
 
     dataArrived = 1;
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
+        // We are to fast, lets make a break
+        udelay(0);
+#endif
 
     if (RCVBufferStart == RCVBufferEnd)
       printk ("FP: RCV buffer overflow!!!\n");
