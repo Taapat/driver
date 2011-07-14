@@ -212,13 +212,30 @@ static const int chromaScale = 112500; // 112.500%, from DENC validation report
  * to STPIO_BIDIR_Z1 (for pio 2,2) or to STPIO_ALT_BIDIR (for pio 4,7)
  * sometime before we run.
  */
+
 #undef STx7109c3_USE_HDMI_HOTPLUG
+
+#ifndef __TDT__
 #if !defined(STx7109c3_USE_HDMI_HOTPLUG)
 #define GPIO_PIN_HOTPLUG stm_gpio(2,2)
 #else /* STx7109c3_USE_HDMI_HOTPLUG */
 /* The pin must have been set to STPIO_ALT_BIDIR by some code. */
 #define GPIO_PIN_HOTPLUG stm_gpio(4,7)
 #endif /* STx7109c3_USE_HDMI_HOTPLUG */
+#else
+
+#if defined(UFS922)
+#define GPIO_PIN_HOTPLUG stm_gpio(2,3)
+#elif defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(FORTIS_HDBOX) || defined(OCTAGON1008)
+#define GPIO_PIN_HOTPLUG stm_gpio(4,7)
+#else
+/* bidir z1 must be set with pad or stpio* in kernel setup!!! */
+#warning warning: hotplug must be STPIO_BIDIR_Z1 which is not possible to set with gpio in current kernel
+#define GPIO_PIN_HOTPLUG stm_gpio(2,2)
+#endif
+
+#endif //TDT
+
 static bool claimed_gpio_hotplug;
 
 #ifndef __TDT__
@@ -269,6 +286,12 @@ int __init stmcore_probe_device(struct stmcore_display_pipeline_data **pd,
 
       if(gpio_request(GPIO_PIN_HOTPLUG, "HDMI Hotplug") >= 0)
         claimed_gpio_hotplug = true;
+
+#ifdef __TDT__
+#if defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(FORTIS_HDBOX) || defined(OCTAGON1008)
+      gpio_direction_input(GPIO_PIN_HOTPLUG);
+#endif
+#endif
       /* We expect the gpio pin function to have been set up correctly by the
          kernel already, see comment above. */
       if(!claimed_gpio_hotplug)
