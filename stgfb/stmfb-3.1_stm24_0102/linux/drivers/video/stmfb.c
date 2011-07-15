@@ -563,7 +563,6 @@ static int stmfb_createfb(struct stmfb_info *i, int display, const char *name)
     goto failed0;
   }
 
-
   /* try to allocate memory from BPA2 as additional memory for graphics
      operations. Basically, this is not vital, but driver loading will still
      fail if an auxsize has been specified in the module parameters which can
@@ -899,6 +898,11 @@ restart:
       goto failed_register;
     }
   }
+
+//#if (defined(UFS912) || defined(SPARK) || defined(AT7500)) && defined(__TDT__)
+  // WORKAROUND: Clear the framebuffer 
+  memset(i->info.screen_base, 0x00, i->ulFBSize);
+//#endif
 
   stmfb_init_class_device(i);
 
