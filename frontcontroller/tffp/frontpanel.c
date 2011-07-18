@@ -45,9 +45,10 @@
 /* 2009-10-13 V4.4  Added typematic rate control for the power-off key    */
 /* 2009-10-13 V4.5  Fixed error in function TranslateUTFString            */
 /*                  In special casses the ending '\0' has been skipped    */
+/* 2011-07-18 V4.6  Add quick hack for long key press                     */
 /**************************************************************************/
 
-#define VERSION         "V4.5"
+#define VERSION         "V4.6"
 //#define DEBUG
 
 #include <asm/io.h>
@@ -1027,24 +1028,32 @@ static void InterpretKeyPresses (void)
   byte                  Key;
 
   Key = GetBufferByte (2);
-  if ((Key & 0x80) == 0)
+  // This should only be 0 if LKP is enabled. Would be better if that is set by using key emulation mode
+  if (DefaultTypematicRate == 0 && DefaultTypematicDelay == 0)
   {
     AddKeyToBuffer (Key, GetBufferByte(1) == FPKEYPRESSFP);
-    TypematicDelay = DefaultTypematicDelay;
-    TypematicRate  = DefaultTypematicRate;
   }
   else
   {
-    if (TypematicDelay == 0)
+    if ((Key & 0x80) == 0)
     {
-      if (TypematicRate == 0)
-      {
-        AddKeyToBuffer (Key & 0x7f, GetBufferByte(1) == FPKEYPRESSFP);
-        TypematicRate = DefaultTypematicRate;
-      }
-      else TypematicRate--;
+      AddKeyToBuffer (Key, GetBufferByte(1) == FPKEYPRESSFP);
+      TypematicDelay = DefaultTypematicDelay;
+      TypematicRate  = DefaultTypematicRate;
     }
-    else TypematicDelay--;
+    else
+    {
+      if (TypematicDelay == 0)
+      {
+        if (TypematicRate == 0)
+        {
+          AddKeyToBuffer (Key & 0x7f, GetBufferByte(1) == FPKEYPRESSFP);
+          TypematicRate = DefaultTypematicRate;
+        }
+        else TypematicRate--;
+      }
+      else TypematicDelay--;
+    }
   }
 }
 
