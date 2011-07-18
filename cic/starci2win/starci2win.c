@@ -99,10 +99,10 @@ unsigned char default_values[33] =
 unsigned char default_values[33] =
 {
   0x00, /* register address for block transfer */
-  0x02, 0x00, 0x01, 0x00, 0x00, 0x33, 0x00, 0x00,
-  0x00, 0x02, 0x00, 0x01, 0x00, 0x00, 0x33, 0x00,
-  0x00, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
-  0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00
+  0x00, 0x00, 0x02, 0x00, 0x00, 0x44, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x02, 0x00, 0x02, 0x44, 0x00,
+  0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+  0x00, 0x00, 0x00, 0x03, 0x06, 0x00, 0x03, 0x01
 };
 #elif defined (ATEVIO7500)
 unsigned char default_values[33] =
@@ -380,7 +380,7 @@ int setCiSource(int slot, int source)
   if(slot != source)
   {
     /* send stream A through module B and stream B through module A */
-#if defined(TF7700) || defined(ATEVIO7500)
+#if defined(TF7700) || defined(ATEVIO7500) || defined(FORTIS_HDBOX)
     val |= 0x20;
 #else
     val &= ~0x20;
@@ -390,7 +390,7 @@ int setCiSource(int slot, int source)
   {
     /* enforce direct mapping */
     /* send stream A through module A and stream B through module B */
-#if defined(TF7700) || defined(ATEVIO7500)
+#if defined(TF7700) || defined(ATEVIO7500) || defined(FORTIS_HDBOX)
     val &= ~0x20;
 #else
     val |= 0x20;
@@ -455,7 +455,7 @@ static int starci_poll_slot_status(struct dvb_ca_en50221 *ca, int slot, int open
 
   slot_status = starci_readreg(state, ctrlReg[slot]) & 0x01;
 
-#ifdef ATEVIO7500
+#if defined(ATEVIO7500) || defined(FORTIS_HDBOX)
   if (slot_status != state->module_present[slot])
   {
 	  if (slot_status)
@@ -559,7 +559,7 @@ static int starci_slot_reset(struct dvb_ca_en50221 *ca, int slot)
     starci_writereg(state, reg[slot], result | 0x80);
 
     starci_writereg(state, DEST_SEL_REG, 0x0);
-#ifdef ATEVIO7500
+#if defined(ATEVIO7500) || defined(FORTIS_HDBOX)
     msleep(200);
 #else
     msleep(60);
@@ -575,7 +575,7 @@ static int starci_slot_reset(struct dvb_ca_en50221 *ca, int slot)
   /* reset status variables because module detection has to
      be reported after a delay */
   state->module_ready[slot] = 0;
-#ifdef ATEVIO7500
+#if defined(ATEVIO7500) || defined(FORTIS_HDBOX)
   state->module_present[slot] = 0;
 #endif
   state->detection_timeout[slot] = 0;
@@ -741,7 +741,7 @@ static int starci_slot_ts_enable(struct dvb_ca_en50221 *ca, int slot)
 
   result = starci_readreg(state, reg[slot]);
 
-#ifndef ATEVIO7500
+#if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX)
   starci_writereg(state, reg[slot], 0x23);
 #else
   starci_writereg(state, reg[slot], 0x21);
@@ -797,7 +797,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 
   state->ca.data 		= state;
 
-#ifdef ATEVIO7500
+#if defined(ATEVIO7500) || defined(FORTIS_HDBOX)
   state->module_present[0] = 0;
   state->module_present[1] = 0;
 #endif
@@ -831,6 +831,9 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 
   module_A_pin = stpio_request_pin (1, 2, "StarCI_ModA", STPIO_OUT);
   module_B_pin = stpio_request_pin (2, 7, "StarCI_ModB", STPIO_OUT);
+
+  stpio_set_pin (module_A_pin, 0);
+  stpio_set_pin (module_B_pin, 0);
 #elif defined(ATEVIO7500)
   /* the magic potion - some clkb settings */
   ctrl_outl(0x0000c0de, 0xfe000010);
@@ -865,13 +868,13 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   /* power on (only possible with LOCK = 1)
      other bits cannot be set when LOCK is = 1 */
      
-#ifdef ATEVIO7500
+#if defined(ATEVIO7500) || defined(FORTIS_HDBOX)
   starci_writereg(state, 0x18, 0x21);
 #else
   starci_writereg(state, 0x18, 0x01);
 #endif
 
-#ifndef ATEVIO7500
+#if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX)
   ctrl_outl(0x0, reg_config + EMI_LCK);
   ctrl_outl(0x0, reg_config + EMI_GEN_CFG);
 #endif
@@ -929,7 +932,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   ctrl_outl(0x0, reg_config + EMI_FLASH_CLK_SEL);
 #endif
 
-#ifndef ATEVIO7500
+#if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX)
   ctrl_outl(0x1, reg_config + EMI_CLK_EN);
 #endif
 
@@ -967,7 +970,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 	  goto error;
   }
 
-#ifndef ATEVIO7500
+#if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX)
   ctrl_outl(0x1F,reg_config + EMI_LCK);
 #endif
 

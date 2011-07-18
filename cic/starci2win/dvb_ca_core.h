@@ -11,7 +11,7 @@ struct dvb_ca_state {
         struct i2c_adapter      		*i2c;
         int					i2c_addr;
         int                                     module_ready[2];
-#ifdef ATEVIO7500
+#if defined(ATEVIO7500) || defined(FORTIS_HDBOX)
         int                                     module_present[2];
 #endif
         unsigned long                           detection_timeout[2];

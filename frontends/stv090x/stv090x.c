@@ -19,6 +19,7 @@
 	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/string.h>
@@ -53,7 +54,7 @@ static unsigned int verbose = FE_DEBUGREG;
 
 static int writereg_lnb_supply (struct stv090x_state *state, char data);
 
-#if defined(CONFIG_KERNELVERSION)  && defined(FORTIS_HDBOX)/* STLinux 2.3 */
+#if (LINUX_VERSION_CODE == KERNEL_VERSION(2,6,23))  && defined(FORTIS_HDBOX)
 void ctrl_fn_using_non_p3_address(void)
 {
 	printk("ctrl_fn_using_non_p3_address FRONTEND OK\n");
@@ -4721,6 +4722,12 @@ static enum stv090x_signal_state stv090x_algo(struct stv090x_state *state)
 
 	dprintk(10, "%s >\n", __func__);
 
+    reg = ctrl_inb(0xa2800000);
+
+    printk("unknown reg examination = 0x%02x\n", reg);
+    
+    reg = 0x00;
+ 
     if (state->device != STX7111)
 	{
 	   reg = STV090x_READ_DEMOD(state, TSCFGH);
