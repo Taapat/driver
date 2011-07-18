@@ -4722,12 +4722,6 @@ static enum stv090x_signal_state stv090x_algo(struct stv090x_state *state)
 
 	dprintk(10, "%s >\n", __func__);
 
-    reg = ctrl_inb(0xa2800000);
-
-    printk("unknown reg examination = 0x%02x\n", reg);
-    
-    reg = 0x00;
- 
     if (state->device != STX7111)
 	{
 	   reg = STV090x_READ_DEMOD(state, TSCFGH);
