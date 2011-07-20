@@ -44,7 +44,7 @@ static struct stv090x_config tt1600_stv090x_config = {
 
 #if defined(FORTIS_HDBOX)
 	.ts1_mode		= STV090x_TSMODE_DVBCI/*STV090x_TSMODE_SERIAL_CONTINUOUS*/,
-	.ts2_mode		= STV090x_TSMODE_SERIAL_CONTINUOUS/*STV090x_TSMODE_SERIAL_CONTINUOUS*/,
+	.ts2_mode		= STV090x_TSMODE_NOTSET,
 #elif defined(UFS912)
 	.ts1_mode		= STV090x_TSMODE_DVBCI,
 	.ts2_mode		= STV090x_TSMODE_SERIAL_CONTINUOUS,
