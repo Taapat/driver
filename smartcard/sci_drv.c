@@ -590,7 +590,16 @@ irqreturn_t sci_irq1_rx_tx_handler (int irq, void *dev_id)
     ULONG res, data;
     SCI_CONTROL_BLOCK *sci = &sci_cb[1];
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
+/* konfetti: disabling an irq waits for completion
+ * of all pending irq's, so its not possible in
+ * an irq handler. nevertheless this seems to be
+ * no problem in older kernel versions. But I think
+ * its not necessary to disable the irq, otherwise
+ * we should use the ctrl regs to disable it.
+ */
     disable_irq(SCI1_INT_RX_TX);
+#endif
 	res = get_reg(sci, BASE_ADDRESS_ASC1, ASC1_STA);
 
     if( (res & RX_FULL_IRQ) && /* Rx interrupt active */((sci->irq_mode==RX_FULL_IRQ) ||
@@ -609,7 +618,10 @@ irqreturn_t sci_irq1_rx_tx_handler (int irq, void *dev_id)
 	                PERROR("Data are received when the buffer is full\n");
 					red_read(sci);
 					res=0;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
+/* se below */
 	                enable_irq(SCI1_INT_RX_TX);
+#endif
 	                return IRQ_HANDLED;
 	            }
 	            else
@@ -694,7 +706,10 @@ irqreturn_t sci_irq1_rx_tx_handler (int irq, void *dev_id)
 		}
 	}
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
+/* se below */
     enable_irq(SCI1_INT_RX_TX);
+#endif
 
     return IRQ_HANDLED;
 }
@@ -711,7 +726,16 @@ irqreturn_t sci_irq0_rx_tx_handler (int irq, void *dev_id)
 
 	dprintk(8,"...\n");
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
+/* konfetti: disabling an irq waits for completion
+ * of all pending irq's, so its not possible in
+ * an irq handler. nevertheless this seems to be
+ * no problem in older kernel versions. But I think
+ * its not necessary to disable the irq, otherwise
+ * we should use the ctrl regs to disable it.
+ */
     disable_irq(SCI0_INT_RX_TX);
+#endif
 	res = get_reg(sci, BASE_ADDRESS_ASC0, ASC0_STA);
 
     if( (res & RX_FULL_IRQ) && /* Rx interrupt active */((sci->irq_mode==RX_FULL_IRQ) ||
@@ -730,7 +754,10 @@ irqreturn_t sci_irq0_rx_tx_handler (int irq, void *dev_id)
 					PDEBUG("Data are received when the buffer is full\n");
 					red_read(sci);
 					res=0;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
+/* se below */
 	                enable_irq(SCI0_INT_RX_TX);
+#endif
 	                return IRQ_HANDLED;
 	            }
 	            else
@@ -753,7 +780,6 @@ irqreturn_t sci_irq0_rx_tx_handler (int irq, void *dev_id)
 	                sci->rx_rptr++;
 	            }
 	        }
-	        udelay(0);
    	        res = get_reg(sci, BASE_ADDRESS_ASC0, ASC0_STA);
 		}while (res & 0x1);
 
@@ -818,7 +844,10 @@ irqreturn_t sci_irq0_rx_tx_handler (int irq, void *dev_id)
 		}
 	}
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
+/* se below */
     enable_irq(SCI0_INT_RX_TX);
+#endif
 	dprintk(8," OK\n");
 
     return IRQ_HANDLED;
@@ -2476,7 +2505,7 @@ static int __init sci_module_init(void)
         sci_module_class = class_create(THIS_MODULE, DEVICE_NAME);
         for(i = 0; i < SCI_NUMBER_OF_CONTROLLERS; i++)
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
-            device_create(sci_module_class, NULL, dev, NULL, "sci%d", i);
+            device_create(sci_module_class, NULL, MKDEV(MAJOR_NUM, MINOR_START + i), NULL, "sci%d", i);
 #else
             class_device_create(sci_module_class, NULL, dev, NULL, "sci%d", i);
 #endif            
