@@ -6288,6 +6288,7 @@ static int stv090x_setup(struct dvb_frontend *fe)
 			state->dev_ver);
 	}
 
+#ifndef FORTIS_HDBOX
 	/* ADC1 range */
 	reg = stv090x_read_reg(state, STV090x_TSTTNR1);
 	STV090x_SETFIELD(reg, ADC1_INMODE_FIELD,
@@ -6301,6 +6302,7 @@ static int stv090x_setup(struct dvb_frontend *fe)
 		(config->adc2_range == STV090x_ADC_1Vpp) ? 0 : 1);
 	if (stv090x_write_reg(state, STV090x_TSTTNR3, reg) < 0)
 		goto err;
+#endif
 
 	if (stv090x_write_reg(state, STV090x_TSTRES0, 0x80) < 0)
 		goto err;
