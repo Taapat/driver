@@ -183,6 +183,8 @@ avl2108-objs +=        avl2108/lnb_pio.o
 avl2108-objs +=        avl2108/lnbh221.o
 obj-m += avl2108.o
 
+avl2108_platform-objs += avl2108/avl2108_platform.o
+obj-m += avl2108_platform.o
 else ifdef UFS910
 cx24116-objs += cx24116_dvbapi5/cx24116.o
 obj-m += cx24116.o
