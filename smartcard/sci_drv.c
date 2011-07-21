@@ -753,6 +753,7 @@ irqreturn_t sci_irq0_rx_tx_handler (int irq, void *dev_id)
 	                sci->rx_rptr++;
 	            }
 	        }
+	        udelay(0);
    	        res = get_reg(sci, BASE_ADDRESS_ASC0, ASC0_STA);
 		}while (res & 0x1);
 
