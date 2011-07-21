@@ -3251,11 +3251,7 @@ static struct platform_device *pvr_devices[] =
 	&tuner_device,
 };
 
-#ifdef UFS922
-void cx21143_register_frontend(struct dvb_adapter *dvb_adap)
-#else
 void cx24116_register_frontend(struct dvb_adapter *dvb_adap)
-#endif
 {
   int i = 0;
   dprintk (1, "%s: cx24116 DVB: 0.50 \n", __FUNCTION__);
@@ -3305,11 +3301,7 @@ void cx24116_register_frontend(struct dvb_adapter *dvb_adap)
   return;
 }
 
-#ifdef UFS922
-EXPORT_SYMBOL(cx21143_register_frontend);
-#else
 EXPORT_SYMBOL(cx24116_register_frontend);
-#endif
 
 static struct dvb_frontend_ops dvb_cx24116_fe_qpsk_ops = {
   .info = {

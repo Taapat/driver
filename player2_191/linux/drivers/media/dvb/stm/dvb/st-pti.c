@@ -49,7 +49,8 @@
 //__TDT__: many modifications in this file
 
 #ifdef UFS922
-extern void cx21143_register_frontend(struct dvb_adapter *dvb_adap);
+extern void cx24116_register_frontend(struct dvb_adapter *dvb_adap);
+extern void avl2108_register_frontend(struct dvb_adapter *dvb_adap);
 #elif defined(FORTIS_HDBOX) || defined(UFS912) || defined(SPARK)
 extern void stv090x_register_frontend(struct dvb_adapter *dvb_adap);
 #elif defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1)
@@ -454,10 +455,11 @@ void ptiInit ( struct DeviceContext_s *pContext )
     socket_register_adapter(&pContext->DvbContext->DvbAdapter);
 #elif defined(SPARK7162)
     spark7162_register_frontend( &pContext->DvbContext->DvbAdapter);
-#elif !defined(UFS922)
+#elif defined(UFS922)
     cx24116_register_frontend( &pContext->DvbContext->DvbAdapter);
+    avl2108_register_frontend( &pContext->DvbContext->DvbAdapter);
 #else
-    cx21143_register_frontend ( &pContext->DvbContext->DvbAdapter);
+    cx24116_register_frontend( &pContext->DvbContext->DvbAdapter);
 #endif
     ptiInitialized = 1;
   }
