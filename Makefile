@@ -102,8 +102,13 @@ obj-y	+= simu_button/
 obj-y	+= e2_proc/
 obj-y	+= frontends/
 obj-y	+= frontcontroller/
+
+ifeq ($(findstring pti_np,$(wildcard *)), )
+obj-y	+= pti_np/
+else
 obj-y	+= pti/
-#obj-y	+= pti_np/
+endif
+
 obj-y	+= compcache/
 obj-y	+= bpamem/
 
