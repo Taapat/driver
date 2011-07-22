@@ -160,9 +160,9 @@ ifdef SPARK
 obj-y	+= smartcard/
 endif
 
-#ifdef OCTAGON1008
-#obj-y    += smartcard/
-#endif
+ifdef OCTAGON1008
+obj-y    += smartcard/
+endif
 
 ifdef FORTIS_HDBOX
 obj-y    += smartcard/
