@@ -2932,8 +2932,7 @@ init_cx24116_device (struct dvb_adapter *adapter,
 
   /* initialize the config data */
   cfg->i2c_adap = i2c_get_adapter (tuner_cfg->i2c_bus);
-  cfg->i2c_bus = tuner_cfg->i2c_bus
-  ;
+  cfg->i2c_bus = tuner_cfg->i2c_bus;
   cfg->i2c_addr = tuner_cfg->i2c_addr;
 #if defined(HOMECAST5101)
   cfg->tuner_enable_pin = NULL;
@@ -2991,6 +2990,16 @@ init_cx24116_device (struct dvb_adapter *adapter,
 
   if (frontend == NULL)
   {
+    if(cfg->tuner_enable_pin != NULL)
+      stpio_free_pin (cfg->tuner_enable_pin);
+    if(cfg->lnb_enable_pin != NULL)
+      stpio_free_pin (cfg->lnb_enable_pin);
+    if(cfg->lnb_vsel_pin != NULL)
+      stpio_free_pin (cfg->lnb_vsel_pin);
+    kfree (cfg);
+
+    printk("cx24116_fe_qpsk_attach failed: not a cx24116 ?\n");
+
     return NULL;
   }
 

@@ -102,8 +102,13 @@ obj-y	+= simu_button/
 obj-y	+= e2_proc/
 obj-y	+= frontends/
 obj-y	+= frontcontroller/
+
+ifneq (,$(findstring pti_np,*))
+obj-y	+= pti_np/
+else
 obj-y	+= pti/
-#obj-y	+= pti_np/
+endif
+
 obj-y	+= compcache/
 obj-y	+= bpamem/
 
@@ -160,9 +165,9 @@ ifdef SPARK
 obj-y	+= smartcard/
 endif
 
-#ifdef OCTAGON1008
-#obj-y    += smartcard/
-#endif
+ifdef OCTAGON1008
+obj-y    += smartcard/
+endif
 
 ifdef FORTIS_HDBOX
 obj-y    += smartcard/

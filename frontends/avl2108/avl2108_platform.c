@@ -136,7 +136,7 @@ static struct avl_private_data_s avl_tuner_priv = {
 };
 
 static struct platform_frontend_s avl2108_config = {
-    .numFrontends = 1,
+    .numFrontends = 2,
     .frontendList = (struct platform_frontend_config_s[]) {
         [0] = {
             .name             = "avl2108-1",

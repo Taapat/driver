@@ -156,7 +156,7 @@ static u16 avl2108_i2c_writereg(struct avl2108_state* state, u8 * data, u16 * si
 
     {
         u8 i;
-        u8 dstr[1024];
+        u8 dstr[512];
         dstr[0] = '\0';
         for (i = 0; i < *size; i++)
             sprintf(dstr, "%s 0x%02x", dstr, data[i]);
@@ -1427,6 +1427,36 @@ struct dvb_frontend* avl2108_attach(const struct avl2108_config* config,
     state->boot_done = 0;
     state->diseqc_status = DISEQC_STATUS_UNINIT;
 
+#ifdef UFS922
+    {
+        int ret;
+        u8 b0[] = { 0x00 };
+        u8 b1[] = { 0x00 };
+
+        struct i2c_msg msg[] = 
+        {
+          {.addr = config->demod_address,.flags = 0,.buf = b0,.len = 1},
+          {.addr = config->demod_address,.flags = I2C_M_RD,.buf = b1,.len = 1}
+        };
+
+        ret = i2c_transfer (state->i2c, msg, 2);
+
+        if (ret != 2) 
+        {
+           printk("%s(): i2c-error: %i\n", __func__, ret);
+
+           kfree(state);
+           return NULL;
+        }
+
+        if (b1[0] == 0x99)
+        {
+           printk("avl2108: Detected SP2237\n");
+        } else
+           printk("avl2108: No SP2237\n");
+     }
+#endif
+
     /* Get version and patch (debug only) number */
     if (avl2108_get_version(state, &version) != AVL2108_OK)
     {
@@ -1522,15 +1552,19 @@ static int avl2108_initfe(struct dvb_frontend* fe)
         return -1;
     }
 
-    if (state->equipment.tuner_load_fw)
+    if ((state->config->usedTuner != cTUNER_EXT_STV6306) &&
+        (state->config->usedTuner != cTUNER_EXT_STV6110A))
     {
-        ret = state->equipment.tuner_load_fw(fe);
-        if (ret != AVL2108_OK) {
-            eprintk("Tuner firmware load failed!");
-            return -1;
+        if (state->equipment.tuner_load_fw)
+        {
+            ret = state->equipment.tuner_load_fw(fe);
+            if (ret != AVL2108_OK) {
+                eprintk("Tuner firmware load failed!");
+                return -1;
+            }
         }
     }
-
+    
     /* tuner init start */
 
     ret = avl2108_i2c_write16(state, REG_TUNER_SLAVE_ADDR, state->config->tuner_address);
@@ -1958,6 +1992,13 @@ void avl2108_register_frontend(struct dvb_adapter *dvb_adap)
                                 STPIO_OUT);
 
         printk("tuner_enable_pin %p\n", cfg->tuner_enable_pin);
+        
+        if (cfg->tuner_enable_pin == NULL)
+        {
+            printk("%s: failed\n", __func__);
+            return;
+        } 
+        
         stpio_set_pin(cfg->tuner_enable_pin, !frontendList[i].tuner_enable[2]);
         stpio_set_pin(cfg->tuner_enable_pin, frontendList[i].tuner_enable[2]);
 

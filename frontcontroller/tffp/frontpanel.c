@@ -46,9 +46,10 @@
 /* 2009-10-13 V4.5  Fixed error in function TranslateUTFString            */
 /*                  In special casses the ending '\0' has been skipped    */
 /* 2011-07-18 V4.6  Add quick hack for long key press                     */
+/* 2011-07-23 V4.7  Add LKP emulation mode                                */
 /**************************************************************************/
 
-#define VERSION         "V4.6"
+#define VERSION         "V4.7"
 //#define DEBUG
 
 #include <asm/io.h>
@@ -125,6 +126,7 @@ extern void remove_proc_fp(void);
 
 #define KEYEMUTF7700              0
 #define KEYEMUUFS910              1
+#define KEYEMUTF7700LKP           2
 
 typedef enum
 {
@@ -1000,6 +1002,7 @@ static void AddKeyToBuffer (byte Key, bool FrontPanel)
   switch (KeyEmulationMode)
   {
     case KEYEMUTF7700:
+    case KEYEMUTF7700LKP:
     {
       AddKeyBuffer (FrontPanel ? FPKEYPRESSFP : FPKEYPRESS);
       AddKeyBuffer (Key);
@@ -1013,8 +1016,8 @@ static void AddKeyToBuffer (byte Key, bool FrontPanel)
         printk("FP: undefined UFS910 key (TF=0x%2.2x)\n", Key);
       else
       {
-	AddKeyBuffer (ufs910map[Key]);
-	wake_up_interruptible(&wq);
+        AddKeyBuffer (ufs910map[Key]);
+        wake_up_interruptible(&wq);
       }
       break;
     }
@@ -1028,14 +1031,13 @@ static void InterpretKeyPresses (void)
   byte                  Key;
 
   Key = GetBufferByte (2);
-  // This should only be 0 if LKP is enabled. Would be better if that is set by using key emulation mode
-  if (DefaultTypematicRate == 0 && DefaultTypematicDelay == 0)
+  if (KeyEmulationMode == KEYEMUTF7700LKP)
   {
     AddKeyToBuffer (Key, GetBufferByte(1) == FPKEYPRESSFP);
   }
   else
   {
-    if ((Key & 0x80) == 0)
+    if ((Key & 0x80) == 0) //First burst
     {
       AddKeyToBuffer (Key, GetBufferByte(1) == FPKEYPRESSFP);
       TypematicDelay = DefaultTypematicDelay;
@@ -1538,13 +1540,13 @@ static void FPCommandInterpreter (void)
 
       if (TypematicRate < 1)
       {
-	/* send standby key to the application */
-	if (KeyEmulationMode == KEYEMUTF7700)
-	  AddKeyBuffer (FPKEYPRESSFP);
+        /* send standby key to the application */
+        if (KeyEmulationMode == KEYEMUTF7700)
+          AddKeyBuffer (FPKEYPRESSFP);
 
-	AddKeyBuffer (0x0c);
+        AddKeyBuffer (0x0c);
         TypematicRate = DefaultTypematicRate;
-	wake_up_interruptible(&wq);
+        wake_up_interruptible(&wq);
       }
       else
         TypematicRate--;
@@ -1855,6 +1857,7 @@ static ssize_t FrontPaneldev_read(struct file *filp, const char *buff, size_t le
           switch (KeyEmulationMode)
           {
             case KEYEMUTF7700:
+            case KEYEMUTF7700LKP:
               BytesPerKey = 2;
               for (j = 0; j < BytesPerKey; j++)
               {
