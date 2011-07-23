@@ -103,11 +103,11 @@ obj-y	+= e2_proc/
 obj-y	+= frontends/
 obj-y	+= frontcontroller/
 
-ifeq ($(findstring pti_np,$(wildcard *)), )
-obj-y	+= pti_np/
-else
-obj-y	+= pti/
-endif
+if test -d wibble; then \
+	obj-y	+= pti_np/ ; \
+else \
+	obj-y	+= pti/ ; \
+fi
 
 obj-y	+= compcache/
 obj-y	+= bpamem/
