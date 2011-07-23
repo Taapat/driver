@@ -156,7 +156,7 @@ static u16 avl2108_i2c_writereg(struct avl2108_state* state, u8 * data, u16 * si
 
     {
         u8 i;
-        u8 dstr[1024];
+        u8 dstr[512];
         dstr[0] = '\0';
         for (i = 0; i < *size; i++)
             sprintf(dstr, "%s 0x%02x", dstr, data[i]);
@@ -1552,15 +1552,19 @@ static int avl2108_initfe(struct dvb_frontend* fe)
         return -1;
     }
 
-    if (state->equipment.tuner_load_fw)
+    if ((state->config->usedTuner != cTUNER_EXT_STV6306) &&
+        (state->config->usedTuner != cTUNER_EXT_STV6110A))
     {
-        ret = state->equipment.tuner_load_fw(fe);
-        if (ret != AVL2108_OK) {
-            eprintk("Tuner firmware load failed!");
-            return -1;
+        if (state->equipment.tuner_load_fw)
+        {
+            ret = state->equipment.tuner_load_fw(fe);
+            if (ret != AVL2108_OK) {
+                eprintk("Tuner firmware load failed!");
+                return -1;
+            }
         }
     }
-
+    
     /* tuner init start */
 
     ret = avl2108_i2c_write16(state, REG_TUNER_SLAVE_ADDR, state->config->tuner_address);
