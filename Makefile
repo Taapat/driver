@@ -103,11 +103,11 @@ obj-y	+= e2_proc/
 obj-y	+= frontends/
 obj-y	+= frontcontroller/
 
-if test -d pti_np; then \
-	obj-y	+= pti_np/ ; \
-else \
-	obj-y	+= pti/ ; \
-fi
+ifneq (,$(findstring pti_np,*))
+obj-y	+= pti_np/
+else
+obj-y	+= pti/
+endif
 
 obj-y	+= compcache/
 obj-y	+= bpamem/
