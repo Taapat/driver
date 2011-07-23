@@ -103,7 +103,7 @@ obj-y	+= e2_proc/
 obj-y	+= frontends/
 obj-y	+= frontcontroller/
 
-if test -d wibble; then \
+if test -d pti_np; then \
 	obj-y	+= pti_np/ ; \
 else \
 	obj-y	+= pti/ ; \
