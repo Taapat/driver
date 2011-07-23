@@ -38,6 +38,13 @@ int proc_info_model_read (char *page, char **start, off_t off, int count,
 	len = sprintf(page, "ufs922\n");
 #elif defined(FORTIS_HDBOX)
 	len = sprintf(page, "hdbox\n");
+#elif defined(IPBOX9900)
+	len = sprintf(page, "ipbox9900\n");
+#elif defined(IPBOX99)
+	len = sprintf(page, "ipbox99\n");
+#elif defined(IPBOX55)
+	len = sprintf(page, "ipbox55\n");
+
 #else
 	len = sprintf(page, "ufs910\n");
 #endif

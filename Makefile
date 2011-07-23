@@ -85,6 +85,15 @@ endif
 ifdef HOMECAST5101
 CCFLAGSY += -DHOMECAST5101
 endif
+ifdef IPBOX9900
+CCFLAGSY += -DIPBOX9900
+endif
+ifdef IPBOX99
+CCFLAGSY += -DIPBOX99
+endif
+ifdef IPBOX55
+CCFLAGSY += -DIPBOX55
+endif
 ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
 ccflags-y += $(CCFLAGSY)
 else
@@ -137,7 +146,6 @@ ifndef UFS922
 ifndef TF7700
 obj-y	+= button/
 obj-y	+= led/
-endif
 endif
 endif
 endif

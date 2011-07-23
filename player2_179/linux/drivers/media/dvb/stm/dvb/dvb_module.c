@@ -122,7 +122,11 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
   #endif
     #else /* STLinux 2.2 kernel */
 #ifdef __TDT__
+    #if (DVB_API_VERSION > 3)
+    Result      = dvb_register_adapter (&DvbContext->DvbAdapter, MODULE_NAME, THIS_MODULE,NULL,AdapterNumbers);
+    #else
     Result      = dvb_register_adapter (&DvbContext->DvbAdapter, MODULE_NAME, THIS_MODULE,NULL);
+    #endif
 #else
     Result      = dvb_register_adapter (&DvbContext->DvbAdapter, MODULE_NAME, THIS_MODULE);
 #endif

@@ -30,7 +30,7 @@ obj-m += avl2108_platform.o
 else ifdef UFS912
 stv090x-objs +=	stv090x/stv090x.o
 stv090x-objs +=	stv090x/stv6110x.o
-stv090x-objs +=	stv090x/core.o
+stv090x-objs +=	stv090x/core.o                               
 obj-m += stv090x.o
 else ifdef SPARK
 stv090x-objs +=	spark/stv090x.o
@@ -53,6 +53,28 @@ fe-core-objs +=        hl101/ix7306.o
 fe-core-objs +=        hl101/cx24116.o
 fe-core-objs +=        hl101/core.o
 obj-m += fe-core.o
+else ifdef IPBOX9900
+fe-core-objs +=        ipbox/stv090x.o 
+fe-core-objs +=        ipbox/stv6110x.o
+fe-core-objs +=        ipbox/zl10353.o
+fe-core-objs +=        ipbox/mxl5007t.o
+#fe-core-objs +=        ipbox/tda10023.o
+fe-core-objs +=        ipbox/core.o
+obj-m += fe-core.o
+else ifdef IPBOX99
+fe-core-objs +=        ipbox/stv090x.o 
+fe-core-objs +=        ipbox/stv6110x.o
+fe-core-objs +=        ipbox/zl10353.o
+fe-core-objs +=        ipbox/mxl5007t.o
+#fe-core-objs +=        ipbox/tda10023.o
+fe-core-objs +=        ipbox/core.o
+obj-m += fe-core.o
+else ifdef IPBOX55
+fe-core-objs +=        ipbox/stv090x.o 
+fe-core-objs +=        ipbox/stv6110x.o
+fe-core-objs +=        ipbox/core.o
+obj-m += fe-core.o
+
 else ifdef VIP1_V2
 fe-core-objs +=        vip1_v2/stb0899_algo.o
 fe-core-objs +=        vip1_v2/stb0899_drv.o
@@ -67,6 +89,7 @@ fe-core-objs +=        base/tda10023.o
 fe-core-objs +=        base/lg031.o
 fe-core-objs +=        vip1_v2/core.o
 obj-m += fe-core.o
+
 else ifdef VIP2_V1
 fe-core-objs +=        vip2/stv090x.o
 fe-core-objs +=        vip2/stv6110x.o
@@ -162,6 +185,13 @@ stv090x-objs +=	spark_dvbapi5/stv6110x.o
 stv090x-objs +=	spark_dvbapi5/core.o
 stv090x-objs +=	spark_dvbapi5/ix7306.o
 obj-m += stv090x.o
+else ifdef SPARK
+stv090x-objs +=	spark_dvbapi5/stv090x.o
+stv090x-objs +=	spark_dvbapi5/stv6110x.o
+stv090x-objs +=	spark_dvbapi5/core.o
+stv090x-objs +=	spark_dvbapi5/ix7306.o
+obj-m += stv090x.o
+
 else ifdef UFS912
 stv090x-objs +=	stv090x/stv090x.o
 stv090x-objs +=	stv090x/stv6110x.o
@@ -215,6 +245,27 @@ else ifdef ATEVIO7500
 #avl2108_platform-objs += avl2108/avl2108_platform.o
 #obj-m += avl2108_platform.o
 obj-y	+= multituner/
+else ifdef IPBOX9900
+fe-core-objs +=        ipbox/stv090x.o 
+fe-core-objs +=        ipbox/stv6110x.o
+fe-core-objs +=        ipbox/zl10353.o
+fe-core-objs +=        ipbox/mxl5007t.o
+#fe-core-objs +=        ipbox/tda10023.o
+fe-core-objs +=        ipbox/core.o
+obj-m += fe-core.o
+else ifdef IPBOX99
+fe-core-objs +=        ipbox/stv090x.o 
+fe-core-objs +=        ipbox/stv6110x.o
+fe-core-objs +=        ipbox/zl10353.o
+fe-core-objs +=        ipbox/mxl5007t.o
+#fe-core-objs +=        ipbox/tda10023.o
+fe-core-objs +=        ipbox/core.o
+obj-m += fe-core.o
+else ifdef IPBOX55
+fe-core-objs +=        ipbox/stv090x.o 
+fe-core-objs +=        ipbox/stv6110x.o
+fe-core-objs +=        ipbox/core.o
+obj-m += fe-core.o
 endif
 # other drivers already in kernel
 

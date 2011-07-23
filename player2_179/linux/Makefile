@@ -43,6 +43,15 @@ endif
 ifdef CUBEREVO_MINI_FTA
  PART1=1
 endif
+ifdef IPBOX9900
+ PART1=1
+endif
+ifdef IPBOX99
+ PART1=1
+endif
+ifdef IPBOX55
+ PART1=1
+endif
 
 ifdef UFS912
  PART2=1

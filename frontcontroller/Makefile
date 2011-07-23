@@ -68,3 +68,15 @@ endif
 ifdef ATEVIO7500
 obj-y	+= nuvoton/
 endif
+
+ifdef IPBOX9900
+obj-y	+= ipbox99xx/
+endif
+
+ifdef IPBOX99
+obj-y	+= ipbox99xx/
+endif
+
+ifdef IPBOX55
+obj-y	+= ipbox55/
+endif

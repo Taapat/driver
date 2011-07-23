@@ -383,7 +383,7 @@ int read_tsm(int a)
 void stm_tsm_init (int use_cimax)
 {
 
-#if defined(VIP2_V1) || defined(SPARK) || defined(SPARK7162)// none ci targets
+#if defined(VIP2_V1) || defined(SPARK) || defined(SPARK7162) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55)// none ci targets
 	use_cimax = 0;
 #endif
 
