@@ -52,7 +52,7 @@ if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
 
 static unsigned int verbose = FE_DEBUGREG;
 
-static int writereg_lnb_supply (struct stv090x_state *state, char data);
+int writereg_lnb_supply (struct stv090x_state *state, char data);
 
 #if (LINUX_VERSION_CODE == KERNEL_VERSION(2,6,23))  && defined(FORTIS_HDBOX)
 void ctrl_fn_using_non_p3_address(void)
@@ -2130,18 +2130,18 @@ static int stv090x_set_viterbi(struct stv090x_state *state)
 	dprintk(10, "%s >\n", __func__);
 	switch (state->search_mode) {
 	case STV090x_SEARCH_AUTO:
-
-		if (STV090x_WRITE_DEMOD(state, FECM, 0x10) < 0) /* DVB-S and DVB-S2 */
-			goto err;
-		if (STV090x_WRITE_DEMOD(state, PRVIT, 0x3f) < 0) /* all puncture rate */
-			goto err;
-
 		if (state->device != STX7111)
 		{
 		   if (STV090x_WRITE_DEMOD(state, FECM, 0x00) < 0) /* DVB-S and DVB-S2 */
 			   goto err;
 		   if (STV090x_WRITE_DEMOD(state, PRVIT, 0x2f) < 0) /* all puncture rate */
 			   goto err;
+        } else
+        {
+		    if (STV090x_WRITE_DEMOD(state, FECM, 0x10) < 0) /* DVB-S and DVB-S2 */
+			    goto err;
+		    if (STV090x_WRITE_DEMOD(state, PRVIT, 0x3f) < 0) /* all puncture rate */
+			    goto err;
         }
 		break;
 	case STV090x_SEARCH_DVBS1:
@@ -2577,9 +2577,16 @@ static int stv090x_delivery_search(struct stv090x_state *state)
 		if (STV090x_WRITE_DEMOD(state, DMDCFGMD, reg) < 0)
 			goto err;
 
+#ifndef FORTIS_HDBOX
 		if (stv090x_vitclk_ctl(state, 0) < 0)
 			goto err;
-		
+#else
+		reg = stv090x_read_reg(state, STV090x_TSTRES0);
+		STV090x_SETFIELD(reg, FRESFEC_FIELD, 0x0);
+		if (stv090x_write_reg(state, STV090x_TSTRES0, reg) < 0)
+			goto err;
+#endif		
+
 		if (stv090x_dvbs_track_crl(state) < 0)
 			goto err;
 
@@ -2757,8 +2764,8 @@ static int stv090x_start_search(struct stv090x_state *state)
 		if (STV090x_WRITE_DEMOD(state, FFECFG, 0x41) < 0)
 			goto err;
 
-		if ((state->search_mode == STV090x_DVBS1)	||
-			(state->search_mode == STV090x_DSS)	||
+		if ((state->search_mode == STV090x_SEARCH_DVBS1)	||
+			(state->search_mode == STV090x_SEARCH_DSS)	||
 			(state->search_mode == STV090x_SEARCH_AUTO)) {
 
 			if (STV090x_WRITE_DEMOD(state, VITSCALE, 0x82) < 0)
@@ -2794,7 +2801,7 @@ static int stv090x_start_search(struct stv090x_state *state)
 	   if (STV090x_WRITE_DEMOD(state, RTC, 0x88) < 0)
 		   goto err;
     }
-	
+
 	if (state->dev_ver >= 0x20) {
 		/*Frequency offset detector setting*/
 		if (state->srate < 2000000) {
@@ -3995,7 +4002,7 @@ static enum stv090x_signal_state stv090x_get_sig_params(struct stv090x_state *st
 		}
 		else
 		{
-			dprintk(10, "%s: out of range %d > %d\n", __func__, abs(offst_freq), car_width);
+			dprintk(10, "%s: out of range %ld > %d\n", __func__, abs(offst_freq), car_width);
 			return STV090x_OUTOFRANGE; /* Out of Range */
 		}
 	} else {
@@ -4008,7 +4015,7 @@ static enum stv090x_signal_state stv090x_get_sig_params(struct stv090x_state *st
 		}
 		else
 		{
-			dprintk(100, "%s: out of range %d > %d\n", __func__, abs(offst_freq), (state->search_range / 2000) + 500);
+			dprintk(100, "%s: out of range %ld > %d\n", __func__, abs(offst_freq), (state->search_range / 2000) + 500);
 		
 			return STV090x_OUTOFRANGE;
 		}
@@ -4228,7 +4235,7 @@ static int stv090x_optimize_track(struct stv090x_state *state)
 	case STV090x_DSS:
                 
 		dprintk(50, "STV090x_DVBS1\n");
-		if (state->algo == STV090x_SEARCH_AUTO) {
+		if (state->search_mode == STV090x_SEARCH_AUTO) {
 			reg = STV090x_READ_DEMOD(state, DMDCFGMD);
 			STV090x_SETFIELD_Px(reg, DVBS1_ENABLE_FIELD, 1);
 			STV090x_SETFIELD_Px(reg, DVBS2_ENABLE_FIELD, 0);
@@ -4241,6 +4248,7 @@ static int stv090x_optimize_track(struct stv090x_state *state)
 		if (STV090x_WRITE_DEMOD(state, DEMOD, reg) < 0)
 			goto err;
 
+#ifndef FORTIS_HDBOX
 		if (state->device == STX7111)
 		{
 		   if (STV090x_WRITE_DEMOD(state, ERRCTRL1, 0x73) < 0)
@@ -4305,7 +4313,7 @@ static int stv090x_optimize_track(struct stv090x_state *state)
    		         STV090x_WRITE_DEMOD(state, CCIR0, 0x18);
 			 }
         }
-                
+#endif                
 		if (state->device != STX7111)
 		   if (STV090x_WRITE_DEMOD(state, ERRCTRL1, 0x75) < 0)
 			   goto err;
@@ -4325,6 +4333,7 @@ static int stv090x_optimize_track(struct stv090x_state *state)
 		if (STV090x_WRITE_DEMOD(state, BCLC, 0) < 0)
 			goto err;
             
+#ifndef FORTIS_HDBOX
 		if (state->frame_len == STV090x_LONG_FRAME) {
 			reg = STV090x_READ_DEMOD(state, DMDMODCOD);
 			modcod = STV090x_GETFIELD_Px(reg, DEMOD_MODCOD_FIELD);
@@ -4403,10 +4412,25 @@ static int stv090x_optimize_track(struct stv090x_state *state)
    		   STV090x_WRITE_DEMOD(state, CCIR0, 0x2c);
 		} else
    		   STV090x_WRITE_DEMOD(state, ERRCTRL1, 0x67); /* PER */
+#else
+		reg = STV090x_READ_DEMOD(state, DMDMODCOD);
+		modcod = STV090x_GETFIELD_Px(reg, DEMOD_MODCOD_FIELD);
+		pilots = STV090x_GETFIELD_Px(reg, DEMOD_TYPE_FIELD) & 0x01;
+		aclc = stv090x_optimize_carloop(state, modcod, pilots);
+		if (modcod <= STV090x_QPSK_910) {
+			STV090x_WRITE_DEMOD(state, ACLC2S2Q, aclc);
+		} else if (modcod <= STV090x_8PSK_910) {
+			if (STV090x_WRITE_DEMOD(state, ACLC2S2Q, 0x2a) < 0)
+				goto err;
+			if (STV090x_WRITE_DEMOD(state, ACLC2S28, aclc) < 0)
+				goto err;
+		}
+
+   		STV090x_WRITE_DEMOD(state, ERRCTRL1, 0x67); /* PER */
+#endif
 	
 		break;
 
-	case STV090x_UNKNOWN:
 	default:
         dprintk(50, "STV090x_UNKNOWN\n");
 		reg = STV090x_READ_DEMOD(state, DMDCFGMD);
@@ -4461,12 +4485,14 @@ static int stv090x_optimize_track(struct stv090x_state *state)
 	if (STV090x_WRITE_DEMOD(state, AGC2REF, 0x38) < 0)
 		goto err;
 
+#ifndef FORTIS_HDBOX
 	/* AUTO tracking MODE */
 	if (STV090x_WRITE_DEMOD(state, SFRUP1, 0x80) < 0)
 		goto err;
 	/* AUTO tracking MODE */
 	if (STV090x_WRITE_DEMOD(state, SFRLOW1, 0x80) < 0)
 		goto err;
+#endif
 
 	if ((state->dev_ver >= 0x20) || (blind_tune == 1) || (state->srate < 10000000)) {
 		/* update initial carrier freq with the found freq offset */
@@ -4776,6 +4802,7 @@ static enum stv090x_signal_state stv090x_algo(struct stv090x_state *state)
 		if (STV090x_WRITE_DEMOD(state, TMGCFG, 0xd2) < 0)
 			goto err;
 
+#ifndef FORTIS_HDBOX
         if (state->device != STX7111)
 		{
 		   if (state->srate < 2000000) {
@@ -4788,6 +4815,7 @@ static enum stv090x_signal_state stv090x_algo(struct stv090x_state *state)
 				   goto err;
 		   }
         }
+#endif
 
 		if (STV090x_WRITE_DEMOD(state, AGC2REF, 0x38) < 0)
 			goto err;
@@ -4829,6 +4857,8 @@ static enum stv090x_signal_state stv090x_algo(struct stv090x_state *state)
 			low_sr = 1;
 	}
 
+
+#ifndef FORTIS_HDBOX
 	if (state->config->tuner_set_bbgain) {
 		reg = state->config->tuner_bbgain;
 		if (reg == 0)
@@ -4840,6 +4870,7 @@ static enum stv090x_signal_state stv090x_algo(struct stv090x_state *state)
 		if (state->config->tuner_set_bbgain(fe, reg) < 0)
  			goto err;
 	}
+#endif
 
 	if (state->config->tuner_set_frequency) {
 		if (state->config->tuner_set_frequency(fe, state->frequency) < 0)
@@ -4975,6 +5006,18 @@ static enum stv090x_signal_state stv090x_algo(struct stv090x_state *state)
 		stv090x_optimize_track(state);
 
 		if (state->dev_ver >= 0x20) {
+#ifdef FORTIS_HDBOX
+			reg = stv090x_read_reg(state, STV090x_TSTRES0);
+			STV090x_SETFIELD(reg, FRESFEC_FIELD, 0x1);
+			if (stv090x_write_reg(state, STV090x_TSTRES0, reg) < 0)
+				goto err;
+
+		    reg = STV090x_READ_DEMOD(state, PDELCTRL1);
+		    STV090x_SETFIELD_Px(reg, ALGOSWRST_FIELD, 0x01);
+		    if (STV090x_WRITE_DEMOD(state, PDELCTRL1, reg) < 0)
+			    goto err;
+#endif
+
 			/* >= Cut 2.0 :release TS reset after
 			 * demod lock and optimized Tracking
 			 */
@@ -4988,6 +5031,20 @@ static enum stv090x_signal_state stv090x_algo(struct stv090x_state *state)
 			STV090x_SETFIELD_Px(reg, RST_HWARE_FIELD, 1); /* merger reset */
 			if (STV090x_WRITE_DEMOD(state, TSCFGH, reg) < 0)
 				goto err;
+
+#ifdef FORTIS_HDBOX
+			reg = stv090x_read_reg(state, STV090x_TSTRES0);
+			STV090x_SETFIELD(reg, FRESFEC_FIELD, 0x0);
+			if (stv090x_write_reg(state, STV090x_TSTRES0, reg) < 0)
+				goto err;
+
+		    reg = STV090x_READ_DEMOD(state, PDELCTRL1);
+		    STV090x_SETFIELD_Px(reg, ALGOSWRST_FIELD, 0x00);
+		    if (STV090x_WRITE_DEMOD(state, PDELCTRL1, reg) < 0)
+			    goto err;
+
+			reg = STV090x_READ_DEMOD(state, TSCFGH);
+#endif
 
 			STV090x_SETFIELD_Px(reg, RST_HWARE_FIELD, 0); /* release merger reset */
 			if (STV090x_WRITE_DEMOD(state, TSCFGH, reg) < 0)
