@@ -103,7 +103,7 @@ obj-y	+= e2_proc/
 obj-y	+= frontends/
 obj-y	+= frontcontroller/
 
-ifeq ($(findstring pti_np,$(wildcard *)), )
+ifneq (,$(findstring pti_np,*))
 obj-y	+= pti_np/
 else
 obj-y	+= pti/
