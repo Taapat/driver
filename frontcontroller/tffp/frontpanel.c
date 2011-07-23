@@ -1538,18 +1538,27 @@ static void FPCommandInterpreter (void)
   printk("FP: FPSHUTDOWN\n");
 #endif
 
-      if (TypematicRate < 1)
+      if (KeyEmulationMode == KEYEMUTF7700LKP)
       {
-        /* send standby key to the application */
-        if (KeyEmulationMode == KEYEMUTF7700)
-          AddKeyBuffer (FPKEYPRESSFP);
-
-        AddKeyBuffer (0x0c);
-        TypematicRate = DefaultTypematicRate;
+        AddKeyBuffer (FPKEYPRESSFP);
+        AddKeyBuffer (0x0c); //KEY_POWER_FAKE
         wake_up_interruptible(&wq);
       }
       else
-        TypematicRate--;
+      {
+        if (TypematicRate < 1)
+        {
+          /* send standby key to the application */
+          if (KeyEmulationMode == KEYEMUTF7700)
+            AddKeyBuffer (FPKEYPRESSFP);
+
+          AddKeyBuffer (0x0c);
+          TypematicRate = DefaultTypematicRate;
+          wake_up_interruptible(&wq);
+        }
+        else
+          TypematicRate--;
+      }
 
       break;
     }
