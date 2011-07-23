@@ -150,6 +150,7 @@ endif
 endif
 endif
 endif
+endif
 
 ifdef UFS922
 obj-y	+= ufs922_fan/
