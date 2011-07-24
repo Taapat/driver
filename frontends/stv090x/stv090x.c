@@ -52,7 +52,9 @@ if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
 
 static unsigned int verbose = FE_DEBUGREG;
 
+#if defined(UFS912)
 int writereg_lnb_supply (struct stv090x_state *state, char data);
+#endif
 
 #if (LINUX_VERSION_CODE == KERNEL_VERSION(2,6,23))  && defined(FORTIS_HDBOX)
 void ctrl_fn_using_non_p3_address(void)
@@ -6515,7 +6517,7 @@ static int stv090x_get_property(struct dvb_frontend *fe, struct dtv_property* tv
  * we have three different til now ... and lnbh23 is also used
  * for newer ufs922
  */
-static int writereg_lnb_supply (struct stv090x_state *state, char data)
+int writereg_lnb_supply (struct stv090x_state *state, char data)
 {
   int ret = -EREMOTEIO;
   struct i2c_msg msg;
