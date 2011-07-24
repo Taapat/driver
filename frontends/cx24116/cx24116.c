@@ -2947,6 +2947,10 @@ init_cx24116_device (struct dvb_adapter *adapter,
   cfg->i2c_addr_lnb_supply = tuner_cfg->lnb_vsel[0];
   cfg->vertical = tuner_cfg->lnb_vsel[1];
   cfg->horizontal = tuner_cfg->lnb_vsel[2];
+
+  cfg->lnb_enable_pin = NULL;
+  cfg->lnb_vsel_pin = NULL;
+  
 #else
   cfg->lnb_enable_pin = stpio_request_pin (tuner_cfg->lnb_enable[0],
                                            tuner_cfg->lnb_enable[1],
