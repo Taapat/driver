@@ -114,7 +114,7 @@ short paramDebug = 1;
 static struct core *core[MAX_DVB_ADAPTERS];
 
 enum { VOLTAGE_13 = 1, VOLTAGE_18  = 0 };
-#ifdef IPBOX55
+#if defined(IPBOX55)
 enum { VOLTAGE_ON = 1, VOLTAGE_OFF = 0 }; // 55 new
 #else
 enum { VOLTAGE_ON = 0, VOLTAGE_OFF = 1 }; // 99XX, 55 old
