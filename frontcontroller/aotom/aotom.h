@@ -1,4 +1,3 @@
-
 #define VFD_MAJOR				147
 
 #define VFDBRIGHTNESS         0xc0425a03
