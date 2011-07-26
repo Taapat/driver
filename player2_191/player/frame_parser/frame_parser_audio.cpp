@@ -254,15 +254,9 @@ FrameParserStatus_t FrameParser_Audio_c::HandleCurrentFrameNormalizedPlaybackTim
             // Check that the predicted and actual times deviate by no more than the threshold
             if (DeltaDelta < -PtsJitterTollerenceThreshold || DeltaDelta > PtsJitterTollerenceThreshold) 
             {
-#ifndef __TDT__
     	        FRAME_ERROR( "Unexpected change in playback time. Expected %lldus, got %lldus (deltas: exp. %lld  got %lld )\n",
     	                     NextFrameNormalizedPlaybackTime, ParsedFrameParameters->NormalizedPlaybackTime,
-                             SyntheticDelta, RealDelta);
-#else
-		/*Hellmaster1024 instead of doing nothing we assume the calculated time is right, this prevents the chopped sound on some
-		DTS files*/	        
-		ParsedFrameParameters->NormalizedPlaybackTime = NextFrameNormalizedPlaybackTime;
-#endif    	        
+                             SyntheticDelta, RealDelta);  	        
 
             }            
         }        

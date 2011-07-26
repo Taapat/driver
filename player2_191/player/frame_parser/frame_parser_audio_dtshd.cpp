@@ -1445,6 +1445,30 @@ FrameParserStatus_t   FrameParser_AudioDtshd_c::GeneratePostDecodeParameterSetti
         TranslatePlaybackTimeNativeToNormalized( CodedFrameParameters->DecodeTime, &ParsedFrameParameters->NormalizedDecodeTime );
     }
 
+    /*Hellmaster1024 correct the presentation time if it differs about 1 frame , this prevents the chopped sound on some
+	DTS files*/
+    if( ParsedFrameParameters->NormalizedPlaybackTime != INVALID_TIME )
+    {
+        if ( LastNormalizedPlaybackTime != UNSPECIFIED_TIME )
+        {
+            int correctUpToMs = 50000;
+            long long RealDelta = ParsedFrameParameters->NormalizedPlaybackTime - LastNormalizedPlaybackTime;
+            long long SyntheticDelta = NextFrameNormalizedPlaybackTime - LastNormalizedPlaybackTime;
+            long long DeltaDelta = RealDelta - SyntheticDelta;
+            
+            // correct the predicted and actual times that deviate by no more than 50ms
+            if ((DeltaDelta < -PtsJitterTollerenceThreshold || DeltaDelta > PtsJitterTollerenceThreshold) &&
+                (DeltaDelta > -correctUpToMs || DeltaDelta < correctUpToMs) )
+            {
+		/*Hellmaster1024 instead of doing nothing we assume the calculated time is right, this prevents the chopped sound on some
+		DTS files*/	        
+		ParsedFrameParameters->NormalizedPlaybackTime = NextFrameNormalizedPlaybackTime;        
+
+            }            
+        }        
+    }
+
+
     //
     // Sythesize the presentation time if required
     //
