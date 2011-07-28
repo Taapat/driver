@@ -43,13 +43,13 @@
 
 #include "dvb_ca_core.h"
 
-static int debug = 0;
+static int debug = 1;
 #define dprintk(args...) \
 	do { \
 		if (debug) printk (args); \
 	} while (0)
 
-#if defined(FORTIS_HDBOX) || defined(ATEVIO7500)
+#if defined(FORTIS_HDBOX) || defined(ATEVIO7500) || defined(IPBOX9900)
 struct stpio_pin*	cic_enable_pin;
 struct stpio_pin*	module_A_pin;
 struct stpio_pin*	module_B_pin;
@@ -122,6 +122,24 @@ unsigned char default_values[33] =
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+#elif defined(IPBOX9900)
+unsigned char default_values[33] =
+{
+   0x00, /* register address for block transfer */
+   /* Module A */
+   0x02, 0x00, 0x01, 0x00, 0x00, 0x40, 
+   0x00, 0x00, 0x00, // RFU 
+   /* Module B */
+/* 9 - E */    0x02, 0x00, 0x01, 0x00, 0x01, 0x40, 
+   0x00, // RFU
+/* 10 */   0x00, // single mode TS control
+/* 11 */   0x80, // Twin mode TS Control 
+/* 12 - 15 */   0x00, 0x00, 0x00, 0x00, // Auto select
+   0x00, // RFU 
+   0x01, // dest select
+   0x00, // Power control, or 0x00?
+/* 19 - 1F */   0x00, 0x00, 0x00, 0x00, 0x01, 0x03, 0x01
+ };
 #endif
 
 /* EMI configuration */
@@ -261,6 +279,7 @@ starci_writeregN (struct dvb_ca_state *state, u8 * data, u16 len)
   struct i2c_msg msg;
 
   msg.addr = state->i2c_addr;
+
   msg.flags = 0;
   msg.buf = data;
   msg.len = len;
@@ -773,7 +792,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   mutex_init (&starci_mutex);
 
   state->dvb_adap = dvb_adap;
-#if defined(FORTIS_HDBOX) || defined(ATEVIO7500)
+#if defined(FORTIS_HDBOX) || defined(ATEVIO7500) || defined(IPBOX9900)
   state->i2c = i2c_get_adapter(2);
 #else
   state->i2c = i2c_get_adapter(0);
@@ -807,7 +826,11 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   state->detection_timeout[0] = 0;
   state->detection_timeout[1] = 0;
 
+#ifdef IPBOX9900
+  reg_config = (unsigned long)ioremap(EMIConfigBaseAddress, 0x800);
+#else
   reg_config = (unsigned long)ioremap(EMIConfigBaseAddress, 0x7ff);
+#endif
 
 #ifndef ATEVIO7500
   reg_buffer = (unsigned long)ioremap(EMIBufferBaseAddress, 0x40);
@@ -854,7 +877,12 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 
   stpio_set_pin (module_A_pin, 0);
   stpio_set_pin (module_B_pin, 0);
+#elif defined(IP9900)
+  module_A_pin = stpio_request_pin( 2, 6, "CIpwr1", STPIO_OUT);
+  module_B_pin = stpio_request_pin( 2, 7, "CIpwr2", STPIO_OUT);
 
+  stpio_set_pin(module_A_pin, 1);
+  stpio_set_pin(module_B_pin, 1);
 #endif
 
   /* reset the chip */
@@ -868,12 +896,16 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   /* power on (only possible with LOCK = 1)
      other bits cannot be set when LOCK is = 1 */
      
-#if defined(ATEVIO7500) || defined(FORTIS_HDBOX)
+#if defined(ATEVIO7500) || defined(FORTIS_HDBOX) || defined(IPBOX9900)
   starci_writereg(state, 0x18, 0x21);
 #else
   starci_writereg(state, 0x18, 0x01);
 #endif
 
+#ifdef IPBOX9900
+  ctrl_outl(0x03, reg_config + 0x860); //  bank enable
+  ctrl_outl(0x00, reg_config + EMI_STA_LCK);
+#endif
 #if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX)
   ctrl_outl(0x0, reg_config + EMI_LCK);
   ctrl_outl(0x0, reg_config + EMI_GEN_CFG);
@@ -899,7 +931,28 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   ctrl_outl(0xa5a00000, reg_config + EMIBank2 + EMI_CFG_DATA1);
   ctrl_outl(0xa5a20000, reg_config + EMIBank2 + EMI_CFG_DATA2);
   ctrl_outl(0x00000000, reg_config + EMIBank2 + EMI_CFG_DATA3);
-  
+
+#elif defined(IPBOX9900)
+  // bank 2 config
+
+  /*      update BANK as port 8bit device type    */
+  //BUSRELEASETIME:2, CSACTIVE:active R/W,OEACTIVE:active read, BEACTIVE:active R/W, PORTSIZE:8bit, DEVICETYPE: normal
+  ctrl_outl( 0x000016f9, reg_config + 0x100 + 0x40 * 2 + 0x08 * 0);       // EMI_CFG_DATA0 : port size = 8bit
+  //cimax 600ns ±âÁØ. read/write bank config
+
+  // 1. read access
+  // [30:24] ACCESSTIMEREAD:28cycles
+  // [23:20],[19:16] CSE1TIMEREAD:falling(3cycles), rising(1cycle)
+  // [15:12],[11:8] OEE1TIMEREAD:falling(3cycles), rising(1cycle)
+  ctrl_outl( 0x9d313131, reg_config + 0x100 + 0x40 * 2 + 0x08 * 1);       // EMI_CFG_DATA1 : port size = 8bit
+
+  // 1. write access
+  // [30:24] ACCESS_TIME_WRITE:16cycles
+  // [23:20],[19:16] CSE1_TIME_WRITE:falling(2cycles), rising(1cycle)
+  // [15:12],[11:8] OEE1_TIME_WRITE:falling(2cycles), rising(1cycle) --> WRITE NOT USE
+  ctrl_outl( 0x90212100, reg_config + 0x100 + 0x40 * 2 + 0x08 * 2);       // EMI_CFG_DATA2 : port size = 8bit
+
+  ctrl_outl( 0x00000000, reg_config + 0x100 + 0x40 * 2 + 0x08 * 3);       // EMI_CFG_DATA3 : port size = 8bit
 #else /* TF7700  */
   ctrl_outl(	EMI_DATA0_WE_USE_OE(0x0) 	|
 		  EMI_DATA0_WAIT_POL(0x0)		|
@@ -932,7 +985,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   ctrl_outl(0x0, reg_config + EMI_FLASH_CLK_SEL);
 #endif
 
-#if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX)
+#if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX) && !defined(IPBOX9900)
   ctrl_outl(0x1, reg_config + EMI_CLK_EN);
 #endif
 
@@ -970,6 +1023,10 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 	  goto error;
   }
 
+#ifdef IPBOX9900
+  ctrl_outl( 0x04, reg_config + EMI_STA_CFG);            //      EMI_STA_CFG : update
+  ctrl_outl( 0x1f, reg_config + EMI_STA_LCK);            //      EMI_STA_LCK : lock
+#endif
 #if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX)
   ctrl_outl(0x1F,reg_config + EMI_LCK);
 #endif

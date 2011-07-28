@@ -459,6 +459,7 @@ void ptiInit ( struct DeviceContext_s *pContext )
     cx24116_register_frontend( &pContext->DvbContext->DvbAdapter);
     avl2108_register_frontend( &pContext->DvbContext->DvbAdapter);
 #else
+    cx21143_register_frontend ( &pContext->DvbContext->DvbAdapter);
     cx24116_register_frontend( &pContext->DvbContext->DvbAdapter);
 #endif
     ptiInitialized = 1;
@@ -518,7 +519,7 @@ int SetSource (struct dmx_demux* demux, const dmx_source_t *src)
 
   if (((*src >= DMX_SOURCE_FRONT0) && (*src <= DMX_SOURCE_FRONT3)) || (*src == DMX_SOURCE_DVR0))
   {
-    pti_hal_set_source( pContext->pPtiSession->session, convert_source(*src) );
+    pti_hal_set_source( pContext->pPtiSession->session, convert_source(*src));
   }
   return 0;
 }

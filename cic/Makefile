@@ -57,8 +57,8 @@ else ifdef SPARK
 dummy_cic-objs += dummy_cic/dummy_cic.o
 obj-m += dummy_cic.o
 else ifdef IPBOX9900
-dummy_cic-objs += dummy_cic/dummy_cic.o
-obj-m += dummy_cic.o
+obj-m += starci.o
+starci-objs:= ipbox9900/starci2win.o
 else ifdef IPBOX99
 dummy_cic-objs += dummy_cic/dummy_cic.o
 obj-m += dummy_cic.o

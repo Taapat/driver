@@ -93,6 +93,9 @@ unsigned long TSM_NUM_1394_ALT_OUT;
 #define TSM_PTI_DEST      	0x0200
 #define TSM_PTI_SEL      	TSM_PTI_DEST
 
+#define TSM_PTI1_DEST      	0x0210
+#define TSM_PTI1_SEL      	TSM_PTI1_DEST
+
 #define TSM_1394_DEST      	0x0210
 #define TSM_1394_SEL      	TSM_1394_DEST
 
@@ -383,7 +386,7 @@ int read_tsm(int a)
 void stm_tsm_init (int use_cimax)
 {
 
-#if defined(VIP2_V1) || defined(SPARK) || defined(SPARK7162) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55)// none ci targets
+#if defined(VIP2_V1) || defined(SPARK) || defined(SPARK7162) || defined(IPBOX99) || defined(IPBOX55)// none ci targets
 	use_cimax = 0;
 #endif
 
@@ -714,7 +717,7 @@ void stm_tsm_init (int use_cimax)
       /* auto count */
       ctrl_outl(0x0, reg_config + TSM_PROG_CNT0);
 
-#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101) && !defined(VIP1_V2) && !defined(HOMECAST5101) && !defined(UFS912) && !defined(SPARK) && !defined(OCTAGON1008) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA) && !defined(ATEVIO7500)
+#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101) && !defined(VIP1_V2) && !defined(HOMECAST5101) && !defined(UFS912) && !defined(SPARK) && !defined(OCTAGON1008) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA) && !defined(ATEVIO7500) && !defined(IPBOX9900)
       /* UFS910 stream configuration */
       /* route stream 2 to PTI */
       ret = ctrl_inl(reg_config + TSM_PTI_SEL);
@@ -882,9 +885,25 @@ void stm_tsm_init (int use_cimax)
 
       /* route stream 0/1/2 to PTI */
       ctrl_outl(0x7, reg_config + TSM_PTI_SEL);
+#elif defined(IPBOX9900)
+
+     /* route stream 0/1 to PTI */
+      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x2 | 0x1 | 0x4, reg_config + TSM_PTI_SEL);
+
+      /* route stream 0/1 to PTI1 */
+      ret = ctrl_inl(reg_config + TSM_PTI1_SEL);
+      ctrl_outl(ret | 0x2 | 0x1 | 0x4, reg_config + TSM_PTI1_SEL);
+
+      /* set stream 1 on */
+      ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
+      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM1_CFG);
+
+      /* set stream 2 on */
+      ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
+      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM2_CFG);
 
 #endif
-
       /* set stream on */
       ret = ctrl_inl(reg_config + TSM_STREAM0_CFG);
       ctrl_outl(ret | 0x80,reg_config + TSM_STREAM0_CFG);
