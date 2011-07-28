@@ -66,6 +66,15 @@ typedef struct snd_pcm_hw_params snd_pcm_hw_params_t;
 #endif
 #endif
 
+#if defined(__TDT__) && defined(HAVANA_P0207_5)
+#define snd_assert(expr, args...) do {\
+	if (!(expr)) {\
+		printk(KERN_ERR "ksound-core: BUG? (%s)\n", #expr);\
+		args;\
+	}\
+} while (0)
+#endif
+
 /*
 	In STM2.4 all these helper functions were moved to the OSS lib, which has lots of dependencies and therefore
 	needs lots of space. However, since we don't need all that stuff i copied the relevant functions into this file.
@@ -664,6 +673,7 @@ static inline snd_pcm_uframes_t _ksnd_pcm_avail_update(snd_pcm_substream_t
 
 /*NICK added if to remove real updates which we do not want*/
 #if defined(__TDT__) && (defined(FORTIS_HDBOX) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(OCTAGON1008) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55) )
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
         if (runtime->sleep_min == 0 &&
             _ksnd_pcm_state(substream) == SNDRV_PCM_STATE_RUNNING)
@@ -672,6 +682,7 @@ static inline snd_pcm_uframes_t _ksnd_pcm_avail_update(snd_pcm_substream_t
 	if (_ksnd_pcm_state(substream) == SNDRV_PCM_STATE_RUNNING)
                 snd_pcm_update_hw_ptr(substream);
 #endif
+
 #endif
 
 	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
@@ -1113,13 +1124,19 @@ int ksnd_pcm_open(ksnd_pcm_t **kpcm,
 	}
 
 
-#ifdef __TDT__
+#if defined(__TDT__)
+
+#if defined(HAVANA_P0207_5)
+	minor = snd_find_minor(device_type, card, device);
+#else
 
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 	minor = snd_get_minor(device_type, card, device);
 #else
 	minor = SNDRV_MINOR(card, device_type + device);
 #endif
+
+#endif /* !HAVANA_P0207_5 */
 
 #else /* TDT */
 

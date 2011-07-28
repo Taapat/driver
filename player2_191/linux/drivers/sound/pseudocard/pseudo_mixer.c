@@ -112,6 +112,16 @@ module_param_array(bpa2_partition, charp, NULL, 0444);
 MODULE_PARM_DESC(bpa2_partition, "BPA2 partition ID string from which to allocate memory.");
 static struct platform_device *devices[SNDRV_CARDS];
 
+#if defined(__TDT__) && defined(HAVANA_P0207_5)
+#define snd_assert(expr, args...) do {\
+	if (!(expr)) {\
+		printk(KERN_ERR "ksound-core: BUG? (%s)\n", #expr);\
+		args;\
+	}\
+} while (0)
+#endif
+
+
 #define _CARD(n, major, minor, freq, chan, f) { \
 	.name = n, \
 	.alsaname = "hw:" #major "," #minor, \
