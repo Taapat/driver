@@ -1,4 +1,4 @@
-﻿/*
+/*
  */
 
 #define VFD_MAJOR			147
