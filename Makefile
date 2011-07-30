@@ -19,10 +19,6 @@ CONFIGFILE := $(DRIVER_TOPDIR)/.config
 
 include $(CONFIGFILE)
 
-ifdef HAVANA_P0207_5
-CCFLAGSY+=-DHAVANA_P0207_5
-endif
-
 ifdef OCTAGON1008
 CCFLAGSY+=-DOCTAGON1008
 endif
@@ -184,6 +180,18 @@ endif
 
 ifdef FORTIS_HDBOX
 obj-y    += smartcard/
+endif
+
+ifdef IPBOX9900
+obj-y    += siinfo/
+obj-y    += rmu/
+endif
+
+ifdef IPBOX99
+obj-y    += siinfo/
+endif
+ifdef IPBOX55
+obj-y    += siinfo/
 endif
 
 endif
