@@ -459,7 +459,6 @@ void ptiInit ( struct DeviceContext_s *pContext )
     cx24116_register_frontend( &pContext->DvbContext->DvbAdapter);
     avl2108_register_frontend( &pContext->DvbContext->DvbAdapter);
 #else
-    cx21143_register_frontend ( &pContext->DvbContext->DvbAdapter);
     cx24116_register_frontend( &pContext->DvbContext->DvbAdapter);
 #endif
     ptiInitialized = 1;
