@@ -6513,7 +6513,7 @@ static int hdbox_set_voltage(struct dvb_frontend *fe, enum fe_sec_voltage voltag
        return 0;
 }
 #elif HS7810A
-static int writereg_lnb_supply (struct stv090x_state *state, char data)
+int writereg_lnb_supply (struct stv090x_state *state, char data)
 {
   int ret = -EREMOTEIO;
   struct i2c_msg msg;
