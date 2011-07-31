@@ -95,9 +95,9 @@ static unsigned short normal_i2c[] = {
 #elif defined(UFS922) || defined(CUBEREVO) \
    || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_2000HD)
 	0x4a, /* stv6412" */
-#elif defined(FORTIS_HDBOX) || defined(TF7700) || defined(HL101) || defined(UFS912) || defined(ATEVIO7500) || defined(IPBOX9900) || defined(IPBOX99)
+#elif defined(FORTIS_HDBOX) || defined(TF7700) || defined(HL101) || defined(UFS912) || defined(ATEVIO7500) || defined(HS7810A) || defined(IPBOX9900) || defined(IPBOX99)
 	0x4b, /* stv6412 / stv6417 / stv6418 */
-#elif defined(CUBEREVO_MINI_FTA) || defined(CUBEREVO_250HD) || defined(IPBOX55)
+#elif defined(CUBEREVO_MINI_FTA) || defined(CUBEREVO_250HD) || defined(HS7810A) || defined(IPBOX55)
 	/* CUBEREVO_MINI_FTA does not register */
 	/* CUBEREVO_250HD seems to use fake_avs, but does not register */
 	0,

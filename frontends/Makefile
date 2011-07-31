@@ -30,7 +30,12 @@ obj-m += avl2108_platform.o
 else ifdef UFS912
 stv090x-objs +=	stv090x/stv090x.o
 stv090x-objs +=	stv090x/stv6110x.o
-stv090x-objs +=	stv090x/core.o                               
+stv090x-objs +=	stv090x/core.o
+obj-m += stv090x.o
+else ifdef HS7810A
+stv090x-objs +=	stv090x/stv090x.o
+stv090x-objs +=	stv090x/stv6110x.o
+stv090x-objs +=	stv090x/core.o
 obj-m += stv090x.o
 else ifdef SPARK
 stv090x-objs +=	spark/stv090x.o

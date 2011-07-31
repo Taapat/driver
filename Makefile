@@ -82,6 +82,9 @@ endif
 ifdef ATEVIO7500
 CCFLAGSY += -DATEVIO7500
 endif
+ifdef HS7810A
+CCFLAGSY += -DHS7810A
+endif
 ifdef HOMECAST5101
 CCFLAGSY += -DHOMECAST5101
 endif
@@ -166,6 +169,11 @@ obj-y	+= cec/
 endif
 
 ifdef ATEVIO7500
+obj-y	+= cec/
+obj-y	+= smartcard/
+endif
+
+ifdef HS7810A
 obj-y	+= cec/
 obj-y	+= smartcard/
 endif

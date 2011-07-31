@@ -52,11 +52,11 @@ if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
 
 static unsigned int verbose = FE_DEBUGREG;
 
-#if defined(UFS912)
+#if defined(UFS912) || defined(HS7810A)
 int writereg_lnb_supply (struct stv090x_state *state, char data);
 #endif
 
-#if (LINUX_VERSION_CODE == KERNEL_VERSION(2,6,23))  && defined(FORTIS_HDBOX)
+#if (LINUX_VERSION_CODE == KERNEL_VERSION(2,6,23))  && (defined(FORTIS_HDBOX) || defined(HS7810A))
 void ctrl_fn_using_non_p3_address(void)
 {
 	printk("ctrl_fn_using_non_p3_address FRONTEND OK\n");
@@ -1903,7 +1903,7 @@ static int stv090x_i2c_gate_ctrl(struct dvb_frontend *fe, int enable)
 			   goto err;
        }
 	}
-	
+
 	return 0;
 err:
 	printk("stv090x_i2c_gate_ctrl: I/O error\n");
@@ -6292,7 +6292,7 @@ static int stv090x_setup(struct dvb_frontend *fe)
 	if (stv090x_write_reg(state, STV090x_P2_TNRCFG, 0x6c) < 0)
 		goto err;
 
-#if defined(UFS912)
+#if defined(UFS912) || defined(HS7810A)
 	STV090x_SETFIELD_Px(reg, STOP_ENABLE_FIELD, 1);
 #endif
 
@@ -6308,7 +6308,7 @@ static int stv090x_setup(struct dvb_frontend *fe)
 	msleep(1);
 	if (stv090x_write_reg(state, STV090x_I2CCFG, 0x08) < 0) /* 1/41 oversampling */
 		goto err;
-#if defined(UFS912)
+#if defined(UFS912) || defined(HS7810A)
 	if (stv090x_write_reg(state, STV090x_SYNTCTRL, 0x10 | config->clk_mode) < 0) /* enable PLL */
 		goto err;
 #else
@@ -6452,8 +6452,9 @@ static int stv090x_get_property(struct dvb_frontend *fe, struct dtv_property* tv
 
 #endif
 
-    static int hdbox_set_voltage(struct dvb_frontend *fe, enum fe_sec_voltage voltage)
-    {
+#ifdef  FORTIS_HDBOX
+static int hdbox_set_voltage(struct dvb_frontend *fe, enum fe_sec_voltage voltage)
+{
        struct stv090x_state *state = fe->demodulator_priv;
 
        u8 res = ctrl_inb(0xa2800000);
@@ -6510,9 +6511,78 @@ static int stv090x_get_property(struct dvb_frontend *fe, struct dtv_property* tv
        ctrl_outb(res, 0xa2800000);
        dprintk(10, "%s <out:0x%x\n", __func__,res);
        return 0;
-    }
+}
+#elif HS7810A
+static int writereg_lnb_supply (struct stv090x_state *state, char data)
+{
+  int ret = -EREMOTEIO;
+  struct i2c_msg msg;
+  u8 buf;
+  static struct i2c_adapter *adapter = NULL;
 
-#if defined(UFS912)
+  buf = data;
+  adapter = i2c_get_adapter (1);//state->i2c;
+  if (adapter == NULL)
+  {
+    printk ("%s: failed get i2c adapter\n", __FUNCTION__);
+    return -1;
+  }
+
+  msg.addr = 0x10; // LNB A8293
+  msg.flags = 0;
+  msg.buf = &buf;
+  msg.len = 1;
+
+  dprintk (100, "write lnb: %s:  write 0x%02x to 0x0a\n", __FUNCTION__, data);
+
+  /*struct dvb_frontend *fe = &state->frontend;
+  if (stv090x_i2c_gate_ctrl(fe, 1) < 0)
+	  return -2;*/
+
+  if ((ret = i2c_transfer (adapter, &msg, 1)) != 1)
+  {
+    printk ("%s: writereg error(err == %i)\n", __FUNCTION__, ret);
+    ret = -EREMOTEIO;
+  }
+  /*if (stv090x_i2c_gate_ctrl(fe, 0) < 0)
+	  return -2;*/
+
+  return ret;
+}
+
+static int lnb_a8293_set_voltage(struct dvb_frontend *fe, enum fe_sec_voltage voltage)
+{
+   struct stv090x_state *state = fe->demodulator_priv;
+   unsigned char lnb_a8293_reg0 = 0x10;
+
+   dprintk(10, "%s >Tuner:%d\n", __func__,state->tuner);
+
+   switch (voltage)
+   {
+      case SEC_VOLTAGE_OFF:
+    	  dprintk(10, "set_voltage_off\n");
+    	  lnb_a8293_reg0 |= (1<<5);
+    	  writereg_lnb_supply(state, lnb_a8293_reg0);
+    	  break;
+
+      case SEC_VOLTAGE_13: /* vertical */
+    	  dprintk(10, "set_voltage_vertical \n");
+    	  lnb_a8293_reg0 |= 0x04;
+    	  writereg_lnb_supply(state, lnb_a8293_reg0);
+    	  break;
+
+      case SEC_VOLTAGE_18: /* horizontal */
+           dprintk(10, "set_voltage_horizontal\n");
+           lnb_a8293_reg0 |= 0x0B;
+     	   writereg_lnb_supply(state, lnb_a8293_reg0);
+           break;
+   }
+
+   dprintk(10, "%s <\n", __func__);
+   return 0;
+}
+
+#elif UFS912
 /* Dagi: maybe we should make a directory for lnb supplies;
  * we have three different til now ... and lnbh23 is also used
  * for newer ufs922
@@ -6630,7 +6700,8 @@ static struct dvb_frontend_ops stv090x_ops = {
 #if defined(FORTIS_HDBOX)
 /* hdbox special */
 	.set_voltage			= hdbox_set_voltage,
-
+#elif  defined(HS7810A)
+	.set_voltage			= lnb_a8293_set_voltage,
 #elif defined(UFS912)
 	.set_voltage			= lnbh23_set_voltage,
 #else
@@ -6665,7 +6736,7 @@ struct dvb_frontend *stv090x_attach(const struct stv090x_config *config,
 
 	dprintk(10, "i2c adapter = %p\n", state->i2c);
 	
-#ifdef UFS912
+#if defined(UFS912) || defined(HS7810A)
 	mutex_init(&demod_lock);
 #else
 //FIXME FIXME FIXME

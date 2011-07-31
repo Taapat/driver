@@ -53,6 +53,8 @@ obj-m += cimax.o
 else ifdef ATEVIO7500
 obj-m += starci.o
 starci-objs:= starci2win/starci2win.o
+else ifdef HS7810A
+obj-m += starci.o
 else ifdef SPARK
 dummy_cic-objs += dummy_cic/dummy_cic.o
 obj-m += dummy_cic.o

@@ -43,8 +43,11 @@
 
 //-------------------------------------
 
-#ifdef ATEVIO7500
+#if defined(ATEVIO7500)
 unsigned int InterruptLine = 120;
+unsigned int ASCXBaseAddress = ASC3BaseAddress;
+#elif defined(HS7810A)
+unsigned int InterruptLine = 274;
 unsigned int ASCXBaseAddress = ASC3BaseAddress;
 #else
 unsigned int InterruptLine = 121;
