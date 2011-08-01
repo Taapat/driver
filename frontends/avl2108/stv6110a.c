@@ -229,7 +229,7 @@ u16 stv6110_tuner_lock_status(struct dvb_frontend* fe)
 u16 stv6110_tuner_init(struct dvb_frontend* fe)
 {
     struct stv6110_state *state = fe->tuner_priv;
-    u16 ret;
+    u16 ret = 0;
     u8 buf0[] = { 0x07, 0x11, 0xdc, 0x85, 0x17, 0x01, 0xe6, 0x1e };
 
     dprintk(50, "%s(): >\n", __func__);
