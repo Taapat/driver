@@ -163,7 +163,7 @@ static struct s_stv6412_data tmpstv6412_data;
 static int stv6412_s_old_src;
 
 /* ---------------------------------------------------------------------- */
-#if defined(FORTIS_HDBOX) || defined(HL101)  || defined(IOBOX9900)
+#if defined(FORTIS_HDBOX) || defined(HL101)  || defined(IPBOX9900)
 //Trick: hack ;)
 int stv6412_set(struct i2c_client *client)
 {
@@ -185,7 +185,7 @@ int stv6412_set(struct i2c_client *client)
 	i2c_master_send(client, buffer, 10);
 
 	return 0;
-}                                                               
+}
 #else
 int stv6412_set(struct i2c_client *client)
 {

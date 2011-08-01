@@ -49,10 +49,10 @@ static int debug = 0;
 		if (debug) printk (args); \
 	} while (0)
 
-#if defined(FORTIS_HDBOX) || defined(ATEVIO7500)
-struct stpio_pin*	cic_enable_pin;
-struct stpio_pin*	module_A_pin;
-struct stpio_pin*	module_B_pin;
+#if defined(FORTIS_HDBOX) || defined(ATEVIO7500) || defined(HS7810A)
+struct stpio_pin*	cic_enable_pin = NULL;
+struct stpio_pin*	module_A_pin = NULL;
+struct stpio_pin*	module_B_pin = NULL;
 #endif
 
 /* StarCI2Win register definitions */
@@ -113,6 +113,15 @@ unsigned char default_values[33] =
   0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 
   0x00, 0x00, 0x00, 0x03, 0x06, 0x00, 0x03, 0x01
 };
+#elif defined(HS7810A)
+unsigned char default_values[33] =
+{
+  0x00, 
+  0x00, 0x00, 0x02, 0x00, 0x00, 0x44, 0x00, 0x00, 
+  0x00, 0x00, 0x00, 0x02, 0x00, 0x02, 0x44, 0x00, 
+  0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 
+  0x00, 0x00, 0x00, 0x03, 0x06, 0x00, 0x03, 0x01
+};
 #elif defined (HOMECAST5101)
 unsigned char default_values[33] =
 {
@@ -128,11 +137,11 @@ unsigned char default_values[33] =
 unsigned long reg_config = 0;
 unsigned long reg_buffer = 0;
 
-#if defined(ATEVIO7500)
+#if defined(ATEVIO7500) || defined(HS7810A)
 unsigned long reg_sysconfig = 0;
 #endif
 
-#if defined(FORTIS_HDBOX) || defined(ATEVIO7500)
+#if defined(FORTIS_HDBOX) || defined(ATEVIO7500) || defined(HS7810A)
 static unsigned char *slot_membase[2];
 #else
 /* for whatever reason the access has to be done though a short pointer */
@@ -168,7 +177,7 @@ static unsigned short *slot_membase[2];
 #define EMI_DATA2_BEE1_WRITE(a)		(a<<4)
 #define EMI_DATA2_BEE2_WRITE(a)		(a<<0)
 
-#if defined(ATEVIO7500)
+#if defined(ATEVIO7500) || defined(HS7810A)
 #define EMIConfigBaseAddress 0xfe700000
 #define SysConfigBaseAddress 0xFE001000
 #else
@@ -325,7 +334,7 @@ void getCiSource(int slot, int* source)
 {
   int val;
 
-#ifndef ATEVIO7500
+#if !defined(ATEVIO7500) && !defined(HS7810A)
   val = starci_readreg(&ca_state, TWIN_MODE_CTRL_REG);
   val &= 0x20;
 
@@ -455,7 +464,7 @@ static int starci_poll_slot_status(struct dvb_ca_en50221 *ca, int slot, int open
 
   slot_status = starci_readreg(state, ctrlReg[slot]) & 0x01;
 
-#if defined(ATEVIO7500) || defined(FORTIS_HDBOX)
+#if defined(ATEVIO7500) || defined(FORTIS_HDBOX) || defined(HS7810A)
   if (slot_status != state->module_present[slot])
   {
 	  if (slot_status)
@@ -559,7 +568,7 @@ static int starci_slot_reset(struct dvb_ca_en50221 *ca, int slot)
     starci_writereg(state, reg[slot], result | 0x80);
 
     starci_writereg(state, DEST_SEL_REG, 0x0);
-#if defined(ATEVIO7500) || defined(FORTIS_HDBOX)
+#if defined(ATEVIO7500) || defined(FORTIS_HDBOX) || defined(HS7810A)
     msleep(200);
 #else
     msleep(60);
@@ -575,7 +584,7 @@ static int starci_slot_reset(struct dvb_ca_en50221 *ca, int slot)
   /* reset status variables because module detection has to
      be reported after a delay */
   state->module_ready[slot] = 0;
-#if defined(ATEVIO7500) || defined(FORTIS_HDBOX)
+#if defined(ATEVIO7500) || defined(FORTIS_HDBOX) || defined(HS7810A)
   state->module_present[slot] = 0;
 #endif
   state->detection_timeout[slot] = 0;
@@ -741,7 +750,7 @@ static int starci_slot_ts_enable(struct dvb_ca_en50221 *ca, int slot)
 
   result = starci_readreg(state, reg[slot]);
 
-#if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX)
+#if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX) && !defined(HS7810A)
   starci_writereg(state, reg[slot], 0x23);
 #else
   starci_writereg(state, reg[slot], 0x21);
@@ -775,6 +784,8 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   state->dvb_adap = dvb_adap;
 #if defined(FORTIS_HDBOX) || defined(ATEVIO7500)
   state->i2c = i2c_get_adapter(2);
+#elif defined(HS7810A)
+  state->i2c = i2c_get_adapter(3);
 #else
   state->i2c = i2c_get_adapter(0);
 #endif
@@ -797,7 +808,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 
   state->ca.data 		= state;
 
-#if defined(ATEVIO7500) || defined(FORTIS_HDBOX)
+#if defined(ATEVIO7500) || defined(FORTIS_HDBOX) || defined(HS7810A)
   state->module_present[0] = 0;
   state->module_present[1] = 0;
 #endif
@@ -809,16 +820,17 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 
   reg_config = (unsigned long)ioremap(EMIConfigBaseAddress, 0x7ff);
 
-#ifndef ATEVIO7500
+#if !defined(ATEVIO7500) && !defined(HS7810A)
   reg_buffer = (unsigned long)ioremap(EMIBufferBaseAddress, 0x40);
 #endif
 
-#ifdef ATEVIO7500
+#if defined(ATEVIO7500) || defined(HS7810A)
   reg_sysconfig = (unsigned long)ioremap(SysConfigBaseAddress, 0x200);
 #endif
 
   dprintk (KERN_ERR "ioremap 0x%.8x -> 0x%.8lx\n", EMIConfigBaseAddress, reg_config);	
-#ifndef ATEVIO7500
+
+#if !defined(ATEVIO7500) && !defined(HS7810A)
   dprintk (KERN_ERR "ioremap 0x%.8x -> 0x%.8lx\n", EMIBufferBaseAddress, reg_buffer);	
 #endif
 
@@ -855,6 +867,27 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   stpio_set_pin (module_A_pin, 0);
   stpio_set_pin (module_B_pin, 0);
 
+#elif defined(HS7810A)
+  /* the magic potion - some clkb settings */
+  ctrl_outl(0x0000c0de, 0xfe000010);
+  ctrl_outl(0x00000008, 0xfe0000b4);
+  ctrl_outl(0x0000c1a0, 0xfe000010);
+
+  /* necessary to access i2c register */
+  ctrl_outl(0x1c, reg_sysconfig + 0x160);
+
+  module_A_pin = stpio_request_pin (6, 0, "StarCI_ModA", STPIO_OUT);
+  module_B_pin = stpio_request_pin (6, 1, "StarCI_ModB", STPIO_OUT);
+
+  cic_enable_pin = stpio_request_pin (6, 2, "StarCI_RST", STPIO_OUT);
+  stpio_set_pin (cic_enable_pin, 1);
+  msleep(250);
+  stpio_set_pin (cic_enable_pin, 0);
+  msleep(250);
+
+  //stpio_set_pin (module_A_pin, 0);
+  stpio_set_pin (module_B_pin, 0);
+
 #endif
 
   /* reset the chip */
@@ -868,13 +901,13 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   /* power on (only possible with LOCK = 1)
      other bits cannot be set when LOCK is = 1 */
      
-#if defined(ATEVIO7500) || defined(FORTIS_HDBOX)
+#if defined(ATEVIO7500) || defined(FORTIS_HDBOX) || defined(HS7810A)
   starci_writereg(state, 0x18, 0x21);
 #else
   starci_writereg(state, 0x18, 0x01);
 #endif
 
-#if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX)
+#if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX) && !defined(HS7810A)
   ctrl_outl(0x0, reg_config + EMI_LCK);
   ctrl_outl(0x0, reg_config + EMI_GEN_CFG);
 #endif
@@ -888,7 +921,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   ctrl_outl(0x9d220000,reg_config + EMIBank1 + EMI_CFG_DATA2);
   ctrl_outl(0x8,reg_config + EMIBank1 + EMI_CFG_DATA3);
 
-#elif defined(ATEVIO7500)
+#elif defined(ATEVIO7500) || defined(HS7810A)
   ctrl_outl(0x8486d9, reg_config + EMIBank3 + EMI_CFG_DATA0);
   ctrl_outl(0x9d220000,reg_config + EMIBank3 + EMI_CFG_DATA2);
   ctrl_outl(0x8,reg_config + EMIBank3 + EMI_CFG_DATA3);
@@ -932,7 +965,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   ctrl_outl(0x0, reg_config + EMI_FLASH_CLK_SEL);
 #endif
 
-#if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX)
+#if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX) && !defined(HS7810A)
   ctrl_outl(0x1, reg_config + EMI_CLK_EN);
 #endif
 
@@ -942,6 +975,8 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 #elif defined(HOMECAST5101)
   slot_membase[0] = ioremap( 0xa3000000, 0x1000 );
 #elif defined(ATEVIO7500)
+  slot_membase[0] = ioremap( 0x06800000, 0x1000 );
+#elif defined(HS7810A) // ?? not sure
   slot_membase[0] = ioremap( 0x06800000, 0x1000 );
 #else
   slot_membase[0] = ioremap( 0xa3000000, 0x1000 );
@@ -960,6 +995,8 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   slot_membase[1] = ioremap( 0xa3010000, 0x1000 );
 #elif defined(ATEVIO7500)
   slot_membase[1] = ioremap( 0x06810000, 0x1000 );
+#elif defined(HS7810A) // ?? not sure
+  slot_membase[1] = ioremap( 0x06810000, 0x1000 );
 #else
   slot_membase[1] = ioremap( 0xa3010000, 0x1000 );
 #endif
@@ -970,7 +1007,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 	  goto error;
   }
 
-#if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX)
+#if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX) && !defined(HS7810A)
   ctrl_outl(0x1F,reg_config + EMI_LCK);
 #endif
 

@@ -271,6 +271,8 @@ static int info_model_read(char *page, char **start, off_t off, int count,
   int len = sprintf(page, "octagon1008\n");
 #elif defined(ATEVIO7500)
   int len = sprintf(page, "atevio7500\n");
+#elif defined(HS7810A)
+  int len = sprintf(page, "hs7810a\n");
 #elif defined(IPBOX9900)
   int len = sprintf(page, "ipbox9900\n");
 #elif defined(IPBOX99)

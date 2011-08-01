@@ -747,7 +747,7 @@ void pti_hal_init ( struct stpti *pti , struct dvb_demux* demux, void (*_demulti
      printk("error allocating back buffer !!!!!!!!!!!!!!!!!!!!!!!!\n");
 
   /* ioremap the pti address space */
-#if defined(UFS912) || defined(SPARK) || defined(SPARK7162)
+#if defined(UFS912) || defined(SPARK) || defined(SPARK7162) || defined(HS7810A)
   start = 0xfe230000;
 #else
   start = 0x19230000;

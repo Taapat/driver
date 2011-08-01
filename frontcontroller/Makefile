@@ -69,6 +69,10 @@ ifdef ATEVIO7500
 obj-y	+= nuvoton/
 endif
 
+ifdef HS7810A
+obj-y	+= nuvoton/
+endif
+
 ifdef IPBOX9900
 obj-y	+= ipbox99xx/
 endif

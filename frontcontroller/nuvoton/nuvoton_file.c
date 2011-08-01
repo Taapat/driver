@@ -124,6 +124,75 @@ u8 c;
 
 #endif
 
+#ifdef HS7810A
+typedef struct
+{
+	char ch;
+	long font;
+} _VFD_FONT_;
+
+
+static _VFD_FONT_ _7seg_fonts[] =
+{
+	{'0', 0x3f},
+	{'1', 0x06},
+	{'2', 0x5b},
+	{'3', 0x4f},
+	{'4', 0x66},
+	{'5', 0x6d},
+	{'6', 0x7c},
+	{'7', 0x27},
+	{'8', 0x7f},
+	{'9', 0x67},
+	{'-', 0x40},
+	{'A', 0x77},
+	{'a', 0x77},
+	{'B', 0x7c},
+	{'b', 0x7c},
+	{'C', 0x39},
+	{'c', 0x39},
+	{'D', 0x5e},
+	{'d', 0x5e},
+	{'E', 0x79},
+	{'e', 0x79},
+	{'F', 0x71},
+	{'f', 0x71},
+	{'G', 0x7d},
+	{'g', 0x7d},
+	{'H', 0x76},
+	{'h', 0x76},
+	{'I', 0x06},
+	{'i', 0x06},
+	{'J', 0x0e},
+	{'j', 0x0e},
+	{'K', 0x7a},
+	{'k', 0x7a},
+	{'M', 0x55},
+	{'m', 0x55},
+	{'L', 0x38},
+	{'l', 0x38},
+	{'N', 0x37},
+	{'n', 0x37},
+	{'O', 0x3f},
+	{'o', 0x3f},
+	{'P', 0x73},
+	{'p', 0x73},
+	{'Q', 0x67},
+	{'q', 0x67},
+	{'R', 0x55},
+	{'r', 0x50},
+	{'s', 0x6d},
+	{'S', 0x6d},
+	{'T', 0x78},
+	{'U', 0x3e},
+	{'u', 0x3e},
+	{'y', 0x66},
+	{'z', 0x5b},
+	{' ', 0x00},
+//	{' ', 0x01},
+};
+#endif
+
 enum {
 	ICON_MIN,
 	ICON_STANDBY,
@@ -223,6 +292,8 @@ struct iconToInternal {
 
 #ifdef OCTAGON1008
 #define cCommandSetVFD           0xc4
+#elif HS7810A
+#define cCommandSetVFD           0x24
 #else
 #define cCommandSetVFD           0xce /* 0xc0 */
 #endif
@@ -230,7 +301,7 @@ struct iconToInternal {
 
 #define cCommandSetVFDBrightness 0xd2
 
-#ifdef ATEVIO7500
+#if defined(ATEVIO7500) || defined(HS7810A)
 #define cCommandGetFrontInfo     0xd0
 #else
 #define cCommandGetFrontInfo     0xe0
@@ -314,7 +385,7 @@ int nuvotonSetIcon(int which, int on)
 
     return res;
 }
-#else
+#elif defined(ATEVIO7500)
 int nuvotonSetIcon(int which, int on)
 {
     char buffer[128];
@@ -393,6 +464,11 @@ int nuvotonSetIcon(int which, int on)
 
     return res;
 }
+#else // HS7810A 7seg_vfd
+int nuvotonSetIcon(int which, int on)
+{
+	return 0;
+}
 #endif
 
 /* export for later use in e2_proc */
@@ -431,6 +507,7 @@ int nuvotonSetBrightness(int level)
 
     dprintk(100, "%s > %d\n", __func__, level);
 
+#ifndef HS7810A
     if (level < 0 || level > 7)
     {
         printk("VFD/Nuvoton brightness out of range %d\n", level);
@@ -447,6 +524,7 @@ int nuvotonSetBrightness(int level)
     buffer[4] = EOP;
 
     res = nuvotonWriteCommand(buffer, 5, 0);
+#endif
 
     dprintk(100, "%s <\n", __func__);
 
@@ -462,6 +540,7 @@ int nuvotonSetPwrLed(int level)
 
     dprintk(100, "%s > %d\n", __func__, level);
 
+#ifndef HS7810A
     if (level < 0 || level > 15)
     {
         printk("VFD/Nuvoton PwrLed out of range %d\n", level);
@@ -478,6 +557,7 @@ int nuvotonSetPwrLed(int level)
     buffer[5] = EOP;
 
     res = nuvotonWriteCommand(buffer, 6, 0);
+#endif
 
     dprintk(100, "%s <\n", __func__);
 
@@ -496,6 +576,7 @@ int nuvotonSetStandby(char* time)
 
     res = nuvotonWriteString("Bye bye ...", strlen("Bye bye ..."));
 
+#ifndef HS7810A
     /* set wakeup time */
     memset(buffer, 0, 8);
 
@@ -509,6 +590,7 @@ int nuvotonSetStandby(char* time)
 
     /* now power off */
     res = nuvotonWriteCommand(power_off, sizeof(power_off), 0);
+#endif
 
     dprintk(100, "%s <\n", __func__);
 
@@ -522,6 +604,7 @@ int nuvotonSetTime(char* time)
 
     dprintk(100, "%s >\n", __func__);
 
+#ifndef HS7810A
     memset(buffer, 0, 8);
 
     buffer[0] = SOP;
@@ -531,6 +614,7 @@ int nuvotonSetTime(char* time)
     buffer[7] = EOP;
 
     res = nuvotonWriteCommand(buffer, 8, 0);
+#endif
 
     dprintk(100, "%s <\n", __func__);
 
@@ -544,6 +628,7 @@ int nuvotonGetTime(void)
 
     dprintk(100, "%s >\n", __func__);
 
+#ifndef HS7810A
     memset(buffer, 0, 3);
 
     buffer[0] = SOP;
@@ -566,6 +651,7 @@ int nuvotonGetTime(void)
         dprintk(20, "myTime= 0x%02x - 0x%02x - 0x%02x - 0x%02x - 0x%02x\n", ioctl_data[0], ioctl_data[1]
                 , ioctl_data[2], ioctl_data[3], ioctl_data[4]);
     }
+#endif
 
     dprintk(100, "%s <\n", __func__);
 
@@ -579,6 +665,7 @@ int nuvotonGetWakeUpMode(void)
 
     dprintk(100, "%s >\n", __func__);
 
+#ifndef HS7810A
     memset(buffer, 0, 8);
 
     buffer[0] = SOP;
@@ -600,13 +687,132 @@ int nuvotonGetWakeUpMode(void)
         /* time received ->noop here */
         dprintk(1, "time received\n");
     }
+#endif
 
     dprintk(100, "%s <\n", __func__);
 
     return res;
 }
 
-#ifndef OCTAGON1008
+#if defined(HS7810A)
+int nuvotonWriteString(unsigned char* aBuf, int len)
+{
+	int i,j,k, res;
+	int buflen;
+	int dot_count=0;
+	unsigned char cmd_buf[8];
+
+    dprintk(100, "%s > %d\n", __func__, len);
+
+	memset(cmd_buf,0,8);
+	buflen = len;
+
+	if(buflen > 8)
+		buflen = 8;
+
+	for(i=0;i<buflen;i++)
+		if(aBuf[i]== '.')
+			dot_count++;
+
+	k=2;
+	for(i=0;i<4+dot_count;i++)
+	{
+		for(j=0; j < (sizeof(_7seg_fonts)/sizeof(_7seg_fonts[0])); j++)
+			if(_7seg_fonts[j].ch == aBuf[i])
+				cmd_buf[k]=_7seg_fonts[j].font ;
+
+		if( aBuf[i+1] == '.')
+		{
+			cmd_buf[k]+=0x80;
+			k++;
+		}
+		else
+		{
+			if( aBuf[i] == '.')
+				continue;
+			else
+				k++;
+		}
+	}
+
+	cmd_buf[0]=SOP;
+	cmd_buf[1]=cCommandSetVFD;
+	cmd_buf[6]=EOP;
+	res = nuvotonWriteCommand(cmd_buf,7,0);
+
+    dprintk(100, "%s <\n", __func__);
+	return res;
+}
+#elif defined(OCTAGON1008)
+
+inline char toupper(const char c)
+{
+    if ((c >= 'a') && (c <= 'z'))
+        return (c - 0x20);
+    return c;
+}
+
+int nuvotonWriteString(unsigned char* aBuf, int len)
+{
+    unsigned char bBuf[128];
+    int i =0, max = 0;
+    int j =0;
+    int res = 0;
+
+    dprintk(100, "%s > %d\n", __func__, len);
+
+    memset(bBuf, ' ', 128);
+
+    max = (len > 8) ? 8 : len;
+    printk("max = %d\n", max);
+
+    //clean display text
+    for(i=0; i<8; i++)
+    {
+        bBuf[0] = SOP;
+        bBuf[2] = 7 - i; /* position: 0x00 = right */
+        bBuf[1] = cCommandSetIcon;
+        bBuf[3] = 0x00;
+        bBuf[4] = 0x00;
+        bBuf[5] = 0x00;
+        bBuf[6] = EOP;
+        nuvotonWriteCommand(bBuf, 8, 0);
+    }
+
+    for (i = 0; i < max ; i++)
+    {
+        bBuf[0] = SOP;
+        bBuf[2] = 7 - i; /* position: 0x00 = right */
+        bBuf[1] = cCommandSetIcon;
+        bBuf[3] = 0x00;
+        bBuf[6] = EOP;
+
+        for (j = 0; j < ARRAY_SIZE(octagon_chars); j++)
+        {
+            if (octagon_chars[j].c == toupper(aBuf[i]))
+            {
+                bBuf[4] = octagon_chars[j].s1;
+                vfdbuf[7 - i].buf1 = bBuf[4];
+                bBuf[5] = octagon_chars[j].s2;
+                vfdbuf[7 - i].buf2 = bBuf[5];
+                res |= nuvotonWriteCommand(bBuf, 8, 0);
+                break;
+            }
+        }
+        //printk(" 0x%02x,0x%02x,0x%02x\n",vfdbuf[7 - i].pos,vfdbuf[7 - i].buf1,vfdbuf[7 - i].buf2);
+    }
+
+    /* save last string written to fp */
+    memcpy(&lastdata.data, aBuf, 128);
+    lastdata.length = len;
+
+    dprintk(70, "len %d\n", len);
+
+    dprintk(100, "%s <\n", __func__);
+
+    return res;
+}
+#else
 int nuvotonWriteString(unsigned char* aBuf, int len)
 {
     unsigned char bBuf[128];
@@ -693,76 +899,6 @@ int nuvotonWriteString(unsigned char* aBuf, int len)
 
     return res;
 }
-#else
-
-inline char toupper(const char c)
-{
-    if ((c >= 'a') && (c <= 'z'))
-        return (c - 0x20);
-    return c;
-}
-
-int nuvotonWriteString(unsigned char* aBuf, int len)
-{
-    unsigned char bBuf[128];
-    int i =0, max = 0;
-    int j =0;
-    int res = 0;
-
-    dprintk(100, "%s > %d\n", __func__, len);
-
-    memset(bBuf, ' ', 128);
-
-    max = (len > 8) ? 8 : len;
-    printk("max = %d\n", max);
-
-    //clean display text
-    for(i=0; i<8; i++)
-    {
-        bBuf[0] = SOP;
-        bBuf[2] = 7 - i; /* position: 0x00 = right */
-        bBuf[1] = cCommandSetIcon;
-        bBuf[3] = 0x00;
-        bBuf[4] = 0x00;
-        bBuf[5] = 0x00;
-        bBuf[6] = EOP;
-        nuvotonWriteCommand(bBuf, 8, 0);
-    }
-
-    for (i = 0; i < max ; i++)
-    {
-        bBuf[0] = SOP;
-        bBuf[2] = 7 - i; /* position: 0x00 = right */
-        bBuf[1] = cCommandSetIcon;
-        bBuf[3] = 0x00;
-        bBuf[6] = EOP;
-
-        for (j = 0; j < ARRAY_SIZE(octagon_chars); j++)
-        {
-            if (octagon_chars[j].c == toupper(aBuf[i]))
-            {
-                bBuf[4] = octagon_chars[j].s1;
-                vfdbuf[7 - i].buf1 = bBuf[4];
-                bBuf[5] = octagon_chars[j].s2;
-                vfdbuf[7 - i].buf2 = bBuf[5];
-                res |= nuvotonWriteCommand(bBuf, 8, 0);
-                break;
-            }
-        }
-        //printk(" 0x%02x,0x%02x,0x%02x\n",vfdbuf[7 - i].pos,vfdbuf[7 - i].buf1,vfdbuf[7 - i].buf2);
-    }
-
-    /* save last string written to fp */
-    memcpy(&lastdata.data, aBuf, 128);
-    lastdata.length = len;
-
-    dprintk(70, "len %d\n", len);
-
-    dprintk(100, "%s <\n", __func__);
-
-    return res;
-}
-
 #endif
 
 #ifndef ATEVIO7500
@@ -803,12 +939,16 @@ int nuvoton_init_func(void)
     res |= nuvotonWriteCommand(init4, sizeof(init4), 0);
     res |= nuvotonWriteCommand(init5, sizeof(init5), 0);
 
+#ifndef HS7810A
     res |= nuvotonSetBrightness(1);
 
     res |= nuvotonWriteString("T.-Ducktales", strlen("T.-Ducktales"));
 
     for (vLoop = ICON_MIN + 1; vLoop < ICON_MAX; vLoop++)
         res |= nuvotonSetIcon(vLoop, 0);
+#else
+    res |= nuvotonWriteString("----", 4);
+#endif
 
     dprintk(100, "%s <\n", __func__);
 
