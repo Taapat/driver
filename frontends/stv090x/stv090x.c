@@ -52,11 +52,11 @@ if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
 
 static unsigned int verbose = FE_DEBUGREG;
 
-#if defined(UFS912) || defined(HS7810A)
+#if defined(UFS912)
 int writereg_lnb_supply (struct stv090x_state *state, char data);
 #endif
 
-#if (LINUX_VERSION_CODE == KERNEL_VERSION(2,6,23))  && (defined(FORTIS_HDBOX) || defined(HS7810A))
+#if (LINUX_VERSION_CODE == KERNEL_VERSION(2,6,23)) && (defined(FORTIS_HDBOX) || defined(HS7810A))
 void ctrl_fn_using_non_p3_address(void)
 {
 	printk("ctrl_fn_using_non_p3_address FRONTEND OK\n");
@@ -6513,69 +6513,32 @@ static int hdbox_set_voltage(struct dvb_frontend *fe, enum fe_sec_voltage voltag
        return 0;
 }
 #elif HS7810A
-int writereg_lnb_supply (struct stv090x_state *state, char data)
-{
-  int ret = -EREMOTEIO;
-  struct i2c_msg msg;
-  u8 buf;
-  static struct i2c_adapter *adapter = NULL;
 
-  buf = data;
-  adapter = i2c_get_adapter (1);//state->i2c;
-  if (adapter == NULL)
-  {
-    printk ("%s: failed get i2c adapter\n", __FUNCTION__);
-    return -1;
-  }
+#define LNB_VOLTAGE_OFF   	 	0x2b0010
+#define LNB_VOLTAGE_VER   	 	0x2b0011
+#define LNB_VOLTAGE_HOR   	 	0x2b0012
 
-  msg.addr = 0x10; // LNB A8293
-  msg.flags = 0;
-  msg.buf = &buf;
-  msg.len = 1;
+extern int lnb_command_kernel(unsigned int cmd, void *arg);
 
-  dprintk (100, "write lnb: %s:  write 0x%02x to 0x0a\n", __FUNCTION__, data);
-
-  /*struct dvb_frontend *fe = &state->frontend;
-  if (stv090x_i2c_gate_ctrl(fe, 1) < 0)
-	  return -2;*/
-
-  if ((ret = i2c_transfer (adapter, &msg, 1)) != 1)
-  {
-    printk ("%s: writereg error(err == %i)\n", __FUNCTION__, ret);
-    ret = -EREMOTEIO;
-  }
-  /*if (stv090x_i2c_gate_ctrl(fe, 0) < 0)
-	  return -2;*/
-
-  return ret;
-}
-
-static int lnb_a8293_set_voltage(struct dvb_frontend *fe, enum fe_sec_voltage voltage)
+static int lnb_set_voltage(struct dvb_frontend *fe, enum fe_sec_voltage voltage)
 {
    struct stv090x_state *state = fe->demodulator_priv;
-   unsigned char lnb_a8293_reg0 = 0x10;
 
-   dprintk(10, "%s >Tuner:%d\n", __func__,state->tuner);
+   dprintk(10, "%s > Tuner: %d\n", __func__,state->tuner);
 
    switch (voltage)
    {
-      case SEC_VOLTAGE_OFF:
-    	  dprintk(10, "set_voltage_off\n");
-    	  lnb_a8293_reg0 |= (1<<5);
-    	  writereg_lnb_supply(state, lnb_a8293_reg0);
-    	  break;
+   case SEC_VOLTAGE_OFF:
+	   lnb_command_kernel(LNB_VOLTAGE_OFF, NULL);
+	   break;
 
-      case SEC_VOLTAGE_13: /* vertical */
-    	  dprintk(10, "set_voltage_vertical \n");
-    	  lnb_a8293_reg0 |= 0x04;
-    	  writereg_lnb_supply(state, lnb_a8293_reg0);
-    	  break;
+   case SEC_VOLTAGE_13:
+	   lnb_command_kernel(LNB_VOLTAGE_VER, NULL);
+	   break;
 
-      case SEC_VOLTAGE_18: /* horizontal */
-           dprintk(10, "set_voltage_horizontal\n");
-           lnb_a8293_reg0 |= 0x0B;
-     	   writereg_lnb_supply(state, lnb_a8293_reg0);
-           break;
+   case SEC_VOLTAGE_18:
+	   lnb_command_kernel(LNB_VOLTAGE_HOR, NULL);
+	   break;
    }
 
    dprintk(10, "%s <\n", __func__);
@@ -6673,7 +6636,7 @@ static struct dvb_frontend_ops stv090x_ops = {
 	.release			= stv090x_release,
 	.init				= stv090x_init,
 
-//workaround for tuner failed, a frontend open does not allways wakeup the tuner
+//workaround for tuner failed, a frontend open does not always wakeup the tuner
 #ifndef FORTIS_HDBOX
 	.sleep				= stv090x_sleep,
 #endif
@@ -6701,7 +6664,7 @@ static struct dvb_frontend_ops stv090x_ops = {
 /* hdbox special */
 	.set_voltage			= hdbox_set_voltage,
 #elif  defined(HS7810A)
-	.set_voltage			= lnb_a8293_set_voltage,
+	.set_voltage			= lnb_set_voltage,
 #elif defined(UFS912)
 	.set_voltage			= lnbh23_set_voltage,
 #else
@@ -6713,7 +6676,7 @@ static struct dvb_frontend_ops stv090x_ops = {
 struct dvb_frontend *stv090x_attach(const struct stv090x_config *config,
 				    struct i2c_adapter *i2c,
 				    enum stv090x_demodulator demod,
-			            enum stv090x_tuner tuner)
+			        enum stv090x_tuner tuner)
 {
 	struct stv090x_state *state = NULL;
 
@@ -6723,7 +6686,7 @@ struct dvb_frontend *stv090x_attach(const struct stv090x_config *config,
 
 	state->verbose				= &verbose;
 	state->config				= config;
-	state->i2c				= i2c;
+	state->i2c					= i2c;
 	state->frontend.ops			= stv090x_ops;
 	state->frontend.demodulator_priv	= state;
 	state->demod				= demod;
