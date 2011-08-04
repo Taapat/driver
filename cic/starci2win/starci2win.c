@@ -464,33 +464,32 @@ static int starci_poll_slot_status(struct dvb_ca_en50221 *ca, int slot, int open
 
   slot_status = starci_readreg(state, ctrlReg[slot]) & 0x01;
 
-#if defined(ATEVIO7500) || defined(FORTIS_HDBOX) || defined(HS7810A)
+#if defined(ATEVIO7500) || defined(FORTIS_HDBOX)
   if (slot_status != state->module_present[slot])
   {
 	  if (slot_status)
 	  {
-              if (slot == 0)
-              {
-		  stpio_set_pin(module_A_pin, 1);
-                  dprintk("Modul A now present\n");
+         if (slot == 0)
+         {
+        	 stpio_set_pin(module_A_pin, 1);
+             dprintk("Modul A now present\n");
 	      }
-              else
-              {
-		  stpio_set_pin(module_B_pin, 1);
-                  dprintk("Modul B now present\n");
-              }
+          else
+          {
+        	  stpio_set_pin(module_B_pin, 1);
+              dprintk("Modul B now present\n");
+          }
 	      state->module_present[slot] = 1;
-
-              msleep(200);
+          msleep(200);
 	  }
 	  else
 	  {
-              if (slot == 0)
-		  stpio_set_pin(module_A_pin, 0);
+          if (slot == 0)
+        	  stpio_set_pin(module_A_pin, 0);
 	      else
-		  stpio_set_pin(module_B_pin, 0);
+	    	  stpio_set_pin(module_B_pin, 0);
 
-    	      dprintk("Modul now not present\n");
+    	  dprintk("Modul now not present\n");
 	      state->module_present[slot] = 0;
 	  }
    }
@@ -785,7 +784,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 #if defined(FORTIS_HDBOX) || defined(ATEVIO7500)
   state->i2c = i2c_get_adapter(2);
 #elif defined(HS7810A)
-  state->i2c = i2c_get_adapter(3);
+  state->i2c = i2c_get_adapter(2);
 #else
   state->i2c = i2c_get_adapter(0);
 #endif
@@ -876,18 +875,11 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   /* necessary to access i2c register */
   ctrl_outl(0x1c, reg_sysconfig + 0x160);
 
-  module_A_pin = stpio_request_pin (6, 0, "StarCI_ModA", STPIO_OUT);
-  module_B_pin = stpio_request_pin (6, 1, "StarCI_ModB", STPIO_OUT);
-
   cic_enable_pin = stpio_request_pin (6, 2, "StarCI_RST", STPIO_OUT);
   stpio_set_pin (cic_enable_pin, 1);
   msleep(250);
   stpio_set_pin (cic_enable_pin, 0);
   msleep(250);
-
-  //stpio_set_pin (module_A_pin, 0);
-  stpio_set_pin (module_B_pin, 0);
-
 #endif
 
   /* reset the chip */
