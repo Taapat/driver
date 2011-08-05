@@ -154,33 +154,37 @@
 #define	TD1_MASK			0x80
 
 /******* Char dev driver *******/
-#define DEVICE_NAME                 "sc"
-#define MAJOR_NUM			        169     /**< Major num of char dev */
-#define MINOR_START                 0       /**< Starting minor for char dev */
+#define DEVICE_NAME			"sc"
+#if defined(FORTIS_HDBOX)
+#define MAJOR_NUM			253	/**< Major num of char dev */
+#else
+#define MAJOR_NUM			169	/**< Major num of char dev */
+#endif
+#define MINOR_START			0	/**< Starting minor for char dev */
 
 /* Ioctl cmd table */
-#define SCI_IOW_MAGIC			    's'
+#define SCI_IOW_MAGIC			's'
 
-#define IOCTL_SET_RESET			   		_IOW(SCI_IOW_MAGIC, 1,  ULONG)
-#define IOCTL_SET_MODES			   		_IOW(SCI_IOW_MAGIC, 2,  SCI_MODES)
-#define IOCTL_GET_MODES			  		_IOW(SCI_IOW_MAGIC, 3,  SCI_MODES)
-#define IOCTL_SET_PARAMETERS			_IOW(SCI_IOW_MAGIC, 4,  SCI_PARAMETERS)
-#define IOCTL_GET_PARAMETERS			_IOW(SCI_IOW_MAGIC, 5,  SCI_PARAMETERS)
-#define IOCTL_SET_CLOCK_START			_IOW(SCI_IOW_MAGIC, 6,  ULONG)
-#define IOCTL_SET_CLOCK_STOP			_IOW(SCI_IOW_MAGIC, 7,  ULONG)
-#define IOCTL_GET_IS_CARD_PRESENT		_IOW(SCI_IOW_MAGIC, 8,  ULONG)
-#define IOCTL_GET_IS_CARD_ACTIVATED		_IOW(SCI_IOW_MAGIC, 9,  ULONG)
+#define IOCTL_SET_RESET			_IOW(SCI_IOW_MAGIC, 1,  ULONG)
+#define IOCTL_SET_MODES			_IOW(SCI_IOW_MAGIC, 2,  SCI_MODES)
+#define IOCTL_GET_MODES			_IOW(SCI_IOW_MAGIC, 3,  SCI_MODES)
+#define IOCTL_SET_PARAMETERS		_IOW(SCI_IOW_MAGIC, 4,  SCI_PARAMETERS)
+#define IOCTL_GET_PARAMETERS		_IOW(SCI_IOW_MAGIC, 5,  SCI_PARAMETERS)
+#define IOCTL_SET_CLOCK_START		_IOW(SCI_IOW_MAGIC, 6,  ULONG)
+#define IOCTL_SET_CLOCK_STOP		_IOW(SCI_IOW_MAGIC, 7,  ULONG)
+#define IOCTL_GET_IS_CARD_PRESENT	_IOW(SCI_IOW_MAGIC, 8,  ULONG)
+#define IOCTL_GET_IS_CARD_ACTIVATED	_IOW(SCI_IOW_MAGIC, 9,  ULONG)
 
 /* new ioctl*/
-#define IOCTL_SET_DEACTIVATE        _IOW(SCI_IOW_MAGIC, 10, ULONG)
+#define IOCTL_SET_DEACTIVATE		_IOW(SCI_IOW_MAGIC, 10, ULONG)
 /************/
 
-#define IOCTL_SET_ATR_READY		    _IOW(SCI_IOW_MAGIC, 11, ULONG)
+#define IOCTL_SET_ATR_READY		_IOW(SCI_IOW_MAGIC, 11, ULONG)
 #define IOCTL_GET_ATR_STATUS		_IOW(SCI_IOW_MAGIC, 12, ULONG)
-#define IOCTL_SET_CLOCK				_IOW(SCI_IOW_MAGIC, 13, ULONG)
+#define IOCTL_SET_CLOCK			_IOW(SCI_IOW_MAGIC, 13, ULONG)
 
 /* new ioctl */
-#define IOCTL_DUMP_REGS             _IOW(SCI_IOW_MAGIC, 20, ULONG)
+#define IOCTL_DUMP_REGS			_IOW(SCI_IOW_MAGIC, 20, ULONG)
 /*************/
 
 #define IOCTL_SET_ONLY_RESET		_IOW(SCI_IOW_MAGIC, 100,  ULONG)	// add for single reset, without change any of the params clock & baud
