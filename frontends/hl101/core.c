@@ -4,7 +4,6 @@
 #include "stb0899_reg.h"
 #include "stb0899_cfg.h"
 #include "stv090x.h"
-#include "cx24116.h"
 
 /* Tuners */
 #include "stb6100.h"
@@ -599,13 +598,6 @@ static struct stv090x_config stv090x_config = {
 	.tuner_get_status		= NULL,
 };
 
-static struct cx24116_config cx24116_config = {
-	.demod_address   = I2C_ADDR_CX24116, /* I2C Address */
-	.mpg_clk_pos_pol = 0x01,
-	.lnb_enable 	 = NULL,
-	.lnb_vsel	 	 = NULL,
-};
-
 static struct stb6100_config stb6100_config = {
 	.tuner_address = I2C_ADDR_STB6100,
 	.refclock      = 27000000
@@ -628,7 +620,7 @@ static const struct ix7306_config bs2s7hz7306a_config = {
 static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 {
 	struct dvb_frontend *frontend = NULL;
-	struct stv6110x_devctl *ctl;
+	struct tuner_devctl *ctl;
 
 	printk (KERN_INFO "%s >\n", __FUNCTION__);
 
@@ -647,40 +639,30 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 
 			switch (tunerType) {
 			case SHARP7306:
-				if(dvb_attach(ix7306_attach, frontend, &bs2s7hz7306a_config, cfg->i2c_adap))
-				{
-					printk("%s: IX7306 attached\n", __FUNCTION__);
-					//stv090x_config.xtal = CLK_EXT_IX7306;
-					stv090x_config.tuner_set_frequency 	= ix7306_set_frequency;
-					stv090x_config.tuner_get_frequency 	= ix7306_get_frequency;
-					stv090x_config.tuner_set_bandwidth 	= ix7306_set_bandwidth;
-					stv090x_config.tuner_get_bandwidth 	= ix7306_get_bandwidth;
-					stv090x_config.tuner_get_status	  	= frontend->ops.tuner_ops.get_status;
-				}else{
-					printk (KERN_INFO "%s: error attaching IX7306\n", __FUNCTION__);
-					goto error_out;
-				}
+				ctl = dvb_attach(ix7306_attach, frontend, &bs2s7hz7306a_config, cfg->i2c_adap);
 				break;
 			case STV6110X:
 			default:
 				ctl = dvb_attach(stv6110x_attach, frontend, &stv6110x_config, cfg->i2c_adap);
-				if(ctl)	{
-					printk("%s: stv6110x attached\n", __FUNCTION__);
-					stv090x_config.tuner_init	  	  	= ctl->tuner_init;
-					stv090x_config.tuner_set_mode	  	= ctl->tuner_set_mode;
-					stv090x_config.tuner_set_frequency 	= ctl->tuner_set_frequency;
-					stv090x_config.tuner_get_frequency 	= ctl->tuner_get_frequency;
-					stv090x_config.tuner_set_bandwidth 	= ctl->tuner_set_bandwidth;
-					stv090x_config.tuner_get_bandwidth 	= ctl->tuner_get_bandwidth;
-					stv090x_config.tuner_set_bbgain	  	= ctl->tuner_set_bbgain;
-					stv090x_config.tuner_get_bbgain	  	= ctl->tuner_get_bbgain;
-					stv090x_config.tuner_set_refclk	  	= ctl->tuner_set_refclk;
-					stv090x_config.tuner_get_status	  	= ctl->tuner_get_status;
-				} else {
-					printk (KERN_INFO "%s: error attaching stv6110x\n", __FUNCTION__);
-					goto error_out;
-				}
 			}
+
+			if(ctl)	{
+				printk("%s: %s attached\n", __FUNCTION__, tuner);
+				stv090x_config.tuner_init	  	  	= ctl->tuner_init;
+				stv090x_config.tuner_set_mode	  	= ctl->tuner_set_mode;
+				stv090x_config.tuner_set_frequency 	= ctl->tuner_set_frequency;
+				stv090x_config.tuner_get_frequency 	= ctl->tuner_get_frequency;
+				stv090x_config.tuner_set_bandwidth 	= ctl->tuner_set_bandwidth;
+				stv090x_config.tuner_get_bandwidth 	= ctl->tuner_get_bandwidth;
+				stv090x_config.tuner_set_bbgain	  	= ctl->tuner_set_bbgain;
+				stv090x_config.tuner_get_bbgain	  	= ctl->tuner_get_bbgain;
+				stv090x_config.tuner_set_refclk	  	= ctl->tuner_set_refclk;
+				stv090x_config.tuner_get_status	  	= ctl->tuner_get_status;
+			} else {
+				printk (KERN_INFO "%s: error attaching stv6110x\n", __FUNCTION__);
+				goto error_out;
+			}
+
 		} else {
 			printk (KERN_INFO "%s: error attaching stv090x\n", __FUNCTION__);
 			goto error_out;
@@ -714,7 +696,7 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 	return frontend;
 
 error_out:
-	printk("core: Frontend registration failed!\n");
+	printk("fe_core: Frontend registration failed!\n");
 	if (frontend)
 		dvb_frontend_detach(frontend);
 	return NULL;
@@ -724,7 +706,7 @@ static struct dvb_frontend *
 init_fe_device (struct dvb_adapter *adapter,
                      struct plat_tuner_config *tuner_cfg, int i)
 {
-  struct core_state *state;
+  struct fe_core_state *state;
   struct dvb_frontend *frontend;
   struct core_config *cfg;
 

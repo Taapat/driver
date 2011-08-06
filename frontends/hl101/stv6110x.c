@@ -27,6 +27,7 @@
 
 #include "dvb_frontend.h"
 
+#include "core.h"
 #include "stv6110x_reg.h"
 #include "stv6110x.h"
 #include "stv6110x_priv.h"
@@ -414,20 +415,20 @@ static struct dvb_tuner_ops stv6110x_ops = {
 	.release		= stv6110x_release
 };
 
-static struct stv6110x_devctl stv6110x_ctl = {
-	.tuner_init		= stv6110x_init,
-	.tuner_set_mode		= stv6110x_set_mode,
+static struct tuner_devctl stv6110x_ctl = {
+	.tuner_init				= stv6110x_init,
+	.tuner_set_mode			= stv6110x_set_mode,
 	.tuner_set_frequency	= stv6110x_set_frequency,
 	.tuner_get_frequency	= stv6110x_get_frequency,
 	.tuner_set_bandwidth	= stv6110x_set_bandwidth,
 	.tuner_get_bandwidth	= stv6110x_get_bandwidth,
-	.tuner_set_bbgain	= stv6110x_set_bbgain,
-	.tuner_get_bbgain	= stv6110x_get_bbgain,
-	.tuner_set_refclk	= stv6110x_set_refclock,
-	.tuner_get_status	= stv6110x_get_status,
+	.tuner_set_bbgain		= stv6110x_set_bbgain,
+	.tuner_get_bbgain		= stv6110x_get_bbgain,
+	.tuner_set_refclk		= stv6110x_set_refclock,
+	.tuner_get_status		= stv6110x_get_status,
 };
 
-struct stv6110x_devctl *stv6110x_attach(struct dvb_frontend *fe,
+struct tuner_devctl *stv6110x_attach(struct dvb_frontend *fe,
 					const struct stv6110x_config *config,
 					struct i2c_adapter *i2c)
 {
