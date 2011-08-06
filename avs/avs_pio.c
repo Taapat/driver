@@ -50,11 +50,11 @@ static unsigned char t_vol;
 /* hold old values for standby */
 static unsigned char ft_stnby=0;
 
-static struct stpio_pin*	scart_cvbs_rgb;
-static struct stpio_pin*	scart_169_43;
-static struct stpio_pin*	scart_standby;
+static struct stpio_pin*	avs_mode;
+static struct stpio_pin*	avs_format;
+static struct stpio_pin*	avs_standby;
 static struct stpio_pin*	scart_tv_sat;
-static struct stpio_pin*	scart_mute;
+static struct stpio_pin*	avs_mute;
 
 int avs_pio_src_sel(int src)
 {
@@ -73,11 +73,11 @@ inline int avs_pio_standby(int type)
 		if (ft_stnby == 0)
 		{
 #if defined(HS7810A)
-			stpio_set_pin(scart_169_43, 0);
-			stpio_set_pin(scart_standby, 1);
-			stpio_set_pin(scart_cvbs_rgb, 0);
+			stpio_set_pin(avs_format, 0);
+			stpio_set_pin(avs_standby, 1);
+			stpio_set_pin(avs_mode, 0);
 #else
-			stpio_set_pin(scart_standby, !ft_stnby);
+			stpio_set_pin(avs_standby, !ft_stnby);
 #endif
 			ft_stnby = 1;
 		}
@@ -89,11 +89,11 @@ inline int avs_pio_standby(int type)
 		if (ft_stnby == 1)
 		{
 #if defined(HS7810A)
-			stpio_set_pin(scart_169_43, 0);
-			stpio_set_pin(scart_standby, 0);
-			stpio_set_pin(scart_cvbs_rgb, 0);
+			stpio_set_pin(avs_format, 0);
+			stpio_set_pin(avs_standby, 0);
+			stpio_set_pin(avs_mode, 0);
 #else
-			stpio_set_pin(scart_standby, !ft_stnby);
+			stpio_set_pin(avs_standby, !ft_stnby);
 #endif
 			ft_stnby = 0;
 		}
@@ -141,7 +141,7 @@ inline int avs_pio_set_mute(int type)
 
 
 #if defined(SPARK) || defined(SPARK7162)
-	stpio_set_pin(scart_mute, t_mute);
+	stpio_set_pin(avs_mute, t_mute);
 #endif
 
 	return 0;
@@ -166,10 +166,10 @@ int avs_pio_set_mode(int val)
 	switch(val)
 	{
 	case SAA_MODE_RGB:
-		stpio_set_pin(scart_cvbs_rgb, 1);
+		stpio_set_pin(avs_mode, 1);
 		break;
 	case SAA_MODE_FBAS:
-		stpio_set_pin(scart_cvbs_rgb, 0);
+		stpio_set_pin(avs_mode, 0);
 		break;
 	}
 
@@ -188,21 +188,21 @@ int avs_pio_set_wss(int val)
 	if (val == SAA_WSS_43F)
 	{
 #if defined(HS7810A)
-		stpio_set_pin(scart_standby, 0);
+		stpio_set_pin(avs_standby, 0);
 #endif
-		stpio_set_pin(scart_169_43, 0);
+		stpio_set_pin(avs_format, 0);
 	}
 	else if (val == SAA_WSS_169F)
 	{
 #if defined(HS7810A)
-		stpio_set_pin(scart_standby, 0);
+		stpio_set_pin(avs_standby, 0);
 #endif
-		stpio_set_pin(scart_169_43, 1);
+		stpio_set_pin(avs_format, 1);
 	}
 	else if (val == SAA_WSS_OFF)
 	{
 #if !defined(HS7810A)
-		stpio_set_pin(scart_169_43, 1);
+		stpio_set_pin(avs_format, 1);
 #endif
 	}
 	else
@@ -352,70 +352,70 @@ int avs_pio_command_kernel(unsigned int cmd, void *arg)
 int avs_pio_init(void)
 {
 #if defined(SPARK7162)
-	scart_cvbs_rgb	= stpio_request_pin (11, 5, "scart_cvbs_rgb", STPIO_OUT);
-	scart_169_43	= stpio_request_pin (11, 4, "scart_169_43", STPIO_OUT);
-	scart_mute		= stpio_request_pin (11, 2, "scart_mute", STPIO_OUT);
-	scart_standby	= stpio_request_pin (11, 3, "scart_standby", STPIO_OUT);
+	avs_mode	= stpio_request_pin (11, 5, "avs_mode", 	STPIO_OUT);
+	avs_format	= stpio_request_pin (11, 4, "avs_format", 	STPIO_OUT);
+	avs_standby	= stpio_request_pin (11, 3, "avs_standby", 	STPIO_OUT);
+	avs_mute	= stpio_request_pin (11, 2, "avs_mute", 	STPIO_OUT);
 #elif defined(SPARK)
-	scart_cvbs_rgb	= stpio_request_pin (6, 0, "scart_cvbs_rgb", STPIO_OUT);
-	scart_169_43	= stpio_request_pin (6, 2, "scart_169_43", STPIO_OUT);
-	scart_mute	    = stpio_request_pin (2, 4, "scart_mute", STPIO_OUT);
-	scart_standby	= stpio_request_pin (6, 1, "scart_standby", STPIO_OUT);
+	avs_mode	= stpio_request_pin (6, 0, "avs_mode", 		STPIO_OUT);
+	avs_format	= stpio_request_pin (6, 2, "avs_format", 	STPIO_OUT);
+	avs_standby	= stpio_request_pin (6, 1, "avs_standby", 	STPIO_OUT);
+	avs_mute	= stpio_request_pin (2, 4, "avs_mute", 		STPIO_OUT);
 #elif defined(HS7810A)
-	scart_169_43	= stpio_request_pin (6, 5, "avs0", STPIO_OUT);
-	scart_standby	= stpio_request_pin (6, 6, "avs1", STPIO_OUT);
-	scart_cvbs_rgb	= stpio_request_pin (6, 4, "avs2", STPIO_OUT);
-	scart_mute	    = NULL;
+	avs_format	= stpio_request_pin (6, 5, "avs0", STPIO_OUT);
+	avs_standby	= stpio_request_pin (6, 6, "avs1", STPIO_OUT);
+	avs_mode	= stpio_request_pin (6, 4, "avs2", STPIO_OUT);
+	avs_mute	= NULL;
 #else
 	return 0;
 #endif
 
 
-	if ((scart_cvbs_rgb == NULL) || (scart_169_43 == NULL) || (scart_standby == NULL))
+	if ((avs_mode == NULL) || (avs_format == NULL) || (avs_standby == NULL))
 	{
-		if(scart_cvbs_rgb != NULL)
-			stpio_free_pin(scart_cvbs_rgb);
+		if(avs_mode != NULL)
+			stpio_free_pin(avs_mode);
 		else
-			dprintk("[AVS]: scart_cvbs_rgb error\n");
-		if(scart_169_43 != NULL)
-			stpio_free_pin (scart_169_43);
+			dprintk("[AVS]: avs_mode error\n");
+		if(avs_format != NULL)
+			stpio_free_pin (avs_format);
 		else
-			dprintk("[AVS]: scart_169_43 error\n");
+			dprintk("[AVS]: avs_format error\n");
 
-		if(scart_standby != NULL)
-			stpio_free_pin(scart_standby);
+		if(avs_standby != NULL)
+			stpio_free_pin(avs_standby);
 		else
-			dprintk("[AVS]: scart_standby error\n");
+			dprintk("[AVS]: avs_standby error\n");
 
 		return -1;
 	}
 
 #if defined(SPARK) || defined(SPARK7162)
-	if (scart_mute == NULL)
+	if (avs_mute == NULL)
 	{
-		dprintk("[AVS]: scart_mute error\n");
+		dprintk("[AVS]: avs_mute error\n");
 		return -1;
 	}
 #endif
 
-	printk("[AVS]: init success\n");
+	dprintk("[AVS-PIO]: init success\n");
 
   return 0;
 }
 
 int avs_pio_exit(void)
 {
-	if(scart_cvbs_rgb != NULL)
-		stpio_free_pin(scart_cvbs_rgb);
+	if(avs_mode != NULL)
+		stpio_free_pin(avs_mode);
 
-	if(scart_169_43 != NULL)
-		stpio_free_pin (scart_169_43);
+	if(avs_format != NULL)
+		stpio_free_pin (avs_format);
 
-	if(scart_standby != NULL)
-		stpio_free_pin(scart_standby);
+	if(avs_standby != NULL)
+		stpio_free_pin(avs_standby);
 
-	if(scart_mute != NULL)
-		stpio_free_pin(scart_mute);
+	if(avs_mute != NULL)
+		stpio_free_pin(avs_mute);
 
   return 0;
 }

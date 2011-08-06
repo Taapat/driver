@@ -46,7 +46,6 @@
 #include "cxa2161.h"
 #include "vip2_avs.h"
 #include "vip1_avs.h"
-#include "spark_avs.h"
 #include "fake_avs.h"
 #include "avs_pio.h"
 #include "avs_none.h"
@@ -76,8 +75,6 @@ static const struct i2c_device_id avs_id[] = {
         { "cxa2161", CXA2161 },
         { "vip2_avs", VIP2_AVS },
 		{ "vip1_avs", VIP1_AVS },
-		{ "spark_avs", SPARK_AVS },
-		{ "spark7162_avs", SPARK7162_AVS },
         { "fake_avs", FAKE_AVS },
         { "avs_pio", AVS_PIO },
         { "avs_none", AVS_NONE },
@@ -237,8 +234,6 @@ static int avs_command_ioctl(struct i2c_client *client, unsigned int cmd, void *
 	/* none i2c avs */
 	case VIP2_AVS: 		err = vip2_avs_command(cmd, arg); 	 break;
 	case VIP1_AVS: 		err = vip1_avs_command(cmd, arg);	 break;
-	case SPARK_AVS:		err = spark_avs_command(cmd, arg); 	 break;
-	case SPARK7162_AVS:	err = spark_avs_command(cmd, arg); 	 break;
 	case AVS_PIO:		err = avs_pio_command(cmd, arg); 	 break;
 	}
 	return err;
@@ -258,12 +253,10 @@ int avs_command_kernel(unsigned int cmd, void *arg)
 
 	switch(devType)
 	{
-#if defined(VIP1_V2) || defined(VIP2_V1) || defined(SPARK) || defined(SPARK7162) || defined(AVS_PIO)// none i2c avs !!!
+#if defined(VIP1_V2) || defined(VIP2_V1) || defined(SPARK) || defined(SPARK7162) || defined(HS7810A)// none i2c avs !!!
 	case AVS_PIO: 		err = avs_pio_command_kernel(cmd, arg); 	break;
 	case VIP2_AVS: 		err = vip2_avs_command_kernel(cmd, arg); 	break;
 	case VIP1_AVS: 		err = vip1_avs_command_kernel(cmd, arg); 	break;
-	case SPARK_AVS: 	err = spark_avs_command_kernel(cmd, arg); 	break;
-	case SPARK7162_AVS: err = spark_avs_command_kernel(cmd, arg); 	break;
 #else
 	case AK4705:   err = ak4705_command_kernel(client, cmd, arg);   break;
 	case STV6412:  err = stv6412_command_kernel(client, cmd, arg);  break;
@@ -297,31 +290,26 @@ static struct miscdevice avs_dev = {
 	.fops = &avs_fops
 };
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
-static int avs_detect(struct i2c_client *client, int kind, const char **info)
-#else
-static int avs_detect(struct i2c_client *client, int kind, struct i2c_board_info *info)
-#endif
+static int avs_detect(int kind, const char **info)
 {
 	const char *name = "";
-	/* int address = client->addr; */
 
-        /*
-         * Now we do the remaining detection. A negative kind means that
-         * the driver was loaded with no force parameter (default), so we
-         * must both detect and identify the chip. A zero kind means that
-         * the driver was loaded with the force parameter, the detection
-         * step shall be skipped. A positive kind means that the driver
-         * was loaded with the force parameter and a given kind of chip is
-         * requested, so both the detection and the identification steps
-         * are skipped.
-         */
+    /*
+     * Now we do the remaining detection. A negative kind means that
+     * the driver was loaded with no force parameter (default), so we
+     * must both detect and identify the chip. A zero kind means that
+     * the driver was loaded with the force parameter, the detection
+     * step shall be skipped. A positive kind means that the driver
+     * was loaded with the force parameter and a given kind of chip is
+     * requested, so both the detection and the identification steps
+     * are skipped.
+     */
 
-        /* Default to an ak4705 if forced */
-        if (kind == 0) {
-                name = "ak4705";
-                kind = AK4705;
-        }
+    /* Default to an ak4705 if forced */
+    if (kind == 0) {
+    	name = "ak4705";
+    	kind = AK4705;
+    }
 
 	if (kind < 0) { /* detection and identification */
 		if (!type || !strcmp("ak4705", type))
@@ -338,10 +326,6 @@ static int avs_detect(struct i2c_client *client, int kind, struct i2c_board_info
 			kind = VIP2_AVS;
 		else if(!strcmp("vip1_avs", type))
 			kind = VIP1_AVS;
-		else if(!strcmp("spark_avs", type))
-			kind = SPARK_AVS;
-		else if(!strcmp("spark7162_avs", type))
-			kind = SPARK7162_AVS;
 		else if(!strcmp("fake_avs", type))
 			kind = FAKE_AVS;
 		else if(!strcmp("avs_pio", type))
@@ -360,18 +344,12 @@ static int avs_detect(struct i2c_client *client, int kind, struct i2c_board_info
 	case VIP2_AVS: 		name = "vip2_avs"; 		break;
 	case VIP1_AVS: 		name = "vip1_avs"; 		break;
 	case FAKE_AVS: 		name = "fake_avs"; 		break;
-	case SPARK_AVS: 	name = "spark_avs"; 	break;
-	case SPARK7162_AVS: name = "spark7162_avs"; break;
 	case AVS_PIO: 		name = "avs_pio"; 		break;
 	case AVS_NONE: 		name = "avs_none"; 		break;
 	default: return -ENODEV;
 	}
 	devType = kind;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	*info = name;
-#else
-	strlcpy(info->type, name, I2C_NAME_SIZE);
-#endif
 	return 0;
 }
 
@@ -383,7 +361,7 @@ static struct i2c_driver avs_i2c_driver = {
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	.driver = {
 		.owner = THIS_MODULE,
-		.name = "avs driver", /* can this be avs_driver? */
+		.name = "avs_driver", /* can this be avs_driver? */
 	},
 	.id = I2C_DRIVERID_AVS,
 	.attach_adapter = avs_probe,
@@ -409,28 +387,26 @@ static struct i2c_driver avs_i2c_driver = {
 
 int __init avs_init(void)
 {
-	int res;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	int res, err;
 	const char *name;
-	struct i2c_client client = { .addr = normal_i2c[0] };
-	int err;
 
-	if ((err = avs_detect(&client, -1, &name))) {
-		printk(KERN_ERR "AVS: Unknown AVS Driver!!!!!!!!!!!!!!!!!111\n");
+	if ((err = avs_detect(-1, &name))) {
+		printk("[AVS]: Unknown AVS Driver!\n");
 		return err;
 	}
+
 	dprintk("[AVS]: A/V switch handling for %s\n", name);
 
 #if !defined(CUBEREVO_MINI_FTA) && !defined(CUBEREVO_250HD)
 	if ((devType != FAKE_AVS) && (devType != AVS_NONE) && (devType != VIP2_AVS)
-		&& (devType != VIP1_AVS) && (devType != SPARK_AVS) && (devType != SPARK7162_AVS) && (devType != AVS_PIO)) {
+		&& (devType != VIP1_AVS) && (devType != AVS_PIO)) {
 		if ((res = i2c_add_driver(&avs_i2c_driver))) {
 			dprintk("[AVS]: i2c add driver failed\n");
 			return res;
 		}
 
 		if (!avs_client){
-			printk(KERN_ERR "avs: no client found\n");
+			printk("[AVS]: no client found\n");
 			i2c_del_driver(&avs_i2c_driver);
 			return -EIO;
 		}
@@ -452,29 +428,11 @@ int __init avs_init(void)
 			printk("[AVS]: init vip1 avs faild!\n");
 			return -EIO;
 		}
-	}else if (devType == SPARK_AVS){
-		if(spark_avs_init() != 0)
-		{
-			printk("[AVS]: init spark avs faild!\n");
-			return -EIO;
-		}
-	}else if (devType == SPARK7162_AVS){
-		if(spark_avs_init() != 0)
-		{
-			printk("[AVS]: init spark7162 avs faild!\n");
-			return -EIO;
-		}
 	}
 #endif
 
-#else /* >= 2.6.30 */
-	if ((res = i2c_add_driver(&avs_i2c_driver)))
-		return res;
-
-#endif /* >= 2.6.30 */
-
 	if (misc_register(&avs_dev)<0){
-		printk(KERN_ERR "avs: unable to register device\n");
+		printk("[AVS]: unable to register device\n");
 		return -EIO;
 	}
 
@@ -497,5 +455,5 @@ MODULE_DESCRIPTION("Multiplatform A/V scart switch driver");
 MODULE_LICENSE("GPL");
 
 module_param(type,charp,0);
-MODULE_PARM_DESC(type, "device type (ak4705, stv6412, cxa2161, stv6417, stv6418, vip2_avs, vip1_avs, spark_avs, spark7162_avs, fake_avs, avs_pio, avs_none)");
+MODULE_PARM_DESC(type, "device type (ak4705, stv6412, cxa2161, stv6417, stv6418, vip2_avs, vip1_avs, fake_avs, avs_pio, avs_none)");
 
