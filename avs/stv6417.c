@@ -48,6 +48,17 @@ static unsigned char t_stnby=0;
 
 #define stv6417_DATA_SIZE sizeof(regs)
 
+#define cReg0  0x01
+#define cReg1  0x02
+#define cReg2  0x03
+#define cReg3  0x04
+#define cReg4  0x05
+#define cReg5  0x06
+#define cReg6  0x07
+#define cReg7  0x08
+#define cReg8  0x09
+#define cReg9  0x0a
+
 /* register description (as far as known) */
 
 /* reg0 (0x01):
@@ -75,6 +86,21 @@ static unsigned char t_stnby=0;
  * Bit 6     = ???
  * Bit 7     = unused ???
  */   
+
+#define AOS_TV_REG     cReg1
+#define AOS_TV_START   0
+#define AOS_TV_SIZE    2
+#define AOS_TV_MUTE    0
+#define AOS_TV_ENCODER 1
+#define AOS_TV_VCR     2
+#define AOS_TV_TV      3
+
+#define AOS_VCR_REG     cReg1
+#define AOS_VCR_START   3
+#define AOS_VCR_SIZE    2
+#define AOS_VCR_MUTE    0
+#define AOS_VCR_ENCODER 1
+#define AOS_VCR_TV      2
 
 /* reg2 (0x03)
  *
@@ -172,16 +198,7 @@ static unsigned char t_stnby=0;
  * Bit 7     = 1 = cvbs vcr enable
  */
   
-#define cReg0  0x01
-#define cReg1  0x02
-#define cReg2  0x03
-#define cReg3  0x04
-#define cReg4  0x05
-#define cReg5  0x06
-#define cReg6  0x07
-#define cReg7  0x08
-#define cReg8  0x09
-#define cReg9  0x0a
+
 
 /* hold old values for mute/unmute */
 static unsigned char tv_value;
@@ -248,27 +265,33 @@ inline int stv6417_set_mute( struct i2c_client *client, int type )
 		return -EINVAL;
 	}
 
+printk("[AVS] %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", 
+get_bits(regs, cReg0, 0, 8), get_bits(regs, cReg1, 0, 8), get_bits(regs, cReg2, 0, 8), get_bits(regs, cReg3, 0, 8), 
+get_bits(regs, cReg4, 0, 8), get_bits(regs, cReg5, 0, 8), get_bits(regs, cReg6, 0, 8), get_bits(regs, cReg7, 0, 8), 
+get_bits(regs, cReg8, 0, 8), get_bits(regs, cReg9, 0, 8));
+
+	// I cant find the error at the moment, do we even need mute capability in the avs ?
+	return 0;
+
 	if (type == AVS_MUTE) 
 	{
-		if (tv_value == 0xff)
+		// Check if we are already mute
+		unsigned char tmp_tv_value  = get_bits(regs, AOS_TV_REG,  AOS_TV_START,  AOS_TV_SIZE);
+		unsigned char tmp_vcr_value = get_bits(regs, AOS_VCR_REG, AOS_VCR_START, AOS_VCR_SIZE);
+		
+		if (tmp_tv_value != AOS_TV_MUTE && tmp_vcr_value != AOS_VCR_MUTE)
 		{
-		   tv_value = get_bits(regs, cReg1, 0, 2);
-		   vcr_value = get_bits(regs, cReg1, 3, 2);
+			tv_value  = tmp_tv_value;
+			vcr_value = tmp_vcr_value;
 
-	           set_bits(regs, cReg1, 0, 0, 2); /* tv cinch mute */
-	           set_bits(regs, cReg1, 0, 3, 2); /* vcr mute */
+			set_bits(regs, AOS_TV_REG,  AOS_TV_MUTE,  AOS_TV_START,  AOS_TV_SIZE); /* tv cinch mute */
+			set_bits(regs, AOS_VCR_REG, AOS_VCR_MUTE, AOS_VCR_START, AOS_VCR_SIZE); /* vcr mute */
 		}
 	}
 	else /* unmute with old values */
 	{
-		if (tv_value != 0xff)
-		{
-	           set_bits(regs, cReg1, tv_value, 0, 2);
-	           set_bits(regs, cReg1, vcr_value, 3, 2);
-
-                   tv_value = 0xff;
-                   vcr_value  = 0xff;
-		}
+		set_bits(regs, AOS_TV_REG,  tv_value,  AOS_TV_START,  AOS_TV_SIZE);
+		set_bits(regs, AOS_VCR_REG, vcr_value, AOS_VCR_START, AOS_VCR_SIZE);
 	}
 
         dprintk("%s <\n", __func__);
@@ -315,6 +338,9 @@ inline int stv6417_set_vsw( struct i2c_client *client, int sw, int type )
 inline int stv6417_set_asw( struct i2c_client *client, int sw, int type )
 {
         dprintk("%s >\n", __func__);
+	// I don't get what this does, seems to be not used
+	return 0;
+	
 	switch(sw)
 	{
 		case 0:
@@ -324,6 +350,8 @@ inline int stv6417_set_asw( struct i2c_client *client, int sw, int type )
 			}
 
 			/* if muted ? yes: save in temp */
+		unsigned char tmp_tv_value  = get_bits(regs, AOS_TV_REG,  AOS_TV_START,  AOS_TV_SIZE);
+		unsigned char tmp_vcr_value = get_bits(regs, AOS_VCR_REG, AOS_VCR_START, AOS_VCR_SIZE);
 			if ( vcr_value == 0xff )
 	                        set_bits(regs, cReg1, type, 3, 2);
 			else
@@ -462,6 +490,7 @@ int stv6417_get_volume(void)
 inline int stv6417_get_mute(void)
 {
         dprintk("%s <>\n", __func__);
+	return 0;
 	return !((tv_value == 0xff) && (vcr_value == 0xff));
 }
 
@@ -511,6 +540,7 @@ inline int stv6417_get_vsw( int sw )
 inline int stv6417_get_asw( int sw )
 {
         dprintk("%s >\n", __func__);
+	return 0;
 	switch(sw)
 	{
 		case 0:
@@ -802,7 +832,7 @@ int stv6417_command_kernel(struct i2c_client *client, unsigned int cmd, void *ar
 	unsigned char scartPin8Table[3] = { 0, 2, 3 };
 	unsigned char scartPin8Table_reverse[4] = { 0, 0, 1, 2 };
 
-	dprintk("[AVS]: command_kernel(%u)\n", cmd);
+	printk("[AVS]: command_kernel(%u)\n", cmd);
 	
 	if (cmd & AVSIOSET)
 	{
@@ -934,16 +964,17 @@ int stv6417_init(struct i2c_client *client)
     dprintk("%s >\n", __func__);
 
     regs[0] = 0x00;
-    regs[1] = 0x40;
-    regs[2] = 0x09;
-    regs[3] = 0x11;
-    regs[4] = 0x84;
-    regs[5] = 0x84;
-    regs[6] = 0x25;
-    regs[7] = 0x08;
-    regs[8] = 0x21;
-    regs[9] = 0xc0;
-    regs[10]= 0x00;
+    //0 0 10000 1
+    regs[cReg0] = 0x01; // 0x40 Means that scart gets the maximum volume output, note we will never trigger this as volume is controled inside the mixer
+    regs[cReg1] = 0x09;
+    regs[cReg2] = 0x11;
+    regs[cReg3] = 0x84;
+    regs[cReg4] = 0x84;
+    regs[cReg5] = 0x25;
+    regs[cReg6] = 0x08;
+    regs[cReg7] = 0x21;
+    regs[cReg8] = 0xc0;
+    regs[cReg9]= 0x00;
 
     dprintk("%s <\n", __func__);
     return stv6417_set(client);

@@ -83,10 +83,14 @@ struct stmfbio_output_configuration
 #define AVSIOSTANDBY    (99|AVSIOSET)
 
 
+#define ENCODER 0
+#define SCART   1
+
+
 extern struct DeviceContext_s* DeviceContext;
 
 static int current_standby = 0;
-static int current_input = 0;
+static int current_input = ENCODER;
 #if defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI_FTA) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(TF7700) || defined(UFS912) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(HOMECAST5101) || defined(ATEVIO7500) || defined(HS7810A) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55)
 static int current_volume = 0;
 #else
@@ -205,7 +209,7 @@ int proc_avs_0_volume_write(struct file *file, const char __user *buf,
 			printk("Pseudo Mixer does not deliver controls\n");
 		}
 
-		if(current_input == 1)
+		if(current_input == SCART)
 	  		avs_command_kernel(AVSIOSVOL, (void*) current_volume);
 
 		kfree(myString);
@@ -265,19 +269,19 @@ int proc_avs_0_input_write(struct file *file, const char __user *buf,
 	    	if(!strncmp("encoder", myString, count - 1))
 	    	{
 			avs_command_kernel(SAAIOSSRCSEL, SAA_SRC_ENC);
-#if defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI_FTA) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(TF7700) || defined(UFS912) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(HOMECAST5101) || defined(ATEVIO7500) || defined(HS7810A) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55)
-			avs_command_kernel(AVSIOSVOL, (void*) current_volume);
-#else
-			avs_command_kernel(AVSIOSVOL, (void*) 31);
-#endif
-			current_input = 0;
+
+			// Note: Volumne is not changed directly but by using the MIXER instead of the AVS. 
+			// So this should always be set to the maximum
+			avs_command_kernel(AVSIOSVOL, (void*) 0);
+			current_input = ENCODER;
 		}
 
 	    	if(!strncmp("scart", myString, count - 1))
 	    	{
 	      		avs_command_kernel(SAAIOSSRCSEL, (void*) SAA_SRC_SCART);
+
 	      		avs_command_kernel(AVSIOSVOL, (void*) current_volume);
-	      		current_input = 1;
+	      		current_input = SCART;
 	    	}
 
 		kfree(myString);
@@ -297,7 +301,7 @@ int proc_avs_0_input_read (char *page, char **start, off_t off, int count,
 	int len = 0;
 	printk("%s\n", __FUNCTION__);
 
-	if(current_input == 0)
+	if(current_input == ENCODER)
     		len = sprintf(page, "encoder\n");
   	else
     		len = sprintf(page, "scart\n");
