@@ -290,7 +290,11 @@ static struct miscdevice avs_dev = {
 	.fops = &avs_fops
 };
 
-static int avs_detect(int kind, const char **info)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+static int avs_detect(struct i2c_client *client, int kind, const char **info)
+#else
+static int avs_detect(struct i2c_client *client, int kind, struct i2c_board_info *info)
+#endif
 {
 	const char *name = "";
 
@@ -349,7 +353,11 @@ static int avs_detect(int kind, const char **info)
 	default: return -ENODEV;
 	}
 	devType = kind;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	*info = name;
+#else
+	strlcpy(info->type, name, I2C_NAME_SIZE);
+#endif
 	return 0;
 }
 
@@ -387,11 +395,14 @@ static struct i2c_driver avs_i2c_driver = {
 
 int __init avs_init(void)
 {
-	int res, err;
+	int res;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 	const char *name;
+	struct i2c_client client = { .addr = normal_i2c[0] };
+	int err;
 
-	if ((err = avs_detect(-1, &name))) {
-		printk("[AVS]: Unknown AVS Driver!\n");
+	if ((err = avs_detect(&client, -1, &name))) {
+		printk(KERN_ERR "AVS: Unknown AVS Driver!!!!!!!!!!!!!!!!!111\n");
 		return err;
 	}
 
@@ -430,6 +441,12 @@ int __init avs_init(void)
 		}
 	}
 #endif
+
+#else /* >= 2.6.30 */
+	if ((res = i2c_add_driver(&avs_i2c_driver)))
+		return res;
+
+#endif /* >= 2.6.30 */
 
 	if (misc_register(&avs_dev)<0){
 		printk("[AVS]: unable to register device\n");
