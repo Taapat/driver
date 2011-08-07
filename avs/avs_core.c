@@ -114,31 +114,6 @@ static struct i2c_client *avs_client = NULL;
 /*
  * i2c probe
  */
-
-static int avs_newprobe(struct i2c_client *client, const struct i2c_device_id *id)
-{
-	if (avs_client) {
-		dprintk("[AVS]: failure, client already registered\n");
-		return -ENODEV;
-	}
-
-	dprintk("[AVS]: chip found @ 0x%x\n", client->addr);
-
-	switch(devType)
-	{
-	case AK4705:   ak4705_init(client);   break;
-	case STV6412:  stv6412_init(client);  break;
-	case STV6417:  stv6417_init(client);  break;
-	case STV6418:  stv6418_init(client);  break;
-	case CXA2161:  cxa2161_init(client);  break;
-	case FAKE_AVS: fake_avs_init(client); break;
-	case AVS_NONE: avs_none_init(client); break;
-	default: return -ENODEV;
-	}
-	avs_client = client;
-	return 0;
-}
-
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static int avs_attach(struct i2c_adapter *adap, int addr, int kind)
 {
@@ -171,9 +146,7 @@ static int avs_attach(struct i2c_adapter *adap, int addr, int kind)
 
 	return 0;
 }
-#endif /* < 2.6.30 */
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static int avs_probe(struct i2c_adapter *adap)
 {
 	int ret = 0;
@@ -186,16 +159,7 @@ static int avs_probe(struct i2c_adapter *adap)
 
 	return ret;
 }
-#endif /* < 2.6.30 */
 
-static int avs_remove(struct i2c_client *client)
-{
-	avs_client = NULL;
-	dprintk("[AVS]: remove\n");
-	return 0;
-}
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static int avs_detach(struct i2c_client *client)
 {
 	int err = avs_remove(client);
@@ -205,7 +169,40 @@ static int avs_detach(struct i2c_client *client)
 
 	return err;
 }
-#endif /* < 2.6.30 */
+
+#else /* >= 2.6.30 */
+
+static int avs_newprobe(struct i2c_client *client, const struct i2c_device_id *id)
+{
+	if (avs_client) {
+		dprintk("[AVS]: failure, client already registered\n");
+		return -ENODEV;
+	}
+
+	dprintk("[AVS]: chip found @ 0x%x\n", client->addr);
+
+	switch(devType)
+	{
+	case AK4705:   ak4705_init(client);   break;
+	case STV6412:  stv6412_init(client);  break;
+	case STV6417:  stv6417_init(client);  break;
+	case STV6418:  stv6418_init(client);  break;
+	case CXA2161:  cxa2161_init(client);  break;
+	case FAKE_AVS: fake_avs_init(client); break;
+	case AVS_NONE: avs_none_init(client); break;
+	default: return -ENODEV;
+	}
+	avs_client = client;
+	return 0;
+}
+
+static int avs_remove(struct i2c_client *client)
+{
+	avs_client = NULL;
+	dprintk("[AVS]: remove\n");
+	return 0;
+}
+#endif
 
 /*
  * devfs fops
@@ -395,14 +392,19 @@ static struct i2c_driver avs_i2c_driver = {
 
 int __init avs_init(void)
 {
-	int res;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	int res, err;
 	const char *name;
-	struct i2c_client client = { .addr = normal_i2c[0] };
-	int err;
 
-	if ((err = avs_detect(&client, -1, &name))) {
-		printk(KERN_ERR "AVS: Unknown AVS Driver!!!!!!!!!!!!!!!!!111\n");
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	err = avs_detect(NULL, -1, &name);
+#else
+	struct i2c_board_info info;
+	err = avs_detect(NULL, -1, &info);
+	name = info.type;
+#endif
+
+	if (err) {
+		printk("[AVS]: Unknown AVS Driver!\n");
 		return err;
 	}
 
@@ -441,12 +443,6 @@ int __init avs_init(void)
 		}
 	}
 #endif
-
-#else /* >= 2.6.30 */
-	if ((res = i2c_add_driver(&avs_i2c_driver)))
-		return res;
-
-#endif /* >= 2.6.30 */
 
 	if (misc_register(&avs_dev)<0){
 		printk("[AVS]: unable to register device\n");
