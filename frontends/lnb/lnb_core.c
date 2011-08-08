@@ -40,6 +40,34 @@ static struct i2c_client *lnb_client = NULL;
 /*
  * i2c probe
  */
+
+static int lnb_newprobe(struct i2c_client *client, const struct i2c_device_id *id)
+{
+	if (lnb_client) {
+		dprintk("[LNB]: failure, client already registered\n");
+		return -ENODEV;
+	}
+
+	dprintk("[LNB]: chip found @ 0x%x\n", client->addr);
+
+	switch(devType)
+	{
+	case A8293:   a8293_init(client);   break;
+	case LNB24:   lnb24_init(client);   break;
+	case LNB_PIO: lnb_pio_init();		break;
+	default: return -ENODEV;
+	}
+	lnb_client = client;
+	return 0;
+}
+
+static int lnb_remove(struct i2c_client *client)
+{
+	lnb_client = NULL;
+	dprintk("[LNB]: remove\n");
+	return 0;
+}
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 
 static int lnb_attach(struct i2c_adapter *adap, int addr, int kind)
@@ -95,35 +123,7 @@ static int lnb_detach(struct i2c_client *client)
 	return err;
 }
 
-#else /* >= 2.6.30 */
-
-static int lnb_newprobe(struct i2c_client *client, const struct i2c_device_id *id)
-{
-	if (lnb_client) {
-		dprintk("[LNB]: failure, client already registered\n");
-		return -ENODEV;
-	}
-
-	dprintk("[LNB]: chip found @ 0x%x\n", client->addr);
-
-	switch(devType)
-	{
-	case A8293:   a8293_init(client);   break;
-	case LNB24:   lnb24_init(client);   break;
-	case LNB_PIO: lnb_pio_init();		break;
-	default: return -ENODEV;
-	}
-	lnb_client = client;
-	return 0;
-}
-
-static int lnb_remove(struct i2c_client *client)
-{
-	lnb_client = NULL;
-	dprintk("[LNB]: remove\n");
-	return 0;
-}
-#endif
+#endif /* < 2.6.30 */
 
 /*
  * devfs fops
