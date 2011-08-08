@@ -114,6 +114,38 @@ static struct i2c_client *avs_client = NULL;
 /*
  * i2c probe
  */
+
+static int avs_newprobe(struct i2c_client *client, const struct i2c_device_id *id)
+{
+	if (avs_client) {
+		dprintk("[AVS]: failure, client already registered\n");
+		return -ENODEV;
+	}
+
+	dprintk("[AVS]: chip found @ 0x%x\n", client->addr);
+
+	switch(devType)
+	{
+	case AK4705:   ak4705_init(client);   break;
+	case STV6412:  stv6412_init(client);  break;
+	case STV6417:  stv6417_init(client);  break;
+	case STV6418:  stv6418_init(client);  break;
+	case CXA2161:  cxa2161_init(client);  break;
+	case FAKE_AVS: fake_avs_init(client); break;
+	case AVS_NONE: avs_none_init(client); break;
+	default: return -ENODEV;
+	}
+	avs_client = client;
+	return 0;
+}
+
+static int avs_remove(struct i2c_client *client)
+{
+	avs_client = NULL;
+	dprintk("[AVS]: remove\n");
+	return 0;
+}
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static int avs_attach(struct i2c_adapter *adap, int addr, int kind)
 {
@@ -170,39 +202,7 @@ static int avs_detach(struct i2c_client *client)
 	return err;
 }
 
-#else /* >= 2.6.30 */
-
-static int avs_newprobe(struct i2c_client *client, const struct i2c_device_id *id)
-{
-	if (avs_client) {
-		dprintk("[AVS]: failure, client already registered\n");
-		return -ENODEV;
-	}
-
-	dprintk("[AVS]: chip found @ 0x%x\n", client->addr);
-
-	switch(devType)
-	{
-	case AK4705:   ak4705_init(client);   break;
-	case STV6412:  stv6412_init(client);  break;
-	case STV6417:  stv6417_init(client);  break;
-	case STV6418:  stv6418_init(client);  break;
-	case CXA2161:  cxa2161_init(client);  break;
-	case FAKE_AVS: fake_avs_init(client); break;
-	case AVS_NONE: avs_none_init(client); break;
-	default: return -ENODEV;
-	}
-	avs_client = client;
-	return 0;
-}
-
-static int avs_remove(struct i2c_client *client)
-{
-	avs_client = NULL;
-	dprintk("[AVS]: remove\n");
-	return 0;
-}
-#endif
+#endif /* < 2.6.30 */
 
 /*
  * devfs fops
