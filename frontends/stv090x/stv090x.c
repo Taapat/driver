@@ -6292,7 +6292,7 @@ static int stv090x_setup(struct dvb_frontend *fe)
 	if (stv090x_write_reg(state, STV090x_P2_TNRCFG, 0x6c) < 0)
 		goto err;
 
-#if defined(UFS912) || defined(HS7810A)
+#if defined(UFS912) || defined(HS7810A) || defined(SPARK)
 	STV090x_SETFIELD_Px(reg, STOP_ENABLE_FIELD, 1);
 #endif
 
@@ -6308,7 +6308,7 @@ static int stv090x_setup(struct dvb_frontend *fe)
 	msleep(1);
 	if (stv090x_write_reg(state, STV090x_I2CCFG, 0x08) < 0) /* 1/41 oversampling */
 		goto err;
-#if defined(UFS912) || defined(HS7810A)
+#if defined(UFS912) || defined(HS7810A) || defined(SPARK)
 	if (stv090x_write_reg(state, STV090x_SYNTCTRL, 0x10 | config->clk_mode) < 0) /* enable PLL */
 		goto err;
 #else
@@ -6452,7 +6452,7 @@ static int stv090x_get_property(struct dvb_frontend *fe, struct dtv_property* tv
 
 #endif
 
-#ifdef  FORTIS_HDBOX
+#if defined(FORTIS_HDBOX)
 static int hdbox_set_voltage(struct dvb_frontend *fe, enum fe_sec_voltage voltage)
 {
        struct stv090x_state *state = fe->demodulator_priv;
@@ -6512,7 +6512,7 @@ static int hdbox_set_voltage(struct dvb_frontend *fe, enum fe_sec_voltage voltag
        dprintk(10, "%s <out:0x%x\n", __func__,res);
        return 0;
 }
-#elif HS7810A
+#elif defined(HS7810A) || defined(SPARK)
 
 #define LNB_VOLTAGE_OFF   	 	0x2b0010
 #define LNB_VOLTAGE_VER   	 	0x2b0011
@@ -6545,7 +6545,7 @@ static int lnb_set_voltage(struct dvb_frontend *fe, enum fe_sec_voltage voltage)
    return 0;
 }
 
-#elif UFS912
+#elif defined(UFS912) // TODO move to lnb driver
 /* Dagi: maybe we should make a directory for lnb supplies;
  * we have three different til now ... and lnbh23 is also used
  * for newer ufs922
@@ -6564,7 +6564,6 @@ int writereg_lnb_supply (struct stv090x_state *state, char data)
   if (adapter == NULL)
      adapter = i2c_get_adapter (1);
 
-/*  msg.addr = state->config->i2c_addr_lnb_supply;*/
   msg.addr = 0x0a;
   msg.flags = 0;
   msg.buf = &buf;
@@ -6617,56 +6616,50 @@ static int lnbh23_set_voltage(struct dvb_frontend *fe, enum fe_sec_voltage volta
 #endif
 
 static struct dvb_frontend_ops stv090x_ops = {
-
 	.info = {
-		.name			= "STV090x Multistandard",
-		.type			= FE_QPSK,
-		.frequency_min		= 950000,
-		.frequency_max 		= 2150000,
-		.frequency_stepsize	= 0,
+		.name					= "STV090x Multistandard",
+		.type					= FE_QPSK,
+		.frequency_min			= 950000,
+		.frequency_max 			= 2150000,
+		.frequency_stepsize		= 0,
 		.frequency_tolerance	= 0,
-		.symbol_rate_min 	= 1000000,
-		.symbol_rate_max 	= 70000000,
-		.caps			= FE_CAN_INVERSION_AUTO |
-					  FE_CAN_FEC_AUTO       |
-					  FE_CAN_QPSK           /*|
-					  FE_CAN_2G_MODULATION*/
+		.symbol_rate_min 		= 1000000,
+		.symbol_rate_max 		= 70000000,
+		.caps					= FE_CAN_INVERSION_AUTO | FE_CAN_FEC_AUTO | FE_CAN_QPSK
 	},
 
-	.release			= stv090x_release,
-	.init				= stv090x_init,
+	.release					= stv090x_release,
+	.init						= stv090x_init,
 
 //workaround for tuner failed, a frontend open does not always wakeup the tuner
 #ifndef FORTIS_HDBOX
-	.sleep				= stv090x_sleep,
+	.sleep						= stv090x_sleep,
 #endif
-	.get_frontend_algo		= stv090x_frontend_algo,
-
-	.i2c_gate_ctrl			= stv090x_i2c_gate_ctrl,
+	.get_frontend_algo			= stv090x_frontend_algo,
+	.i2c_gate_ctrl				= stv090x_i2c_gate_ctrl,
 
 	.diseqc_send_master_cmd		= stv090x_send_diseqc_msg,
-	.diseqc_send_burst		= stv090x_send_diseqc_burst,
+	.diseqc_send_burst			= stv090x_send_diseqc_burst,
 	.diseqc_recv_slave_reply	= stv090x_recv_slave_reply,
-	.set_tone			= stv090x_set_tone,
+	.set_tone					= stv090x_set_tone,
 
-	.search				= stv090x_search,
-	.read_status			= stv090x_read_status,
-	.read_ber			= stv090x_read_per,
+	.search						= stv090x_search,
+	.read_status				= stv090x_read_status,
+	.read_ber					= stv090x_read_per,
 	.read_signal_strength		= stv090x_read_signal_strength,
-	.read_snr			= stv090x_read_cnr,
+	.read_snr					= stv090x_read_cnr,
 #if DVB_API_VERSION < 5
-	.get_info                       = stv090x_get_info,
+	.get_info                   = stv090x_get_info,
 #else
-	.get_property = stv090x_get_property,
+	.get_property 				= stv090x_get_property,
 #endif
 
 #if defined(FORTIS_HDBOX)
-/* hdbox special */
-	.set_voltage			= hdbox_set_voltage,
-#elif  defined(HS7810A)
-	.set_voltage			= lnb_set_voltage,
+	.set_voltage				= hdbox_set_voltage,
+#elif  defined(HS7810A) || defined(SPARK)
+	.set_voltage				= lnb_set_voltage,
 #elif defined(UFS912)
-	.set_voltage			= lnbh23_set_voltage,
+	.set_voltage				= lnbh23_set_voltage,
 #else
 #warning not supported architechture
 #endif
@@ -6684,26 +6677,24 @@ struct dvb_frontend *stv090x_attach(const struct stv090x_config *config,
 	if (state == NULL)
 		goto error;
 
-	state->verbose				= &verbose;
-	state->config				= config;
-	state->i2c					= i2c;
-	state->frontend.ops			= stv090x_ops;
+	state->verbose					= &verbose;
+	state->config					= config;
+	state->i2c						= i2c;
+	state->demod					= demod;
+	state->demod_mode 				= config->demod_mode; /* Single or Dual mode */
+	state->device					= config->device;
+	state->rolloff					= STV090x_RO_35; /* default */
+	state->tuner					= tuner;
+	state->frontend.ops				= stv090x_ops;
 	state->frontend.demodulator_priv	= state;
-	state->demod				= demod;
-	state->demod_mode 			= config->demod_mode; /* Single or Dual mode */
-	state->device				= config->device;
-	state->rolloff				= STV090x_RO_35; /* default */
-	state->tuner				= tuner;
 
     state->mclk = 0;
 
 	dprintk(10, "i2c adapter = %p\n", state->i2c);
 	
-#if defined(UFS912) || defined(HS7810A)
+#if defined(UFS912) || defined(HS7810A) || defined(SPARK)
 	mutex_init(&demod_lock);
 #else
-//FIXME FIXME FIXME
-//wir muessen pro tuner einen demod mutex haben denke ich
 	if (state->demod == STV090x_DEMODULATOR_0)
 		mutex_init(&demod_lock);
 #endif

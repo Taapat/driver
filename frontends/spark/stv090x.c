@@ -6170,8 +6170,6 @@ struct dvb_frontend *stv090x_attach(const struct stv090x_config *config,
 #if defined(UFS912) || defined(SPARK)
 	mutex_init(&demod_lock);
 #else
-//FIXME FIXME FIXME
-//wir muessen pro tuner einen demod mutex haben denke ich
 	if (state->demod == STV090x_DEMODULATOR_0)
 		mutex_init(&demod_lock);
 #endif

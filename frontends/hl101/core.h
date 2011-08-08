@@ -23,8 +23,11 @@
 #endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27)
-#include "compat.h"
 #include <linux/mutex.h>
+#endif
+
+#if DVB_API_VERSION < 5
+#include "compat.h"
 #endif
 
 #define MAX_DVB_ADAPTERS 4
@@ -104,6 +107,7 @@ struct core {
 
 struct tuner_devctl {
 	int (*tuner_init) (struct dvb_frontend *fe);
+    int (*tuner_sleep) (struct dvb_frontend *fe);
 	int (*tuner_set_mode) (struct dvb_frontend *fe, enum tuner_mode mode);
 	int (*tuner_set_frequency) (struct dvb_frontend *fe, u32 frequency);
 	int (*tuner_get_frequency) (struct dvb_frontend *fe, u32 *frequency);

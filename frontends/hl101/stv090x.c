@@ -4731,6 +4731,12 @@ static int stv090x_sleep(struct dvb_frontend *fe)
 	struct stv090x_state *state = fe->demodulator_priv;
 	u32 reg;
 
+
+	if (state->config->tuner_sleep) {
+		if (state->config->tuner_sleep(fe) < 0)
+			goto err;
+	}
+
 	dprintk(FE_DEBUG, 1, "Set %s to sleep",
 		state->device == STV0900 ? "STV0900" : "STV0903");
 

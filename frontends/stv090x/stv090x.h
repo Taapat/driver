@@ -61,12 +61,12 @@ enum stv090x_clkmode {
 enum stv090x_i2crpt {
 	STV090x_RPTLEVEL_256	= 0,
 	STV090x_RPTLEVEL_128	= 1,
-	STV090x_RPTLEVEL_64	= 2,
-	STV090x_RPTLEVEL_32	= 3,
-	STV090x_RPTLEVEL_16	= 4,
-	STV090x_RPTLEVEL_8	= 5,
-	STV090x_RPTLEVEL_4	= 6,
-	STV090x_RPTLEVEL_2	= 7,
+	STV090x_RPTLEVEL_64		= 2,
+	STV090x_RPTLEVEL_32		= 3,
+	STV090x_RPTLEVEL_16		= 4,
+	STV090x_RPTLEVEL_8		= 5,
+	STV090x_RPTLEVEL_4		= 6,
+	STV090x_RPTLEVEL_2		= 7,
 };
 
 enum stv090x_adc_range {
@@ -75,8 +75,8 @@ enum stv090x_adc_range {
 };
 
 struct stv090x_config {
-	enum stv090x_device	device;
-	enum stv090x_mode	demod_mode;
+	enum stv090x_device		device;
+	enum stv090x_mode		demod_mode;
 	enum stv090x_clkmode	clk_mode;
 
 	u32 xtal; /* default: 8000000 */
@@ -89,12 +89,12 @@ struct stv090x_config {
 	u32 ts1_clk;
 	u32 ts2_clk;
 
-	enum stv090x_i2crpt	repeater_level;
+	enum stv090x_i2crpt		repeater_level;
 
-	u8			tuner_bbgain; /* default: 10db */
+	u8						tuner_bbgain; /* default: 10db */
 	enum stv090x_adc_range	adc1_range; /* default: 2Vpp */
 	enum stv090x_adc_range	adc2_range; /* default: 2Vpp */
-    bool diseqc_envelope_mode;
+    bool 					diseqc_envelope_mode;
 
 	int (*tuner_init) (struct dvb_frontend *fe);
     int (*tuner_sleep) (struct dvb_frontend *fe);

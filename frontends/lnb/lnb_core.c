@@ -2,22 +2,6 @@
  *   lnb_core.c - lnb power control driver
  */
 
-#include <linux/module.h>
-#include <linux/kernel.h>
-#include <linux/init.h>
-#include <linux/version.h>
-
-#include <linux/sched.h>
-#include <linux/string.h>
-#include <linux/timer.h>
-#include <linux/delay.h>
-#include <linux/errno.h>
-#include <linux/slab.h>
-#include <linux/poll.h>
-#include <linux/types.h>
-#include <linux/i2c.h>
-#include <linux/miscdevice.h>
-#include <asm/string.h>
 #include "lnb_core.h"
 
 enum
@@ -41,18 +25,6 @@ static int devType;
 static char *type = "a8293";
 short debug = 0;
 
-int a8293_init(struct i2c_client *client);
-int a8293_command(struct i2c_client *client, unsigned int cmd, void *arg );
-int a8293_command_kernel(struct i2c_client *client, unsigned int cmd, void *arg);
-
-int lnb24_init(struct i2c_client *client);
-int lnb24_command(struct i2c_client *client, unsigned int cmd, void *arg );
-int lnb24_command_kernel(struct i2c_client *client, unsigned int cmd, void *arg);
-
-int lnb_pio_init(struct i2c_client *client);
-int lnb_pio_command(struct i2c_client *client, unsigned int cmd, void *arg );
-int lnb_pio_command_kernel(struct i2c_client *client, unsigned int cmd, void *arg);
-
 /*
  * Addresses to scan
  */
@@ -68,28 +40,8 @@ static struct i2c_client *lnb_client = NULL;
 /*
  * i2c probe
  */
-
-static int lnb_newprobe(struct i2c_client *client, const struct i2c_device_id *id)
-{
-	if (lnb_client) {
-		dprintk("[LNB]: failure, client already registered\n");
-		return -ENODEV;
-	}
-
-	dprintk("[LNB]: chip found @ 0x%x\n", client->addr);
-
-	switch(devType)
-	{
-	case A8293:   a8293_init(client);   break;
-	case LNB24:   lnb24_init(client);   break;
-	case LNB_PIO: lnb_pio_init(client); break;
-	default: return -ENODEV;
-	}
-	lnb_client = client;
-	return 0;
-}
-
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+
 static int lnb_attach(struct i2c_adapter *adap, int addr, int kind)
 {
 	struct i2c_client *client;
@@ -121,9 +73,7 @@ static int lnb_attach(struct i2c_adapter *adap, int addr, int kind)
 
 	return 0;
 }
-#endif /* < 2.6.30 */
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static int lnb_probe(struct i2c_adapter *adap)
 {
 	int ret = 0;
@@ -134,16 +84,7 @@ static int lnb_probe(struct i2c_adapter *adap)
 
 	return ret;
 }
-#endif /* < 2.6.30 */
 
-static int lnb_remove(struct i2c_client *client)
-{
-	lnb_client = NULL;
-	dprintk("[LNB]: remove\n");
-	return 0;
-}
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 static int lnb_detach(struct i2c_client *client)
 {
 	int err = lnb_remove(client);
@@ -153,7 +94,36 @@ static int lnb_detach(struct i2c_client *client)
 
 	return err;
 }
-#endif /* < 2.6.30 */
+
+#else /* >= 2.6.30 */
+
+static int lnb_newprobe(struct i2c_client *client, const struct i2c_device_id *id)
+{
+	if (lnb_client) {
+		dprintk("[LNB]: failure, client already registered\n");
+		return -ENODEV;
+	}
+
+	dprintk("[LNB]: chip found @ 0x%x\n", client->addr);
+
+	switch(devType)
+	{
+	case A8293:   a8293_init(client);   break;
+	case LNB24:   lnb24_init(client);   break;
+	case LNB_PIO: lnb_pio_init();		break;
+	default: return -ENODEV;
+	}
+	lnb_client = client;
+	return 0;
+}
+
+static int lnb_remove(struct i2c_client *client)
+{
+	lnb_client = NULL;
+	dprintk("[LNB]: remove\n");
+	return 0;
+}
+#endif
 
 /*
  * devfs fops
@@ -165,11 +135,14 @@ static int lnb_command_ioctl(struct i2c_client *client, unsigned int cmd, void *
 
 	dprintk("[LNB]: %s (%x)\n", __func__, cmd);
 
+	if (!client && (devType != LNB_PIO))
+		return -1;
+
 	switch(devType)
 	{
-	case A8293:   err = a8293_command(client, cmd, arg);   break;
-	case LNB24:   err = lnb24_command(client, cmd, arg);     break;
-	case LNB_PIO: err = lnb_pio_command(client, cmd, arg); break;
+	case A8293:   err = a8293_command(client, cmd, arg);   	break;
+	case LNB24:   err = lnb24_command(client, cmd, arg);    break;
+	case LNB_PIO: err = lnb_pio_command(cmd, arg); 			break;
 	}
 	return err;
 }
@@ -179,16 +152,16 @@ int lnb_command_kernel(unsigned int cmd, void *arg)
 	int err = 0;
 	struct i2c_client *client = lnb_client;
 
-	dprintk("[LNB]: %s (%u)\n", __func__, cmd);
+	dprintk("[LNB]: %s (%x)\n", __func__, cmd);
 
-	if (!client)
+	if (!client && (devType != LNB_PIO))
 		return -1;
 
 	switch(devType)
 	{
-	case A8293:   err = a8293_command_kernel(client, cmd, arg);   break;
-	case LNB24:   err = lnb24_command_kernel(client, cmd, arg);     break;
-	case LNB_PIO: err = lnb_pio_command_kernel(client, cmd, arg); break;
+	case A8293:   err = a8293_command_kernel(client, cmd, arg);	break;
+	case LNB24:   err = lnb24_command_kernel(client, cmd, arg);	break;
+	case LNB_PIO: err = lnb_pio_command_kernel(cmd, arg); 		break;
 	}
 	return err;
 }
@@ -243,7 +216,7 @@ static int lnb_detect(struct i2c_client *client, int kind, struct i2c_board_info
 	switch (kind) {
 	case A8293:    name = "a8293";   break;
 	case LNB24:    name = "lnb24";  break;
-	case LNB_PIO:  name = "pio";  break;
+	case LNB_PIO:  name = "lnp-pio";  break;
 	default: return -ENODEV;
 	}
 	devType = kind;
@@ -289,40 +262,51 @@ static struct i2c_driver lnb_i2c_driver = {
 
 int __init lnb_init(void)
 {
-	int res;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	int res, err;
 	const char *name;
-	struct i2c_client client = { .addr = normal_i2c[0] };
-	int err;
 
-	if ((err = lnb_detect(&client, -1, &name))) {
-		printk(KERN_ERR "[LNB] Unknown LNB Driver!\n");
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+	err = lnb_detect(NULL, -1, &name);
+#else
+	struct i2c_board_info info;
+	err = lnb_detect(NULL, -1, &info);
+	name = info.type;
+#endif
+
+	if (err) {
+		printk("[LNB]: Error detecting lnb type!\n");
 		return err;
 	}
-	dprintk("[LNB] LNB power control handling for %s\n", name);
 
-	if ((res = i2c_add_driver(&lnb_i2c_driver))) {
-		dprintk("[LNB] i2c add driver failed\n");
-		return res;
+	dprintk("[LNB] lnb power control handling, type: %s\n", name);
+
+	if(devType == LNB_PIO) {
+		if ((res = lnb_pio_init())) {
+			dprintk("[LNB] init lnb pio failed\n");
+			return res;
+		}
+	} else {
+		if ((res = i2c_add_driver(&lnb_i2c_driver))) {
+			dprintk("[LNB] i2c add driver failed\n");
+			return res;
+		}
+
+		if (!lnb_client) {
+			printk(KERN_ERR "[LNB] no client found\n");
+			i2c_del_driver(&lnb_i2c_driver);
+			return -EIO;
+		}
 	}
 
-	if (!lnb_client){
-		printk(KERN_ERR "[LNB] no client found\n");
-		i2c_del_driver(&lnb_i2c_driver);
-		return -EIO;
-	}
-
-#else /* >= 2.6.30 */
-	if ((res = i2c_add_driver(&lnb_i2c_driver)))
-		return res;
-
-#endif /* >= 2.6.30 */
-
-	if (register_chrdev(LNB_MAJOR,"LNB",&lnb_fops)<0){
+	if (register_chrdev(LNB_MAJOR,"LNB",&lnb_fops)<0) {
 		printk(KERN_ERR "[LNB] unable to register device\n");
-		i2c_del_driver(&lnb_i2c_driver);
+		if(devType == LNB_PIO)
+			lnb_pio_exit();
+		else
+			i2c_del_driver(&lnb_i2c_driver);
 		return -EIO;
 	}
+
 	return 0;
 }
 
@@ -335,10 +319,14 @@ void __exit lnb_exit(void)
 module_init(lnb_init);
 module_exit(lnb_exit);
 
+module_param(type,charp,0);
+MODULE_PARM_DESC(type, "device type (a8293, lnb24, pio)");
+
+module_param(debug, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(debug, "Debug Output 0=disabled >0=enabled(debuglevel)");
+
 MODULE_AUTHOR("Spider-Team");
 MODULE_DESCRIPTION("Multiplatform lnb power control driver");
 MODULE_LICENSE("GPL");
 
-module_param(type,charp,0);
-MODULE_PARM_DESC(type, "device type (a8293, lnb24, pio)");
 

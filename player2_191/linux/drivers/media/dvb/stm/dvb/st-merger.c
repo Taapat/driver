@@ -405,7 +405,7 @@ void stm_tsm_init (int use_cimax)
       unsigned int     ret;
       int              n;
 
-#if defined(UFS912) || defined(SPARK) || defined(HS7810A)
+#if defined(UFS912) || defined(HS7810A)
       struct stpio* stream1_pin = stpio_request_pin (5, 0, "TSinterface1", STPIO_IN);
       struct stpio* stream2_pin = stpio_request_pin (5, 3, "TSinterface2", STPIO_IN);
 #elif defined(ATEVIO7500)
@@ -512,7 +512,7 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x0, reg_sys_config + SYS_CFG0);
 #endif
 
-#if !defined(ATEVIO7500) && !defined(UFS912) && !defined(SPARK) && !defined(HS7810A)
+#if !defined(ATEVIO7500) && !defined(UFS912) && !defined(HS7810A)
       ctrl_outl(0x0, reg_sys_config + SYS_CFG1);
 #endif
 

@@ -13,9 +13,15 @@
 #include <linux/dvb/frontend.h>
 #include "dvb_frontend.h"
 
+#include <linux/version.h>
 #include <linux/module.h>
-
 #include <linux/dvb/version.h>
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
+#  include <linux/stpio.h>
+#else
+#  include <linux/stm/pio.h>
+#endif
 
 #if DVB_API_VERSION < 5
 #include "compat.h"
@@ -24,16 +30,20 @@
 #include <linux/mutex.h>
 #include "stv090x.h"
 
+enum {
+	STV6110X = 0,
+	SHARP7306,
+};
+
 struct core_config
 {
 	struct i2c_adapter	*i2c_adap; /* i2c bus of the tuner */
+	struct stpio_pin*	tuner_enable_pin;
 	u8			i2c_addr; /* i2c address of the tuner */
 	u8			i2c_addr_lnb_supply; /* i2c address of the lnb_supply */
 	u8			vertical; /* i2c value */
 	u8			horizontal; /* i2c value */
-	struct stpio_pin*	tuner_enable_pin;
 	u8			tuner_enable_act; /* active state of the pin */
-
 };
 
 struct core_info {
@@ -45,10 +55,9 @@ struct core_info {
 struct core {
 
 	/* devices */
-	struct dvb_device dvb_dev;
-	struct dvb_net dvb_net;
-
-	struct core_info *card;
+	struct dvb_device 	dvb_dev;
+	struct dvb_net 		dvb_net;
+	struct core_info 	*card;
 
 	unsigned char *grabbing;
 
@@ -75,7 +84,6 @@ struct core {
 	int feeding;
 
 	spinlock_t feedlock;
-
 	spinlock_t debilock;
 
 	struct dvb_adapter *	dvb_adapter;
@@ -85,5 +93,20 @@ struct core {
 
 	void *priv;
 };
+
+struct tuner_devctl {
+	int (*tuner_init) (struct dvb_frontend *fe);
+    int (*tuner_sleep) (struct dvb_frontend *fe);
+	int (*tuner_set_mode) (struct dvb_frontend *fe, enum tuner_mode mode);
+	int (*tuner_set_frequency) (struct dvb_frontend *fe, u32 frequency);
+	int (*tuner_get_frequency) (struct dvb_frontend *fe, u32 *frequency);
+	int (*tuner_set_bandwidth) (struct dvb_frontend *fe, u32 bandwidth);
+	int (*tuner_get_bandwidth) (struct dvb_frontend *fe, u32 *bandwidth);
+	int (*tuner_set_bbgain) (struct dvb_frontend *fe, u32 gain);
+	int (*tuner_get_bbgain) (struct dvb_frontend *fe, u32 *gain);
+	int (*tuner_set_refclk)  (struct dvb_frontend *fe, u32 refclk);
+	int (*tuner_get_status) (struct dvb_frontend *fe, u32 *status);
+};
+
 extern void st90x_register_frontend(struct dvb_adapter *dvb_adap);
 #endif
