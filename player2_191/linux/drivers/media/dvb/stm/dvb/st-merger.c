@@ -976,8 +976,21 @@ Dies sind die Options (also wohl auch view channel):
        STM_TSM_CHANNEL_3       = 0x030000,
 
 */
+	#if	defined(SPARK)
+	ctrl_outl(0x0,   tsm_io + TSM_STREAM0_CFG);
+	ctrl_outl(0x400, tsm_io + TSM_STREAM1_CFG);
+	ctrl_outl(0x500, tsm_io + TSM_STREAM2_CFG);
+	ctrl_outl(0xb00, tsm_io + TSM_STREAM3_CFG);
+	ctrl_outl(0xc00, tsm_io + TSM_STREAM4_CFG);
+	ctrl_outl(0x1d00, tsm_io + TSM_STREAM5_CFG);
+	ctrl_outl(0x1e00, tsm_io + TSM_STREAM6_CFG);
+	ctrl_outl(0x1f00, tsm_io + TSM_STREAM7_CFG);
+	#else
   	for (n=0;n<5;n++)
-    	   writel( TSM_RAM_ALLOC_START( 0x3 *n ), tsm_io + TSM_STREAM_CONF(n));
+  	{
+		writel( TSM_RAM_ALLOC_START( 0x3 *n ), tsm_io + TSM_STREAM_CONF(n));
+  	}
+  	#endif  /* SPARK */
 
   	for (n=0;n< 4/* config->nr_channels */;n++)
   	{

@@ -549,7 +549,7 @@ void stm_tsm_init (int use_cimax)
 
       ctrl_outl(0x0, reg_config + SWTS_CFG(0));
 
-#if  defined(FORTIS_HDBOX) || defined(UFS922) || defined(TF7700) || defined(HL101) || defined(VIP1_V2) || defined(UFS912) || defined(SPARK) || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA) || defined(ATEVIO7500) || defined(HS7810A) || defined(IPBOX9900) 
+#if  defined(FORTIS_HDBOX) || defined(UFS922) || defined(TF7700) || defined(HL101) || defined(VIP1_V2) || defined(UFS912) || defined(SPARK) || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA) || defined(ATEVIO7500) || defined(HS7810A) || defined(IPBOX9900)
       ctrl_outl(0x0, reg_config + SWTS_CFG(1));
       ctrl_outl(0x0, reg_config + SWTS_CFG(2));
 #endif
@@ -678,7 +678,7 @@ void stm_tsm_init (int use_cimax)
 
       ctrl_outl(0x00 , reg_config + TSM_STREAM5_SYNC);
       ctrl_outl(0x00 , reg_config + TSM_STREAM6_SYNC);
-#elif  defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA) || defined(IPBOX9900) 
+#elif  defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA) || defined(IPBOX9900)
 	  /* configure streams: */
       /* add tag bytes to stream + stream priority */
       ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
@@ -691,7 +691,7 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(stream_sync, reg_config + TSM_STREAM3_SYNC);
       ctrl_outl(0x0, reg_config + 0x78 /* reserved ??? */);
 
-#if !defined(FORTIS_HDBOX) && !defined(UFS912) && !defined(SPARK) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA) && !defined(ATEVIO7500) && !defined(HS7810A) || !defined(IPBOX9900) 
+#if !defined(FORTIS_HDBOX) && !defined(UFS912) && !defined(SPARK) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA) && !defined(ATEVIO7500) && !defined(HS7810A) || !defined(IPBOX9900)
       /* swts_req_trigger + pace cycles (1101) */
       ctrl_outl(0x800000d, reg_config + SWTS_CFG(0));
 #elif defined (UFS912) || defined(SPARK) || defined(ATEVIO7500) || defined(HS7810A)
@@ -707,7 +707,7 @@ void stm_tsm_init (int use_cimax)
       /* auto count */
       ctrl_outl(0x0, reg_config + TSM_PROG_CNT0);
 
-#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101) && !defined(VIP1_V2) && !defined(HOMECAST5101) && !defined(UFS912) && !defined(SPARK) && !defined(OCTAGON1008) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA) && !defined(ATEVIO7500) && !defined(HS7810A) && !defined(IPBOX9900) 
+#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101) && !defined(VIP1_V2) && !defined(HOMECAST5101) && !defined(UFS912) && !defined(SPARK) && !defined(OCTAGON1008) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA) && !defined(ATEVIO7500) && !defined(HS7810A) && !defined(IPBOX9900)
       /* UFS910 stream configuration */
       /* route stream 2 to PTI */
       ret = ctrl_inl(reg_config + TSM_PTI_SEL);
@@ -881,7 +881,7 @@ void stm_tsm_init (int use_cimax)
      /* route stream 0/1 to PTI */
       ret = ctrl_inl(reg_config + TSM_PTI_SEL);
       ctrl_outl(ret | 0x2 | 0x1 | 0x4, reg_config + TSM_PTI_SEL);
- 
+
       /* route stream 0/1 to PTI1 */
       ret = ctrl_inl(reg_config + TSM_PTI1_SEL);
       ctrl_outl(ret | 0x2 | 0x1 | 0x4, reg_config + TSM_PTI1_SEL);
@@ -967,8 +967,21 @@ Dies sind die Options (also wohl auch view channel):
        STM_TSM_CHANNEL_3       = 0x030000,
 
 */
+	#if	defined(SPARK)
+	ctrl_outl(0x0,   tsm_io + TSM_STREAM0_CFG);
+	ctrl_outl(0x400, tsm_io + TSM_STREAM1_CFG);
+	ctrl_outl(0x500, tsm_io + TSM_STREAM2_CFG);
+	ctrl_outl(0xb00, tsm_io + TSM_STREAM3_CFG);
+	ctrl_outl(0xc00, tsm_io + TSM_STREAM4_CFG);
+	ctrl_outl(0x1d00, tsm_io + TSM_STREAM5_CFG);
+	ctrl_outl(0x1e00, tsm_io + TSM_STREAM6_CFG);
+	ctrl_outl(0x1f00, tsm_io + TSM_STREAM7_CFG);
+	#else
   	for (n=0;n<5;n++)
-    	   writel( TSM_RAM_ALLOC_START( 0x3 *n ), tsm_io + TSM_STREAM_CONF(n));
+  	{
+		writel( TSM_RAM_ALLOC_START( 0x3 *n ), tsm_io + TSM_STREAM_CONF(n));
+  	}
+  	#endif  /* SPARK */
 
   	for (n=0;n< 4/* config->nr_channels */;n++)
   	{
