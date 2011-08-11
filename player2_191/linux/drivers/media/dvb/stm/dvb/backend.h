@@ -177,6 +177,10 @@ int DvbStreamGetPlayInfo                   (struct StreamContext_s*         Stre
                                             struct play_info_s*             PlayInfo);
 int DvbStreamDrain                         (struct StreamContext_s*         Stream,
                                             unsigned int                    Discard);
+int DvbStreamDrain2                        (struct StreamContext_s*         Stream,
+                                            unsigned int                    Discard,
+                                            unsigned int                    NonBlock);
+int DvbStreamCheckDrained                  (struct StreamContext_s*         Stream);
 int DvbStreamDiscontinuity                 (struct StreamContext_s*         Stream,
                                             discontinuity_t                 Discontinuity);
 int DvbStreamStep                          (struct StreamContext_s*         Stream);

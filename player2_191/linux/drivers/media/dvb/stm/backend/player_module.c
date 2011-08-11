@@ -89,6 +89,7 @@ static struct dvb_backend_operations            DvbBackendOps        =
     .stream_inject_data_packet                  = StreamInjectDataPacket,
     .stream_discontinuity                       = StreamDiscontinuity,
     .stream_drain                               = StreamDrain,
+    .stream_check_drained                       = StreamCheckDrained,
     .stream_enable                              = StreamEnable,
     .stream_set_id                              = StreamSetId,
     .stream_channel_select                      = StreamChannelSelect,

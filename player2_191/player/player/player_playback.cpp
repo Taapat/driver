@@ -1100,7 +1100,6 @@ unsigned long long	  Delay;
     //
     // Are we a blocking/non-blocking call
     //
-
     if( !NonBlocking )
     {
 	Status	= WaitForDrainCompletion( Stream, (PlayoutPolicyValue == PolicyValueDiscard) );
@@ -1166,6 +1165,16 @@ unsigned int	IndividualWaitTime;
 	} while( (OSStatus != OS_NO_ERROR) && Stream->BuffersComingOutOfManifestation );
     }
 
+    return (OSStatus == OS_NO_ERROR) ? PlayerNoError : PlayerTimedOut;
+}
+
+unsigned int   Player_Generic_c::CheckStreamDrained(PlayerStream_t Stream,
+						void                     *EventUserData )
+{
+OS_Status_t	OSStatus;
+unsigned int	IndividualWaitTime = 10;
+
+    OSStatus					= OS_WaitForEvent( &Stream->Drained, IndividualWaitTime );
     return (OSStatus == OS_NO_ERROR) ? PlayerNoError : PlayerTimedOut;
 }
 

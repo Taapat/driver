@@ -759,10 +759,12 @@ static int AudioIoctlSetEncoding (struct DeviceContext_s* Context, unsigned int 
 #endif
 /*}}}*/
 /*{{{  AudioIoctlFlush*/
-static int AudioIoctlFlush (struct DeviceContext_s* Context)
+static int AudioIoctlFlush (struct DeviceContext_s* Context, unsigned int NonBlock)
 {
     int                         Result  = 0;
     struct DvbContext_s*        DvbContext      = Context->DvbContext;
+
+    printk("AudioIoctlFlush NonBlock=%d\n", NonBlock);
 
     DVB_DEBUG ("(audio%d)\n", Context->Id);
     /* If the stream is frozen it cannot be drained so an error is returned. */
@@ -773,7 +775,7 @@ static int AudioIoctlFlush (struct DeviceContext_s* Context)
         return -ERESTARTSYS;
     mutex_unlock (&(DvbContext->Lock));                 /* release lock so non-writing ioctls still work while draining */
 
-    Result      = DvbStreamDrain (Context->AudioStream, false);
+    Result      = DvbStreamDrain2 (Context->AudioStream, false, NonBlock);
 
     mutex_unlock (Context->ActiveAudioWriteLock);       /* release write lock so actions which have context lock can complete */
     mutex_lock (&(DvbContext->Lock));                   /* reclaim lock so can be released by outer function */
@@ -1076,7 +1078,7 @@ static int AudioIoctl (struct inode*    Inode,
         case AUDIO_SET_ATTRIBUTES:        Result = AudioIoctlSetAttributes      (Context, (audio_attributes_t) ((int)Parameter)); break;
         case AUDIO_SET_KARAOKE:           Result = AudioIoctlSetKaraoke         (Context, (audio_karaoke_t*)Parameter);           break;
         case AUDIO_SET_ENCODING:          Result = AudioIoctlSetEncoding        (Context, (unsigned int)Parameter);               break;
-        case AUDIO_FLUSH:                 Result = AudioIoctlFlush              (Context);                                        break;
+        case AUDIO_FLUSH:                 Result = AudioIoctlFlush              (Context, (unsigned int)Parameter);               break;
         case AUDIO_SET_SPDIF_SOURCE:      Result = AudioIoctlSetSpdifSource     (Context, (unsigned int)Parameter);               break;
         case AUDIO_SET_SPEED:             Result = AudioIoctlSetSpeed           (Context, (int)Parameter);                        break;
         case AUDIO_DISCONTINUITY:         Result = AudioIoctlDiscontinuity      (Context, (audio_discontinuity_t)Parameter);      break;
@@ -1209,6 +1211,13 @@ static unsigned int AudioPoll (struct file* File, poll_table* Wait)
     if (((File->f_flags & O_ACCMODE) == O_RDONLY) || (Context->AudioStream == NULL))
         return 0;
 
+#ifdef __TDT__
+    if (DvbStreamCheckDrained(Context->AudioStream) == 1) {
+        printk("Stream Drained\n");
+        return (POLLIN);
+    }
+#endif
+
 #if defined (USE_INJECTION_THREAD)
     poll_wait (File, &Context->AudioStream->BufferEmpty, Wait);
 #endif
@@ -1218,7 +1227,9 @@ static unsigned int AudioPoll (struct file* File, poll_table* Wait)
         if (StreamBufferFree (Context->AudioStream))
             Mask   |= (POLLOUT | POLLWRNORM);
     }
+
     return Mask;
 }
 /*}}}*/
+
 

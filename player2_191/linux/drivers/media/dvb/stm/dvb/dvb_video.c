@@ -1134,10 +1134,12 @@ static int VideoIoctlSetEncoding (struct DeviceContext_s* Context, unsigned int 
 #endif
 /*}}}*/
 /*{{{  VideoIoctlFlush*/
-static int VideoIoctlFlush (struct DeviceContext_s* Context)
+static int VideoIoctlFlush (struct DeviceContext_s* Context, unsigned int NonBlock)
 {
     int                         Result  = 0;
     struct DvbContext_s*        DvbContext      = Context->DvbContext;
+
+    printk("VideoIoctlFlush NonBlock=%d\n", NonBlock);
 
     DVB_DEBUG("(video%d), %p\n", Context->Id, Context->VideoStream);
 
@@ -1149,7 +1151,7 @@ static int VideoIoctlFlush (struct DeviceContext_s* Context)
         return -ERESTARTSYS;
     mutex_unlock (&(DvbContext->Lock));                 /* release lock so non-writing ioctls still work while draining */
 
-    Result      = DvbStreamDrain (Context->VideoStream, false);
+    Result      = DvbStreamDrain2 (Context->VideoStream, false, NonBlock);
 
     mutex_unlock (Context->ActiveVideoWriteLock);       /* release write lock so actions which have context lock can complete */
     mutex_lock (&(DvbContext->Lock));                   /* reclaim lock so can be released by outer function */
@@ -1495,7 +1497,7 @@ static int VideoIoctl (struct inode*    Inode,
         case VIDEO_SET_ATTRIBUTES:        Result = VideoIoctlSetAttributes      (Context, (video_attributes_t)Parameter);                 break;
         case VIDEO_GET_FRAME_RATE:        Result = VideoIoctlGetFrameRate       (Context, (int*)Parameter);                               break;
         case VIDEO_SET_ENCODING:          Result = VideoIoctlSetEncoding        (Context, (unsigned int)Parameter);                       break;
-        case VIDEO_FLUSH:                 Result = VideoIoctlFlush              (Context);                                                break;
+        case VIDEO_FLUSH:                 Result = VideoIoctlFlush              (Context, (unsigned int)Parameter);                       break;
         case VIDEO_SET_SPEED:             Result = VideoIoctlSetSpeed           (Context, (int)Parameter);                                break;
         case VIDEO_DISCONTINUITY:         Result = VideoIoctlDiscontinuity      (Context, (video_discontinuity_t)Parameter);              break;
         case VIDEO_STEP:                  Result = VideoIoctlStep               (Context);                                                break;
@@ -1615,6 +1617,13 @@ static unsigned int VideoPoll (struct file* File, poll_table* Wait)
     unsigned int                Mask            = 0;
 
     /*DVB_DEBUG ("(video%d)\n", Context->Id);*/
+
+#ifdef __TDT__
+    if (DvbStreamCheckDrained(Context->VideoStream) == 1) {
+        printk("Stream Drained\n");
+        return (POLLIN);
+    }
+#endif
 
 #if defined (USE_INJECTION_THREAD)
     if (((File->f_flags & O_ACCMODE) != O_RDONLY) && (Context->VideoStream != NULL))

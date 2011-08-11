@@ -351,7 +351,8 @@ int StreamDiscontinuity         (stream_handle_t         Stream,
 //}}}
 //{{{  StreamDrain
 int StreamDrain                 (stream_handle_t         Stream,
-                                 unsigned int            Discard)
+                                 unsigned int            Discard,
+                                 unsigned int            NonBlock)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
@@ -359,10 +360,17 @@ int StreamDrain                 (stream_handle_t         Stream,
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    HavanaStream->Drain (Discard);
+    HavanaStream->Drain (Discard, NonBlock);
 
     return 0;
 }
+
+int StreamCheckDrained               (stream_handle_t         Stream)
+{
+    class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
+    return HavanaStream->CheckDrained ();
+}
+
 //}}}
 //{{{  StreamEnable
 int StreamEnable                (stream_handle_t         Stream,

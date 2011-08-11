@@ -183,6 +183,9 @@ public:
 							bool                      SignalEvent           = false,
 							void                     *EventUserData         = NULL ) = 0;
 
+    virtual PlayerStatus_t   CheckStreamDrained(               PlayerStream_t            Stream,
+							void                     *EventUserData         = NULL ) = 0;
+
     //
     // Mechanisms for managing time
     //
