@@ -22,9 +22,7 @@
 #  include <linux/stm/pio.h>
 #endif
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27)
-#include <linux/mutex.h>
-#endif
+#include <linux/dvb/version.h>
 
 #if DVB_API_VERSION < 5
 #include "compat.h"
