@@ -396,7 +396,9 @@ struct dvb_backend_operations
                                         play_option_t           option,
                                         unsigned int*           value);
     int (*stream_drain)                (stream_handle_t         stream,
-                                        unsigned int            discard);
+                                        unsigned int            discard,
+                                        unsigned int            nonblock);
+    int (*stream_check_drained)        (stream_handle_t         stream);
     int (*stream_step)                 (stream_handle_t         Stream);
     int (*stream_get_play_info)        (stream_handle_t         stream,
                                         struct play_info_s     *play_info);

@@ -652,6 +652,9 @@ private:
 
 public:
 
+    PlayerStatus_t   CheckStreamDrained(	PlayerStream_t		  Stream);
+
+
     void ProcessCollateToParse(			PlayerStream_t		  Stream );
     void ProcessParseToDecode(			PlayerStream_t		  Stream );
     void ProcessDecodeToManifest(		PlayerStream_t		  Stream );
@@ -744,6 +747,10 @@ public:
 						bool			  NonBlocking		= false,
 						bool			  SignalEvent		= false,
 						void			 *EventUserData		= NULL );
+
+    PlayerStatus_t   CheckStreamDrained(	PlayerStream_t		  Stream,
+						void			 *EventUserData		= NULL );
+
     //
     // Mechanisms for managing time
     //

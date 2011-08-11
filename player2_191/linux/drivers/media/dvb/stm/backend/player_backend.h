@@ -82,7 +82,9 @@ int StreamInjectDataPacket     (stream_handle_t         stream,
 int StreamDiscontinuity        (stream_handle_t         stream,
                                 discontinuity_t         discontinuity);
 int StreamDrain                (stream_handle_t         stream,
-                                unsigned int            discard);
+                                unsigned int            discard,
+                                unsigned int            nonblock);
+int StreamCheckDrained         (stream_handle_t         stream);
 int StreamEnable               (stream_handle_t         stream,
                                 unsigned int            enable);
 int StreamSetId                (stream_handle_t         stream,

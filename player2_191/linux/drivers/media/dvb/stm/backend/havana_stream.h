@@ -161,7 +161,9 @@ public:
                                                                 unsigned long long              PlaybackTime);
     HavanaStatus_t              Discontinuity                  (bool                            ContinuousReverse,
                                                                 bool                            SurplusData);
-    HavanaStatus_t              Drain                          (bool                            Discard);
+    HavanaStatus_t              Drain                          (bool                            Discard,
+                                                                bool                            NonBlock);
+    HavanaStatus_t              CheckDrained                   ();
     HavanaStatus_t              Enable                         (bool                            Manifest);
     HavanaStatus_t              SetId                          (unsigned int                    DemuxId,
                                                                 unsigned int                    Id);

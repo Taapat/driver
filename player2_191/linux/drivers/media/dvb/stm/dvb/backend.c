@@ -600,17 +600,39 @@ int DvbStreamInjectPacket      (struct StreamContext_s*         Stream,
 int DvbStreamDrain     (struct StreamContext_s*         Stream,
                         unsigned int                    Discard)
 {
+    return DvbStreamDrain2(Stream, Discard, 0);
+}
+
+int DvbStreamDrain2    (struct StreamContext_s*         Stream,
+                        unsigned int                    Discard,
+                        unsigned int                    NonBlock)
+{
     int         Result;
 
     if ((Stream == NULL) || (Stream->Handle == NULL))           /* No stream to drain */
         return -EINVAL;
 
-    Result      = Backend->Ops->stream_drain (Stream->Handle, Discard);
+    Result      = Backend->Ops->stream_drain (Stream->Handle, Discard, NonBlock);
     if (Result < 0)
         BACKEND_ERROR("Unable to drain stream\n");
 
     return Result;
 }
+
+int DvbStreamCheckDrained    (struct StreamContext_s*         Stream)
+{
+    int         Result;
+
+    if ((Stream == NULL) || (Stream->Handle == NULL))           /* No stream to drain */
+        return -EINVAL;
+
+    Result      = Backend->Ops->stream_check_drained (Stream->Handle);
+    if (Result < 0)
+        BACKEND_ERROR("Unable to drain stream\n");
+
+    return Result;
+}
+
 /*}}}*/
 /*{{{  DvbStreamStep*/
 int DvbStreamStep      (struct StreamContext_s*         Stream)

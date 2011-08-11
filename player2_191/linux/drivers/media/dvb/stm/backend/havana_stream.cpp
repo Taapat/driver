@@ -440,16 +440,25 @@ HavanaStatus_t HavanaStream_c::Discontinuity   (bool                    Continuo
 }
 //}}}
 //{{{  Drain
-HavanaStatus_t HavanaStream_c::Drain   (bool            Discard)
+HavanaStatus_t HavanaStream_c::Drain   (bool            Discard, 
+                                        bool            NonBlock)
 {
     unsigned int        PolicyValue     = Discard ? PolicyValueDiscard : PolicyValuePlayout;
     PlayerStatus_t      Status;
 
     Player->SetPolicy   (PlayerPlayback, PlayerStream, PolicyPlayoutOnDrain, PolicyValue);
-    Status              = Player->DrainStream (PlayerStream);   // NonBlocking=false, SignalEvent=false, EventUserData=NULL);
+    Status              = Player->DrainStream (PlayerStream, NonBlock, true);   // NonBlocking=false, SignalEvent=false, EventUserData=NULL);
                                                                 // i.e. we wait rather than use the event
     return HavanaNoError;
 }
+
+HavanaStatus_t HavanaStream_c::CheckDrained   ()
+{
+    PlayerStatus_t      Status;
+    Status              = Player->CheckStreamDrained(PlayerStream);
+    return (HavanaStatus_t)Status;
+}
+
 //}}}
 //{{{  Enable
 HavanaStatus_t HavanaStream_c::Enable  (bool    Manifest)
@@ -1533,7 +1542,6 @@ HavanaStatus_t HavanaStream_c::CheckEvent      (struct PlayerEventRecord_s*     
                 StreamEvent.code                        = STREAM_EVENT_FATAL_HARDWARE_FAILURE;
                 StreamEvent.u.longlong                  = PlayerEvent->Value[0].LongLong;
                 break;
-
             default:
                 STREAM_DEBUG("Unexpected event %x\n", PlayerEvent->Code);
                 StreamEvent.code                = STREAM_EVENT_INVALID;
