@@ -485,7 +485,13 @@ int micomWriteString(unsigned char* aBuf, int len)
             case 0xc3:
                 UTF_Char_Table = UTF_C3;
                 break;
-            case 0xd0:
+            case 0xc4:
+                UTF_Char_Table = UTF_C4;
+                break;
+            case 0xc5:
+                UTF_Char_Table = UTF_C5;
+                break;
+	    case 0xd0:
                 UTF_Char_Table = UTF_D0;
                 break;
             case 0xd1:
