@@ -268,7 +268,7 @@ static u32 MxL201RF_ES4_RFTune(struct tda10023_state* state, struct dvb_frontend
 	u32 frac_divider = 1000000;
 
 	rf_freq_MHz = RF_Freq/MHz;
-	dprintk("tda10023: Freq %dMHz\n", rf_freq_MHz);
+	//dprintk("tda10023: Freq %dMHz\n", rf_freq_MHz);
 
 	/*CABLE */
 	// MxL_MODE_CAB_STD:
@@ -485,8 +485,7 @@ static int tda10023_set_symbolrate (struct tda10023_state* state, u32 sr)
 
 		BDR=(s32)BDRX;
 	}
-	dprintk("@@@@@@Symbolrate %d, BDR %d BDRI %d, NDEC %d\n",
-		sr, BDR, BDRI, NDEC);
+	//dprintk("@@@@@@Symbolrate %d, BDR %d BDRI %d, NDEC %d\n",	sr, BDR, BDRI, NDEC);
 	tda10023_writebit (state, 0x03, 0xc0, NDEC<<6);
 	tda10023_writereg (state, 0x0a, BDR&255);
 	tda10023_writereg (state, 0x0b, (BDR>>8)&255);
@@ -642,11 +641,13 @@ static int tda10023_set_parameters (struct dvb_frontend *fe,
 	if (qam < 0 || qam > 5)
 		return -EINVAL;
 
-	MxL_Init(state);
-	write_init_tda10023(fe,p);
-
 	/* Set MxL201 params */
+	MxL_Init(state);
 	MxL201RF_ES4_RFTune(state, p);
+
+	msleep(50);
+
+	write_init_tda10023(fe,p);
 
 	//printk("p->u.qam.symbol_rate === %d\n",p->u.qam.symbol_rate);
 	
@@ -719,6 +720,8 @@ static int tda10023_read_status(struct dvb_frontend* fe, fe_status_t* status)
 	//0x11[3] == FEL -> Front End locked
 	//0x11[6] == NODVB -> DVB Mode Information
 	sync = tda10023_readreg (state, 0x11);
+
+	//printk(">>> HAS_SIGNAL %d, HAS_SYNC %d, HAS_LOCK %d\n", (sync & 2), (sync & 4), (sync & 8));
 
 	if (sync & 2)
 		*status |= FE_HAS_SIGNAL|FE_HAS_CARRIER;
@@ -817,6 +820,28 @@ static void tda10023_release(struct dvb_frontend* fe)
 	kfree(state);
 }
 
+static int tda10023_set_property(struct dvb_frontend *fe,
+	struct dtv_property *tvp)
+{
+	return 0;
+}
+
+static int tda10023_get_property(struct dvb_frontend *fe,
+	struct dtv_property *tvp)
+{
+	dprintk("%s(..)\n", __func__);
+	/* get delivery system info */
+	if(tvp->cmd==DTV_DELIVERY_SYSTEM){
+		switch (tvp->u.data) {
+		case SYS_DVBC_ANNEX_AC:
+			break;
+		default:
+			return -EINVAL;
+		}
+	}
+	return 0;
+}
+
 static struct dvb_frontend_ops tda10023_ops;
 
 struct dvb_frontend *tda10023_attach(const struct tda10023_config *config,
@@ -912,7 +937,8 @@ static struct dvb_frontend_ops tda10023_ops = {
 	.read_snr = tda10023_read_snr,
 	.read_ucblocks = tda10023_read_ucblocks,
 	
-//	.get_property = tda10023_get_property,
+	.set_property = tda10023_set_property,
+	.get_property = tda10023_get_property,
 };
 
 EXPORT_SYMBOL(tda10023_attach);

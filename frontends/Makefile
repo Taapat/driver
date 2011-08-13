@@ -65,7 +65,7 @@ fe-core-objs +=        ipbox/stv090x.o
 fe-core-objs +=        ipbox/stv6110x.o
 fe-core-objs +=        ipbox/zl10353.o
 fe-core-objs +=        ipbox/mxl5007t.o
-#fe-core-objs +=        ipbox/tda10023.o
+fe-core-objs +=        ipbox/tda10023.o
 fe-core-objs +=        ipbox/core.o
 obj-m += fe-core.o
 else ifdef IPBOX99
@@ -73,7 +73,7 @@ fe-core-objs +=        ipbox/stv090x.o
 fe-core-objs +=        ipbox/stv6110x.o
 fe-core-objs +=        ipbox/zl10353.o
 fe-core-objs +=        ipbox/mxl5007t.o
-#fe-core-objs +=        ipbox/tda10023.o
+fe-core-objs +=        ipbox/tda10023.o
 fe-core-objs +=        ipbox/core.o
 obj-m += fe-core.o
 else ifdef IPBOX55
@@ -253,7 +253,7 @@ fe-core-objs +=        ipbox/stv090x.o
 fe-core-objs +=        ipbox/stv6110x.o
 fe-core-objs +=        ipbox/zl10353.o
 fe-core-objs +=        ipbox/mxl5007t.o
-#fe-core-objs +=        ipbox/tda10023.o
+fe-core-objs +=        ipbox/tda10023.o
 fe-core-objs +=        ipbox/core.o
 obj-m += fe-core.o
 else ifdef IPBOX99
@@ -261,7 +261,7 @@ fe-core-objs +=        ipbox/stv090x.o
 fe-core-objs +=        ipbox/stv6110x.o
 fe-core-objs +=        ipbox/zl10353.o
 fe-core-objs +=        ipbox/mxl5007t.o
-#fe-core-objs +=        ipbox/tda10023.o
+fe-core-objs +=        ipbox/tda10023.o
 fe-core-objs +=        ipbox/core.o
 obj-m += fe-core.o
 else ifdef IPBOX55

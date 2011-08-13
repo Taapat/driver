@@ -221,12 +221,17 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int slot, in
 
 
 		case NIM_DVBC_PHILIPS_V1:
-#if 0
+#if 1//defined(IPBOX9900) || defined(IPBOX99)
+
 			frontend = dvb_attach(tda10023_attach, &tda10023_config, cfg->i2c_adap, 0);
 			if (frontend)
 			{
 				printk("%s: demod attached\n", __FUNCTION__);
+			} else {
+				printk (KERN_INFO "%s: error attaching pll\n", __FUNCTION__);
+				frontend = NULL;
 			}
+#else			
 			printk(" WARN: DVB-C not supported, yet ;)\n");
 			frontend = NULL;
 #endif
