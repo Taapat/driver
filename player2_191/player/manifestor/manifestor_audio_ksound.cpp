@@ -760,6 +760,10 @@ ManifestorStatus_t Manifestor_AudioKsound_c::FillOutInputBuffer(
                 {
                     MANIFESTOR_ERROR("Mixer has starved - injecting silence (sta:0x%x)\n",Status);
                     OutputState = STARVED;
+#ifdef __TDT__
+                    OS_WaitForEvent(&BufferQueueUpdated, OS_INFINITE);
+                    OS_ResetEvent(&BufferQueueUpdated);
+#endif
                 }
                 else
                 {

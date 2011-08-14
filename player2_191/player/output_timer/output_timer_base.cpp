@@ -920,6 +920,10 @@ unsigned long long	  Now;
     Now	= OS_GetTimeInMicroSeconds();
     if( (Speed != 0) && ((Now + Configuration.MinimumManifestorLatency) >= OutputTiming->SystemPlaybackTime) )
     {
+#ifdef __TDT__
+        unsigned int DecodeBufferCount = 0;
+        unsigned int DecodeBuffersInUse = 0;
+#endif
 	DecodeInTimeFailure( (Now + Configuration.MinimumManifestorLatency) - OutputTiming->SystemPlaybackTime );
 
 	DropLateFramesPolicy	= Player->PolicyValue( Playback, Stream, PolicyDiscardLateFrames );
@@ -929,6 +933,22 @@ unsigned long long	  Now;
 			break;
 
 	    case PolicyValueDiscardLateFramesAfterSynchronize:
+#ifdef __TDT__
+                        // H.264 deadlock workaround
+                        // determine the pool usage
+                        DecodeBufferPool->GetPoolUsage( NULL,
+                                                        &DecodeBuffersInUse,
+                                                        NULL, NULL, NULL );
+                        Manifestor->GetDecodeBufferCount( &DecodeBufferCount );
+
+                        // if the buffer pool is almost empty discard the frame to
+                        // prevent the decoder from running out of buffers
+                        if(DecodeBuffersInUse > DecodeBufferCount - 2)
+                        {
+                                        OutputTiming->TimingGenerated   = false;
+                                        return OutputTimerDropFrameTooLateForManifestation;
+                        }
+#endif
 			if( !SeenAnInTimeFrame )
 			{
 			    // If this is audio in a video play immediate case

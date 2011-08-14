@@ -5935,6 +5935,7 @@ unsigned int	InvalidPTSSequence;
     OrderedDeferredList[i]	= Index;
     DeferredListEntries++;
 
+#ifndef __TDT__
     //
     // Perform PTS validation - check for a jump in PTS of the wrong direction
     //				then range check it to less than 1 second to 
@@ -5994,6 +5995,7 @@ unsigned int	InvalidPTSSequence;
 	else
 	    ProcessDeferredDFIandPTSDownto( DeferredList[OrderedDeferredList[DeferredListEntries-1]].ExtendedPicOrderCnt + 1 ); 
     }
+#endif
 }
 
 

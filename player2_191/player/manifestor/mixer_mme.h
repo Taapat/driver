@@ -34,6 +34,10 @@ Date        Modification                                    Name
 #ifndef H_MIXER_MME_CLASS
 #define H_MIXER_MME_CLASS
 
+#if defined(__TDT__)
+#include <linux/version.h>
+#endif
+
 #include "player_types.h"
 #include "manifestor_audio_ksound.h"
 #include "mixer.h"
@@ -62,7 +66,7 @@ Date        Modification                                    Name
  * currently it seems so that this works for both cpu types
  * (BWC vs. BWD)
  */
-#if defined (CONFIG_KERNELVERSION) && defined(__TDT__)
+#if (defined(CONFIG_KERNELVERSION) || LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)) && defined(__TDT__)
 
 #if (defined(FORTIS_HDBOX) || defined(OCTAGON1008))
 

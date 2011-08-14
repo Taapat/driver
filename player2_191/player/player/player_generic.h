@@ -92,7 +92,12 @@ Date        Modification                                    Name
 #define PLAYER_AUDIO_DEFAULT_CODED_FRAME_PARTITION_NAME	"BPA2_Region0"
 #endif
 
+#ifdef __TDT__
+#define PLAYER_VIDEO_DEFAULT_CODED_FRAME_COUNT		256
+#else
 #define PLAYER_VIDEO_DEFAULT_CODED_FRAME_COUNT		1024
+#endif
+
 #define PLAYER_VIDEO_DEFAULT_CODED_MEMORY_SIZE		PLAYER2_VIDEO_DEFAULT_CODED_MEMORY_SIZE /* 0x1000000 */
 #define PLAYER_VIDEO_DEFAULT_CODED_FRAME_MAXIMUM_SIZE	0x100000
 #if defined(__TDT__) && (defined(UFS910) || defined(FORTIS_HDBOX) || defined(OCTAGON1008) || defined(HL101) || defined(TF7700))

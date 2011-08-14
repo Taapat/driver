@@ -949,7 +949,22 @@ unsigned int			  MaxAllocatableDecodeBuffers;
 	Status	= ReferenceFrameSlotAllocate( CurrentDecodeBufferIndex );
 	if( Status != CodecNoError )
 	{
+#ifdef __TDT__
+   	      report( severity_error, "Codec_MmeVideoH264_c::FillOutDecodeCommand - Failed to obtain a reference frame slot.\n" );
+            /* This is necessary to avoid deadlocks caused by lack
+               of further reference frame slots. (There is a firmware
+               limitation of 16 reference frames.) It is unclear
+               what exactly causes the firmware to stop releasing
+               the buffers with reference frames. Sometimes it happens
+               during in live stream (e.g. in some showcase loops) and
+               sometimes it might be caused by synchronization problems.
+               I tried lots of additional actions (like discarding
+               manifestor decode buffers) to speed up the resynchronization
+               but most of them lead to another deadlock. */
+            H264ReleaseReferenceFrame( CODEC_RELEASE_ALL);
+#else
 	    report( severity_error, "Codec_MmeVideoH264_c::FillOutDecodeCommand - Failed to obtain a reference frame slot.\n" );
+#endif
 	    return Status;
 	}
 
