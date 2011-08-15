@@ -385,7 +385,8 @@ int nuvotonSetIcon(int which, int on)
 
     return res;
 }
-#elif defined(ATEVIO7500)
+
+#elif defined(ATEVIO7500) || defined(FORTIS_HDBOX)
 int nuvotonSetIcon(int which, int on)
 {
     char buffer[128];
