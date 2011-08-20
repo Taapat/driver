@@ -137,8 +137,8 @@ static int pio_set_voltage(struct dvb_frontend *fe, fe_sec_voltage_t voltage)
 		break;
 	case SEC_VOLTAGE_OFF:
         printk("frontend: set_voltage_off\n");
-        stpio_set_pin (cfg->lnb_enable, VOLTAGE_OFF);
-		break;
+//        stpio_set_pin (cfg->lnb_enable, VOLTAGE_OFF);
+//		break;
 	default:
 		return -EINVAL;
 	}
@@ -208,9 +208,6 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int slot, in
 					printk("%s: pll attached\n", __FUNCTION__);
 				} else {
 					printk (KERN_INFO "%s: error attaching pll\n", __FUNCTION__);
-					//if (frontend)
-					//	dvb_frontend_detach(frontend);
-					//frontend = NULL;
 				}
 			}
 #else
@@ -221,7 +218,7 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int slot, in
 
 
 		case NIM_DVBC_PHILIPS_V1:
-#if 1//defined(IPBOX9900) || defined(IPBOX99)
+#if defined(IPBOX9900) || defined(IPBOX99)
 
 			frontend = dvb_attach(tda10023_attach, &tda10023_config, cfg->i2c_adap, 0);
 			if (frontend)

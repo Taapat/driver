@@ -19,9 +19,6 @@
  *
  */
 
-
-#define RMU74055	                2
-
 #define VENDOR_UNKNOWN	     		0
 #define VENDOR_STMICROELECTRONICS	2
 
@@ -39,7 +36,6 @@
 #define dprintk(fmt, args...)
 #endif
 
-extern int type;
 extern int debug;
 
 int scart_command( unsigned int cmd, void *arg );

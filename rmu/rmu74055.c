@@ -105,7 +105,6 @@ int rmu74055_set(struct i2c_client *client)
 	char buffer[RMU74055_DATA_SIZE+2];
 
         buffer[0]=buffer[1]=0;
-
         memcpy( buffer+2, &rmu74055_data, RMU74055_DATA_SIZE );
 #if 0
         dprintk("RMU74055_DATA_SIZE [%d] ", RMU74055_DATA_SIZE);
@@ -114,6 +113,7 @@ int rmu74055_set(struct i2c_client *client)
     		dprintk(" %02x",buffer[i]);
     	dprintk(" \n");
 #endif
+
 	if ( (RMU74055_DATA_SIZE) != i2c_master_send(client, buffer+2, RMU74055_DATA_SIZE))
 	{
 		return -EFAULT;

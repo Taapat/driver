@@ -924,7 +924,7 @@ static int fpTransmitterTask(void* dummy)
      	  int sendFailed = 0;
 	  
      	  dprintk("send data to fp (0x%x)\n", transmit[0].command);
-
+          
      	  /* 0. claim sema */
 	  down_interruptible(&transmit_sem);
      
@@ -940,7 +940,7 @@ static int fpTransmitterTask(void* dummy)
           int i;
 	  for(vLoop = 0 ; vLoop < micom_cmd[1]; vLoop++)
 	  {	
-	        udelay(100);
+	        udelay(10000);
 		if (serial3_putc((micom_cmd[vLoop])) == 0)
 		{
 			printk("FP: ERR: sending char = %c \n", micom_cmd[vLoop]);
@@ -1220,7 +1220,7 @@ static int micom_init_func(void)
 	micomWriteCommand(MICOM_CMD_NO_PING, /* ON */ "\x01" , 1, 0, 0);
 
 	micomWriteString(EMPTY, strlen(EMPTY), 0);
-#ifdef INIT_EFECT
+#if 1//def INIT_EFECT
 	{
 		char buf[VFD_MAX_DATA_LEN];
 

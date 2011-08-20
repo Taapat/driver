@@ -188,6 +188,9 @@ Offen:
 #include "../dvb_module.h"
 #include "linux/dvb/stm_ioctls.h"
 
+
+
+
 /* external functions provided by the module e2_procfs */
 extern int install_e2_procs(char *name, read_proc_t *read_proc, write_proc_t *write_proc, void *data);
 extern int remove_e2_procs(char *name, read_proc_t *read_proc, write_proc_t *write_proc);
@@ -257,7 +260,6 @@ extern int proc_tsmux_lnb_b_input_read(char *page, char **start, off_t off, int 
 extern int proc_tsmux_lnb_b_input_write(struct file *file, const char __user *buf, unsigned long count, void *data);
 extern int proc_misc_12V_output_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
 extern int proc_misc_12V_output_write(struct file *file, const char __user *buf, unsigned long count, void *data);
-
 extern int proc_audio_ac3_choices_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
 extern int proc_video_videomode_choices_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
 extern int proc_video_videomode_preferred_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
@@ -268,6 +270,11 @@ extern int proc_fp_led_pattern_speed_read(char *page, char **start, off_t off, i
 extern int proc_fp_led_pattern_speed_write(struct file *file, const char __user *buf, unsigned long count, void *data);
 extern int proc_fp_was_timer_wakeup_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
 extern int proc_fp_was_timer_wakeup_write(struct file *file, const char __user *buf, unsigned long count, void *data);
+
+#if defined(IPBOX9900) || defined(IPBOX99)
+extern int proc_fp_wakeup_time_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
+extern int proc_fp_wakeup_time_write(struct file *file, const char __user *buf, unsigned long count, void *data);
+#endif
 
 extern int proc_vmpeg_0_dst_left_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
 extern int proc_vmpeg_0_dst_left_write(struct file *file, const char __user *buf, unsigned long count, void *data);
@@ -378,6 +385,9 @@ struct e2_procs
   {"stb/denc/0/wss",                    proc_denc_0_wss_read,                   proc_denc_0_wss_write, 0},
 
   {"stb/fp/was_timer_wakeup",           proc_fp_was_timer_wakeup_read,          proc_fp_was_timer_wakeup_write, 0},
+#if defined(IPBOX9900) || defined(IPBOX99)  
+  {"stb/fp/wakeup_time",                proc_fp_wakeup_time_read,               proc_fp_wakeup_time_write, 0},
+#endif
 
   {"stb/tsmux/input0",                  proc_tsmux_input0_read,                 proc_tsmux_input0_write, 0},
   {"stb/tsmux/input1",                  proc_tsmux_input1_read,                 proc_tsmux_input1_write, 0},
@@ -385,7 +395,6 @@ struct e2_procs
   {"stb/tsmux/ci1_input",               proc_tsmux_ci1_input_read,              proc_tsmux_ci1_input_write, 0},
   {"stb/tsmux/lnb_b_input",             proc_tsmux_lnb_b_input_read,            proc_tsmux_lnb_b_input_write, 0},
   {"stb/misc/12V_output",               proc_misc_12V_output_read,              proc_misc_12V_output_write, 0},
-
   {"stb/vmpeg/0/dst_left",              proc_vmpeg_0_dst_left_read,             proc_vmpeg_0_dst_left_write, 0},
   {"stb/vmpeg/0/dst_top",               proc_vmpeg_0_dst_top_read,              proc_vmpeg_0_dst_top_write, 0},
   {"stb/vmpeg/0/dst_width",             proc_vmpeg_0_dst_width_read,            proc_vmpeg_0_dst_width_write, 0},
@@ -436,10 +445,28 @@ struct e2_procs
 
 struct DeviceContext_s* ProcDeviceContext = NULL;
 
+#if defined(IPBOX9900)
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
+#include <linux/stpio.h>
+#else
+#include <linux/stm/pio.h>
+#endif
+extern struct stpio_pin *output_pin;
+
+void setup_stpio_pin()
+{
+  output_pin= stpio_request_pin (3, 5, "12V_output", STPIO_OUT);
+  return;
+}
+#endif
+
 void init_e2_proc(struct DeviceContext_s* DC)
 {
+#if defined(IPBOX9900)
+  setup_stpio_pin();
+#endif
   int i;
-
   for(i = 0; i < sizeof(e2_procs)/sizeof(e2_procs[0]); i++)
   {
     install_e2_procs(e2_procs[i].name, e2_procs[i].read_proc,
