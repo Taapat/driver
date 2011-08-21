@@ -1215,8 +1215,10 @@ static unsigned int AudioPoll (struct file* File, poll_table* Wait)
 
 #ifdef __TDT__
     //TODO: Why is this true after seeking and never becomes false again?
+    //      Is beeing reset at the end after nonblocking flush ioctl
+    //      So not really a problem but still not nice
     if (DvbStreamCheckDrained(Context->AudioStream) == 1) {
-		printk("Audio Stream drained\n");
+        printk("Audio Stream drained\n");
         Mask |= (POLLIN);
     }
 #endif
