@@ -1619,9 +1619,10 @@ static unsigned int VideoPoll (struct file* File, poll_table* Wait)
     /*DVB_DEBUG ("(video%d)\n", Context->Id);*/
 
 #ifdef __TDT__
+    //TODO: Why is this true after seeking and never becomes false again?
     if (DvbStreamCheckDrained(Context->VideoStream) == 1) {
-        printk("Stream Drained\n");
-        return (POLLIN);
+		printk("Video Stream drained\n");
+        Mask |= (POLLIN);
     }
 #endif
 

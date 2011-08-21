@@ -1208,13 +1208,16 @@ static unsigned int AudioPoll (struct file* File, poll_table* Wait)
     struct DeviceContext_s*     Context         = (struct DeviceContext_s*)DvbDevice->priv;
     unsigned int                Mask            = 0;
 
+	//printk("[Audio] poll ->\n");
+
     if (((File->f_flags & O_ACCMODE) == O_RDONLY) || (Context->AudioStream == NULL))
         return 0;
 
 #ifdef __TDT__
+    //TODO: Why is this true after seeking and never becomes false again?
     if (DvbStreamCheckDrained(Context->AudioStream) == 1) {
-        printk("Stream Drained\n");
-        return (POLLIN);
+		printk("Audio Stream drained\n");
+        Mask |= (POLLIN);
     }
 #endif
 
@@ -1227,6 +1230,8 @@ static unsigned int AudioPoll (struct file* File, poll_table* Wait)
         if (StreamBufferFree (Context->AudioStream))
             Mask   |= (POLLOUT | POLLWRNORM);
     }
+
+	//printk("[Audio] poll <- %d\n", Mask);
 
     return Mask;
 }
