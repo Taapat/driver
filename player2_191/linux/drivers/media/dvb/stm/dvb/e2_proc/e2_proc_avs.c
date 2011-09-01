@@ -272,7 +272,11 @@ int proc_avs_0_input_write(struct file *file, const char __user *buf,
 
 			// Note: Volumne is not changed directly but by using the MIXER instead of the AVS. 
 			// So this should always be set to the maximum
+			#ifdef UFS910
+			avs_command_kernel(AVSIOSVOL, (void*) 31);
+			#else
 			avs_command_kernel(AVSIOSVOL, (void*) 0);
+			#endif
 			current_input = ENCODER;
 		}
 
