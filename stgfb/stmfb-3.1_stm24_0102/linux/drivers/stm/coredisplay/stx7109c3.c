@@ -290,7 +290,11 @@ int __init stmcore_probe_device(struct stmcore_display_pipeline_data **pd,
         claimed_gpio_hotplug = true;
 
 #ifdef __TDT__
-#if defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(FORTIS_HDBOX) || defined(OCTAGON1008)
+#if defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || \
+    defined(FORTIS_HDBOX) || defined(OCTAGON1008) || defined(CUBEREVO) || defined(CUBEREVO_MINI) || \
+    defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || \
+    defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
+//fixme: revise if this is true for all cuberevo boxes     
       gpio_direction_input(GPIO_PIN_HOTPLUG);
 #endif
 #endif

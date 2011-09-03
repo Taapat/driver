@@ -37,7 +37,11 @@
 #include "avl2108_reg.h"
 #include "avl2108.h"
 
+#include "cx24116_platform.h"
+
 #include "socket.h"
+#include "tuner.h"
+#include "lnb.h"
 
 #if defined(ATEVIO7500)
 struct avl_private_data_s avl_tuner_priv = {
@@ -260,6 +264,116 @@ struct platform_device ufs922_socket_device = {
 struct platform_device *platform[] __initdata = {
     &avl2108_frontend_device,
     &ufs922_socket_device,
+};
+#elif defined (CUBEREVO_MINI2) || defined (CUBEREVO_MINI) || defined (CUBEREVO_250HD) || defined (CUBEREVO_9500HD) || defined (CUBEREVO_2000HD) || defined (CUBEREVO_MINI_FTA)
+struct cx24116_private_data_s cx24116_tuner_priv = {
+    .useUnknown       = 1,
+    .usedLNB          = cLNB_PIO,
+    .fw_name          = "dvb-fe-cx24116.fw",
+    .fastDelay        = 1,
+};
+
+struct platform_frontend_config_s cx24116_frontend = {
+            .name               = "cx24116",
+            .demod_i2c          = 0x05,
+            .tuner_i2c          = 0xff,
+            .private            = &cx24116_tuner_priv,
+};
+
+struct tunersocket_s cuberevo_socket = {
+    .numSockets = 1,
+    .socketList = (struct socket_s[]) {
+        [0] = {
+            .name               = "socket-1",
+            .tuner_enable       = {-1, -1, -1},
+            .lnb                = {2, 6, 1, 2, 5, 0},
+            .i2c_bus            = 0,
+        },
+    },
+};
+
+struct platform_device cx24116_frontend_device = {
+    .name    = "cx24116",
+    .id      = -1,
+    .dev     = {
+        .platform_data = &cx24116_frontend,
+    },
+    .num_resources        = 0,
+    .resource             = NULL,
+  };
+
+struct platform_device cuberevo_socket_device = {
+    .name    = "socket",
+    .id      = -1,
+    .dev     = {
+        .platform_data = &cuberevo_socket,
+    },
+    .num_resources        = 0,
+    .resource             = NULL,
+  };
+
+struct platform_device *platform[] __initdata = {
+    &cx24116_frontend_device,
+//TODO add other fronend's here
+    &cuberevo_socket_device,
+};
+#elif defined (CUBEREVO) || defined (CUBEREVO_9500HD)	
+struct cx24116_private_data_s cx24116_tuner_priv = {
+    .useUnknown       = 1,
+    .usedLNB          = cLNB_PIO,
+    .fw_name          = "dvb-fe-cx24116.fw",
+    .fastDelay        = 1,
+};
+
+struct platform_frontend_config_s cx24116_frontend = {
+            .name               = "cx24116",
+            .demod_i2c          = 0x05,
+            .tuner_i2c          = 0xff,
+            .private            = &cx24116_tuner_priv,
+};
+
+struct tunersocket_s cuberevo_socket = {
+    .numSockets = 2,
+    .socketList = (struct socket_s[]) {
+        [0] = {
+            .name               = "socket-1",
+            .tuner_enable       = {-1, -1, -1},
+            .lnb                = {2, 6, 1, 2, 5, 0},
+            .i2c_bus            = 0,
+        },
+        [1] = {
+            .name               = "socket-2",
+            .tuner_enable       = {-1, -1, -1},
+            .lnb                = {2, 4, 1, 2, 3, 0},
+            .i2c_bus            = 0,
+        },
+    },
+};
+
+struct platform_device cx24116_frontend_device = {
+    .name    = "cx24116",
+    .id      = -1,
+    .dev     = {
+        .platform_data = &cx24116_frontend,
+    },
+    .num_resources        = 0,
+    .resource             = NULL,
+  };
+
+struct platform_device cuberevo_socket_device = {
+    .name    = "socket",
+    .id      = -1,
+    .dev     = {
+        .platform_data = &cuberevo_socket,
+    },
+    .num_resources        = 0,
+    .resource             = NULL,
+  };
+
+struct platform_device *platform[] __initdata = {
+    &cx24116_frontend_device,
+//TODO add other fronend's here
+    &cuberevo_socket_device,
 };
 #else
 #warning unsupported arch

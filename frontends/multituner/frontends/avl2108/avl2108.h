@@ -43,13 +43,6 @@
 	printk("avl2108: ERROR: " args);   \
 } while (0)
 
-#define cTUNER_INT_STV6306       1
-#define cTUNER_EXT_STV6306       2
-#define cTUNER_EXT_STV6110A      3
-
-#define cLNB_LNBH221 1
-#define cLNB_PIO     2
-
 /* Error codes */
 #define AVL2108_OK		0			/*< No error */
 #define AVL2108_ERROR_GENERIC	1	/*< Generic error */

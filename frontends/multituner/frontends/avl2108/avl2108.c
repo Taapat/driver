@@ -47,6 +47,9 @@
 #include "frontend_platform.h"
 #include "socket.h"
 
+#include "tuner.h"
+#include "lnb.h"
+
 #define AVL2108_DEMOD_FW "dvb-fe-avl2108.fw" /*< Demod fw used for locking */
 
 #define I2C_MAX_READ	64
@@ -177,7 +180,7 @@ static u16 avl2108_i2c_writereg(struct avl2108_state* state, u8 * data, u16 * si
 
     {
         u8 i;
-        u8 dstr[1024];
+        u8 dstr[512];
         dstr[0] = '\0';
         for (i = 0; i < *size; i++)
             sprintf(dstr, "%s 0x%02x", dstr, data[i]);
@@ -568,12 +571,14 @@ u16 avl2108_cpu_halt(struct dvb_frontend* fe)
 
     ret = avl2108_send_op(DEMOD_OP_HALT, state);
     if (ret == AVL2108_OK) {
+        u16 cnt;
+        
         u16 delay = 8;
         
         if (useOriginTimings == 1)
             delay = 10;
             
-        u16 cnt = (20 * 10) / delay;
+        cnt = (20 * 10) / delay;
 
         while (i++ < /*20 */ cnt) {
             ret = avl2108_get_op_status(state);
@@ -1755,7 +1760,6 @@ static int avl2108_set_frontend(struct dvb_frontend* fe, struct dvb_frontend_par
     struct avl2108_state *state = fe->demodulator_priv;
 #if DVB_API_VERSION >= 5
     struct dtv_frontend_properties *c = &fe->dtv_property_cache;
-    fe_rolloff_t rolloff = ROLLOFF_35;
 #else
     struct dvbfe_params newfe;
     enum dvbfe_rolloff rolloff = DVBFE_ROLLOFF_35;
@@ -1777,7 +1781,6 @@ static int avl2108_set_frontend(struct dvb_frontend* fe, struct dvb_frontend_par
     dprintk(1,"%s:   frequency   		= %d\n", __func__, c->frequency);
     dprintk(1,"%s:   symbol_rate 		= %d\n", __func__, c->symbol_rate);
     dprintk(1,"%s:   inversion 		= %d\n", __func__, c->inversion);
-    dprintk(1,"%s:   rolloff  		= %d\n", __func__, c->rolloff);
 #else
     newfe.frequency = p->frequency;
 

@@ -269,6 +269,20 @@ fe-core-objs +=        ipbox/stv090x.o
 fe-core-objs +=        ipbox/stv6110x.o
 fe-core-objs +=        ipbox/core.o
 obj-m += fe-core.o
+else ifdef CUBEREVO
+obj-y	+= multituner/
+else ifdef CUBEREVO_MINI
+obj-y	+= multituner/
+else ifdef CUBEREVO_MINI2
+obj-y	+= multituner/
+else ifdef CUBEREVO_250HD
+obj-y	+= multituner/
+else ifdef CUBEREVO_9500HD
+obj-y	+= multituner/
+else ifdef CUBEREVO_2000HD
+obj-y	+= multituner/
+else ifdef CUBEREVO_MINI_FTA
+obj-y	+= multituner/
 endif
 # other drivers already in kernel
 
