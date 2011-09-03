@@ -84,3 +84,21 @@ endif
 ifdef IPBOX55
 obj-y	+= ipbox55/
 endif
+
+ifdef CUBEREVO
+obj-y	+= ipbox/
+else ifdef CUBEREVO_MINI
+obj-y	+= ipbox/
+else ifdef CUBEREVO_MINI2
+obj-y	+= ipbox/
+else ifdef CUBEREVO_250HD
+obj-y	+= ipbox/
+else ifdef CUBEREVO_9500HD
+obj-y	+= ipbox/
+else ifdef CUBEREVO_2000HD
+obj-y	+= ipbox/
+else ifdef CUBEREVO_MINI_FTA
+obj-y	+= ipbox/
+endif
+
+
