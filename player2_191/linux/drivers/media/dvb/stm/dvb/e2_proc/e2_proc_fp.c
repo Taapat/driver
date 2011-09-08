@@ -19,6 +19,10 @@ extern struct DeviceContext_s* DeviceContext;
 
 static int was_timer_wakeup = 0;
 
+#if defined(IPBOX9900) || defined(IPBOX99)
+static int wakeup_time = 0;
+#endif
+
 int proc_fp_lnb_sense1_write(struct file *file, const char __user *buf,
                            unsigned long count, void *data)
 {
@@ -173,8 +177,11 @@ int proc_fp_wakeup_time_read (char *page, char **start, off_t off, int count,
 			  int *eof, void *data_unused)
 {
 	int len = 0;
+#if defined(IPBOX9900) || defined(IPBOX99)
+	len = sprintf(page, "%d\n", wakeup_time);
+#else
 	len = sprintf(page, "0\n");
-
+#endif
         return len;
 }
 
@@ -193,7 +200,16 @@ int proc_fp_wakeup_time_write(struct file *file, const char __user *buf,
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
 			goto out;
+#if defined(IPBOX9900) || defined(IPBOX99)                
+                char* myString;
+                myString = (char *) kmalloc(count + 1, GFP_KERNEL);
+		strncpy(myString, page, count);
+		myString[count] = '\0';
 
+		printk("%s\n", myString);
+		sscanf(myString, "%d", &wakeup_time);
+		kfree(myString);
+#endif
 		//result = sscanf(page, "%3s %3s %3s %3s %3s", s1, s2, s3, s4, s5);
 	}
 	
