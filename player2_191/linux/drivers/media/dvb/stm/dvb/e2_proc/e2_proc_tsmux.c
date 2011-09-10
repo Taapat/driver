@@ -37,6 +37,10 @@ int proc_tsmux_input0_write(struct file *file, const char __user *buf,
 		page[count] = 0;
 		printk("%s\n", page);
 		ret = count;
+#if defined(IPBOX9900)
+		if(strcmp(page, "A") == 0)
+			setCiSource(0, -1);
+#endif
 /* Dagobert: fixme: currently just to see what e2 sends here
  * so maybe I understand what the developer
  * wants to do here.

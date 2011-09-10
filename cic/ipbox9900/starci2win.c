@@ -1,23 +1,16 @@
 /*
     StarCI2Win driver for ABIPBOX 9900/99/55.
 
-    Copyright (C) 2007 konfetti <konfetti@ufs910.de>
-	many thanx to jolt for good support
+Source file name : dvb_ca.c
+Author :           Pete
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
+Implementation of linux dvb dvr input device
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+Date        Modification                                    Name
+----        ------------                                    --------
+01-Nov-06   Created                                         Pete
 
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-*/
+************************************************************************/
 
 #include <linux/module.h>
 #include <linux/dvb/audio.h>
@@ -690,10 +683,11 @@ EXPORT_SYMBOL(getCiSource);
 int setCiSource(int slot, int source)
 {
 	int val;
+
 #if defined(IPBOX9900)
 	printk("setCiSource (%d , %d)\n", slot, source);
 	if((slot < 0) || (slot > 1) /* invalid slot */ 
-		      || (source < 0) || (source > 3) /* invalid source */ 
+		      || (source > 3) /* invalid source */ 
 		      || (slot == 0 && source == 2) /* nonsence */ 
 		      || (slot == 1 && source == 3) /* nonsence */)
 	        return -1;
@@ -704,17 +698,24 @@ int setCiSource(int slot, int source)
 	}
 
     	switch (source){
+		case -1:
+			printk("[%s] CI%d->bypass\n",__func__, slot);
+			val |= slot == 0 ? 0x10 : 0x08;
+			starci2_writereg(0x11, val);
+			break;
+
     		case 0: 
     		case 1: 
 			printk("[%s] TUNER_%c->CI%d\n",__func__, source ? 'B' : 'A', slot);
-
-			if((slot == source && (val & 0x20)) || (slot != source && (val & 0x20) == 0)) 
+        		if((slot == source && (val & 0x20)) || (slot != source && (val & 0x20) == 0)) 
 			{
-				val ^= 0x20; 
-				printk("setCiSource: new ctrlx11=0x%x\n", val);
-				starci2_writereg(0x11, val);
+				val ^= 0x20;
 			}
+			val &= ~(slot == 0 ? 0x10 : 0x08); // disable bypass again
+			printk("setCiSource: new ctrlx11=0x%x\n", val);
+			starci2_writereg(0x11, val);
 			break;
+
     		case 2: 
 			printk("[%s] CI0->CI%d\n",__func__, slot);
 			break;
