@@ -90,10 +90,14 @@ unsigned char default_values[33] =
 unsigned char default_values[33] =
 {
    0x00, /* register address for block transfer */
-   0x02, 0x00, 0x01, 0x00, 0x00, 0x33, 0x00, 0x00,
-   0x00, 0x02, 0x00, 0x01, 0x00, 0x00, 0x33, 0x00,
-   0x00, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
-   0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+/* 0x00  0x01  0x02  0x03  0x04  0x05  0x06  0x07 */
+   0x00, 0x00, 0x01, 0x00, 0x00, 0x33, 0x00, 0x00,
+/* 0x08  0x09  0x0a  0x0b  0x0c  0x0d  0x0e  0x0f */
+   0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x33, 0x00,
+/* 0x10  0x11  0x12  0x13  0x14  0x15  0x16  0x17 */
+   0x00, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+/* 0x18  0x19  0x1a  0x1b  0x1c  0x1d  0x1e  0x1f */
+   0xc0, 0x00, 0x00, 0x00, 0x00, 0x02, 0x03, 0x00
  };
 #elif defined (FORTIS_HDBOX)
 unsigned char default_values[33] =
@@ -385,6 +389,11 @@ int setCiSource(int slot, int source)
      (source < 0) || (source > 1))
     return -1;
 
+#if defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
+//fixme source beachten
+   starci_writereg(&ca_state, TWIN_MODE_CTRL_REG, 0x9a);
+   return starci_writereg(&ca_state, SINGLE_MODE_CTRL_REG, 0x02);
+#else
   val = starci_readreg(&ca_state, TWIN_MODE_CTRL_REG);
   if(slot != source)
   {
@@ -407,6 +416,7 @@ int setCiSource(int slot, int source)
   }
 
   return starci_writereg(&ca_state, TWIN_MODE_CTRL_REG, val);
+#endif
 }
 
 void setDestination(struct dvb_ca_state *state, int slot)
@@ -615,7 +625,7 @@ static int starci_read_attribute_mem(struct dvb_ca_en50221 *ca, int slot, int ad
 
   setDestination(state, slot);
 
-  res = slot_membase[slot][address] & 0xff;
+  res = slot_membase[slot][address] & 0xFF;
 
   if (address <= 2)
      dprintk ("address = %d: res = 0x%.x\n", address, res);
@@ -682,7 +692,7 @@ static int starci_read_cam_control(struct dvb_ca_en50221 *ca, int slot, u8 addre
 
   setDestination(state, slot);
 
-  res = slot_membase[slot][address] & 0xff;
+  res = slot_membase[slot][address] & 0xFF;
 
   if (address > 2)
   {
@@ -776,7 +786,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   struct dvb_ca_state *state = &ca_state;
   int result = 0;
 
-  dprintk("init_cimax >\n");
+  dprintk("%s >\n", __func__);
 
   mutex_init (&starci_mutex);
 
@@ -925,7 +935,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   ctrl_outl(0xa5a20000, reg_config + EMIBank2 + EMI_CFG_DATA2);
   ctrl_outl(0x00000000, reg_config + EMIBank2 + EMI_CFG_DATA3);
   
-#else /* TF7700  */
+#else /* Cuberevo & TF7700  */
   ctrl_outl(	EMI_DATA0_WE_USE_OE(0x0) 	|
 		  EMI_DATA0_WAIT_POL(0x0)		|
 		  EMI_DATA0_LATCH_POINT(30)	|
@@ -970,6 +980,9 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   slot_membase[0] = ioremap( 0x06800000, 0x1000 );
 #elif defined(HS7810A) // ?? not sure
   slot_membase[0] = ioremap( 0x06800000, 0x1000 );
+#elif defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
+  slot_membase[0] = ioremap( 0x3000000, 0x1000 );
+  printk("membase-0 0x%08x\n", slot_membase[0]);
 #else
   slot_membase[0] = ioremap( 0xa3000000, 0x1000 );
 #endif
@@ -989,6 +1002,9 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   slot_membase[1] = ioremap( 0x06810000, 0x1000 );
 #elif defined(HS7810A) // ?? not sure
   slot_membase[1] = ioremap( 0x06810000, 0x1000 );
+#elif defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
+  slot_membase[1] = ioremap( 0x3010000, 0x1000 );
+  printk("membase-1 0x%08x\n", slot_membase[1]);
 #else
   slot_membase[1] = ioremap( 0xa3010000, 0x1000 );
 #endif
@@ -1000,10 +1016,10 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   }
 
 #if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX) && !defined(HS7810A)
-  ctrl_outl(0x1F,reg_config + EMI_LCK);
+//  ctrl_outl(0x1F,reg_config + EMI_LCK);
 #endif
 
-  dprintk("init_cimax: call dvb_ca_en50221_init\n");
+  dprintk("init_startci: call dvb_ca_en50221_init\n");
   
 #if defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
   if ((result = dvb_ca_en50221_init(state->dvb_adap,
