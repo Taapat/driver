@@ -432,7 +432,10 @@ void stm_tsm_init (int use_cimax)
        * packet len = 188
        */
 
-#if !defined(FORTIS_HDBOX) && !defined(UFS912) && !defined(SPARK) && !defined(OCTAGON1008) && !defined(HOMECAST5101) && !defined(ATEVIO7500) && !defined(HS7810A)
+#if !defined(FORTIS_HDBOX) && !defined(UFS912) && !defined(SPARK) && !defined(OCTAGON1008) && !defined(HOMECAST5101) && \
+    !defined(ATEVIO7500) && !defined(HS7810A) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && \
+    !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && \
+    !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA)
       unsigned int stream_sync = 0xbc4733;
 #else
       unsigned int stream_sync = 0xbc4722;
@@ -622,7 +625,7 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x1a00, reg_config + TSM_STREAM4_CFG);  //320kb (5*64)
 #endif
 
-#if  defined(FORTIS_HDBOX) || defined(OCTAGON1008)
+#if  defined(FORTIS_HDBOX) || defined(OCTAGON1008) || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
       /* configure streams: */
       /* add tag bytes to stream + stream priority */
       ret = ctrl_inl(reg_config + TSM_STREAM0_CFG);
@@ -835,16 +838,16 @@ void stm_tsm_init (int use_cimax)
       ret = ctrl_inl(reg_config + TSM_PTI_SEL);
       ctrl_outl(ret | 0x1, reg_config + TSM_PTI_SEL);
 
-	   /* stream 5 and 6 */
+	   /* stream 5 and 6 
 	  ctrl_outl(0x1, reg_config + TSM_STREAM5_CFG);
       ctrl_outl(0x1, reg_config + TSM_STREAM6_CFG);
       ctrl_outl(0xbc4700, reg_config + TSM_STREAM5_SYNC);
-      ctrl_outl(0xbc4700, reg_config + TSM_STREAM6_SYNC);
+      ctrl_outl(0xbc4700, reg_config + TSM_STREAM6_SYNC);*/
 
-      /* set 1394 stream Out */
+      /* set 1394 stream Out 
 	  ctrl_outl(0x0001804c ,reg_config + TS_1394_CFG);
       ret = ctrl_inl(reg_config + TSM_1394_DEST);
-      ctrl_outl(ret | 0x1 , reg_config + TSM_1394_DEST);
+      ctrl_outl(ret | 0x1 , reg_config + TSM_1394_DEST);*/
 #elif defined(HOMECAST5101)
       ret = ctrl_inl(reg_config + TSM_PTI_SEL);
       ctrl_outl(ret | 0x1,reg_config + TSM_PTI_SEL);
@@ -908,7 +911,9 @@ void stm_tsm_init (int use_cimax)
       ret = ctrl_inl(reg_config + TSM_STREAM0_CFG);
       ctrl_outl(ret | 0x80,reg_config + TSM_STREAM0_CFG);
 
-      /* Dagobert: set-up swts */
+#if !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && \
+    !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && \
+    !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA)      /* Dagobert: set-up swts */
       ctrl_outl( TSM_SWTS_REQ_TRIG(128/16) | 0x10, reg_config + TSM_SWTS_CFG(0));
 
       /* SWTS0 to PTI */
@@ -940,7 +945,7 @@ void stm_tsm_init (int use_cimax)
          dma_params_DIM_1_x_0(&tsm_handle.swts_params[n]);
          dma_params_req(&tsm_handle.swts_params[n],tsm_handle.fdma_req);
       }
-
+#endif
    } else
    {
    	/* bypass cimax */
