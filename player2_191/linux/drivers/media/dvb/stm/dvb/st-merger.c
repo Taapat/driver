@@ -559,7 +559,7 @@ void stm_tsm_init (int use_cimax)
 
       ctrl_outl(0x0, reg_config + SWTS_CFG(0));
 
-#if  defined(FORTIS_HDBOX) || defined(UFS922) || defined(TF7700) || defined(HL101) || defined(VIP1_V2) || defined(UFS912) || defined(SPARK) || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA) || defined(ATEVIO7500) || defined(HS7810A)
+#if  defined(FORTIS_HDBOX) || defined(UFS922) || defined(TF7700) || defined(HL101) || defined(VIP1_V2) || defined(UFS912) || defined(SPARK) || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA) || defined(ATEVIO7500) || defined(HS7810A) || defined(IPBOX9900)
       ctrl_outl(0x0, reg_config + SWTS_CFG(1));
       ctrl_outl(0x0, reg_config + SWTS_CFG(2));
 #endif
@@ -688,7 +688,7 @@ void stm_tsm_init (int use_cimax)
 
       ctrl_outl(0x00 , reg_config + TSM_STREAM5_SYNC);
       ctrl_outl(0x00 , reg_config + TSM_STREAM6_SYNC);
-#elif  defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
+#elif  defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA) || defined(IPBOX9900)
 	  /* configure streams: */
       /* add tag bytes to stream + stream priority */
       ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
@@ -701,7 +701,7 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(stream_sync, reg_config + TSM_STREAM3_SYNC);
       ctrl_outl(0x0, reg_config + 0x78 /* reserved ??? */);
 
-#if !defined(FORTIS_HDBOX) && !defined(UFS912) && !defined(SPARK) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA) && !defined(ATEVIO7500) && !defined(HS7810A)
+#if !defined(FORTIS_HDBOX) && !defined(UFS912) && !defined(SPARK) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA) && !defined(ATEVIO7500) && !defined(HS7810A) && !defined(IPBOX9900)
       /* swts_req_trigger + pace cycles (1101) */
       ctrl_outl(0x800000d, reg_config + SWTS_CFG(0));
 #elif defined (UFS912) || defined(SPARK) || defined(ATEVIO7500) || defined(HS7810A)

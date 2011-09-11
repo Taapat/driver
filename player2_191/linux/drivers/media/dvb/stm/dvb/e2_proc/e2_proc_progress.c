@@ -24,9 +24,9 @@ int proc_progress_write(struct file *file, const char __user *buf,
 	char		*myString;
 	ssize_t 	ret = -ENOMEM;
 	/* int		result; */
-	
+#if !defined(IPBOX9900) && !defined(IPBOX99) && !defined(IPBOX55)	
 	printk("%s %ld - ", __FUNCTION__, count);
-
+#endif
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
 	{
@@ -37,9 +37,9 @@ int proc_progress_write(struct file *file, const char __user *buf,
 		myString = (char *) kmalloc(count + 1, GFP_KERNEL);
 		strncpy(myString, page, count);
 		myString[count] = '\0';
-
+#if !defined(IPBOX9900) && !defined(IPBOX99) && !defined(IPBOX55)	
 		printk("%s\n", myString);
-
+#endif
 		sscanf(myString, "%d", &progress);	
 
 		kfree(myString);
@@ -58,8 +58,9 @@ int proc_progress_read (char *page, char **start, off_t off, int count,
 			  int *eof, void *data_unused)
 {
 	int len = 0;
+#if !defined(IPBOX9900) && !defined(IPBOX99) && !defined(IPBOX55)
 	printk("%s %d\n", __FUNCTION__, count);
-
+#endif
 	len = sprintf(page, "%d\n", progress);
 
         return len;
