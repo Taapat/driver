@@ -672,7 +672,7 @@ static inline snd_pcm_uframes_t _ksnd_pcm_avail_update(snd_pcm_substream_t
 	snd_pcm_runtime_t *runtime = substream->runtime;
 
 /*NICK added if to remove real updates which we do not want*/
-#if defined(__TDT__) && (defined(FORTIS_HDBOX) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(OCTAGON1008) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55) )
+#if defined(__TDT__) && (defined(FORTIS_HDBOX) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(OCTAGON1008) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55) || defined(CUBEREVO_250HD))
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
         if (runtime->sleep_min == 0 &&
@@ -754,7 +754,7 @@ int ksnd_pcm_htimestamp(ksnd_pcm_t *kpcm, snd_pcm_uframes_t *avail, struct times
  * currently it seems so that this works for both cpu types
  * (BWC vs. BWD)
  */
-#if defined(__TDT__) && (defined(FORTIS_HDBOX) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(OCTAGON1008) || defined(IPBOX9900) || defined(IPBOX99)|| defined(IPBOX55))
+#if defined(__TDT__) && (defined(FORTIS_HDBOX) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(OCTAGON1008) || defined(IPBOX9900) || defined(IPBOX99)|| defined(IPBOX55) || defined(CUBEREVO_250HD))
         myavail = _ksnd_pcm_avail_update(kpcm->substream);
 #else
         myavail = 0;
