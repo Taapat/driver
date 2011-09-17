@@ -27,7 +27,7 @@
 #include <linux/init.h>
 #include <linux/kernel.h>
 #include <linux/string.h>
-#include <linux/i2c.h> 
+#include <linux/i2c.h>
 #include <linux/i2c-algo-bit.h>
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #include <linux/stm/pio.h>
@@ -77,7 +77,7 @@ struct stpio_pin*	module_B_pin = NULL;
 #define STARCI_CTRL_REG 0x1f
 
 /* hardware specific register values */
-#if defined(TF7700) 
+#if defined(TF7700)
 unsigned char default_values[33] =
 {
   0x00, /* register address for block transfer */
@@ -111,19 +111,19 @@ unsigned char default_values[33] =
 #elif defined (ATEVIO7500)
 unsigned char default_values[33] =
 {
-  0x00, 
-  0x00, 0x00, 0x02, 0x00, 0x00, 0x44, 0x00, 0x00, 
-  0x00, 0x00, 0x00, 0x02, 0x00, 0x02, 0x44, 0x00, 
-  0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 
+  0x00,
+  0x00, 0x00, 0x02, 0x00, 0x00, 0x44, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x02, 0x00, 0x02, 0x44, 0x00,
+  0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
   0x00, 0x00, 0x00, 0x03, 0x06, 0x00, 0x03, 0x01
 };
 #elif defined(HS7810A)
 unsigned char default_values[33] =
 {
-  0x00, 
-  0x00, 0x00, 0x02, 0x00, 0x00, 0x44, 0x00, 0x00, 
-  0x00, 0x00, 0x00, 0x02, 0x00, 0x02, 0x44, 0x00, 
-  0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 
+  0x00,
+  0x00, 0x00, 0x02, 0x00, 0x00, 0x44, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x02, 0x00, 0x02, 0x44, 0x00,
+  0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
   0x00, 0x00, 0x00, 0x03, 0x06, 0x00, 0x03, 0x01
 };
 #elif defined (HOMECAST5101)
@@ -196,7 +196,7 @@ static unsigned short *slot_membase[2];
 #define EMIBank3 0x1C0
 #define EMIBank4 0x200
 #define EMIBank5 0x240 /* virtual */
- 
+
 #define EMIBank0BaseAddress EMIConfigBaseAddress + EMIBank0
 #define EMIBank1BaseAddress EMIConfigBaseAddress + EMIBank1
 #define EMIBank2BaseAddress EMIConfigBaseAddress + EMIBank2
@@ -207,9 +207,9 @@ static unsigned short *slot_membase[2];
 /* konfetti: first base address of EMI. the specification
  * says that all other can be calculated from the top address
  * but this doesnt work for me. so I set the address fix later on
- * and dont waste time on that. 
+ * and dont waste time on that.
  */
-#define EMI_BANK0_BASE_ADDRESS  0x40000000 
+#define EMI_BANK0_BASE_ADDRESS  0x40000000
 
 /* ConfigBase */
 #define EMI_STA_CFG	0x0010
@@ -219,7 +219,7 @@ static unsigned short *slot_membase[2];
  * 32Bit, R/W, reset=0x00
  * Bit 31-5 reserved
  * Bit 4 = PCCB4_EN: Enable PC card bank 4
- * Bit 3 = PCCB3_EN: Enable PC card bank 3 
+ * Bit 3 = PCCB3_EN: Enable PC card bank 3
  * Bit 2 = EWAIT_RETIME
  * Bit 1/0 reserved
  */
@@ -350,7 +350,7 @@ void getCiSource(int slot, int* source)
     else
       *source = 0;
 #else
-    if(val != 0) 
+    if(val != 0)
       *source = 0;
     else
       *source = 1;
@@ -430,7 +430,7 @@ void setDestination(struct dvb_ca_state *state, int slot)
    int loop = 0;
    int activationMask[2] = {0x02, 0x04};
    int deactivationMask[2] = {0x04, 0x02};
-   
+
    dprintk("%s (slot = %d)>\n", __func__, slot);
 
    if((slot < 0) || (slot > 1))
@@ -442,17 +442,17 @@ void setDestination(struct dvb_ca_state *state, int slot)
    while ((result & activationMask[slot]) == 0)
    {
         /* unselect the other slot if this was selected before */
-        result = result & ~deactivationMask[slot]; 
+        result = result & ~deactivationMask[slot];
         starci_writereg(state, DEST_SEL_REG, result | activationMask[slot]);
 
 	/* try it first time without sleep */
         if (loop > 0) msleep(10);
-	  
+
 	/* re-read the destination register */
         result = starci_readreg(state, DEST_SEL_REG);
-          
+
 	dprintk("%s (slot = %d, loop = %d): result = 0x%x\n", __func__, slot,loop, result);
-      
+
       	loop++;
       	if (loop >= 10)
 	{
@@ -587,7 +587,7 @@ static int starci_slot_reset(struct dvb_ca_en50221 *ca, int slot)
 #else
     msleep(60);
 #endif
-    
+
     /* reset "rst" bit */
     result = starci_readreg(state, reg[slot]);
     starci_writereg(state, reg[slot], result & ~0x80);
@@ -625,7 +625,7 @@ static int starci_read_attribute_mem(struct dvb_ca_en50221 *ca, int slot, int ad
 
   result = starci_readreg(state, reg[slot]);
 
-  if (result & 0xC) 
+  if (result & 0xC)
     starci_writereg(state, reg[slot], (result & ~0xC));
 
   setDestination(state, slot);
@@ -662,7 +662,7 @@ static int starci_write_attribute_mem(struct dvb_ca_en50221 *ca, int slot, int a
   result = starci_readreg(state, reg[slot]);
 
   /* delete bit 3/4 ->access to attribute mem */
-  if (result & 0xC) 
+  if (result & 0xC)
       starci_writereg(state, reg[slot], (result & ~0xC));
 
   setDestination(state, slot);
@@ -796,14 +796,16 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   mutex_init (&starci_mutex);
 
   state->dvb_adap = dvb_adap;
+  state->i2c_addr = 0x40;
+
 #if defined(FORTIS_HDBOX) || defined(ATEVIO7500)
   state->i2c = i2c_get_adapter(2);
 #elif defined(HS7810A)
-  state->i2c = i2c_get_adapter(2);
+  state->i2c = i2c_get_adapter(1);
+  state->i2c_addr = 0x43;
 #else
   state->i2c = i2c_get_adapter(0);
 #endif
-  state->i2c_addr = 0x40;
 
   memset(&state->ca, 0, sizeof(struct dvb_ca_en50221));
 
@@ -842,10 +844,10 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   reg_sysconfig = (unsigned long)ioremap(SysConfigBaseAddress, 0x200);
 #endif
 
-  dprintk (KERN_ERR "ioremap 0x%.8x -> 0x%.8lx\n", EMIConfigBaseAddress, reg_config);	
+  dprintk (KERN_ERR "ioremap 0x%.8x -> 0x%.8lx\n", EMIConfigBaseAddress, reg_config);
 
 #if !defined(ATEVIO7500) && !defined(HS7810A)
-  dprintk (KERN_ERR "ioremap 0x%.8x -> 0x%.8lx\n", EMIBufferBaseAddress, reg_buffer);	
+  dprintk (KERN_ERR "ioremap 0x%.8x -> 0x%.8lx\n", EMIBufferBaseAddress, reg_buffer);
 #endif
 
 #if defined(FORTIS_HDBOX)
@@ -901,13 +903,13 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   starci_writereg(state, 0x1f, 0x80);
 
   starci_writeregN(state, default_values, 33);
- 
+
   /* lock the configuration */
   starci_writereg(state, 0x1f, 0x01);
 
   /* power on (only possible with LOCK = 1)
      other bits cannot be set when LOCK is = 1 */
-     
+
 #if defined(ATEVIO7500) || defined(FORTIS_HDBOX) || defined(HS7810A)
   starci_writereg(state, 0x18, 0x21);
 #else
@@ -939,7 +941,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   ctrl_outl(0xa5a00000, reg_config + EMIBank2 + EMI_CFG_DATA1);
   ctrl_outl(0xa5a20000, reg_config + EMIBank2 + EMI_CFG_DATA2);
   ctrl_outl(0x00000000, reg_config + EMIBank2 + EMI_CFG_DATA3);
-  
+
 #else /* Cuberevo & TF7700  */
   ctrl_outl(	EMI_DATA0_WE_USE_OE(0x0) 	|
 		  EMI_DATA0_WAIT_POL(0x0)		|
@@ -983,8 +985,8 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   slot_membase[0] = ioremap( 0xa3000000, 0x1000 );
 #elif defined(ATEVIO7500)
   slot_membase[0] = ioremap( 0x06800000, 0x1000 );
-#elif defined(HS7810A) // ?? not sure
-  slot_membase[0] = ioremap( 0x06800000, 0x1000 );
+#elif defined(HS7810A)
+  slot_membase[0] = ioremap( 0x06000000, 0x1000 );
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
   slot_membase[0] = ioremap( 0x3000000, 0x1000 );
   printk("membase-0 0x%08x\n", slot_membase[0]);
@@ -996,7 +998,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 	  result = 1;
 	  goto error;
   }
-#if defined(TF7700) 
+#if defined(TF7700)
   slot_membase[1] = ioremap( 0xa3400000, 0x1000 );
 #elif defined(FORTIS_HDBOX)
 //is [1] = bottom slot?
@@ -1005,8 +1007,8 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   slot_membase[1] = ioremap( 0xa3010000, 0x1000 );
 #elif defined(ATEVIO7500)
   slot_membase[1] = ioremap( 0x06810000, 0x1000 );
-#elif defined(HS7810A) // ?? not sure
-  slot_membase[1] = ioremap( 0x06810000, 0x1000 );
+#elif defined(HS7810A)
+  slot_membase[1] = ioremap( 0x06010000, 0x1000 );
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
   slot_membase[1] = ioremap( 0x3010000, 0x1000 );
   printk("membase-1 0x%08x\n", slot_membase[1]);
@@ -1025,14 +1027,14 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 #endif
 
   dprintk("init_startci: call dvb_ca_en50221_init\n");
-  
+
 #if defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
   if ((result = dvb_ca_en50221_init(state->dvb_adap,
                     &state->ca, 0, 1)) != 0) {
 #else
   if ((result = dvb_ca_en50221_init(state->dvb_adap,
 				    &state->ca, 0, 2)) != 0) {
-#endif					
+#endif
 	  printk(KERN_ERR "ca0 initialisation failed.\n");
 	  goto error;
   }
@@ -1056,7 +1058,7 @@ int starci2win_init(void)
 }
 
 void starci2win_exit(void)
-{  
+{
    printk("starci2win unloaded\n");
 }
 
