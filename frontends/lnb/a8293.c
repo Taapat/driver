@@ -94,10 +94,7 @@ int a8293_command(struct i2c_client *client, unsigned int cmd, void *arg)
 
 int a8293_init(struct i2c_client *client)
 {
-	unsigned char reg = a8293_read(client);
-
-	dprintk("[A8293]: %s -> 0x%02X\n", __func__, reg);
-	return 0;
+	return a8293_write(client, 0x82);
 }
 
 /* ---------------------------------------------------------------------- */
