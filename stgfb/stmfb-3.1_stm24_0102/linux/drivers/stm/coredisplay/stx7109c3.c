@@ -16,6 +16,10 @@
 #include <linux/gpio.h>
 #include <linux/stm/gpio.h>
 
+#ifdef __TDT__
+#include <linux/stm/pio.h>
+#endif
+
 #include <stmdisplay.h>
 #include <linux/stm/stmcoredisplay.h>
 
@@ -118,10 +122,11 @@ static struct stmcore_display_pipeline_data platform_data[] = {
 #elif defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1)
 /*nassar: spider-box hl-101 uses id 1  */
     .hdmi_i2c_adapter_id      = 1,
-#elif defined(CONFIG_SH_STB7100_REF) || defined(CONFIG_SH_ST_MB442) || defined(CONFIG_SH_RELOOK511) || defined(CONFIG_SH_CUBEREVO_MINI) \
-|| defined(CONFIG_SH_CUBEREVO) || defined(CONFIG_SH_CUBEREVO_MINI2) \
-|| defined(CONFIG_SH_CUBEREVO_MINI_FTA) || defined(CONFIG_SH_CUBEREVO_250HD) || defined(CONFIG_SH_CUBEREVO_2000HD) \
-|| defined(CONFIG_SH_IPBOX9900) || defined(CONFIG_SH_IPBOX99) || defined(CONFIG_SH_IPBOX55)
+#elif defined(CONFIG_SH_STB7100_REF) || defined(CONFIG_SH_ST_MB442) || defined(CONFIG_SH_RELOOK511) || \
+    defined(CUBEREVO) || defined(CUBEREVO_MINI) || \
+    defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || \
+    defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA) || \
+    defined(CONFIG_SH_IPBOX9900) || defined(CONFIG_SH_IPBOX99) || defined(CONFIG_SH_IPBOX55)
     .hdmi_i2c_adapter_id      = 1,
 #elif defined(CONFIG_SH_STB7109E_REF) || defined(CONFIG_SH_ST_MB448)
     .hdmi_i2c_adapter_id      = 2,
@@ -230,8 +235,6 @@ static const int chromaScale = 112500; // 112.500%, from DENC validation report
 #elif defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(FORTIS_HDBOX) || defined(OCTAGON1008)
 #define GPIO_PIN_HOTPLUG stm_gpio(4,7)
 #else
-/* bidir z1 must be set with pad or stpio* in kernel setup!!! */
-#warning warning: hotplug must be STPIO_BIDIR_Z1 which is not possible to set with gpio in current kernel
 #define GPIO_PIN_HOTPLUG stm_gpio(2,2)
 #endif
 
@@ -291,10 +294,7 @@ int __init stmcore_probe_device(struct stmcore_display_pipeline_data **pd,
 
 #ifdef __TDT__
 #if defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || \
-    defined(FORTIS_HDBOX) || defined(OCTAGON1008) || defined(CUBEREVO) || defined(CUBEREVO_MINI) || \
-    defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || \
-    defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
-//fixme: revise if this is true for all cuberevo boxes     
+    defined(FORTIS_HDBOX) || defined(OCTAGON1008)
       gpio_direction_input(GPIO_PIN_HOTPLUG);
 #endif
 #endif
