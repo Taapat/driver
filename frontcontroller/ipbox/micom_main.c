@@ -52,8 +52,8 @@
 
 //----------------------------------------------
 
-#define EVENT_BTN                  0xe1
-//fixme #define EVENT_BTN                  0xe2
+#define EVENT_BTN_HI                  0xe1
+#define EVENT_BTN_LO                  0xe2
 
 #define EVENT_RC                   0xe0
 
@@ -71,8 +71,8 @@
 #define EVENT_ANSWER_RAM                 0xec
 #define EVENT_ANSWER_WAKEUP_STATUS       0xed
 
-#define EVENT_ANSWER_WAKEUP_UNKNOWN1     0xee
-#define EVENT_ANSWER_WAKEUP_UNKNOWN2     0xef
+#define EVENT_ANSWER_UNKNOWN1            0xee
+#define EVENT_ANSWER_UNKNOWN2            0xef
 
 //----------------------------------------------
 short paramDebug = 10;
@@ -82,8 +82,10 @@ static unsigned char expectEventId = 1;
 
 #define ACK_WAIT_TIME msecs_to_jiffies(500)
 
-#define cPackageSize        2
-#define cPackageSizeMicom   6
+#define cPackageSize             2
+#define cPackageSizeMicom        6
+#define cPackageSizeDateTime     12
+#define cPackageSizeWakeupReason 2
 
 #define cMinimumSize   2
 
@@ -285,7 +287,8 @@ static void processResponse(void)
     {
         switch (expectEventData)
         {
-        case EVENT_BTN:
+        case EVENT_BTN_HI:
+        case EVENT_BTN_LO:
         {
             if (len == 0)
                 goto out_switch;
@@ -365,18 +368,30 @@ static void processResponse(void)
             RCVBufferEnd = (RCVBufferEnd + cPackageSizeMicom) % BUFFERSIZE;
 
             break;
-
-        break;    
         case EVENT_ANSWER_GETWAKEUP_SEC:
         case EVENT_ANSWER_GETWAKEUP_MIN:
         case EVENT_ANSWER_GETWAKEUP_HOUR:
         case EVENT_ANSWER_GETWAKEUP_DAY:
         case EVENT_ANSWER_GETWAKEUP_MONTH:
         case EVENT_ANSWER_GETWAKEUP_YEAR:
+            if (len == 0)
+                goto out_switch;
+
+            if (len < cPackageSizeDateTime)
+                goto out_switch;
+
+            handleCopyData(len);
+
+            dprintk(1, "Pos. response received (0x%0x)\n", expectEventData);
+            errorOccured = 0;
+            ack_sem_up();
+
+            RCVBufferEnd = (RCVBufferEnd + cPackageSizeDateTime) % BUFFERSIZE;
+
+            break;
         case EVENT_ANSWER_RAM:
-        case EVENT_ANSWER_WAKEUP_STATUS:
-        case EVENT_ANSWER_WAKEUP_UNKNOWN1:
-        case EVENT_ANSWER_WAKEUP_UNKNOWN2:
+        case EVENT_ANSWER_UNKNOWN1:
+        case EVENT_ANSWER_UNKNOWN2:
             if (len == 0)
                 goto out_switch;
 
@@ -385,12 +400,27 @@ static void processResponse(void)
 
             handleCopyData(len);
 
-//fixme translate event to textvalue for debugging
             dprintk(1, "Pos. response received (0x%0x)\n", expectEventData);
             errorOccured = 0;
             ack_sem_up();
 
             RCVBufferEnd = (RCVBufferEnd + cPackageSize) % BUFFERSIZE;
+
+            break;
+        case EVENT_ANSWER_WAKEUP_STATUS:
+            if (len == 0)
+                goto out_switch;
+
+            if (len < cPackageSizeWakeupReason)
+                goto out_switch;
+
+            handleCopyData(len);
+
+            dprintk(1, "Pos. response received (0x%0x)\n", expectEventData);
+            errorOccured = 0;
+            ack_sem_up();
+
+            RCVBufferEnd = (RCVBufferEnd + cPackageSizeWakeupReason) % BUFFERSIZE;
 
             break;
         default: // Ignore Response

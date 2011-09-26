@@ -62,7 +62,6 @@ struct saved_data_s
 
 /* version date of fp */
 int micom_day, micom_month, micom_year;
-int oldFP = 0;
 
 /* to the fp */
 #define VFD_GETA0                0xA0
@@ -71,7 +70,7 @@ int oldFP = 0;
 #define VFD_GETRAM               0xA3
 #define VFD_GETDATETIME          0xA4
 #define VFD_GETMICOM             0xA5
-#define VFD_GETWAKEUP            0xA6
+#define VFD_GETWAKEUP            0xA6 /* wakeup time */
 #define VFD_SETWAKEUPDATE        0xC0
 #define VFD_SETWAKEUPTIME        0xC1
 #define VFD_SETDATETIME          0xC2
@@ -100,86 +99,174 @@ int oldFP = 0;
 #define VFD_SETSEGMENTII         0xD9
 #define VFD_SETCLEARSEGMENTS     0xDA
 
-//character table from puppy fp.c
-//does not work for me and my logs shows other things (see below)
-char iso8859_1[256] = 
+typedef struct _special_char
 {
-  /* 0x00 */0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10,
-  /* 0x10 */0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10,
-  /*                !    "      #     $     %     &     '    (     )     *     +     ,     -     .     /    */
-  /* 0x20 */0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
-  /*          0     1     2     3     4     5     6     7     8     9     :     ;     <     =     >    ?    */
-  /* 0x30 */0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F,
-  /*          @     A     B     C     D     E     F     G     H     I     J     K     L     M     N     O   */
-  /* 0x40 */0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F,
-  /*          P     Q     R     S     T     U     V     W     X     Y     Z     [     \     ]     ^     _   */
-  /* 0x50 */0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B, 0x90, 0x4D, 0x4E, 0x4F, 
-  /*          `     a     b     c     d     e     f     g     h     i     j     k     l     m     n     o   */
-  /* 0x60 */0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F,
-  /*          p     q     r     s     t     u     v     w     x     z     y     {     |     }     ~         */
-  /* 0x70 */0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x10,
-  /* 0x80 */0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10,
-  /* 0x90 */0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10,
-  /* 0xa0 */0x59, 0x10, 0x10, 0x80, 0x8A, 0x4C, 0xE5, 0x81, 0x10, 0x10, 0x10, 0xDC, 0x10, 0x10, 0x10, 0x10,
-  /* 0xb0 */0x10, 0x8E, 0x88, 0x89, 0x10, 0x78, 0x10, 0x10, 0x10, 0x10, 0x10, 0xDD, 0x10, 0x8B, 0x10, 0x10,
-  /* 0xc0 */0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x10, 0x33, 0x35, 0x35, 0x35, 0x35, 0x39, 0x39, 0x39, 0x39,
-  /* 0xd0 */0x34, 0x3E, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x48, 0x20, 0x45, 0x45, 0x45, 0x45, 0x49, 0x10, 0x71,
-  /* 0xe0 */0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x10, 0x53, 0x55, 0x55, 0x55, 0x55, 0x59, 0x59, 0x59, 0x59,
-  /* 0xf0 */0x7B, 0x5E, 0x5F, 0x5F, 0x5F, 0x5F, 0x5F, 0x10, 0x20, 0x65, 0x65, 0x65, 0x65, 0x69, 0x10, 0x69,
+   unsigned char  ch;
+   unsigned short value;
+} special_char_t;
+
+/* number segments */
+int front_seg_num = 14;
+
+unsigned short *num2seg;
+unsigned short *Char2seg;
+static special_char_t  *special2seg;
+static int special2seg_size = 4;
+
+unsigned short num2seg_12dotmatrix[] =
+{
+   0x20,       // 0
+   0x21,       // 1
+   0x22,       // 2
+   0x23,       // 3
+   0x24,       // 4
+   0x25,       // 5
+   0x26,       // 6
+   0x27,       // 7
+   0x28,       // 8
+   0x29,       // 9
 };
 
-struct chars {
-u8 s1;
-u8 s2;
-u8 c;
-} micom_chars[] =
+unsigned short Char2seg_12dotmatrix[] =
 {
-   {0xe3, 0x11, 'A'},
-   {0xcb, 0x25, 'B'},
-   {0x21, 0x30, 'C'},
-   {0x0b, 0x25, 'D'},
-   {0xe1, 0x30, 'E'},
-   {0xe1, 0x10, 'F'},
-   {0xa1, 0x31, 'G'},
-   {0xe2, 0x11, 'H'},
-   {0x09, 0x24, 'I'},
-   {0x09, 0x08, 'J'},
-   {0x64, 0x12, 'K'},
-   {0x20, 0x30, 'L'},
-   {0x36, 0x11, 'M'},
-   {0x32, 0x13, 'N'},
-   {0x23, 0x31, 'O'},
-   {0xe3, 0x10, 'P'},
-   {0x23, 0x33, 'Q'},
-   {0xe3, 0x12, 'R'},
-   {0xe1, 0x21, 'S'},
-   {0x09, 0x04, 'T'},
-   {0x22, 0x31, 'U'},
-   {0x24, 0x18, 'V'},
-   {0x22, 0x1b, 'W'},
-   {0x14, 0x0a, 'X'},
-   {0xe2, 0x04, 'Y'},
-   {0x05, 0x28, 'Z'},
-   {0x08, 0x04, '1'},
-   {0xc3, 0x30, '2'},
-   {0xc3, 0x21, '3'},
-   {0xe2, 0x01, '4'},
-   {0xe1, 0x21, '5'},
-   {0xe1, 0x31, '6'},
-   {0x23, 0x01, '7'},
-   {0xe3, 0x31, '8'},
-   {0xe3, 0x21, '9'},
-   {0x23, 0x31, '0'},
-   {0x38, 0x8e, '!'}, //fixme
-   {0x20, 0x82, '/'}, //fixme
-   {0x00, 0x40, '.'},
-   {0x20, 0x00, ','}, //fixme
-   {0x11, 0xc4, '+'}, //fixme
-   {0xc0, 0x00, '-'},
-   {0x40, 0x00, '_'}, //fixme
-   {0x08, 0x82, '<'}, //fixme
-   {0x20, 0x88, '<'}, //fixme
-   {0x00, 0x00, ' '}
+   0x31,       // A
+   0x32,       // B
+   0x33,       // C
+   0x34,       // D
+   0x35,       // E
+   0x36,       // F
+   0x37,       // G
+   0x38,       // H
+   0x39,       // I
+   0x3a,       // J
+   0x3b,       // K
+   0x3c,       // L
+   0x3d,       // M
+   0x3e,       // N
+   0x3f,       // O
+   0x40,       // P
+   0x41,       // Q
+   0x42,       // R
+   0x43,       // S
+   0x44,       // T
+   0x45,       // U
+   0x46,       // V
+   0x47,       // W
+   0x48,       // X
+   0x49,       // Y
+   0x4a,       // Z
+};
+
+unsigned short num2seg_14dotmatrix[] =
+{
+   0x20,       // 0
+   0x21,       // 1
+   0x22,       // 2
+   0x23,       // 3
+   0x24,       // 4
+   0x25,       // 5
+   0x26,       // 6
+   0x27,       // 7
+   0x28,       // 8
+   0x29,       // 9
+};
+
+unsigned short Char2seg_14dotmatrix[] =
+{
+   0x31,       // A
+   0x32,       // B
+   0x33,       // C
+   0x34,       // D
+   0x35,       // E
+   0x36,       // F
+   0x37,       // G
+   0x38,       // H
+   0x39,       // I
+   0x3a,       // J
+   0x3b,       // K
+   0x3c,       // L
+   0x3d,       // M
+   0x3e,       // N
+   0x3f,       // O
+   0x40,       // P
+   0x41,       // Q
+   0x42,       // R
+   0x43,       // S
+   0x44,       // T
+   0x45,       // U
+   0x46,       // V
+   0x47,       // W
+   0x48,       // X
+   0x49,       // Y
+   0x4a,       // Z
+};
+
+unsigned short num2seg_13grid[] =
+{
+   0x3123,     // 0
+   0x0408,     // 1
+   0x30c3,     // 2
+   0x21c3,     // 3
+   0x01e2,     // 4
+   0x21e1,     // 5
+   0x31e1,     // 6
+   0x0123,     // 7
+   0x31e3,     // 8
+   0x21e3,     // 9
+};
+
+unsigned short Char2seg_13grid[] =
+{
+   0x11e3,     // A
+   0x25cb,     // B
+   0x3021,     // C
+   0x250b,     // D
+   0x30e1,     // E
+   0x10e1,     // F
+   0x31a1,     // G
+   0x11e2,     // H
+   0x2409,     // I
+   0x0809,     // J
+   0x1264,     // K
+   0x3020,     // L
+   0x1136,     // M
+   0x1332,     // N
+   0x3123,     // O
+   0x10e3,     // P
+   0x3323,     // Q
+   0x12e3,     // R
+   0x21e1,     // S
+   0x0409,     // T
+   0x3122,     // U
+   0x1824,     // V
+   0x1b22,     // W
+   0x0a14,     // X
+   0x04e2,     // Y
+   0x2805,     // Z
+};
+
+special_char_t special2seg_14dotmatrix[] =
+{
+   {'-',   0x1d},
+   {'\'',  0x90},
+   {'.',   0x1e},
+   {' ',   0x10},
+};
+
+special_char_t special2seg_13grid[] = 
+{
+   {'-',   0x00c0},
+   {'\'',  0x0004},
+   {'.',   0x4000},
+   {' ',   0x0000},
+};
+
+special_char_t special2seg_12dotmatrix[] =
+{
+   {'-',   0x1d},
+   {'\'',  0x90},
+   {'.',   0x1e},
+   {' ',   0x10},
 };
 
 enum {
@@ -294,34 +381,76 @@ int micomSetLED(int on)
 
     memset(buffer, 0, 5);
 
-    /* on:
-     * 0 = off
-     * 1 = on
-     * 2 = slow
-     * 3 = fast
-     */
-    switch (on)
+    /*
+    xxxxxxx0 ->off
+    xxxxxxx1 ->on
+    LED_ON 0x1
+    LED_OFF ~ 0x1
+
+    xxxxxx0x ->slow blink off
+    xxxxxx1x ->slow blink on
+
+    SLOW_ON 0x2
+    SLOW_OFF ~0x2
+
+    xxxxx0xx ->fast blink off
+    xxxxx1xx ->fast blink on
+    
+    FAST_ON 0x4
+    FAST_OFF ~0x4
+    */
+    if (on & 0x1)
     {
-        case 0:
-            buffer[0] = VFD_SETLED;
-            buffer[1] = 0x00;
-        break;
-        case 1:
-            buffer[0] = VFD_SETLED;
-            buffer[1] = 0x01;
-        break;
-        case 2:
+        buffer[0] = VFD_SETLED;
+        buffer[1] = 0x01;
+
+        res = micomWriteCommand(buffer, 5, 0);
+
+        if (on & 0x2)
+        {
             buffer[0] = VFD_SETLEDSLOW;
-            buffer[1] = 0x80;
-        break;
-        case 3:
+            buffer[1] = 0x80;           /* continues blink mode, last state will be off */
+
+            res = micomWriteCommand(buffer, 5, 0);
+        } else
+        {
+            buffer[0] = VFD_SETLEDSLOW;
+            buffer[1] = 0x00;
+            
+            res = micomWriteCommand(buffer, 5, 0);
+        }
+
+        if (on & 0x4)
+        {
             buffer[0] = VFD_SETLEDFAST;
-            buffer[1] = 0x80;
-        break;
-    } 
+            buffer[1] = 0x80;           /* continues blink mode, last state will be off */
 
-    res = micomWriteCommand(buffer, 5, 0);
+            res = micomWriteCommand(buffer, 5, 0);
+        } else
+        {
+            buffer[0] = VFD_SETLEDFAST;
+            buffer[1] = 0x00;
+            
+            res = micomWriteCommand(buffer, 5, 0);
+        }
+    } else
+    {
+        buffer[0] = VFD_SETLED;
+        buffer[1] = 0x00;
 
+        res = micomWriteCommand(buffer, 5, 0);
+
+        buffer[0] = VFD_SETLEDFAST;
+        buffer[1] = 0x00;
+
+        res = micomWriteCommand(buffer, 5, 0);
+
+        buffer[0] = VFD_SETLEDSLOW;
+        buffer[1] = 0x00;
+
+        res = micomWriteCommand(buffer, 5, 0);
+    }
+    
     dprintk(100, "%s (%d) <\n", __func__, res);
 
     return res;
@@ -568,7 +697,7 @@ int micomClearIcons(void)
     return res;
 }
 
-int micomGetTime(void)
+int micomGetTime(char* time)
 {
     char     buffer[5];
     int      res = 0;
@@ -576,8 +705,6 @@ int micomGetTime(void)
     dprintk(100, "%s >\n", __func__);
 
     memset(buffer, 0, 5);
-
-//fixme
 
     buffer[0] = VFD_GETDATETIME;
 
@@ -587,15 +714,50 @@ int micomGetTime(void)
     if (errorOccured == 1)
     {
         /* error */
-        memset(ioctl_data, 0, 8);
+        memset(ioctl_data, 0, 20);
         printk("error\n");
         res = -ETIMEDOUT;
     } else
     {
-        /* time received ->noop here */
+        dprintk(100, "0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x \n", ioctl_data[0], ioctl_data[1], ioctl_data[2], ioctl_data[2], ioctl_data[4], ioctl_data[5]);
+        
+        memcpy(time, ioctl_data, 12);
+
         dprintk(1, "time received\n");
-        dprintk(20, "myTime= 0x%02x - 0x%02x - 0x%02x - 0x%02x - 0x%02x\n", ioctl_data[0], ioctl_data[1]
-                , ioctl_data[2], ioctl_data[3], ioctl_data[4]);
+    }
+
+    dprintk(100, "%s <\n", __func__);
+
+    return res;
+}
+
+int micomGetWakeupTime(char* time)
+{
+    char     buffer[5];
+    int      res = 0;
+
+    dprintk(100, "%s >\n", __func__);
+
+    memset(buffer, 0, 5);
+
+    buffer[0] = VFD_GETWAKEUP;
+
+    errorOccured = 0;
+    res = micomWriteCommand(buffer, 5, 1);
+
+    if (errorOccured == 1)
+    {
+        /* error */
+        memset(ioctl_data, 0, 20);
+        printk("error\n");
+        res = -ETIMEDOUT;
+    } else
+    {
+        dprintk(100, "0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x \n", ioctl_data[0], ioctl_data[1], ioctl_data[2], ioctl_data[2], ioctl_data[4], ioctl_data[5]);
+        
+        memcpy(time, ioctl_data, 12);
+
+        dprintk(1, "time received\n");
     }
 
     dprintk(100, "%s <\n", __func__);
@@ -611,6 +773,10 @@ int micomGetMicom(void)
 
     dprintk(100, "%s >\n", __func__);
 
+#if defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) /* fixme: not sure if true for MINI2 !!! */
+    micom_year  = 2008;
+    micom_month = 4; 
+#else
     memset(buffer, 0, 5);
 
     buffer[0] = VFD_GETMICOM;
@@ -631,22 +797,52 @@ int micomGetMicom(void)
         micom_year  = (ioctl_data[0] & 0xff) + 2000;
         micom_month = (ioctl_data[1] & 0xff);
         micom_day   = (ioctl_data[2] & 0xff);
-
-        if (micom_year > 2007)
-           oldFP = 0;
-        else
-           oldFP = 1;
-
-        dprintk(1, "time received\n");
-        dprintk(1, "myTime= %02d.%02d.%04d\n", micom_day, micom_month, micom_year);
     }
 
-    dprintk(100, "%s <\n", __func__);
+#endif
+
+    dprintk(1, "myTime= %02d.%02d.%04d\n", micom_day, micom_month, micom_year);
+
+#if defined(CUBEREVO)
+    if ((micom_year == 2008) && (micom_month == 3))
+#elif defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) /* fixme: not sure if true for MINI2 !!! */
+    if ((micom_year == 2008) && (micom_month == 4))
+#endif
+    {
+#if defined(CUBEREVO)
+        front_seg_num = 12;
+#elif defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) /* fixme: not sure if true for MINI2 !!! */
+        front_seg_num = 14;
+#endif
+        num2seg = num2seg_12dotmatrix;
+        Char2seg = Char2seg_12dotmatrix;
+        special2seg = special2seg_12dotmatrix;
+        special2seg_size = ARRAY_SIZE(special2seg_12dotmatrix);
+    } else
+    {
+        /* 13 grid */
+        front_seg_num = 13;
+
+        num2seg = num2seg_13grid;
+        Char2seg = Char2seg_13grid;
+        special2seg = special2seg_13grid;
+        special2seg_size = ARRAY_SIZE(special2seg_13grid);
+    }
+
+//fixme 7seg ->display len = 4 ->but which charset?
+//which other boxes?!?!
+#ifdef CUBEREVO_250HD
+    front_seg_num = 4;
+#endif
+
+    dprintk(1, "%s front_seg_num %d \n", __func__, front_seg_num);
+
+    dprintk(100, "%s < \n", __func__);
 
     return res;
 }
 
-int micomGetWakeUpMode(void)
+int micomGetWakeUpMode(char* mode)
 {
     char     buffer[5];
     int      res = 0;
@@ -655,7 +851,23 @@ int micomGetWakeUpMode(void)
 
     memset(buffer, 0, 5);
 
-//fixme
+    buffer[0] = VFD_GETWAKEUPSTATUS;
+
+    errorOccured = 0;
+    res = micomWriteCommand(buffer, 5, 1);
+
+    if (errorOccured == 1)
+    {
+        /* error */
+        memset(ioctl_data, 0, 20);
+        printk("error\n");
+        res = -ETIMEDOUT;
+    } else
+    {
+        dprintk(100, "0x%02x\n", ioctl_data[0]);
+        
+        *mode = ioctl_data[0] & 0xff;
+    }
 
     dprintk(100, "%s <\n", __func__);
 
@@ -671,47 +883,100 @@ inline char toupper(const char c)
 
 int micomWriteString(unsigned char* aBuf, int len)
 {
-    char       buffer[5];
-    char       bBuf[11];
-    int        res = 0, i, j;
-
+    char                buffer[5];
+    unsigned char       bBuf[128];
+    int                 res = 0, i, j;
+    int                 pos = 0;
+    unsigned char       space;
+        
     dprintk(100, "%s >\n", __func__);
 
-//fixme: utf not implemented
- 
-    /* always write all characters and fill unused with 0x10 */
-    memset(bBuf, 0x10, 11);
-    memcpy(bBuf, aBuf, len);
-    len = 11;
+    memset(bBuf, 0, 100);
 
     memset(buffer, 0, 5);
     buffer[0] = VFD_SETCLEARTEXT;
     res = micomWriteCommand(buffer, 5, 0);
+ 	
+    pos = front_seg_num - len;
+
+	if( pos < 0 )
+		pos = 0;
+
+	pos /= 2;
+
+	for (i = 0; i < pos; i++ )
+		bBuf[i] = ' ';
+	
+    for(j=0 ; aBuf[j] && pos < front_seg_num; pos++, i++, j++)
+		bBuf[i] = aBuf[j];
+        
+	for( ; pos < front_seg_num; pos++, i++ )
+		bBuf[i] = ' ';
+        
+    len = front_seg_num;
+
+    /* none printable chars will be replaced by space */
+    for(j = 0; j < special2seg_size; j++)
+    {
+        if(special2seg[j].ch == ' ') 
+           break;
+    }
+    space = special2seg[j].value;
 
     /* set text char by char */
     for (i = 0; i < len; i++)
     {
+        unsigned short data;
+        unsigned char ch;
+        
         memset(buffer, 0, 5);
 
         buffer[0] = VFD_SETCHAR;
         buffer[1] = i & 0xff; /* position */
 
-        if (oldFP)
+        ch = bBuf[i];
+        switch( ch )
         {
-            for (j = 0; j < ARRAY_SIZE(micom_chars); j++)
-            {
-                if (micom_chars[j].c == toupper(bBuf[i]))
+            case 'A' ... 'Z':
+                ch -= 'A'-'a';
+            case 'a' ... 'z':
+                data = Char2seg[ch-'a'];
+                break;
+            case '0' ... '9':
+                data = num2seg[ch-'0'];
+                break;
+            case '-':
+            case '\'':
+            case '.':
+            case ' ':
+                for(j = 0; j < special2seg_size; j++)
                 {
-                    buffer[2] = micom_chars[j].s1;
-                    buffer[3] = micom_chars[j].s2;
+                    if(special2seg[j].ch == ch) 
+                       break;
+                }
+                
+                if(j < special2seg_size) 
+                {
+                    data = special2seg[j].value;
                     break;
                 }
-            }
-        } else
-        {
-            buffer[2] = iso8859_1[(unsigned char) bBuf[i] & 0xff];
-//        buffer[2] = bBuf[i] & 0xff;
+                else
+                {
+                    printk("%s ignore unprintable char \'%c\'\n", __func__, ch);
+                    data = space;
+                }
+                break;
+            default:
+                printk("%s ignore unprintable char \'%c\'\n", __func__, ch);
+                data = space;
+                break;
         }
+
+	    
+        dprintk(50, "%s data 0x%x \n", __func__, data);
+        
+        buffer[2] = data & 0xff;
+ 	    buffer[3] = (data >> 8) & 0xff;
         res = micomWriteCommand(buffer, 5, 0);
     }
 
@@ -736,6 +1001,7 @@ int micom_init_func(void)
 
     micomGetMicom();
     res |= micomSetFan(0);
+    res |= micomSetLED(3 /* on and slow blink mode */);
     res |= micomSetBrightness(7);
     res |= micomWriteString("T.Ducktales", strlen("T.Ducktales"));
 
@@ -980,7 +1246,7 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
         mode = 0;
         break;
     case VFDICONDISPLAYONOFF:
-        if (!oldFP)
+        if (micom_year > 2007)
         {
             if (mode == 0)
             {
@@ -1021,12 +1287,16 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
         res = micomSetRF(micom->u.rf.on);
         break;
     case VFDGETTIME:
-        res = micomGetTime();
-        copy_to_user((void*) arg, &ioctl_data, 5);
+        res = micomGetTime(micom->u.get_time.time);
+        copy_to_user((void*) arg, &micom, sizeof(micom));
+        break;
+    case VFDGETWAKEUPTIME:
+        res = micomGetWakeupTime(micom->u.wakeup_time.time);
+        copy_to_user((void*) arg, &micom, sizeof(micom));
         break;
     case VFDGETWAKEUPMODE:
-        res = micomGetWakeUpMode();
-        copy_to_user((void*) arg, &ioctl_data, 1);
+        res = micomGetWakeUpMode(&micom->u.status.status);
+        copy_to_user((void*) arg, &micom, sizeof(micom));
         break;
     case VFDDISPLAYCHARS:
         if (mode == 0)
@@ -1045,9 +1315,24 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
         break;
     case VFDCLEARICONS:
         res = 0;
-        if (!oldFP)
+        if (micom_year > 2007)
            res = micomClearIcons();
     break;
+    case VFDGETVERSION:
+        if (front_seg_num == 12)
+            micom->u.version.version = 0;
+        else
+        if (front_seg_num == 13)
+            micom->u.version.version = 1;
+        else
+        if (front_seg_num == 14)
+            micom->u.version.version = 2;
+        else
+        if (front_seg_num == 4)
+            micom->u.version.version = 3;
+        
+        copy_to_user((void*) arg, &micom, sizeof(micom));
+        break;
     default:
         printk("VFD/Micom: unknown IOCTL 0x%x\n", cmd);
         mode = 0;
