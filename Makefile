@@ -209,4 +209,20 @@ ifdef IPBOX55
 obj-y    += siinfo/
 endif
 
+ifdef CUBEREVO
+obj-y    += smartcard/
+endif
+ifdef CUBEREVO_MINI2
+obj-y    += smartcard/
+endif
+ifdef CUBEREVO_250HD
+obj-y    += smartcard/
+endif
+ifdef CUBEREVO_2000HD
+obj-y    += smartcard/
+endif
+ifdef CUBEREVO_9500HD
+obj-y    += smartcard/
+endif
+
 endif
