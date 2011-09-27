@@ -1288,15 +1288,12 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
         break;
     case VFDGETTIME:
         res = micomGetTime(micom->u.get_time.time);
-        copy_to_user((void*) arg, &micom, sizeof(micom));
         break;
     case VFDGETWAKEUPTIME:
         res = micomGetWakeupTime(micom->u.wakeup_time.time);
-        copy_to_user((void*) arg, &micom, sizeof(micom));
         break;
     case VFDGETWAKEUPMODE:
         res = micomGetWakeUpMode(&micom->u.status.status);
-        copy_to_user((void*) arg, &micom, sizeof(micom));
         break;
     case VFDDISPLAYCHARS:
         if (mode == 0)
@@ -1319,6 +1316,7 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
            res = micomClearIcons();
     break;
     case VFDGETVERSION:
+        printk("VFDGETVERSION: front_seg_num %d\n", front_seg_num);
         if (front_seg_num == 12)
             micom->u.version.version = 0;
         else
@@ -1331,7 +1329,7 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
         if (front_seg_num == 4)
             micom->u.version.version = 3;
         
-        copy_to_user((void*) arg, &micom, sizeof(micom));
+        printk("VFDGETVERSION: version %d\n", micom->u.version.version);
         break;
     default:
         printk("VFD/Micom: unknown IOCTL 0x%x\n", cmd);

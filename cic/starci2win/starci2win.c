@@ -910,7 +910,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   /* power on (only possible with LOCK = 1)
      other bits cannot be set when LOCK is = 1 */
 
-#if defined(ATEVIO7500) || defined(FORTIS_HDBOX) || defined(HS7810A)
+#if defined(ATEVIO7500) || defined(FORTIS_HDBOX) || defined(HS7810A) || defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
   starci_writereg(state, 0x18, 0x21);
 #else
   starci_writereg(state, 0x18, 0x01);
@@ -969,7 +969,12 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 		  EMI_DATA2_OEE2_WRITE(10)	|
 		  EMI_DATA2_BEE1_WRITE(10)	|
 		  EMI_DATA2_BEE2_WRITE(10),reg_config + EMIBank2 + EMI_CFG_DATA2);
+
+#if defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
+  ctrl_outl(0x8,reg_config + EMIBank2 + EMI_CFG_DATA3);
+#else
   ctrl_outl(0x0,reg_config + EMIBank2 + EMI_CFG_DATA3);
+#endif
 
   ctrl_outl(0x0, reg_config + EMI_FLASH_CLK_SEL);
 #endif
