@@ -773,7 +773,7 @@ int micomGetMicom(void)
 
     dprintk(100, "%s >\n", __func__);
 
-#if defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) /* fixme: not sure if true for MINI2 !!! */
+#if defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) /* fixme: not sure if true for MINI2 & CUBEREVO250HD!!! */
     micom_year  = 2008;
     micom_month = 4; 
 #else
@@ -805,13 +805,13 @@ int micomGetMicom(void)
 
 #if defined(CUBEREVO)
     if ((micom_year == 2008) && (micom_month == 3))
-#elif defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) /* fixme: not sure if true for MINI2 !!! */
+#elif defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) /* fixme: not sure if true for MINI2 & CUBEREVO250HD!!! */
     if ((micom_year == 2008) && (micom_month == 4))
 #endif
     {
 #if defined(CUBEREVO)
         front_seg_num = 12;
-#elif defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) /* fixme: not sure if true for MINI2 !!! */
+#elif defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) /* fixme: not sure if true for MINI2 & CUBEREVO250HD!!! */
         front_seg_num = 14;
 #endif
         num2seg = num2seg_12dotmatrix;
