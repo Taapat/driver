@@ -279,6 +279,8 @@ static int info_model_read(char *page, char **start, off_t off, int count,
   int len = sprintf(page, "ipbox99\n");
 #elif defined(IPBOX55)
   int len = sprintf(page, "ipbox55\n");
+#elif defined(ADB_BOX)
+  int len = sprintf(page, "adb_box\n"); 
 #else
   int len = sprintf(page, "ufs910\n");
 #endif

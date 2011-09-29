@@ -123,7 +123,11 @@ static struct stmcore_display_pipeline_data platform_data[] = {
 //    .hdmi_i2c_adapter_id      = 1,
 //#elif defined(CONFIG_SH_STB7100_MBOARD) || defined(CONFIG_SH_ST_MB411)
 //#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
+#if defined(ADB_BOX)
+    .hdmi_i2c_adapter_id = 1,
+#else
     .hdmi_i2c_adapter_id      = 2,
+#endif
 //#else
 //    .hdmi_i2c_adapter_id      = 1,
 //#endif
@@ -223,8 +227,11 @@ int __init stmcore_probe_device(struct stmcore_display_pipeline_data **pd, int *
     {	
       *pd = platform_data;
       *nr_platform_devices = N_ELEMENTS (platform_data);
-
+      #if defined(ADB_BOX)
+      hotplug_pio = stpio_request_pin(3,7,"HDMI Hotplug",STPIO_IN);
+      #else
       hotplug_pio = stpio_request_pin(2,2,"HDMI Hotplug",STPIO_BIDIR_Z1);
+      #endif
       if(!hotplug_pio)
       {
         printk(KERN_WARNING "stmcore-display: Hotplug PIO already in use (by SSC driver?)\n");

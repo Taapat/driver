@@ -92,6 +92,9 @@ endif
 ifdef HOMECAST5101
 CCFLAGSY += -DHOMECAST5101
 endif
+ifdef ADB_BOX
+CCFLAGSY += -DADB_BOX
+endif
 ifdef IPBOX9900
 CCFLAGSY += -DIPBOX9900
 endif
@@ -136,6 +139,12 @@ endif
 
 ifdef  HL101
 obj-y	+= smartcard/
+endif
+ifdef  ADB_BOX
+obj-y	+= smartcard/
+obj-y	+= stsci/
+obj-y	+= adb_box_fan/
+obj-y	+= vfd/
 endif
 
 ifndef VIP2_V1

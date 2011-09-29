@@ -204,7 +204,7 @@ static const struct snd_pseudo_mixer_downstream_topology default_topology[] = {
 	CARD        ("HDMI",    0, 0,  48000, 2),
 #else
 #if defined (CONFIG_KERNELVERSION)
-  #if defined(__TDT__) && ! defined(UFS922)  && !defined(OCTAGON1008) && !defined(UFS910) && !defined(FORTIS_HDBOX)
+  #if defined(__TDT__) && ! defined(UFS922)  && !defined(OCTAGON1008) && !defined(UFS910) && !defined(FORTIS_HDBOX) && !defined(ADB_BOX) 
  			 CARD_SPDIF  ("SPDIF",   2, 0,  48000, 2),
       			 CARD        ("Analog",  1, 0,  48000, 2),
       			 CARD        ("HDMI",    0, 0,  48000, 2),

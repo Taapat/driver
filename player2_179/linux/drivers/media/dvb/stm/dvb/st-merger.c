@@ -386,7 +386,7 @@ int read_tsm(int a)
 void stm_tsm_init (int use_cimax)
 {
 
-#if defined(VIP2_V1) || defined(SPARK) || defined(SPARK7162) || defined(IPBOX99) || defined(IPBOX55)// none ci targets
+#if defined(VIP2_V1) || defined(SPARK) || defined(SPARK7162) || defined(IPBOX99) || defined(IPBOX55) || defined(ADB_BOX) // none ci targets
 	use_cimax = 0;
 #endif
 
@@ -893,6 +893,27 @@ void stm_tsm_init (int use_cimax)
       /* set stream 2 on */
       ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
       ctrl_outl(ret | 0x80,reg_config + TSM_STREAM2_CFG);
+
+#elif defined(ADB_BOX)
+     /* route stream 1 to PTI */
+     ret = ctrl_inl(reg_config + TSM_PTI_SEL);
+     ctrl_outl(ret | 0x2, reg_config + TSM_PTI_SEL);
+
+     /* set stream 1 on */
+     ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
+     ctrl_outl(ret | 0x80,reg_config + TSM_STREAM1_CFG);
+
+     /* route stream 2 to PTI */
+     ret = ctrl_inl(reg_config + TSM_PTI_SEL);
+     ctrl_outl(ret | 0x4, reg_config + TSM_PTI_SEL);
+
+     /* set stream 2 on */
+     ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
+     ctrl_outl(ret | 0x80,reg_config + TSM_STREAM2_CFG);
+
+     /* route stream 0 to PTI */
+     ret = ctrl_inl(reg_config + TSM_PTI_SEL);
+     ctrl_outl(ret | 0x1, reg_config + TSM_PTI_SEL);
 #endif
 
       /* set stream on */

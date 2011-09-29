@@ -101,4 +101,7 @@ else ifdef CUBEREVO_MINI_FTA
 obj-y	+= ipbox/
 endif
 
+ifdef ADB_BOX
+obj-y	+= vfd_adb/
+endif
 
