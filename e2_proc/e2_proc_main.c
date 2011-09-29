@@ -349,6 +349,55 @@ out:
 	return ret;
 }
 
+static char* wakeup_time = NULL;
+
+static int wakeup_time_read(char *page, char **start, off_t off, int count,
+                           int *eof, void *data)
+{
+  int len = 0;
+  if (wakeup_time == NULL)
+    len = sprintf(page, "3000000000");
+  else
+    len = sprintf(page, wakeup_time);
+  
+  return len;
+}
+
+static int wakeup_time_write(struct file *file, const char __user *buf,
+                           unsigned long count, void *data)
+{
+	char 		*page;
+	ssize_t 	ret = -ENOMEM;
+
+	char* myString = kmalloc(count + 1, GFP_KERNEL);
+
+	printk("%s %ld - ", __FUNCTION__, count);
+
+	page = (char *)__get_free_page(GFP_KERNEL);
+	if (page) 
+	{
+		ret = -EFAULT;
+		if (copy_from_user(page, buf, count))
+			goto out;
+
+		strncpy(myString, page, count);
+		myString[count] = '\0';
+
+		printk("%s\n", myString);
+		
+		if(wakeup_time != NULL) kfree(wakeup_time);
+		wakeup_time = myString;
+		
+		/* always return count to avoid endless loop */
+		ret = count;
+	}
+	
+out:
+	free_page((unsigned long)page);
+	if(wakeup_time != myString) kfree(myString);
+	return ret;
+}
+
 static int zero_read(char *page, char **start, off_t off, int count,
                            int *eof, void *data)
 {
@@ -424,7 +473,7 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/fp/led0_pattern"                                              , NULL, NULL, default_write_proc, NULL, ""},
 	{cProcEntry, "stb/fp/led_pattern_speed"                                         , NULL, NULL, default_write_proc, NULL, ""},
 	{cProcEntry, "stb/fp/version"                                                   , NULL, zero_read, NULL, NULL, ""},
-	{cProcEntry, "stb/fp/wakeup_time"                                               , NULL, default_read_proc, default_write_proc, NULL, ""},
+	{cProcEntry, "stb/fp/wakeup_time"                                               , NULL, wakeup_time_read, wakeup_time_write, NULL, ""},
 	{cProcEntry, "stb/fp/was_timer_wakeup"                                          , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/fp/rtc"                                                       , NULL, zero_read, default_write_proc, NULL, ""},
 
