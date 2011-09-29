@@ -371,7 +371,11 @@ static int convert_source ( const dmx_source_t source)
 #endif
     break;
   case DMX_SOURCE_FRONT1:
+#if defined(ADB_BOX) 
+    tag = TSIN0;
+#else
     tag = TSIN1;
+#endif
     break;
 #if defined(SPARK7162)
   case DMX_SOURCE_FRONT2:
@@ -439,7 +443,7 @@ void ptiInit ( struct DeviceContext_s *pContext )
 
 #if defined(FORTIS_HDBOX) || defined(UFS912) || defined(SPARK) || defined(HS7810A)
     stv090x_register_frontend(&pContext->DvbContext->DvbAdapter);
-#elif defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55)
+#elif defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55) || defined(ADB_BOX) 
     fe_core_register_frontend( &pContext->DvbContext->DvbAdapter);
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
     socket_register_adapter(&pContext->DvbContext->DvbAdapter);
