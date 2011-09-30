@@ -811,7 +811,7 @@ static void stmhdmi_vsync_cb(stm_vsync_context_handle_t context, stm_field_t fie
   if(hdmi_data->display_runtime->hotplug_poll_pio >= 0)
   {
     unsigned hotplugstate = gpio_get_value(hdmi_data->display_runtime->hotplug_poll_pio);
-#if defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(SPARK) || defined(SPARK7162)
+#if defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(SPARK) || defined(SPARK7162) || defined(ADB_BOX) 
     if(hdmi_status == STM_DISPLAY_DISCONNECTED)
     {
       /*

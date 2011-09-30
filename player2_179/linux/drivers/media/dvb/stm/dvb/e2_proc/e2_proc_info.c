@@ -44,7 +44,8 @@ int proc_info_model_read (char *page, char **start, off_t off, int count,
 	len = sprintf(page, "ipbox99\n");
 #elif defined(IPBOX55)
 	len = sprintf(page, "ipbox55\n");
-
+#elif defined(ADB_BOX)
+	len = sprintf(page, "adb_box\n");
 #else
 	len = sprintf(page, "ufs910\n");
 #endif
