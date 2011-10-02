@@ -338,7 +338,7 @@ enum {
 	ICON_MP3,
 	ICON_REPEAT,
 	ICON_Play,
-	ICON_TER,
+	ICON_TER,            
 	ICON_FILE,
 	ICON_480i,
 	ICON_480p,
@@ -348,8 +348,12 @@ enum {
 	ICON_1080i,
 	ICON_1080p,
 	ICON_Play_1,
+    ICON_RADIO,   //fixme value from e2?
+    ICON_TV,      //fixme value from e2?
 	ICON_MAX
 };
+
+
 
 struct iconToInternal {
 	char *name;
@@ -363,6 +367,7 @@ struct iconToInternal {
 	{ "ICON_SAT"      , ICON_SAT       , 0x02, 0x00, 1},
 	{ "ICON_REC"      , ICON_REC       , 0x00, 0x00, 0},
 	{ "ICON_TIMESHIFT", ICON_TIMESHIFT , 0x01, 0x01, 0},
+	{ "ICON_TIMESHIFT", ICON_TIMESHIFT , 0x01, 0x02, 0},
 	{ "ICON_TIMER"    , ICON_TIMER     , 0x01, 0x03, 0},
 	{ "ICON_HD"       , ICON_HD        , 0x01, 0x04, 0},
 	{ "ICON_USB"      , ICON_USB       , 0x01, 0x05, 0},
@@ -373,17 +378,41 @@ struct iconToInternal {
 	{ "ICON_TUNER2"   , ICON_TUNER2    , 0x01, 0x0a, 0},
 	{ "ICON_MP3"      , ICON_MP3       , 0x01, 0x0b, 0},
 	{ "ICON_REPEAT"   , ICON_REPEAT    , 0x01, 0x0c, 0},
-	{ "ICON_Play"     , ICON_Play      , 0x01, 0x00, 1},
+	{ "ICON_Play"     , ICON_Play      , 0x00, 0x00, 1},
+	{ "ICON_Play"     , ICON_Play      , 0x00, 0x02, 1},
+	{ "ICON_Play"     , ICON_Play      , 0x01, 0x01, 1},
+	{ "ICON_Play"     , ICON_Play      , 0x01, 0x03, 1},
+	{ "ICON_Play"     , ICON_Play      , 0x01, 0x04, 1},
+	{ "ICON_Play"     , ICON_Play      , 0x01, 0x02, 1},
+	{ "ICON_Play"     , ICON_Play      , 0x00, 0x03, 1},
+	{ "ICON_Play"     , ICON_Play      , 0x00, 0x01, 1},
 	{ "ICON_Play_1"   , ICON_Play_1    , 0x01, 0x04, 1},
 	{ "ICON_TER"      , ICON_TER       , 0x02, 0x01, 1},
 	{ "ICON_FILE"     , ICON_FILE      , 0x02, 0x02, 1},
+	{ "ICON_480i"     , ICON_480i      , 0x06, 0x04, 1},
 	{ "ICON_480i"     , ICON_480i      , 0x06, 0x03, 1},
+	{ "ICON_480p"     , ICON_480p      , 0x06, 0x04, 1},
 	{ "ICON_480p"     , ICON_480p      , 0x06, 0x02, 1},
+	{ "ICON_576i"     , ICON_576i      , 0x06, 0x01, 1},
 	{ "ICON_576i"     , ICON_576i      , 0x06, 0x00, 1},
+	{ "ICON_576p"     , ICON_576p      , 0x06, 0x01, 1},
 	{ "ICON_576p"     , ICON_576p      , 0x05, 0x04, 1},
 	{ "ICON_720p"     , ICON_720p      , 0x05, 0x03, 1},
 	{ "ICON_1080i"    , ICON_1080i     , 0x05, 0x02, 1},
 	{ "ICON_1080p"    , ICON_1080p     , 0x05, 0x01, 1}
+	{ "ICON_RADIO"    , ICON_RADIO     , 0x02, 0x04, 1}
+	{ "ICON_TV"       , ICON_TV        , 0x02, 0x03, 1}
+};
+
+struct iconToInternal micom_14seg_Icons[] ={
+/*--------------------- SetIcon -------  msb   lsb   segment -----*/
+	{ "ICON_Play"      , ICON_Play      , 0x02, 0x01, 1},
+	{ "ICON_PAUSE"     , ICON_PAUSE     , 0x02, 0x02, 1},
+	{ "ICON_STANDBY"   , ICON_STANDBY   , 0x03, 0x00, 1},
+	{ "ICON_REC"       , ICON_REC       , 0x02, 0x00, 1},
+	{ "ICON_HD"        , ICON_HD        , 0x01, 0x04, 0}, //fixme
+	{ "ICON_DOLBY"     , ICON_DOLBY     , 0x01, 0x07, 0}, //fixme
+
 };
 
 static struct saved_data_s lastdata;
@@ -599,6 +628,7 @@ int micomSetIcon(int which, int on)
     char buffer[5];
     int  vLoop, res = 0;
 
+#if !defined(CUBEREVO_250HD)
     dprintk(100, "%s > %d, %d\n", __func__, which, on);
 
     if (which < 1 || which >= ICON_MAX)
@@ -606,23 +636,45 @@ int micomSetIcon(int which, int on)
         printk("VFD/Nuvoton icon number out of range %d\n", which);
         return -EINVAL;
     }
+
+    if (front_seg_num == 13) //no icons
+       return res;
+
     memset(buffer, 0, 5);
 
-    for (vLoop = 0; vLoop < ARRAY_SIZE(micomIcons); vLoop++)
+    if (front_seg_num == 14) //only six icons
     {
-        if ((which & 0xff) == micomIcons[vLoop].icon)
+        for (vLoop = 0; vLoop < ARRAY_SIZE(micom_14seg_Icons); vLoop++)
         {
-            buffer[0] = VFD_SETSEGMENTI + micomIcons[vLoop].segment;
-            buffer[1] = on;
-            buffer[2] = micomIcons[vLoop].codelsb;
-            buffer[3] = micomIcons[vLoop].codemsb;
-            res = micomWriteCommand(buffer, 5, 0);
+            if ((which & 0xff) == micom_14seg_Icons[vLoop].icon)
+            {
+                buffer[0] = VFD_SETSEGMENTI + micom_14seg_Icons[vLoop].segment;
+                buffer[1] = on;
+                buffer[2] = micom_14seg_Icons[vLoop].codelsb;
+                buffer[3] = micom_14seg_Icons[vLoop].codemsb;
+                res = micomWriteCommand(buffer, 5, 0);
 
-            break;
+                break;
+            }
+        }
+    } else
+    {    
+        for (vLoop = 0; vLoop < ARRAY_SIZE(micomIcons); vLoop++)
+        {
+            if ((which & 0xff) == micomIcons[vLoop].icon)
+            {
+                buffer[0] = VFD_SETSEGMENTI + micomIcons[vLoop].segment;
+                buffer[1] = on;
+                buffer[2] = micomIcons[vLoop].codelsb;
+                buffer[3] = micomIcons[vLoop].codemsb;
+                res = micomWriteCommand(buffer, 5, 0);
+
+                /* dont break here because there may be multiple segments */
+            }
         }
     }
-
     dprintk(100, "%s <\n", __func__);
+#endif
 
     return res;
 }
