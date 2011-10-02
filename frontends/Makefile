@@ -46,6 +46,7 @@ stv090x-objs +=	spark/stv6110x.o
 stv090x-objs +=	spark/ix7306.o
 stv090x-objs +=	spark/core.o
 obj-m += stv090x.o
+obj-y += lnb/
 else ifdef FORTIS_HDBOX
 stv090x-objs +=	stv090x/stv090x.o
 stv090x-objs +=	stv090x/stv6110x.o
