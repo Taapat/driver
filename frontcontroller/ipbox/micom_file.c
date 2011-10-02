@@ -350,6 +350,7 @@ enum {
 	ICON_Play_1,
     ICON_RADIO,   //fixme value from e2?
     ICON_TV,      //fixme value from e2?
+	ICON_PAUSE,   //fixme value from e2?
 	ICON_MAX
 };
 
@@ -399,8 +400,8 @@ struct iconToInternal {
 	{ "ICON_576p"     , ICON_576p      , 0x05, 0x04, 1},
 	{ "ICON_720p"     , ICON_720p      , 0x05, 0x03, 1},
 	{ "ICON_1080i"    , ICON_1080i     , 0x05, 0x02, 1},
-	{ "ICON_1080p"    , ICON_1080p     , 0x05, 0x01, 1}
-	{ "ICON_RADIO"    , ICON_RADIO     , 0x02, 0x04, 1}
+	{ "ICON_1080p"    , ICON_1080p     , 0x05, 0x01, 1},
+	{ "ICON_RADIO"    , ICON_RADIO     , 0x02, 0x04, 1},
 	{ "ICON_TV"       , ICON_TV        , 0x02, 0x03, 1}
 };
 
