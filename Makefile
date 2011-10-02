@@ -142,7 +142,7 @@ obj-y	+= smartcard/
 endif
 ifdef  ADB_BOX
 obj-y	+= smartcard/
-obj-y	+= stsci/
+#obj-y	+= stsci/
 obj-y	+= adb_box_fan/
 endif
 
