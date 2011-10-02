@@ -269,6 +269,58 @@ special_char_t special2seg_12dotmatrix[] =
    {' ',   0x10},
 };
 
+static unsigned short Char2seg_7seg[] =
+{
+	0x01 & 0x02 & 0x04 & 0x10 & 0x20 & 0x40,
+	0x04 & 0x08 & 0x10 & 0x20 & 0x40,		
+	0x01 & 0x08 & 0x10 & 0x20,			    
+	0x02 & 0x04 & 0x08 & 0x10 & 0x40,		
+	0x01 & 0x08 & 0x10 & 0x20 & 0x40,		
+	0x01 & 0x10 & 0x20 & 0x40,			
+	0x01 & 0x04 & 0x08 & 0x10 & 0x20,	
+	0x04 & 0x10 & 0x20 & 0x40,			
+	0x04,				     
+	0x02 & 0x04 & 0x08 & 0x10,
+	0x01 & 0x04 & 0x10 & 0x20 & 0x40,
+	0x08 & 0x10 & 0x20,			    
+	0x01 & 0x02 & 0x04 & 0x10 & 0x20,
+	0x04 & 0x10 & 0x40,			    
+	0x04 & 0x08 & 0x10 & 0x40,		
+	0x01 & 0x02 & 0x10 & 0x20 & 0x40,
+	0x01 & 0x02 & 0x08 & 0x10 & 0x20 & 0x40,
+	0x10 & 0x40,				    
+	0x04 & 0x08 & 0x20 & 0x40,		
+	0x08 & 0x10 & 0x20 & 0x40,		
+	0x04 & 0x08 & 0x10,			    
+	0x02 & 0x04 & 0x08 & 0x10 & 0x20,
+	0x02 & 0x04 & 0x08 & 0x10 & 0x20 & 0x40,
+	0x02 & 0x04 & 0x10 & 0x20 & 0x40,		
+	0x02 & 0x04 & 0x08 & 0x20 & 0x40,		
+	0x01 & 0x02 & 0x08 & 0x10,			
+};
+
+static unsigned short num2seg_7seg[] =
+{
+	0xc0,		// 0
+	0xf9,		// 1
+	0xa4,		// 2
+	0xb0,		// 3
+	0x99,		// 4
+	0x92,		// 5
+	0x82,		// 6
+	0xd8,		// 7
+	0x80,		// 8
+	0x98,		// 9
+};
+
+special_char_t  special2seg_7seg[] = 
+{
+	{'-',	0xbf},
+	{'_',	0xf7},
+	{'.',	0x7f},
+	{' ',	0xff},
+};
+
 enum {
 	ICON_MIN,
 	ICON_STANDBY,
@@ -803,15 +855,25 @@ int micomGetMicom(void)
 
     dprintk(1, "myTime= %02d.%02d.%04d\n", micom_day, micom_month, micom_year);
 
+#ifdef CUBEREVO_250HD
+
+    front_seg_num    = 4;
+    num2seg          = num2seg_7seg;
+    Char2seg         = Char2seg_7seg;
+    special2seg      = special2seg_7seg;
+    special2seg_size = ARRAY_SIZE(special2seg_7seg);
+
+#else
+
 #if defined(CUBEREVO)
     if ((micom_year == 2008) && (micom_month == 3))
-#elif defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) /* fixme: not sure if true for MINI2 & CUBEREVO250HD!!! */
+#elif defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) /* fixme: not sure if true for MINI2 !!! */
     if ((micom_year == 2008) && (micom_month == 4))
 #endif
     {
 #if defined(CUBEREVO)
         front_seg_num = 12;
-#elif defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) /* fixme: not sure if true for MINI2 & CUBEREVO250HD!!! */
+#elif defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2)/* fixme: not sure if true for MINI2 */
         front_seg_num = 14;
 #endif
         num2seg = num2seg_12dotmatrix;
@@ -829,11 +891,7 @@ int micomGetMicom(void)
         special2seg_size = ARRAY_SIZE(special2seg_13grid);
     }
 
-//fixme 7seg ->display len = 4 ->but which charset?
-//which other boxes?!?!
-#ifdef CUBEREVO_250HD
-    front_seg_num = 4;
-#endif
+#endif /* 250HD */
 
     dprintk(1, "%s front_seg_num %d \n", __func__, front_seg_num);
 
