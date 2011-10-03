@@ -326,13 +326,13 @@ static void pt6302_setup( struct pt6302_driver *pfd ) {
 
   DBG("setup pt6302 done.");
 
-
+/*  if (rec) {
+*/
   	pt6302_write_dcram( pfd, 0x0, "       []       ", 16 ); // powitanie
 	pt6958_display("-  -");
   	for( i=0; i < 50; i++ )
     		udelay( 2500 ); 
   	pt6302_write_dcram( pfd, 0x0, "      [  ]      ", 16 ); // powitanie 
-	pt6958_display("-  -");
   	for( i=0; i < 50; i++ )
     		udelay( 2500 ); 
   	pt6302_write_dcram( pfd, 0x0, "     [ ** ]     ", 16 ); // powitanie 
@@ -340,7 +340,6 @@ static void pt6302_setup( struct pt6302_driver *pfd ) {
   	for( i=0; i < 50; i++ )
     		udelay( 2500 ); 
   	pt6302_write_dcram( pfd, 0x0, "    [ *  * ]    ", 16 ); // powitanie 
-	pt6958_display(" -- ");
   	for( i=0; i < 50; i++ )
     		udelay( 2500 ); 
   	pt6302_write_dcram( pfd, 0x0, "   [ *    * ]   ", 16 ); // powitanie 
@@ -348,7 +347,6 @@ static void pt6302_setup( struct pt6302_driver *pfd ) {
   	for( i=0; i < 50; i++ )
     		udelay( 1500 ); 
   	pt6302_write_dcram( pfd, 0x0, "  [ *  Bm  * ]  ", 16 ); // powitanie 
-	pt6958_display(" bm ");
   	for( i=0; i < 50; i++ )
     		udelay( 2500 ); 
   	pt6302_write_dcram( pfd, 0x0, " [ *  B4am  * ] ", 16 ); // powitanie 
@@ -363,12 +361,21 @@ static void pt6302_setup( struct pt6302_driver *pfd ) {
   	pt6302_write_dcram( pfd, 0x0, "[   v. 05.03   ]", 16 ); // powitanie
 	pt6958_display("05.03");
 
+/*
+	}
+	else
+	{
+	pt6958_display(led_txt);
+	}
+*/
+
   	for( i=0; i < 150; i++ )
     		udelay( 5000 ); 
 
   	pt6302_write_dcram( pfd, 0x0, "[              ]", 16 ); // powitanie
-	pt6958_display("-  -");
+	pt6958_display("    ");
 
+//       pt6958_led_control(PT6958_CMD_ADDR_LED1, 2 );
 }
 
 
@@ -383,3 +390,4 @@ static void pt6302_free( struct pt6302_driver *ptd ) {
   
   ptd->scp = NULL;
 }
+

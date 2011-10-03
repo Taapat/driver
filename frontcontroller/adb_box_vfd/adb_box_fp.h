@@ -91,3 +91,4 @@ struct __vfd_scp* vfd_scp_ctrl=NULL;
 #define SCP_STATUS          (vfd_scp_ctrl->status)
 
 int SCP_PORT = 0;
+

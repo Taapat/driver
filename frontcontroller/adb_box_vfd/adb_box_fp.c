@@ -4,7 +4,7 @@
 #include <linux/module.h>
 #include <linux/delay.h>
 #include <linux/fs.h>
-#include <linux/kernel.h>sci_drv.c
+#include <linux/kernel.h>
 #include <linux/mm.h>
 
 //#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
@@ -89,10 +89,7 @@ void button_poll(struct work_struct *ignored)
 		if ((key_group1==0xA) 	&& (key_group2==0x0)) {				//RES+OK
 			ERR("[fp_key] reboot ...");
  			msleep(250);
-			button_reset = stpio_request_pin( BUTTON_RESET_PORT, BUTTON_RESET_PIN, "btn_reset", STPIO_OUT ); // do sprawdzenia bo cos tu nie kaman :p
-			stpio_set_pin( button_reset,  0 );
-			//stpio_set_pin( button_reset,  1 );
-			//stpio_set_pin( button_reset,  0 );
+			button_reset = stpio_request_pin( 3,2, "btn_reset", STPIO_OUT ); 
 			};
 		if ((key_group1==0x8) 	&& (key_group2==0x2)) key_button = KEY_COMPOSE;	//RES+DOWN
 
@@ -178,9 +175,9 @@ int button_dev_init(void)
 		}
 
 //reset
-/* 	DBG("request stpio %d,%d,%s,%d", BUTTON_RESET_PORT, BUTTON_RESET_PIN, "btn_reset", STPIO_OUT);
-	button_reset = stpio_request_pin( BUTTON_RESET_PORT, BUTTON_RESET_PIN, "btn_reset", STPIO_OUT ); //[IN  (Hi-Z)         ]
-	if ( button_reset == NULL ) {
+/* 	DBG("request stpio %d,%d,%s,%d", BUTTON_RESET_PORT, BUTTON_RESET_PIN, "btn_reset", STPIO_IN);
+	button_reset = stpio_request_pin( BUTTON_RESET_PORT, BUTTON_RESET_PIN, "btn_reset", STPIO_IN); 
+		if ( button_reset == NULL ) {
     		ERR("Request stpio reset failed. abort.");
 		return -EIO;
 		}
@@ -639,8 +636,9 @@ module_param( delay, int, 0644 );
 MODULE_PARM_DESC( delay, "scp delay" );
 
 module_param( rec, int, 0644 );
-MODULE_PARM_DESC( rec, "nbox rec" );
+MODULE_PARM_DESC( rec, "adb_box rec" );
 
 MODULE_DESCRIPTION("fp pt6302 & pt6958 driver");
 MODULE_AUTHOR("B4Team");
 MODULE_LICENSE("GPL");
+
