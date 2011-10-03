@@ -17,9 +17,6 @@
 #include "pio.h"
 #include "adb_box_pt6958.h"
 
-
-
-
 // PT6958
 //------------------------------------------------------------------------------
 static void pt6958_start_write(void)
@@ -407,3 +404,4 @@ void pt6958_display(char *str)
 
 	return;
 }
+

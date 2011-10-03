@@ -1,13 +1,13 @@
 #ifndef _PT6958_H_
 #define _PT6958_H_
 
-#define ADB_BOX_BUTTON_UP    0x01
-#define ADB_BOX_BUTTON_DOWN  0x02
-#define ADB_BOX_BUTTON_LEFT  0x04
-#define ADB_BOX_BUTTON_RIGHT 0x08
-#define ADB_BOX_BUTTON_POWER 0x10
-#define ADB_BOX_BUTTON_MENU  0x20
-#define ADB_BOX_BUTTON_EXIT  0x40
+#define NBOX_BUTTON_UP    0x01
+#define NBOX_BUTTON_DOWN  0x02
+#define NBOX_BUTTON_LEFT  0x04
+#define NBOX_BUTTON_RIGHT 0x08
+#define NBOX_BUTTON_POWER 0x10
+#define NBOX_BUTTON_MENU  0x20
+#define NBOX_BUTTON_EXIT  0x40
 
 #define BUTTON_DO_PORT  2
 #define BUTTON_DO_PIN   2
@@ -16,8 +16,8 @@
 #define BUTTON_DS_PIN   6
 
 
-//#define BUTTON_RESET_PORT  3
-//#define BUTTON_RESET_PIN   2
+#define BUTTON_RESET_PORT  3
+#define BUTTON_RESET_PIN   2
 
 
 static char                    *button_driver_name = "pt6958 frontpanel buttons";
@@ -60,7 +60,6 @@ unsigned char ReadData(void);
 #define FP_GETKEY			STPIO_GET_PIN(PIO_PORT(2),2) //4 ?
 #define FP_DATA				STPIO_GET_PIN(PIO_PORT(4),1)
 //------------------------------------------------------------------------------
-
 #define FP_TIMING_PWCLK			1 			// clock pulse with is 1us 
 #define FP_TIMING_STBCLK		1 		// clock strobe time 2us
 #define FP_TIMING_CSBCLK		FP_TIMING_STBCLK 	// same as STBCLK
@@ -70,7 +69,7 @@ unsigned char ReadData(void);
 #define FP_TIMING_TDOFF			1			// 300ns delay between data bytes
 //------------------------------------------------------------------------------
 
-//extern void adb_box_fp_init(void);
+//extern void nbox_fp_init(void);
 
 
 //------------------------------------------------------------------------------
@@ -171,7 +170,7 @@ typedef struct
  **********************************************************************/
 #define PT6958_CMD_DISPLAY_OFF		0x80 
 #define PT6958_CMD_DISPLAY_OFF_DIM(x)	(0x80+x) //0x80-0x87
-#define PT6958_CMD_DISPLAY_ON		0x8E //0x8E org adb_box
+#define PT6958_CMD_DISPLAY_ON		0x8E //0x8E org nbox
 #define PT6958_CMD_DISPLAY_ON_DIM(x)	(0x88+x) //0x88-0x8F
 /*********************************************************************
  * Definition of LED segment
@@ -298,14 +297,9 @@ typedef struct
  */
 
 
-
 //void pt6958_pow_off(void);
 static int pt6958_led_control(unsigned char led, unsigned char set);
 unsigned char pt6958_read_key(void);
 void pt6958_display(char *str);
 
-
-
 #endif
-
-
