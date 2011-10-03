@@ -3,7 +3,7 @@ DRIVER_TOPDIR:=$(shell pwd)/..
 include $(DRIVER_TOPDIR)/kernel.make
 else
 
-vfd-objs	+= nbox_fp.o
+vfd-objs	+= adb_box_fp.o
 obj-m	+= vfd.o
 
 ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
