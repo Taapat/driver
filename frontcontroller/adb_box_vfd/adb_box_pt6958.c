@@ -8,11 +8,11 @@
 #include <linux/kernel.h>
 #include <linux/mm.h>
 
-#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
+//#if defined (CONFIG_KERNELVERSION) /* ST Linux 2.3 */
 #include <linux/stm/pio.h>
-#else
-#include <linux/stpio.h>
-#endif
+//#else
+//#include <linux/stpio.h>
+//#endif
 
 #include "pio.h"
 #include "adb_box_pt6958.h"
