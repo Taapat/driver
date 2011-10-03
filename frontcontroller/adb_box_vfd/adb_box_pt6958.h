@@ -1,13 +1,13 @@
 #ifndef _PT6958_H_
 #define _PT6958_H_
 
-#define NBOX_BUTTON_UP    0x01
-#define NBOX_BUTTON_DOWN  0x02
-#define NBOX_BUTTON_LEFT  0x04
-#define NBOX_BUTTON_RIGHT 0x08
-#define NBOX_BUTTON_POWER 0x10
-#define NBOX_BUTTON_MENU  0x20
-#define NBOX_BUTTON_EXIT  0x40
+#define ADB_BOX_BUTTON_UP    0x01
+#define ADB_BOX_BUTTON_DOWN  0x02
+#define ADB_BOX_BUTTON_LEFT  0x04
+#define ADB_BOX_BUTTON_RIGHT 0x08
+#define ADB_BOX_BUTTON_POWER 0x10
+#define ADB_BOX_BUTTON_MENU  0x20
+#define ADB_BOX_BUTTON_EXIT  0x40
 
 #define BUTTON_DO_PORT  2
 #define BUTTON_DO_PIN   2
@@ -69,7 +69,7 @@ unsigned char ReadData(void);
 #define FP_TIMING_TDOFF			1			// 300ns delay between data bytes
 //------------------------------------------------------------------------------
 
-//extern void nbox_fp_init(void);
+//extern void adb_box_fp_init(void);
 
 
 //------------------------------------------------------------------------------

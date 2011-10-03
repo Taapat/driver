@@ -19,7 +19,7 @@
 #include "adb_box_pt6958.h"
 
 
-static char nbox_scp_access_char( struct scp_driver *scp, int dout ) {
+static char adb_box_scp_access_char( struct scp_driver *scp, int dout ) {
   uint8_t din   = 0;
   int     outen = ( dout < 0 ) ? 0 : 1, i;
   for( i=0; i < 8; i++ ) {
@@ -34,29 +34,29 @@ static char nbox_scp_access_char( struct scp_driver *scp, int dout ) {
   return din;
 };
 
-static inline void nbox_scp_write_char( struct scp_driver *scp, char data ) {
+static inline void adb_box_scp_write_char( struct scp_driver *scp, char data ) {
   stpio_set_pin( scp->scs, 0 );
-  nbox_scp_access_char( scp, data );
+  adb_box_scp_access_char( scp, data );
   stpio_set_pin( scp->scs, 1 );
 };
 
-static inline char nbox_scp_read_char( struct scp_driver *scp ) {
+static inline char adb_box_scp_read_char( struct scp_driver *scp ) {
   stpio_set_pin( scp->scs, 0 );
-  return nbox_scp_access_char( scp, -1 );
+  return adb_box_scp_access_char( scp, -1 );
   stpio_set_pin( scp->scs, 1 );
 };
 
-static void nbox_scp_write_data( struct scp_driver *scp, char *data, int len ) {
+static void adb_box_scp_write_data( struct scp_driver *scp, char *data, int len ) {
   int i;
   stpio_set_pin( scp->scs, 0 );
-  for( i=0; i<len; i++ ) nbox_scp_access_char( scp, data[i] );
+  for( i=0; i<len; i++ ) adb_box_scp_access_char( scp, data[i] );
   stpio_set_pin( scp->scs, 1 );
 };
 
-static int nbox_scp_read_data( struct scp_driver *scp, char *data, int len ) {
+static int adb_box_scp_read_data( struct scp_driver *scp, char *data, int len ) {
   int i;
   stpio_set_pin( scp->scs, 0 );
-  for( i=0; i<len; i++ ) data[i] = nbox_scp_access_char( scp, -1 );
+  for( i=0; i<len; i++ ) data[i] = adb_box_scp_access_char( scp, -1 );
   stpio_set_pin( scp->scs, 1 );
   return len;
 };
@@ -104,8 +104,8 @@ struct pt6302_driver {
   struct scp_driver* scp;
 };
 
-#define pt6302_write_data( scp, data, len ) nbox_scp_write_data( scp, data, len )
-#define pt6302_write_char( scp, data )      nbox_scp_write_char( scp, data )
+#define pt6302_write_data( scp, data, len ) adb_box_scp_write_data( scp, data, len )
+#define pt6302_write_char( scp, data )      adb_box_scp_write_char( scp, data )
 
 static void pt6302_free( struct pt6302_driver *ptd );
 
@@ -176,7 +176,7 @@ static int pt6302_write_dcram( struct pt6302_driver* ptd, unsigned char addr, un
 	{
 	if (data[i] < 0x80) 
 		{
-      		wdata[len_vfd-j] = pt6302_nbox_rom_table[data[i]]; 	// wybor z tablicy znakow dla VFD
+      		wdata[len_vfd-j] = pt6302_adb_box_rom_table[data[i]]; 	// wybor z tablicy znakow dla VFD
 
 		j++;
 		}
@@ -198,7 +198,7 @@ static int pt6302_write_dcram( struct pt6302_driver* ptd, unsigned char addr, un
 
 		if (znak != 0x00)
 			{
-      			wdata[len_vfd-j] = pt6302_nbox_rom_table[znak]; 	// wybor z tablicy znakow
+      			wdata[len_vfd-j] = pt6302_adb_box_rom_table[znak]; 	// wybor z tablicy znakow
 			j++;
 			}
 		}

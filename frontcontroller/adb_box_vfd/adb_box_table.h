@@ -1,4 +1,4 @@
-static const uint8_t pt6302_nbox_rom_table[128] = {
+static const uint8_t pt6302_adb_box_rom_table[128] = {
   0x2e,//0x00, RAM0
   0x8f,//0x01, RAM1
   0xe4,//0x02, RAM2

@@ -246,7 +246,7 @@ void button_dev_exit(void)
 
  /* <-----vfd-----> */
 
-static void nbox_scp_free( struct scp_driver* scp ) {
+static void adb_box_scp_free( struct scp_driver* scp ) {
   if ( scp == NULL ) return;
   if ( scp->scs ) stpio_set_pin( scp->scs, 1 );
   
@@ -264,7 +264,7 @@ static const char stpio_vfd_scs[] = "vfd_sc[KEY_RESTART]s";
 static const char stpio_vfd_scl[] = "vfd_sck";
 static const char stpio_vfd_sda[] = "vfd_sda";
 
-static struct scp_driver* nbox_scp_init( void ) {
+static struct scp_driver* adb_box_scp_init( void ) {
   struct scp_driver* scp = NULL;
   
   DBG("Init fp pt6302 & pt6958 driver.");
@@ -272,42 +272,42 @@ static struct scp_driver* nbox_scp_init( void ) {
   scp = (struct scp_driver*)kzalloc( sizeof( struct scp_driver ), GFP_KERNEL );
   if ( scp == NULL ) {
     ERR("Unable to allocate scp driver struct. abort.");
-    goto nbox_scp_init_fail;
+    goto adb_box_scp_init_fail;
   }
 
 //PT6302  
-  DBG("request stpio %d,%d,%s,%d", NBOX_VFD_PIO_PORT_SCS, NBOX_VFD_PIO_PIN_SCS, stpio_vfd_scs, STPIO_OUT);
-  scp->scs = stpio_request_pin( NBOX_VFD_PIO_PORT_SCS, NBOX_VFD_PIO_PIN_SCS, stpio_vfd_scs, STPIO_OUT );
+  DBG("request stpio %d,%d,%s,%d", ADB_BOX_VFD_PIO_PORT_SCS, ADB_BOX_VFD_PIO_PIN_SCS, stpio_vfd_scs, STPIO_OUT);
+  scp->scs = stpio_request_pin( ADB_BOX_VFD_PIO_PORT_SCS, ADB_BOX_VFD_PIO_PIN_SCS, stpio_vfd_scs, STPIO_OUT );
 
   if ( scp->scs == NULL ) {
     ERR("Request stpio scs failed. abort.");
-    goto nbox_scp_init_fail;
+    goto adb_box_scp_init_fail;
   }
 
 //wspolne  
 // SCLK
-  DBG("request stpio %d,%d,%s,%d", NBOX_VFD_PIO_PORT_SCL, NBOX_VFD_PIO_PIN_SCL, stpio_vfd_scl, STPIO_OUT);
-  scp->scl = stpio_request_pin( NBOX_VFD_PIO_PORT_SCL, NBOX_VFD_PIO_PIN_SCL, stpio_vfd_scl, STPIO_OUT );
+  DBG("request stpio %d,%d,%s,%d", ADB_BOX_VFD_PIO_PORT_SCL, ADB_BOX_VFD_PIO_PIN_SCL, stpio_vfd_scl, STPIO_OUT);
+  scp->scl = stpio_request_pin( ADB_BOX_VFD_PIO_PORT_SCL, ADB_BOX_VFD_PIO_PIN_SCL, stpio_vfd_scl, STPIO_OUT );
   
   if ( scp->scl == NULL ) {
     ERR("Request stpio scl failed. abort.");
-    goto nbox_scp_init_fail;
+    goto adb_box_scp_init_fail;
   }
 
 // DIN  
-  DBG("request stpio %d,%d,%s,%d", NBOX_VFD_PIO_PORT_SDA, NBOX_VFD_PIO_PIN_SDA, stpio_vfd_sda, STPIO_BIDIR );
-  scp->sda = stpio_request_pin( NBOX_VFD_PIO_PORT_SDA, NBOX_VFD_PIO_PIN_SDA, stpio_vfd_sda, STPIO_BIDIR );
+  DBG("request stpio %d,%d,%s,%d", ADB_BOX_VFD_PIO_PORT_SDA, ADB_BOX_VFD_PIO_PIN_SDA, stpio_vfd_sda, STPIO_BIDIR );
+  scp->sda = stpio_request_pin( ADB_BOX_VFD_PIO_PORT_SDA, ADB_BOX_VFD_PIO_PIN_SDA, stpio_vfd_sda, STPIO_BIDIR );
   
   if ( scp->sda == NULL ) {
     ERR("Request stpio sda failed. abort.");
-    goto nbox_scp_init_fail;
+    goto adb_box_scp_init_fail;
   }
 
   
   return scp;
   
-  nbox_scp_init_fail:
-  nbox_scp_free( scp );
+  adb_box_scp_init_fail:
+  adb_box_scp_free( scp );
   
   return 0;
 };
@@ -481,7 +481,7 @@ static ssize_t vfd_write( struct file *filp, const char *buf, size_t len, loff_t
   unsigned char* kbuf;
   size_t         wlen;
 
-  DBG("write : len = %d (%d), off = %d.", len, NBOX_VFD_MAX_CHARS, (int)*off);
+  DBG("write : len = %d (%d), off = %d.", len, ADB_BOX_VFD_MAX_CHARS, (int)*off);
 
   if ( len == 0 ) return len;
 
@@ -495,18 +495,18 @@ static ssize_t vfd_write( struct file *filp, const char *buf, size_t len, loff_t
 
   wlen = len;
   if ( kbuf[len-1] == '\n' ) { kbuf[len-1] = '\0'; wlen--; }
-  if ( wlen > NBOX_VFD_MAX_CHARS ) wlen = NBOX_VFD_MAX_CHARS;
+  if ( wlen > ADB_BOX_VFD_MAX_CHARS ) wlen = ADB_BOX_VFD_MAX_CHARS;
 
   DBG("write : len = %d, wlen = %d, kbuf = '%s'.\n", len, wlen, kbuf);
 
   pt6302_write_dcram( vfd.ctrl, 0, kbuf, wlen );
 
 #if 0
-  if ( wlen <= NBOX_VFD_MAX_CHARS ) {
+  if ( wlen <= ADB_BOX_VFD_MAX_CHARS ) {
     pt6302_write_dcram( vfd.ctrl, 0, kbuf, wlen );
   } else {
     pos = 0;
-    pt6302_write_dcram( vfd.ctrl, 0, kbuf+pos, NBOX_VFD_MAX_CHARS );
+    pt6302_write_dcram( vfd.ctrl, 0, kbuf+pos, ADB_BOX_VFD_MAX_CHARS );
   }
 #endif
 
@@ -565,7 +565,7 @@ static void __exit vfd_module_exit(void) {
 
   unregister_chrdev( VFD_MAJOR, "vfd" );
   if ( vfd.ctrl ) pt6302_free( vfd.ctrl );
-  if ( vfd.scp  ) nbox_scp_free( vfd.scp );
+  if ( vfd.scp  ) adb_box_scp_free( vfd.scp );
   vfd.ctrl = NULL;
   vfd.scp  = NULL;
   DBG("[fp_vfd] done...\n");
@@ -583,7 +583,7 @@ static int __init vfd_module_init( void ) {
   vfd.ctrl = NULL;
   
   DBG("probe for scp driver.");
-  vfd.scp = nbox_scp_init();
+  vfd.scp = adb_box_scp_init();
   if ( vfd.scp == NULL ) {
     ERR("unable to init scp driver. abort.");
     goto vfd_init_fail;

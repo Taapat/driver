@@ -18,17 +18,17 @@
 //------------------------------------------------
 
 // PT6302
-#define NBOX_VFD_MAX_CHARS 16
+#define ADB_BOX_VFD_MAX_CHARS 16
 
-#define NBOX_VFD_PIO_PORT_SCS 1
-#define NBOX_VFD_PIO_PIN_SCS  2
+#define ADB_BOX_VFD_PIO_PORT_SCS 1
+#define ADB_BOX_VFD_PIO_PIN_SCS  2
 
 // wspolne PIO
-#define NBOX_VFD_PIO_PORT_SCL 4
-#define NBOX_VFD_PIO_PIN_SCL  0
+#define ADB_BOX_VFD_PIO_PORT_SCL 4
+#define ADB_BOX_VFD_PIO_PIN_SCL  0
 
-#define NBOX_VFD_PIO_PORT_SDA 4
-#define NBOX_VFD_PIO_PIN_SDA  1
+#define ADB_BOX_VFD_PIO_PORT_SDA 4
+#define ADB_BOX_VFD_PIO_PIN_SDA  1
 
 // PT6958
 #define PT6958_BUTTON_PIO_PORT_DOUT	2
