@@ -1,5 +1,11 @@
 #ifndef _SCI_7100_H
 #define _SCI_7100_H
+/* Hellmaster1024 Octagon1008 and Fortis HDBOX need these defines, maybe other sti7100/sti7101 based STB need this defines too
+*/
+#if defined(OCTAGON1008) || defined(FORTIS_HDBOX)
+#define SUPPORT_NO_VOLTAGE
+#define SUPPORT_NO_AUTOSET
+#endif
 
 #define SYS_CFG_BASE_ADDRESS     	0x19001000
 #define SYS_CFG7                  	0x11C
