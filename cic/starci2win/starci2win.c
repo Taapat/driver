@@ -43,7 +43,7 @@
 
 #include "dvb_ca_core.h"
 
-static int debug = 0;
+static int debug;
 #define dprintk(args...) \
 	do { \
 		if (debug) printk (args); \
@@ -460,7 +460,6 @@ void setDestination(struct dvb_ca_state *state, int slot)
 	   break;
       	}
    }
-
    dprintk("%s (slot = %d)<\n", __func__, slot);
 }
 
@@ -764,7 +763,11 @@ static int starci_slot_ts_enable(struct dvb_ca_en50221 *ca, int slot)
 
   result = starci_readreg(state, reg[slot]);
 
-#if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX) && !defined(HS7810A)
+#if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX) && !defined(HS7810A) && \
+    !defined(CUBEREVO) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_MINI2) && \
+    !defined(CUBEREVO_250HD) && !defined(CUBEREVO_9500HD) && \
+    !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_MINI_FTA)
+ 
   starci_writereg(state, reg[slot], 0x23);
 #else
   starci_writereg(state, reg[slot], 0x21);
