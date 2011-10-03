@@ -2561,7 +2561,7 @@ module_exit(sci_module_cleanup);
 MODULE_VERSION(SMARTCARD_VERSION);
 
 module_param(debug, int, S_IRUGO);
-MODULE_PARM_DESC(debug, "Turn on/off SmartCard debugging (default:off)");
+MODULE_PARM_DESC(debug, "Turn on/off SmartCard debugging (default:on)");
 
 MODULE_AUTHOR("Spider-Team");
 MODULE_DESCRIPTION("SmartCard Interface driver");
