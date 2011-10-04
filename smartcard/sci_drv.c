@@ -373,8 +373,20 @@ void smartcard_reset(SCI_CONTROL_BLOCK *sci, unsigned char wait)
 {
     PDEBUG(" ...\n");
 
-    if (sci->id == 0)
+    if (sci->id == 0) {
         disable_irq(SCI0_INT_RX_TX);
+#if defined(ADB_BOX)
+        /*VCC Low */
+        stpio_set_pin(sci->cmdvcc, 0);
+        /* Reset low */
+         stpio_set_pin(sci->reset, 0); 
+         mdelay(500); 
+         /* VCC High */
+         stpio_set_pin(sci->cmdvcc, 1);
+         mdelay(200); 
+#endif
+       }
+    
     else if (sci->id == 1)
         disable_irq(SCI1_INT_RX_TX);
 	else
@@ -388,12 +400,13 @@ void smartcard_reset(SCI_CONTROL_BLOCK *sci, unsigned char wait)
 	sci->rx_wptr = 0;
 	sci->tx_rptr = 0;
 	sci->tx_wptr = 0;
-
+#if !defined(ADB_BOX)
     /* Reset high */
     stpio_set_pin(sci->reset, 1);
-	mdelay(10);
+    mdelay(10);
     /* Reset low */
     stpio_set_pin(sci->reset, 0);
+#endif
     /* Wait 100 ms */
     mdelay(100);
 
@@ -403,8 +416,10 @@ void smartcard_reset(SCI_CONTROL_BLOCK *sci, unsigned char wait)
    		set_reg_writeonly(sci, BASE_ADDRESS_ASC0, ASC0_TX_RST, 0xFF);
         set_reg_writeonly(sci, BASE_ADDRESS_ASC0, ASC0_RX_RST, 0xFF);
         set_serial_irq(sci, RX_FULL_IRQ);
+#if !defined(ADB_BOX)
 		if(wait)
 			msleep(1000);
+#endif
         enable_irq(SCI0_INT_RX_TX);
     }
     else if (sci->id == 1)
@@ -863,9 +878,13 @@ static void sci_detect_change(SCI_CONTROL_BLOCK *sci)
         dprintk(1, "Removing Smartcard %d!\n", sci->id);
 
 		sci->atr_status = SCI_WITHOUT_ATR;
-
-        /* VCC cmd high */
-        stpio_set_pin(sci->cmdvcc, 1);
+#if defined(ADB_BOX)
+        /* VCC cmd low */
+        stpio_set_pin(sci->cmdvcc, 0);
+#else
+	/* VCC cmd high */
+	stpio_set_pin(sci->cmdvcc, 1);
+#endif
         sci_hw_init(sci);
 
         memset(sci->read_buf, 0, SCI_BUFFER_SIZE);
@@ -1058,7 +1077,11 @@ void sci_exit (void)
 		mdelay(10);
 
 	    if(sci->cmdvcc!= NULL) {
-	    	stpio_set_pin(sci->cmdvcc, 1); // active low
+#if defined(ADB_BOX)
+	    	stpio_set_pin(sci->cmdvcc, 0); // active low
+#else
+		stpio_set_pin(sci->cmdvcc, 1);
+#endif
 	    	stpio_free_pin (sci->cmdvcc);
 	    	sci->cmdvcc=NULL;
 	    }
@@ -1286,8 +1309,12 @@ void sci_detect_handler (void *params)
     int last_status=0;
 
     sci->polling =1;
-    /* VCC cmd high */
+#if defined(ADB_BOX)
+    /* VCC cmd low */
+    stpio_set_pin(sci->cmdvcc, 0);
+#else
     stpio_set_pin(sci->cmdvcc, 1);
+#endif
 
 	PDEBUG(" sci %d...\n", sci->id);
 
@@ -1543,9 +1570,12 @@ SCI_ERROR sci_reset(SCI_CONTROL_BLOCK *sci)
         return rc;
     }
     /* FIXME: Add wake_up_interruptible() */
-
+#if defined(ADB_BOX)
     /* VCC cmd low  (active) */
+    stpio_set_pin(sci->cmdvcc, 1);
+#else
     stpio_set_pin(sci->cmdvcc, 0);
+#endif
 
     smartcard_reset(sci, 0);
     
@@ -1902,8 +1932,11 @@ static int sci_close(struct inode *inode, struct file *filp)
         	dprintk(1,"sc[%d] device is not opend: %d\n", sci->id, sci->driver_inuse);
             rc = -EINVAL;
         }
-
-        stpio_set_pin(sci->cmdvcc, 1); // disable TDA8024
+#if defined(ADB_BOX)
+        stpio_set_pin(sci->cmdvcc, 0); // disable TDA8024
+#else
+        stpio_set_pin(sci->cmdvcc, 1);
+#endif
     }
     else
     {
@@ -2213,7 +2246,11 @@ int sci_ioctl(struct inode *inode,
 			}
 			if(rc || !sci->WWT)
 			{
+			#if defined(ADB_BOX)
+			    stpio_set_pin(sci->cmdvcc, 0);
+			#else
 			    stpio_set_pin(sci->cmdvcc, 1);
+			#endif
 	            dprintk(1, "no atr detected!\n");
 			}
 
@@ -2561,7 +2598,7 @@ module_exit(sci_module_cleanup);
 MODULE_VERSION(SMARTCARD_VERSION);
 
 module_param(debug, int, S_IRUGO);
-MODULE_PARM_DESC(debug, "Turn on/off SmartCard debugging (default:off)");
+MODULE_PARM_DESC(debug, "Turn on/off SmartCard debugging (default:on)");
 
 MODULE_AUTHOR("Spider-Team");
 MODULE_DESCRIPTION("SmartCard Interface driver");
