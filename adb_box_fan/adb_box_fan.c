@@ -125,7 +125,6 @@ struct e2_procs
 
 static int __init init_fan_module(void)
 {
- printk("Loading Cooler by B4Team\n\t");
   install_e2_procs(e2_procs[0].name, e2_procs[0].read_proc, e2_procs[0].write_proc, NULL);
 
   fan_registers = (unsigned long) ioremap(0x18010000, 0x100);

@@ -564,8 +564,12 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/fan/fan_ctrl"   	           , NULL, NULL, NULL, NULL, ""},
 #endif
 	{cProcDir  , "stb/player"                      , NULL, NULL, NULL, NULL, ""},
-	{cProcEntry, "stb/player/version"              , NULL, get_player_version, NULL, NULL, ""}
+	{cProcEntry, "stb/player/version"              , NULL, get_player_version, NULL, NULL, ""},
 
+#ifdef ADB_BOX
+	{cProcDir  , "stb/fan"   	                    , NULL, NULL, NULL, NULL, ""}, 
+	{cProcEntry, "stb/fan/fan_ctrl"   	           , NULL, NULL, NULL, NULL, ""}, 
+#endif
 };
 
 static int cpp_read_proc(char *page, char **start, off_t off, int count,
