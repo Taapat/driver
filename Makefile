@@ -136,6 +136,9 @@ obj-y	+= logfs/
 endif
 
 #obj-y	+= proc_register/
+ifneq (,$(findstring cpu_frequ,*))
+obj-y	+= cpu_frequ/
+endif
 
 ifdef  HL101
 obj-y	+= smartcard/
