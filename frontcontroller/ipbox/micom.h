@@ -58,6 +58,7 @@ extern tFrontPanelOpen FrontPanelOpen[LASTMINOR];
 
 #define VFDGETWAKEUPTIME      0xc0425b00
 #define VFDGETVERSION         0xc0425b01
+#define VFDSETDISPLAYTIME     0xc0425b02
 
 struct set_brightness_s {
     int level;
@@ -73,6 +74,10 @@ struct set_fan_s {
 };
 
 struct set_rf_s {
+    int on;
+};
+
+struct set_display_time_s {
     int on;
 };
 
@@ -133,6 +138,7 @@ struct micom_ioctl_data {
         struct get_wakeupstatus status;
         struct get_wakeuptime wakeup_time;
         struct get_version_s version;
+        struct set_display_time_s display_time;
     } u;
 };
 
