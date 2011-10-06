@@ -120,6 +120,7 @@ extern struct mutex asc_lock;
 
 unsigned short *num2seg;
 unsigned short *Char2seg;
+unsigned short *LowerChar2seg;
 static special_char_t  *special2seg;
 static int special2seg_size = 4;
 
@@ -211,6 +212,36 @@ unsigned short Char2seg_14dotmatrix[] =
    0x4a,       // Z
 };
 
+unsigned short LowerChar2seg_14dotmatrix[] =
+{
+   0x51,       // a
+   0x52,       // b
+   0x53,       // c
+   0x54,       // d
+   0x55,       // e
+   0x56,       // f
+   0x57,       // g
+   0x58,       // h
+   0x59,       // i
+   0x5a,       // j
+   0x5b,       // k
+   0x5c,       // l
+   0x5d,       // m
+   0x5e,       // n
+   0x5f,       // o
+   0x60,       // p
+   0x61,       // q
+   0x62,       // r
+   0x63,       // s
+   0x64,       // t
+   0x65,       // u
+   0x66,       // v
+   0x67,       // w
+   0x68,       // x
+   0x69,       // y
+   0x6a,       // z
+};
+
 unsigned short num2seg_13grid[] =
 {
    0x3123,     // 0
@@ -257,6 +288,11 @@ unsigned short Char2seg_13grid[] =
 
 special_char_t special2seg_14dotmatrix[] =
 {
+   {'/',   0x4e},
+   {'^',   0x4e},
+   {'[',   0x4b},
+   {']',   0x4d},
+   {'_',   0x4f},
    {'-',   0x1d},
    {'\'',  0x90},
    {'.',   0x1e},
@@ -1032,6 +1068,7 @@ int micomGetMicom(void)
     front_seg_num    = 4;
     num2seg          = num2seg_7seg;
     Char2seg         = Char2seg_7seg;
+    LowerChar2seg    = NULL;
     special2seg      = special2seg_7seg;
     special2seg_size = ARRAY_SIZE(special2seg_7seg);
 
@@ -1045,13 +1082,19 @@ int micomGetMicom(void)
     {
 #if defined(CUBEREVO)
         front_seg_num = 12;
-#elif defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2)/* fixme: not sure if true for MINI2 */
-        front_seg_num = 14;
-#endif
         num2seg = num2seg_12dotmatrix;
         Char2seg = Char2seg_12dotmatrix;
-        special2seg = special2seg_12dotmatrix;
-        special2seg_size = ARRAY_SIZE(special2seg_12dotmatrix);
+        LowerChar2seg = LowerChar2seg_14dotmatrix;
+        special2seg = special2seg_14dotmatrix;
+        special2seg_size = ARRAY_SIZE(special2seg_14dotmatrix);
+#elif defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2)/* fixme: not sure if true for MINI2 */
+        front_seg_num = 14;
+        num2seg = num2seg_14dotmatrix;
+        Char2seg = Char2seg_14dotmatrix;
+        LowerChar2seg = LowerChar2seg_14dotmatrix;
+        special2seg = special2seg_14dotmatrix;
+        special2seg_size = ARRAY_SIZE(special2seg_14dotmatrix);
+#endif
     } else
     {
         /* 13 grid */
@@ -1059,6 +1102,7 @@ int micomGetMicom(void)
 
         num2seg = num2seg_13grid;
         Char2seg = Char2seg_13grid;
+        LowerChar2seg = NULL;
         special2seg = special2seg_13grid;
         special2seg_size = ARRAY_SIZE(special2seg_13grid);
     }
@@ -1179,8 +1223,13 @@ int micomWriteString(unsigned char* aBuf, int len)
         {
             case 'A' ... 'Z':
                 ch -= 'A'-'a';
+                    data = Char2seg[ch-'a'];
+                break;
             case 'a' ... 'z':
-                data = Char2seg[ch-'a'];
+                if (LowerChar2seg == NULL)
+                    data = Char2seg[ch-'a'];
+                else
+                    data = LowerChar2seg[ch-'a'];
                 break;
             case '0' ... '9':
                 data = num2seg[ch-'0'];
