@@ -52,9 +52,9 @@ void serial_init (void)
 {
     // Configure the asc input/output settings
     *(unsigned int*)(ASCXBaseAddress + ASC_INT_EN)   = 0x00000000;
-    *(unsigned int*)(ASCXBaseAddress + ASC_CTRL)     = 0x00000589; //1589
+    *(unsigned int*)(ASCXBaseAddress + ASC_CTRL)     = 0x00000589;
     *(unsigned int*)(ASCXBaseAddress + ASC_TIMEOUT)  = 0x00000014; //10 
-    *(unsigned int*)(ASCXBaseAddress + ASC_BAUDRATE) = 0x0000028a; //c9
+    *(unsigned int*)(ASCXBaseAddress + ASC_BAUDRATE) = 0x0000028a;
     *(unsigned int*)(ASCXBaseAddress + ASC_TX_RST)   = 0;
     *(unsigned int*)(ASCXBaseAddress + ASC_RX_RST)   = 0;
 }

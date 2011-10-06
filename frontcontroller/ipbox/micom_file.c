@@ -37,6 +37,7 @@
 #include <linux/interrupt.h>
 #include <linux/time.h>
 #include <linux/poll.h>
+#include <linux/mutex.h>
 
 #include "micom.h"
 #include "micom_asc.h"
@@ -114,6 +115,8 @@ static struct saved_data_s lastdata;
 
 /* number segments */
 int front_seg_num = 14;
+
+extern struct mutex asc_lock;
 
 unsigned short *num2seg;
 unsigned short *Char2seg;
@@ -494,6 +497,8 @@ int micomWriteCommand(char* buffer, int len, int needAck)
 
     dprintk(150, "%s >\n", __func__);
 
+    mutex_lock(&asc_lock);
+
     for (i = 0; i < len; i++)
     {
         serial_putc (buffer[i]);
@@ -502,6 +507,9 @@ int micomWriteCommand(char* buffer, int len, int needAck)
     if (needAck)
         if (ack_sem_down())
             return -ERESTARTSYS;
+
+
+    mutex_unlock(&asc_lock);
 
     dprintk(150, "%s < \n", __func__);
 
@@ -611,15 +619,22 @@ int micomSetFan(int on)
     return res;
 }
 
-int micomSetRF(int on)
+int micomSetDisplayTime(int on)
 {
     char buffer[5];
     int res = 0;
 
     dprintk(100, "%s > %d\n", __func__, on);
 
+    /* clear display */
     memset(buffer, 0, 5);
+    buffer[0] = VFD_SETCLEARTEXT;
+    res = micomWriteCommand(buffer, 5, 0);
+    buffer[0] = VFD_SETDISPLAYTEXT;
+    res = micomWriteCommand(buffer, 5, 0);
 
+    /* show time */
+    memset(buffer, 0, 5);
     buffer[0] = VFD_SETVFDTIME;
     buffer[1] = on;
      
@@ -630,7 +645,7 @@ int micomSetRF(int on)
     return res;
 }
 
-int micomSetDisplayTime(int on)
+int micomSetRF(int on)
 {
     char buffer[5];
     int res = 0;
