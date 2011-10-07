@@ -46,6 +46,7 @@
 #include <linux/interrupt.h>
 #include <linux/time.h>
 #include <linux/poll.h>
+#include <linux/mutex.h>
 
 #include "micom.h"
 #include "micom_asc.h"
@@ -75,7 +76,7 @@
 #define EVENT_ANSWER_UNKNOWN2            0xef
 
 //----------------------------------------------
-short paramDebug = 10;
+short paramDebug = 0;
 
 static unsigned char expectEventData = 0;
 static unsigned char expectEventId = 1;
@@ -89,7 +90,7 @@ static unsigned char expectEventId = 1;
 
 #define cMinimumSize   2
 
-#define BUFFERSIZE   256     //must be 2 ^ n
+#define BUFFERSIZE   512     //must be 2 ^ n
 static unsigned char RCVBuffer [BUFFERSIZE];
 static int           RCVBufferStart = 0, RCVBufferEnd = 0;
 
@@ -100,6 +101,8 @@ static wait_queue_head_t   wq;
 static wait_queue_head_t   rx_wq;
 static wait_queue_head_t   ack_wq;
 static int dataReady = 0;
+
+struct mutex asc_lock;
 
 //----------------------------------------------
 
@@ -194,7 +197,7 @@ void handleCopyData(int len)
     
     while (i != len / 2)
     {
-        printk("%d. = 0x%02x\n", j,  RCVBuffer[j]);
+        dprintk(50, "%d. = 0x%02x\n", j,  RCVBuffer[j]);
         data[i] = RCVBuffer[j];
         j += 2; //filter answer tag
         j %= BUFFERSIZE;
@@ -454,16 +457,17 @@ static irqreturn_t FP_interrupt(int irq, void *dev_id)
         RCVBuffer [RCVBufferStart] = *ASC_X_RX_BUFF;
         RCVBufferStart = (RCVBufferStart + 1) % BUFFERSIZE;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
-        // We are to fast, lets make a break
-        udelay(0);
-#endif
-
         dataArrived = 1;
 
         if (RCVBufferStart == RCVBufferEnd)
         {
             printk ("FP: RCV buffer overflow!!! (%d - %d)\n", RCVBufferStart, RCVBufferEnd);
+        }
+    
+        //give the reader process the chance to consume the data
+        if (getLen() > cPackageSize * 20)
+        {
+           break;
         }
     }
 
@@ -496,6 +500,8 @@ int micomTask(void * dummy)
          continue;
      }
 
+     mutex_lock(&asc_lock);
+
      if (RCVBufferStart != RCVBufferEnd)
         dataAvailable = 1;
      
@@ -508,6 +514,7 @@ int micomTask(void * dummy)
 
         dprintk(150, "start %d end %d\n",  RCVBufferStart,  RCVBufferEnd);  
      }
+     mutex_unlock(&asc_lock);
   }
 
   printk("micomTask died!\n");
@@ -531,6 +538,7 @@ static int __init micom_init_module(void)
     //Disable all ASC 2 interrupts
     *ASC_X_INT_EN = *ASC_X_INT_EN & ~0x000001ff;
 
+	mutex_init(&asc_lock);
     serial_init();
 
     init_waitqueue_head(&wq);

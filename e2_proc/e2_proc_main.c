@@ -570,7 +570,6 @@ struct ProcStructure_s e2Proc[] =
 	{cProcDir  , "stb/fan"   	                    , NULL, NULL, NULL, NULL, ""}, 
 	{cProcEntry, "stb/fan/fan_ctrl"   	           , NULL, NULL, NULL, NULL, ""}, 
 #endif
-
 };
 
 static int cpp_read_proc(char *page, char **start, off_t off, int count,

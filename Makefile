@@ -178,11 +178,13 @@ endif
 
 ifdef UFS912
 obj-y	+= cec/
+obj-y	+= cpu_frequ/
 endif
 
 ifdef ATEVIO7500
 obj-y	+= cec/
 obj-y	+= smartcard/
+obj-y	+= cpu_frequ/
 endif
 
 ifdef HS7810A
