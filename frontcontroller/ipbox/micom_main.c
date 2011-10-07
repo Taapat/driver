@@ -21,7 +21,7 @@
  */
 
 /*
- * Cuberevo 9000 HD Frontcontroller
+ * Cuberevo 900/9000 HD Frontcontroller
  *
  * Devices:
  *  - /dev/vfd (vfd ioctls and read/write function)
@@ -103,6 +103,8 @@ static wait_queue_head_t   ack_wq;
 static int dataReady = 0;
 
 struct mutex asc_lock;
+
+const char* driver_version = "1.00";
 
 //----------------------------------------------
 
@@ -467,6 +469,7 @@ static irqreturn_t FP_interrupt(int irq, void *dev_id)
         //give the reader process the chance to consume the data
         if (getLen() > cPackageSize * 20)
         {
+           udelay(0);
            break;
         }
     }
@@ -590,7 +593,22 @@ static void __exit micom_cleanup_module(void)
 module_init(micom_init_module);
 module_exit(micom_cleanup_module);
 
-MODULE_DESCRIPTION("MICOM frontcontroller module");
+#if defined(CUBEREVO_MINI) 
+MODULE_DESCRIPTION("MICOM frontcontroller module (CUBEREVO_MINI)" );
+#elif defined(CUBEREVO_MINI2) 
+MODULE_DESCRIPTION("MICOM frontcontroller module (CUBEREVO_MINI2)");
+#elif defined(CUBEREVO_250HD)
+MODULE_DESCRIPTION("MICOM frontcontroller module (CUBEREVO_250HD)");
+#elif defined(CUBEREVO)
+MODULE_DESCRIPTION("MICOM frontcontroller module (CUBEREVO)");
+#elif defined(CUBEREVO_2000HD)
+MODULE_DESCRIPTION("MICOM frontcontroller module (CUBEREVO_2000HD)");
+#elif defined(CUBEREVO_3000HD)
+MODULE_DESCRIPTION("MICOM frontcontroller module (CUBEREVO_3000HD)");
+#else
+MODULE_DESCRIPTION("MICOM frontcontroller module (UNKNOWN)");
+#endif
+
 MODULE_AUTHOR("Konfetti");
 MODULE_LICENSE("GPL");
 

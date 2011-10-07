@@ -43,6 +43,7 @@
 #include "micom_asc.h"
 #include "micom_utf.h"
 
+extern const char* driver_version;
 extern void ack_sem_up(void);
 extern int  ack_sem_down(void);
 int micomWriteString(unsigned char* aBuf, int len);
@@ -1033,7 +1034,7 @@ int micomGetMicom(void)
 
     dprintk(100, "%s >\n", __func__);
 
-#if defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) /* fixme: not sure if true for MINI2 & CUBEREVO250HD!!! */
+#if defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_3000HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_250HD) /* fixme: not sure if true for MINI2 & CUBEREVO250HD!!! */
     micom_year  = 2008;
     micom_month = 4; 
 #else
@@ -1076,7 +1077,7 @@ int micomGetMicom(void)
 
 #if defined(CUBEREVO)
     if ((micom_year == 2008) && (micom_month == 3))
-#elif defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) /* fixme: not sure if true for MINI2 !!! */
+#elif defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_3000HD) || defined(CUBEREVO_2000HD) /* fixme: not sure if true for MINI2 !!! */
     if ((micom_year == 2008) && (micom_month == 4))
 #endif
     {
@@ -1087,7 +1088,7 @@ int micomGetMicom(void)
         LowerChar2seg = LowerChar2seg_14dotmatrix;
         special2seg = special2seg_14dotmatrix;
         special2seg_size = ARRAY_SIZE(special2seg_14dotmatrix);
-#elif defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2)/* fixme: not sure if true for MINI2 */
+#elif defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_3000HD) || defined(CUBEREVO_2000HD)/* fixme: not sure if true for MINI2 */
         front_seg_num = 14;
         num2seg = num2seg_14dotmatrix;
         Char2seg = Char2seg_14dotmatrix;
@@ -1287,7 +1288,21 @@ int micom_init_func(void)
 
     sema_init(&write_sem, 1);
 
-    printk("Cuberevo 9000 HD VFD/Micom module initializing\n");
+#if defined(CUBEREVO_MINI) 
+    printk("Cuberevo MINI VFD initializing (V%s)\n", driver_version);
+#elif defined(CUBEREVO_MINI2) 
+    printk("Cuberevo MINI2 VFD initializing (V%s)\n", driver_version);
+#elif defined(CUBEREVO_250HD)
+    printk("Cuberevo 250 HD VFD initializing (V%s)\n", driver_version);
+#elif defined(CUBEREVO)
+    printk("Cuberevo 9000 HD VFD initializing (V%s)\n", driver_version);
+#elif defined(CUBEREVO_2000HD)
+    printk("Cuberevo 2000 HD VFD initializing (V%s)\n", driver_version);
+#elif defined(CUBEREVO_3000HD)
+    printk("Cuberevo 3000 HD VFD initializing (V%s)\n", driver_version);
+#else
+    printk("Cuberevo UNKNOWN VFD initializing (V%s)\n", driver_version);
+#endif
 
     micomGetMicom();
     res |= micomSetFan(0);
@@ -1316,6 +1331,8 @@ int micom_init_func(void)
     return 0;
 }
 
+//#define TEST_CHARSET
+#ifndef TEST_CHARSET
 static ssize_t MICOMdev_write(struct file *filp, const char *buff, size_t len, loff_t *off)
 {
     char* kernel_buf;
@@ -1378,6 +1395,88 @@ static ssize_t MICOMdev_write(struct file *filp, const char *buff, size_t len, l
     else
         return len;
 }
+#else
+static ssize_t MICOMdev_write(struct file *filp, const char *buff, size_t len, loff_t *off)
+{
+    char* kernel_buf;
+    int minor, vLoop, res = 0;
+	char* myString = kmalloc(len + 1, GFP_KERNEL);
+    int value;
+    char                buffer[5];
+    
+    dprintk(100, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
+
+    if (len == 0)
+        return len;
+
+    minor = -1;
+    for (vLoop = 0; vLoop < LASTMINOR; vLoop++)
+    {
+        if (FrontPanelOpen[vLoop].fp == filp)
+        {
+            minor = vLoop;
+        }
+    }
+
+    if (minor == -1)
+    {
+        printk("Error Bad Minor\n");
+        return -1; //FIXME
+    }
+
+    dprintk(70, "minor = %d\n", minor);
+
+    /* dont write to the remote control */
+    if (minor == FRONTPANEL_MINOR_RC)
+        return -EOPNOTSUPP;
+
+    kernel_buf = kmalloc(len, GFP_KERNEL);
+
+    if (kernel_buf == NULL)
+    {
+        printk("%s return no mem<\n", __func__);
+        return -ENOMEM;
+    }
+
+    copy_from_user(kernel_buf, buff, len);
+
+    if (write_sem_down())
+        return -ERESTARTSYS;
+
+	strncpy(myString, kernel_buf, len);
+	myString[len] = '\0';
+
+	printk("%s\n", myString);
+	sscanf(myString, "%d", &value);
+	printk("0x%x\n", value);
+
+    memset(buffer, 0, 5);
+    buffer[0] = VFD_SETCLEARTEXT;
+    res = micomWriteCommand(buffer, 5, 0);
+
+    memset(buffer, 0, 5);
+    buffer[0] = VFD_SETCHAR;
+    buffer[1] = 1;
+    buffer[2] = value & 0xff;
+ 	buffer[3] = 0;
+    res = micomWriteCommand(buffer, 5, 0);
+
+    kfree(kernel_buf);
+
+    memset(buffer, 0, 5);
+    buffer[0] = VFD_SETDISPLAYTEXT;
+    res = micomWriteCommand(buffer, 5, 0);
+
+    write_sem_up();
+
+    dprintk(70, "%s < res %d len %d\n", __func__, res, len);
+
+    if (res < 0)
+        return res;
+    else
+        return len;
+}
+#endif
 
 static ssize_t MICOMdev_read(struct file *filp, char __user *buff, size_t len, loff_t *off)
 {
@@ -1616,6 +1715,25 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
         mode = 0;
         break;
     case VFDDISPLAYWRITEONOFF:
+    {
+        char buffer[5];
+        struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;
+        int on = data->start;
+
+        if (on)
+           break;
+        
+        /* clear text */
+        memset(buffer, 0, 5);
+        buffer[0] = VFD_SETCLEARTEXT;
+        res = micomWriteCommand(buffer, 5, 0);
+
+        memset(buffer, 0, 5);
+        buffer[0] = VFD_SETDISPLAYTEXT;
+        res = micomWriteCommand(buffer, 5, 0);
+        
+        /* and fall through to clear icons */
+    }
     case VFDCLEARICONS:
         res = 0;
         if (micom_year > 2007)
