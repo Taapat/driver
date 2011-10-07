@@ -61,6 +61,8 @@ struct saved_data_s
     char  data[128];
 };
 
+int currentDisplayTime = 0; //display text not time
+
 #ifdef CUBEREVO
 /* animation timer for Play Symbol on 9000er */
 static struct timer_list playTimer;
@@ -671,6 +673,31 @@ int micomSetFan(int on)
     return res;
 }
 
+int micomSetTimeMode(int twentyFour)
+{
+    char buffer[5];
+    int res = 0;
+
+    dprintk(100, "%s > %d\n", __func__, twentyFour);
+
+    /* clear display */
+    memset(buffer, 0, 5);
+    buffer[0] = VFD_SETCLEARTEXT;
+    res = micomWriteCommand(buffer, 5, 0);
+    buffer[0] = VFD_SETDISPLAYTEXT;
+    res = micomWriteCommand(buffer, 5, 0);
+
+    memset(buffer, 0, 5);
+    buffer[0] = VFD_SETMODETIME;
+    buffer[1] = twentyFour & 0x1;
+
+    res = micomWriteCommand(buffer, 5, 0);
+
+    dprintk(100, "%s (%d) <\n", __func__, res);
+
+    return res;
+}
+
 int micomSetDisplayTime(int on)
 {
     char buffer[5];
@@ -691,6 +718,8 @@ int micomSetDisplayTime(int on)
     buffer[1] = on;
      
     res = micomWriteCommand(buffer, 5, 0);
+
+    currentDisplayTime = on;
 
     dprintk(100, "%s (%d) <\n", __func__, res);
 
@@ -1198,6 +1227,12 @@ int micomWriteString(unsigned char* aBuf, int len)
         
     dprintk(100, "%s >\n", __func__);
 
+    if (currentDisplayTime == 1)
+    {
+        printk("display in time mode ->ignoring display text\n");
+        return 0;
+    }
+
     memset(bBuf, 0, 100);
 
     memset(buffer, 0, 5);
@@ -1331,6 +1366,8 @@ int micom_init_func(void)
     res |= micomSetFan(0);
     res |= micomSetLED(3 /* on and slow blink mode */);
     res |= micomSetBrightness(7);
+    res |= micomSetTimeMode(1); //24h mode
+    res |= micomSetDisplayTime(0);   //mode = display text
     res |= micomWriteString("T.Ducktales", strlen("T.Ducktales"));
 
     /* disable all icons at startup */
@@ -1713,6 +1750,9 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
         break;
     case VFDSETRF:
         res = micomSetRF(micom->u.rf.on);
+        break;
+    case VFDSETTIMEMODE:
+        res = micomSetTimeMode(micom->u.time_mode.twentyFour);
         break;
     case VFDSETDISPLAYTIME:
         res = micomSetDisplayTime(micom->u.display_time.on);
