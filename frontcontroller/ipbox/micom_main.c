@@ -46,7 +46,6 @@
 #include <linux/interrupt.h>
 #include <linux/time.h>
 #include <linux/poll.h>
-#include <linux/mutex.h>
 
 #include "micom.h"
 #include "micom_asc.h"
@@ -56,7 +55,7 @@
 #define EVENT_BTN_HI                  0xe1
 #define EVENT_BTN_LO                  0xe2
 
-#define EVENT_RC                   0xe0
+#define EVENT_RC                      0xe0
 
 #define EVENT_ANSWER_GETWAKEUP_SEC       0xe3
 #define EVENT_ANSWER_GETWAKEUP_MIN       0xe4
@@ -102,9 +101,7 @@ static wait_queue_head_t   rx_wq;
 static wait_queue_head_t   ack_wq;
 static int dataReady = 0;
 
-struct mutex asc_lock;
-
-const char* driver_version = "1.00";
+const char* driver_version = "1.01";
 
 //----------------------------------------------
 
@@ -195,7 +192,7 @@ void handleCopyData(int len)
     unsigned char* data = kmalloc(len / 2, GFP_KERNEL);
     
     i = 0;
-    j = 1;
+    j = (RCVBufferEnd + 1) % BUFFERSIZE;
     
     while (i != len / 2)
     {
@@ -503,8 +500,6 @@ int micomTask(void * dummy)
          continue;
      }
 
-     mutex_lock(&asc_lock);
-
      if (RCVBufferStart != RCVBufferEnd)
         dataAvailable = 1;
      
@@ -517,7 +512,6 @@ int micomTask(void * dummy)
 
         dprintk(150, "start %d end %d\n",  RCVBufferStart,  RCVBufferEnd);  
      }
-     mutex_unlock(&asc_lock);
   }
 
   printk("micomTask died!\n");
@@ -541,7 +535,6 @@ static int __init micom_init_module(void)
     //Disable all ASC 2 interrupts
     *ASC_X_INT_EN = *ASC_X_INT_EN & ~0x000001ff;
 
-	mutex_init(&asc_lock);
     serial_init();
 
     init_waitqueue_head(&wq);

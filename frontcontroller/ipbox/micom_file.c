@@ -37,7 +37,6 @@
 #include <linux/interrupt.h>
 #include <linux/time.h>
 #include <linux/poll.h>
-#include <linux/mutex.h>
 
 #include "micom.h"
 #include "micom_asc.h"
@@ -116,8 +115,6 @@ static struct saved_data_s lastdata;
 
 /* number segments */
 int front_seg_num = 14;
-
-extern struct mutex asc_lock;
 
 unsigned short *num2seg;
 unsigned short *Char2seg;
@@ -556,8 +553,6 @@ int micomWriteCommand(char* buffer, int len, int needAck)
 
     dprintk(150, "%s >\n", __func__);
 
-    mutex_lock(&asc_lock);
-
     for (i = 0; i < len; i++)
     {
         serial_putc (buffer[i]);
@@ -567,8 +562,6 @@ int micomWriteCommand(char* buffer, int len, int needAck)
         if (ack_sem_down())
             return -ERESTARTSYS;
 
-
-    mutex_unlock(&asc_lock);
 
     dprintk(150, "%s < \n", __func__);
 
@@ -942,6 +935,9 @@ int micomSetTime(char* time)
     /* set wakeup time */
     memset(buffer, 0, 5);
 
+    dprintk(1, "date: %c %c %c %c %c %c\n", time[0], time[1], time[2], time[3], time[4], time[5]);
+    dprintk(1, "time: %c %c %c %c %c %c\n", time[6], time[7], time[8], time[9], time[10], time[11]);
+
     buffer[0] = VFD_SETDATETIME;
     buffer[1] = ((time[0] - '0') << 4) | (time[1] - '0'); //year
     buffer[2] = ((time[2] - '0') << 4) | (time[3] - '0'); //month
@@ -1075,11 +1071,16 @@ int micomGetMicom(void)
         res = -ETIMEDOUT;
     } else
     {
+        char  convertDate[128];
+        
         dprintk(100, "0x%02x 0x%02x 0x%02x\n", ioctl_data[0], ioctl_data[1], ioctl_data[2]);
         
-        micom_year  = (ioctl_data[0] & 0xff) + 2000;
-        micom_month = (ioctl_data[1] & 0xff);
-        micom_day   = (ioctl_data[2] & 0xff);
+        sprintf(convertDate, "%02x %02x %02x\n", 
+                                  ioctl_data[0],ioctl_data[1], ioctl_data[2]);
+
+        sscanf(convertDate, "%d %d %d", &micom_year, &micom_month, &micom_day);
+        
+        micom_year  += 2000;
     }
 
 #endif
