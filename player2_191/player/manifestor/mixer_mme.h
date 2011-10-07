@@ -104,11 +104,10 @@ Date        Modification                                    Name
 #define MIXER_AUDIO_MAX_BUFFERS        (MIXER_AUDIO_MAX_INPUT_BUFFERS +\
                                              MIXER_AUDIO_MAX_OUTPUT_BUFFERS)
 
-#if defined(__TDT__) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && \
-    !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA)
+#if defined(__TDT__)
 #define MIXER_AUDIO_PAGES_PER_BUFFER   32 
 #else
-#define MIXER_AUDIO_PAGES_PER_BUFFER   8
+#define MIXER_AUDIO_PAGES_PER_BUFFER   16
 #endif
 #define MIXER_AUDIO_MAX_PAGES          (MIXER_AUDIO_PAGES_PER_BUFFER * MIXER_AUDIO_MAX_BUFFERS)
 
