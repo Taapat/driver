@@ -21,7 +21,7 @@
  */
 
 /*
- * Cuberevo 9000 HD Frontcontroller
+ * Cuberevo 900/9000 HD Frontcontroller
  *
  * Devices:
  *  - /dev/vfd (vfd ioctls and read/write function)
@@ -46,7 +46,6 @@
 #include <linux/interrupt.h>
 #include <linux/time.h>
 #include <linux/poll.h>
-#include <linux/mutex.h>
 
 #include "micom.h"
 #include "micom_asc.h"
@@ -56,7 +55,7 @@
 #define EVENT_BTN_HI                  0xe1
 #define EVENT_BTN_LO                  0xe2
 
-#define EVENT_RC                   0xe0
+#define EVENT_RC                      0xe0
 
 #define EVENT_ANSWER_GETWAKEUP_SEC       0xe3
 #define EVENT_ANSWER_GETWAKEUP_MIN       0xe4
@@ -102,7 +101,7 @@ static wait_queue_head_t   rx_wq;
 static wait_queue_head_t   ack_wq;
 static int dataReady = 0;
 
-struct mutex asc_lock;
+const char* driver_version = "1.01";
 
 //----------------------------------------------
 
@@ -193,7 +192,7 @@ void handleCopyData(int len)
     unsigned char* data = kmalloc(len / 2, GFP_KERNEL);
     
     i = 0;
-    j = 1;
+    j = (RCVBufferEnd + 1) % BUFFERSIZE;
     
     while (i != len / 2)
     {
@@ -467,6 +466,7 @@ static irqreturn_t FP_interrupt(int irq, void *dev_id)
         //give the reader process the chance to consume the data
         if (getLen() > cPackageSize * 20)
         {
+           udelay(0);
            break;
         }
     }
@@ -500,8 +500,6 @@ int micomTask(void * dummy)
          continue;
      }
 
-     mutex_lock(&asc_lock);
-
      if (RCVBufferStart != RCVBufferEnd)
         dataAvailable = 1;
      
@@ -514,7 +512,6 @@ int micomTask(void * dummy)
 
         dprintk(150, "start %d end %d\n",  RCVBufferStart,  RCVBufferEnd);  
      }
-     mutex_unlock(&asc_lock);
   }
 
   printk("micomTask died!\n");
@@ -538,7 +535,6 @@ static int __init micom_init_module(void)
     //Disable all ASC 2 interrupts
     *ASC_X_INT_EN = *ASC_X_INT_EN & ~0x000001ff;
 
-	mutex_init(&asc_lock);
     serial_init();
 
     init_waitqueue_head(&wq);
@@ -590,7 +586,22 @@ static void __exit micom_cleanup_module(void)
 module_init(micom_init_module);
 module_exit(micom_cleanup_module);
 
-MODULE_DESCRIPTION("MICOM frontcontroller module");
+#if defined(CUBEREVO_MINI) 
+MODULE_DESCRIPTION("MICOM frontcontroller module (CUBEREVO_MINI)" );
+#elif defined(CUBEREVO_MINI2) 
+MODULE_DESCRIPTION("MICOM frontcontroller module (CUBEREVO_MINI2)");
+#elif defined(CUBEREVO_250HD)
+MODULE_DESCRIPTION("MICOM frontcontroller module (CUBEREVO_250HD)");
+#elif defined(CUBEREVO)
+MODULE_DESCRIPTION("MICOM frontcontroller module (CUBEREVO)");
+#elif defined(CUBEREVO_2000HD)
+MODULE_DESCRIPTION("MICOM frontcontroller module (CUBEREVO_2000HD)");
+#elif defined(CUBEREVO_3000HD)
+MODULE_DESCRIPTION("MICOM frontcontroller module (CUBEREVO_3000HD)");
+#else
+MODULE_DESCRIPTION("MICOM frontcontroller module (UNKNOWN)");
+#endif
+
 MODULE_AUTHOR("Konfetti");
 MODULE_LICENSE("GPL");
 
