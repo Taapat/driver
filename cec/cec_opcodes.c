@@ -96,7 +96,7 @@ unsigned short getActiveSource(void) {
 }
 
 void setActiveSource(unsigned short addr) {
-  printk("FROM: %04x TO: %04x\n", ActiveSource, addr);
+  printk("[CEC] FROM: %04x TO: %04x\n", ActiveSource, addr);
   if(ActiveSource != addr) {
     ActiveSource = addr;
     setUpdatedActiveSource();
@@ -369,10 +369,11 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
       strcpy(name, "SET_STREAM_PATH");
       if(((buf[1]<<8) + buf[2]) == getPhysicalAddress()) // If we are the active source
       {
+        unsigned short physicalAddress = getPhysicalAddress();
         responseBuffer[0] = (getLogicalDeviceType() << 4) + (BROADCAST & 0xF);
         responseBuffer[1] = ACTIVE_SOURCE;
-        responseBuffer[2] = (((getPhysicalAddress() >> 12)&0xf) << 4) + ((getPhysicalAddress() >> 8)&0xf);
-        responseBuffer[3] = (((getPhysicalAddress() >> 4)&0xf) << 4) + ((getPhysicalAddress() >> 0)&0xf);
+        responseBuffer[2] = (((physicalAddress >> 12)&0xf) << 4) + ((physicalAddress >> 8)&0xf);
+        responseBuffer[3] = (((physicalAddress >> 4)&0xf) << 4) + ((physicalAddress >> 0)&0xf);
         sendMessage(4, responseBuffer);
       }
       break;
@@ -550,26 +551,28 @@ void parseRawMessage(unsigned int len, unsigned char buf[])
 
 void sendReportPhysicalAddress(void) 
 {
+  unsigned short physicalAddress = getPhysicalAddress();
   unsigned char responseBuffer[SEND_BUF_SIZE];
   memset(responseBuffer, 0, SEND_BUF_SIZE);
 
   responseBuffer[0] = (getLogicalDeviceType() << 4) + (BROADCAST & 0xF);
   responseBuffer[1] = REPORT_PHYSICAL_ADDRESS;
-  responseBuffer[2] = (((getPhysicalAddress() >> 12)&0xf) << 4) + ((getPhysicalAddress() >> 8)&0xf);
-  responseBuffer[3] = (((getPhysicalAddress() >> 4)&0xf) << 4) + ((getPhysicalAddress() >> 0)&0xf);
+  responseBuffer[2] = (((physicalAddress >> 12)&0xf) << 4) + ((physicalAddress >> 8)&0xf);
+  responseBuffer[3] = (((physicalAddress >> 4)&0xf) << 4)  + ((physicalAddress >> 0)&0xf);
   responseBuffer[4] = getDeviceType(); 
   sendMessage(5, responseBuffer);
 }
 
 void setSourceAsActive(void) 
 {
+  unsigned short physicalAddress = getPhysicalAddress();
   unsigned char responseBuffer[SEND_BUF_SIZE];
   memset(responseBuffer, 0, SEND_BUF_SIZE);
 
   responseBuffer[0] = (getLogicalDeviceType() << 4) + (BROADCAST & 0xF);
   responseBuffer[1] = ACTIVE_SOURCE;
-  responseBuffer[2] = (((getPhysicalAddress() >> 12)&0xf) << 4) + ((getPhysicalAddress() >> 8)&0xf);
-  responseBuffer[3] = (((getPhysicalAddress() >> 4)&0xf) << 4) + ((getPhysicalAddress() >> 0)&0xf);
+  responseBuffer[2] = (((physicalAddress >> 12)&0xf) << 4) + ((physicalAddress >> 8)&0xf);
+  responseBuffer[3] = (((physicalAddress >> 4)&0xf) << 4)  + ((physicalAddress >> 0)&0xf);
   sendMessage(4, responseBuffer);
 }
 
@@ -609,6 +612,7 @@ void sendPingWithAutoIncrement(void)
 
 void sendOneTouchPlay(void)
 {
+  unsigned short physicalAddress = getPhysicalAddress();
   unsigned char responseBuffer[SEND_BUF_SIZE];
   memset(responseBuffer, 0, SEND_BUF_SIZE);
 
@@ -624,8 +628,8 @@ void sendOneTouchPlay(void)
 
   responseBuffer[0] = (getLogicalDeviceType() << 4) + (BROADCAST & 0xF);
   responseBuffer[1] = ACTIVE_SOURCE;
-  responseBuffer[2] = (((getPhysicalAddress() >> 12)&0xf) << 4) + ((getPhysicalAddress() >> 8)&0xf);
-  responseBuffer[3] = (((getPhysicalAddress() >> 4)&0xf) << 4) + ((getPhysicalAddress() >> 0)&0xf);
+  responseBuffer[2] = (((physicalAddress >> 12)&0xf) << 4) + ((physicalAddress >> 8)&0xf);
+  responseBuffer[3] = (((physicalAddress >> 4)&0xf) << 4)  + ((physicalAddress >> 0)&0xf);
   printk("[CEC] sendOneTouchPlay - 5\n");
   sendMessage(4, responseBuffer);
   printk("[CEC] sendOneTouchPlay - 6\n");

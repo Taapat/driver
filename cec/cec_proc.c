@@ -42,7 +42,7 @@ static unsigned int sizeOfInputBuffer = 0;
     int     pageLen = 0; \
     ssize_t ret     = -ENOMEM; \
 \
-    printk("%s %ld\n", __FUNCTION__, count); \
+    printk("[CEC] %s %ld\n", __FUNCTION__, count); \
 \
     page = (char *)__get_free_page(GFP_KERNEL); \
     if (page) \
@@ -62,7 +62,7 @@ out: \
 
 #define PR_INIT() \
     int len = 0; \
-    printk("%s\n", __FUNCTION__);
+    printk("[CEC] %s\n", __FUNCTION__);
 
 #define PR_EXIT(len) \
     return len;
@@ -72,7 +72,7 @@ out: \
 #define INC(counter) \
   if(counter != 0xf) \
     counter++; \
-  printk("Value: %d\n", counter);
+  printk("[CEC] Incremented Value: %d\n", counter);
 
 #define RESET(event) \
   event = 0;

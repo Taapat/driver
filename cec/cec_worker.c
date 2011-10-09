@@ -64,7 +64,7 @@ static unsigned char sendCommandWithDelay = 0;
 
 int sendMessageWithRetry(unsigned int len, unsigned char buf[], unsigned int retry)
 {
-  unsigned long         Counter = 200000;
+  unsigned long Counter = 1000;
   unsigned char value = 0;
   unsigned char src;
   unsigned char dst;
@@ -72,7 +72,7 @@ int sendMessageWithRetry(unsigned int len, unsigned char buf[], unsigned int ret
   while(isSending && --Counter)
   {
     // We are to fast, lets make a break
-    udelay(0);
+    udelay(1000);
   }
 
   if (Counter == 0)
@@ -236,12 +236,15 @@ irqreturn_t cec_interrupt(int irq, void *dev_id)
 
     if(getIsFirstKiss() == 1)
     {
-        if (error & CEC_ERROR_ACK) 
-            setIsFirstKiss(0);
-        if(retries > 0)
+        if (error & CEC_ERROR_ACK)
         {
-            sendMessageWithRetry(sizeOfSendBuf, sendBuf, retries - 1);
-            sendCommandWithDelay++;
+          printk("[CEC] The above error is a wanted behaviour as this was a ping!\n");
+          setIsFirstKiss(0);
+        }
+        else if(retries > 0)
+        {
+          sendMessageWithRetry(sizeOfSendBuf, sendBuf, retries - 1);
+          sendCommandWithDelay++;
         }
     }
     else if(retries > 0)
