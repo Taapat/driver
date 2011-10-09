@@ -21,6 +21,7 @@
 
 #include <linux/proc_fs.h>  	/* proc fs */ 
 #include <asm/uaccess.h>    	/* copy_from_user */
+#include <linux/delay.h>
 
 #include "cec_worker.h"
 #include "cec_opcodes.h"
@@ -30,8 +31,8 @@
 extern int install_e2_procs(char *name, read_proc_t *read_proc, write_proc_t *write_proc, void *data);
 extern int remove_e2_procs(char *name, read_proc_t *read_proc, write_proc_t *write_proc);
 
-
-static unsigned char inputBuffer[255];
+#define INPUT_BUFFER_SIZE 255
+static unsigned char inputBuffer[INPUT_BUFFER_SIZE];
 static unsigned int sizeOfInputBuffer = 0;
 
 //===================================
@@ -119,6 +120,7 @@ int proc_cec_send_write(struct file *filefile, const char __user *buf, unsigned 
     int i = 0;
     PW_INIT(buf, count);
 
+    memset(inputBuffer, 0, INPUT_BUFFER_SIZE);
     sizeOfInputBuffer = 0;
     for(i = 0; (i+2) < pageLen; i+=3)
     {
@@ -135,22 +137,6 @@ int proc_cec_send_write(struct file *filefile, const char __user *buf, unsigned 
 }
 
 //===================================
-
-/*int proc_cec_address_write(struct file *file, const char __user *buf, unsigned long count, void *data)
-{
-    unsigned short physAddr = 0;
-    unsigned int addrA, addrB, addrC, addrD;
-    PW_INIT(buf, count);
-
-    if(count >= 7) {
-        sscanf(page, "%1x.%1x.%1x.%1x", &addrA, &addrB, &addrC, &addrD);
-
-        physAddr = (addrA << 12) + (addrB << 8) + (addrC << 4) + (addrD);
-
-        setPhysicalAddress(physAddr);
-    }
-    PW_EXIT(count, ret, page);
-}*/
 
 int proc_cecaddress_read (char *page, char **start, off_t off, int count, int *eof, void *data_unused)
 {
@@ -242,7 +228,6 @@ struct e2_procs
   {"stb/cec/state_activesource", proc_activesource_read,  NULL,                      0},
   {"stb/cec/state_cecaddress",   proc_cecaddress_read,    NULL,                      0},
   {"stb/cec/state_standby",      proc_standby_read,       NULL,                      0},
-
 
   {"stb/cec/event_poll",         proc_event_poll_read,    NULL,                      0}
 };
