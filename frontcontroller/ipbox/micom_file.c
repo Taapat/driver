@@ -390,35 +390,35 @@ special_char_t  special2seg_7seg[] =
 };
 
 enum {
-	ICON_MIN,
+	ICON_MIN,             // 0x00
 	ICON_STANDBY,
 	ICON_SAT,
 	ICON_REC,
 	ICON_TIMESHIFT,
-	ICON_TIMER,
+	ICON_TIMER,           // 0x05
 	ICON_HD,
 	ICON_USB,
 	ICON_SCRAMBLED,
 	ICON_DOLBY,
-	ICON_MUTE,
+	ICON_MUTE,            // 0x0a
 	ICON_TUNER1,
 	ICON_TUNER2,
 	ICON_MP3,
 	ICON_REPEAT,
-	ICON_Play,
+	ICON_Play,            // 0x0f
 	ICON_TER,            
 	ICON_FILE,
 	ICON_480i,
 	ICON_480p,
-	ICON_576i,
+	ICON_576i,            // 0x14
 	ICON_576p,
 	ICON_720p,
 	ICON_1080i,
 	ICON_1080p,
-	ICON_Play_1,
-    ICON_RADIO,   //fixme value from e2?
-    ICON_TV,      //fixme value from e2?
-	ICON_PAUSE,   //fixme value from e2?
+	ICON_Play_1,          // 0x19 
+    ICON_RADIO,   
+    ICON_TV,      
+	ICON_PAUSE,   
 	ICON_MAX
 };
 
