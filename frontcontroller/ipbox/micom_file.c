@@ -46,6 +46,8 @@ extern const char* driver_version;
 extern void ack_sem_up(void);
 extern int  ack_sem_down(void);
 int micomWriteString(unsigned char* aBuf, int len);
+extern void micom_putc(unsigned char data);
+
 
 struct semaphore     write_sem;
 
@@ -557,7 +559,11 @@ int micomWriteCommand(char* buffer, int len, int needAck)
 
     for (i = 0; i < len; i++)
     {
-        serial_putc (buffer[i]);
+#ifdef DIRECT_ASC
+          serial_putc (buffer[i]);
+#else
+          micom_putc(buffer[i]);
+#endif
     }
 
     if (needAck)
