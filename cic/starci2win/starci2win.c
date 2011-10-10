@@ -393,7 +393,7 @@ int setCiSource(int slot, int source)
 /* fixme: think on this */
   if (slot == 0)
   {
-       return starci_writereg(&ca_state, TWIN_MODE_CTRL_REG, 0x9a);
+       return starci_writereg(&ca_state, TWIN_MODE_CTRL_REG, 0x82);
   } else
   {
        return starci_writereg(&ca_state, TWIN_MODE_CTRL_REG, 0xa2);
