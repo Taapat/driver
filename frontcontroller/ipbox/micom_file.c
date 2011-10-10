@@ -564,7 +564,6 @@ int micomWriteCommand(char* buffer, int len, int needAck)
         if (ack_sem_down())
             return -ERESTARTSYS;
 
-
     dprintk(150, "%s < \n", __func__);
 
     return 0;
@@ -1225,7 +1224,7 @@ int micomWriteString(unsigned char* aBuf, int len)
     int                 pos = 0;
     unsigned char       space;
         
-    dprintk(100, "%s >\n", __func__);
+    dprintk(50, "%s >\n", __func__);
 
     if (currentDisplayTime == 1)
     {
@@ -1293,10 +1292,7 @@ int micomWriteString(unsigned char* aBuf, int len)
             case '0' ... '9':
                 data = num2seg[ch-'0'];
                 break;
-            case '-':
-            case '\'':
-            case '.':
-            case ' ':
+            default:
                 for(j = 0; j < special2seg_size; j++)
                 {
                     if(special2seg[j].ch == ch) 
@@ -1314,10 +1310,6 @@ int micomWriteString(unsigned char* aBuf, int len)
                     data = space;
                 }
                 break;
-            default:
-                printk("%s ignore unprintable char \'%c\'\n", __func__, ch);
-                data = space;
-                break;
         }
 
 	    
@@ -1332,7 +1324,7 @@ int micomWriteString(unsigned char* aBuf, int len)
     buffer[0] = VFD_SETDISPLAYTEXT;
     res = micomWriteCommand(buffer, 5, 0);
 
-    dprintk(100, "%s <\n", __func__);
+    dprintk(51, "%s <\n", __func__);
 
     return res;
 }
