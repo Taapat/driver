@@ -66,7 +66,7 @@ int serial_putc (char Data)
     unsigned long         Counter = 200000;
 
     while (((*ASCn_INT_STA & ASC_INT_STA_THE) == 0) && --Counter)
-         mdelay(1);
+         udelay(0);
 
     if (Counter == 0)
     {

@@ -101,7 +101,7 @@ static wait_queue_head_t   rx_wq;
 static wait_queue_head_t   ack_wq;
 static int dataReady = 0;
 
-const char* driver_version = "1.01";
+const char* driver_version = "1.05";
 
 //----------------------------------------------
 
@@ -456,6 +456,11 @@ static irqreturn_t FP_interrupt(int irq, void *dev_id)
         RCVBuffer [RCVBufferStart] = *ASC_X_RX_BUFF;
         RCVBufferStart = (RCVBufferStart + 1) % BUFFERSIZE;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
+        // We are to fast, lets make a break
+        udelay(0);
+#endif
+
         dataArrived = 1;
 
         if (RCVBufferStart == RCVBufferEnd)
@@ -463,12 +468,6 @@ static irqreturn_t FP_interrupt(int irq, void *dev_id)
             printk ("FP: RCV buffer overflow!!! (%d - %d)\n", RCVBufferStart, RCVBufferEnd);
         }
     
-        //give the reader process the chance to consume the data
-        if (getLen() > cPackageSize * 20)
-        {
-           udelay(0);
-           break;
-        }
     }
 
     if (dataArrived)
@@ -493,7 +492,7 @@ int micomTask(void * dummy)
   while(1)
   {
      int dataAvailable = 0;
-     
+       
      if (wait_event_interruptible(rx_wq, (RCVBufferStart != RCVBufferEnd)))
      {
          printk("wait_event_interruptible failed\n");
@@ -511,6 +510,7 @@ int micomTask(void * dummy)
             dataAvailable = 0;
 
         dprintk(150, "start %d end %d\n",  RCVBufferStart,  RCVBufferEnd);  
+        
      }
   }
 
@@ -607,4 +607,3 @@ MODULE_LICENSE("GPL");
 
 module_param(paramDebug, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 MODULE_PARM_DESC(paramDebug, "Debug Output 0=disabled >0=enabled(debuglevel)");
-
