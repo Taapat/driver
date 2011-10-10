@@ -76,6 +76,8 @@
 
 //----------------------------------------------
 short paramDebug = 0;
+short delayTime  = 10;
+short delayBytes = 100;
 
 static unsigned char expectEventData = 0;
 static unsigned char expectEventId = 1;
@@ -101,7 +103,7 @@ static wait_queue_head_t   rx_wq;
 static wait_queue_head_t   ack_wq;
 static int dataReady = 0;
 
-const char* driver_version = "1.01";
+const char* driver_version = "1.04";
 
 //----------------------------------------------
 
@@ -463,12 +465,16 @@ static irqreturn_t FP_interrupt(int irq, void *dev_id)
             printk ("FP: RCV buffer overflow!!! (%d - %d)\n", RCVBufferStart, RCVBufferEnd);
         }
     
+#if 0
         //give the reader process the chance to consume the data
         if (getLen() > cPackageSize * 20)
         {
            udelay(0);
            break;
         }
+#else
+        udelay(0);
+#endif
     }
 
     if (dataArrived)
@@ -493,7 +499,8 @@ int micomTask(void * dummy)
   while(1)
   {
      int dataAvailable = 0;
-     
+     int consumedBytes = 0;
+       
      if (wait_event_interruptible(rx_wq, (RCVBufferStart != RCVBufferEnd)))
      {
          printk("wait_event_interruptible failed\n");
@@ -511,6 +518,15 @@ int micomTask(void * dummy)
             dataAvailable = 0;
 
         dprintk(150, "start %d end %d\n",  RCVBufferStart,  RCVBufferEnd);  
+        
+        consumedBytes++;
+        
+        if (consumedBytes > delayBytes)
+        {
+            printk("micom: delay loop\n");  
+            udelay(delayTime);
+            consumedBytes = 0;
+        }
      }
   }
 
@@ -608,3 +624,8 @@ MODULE_LICENSE("GPL");
 module_param(paramDebug, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 MODULE_PARM_DESC(paramDebug, "Debug Output 0=disabled >0=enabled(debuglevel)");
 
+module_param(delayTime, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(delayTime, "default: 10");
+
+module_param(delayBytes, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(delayBytes, "default: 1ß0");

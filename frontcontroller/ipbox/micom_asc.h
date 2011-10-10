@@ -38,7 +38,7 @@
 
 
 //-------------------------------------
-#define PIO5BaseAddress   0xb8025000
+#define PIO4BaseAddress   0xb8024000
 
 #define PIO_CLR_PnC0      0x28
 #define PIO_CLR_PnC1      0x38

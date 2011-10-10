@@ -50,6 +50,28 @@ unsigned int ASCXBaseAddress = ASC2BaseAddress;
 
 void serial_init (void)
 {
+    // Configure the PIO pins
+    stpio_request_pin(4, 2,  "ASC_TX", STPIO_ALT_OUT); /* Tx */
+    stpio_request_pin(4, 3,  "ASC_RX", STPIO_IN);      /* Rx */
+
+/* fixme: clarify which settings are really needed */
+    *(unsigned int*)(PIO4BaseAddress + PIO_CLR_PnCOMP) = 0x20;
+    *(unsigned int*)(PIO4BaseAddress + PIO_CLR_PnOUT) = 0x23;
+    *(unsigned int*)(PIO4BaseAddress + PIO_CLR_PnC0) = 0x03;
+    *(unsigned int*)(PIO4BaseAddress + PIO_CLR_PnC1) = 0xd8;
+    *(unsigned int*)(PIO4BaseAddress + PIO_CLR_PnC1) = 0xac;
+
+    *(unsigned int*)(PIO4BaseAddress + PIO_PnC0) = 0x03;
+    *(unsigned int*)(PIO4BaseAddress + PIO_PnCOMP) = 0x20;
+    *(unsigned int*)(PIO4BaseAddress + PIO_PnOUT) = 0x23;
+
+    *(unsigned int*)(PIO4BaseAddress + PIO_SET_PnCOMP) = 0x20;
+    *(unsigned int*)(PIO4BaseAddress + PIO_SET_PnOUT) = 0x23;
+
+    *(unsigned int*)(PIO4BaseAddress + PIO_SET_PnC0) = 0x03;
+    *(unsigned int*)(PIO4BaseAddress + PIO_SET_PnC1) = 0xd8;
+    *(unsigned int*)(PIO4BaseAddress + PIO_SET_PnC2) = 0xac;
+
     // Configure the asc input/output settings
     *(unsigned int*)(ASCXBaseAddress + ASC_INT_EN)   = 0x00000000;
     *(unsigned int*)(ASCXBaseAddress + ASC_CTRL)     = 0x00000589;
@@ -66,7 +88,7 @@ int serial_putc (char Data)
     unsigned long         Counter = 200000;
 
     while (((*ASCn_INT_STA & ASC_INT_STA_THE) == 0) && --Counter)
-         mdelay(1);
+         udelay(0);
 
     if (Counter == 0)
     {
