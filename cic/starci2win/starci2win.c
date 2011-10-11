@@ -994,11 +994,11 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 		  EMI_DATA2_BEE1_WRITE(10)	|
 		  EMI_DATA2_BEE2_WRITE(10),reg_config + EMIBank2 + EMI_CFG_DATA2);
 
+  ctrl_outl(0x0, reg_config + EMIBank2 + EMI_CFG_DATA3);
+
 #if defined(CUBEBOX)
-  ctrl_outl(0x8, reg_config + EMIBank2 + EMI_CFG_DATA3);
   ctrl_outl(0x2, reg_config + EMI_FLASH_CLK_SEL);
 #else
-  ctrl_outl(0x0,reg_config + EMIBank2 + EMI_CFG_DATA3);
   ctrl_outl(0x0, reg_config + EMI_FLASH_CLK_SEL);
 #endif
 
