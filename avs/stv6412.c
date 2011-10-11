@@ -217,7 +217,7 @@ int stv6412_set_volume( struct i2c_client *client, int vol )
 //	{
 //		c--;
 //	}
-
+#if !defined(ADB_BOX)
 	if(c==63)
 		c=62;
 	if(c==0)
@@ -229,7 +229,7 @@ int stv6412_set_volume( struct i2c_client *client, int vol )
 	c /= 2;
 
 	stv6412_data.t_vol_c = c;
-
+#endif
 	return stv6412_set(client);
 }
 
