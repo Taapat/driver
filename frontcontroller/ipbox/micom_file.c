@@ -46,6 +46,8 @@ extern const char* driver_version;
 extern void ack_sem_up(void);
 extern int  ack_sem_down(void);
 int micomWriteString(unsigned char* aBuf, int len);
+extern void micom_putc(unsigned char data);
+
 
 struct semaphore     write_sem;
 
@@ -390,35 +392,35 @@ special_char_t  special2seg_7seg[] =
 };
 
 enum {
-	ICON_MIN,
+	ICON_MIN,             // 0x00
 	ICON_STANDBY,
 	ICON_SAT,
 	ICON_REC,
 	ICON_TIMESHIFT,
-	ICON_TIMER,
+	ICON_TIMER,           // 0x05
 	ICON_HD,
 	ICON_USB,
 	ICON_SCRAMBLED,
 	ICON_DOLBY,
-	ICON_MUTE,
+	ICON_MUTE,            // 0x0a
 	ICON_TUNER1,
 	ICON_TUNER2,
 	ICON_MP3,
 	ICON_REPEAT,
-	ICON_Play,
+	ICON_Play,            // 0x0f
 	ICON_TER,            
 	ICON_FILE,
 	ICON_480i,
 	ICON_480p,
-	ICON_576i,
+	ICON_576i,            // 0x14
 	ICON_576p,
 	ICON_720p,
 	ICON_1080i,
 	ICON_1080p,
-	ICON_Play_1,
-    ICON_RADIO,   //fixme value from e2?
-    ICON_TV,      //fixme value from e2?
-	ICON_PAUSE,   //fixme value from e2?
+	ICON_Play_1,          // 0x19 
+    ICON_RADIO,   
+    ICON_TV,      
+	ICON_PAUSE,   
 	ICON_MAX
 };
 
@@ -557,13 +559,16 @@ int micomWriteCommand(char* buffer, int len, int needAck)
 
     for (i = 0; i < len; i++)
     {
-        serial_putc (buffer[i]);
+#ifdef DIRECT_ASC
+          serial_putc (buffer[i]);
+#else
+          micom_putc(buffer[i]);
+#endif
     }
 
     if (needAck)
         if (ack_sem_down())
             return -ERESTARTSYS;
-
 
     dprintk(150, "%s < \n", __func__);
 
@@ -893,21 +898,34 @@ int micomSetStandby(char* time)
     /* set wakeup time */
     memset(buffer, 0, 5);
 
-    buffer[0] = VFD_SETWAKEUPDATE;
-    buffer[1] = ((time[0] - '0') << 4) | (time[1] - '0'); //year 
-    buffer[2] = ((time[2] - '0') << 4) | (time[3] - '0'); //month
-    buffer[3] = ((time[4] - '0') << 4) | (time[5] - '0'); //day
+    if (time[0] = '\0')
+    {
+        dprintk(1, "clear wakeup time\n");
+        memset(buffer, 0, 5);
 
-    res = micomWriteCommand(buffer, 5, 0);
+        buffer[0] = VFD_SETWAKEUPTIME;
+        buffer[1] = ((time[6] - '0') << 4) | (time[7] - '0'); //hour
+        buffer[2] = ((time[8] - '0') << 4) | (time[9] - '0'); //minute
+        buffer[3] = 1; /* on/off */
+        res = micomWriteCommand(buffer, 5, 0);
+    } else
+    {
+        dprintk(1, "set wakeup time\n");
+        buffer[0] = VFD_SETWAKEUPDATE;
+        buffer[1] = ((time[0] - '0') << 4) | (time[1] - '0'); //year 
+        buffer[2] = ((time[2] - '0') << 4) | (time[3] - '0'); //month
+        buffer[3] = ((time[4] - '0') << 4) | (time[5] - '0'); //day
 
-    memset(buffer, 0, 5);
+        res = micomWriteCommand(buffer, 5, 0);
 
-    buffer[0] = VFD_SETWAKEUPTIME;
-    buffer[1] = ((time[6] - '0') << 4) | (time[7] - '0'); //hour
-    buffer[2] = ((time[8] - '0') << 4) | (time[9] - '0'); //minute
-    buffer[3] = 1; /* on/off */
+        memset(buffer, 0, 5);
 
-    res = micomWriteCommand(buffer, 5, 0);
+        buffer[0] = VFD_SETWAKEUPTIME;
+        buffer[1] = ((time[6] - '0') << 4) | (time[7] - '0'); //hour
+        buffer[2] = ((time[8] - '0') << 4) | (time[9] - '0'); //minute
+        buffer[3] = 1; /* on/off */
+        res = micomWriteCommand(buffer, 5, 0);
+    }
 
     /* now power off */
     memset(buffer, 0, 5);
@@ -1225,7 +1243,7 @@ int micomWriteString(unsigned char* aBuf, int len)
     int                 pos = 0;
     unsigned char       space;
         
-    dprintk(100, "%s >\n", __func__);
+    dprintk(50, "%s >\n", __func__);
 
     if (currentDisplayTime == 1)
     {
@@ -1293,10 +1311,7 @@ int micomWriteString(unsigned char* aBuf, int len)
             case '0' ... '9':
                 data = num2seg[ch-'0'];
                 break;
-            case '-':
-            case '\'':
-            case '.':
-            case ' ':
+            default:
                 for(j = 0; j < special2seg_size; j++)
                 {
                     if(special2seg[j].ch == ch) 
@@ -1314,10 +1329,6 @@ int micomWriteString(unsigned char* aBuf, int len)
                     data = space;
                 }
                 break;
-            default:
-                printk("%s ignore unprintable char \'%c\'\n", __func__, ch);
-                data = space;
-                break;
         }
 
 	    
@@ -1332,7 +1343,7 @@ int micomWriteString(unsigned char* aBuf, int len)
     buffer[0] = VFD_SETDISPLAYTEXT;
     res = micomWriteCommand(buffer, 5, 0);
 
-    dprintk(100, "%s <\n", __func__);
+    dprintk(51, "%s <\n", __func__);
 
     return res;
 }
@@ -1391,8 +1402,9 @@ int micom_init_func(void)
     return 0;
 }
 
+//#define TEST_COMMANDS
 //#define TEST_CHARSET
-#ifndef TEST_CHARSET
+#if !defined(TEST_CHARSET) && !defined(TEST_COMMANDS)
 static ssize_t MICOMdev_write(struct file *filp, const char *buff, size_t len, loff_t *off)
 {
     char* kernel_buf;
@@ -1455,7 +1467,7 @@ static ssize_t MICOMdev_write(struct file *filp, const char *buff, size_t len, l
     else
         return len;
 }
-#else
+#elif defined(TEST_CHARSET)
 static ssize_t MICOMdev_write(struct file *filp, const char *buff, size_t len, loff_t *off)
 {
     char* kernel_buf;
@@ -1518,7 +1530,7 @@ static ssize_t MICOMdev_write(struct file *filp, const char *buff, size_t len, l
     buffer[0] = VFD_SETCHAR;
     buffer[1] = 1;
     buffer[2] = value & 0xff;
- 	buffer[3] = 0;
+ 	buffer[3] = (value >> 8) & 0xff;
     res = micomWriteCommand(buffer, 5, 0);
 
     kfree(kernel_buf);
@@ -1526,6 +1538,105 @@ static ssize_t MICOMdev_write(struct file *filp, const char *buff, size_t len, l
     memset(buffer, 0, 5);
     buffer[0] = VFD_SETDISPLAYTEXT;
     res = micomWriteCommand(buffer, 5, 0);
+
+    write_sem_up();
+
+    dprintk(70, "%s < res %d len %d\n", __func__, res, len);
+
+    if (res < 0)
+        return res;
+    else
+        return len;
+}
+#else
+static ssize_t MICOMdev_write(struct file *filp, const char *buff, size_t len, loff_t *off)
+{
+    char* kernel_buf;
+    int minor, vLoop, res = 0;
+	char* myString = kmalloc(len + 1, GFP_KERNEL);
+    int value, arg1, arg2, arg3;
+    char                buffer[5];
+    int i;
+    
+    dprintk(100, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
+
+    if (len == 0)
+        return len;
+
+    minor = -1;
+    for (vLoop = 0; vLoop < LASTMINOR; vLoop++)
+    {
+        if (FrontPanelOpen[vLoop].fp == filp)
+        {
+            minor = vLoop;
+        }
+    }
+
+    if (minor == -1)
+    {
+        printk("Error Bad Minor\n");
+        return -1; //FIXME
+    }
+
+    dprintk(70, "minor = %d\n", minor);
+
+    /* dont write to the remote control */
+    if (minor == FRONTPANEL_MINOR_RC)
+        return -EOPNOTSUPP;
+
+    kernel_buf = kmalloc(len, GFP_KERNEL);
+
+    if (kernel_buf == NULL)
+    {
+        printk("%s return no mem<\n", __func__);
+        return -ENOMEM;
+    }
+
+    copy_from_user(kernel_buf, buff, len);
+
+    if (write_sem_down())
+        return -ERESTARTSYS;
+
+	strncpy(myString, kernel_buf, len);
+	myString[len] = '\0';
+
+	printk("str: %s\n", myString);
+	i = sscanf(myString, "%x %x %x %x", &value, &arg1, &arg2, &arg3);
+	printk("val (%d): 0x%x 0x%x 0x%x 0x%x\n", i, value, arg1, arg2, arg3);
+
+    if ((value != 0xd2) && (value != 0xd3) && (value != 0xd4) && (value != 0xd6) &&
+        (value != 0xCB) && (value != 0xa0) && (value != 0xa2)) 
+    {
+      write_sem_up();
+      return len;
+    } 
+    
+//#define bimmel
+#ifdef bimmel
+    for (i = 0; i <= 255; i++)
+    {
+       printk("0x%x ->0x%x\n", value, i);
+    
+       memset(buffer, 0, 5);
+       buffer[0] = value;
+       buffer[1] = 1;
+       buffer[2] = i;
+ 	   buffer[3] = 0;
+       res = micomWriteCommand(buffer, 5, 0);
+       msleep(125);
+    }
+#else
+    {
+       memset(buffer, 0, 5);
+       buffer[0] = value;
+       buffer[1] = arg1;
+       buffer[2] = arg2;
+ 	   buffer[3] = arg3;
+       res = micomWriteCommand(buffer, 5, 0);
+    }
+
+#endif    
+    kfree(kernel_buf);
 
     write_sem_up();
 

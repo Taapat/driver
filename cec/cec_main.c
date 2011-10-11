@@ -55,7 +55,7 @@ int __init cec_init(void)
 
     cec_internal_init();
 
-    msleep(100);
+    udelay(10000);
 
     startTask();
 
@@ -93,7 +93,7 @@ static void __exit cec_exit(void)
     printk("[CEC] unloaded\n");
 
     cancelStart = 1;
-    msleep(200);
+    udelay(20000);
 
     endTask();
 

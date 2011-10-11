@@ -121,10 +121,28 @@ static int           RCVBufferStart = 0, RCVBufferEnd = 0;
 static unsigned char KeyBuffer [BUFFERSIZE];
 static int           KeyBufferStart = 0, KeyBufferEnd = 0;
 
+static unsigned char OutBuffer [BUFFERSIZE];
+static int           OutBufferStart = 0, OutBufferEnd = 0;
+
 static wait_queue_head_t   wq;
 static wait_queue_head_t   rx_wq;
 static wait_queue_head_t   ack_wq;
 static int dataReady = 0;
+
+//----------------------------------------------
+
+/* queue data ->transmission is done in the irq */
+void nuvoton_putc(unsigned char data)
+{
+    unsigned int *ASC_X_INT_EN = (unsigned int*)(ASCXBaseAddress + ASC_INT_EN);
+
+    OutBuffer [OutBufferStart] = data;
+    OutBufferStart = (OutBufferStart + 1) % BUFFERSIZE;
+
+    /* if irq is not enabled, enable it */
+    if (!(*ASC_X_INT_EN & ASC_INT_STA_THE))
+        *ASC_X_INT_EN = *ASC_X_INT_EN | ASC_INT_STA_THE;
+}
 
 //----------------------------------------------
 
@@ -474,7 +492,9 @@ out_switch:
 static irqreturn_t FP_interrupt(int irq, void *dev_id)
 {
     unsigned int *ASC_X_INT_STA = (unsigned int*)(ASCXBaseAddress + ASC_INT_STA);
+    unsigned int *ASC_X_INT_EN = (unsigned int*)(ASCXBaseAddress + ASC_INT_EN);
     char         *ASC_X_RX_BUFF = (char*)        (ASCXBaseAddress + ASC_RX_BUFF);
+    char         *ASC_X_TX_BUFF = (char*)        (ASCXBaseAddress + ASC_TX_BUFF);
     int          dataArrived = 0;
 
     if (paramDebug > 100)
@@ -503,10 +523,25 @@ static irqreturn_t FP_interrupt(int irq, void *dev_id)
         wake_up_interruptible(&rx_wq);
     }
 
-    /* konfetti comment: in normal case we would also
-     * check the transmission state and send queued
-     * data, but I think this is not necessary in this case
+    while ((*ASC_X_INT_STA & ASC_INT_STA_THE) && 
+           (*ASC_X_INT_EN & ASC_INT_STA_THE) &&
+           (OutBufferStart != OutBufferEnd))
+    {
+        *ASC_X_TX_BUFF = OutBuffer[OutBufferEnd];
+        OutBufferEnd = (OutBufferEnd + 1) % BUFFERSIZE;
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
+        // We are to fast, lets make a break
+        udelay(0);
+#endif
+    }
+
+    /* if all the data is transmitted disable irq, otherwise
+     * system is overflowed with irq's
      */
+    if (OutBufferStart == OutBufferEnd)
+        if (*ASC_X_INT_EN & ASC_INT_STA_THE)
+            *ASC_X_INT_EN &= ~ASC_INT_STA_THE;
 
     return IRQ_HANDLED;
 }
