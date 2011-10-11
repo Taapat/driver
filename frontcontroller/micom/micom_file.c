@@ -44,6 +44,7 @@
 
 extern void ack_sem_up(void);
 extern int  ack_sem_down(void);
+extern void micom_putc(unsigned char data);
 
 struct semaphore     write_sem;
 
@@ -87,8 +88,12 @@ int micomWriteCommand(char command, char* buffer, int len, int needAck)
 
     for (i = 0; i < len; i++)
     {
-	dprintk(201, "Put: %c\n", buffer[i]);
-        serial_putc (buffer[i]);
+	      dprintk(201, "Put: %c\n", buffer[i]);
+#ifdef DIRECT_ASC
+          serial_putc (buffer[i]);
+#else
+          micom_putc(buffer[i]);
+#endif
     }
 
     if (needAck)
