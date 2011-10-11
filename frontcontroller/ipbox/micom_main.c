@@ -104,9 +104,6 @@ static wait_queue_head_t   rx_wq;
 static wait_queue_head_t   ack_wq;
 static int dataReady = 0;
 
-<<<<<<< HEAD
-const char* driver_version = "1.05";
-=======
 const char* driver_version = "1.06";
 
 //----------------------------------------------
@@ -123,7 +120,6 @@ void micom_putc(unsigned char data)
     if (!(*ASC_X_INT_EN & ASC_INT_STA_THE))
         *ASC_X_INT_EN = *ASC_X_INT_EN | ASC_INT_STA_THE;
 }
->>>>>>> tdt/master
 
 //----------------------------------------------
 
