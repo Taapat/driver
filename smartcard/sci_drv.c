@@ -414,6 +414,12 @@ void smartcard_reset(SCI_CONTROL_BLOCK *sci, unsigned char wait)
 			msleep(1000);
 #endif
         enable_irq(SCI0_INT_RX_TX);
+
+#if defined(ADB_BOX)
+        mdelay(20);
+        /* Reset high */
+        stpio_set_pin(sci->reset, 1);
+#endif
     }
     else if (sci->id == 1)
     {
@@ -450,7 +456,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
         {
             sci->sci_atr_class=SCI_CLASS_B;
 #if !defined(SUPPORT_NO_VOLTAGE)
-#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO4, PIO_CLR_P4OUT, 0x40);
 #endif
 #endif
@@ -459,7 +465,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
         {
             sci->sci_atr_class=SCI_CLASS_A;
 #if !defined(SUPPORT_NO_VOLTAGE)
-#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO4, PIO_SET_P4OUT, 0x40);
 #endif
 #endif
@@ -469,7 +475,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
             PERROR("Invalid Vcc value '%d', set Vcc 5V", vcc);
             sci->sci_atr_class=SCI_CLASS_A;
 #if !defined(SUPPORT_NO_VOLTAGE)
-#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX) // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO4, PIO_SET_P4OUT, 0x40);
 #endif
 #endif

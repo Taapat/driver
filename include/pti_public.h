@@ -3,7 +3,7 @@
 
 /* public pti header */
 
-#if defined(UFS910)
+#if defined(UFS910) || defined(ADB_BOX)
 	/*ufs910 has a memory problem causing artefacts while watching HDTV channels
 	so we need to reduce the number of descramblers,
 	maybe other boxes have the same problems*/
