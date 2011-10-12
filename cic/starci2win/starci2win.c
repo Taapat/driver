@@ -55,6 +55,16 @@ struct stpio_pin*	module_A_pin = NULL;
 struct stpio_pin*	module_B_pin = NULL;
 #endif
 
+#if defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || \
+    defined(CUBEREVO_250HD) || defined(CUBEREVO_9500HD) || \
+    defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
+#define CUBEBOX
+#else
+#undef  CUBEBOX
+#endif
+
+
+
 /* StarCI2Win register definitions */
 #define MODA_CTRL_REG 0x00
 #define MODA_MASK_HIGH_REG 0x01
@@ -86,7 +96,7 @@ unsigned char default_values[33] =
   0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
   0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00
 };
-#elif defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
+#elif defined(CUBEBOX)
 unsigned char default_values[33] =
 {
    0x00, /* register address for block transfer */
@@ -95,7 +105,7 @@ unsigned char default_values[33] =
 /* 0x08  0x09  0x0a  0x0b  0x0c  0x0d  0x0e  0x0f */
    0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x33, 0x00,
 /* 0x10  0x11  0x12  0x13  0x14  0x15  0x16  0x17 */
-   0x02, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+   0x02, 0x9a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
 /* 0x18  0x19  0x1a  0x1b  0x1c  0x1d  0x1e  0x1f */
    0xc0, 0x00, 0x00, 0x00, 0x00, 0x02, 0x03, 0x00
  };
@@ -389,11 +399,11 @@ int setCiSource(int slot, int source)
      (source < 0) || (source > 1))
     return -1;
 
-#if defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
+#if defined(CUBEBOX)
 /* fixme: think on this */
   if (slot == 0)
   {
-       return starci_writereg(&ca_state, TWIN_MODE_CTRL_REG, 0x9a);
+       return starci_writereg(&ca_state, TWIN_MODE_CTRL_REG, 0x82);
   } else
   {
        return starci_writereg(&ca_state, TWIN_MODE_CTRL_REG, 0xa2);
@@ -547,6 +557,7 @@ static int starci_poll_slot_status(struct dvb_ca_en50221 *ca, int slot, int open
   if(state->module_ready[slot])
      slot_status |= DVB_CA_EN50221_POLL_CAM_READY;
 
+
   dprintk(KERN_INFO "Module %c: present = %d, ready = %d\n",
 			  slot ? 'B' : 'A', slot_status,
 			  state->module_ready[slot]);
@@ -576,6 +587,19 @@ static int starci_slot_reset(struct dvb_ca_en50221 *ca, int slot)
   /* only reset if modul is present */
   if (result & 0x01)
   {
+#if defined(CUBEBOX)
+    starci_writereg(state, reg[slot], 0x80);
+
+    msleep(200);
+
+    /* reset "rst" bit */
+    result = starci_readreg(state, reg[slot]);
+    starci_writereg(state, reg[slot], 0x00);
+
+    dprintk(KERN_ERR "Reset Module %c\n", (slot == 0) ? 'A' : 'B');
+
+#else
+
     result = starci_readreg(state, reg[slot]);
     printk("%s: result = 0x%x\n", __func__, result);
     starci_writereg(state, reg[slot], result | 0x80);
@@ -591,7 +615,8 @@ static int starci_slot_reset(struct dvb_ca_en50221 *ca, int slot)
     result = starci_readreg(state, reg[slot]);
     starci_writereg(state, reg[slot], result & ~0x80);
 
-    dprintk(KERN_ERR "Reset Module A\n");
+    dprintk(KERN_ERR "Reset Module %c\n", (slot == 0) ? 'A' : 'B');
+#endif
   }
 
   /* reset status variables because module detection has to
@@ -636,9 +661,9 @@ static int starci_read_attribute_mem(struct dvb_ca_en50221 *ca, int slot, int ad
   else
   {
      if ((res > 31) && (res < 127))
-	  dprintk("%c", res);
+	  dprintk("%c\n", res);
      else
-	  dprintk(".");
+	  dprintk(".\n");
   }
 
   mutex_unlock(&starci_mutex);
@@ -763,11 +788,7 @@ static int starci_slot_ts_enable(struct dvb_ca_en50221 *ca, int slot)
 
   result = starci_readreg(state, reg[slot]);
 
-#if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX) && !defined(HS7810A) && \
-    !defined(CUBEREVO) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_MINI2) && \
-    !defined(CUBEREVO_250HD) && !defined(CUBEREVO_9500HD) && \
-    !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_MINI_FTA)
- 
+#if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX) && !defined(HS7810A) && !defined(CUBEBOX) 
   starci_writereg(state, reg[slot], 0x23);
 #else
   starci_writereg(state, reg[slot], 0x21);
@@ -913,7 +934,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   /* power on (only possible with LOCK = 1)
      other bits cannot be set when LOCK is = 1 */
 
-#if defined(ATEVIO7500) || defined(FORTIS_HDBOX) || defined(HS7810A) || defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
+#if defined(ATEVIO7500) || defined(FORTIS_HDBOX) || defined(HS7810A) || defined(CUBEBOX)
   starci_writereg(state, 0x18, 0x21);
 #else
   starci_writereg(state, 0x18, 0x01);
@@ -973,13 +994,14 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 		  EMI_DATA2_BEE1_WRITE(10)	|
 		  EMI_DATA2_BEE2_WRITE(10),reg_config + EMIBank2 + EMI_CFG_DATA2);
 
-#if defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
-  ctrl_outl(0x8,reg_config + EMIBank2 + EMI_CFG_DATA3);
+  ctrl_outl(0x0, reg_config + EMIBank2 + EMI_CFG_DATA3);
+
+#if defined(CUBEBOX)
+  ctrl_outl(0x2, reg_config + EMI_FLASH_CLK_SEL);
 #else
-  ctrl_outl(0x0,reg_config + EMIBank2 + EMI_CFG_DATA3);
+  ctrl_outl(0x0, reg_config + EMI_FLASH_CLK_SEL);
 #endif
 
-  ctrl_outl(0x0, reg_config + EMI_FLASH_CLK_SEL);
 #endif
 
 #if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX) && !defined(HS7810A)
@@ -995,7 +1017,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   slot_membase[0] = ioremap( 0x06800000, 0x1000 );
 #elif defined(HS7810A)
   slot_membase[0] = ioremap( 0x06000000, 0x1000 );
-#elif defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
+#elif defined(CUBEBOX)
   slot_membase[0] = ioremap( 0x3000000, 0x1000 );
   printk("membase-0 0x%08x\n", slot_membase[0]);
 #else
@@ -1017,7 +1039,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   slot_membase[1] = ioremap( 0x06810000, 0x1000 );
 #elif defined(HS7810A)
   slot_membase[1] = ioremap( 0x06010000, 0x1000 );
-#elif defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_MINI_FTA)
+#elif defined(CUBEBOX)
   slot_membase[1] = ioremap( 0x3010000, 0x1000 );
   printk("membase-1 0x%08x\n", slot_membase[1]);
 #else
@@ -1031,7 +1053,7 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   }
 
 #if !defined(ATEVIO7500) && !defined(FORTIS_HDBOX) && !defined(HS7810A)
-//  ctrl_outl(0x1F,reg_config + EMI_LCK);
+  ctrl_outl(0x1F,reg_config + EMI_LCK);
 #endif
 
   dprintk("init_startci: call dvb_ca_en50221_init\n");
