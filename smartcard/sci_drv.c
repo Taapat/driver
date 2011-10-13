@@ -56,16 +56,6 @@
 #include "sci.h"
 #include "atr.h"
 
-#if defined(CONFIG_CPU_SUBTYPE_STB7100) || defined(CONFIG_CPU_SUBTYPE_STX7100) || defined(CONFIG_SH_ST_MB442) || defined(CONFIG_SH_ST_MB411)
-#include "sci_7100.h"
-#elif defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(UFS912) || defined(SPARK) || defined(HS7810A)
-#include "sci_7111.h"
-#elif defined(CONFIG_CPU_SUBTYPE_STX7105) || defined(ATEVIO7500)
-#include "sci_7105.h"
-#endif
-
-
-
 /*****************************
  * MACROS
  *****************************/
@@ -376,11 +366,14 @@ void smartcard_reset(SCI_CONTROL_BLOCK *sci, unsigned char wait)
     if (sci->id == 0) {
         disable_irq(SCI0_INT_RX_TX);
 #if defined(ADB_BOX)
+
         /*VCC Low */
         stpio_set_pin(sci->cmdvcc, 0);
+
         /* Reset low */
          stpio_set_pin(sci->reset, 0); 
          mdelay(500); 
+
          /* VCC High */
          stpio_set_pin(sci->cmdvcc, 1);
          mdelay(200); 
@@ -421,6 +414,12 @@ void smartcard_reset(SCI_CONTROL_BLOCK *sci, unsigned char wait)
 			msleep(1000);
 #endif
         enable_irq(SCI0_INT_RX_TX);
+
+#if defined(ADB_BOX)
+        mdelay(20);
+        /* Reset high */
+        stpio_set_pin(sci->reset, 1);
+#endif
     }
     else if (sci->id == 1)
     {
@@ -457,7 +456,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
         {
             sci->sci_atr_class=SCI_CLASS_B;
 #if !defined(SUPPORT_NO_VOLTAGE)
-#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO4, PIO_CLR_P4OUT, 0x40);
 #endif
 #endif
@@ -466,7 +465,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
         {
             sci->sci_atr_class=SCI_CLASS_A;
 #if !defined(SUPPORT_NO_VOLTAGE)
-#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO4, PIO_SET_P4OUT, 0x40);
 #endif
 #endif
@@ -476,7 +475,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
             PERROR("Invalid Vcc value '%d', set Vcc 5V", vcc);
             sci->sci_atr_class=SCI_CLASS_A;
 #if !defined(SUPPORT_NO_VOLTAGE)
-#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX) // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO4, PIO_SET_P4OUT, 0x40);
 #endif
 #endif
@@ -1130,8 +1129,12 @@ static int SCI_SetClockSource(SCI_CONTROL_BLOCK *sci)
 	val = ctrl_inl(reg_address);
 	val|=0x1B0;
 
+#ifdef CUBEBOX
 	/* configure SC0_nSETVCC: derived from SC0_DETECT input */
+	val |= (1 << 7);
+#else
 	val &= ~(1 << 7);
+#endif
 	/* set polarity of SC0_nSETVCC: SC0_nSETVCC = NOT(SC0_DETECT) */
 	val |= (1 << 8);
 	ctrl_outl(val, reg_address);
@@ -1290,6 +1293,7 @@ static int SCI_IO_init(SCI_CONTROL_BLOCK *sci)
 
     sci->txd    = stpio_request_pin(sci->pio_port, 0, "sc_io",    STPIO_ALT_BIDIR);
     sci->rxd    = stpio_request_pin(sci->pio_port, 1, "sc_rxd",   STPIO_IN);
+
 	sci->clock  = stpio_request_pin(sci->pio_port, 3, "sc_clock", STPIO_ALT_OUT);
     sci->reset  = stpio_request_pin(sci->pio_port, 4, "sc_reset", STPIO_OUT);
     sci->detect = stpio_request_pin(sci->pio_port, 7, "sc_detect",STPIO_IN);
@@ -1350,6 +1354,7 @@ SCI_ERROR sci_init(void)
     for (i = 0; i < SCI_NUMBER_OF_CONTROLLERS; i++)
     {
         PDEBUG("Init Smartcard %d...\n", i);
+
         sci = &sci_cb[i];
 
         if (i == 0)
@@ -2597,7 +2602,7 @@ module_exit(sci_module_cleanup);
 
 MODULE_VERSION(SMARTCARD_VERSION);
 
-module_param(debug, int, S_IRUGO);
+module_param(debug, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 MODULE_PARM_DESC(debug, "Turn on/off SmartCard debugging (default:on)");
 
 MODULE_AUTHOR("Spider-Team");

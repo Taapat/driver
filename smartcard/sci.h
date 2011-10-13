@@ -20,6 +20,14 @@
 #ifndef _SCI_H
 #define _SCI_H
 
+#if defined(CONFIG_CPU_SUBTYPE_STB7100) || defined(CONFIG_CPU_SUBTYPE_STX7100) || defined(CONFIG_SH_ST_MB442) || defined(CONFIG_SH_ST_MB411)
+#include "sci_7100.h"
+#elif defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(UFS912) || defined(SPARK) || defined(HS7810A)
+#include "sci_7111.h"
+#elif defined(CONFIG_CPU_SUBTYPE_STX7105) || defined(ATEVIO7500)
+#include "sci_7105.h"
+#endif
+
 #define MYVERSION "1.0.1"
 
 //#define DEBUG

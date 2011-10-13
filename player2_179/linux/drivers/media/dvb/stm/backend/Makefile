@@ -125,7 +125,7 @@ frame_parser-objs :=    frame_parser_base.o \
 			frame_parser_audio_mlp.o \
 			frame_parser_audio_rma.o \
 			frame_parser_audio_vorbis.o \
-			frame_parser_audio_pcm.o \
+			frame_parser_audio_pcm.o
 
 codec-objs :=           codec_mme_base.o        \
 			codec_mme_video.o       \

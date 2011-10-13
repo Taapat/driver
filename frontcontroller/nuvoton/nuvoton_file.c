@@ -61,6 +61,8 @@ struct saved_data_s
     char  data[128];
 };
 
+u8 regs[0xff];
+
 #ifdef OCTAGON1008
 //Trick: text + icon
 struct vfd_buffer vfdbuf[8];
@@ -235,30 +237,45 @@ struct iconToInternal {
 /*--------------------- SetIcon ------- code1 data1 code2 data2 -----*/
 	{ "ICON_STANDBY"  , ICON_STANDBY   , 0x20, 0x08, 0xff, 0x00}, // ok
 	{ "ICON_SAT"      , ICON_SAT       , 0x20, 0x04, 0xff, 0x00}, // ok
-	{ "ICON_REC"      , ICON_REC       , 0x30, 0x03, 0xff, 0x00}, // ok
-	{ "ICON_TIMESHIFT", ICON_TIMESHIFT , 0x31, 0x03, 0x32, 0x03}, // ok
+	{ "ICON_REC"      , ICON_REC       , 0x30, 0x01, 0xff, 0x00}, // ok
+	{ "ICON_TIMESHIFT", ICON_TIMESHIFT , 0x31, 0x02, 0x32, 0x02}, // ok
 	{ "ICON_TIMER"    , ICON_TIMER     , 0x33, 0x02, 0xff, 0x00}, // ok
 	{ "ICON_HD"       , ICON_HD        , 0x34, 0x02, 0xff, 0x00}, // ok
 	{ "ICON_USB"      , ICON_USB       , 0x35, 0x02, 0xff, 0x00}, // ok
 	{ "ICON_SCRAMBLED", ICON_SCRAMBLED , 0x36, 0x02, 0xff, 0x00}, // ok
 	{ "ICON_DOLBY"    , ICON_DOLBY     , 0x37, 0x02, 0xff, 0x00}, // ok
 	{ "ICON_MUTE"     , ICON_MUTE      , 0x38, 0x02, 0xff, 0x00}, // ok
-	{ "ICON_TUNER1"   , ICON_TUNER1    , 0x39, 0x03, 0xff, 0x00}, // ok
-	{ "ICON_TUNER2"   , ICON_TUNER2    , 0x3a, 0x03, 0xff, 0x00}, // ok
-	{ "ICON_MP3"      , ICON_MP3       , 0x3b, 0x03, 0xff, 0x00}, // ok
-	{ "ICON_REPEAT"   , ICON_REPEAT    , 0x3c, 0x03, 0xff, 0x00}, // ok
-	{ "ICON_Play"     , ICON_Play      , 0x20, 0x02, 0xff, 0x00}, // ok
-	{ "ICON_Play_1"   , ICON_Play_1    , 0x23, 0x04, 0xff, 0x00}, // ok
-/*------------------------ SetIcon noch offen --------------------------*/
-	{ "ICON_TER"      , ICON_TER       , 0xff, 0x00, 0xff, 0x00},
-	{ "ICON_FILE"     , ICON_FILE      , 0xff, 0x00, 0xff, 0x00},
-	{ "ICON_480i"     , ICON_480i      , 0xff, 0x00, 0xff, 0x00},
-	{ "ICON_480p"     , ICON_480p      , 0xff, 0x00, 0xff, 0x00},
-	{ "ICON_576i"     , ICON_576i      , 0xff, 0x00, 0xff, 0x00},
-	{ "ICON_576p"     , ICON_576p      , 0xff, 0x00, 0xff, 0x00},
-	{ "ICON_720p"     , ICON_720p      , 0xff, 0x00, 0xff, 0x00},
-	{ "ICON_1080i"    , ICON_1080i     , 0xff, 0x00, 0xff, 0x00},
-	{ "ICON_1080p"    , ICON_1080p     , 0xff, 0x00, 0xff, 0x00}
+	{ "ICON_TUNER1"   , ICON_TUNER1    , 0x39, 0x02, 0xff, 0x00}, // ok
+	{ "ICON_TUNER2"   , ICON_TUNER2    , 0x3a, 0x02, 0xff, 0x00}, // ok
+	{ "ICON_MP3"      , ICON_MP3       , 0x3b, 0x02, 0xff, 0x00}, // ok
+	{ "ICON_REPEAT"   , ICON_REPEAT    , 0x3c, 0x02, 0xff, 0x00}, // ok
+	{ "ICON_Play"     , ICON_Play      , 0x20, 0x01, 0xff, 0x00},
+	{ "ICON_Play"     , ICON_Play      , 0x20, 0x02, 0xff, 0x00},
+	{ "ICON_Play"     , ICON_Play      , 0x21, 0x01, 0xff, 0x00},
+	{ "ICON_Play"     , ICON_Play      , 0x21, 0x02, 0xff, 0x00},
+	{ "ICON_Play"     , ICON_Play      , 0x22, 0x01, 0xff, 0x00},
+	{ "ICON_Play"     , ICON_Play      , 0x22, 0x02, 0xff, 0x00},
+	{ "ICON_Play"     , ICON_Play      , 0x23, 0x01, 0xff, 0x00},
+	{ "ICON_Play"     , ICON_Play      , 0x23, 0x02, 0xff, 0x00},
+	{ "ICON_Play"     , ICON_Play      , 0x24, 0x01, 0xff, 0x00},
+	{ "ICON_Play"     , ICON_Play      , 0x24, 0x02, 0xff, 0x00},
+	{ "ICON_TER"      , ICON_TER       , 0x20, 0x04, 0xff, 0x00},
+	{ "ICON_FILE"     , ICON_FILE      , 0x21, 0x04, 0xff, 0x00},
+	{ "ICON_480i"     , ICON_480i      , 0x24, 0x40, 0x23, 0x40},
+	{ "ICON_480p"     , ICON_480p      , 0x24, 0x40, 0x22, 0x40},
+	{ "ICON_576i"     , ICON_576i      , 0x21, 0x40, 0x20, 0x40},
+	{ "ICON_576p"     , ICON_576p      , 0x21, 0x40, 0x24, 0x20},
+	{ "ICON_720p"     , ICON_720p      , 0x23, 0x20, 0xff, 0x00},
+	{ "ICON_1080i"    , ICON_1080i     , 0x22, 0x20, 0xff, 0x00},
+	{ "ICON_1080p"    , ICON_1080p     , 0x21, 0x20, 0xff, 0x00}
+/* currently not used:
+  0x36 0x01 -> ":" left between text
+  0x39 0x01 -> ":" middle between text
+  0x3a 0x01 -> ":" right between text
+  
+  0x23 0x4 ->a symbol ;)
+  0x24 0x4 ->another symbol :D
+ */
 };
 
 /* to the fp */
@@ -291,9 +308,9 @@ struct iconToInternal {
 #define cCommandSetIconII        0xc7
 #endif
 
-#ifdef OCTAGON1008
+#if defined(OCTAGON1008)
 #define cCommandSetVFD           0xc4
-#elif HS7810A
+#elif defined(HS7810A)
 #define cCommandSetVFD           0x24
 #else
 #define cCommandSetVFD           0xce /* 0xc0 */
@@ -391,7 +408,7 @@ int nuvotonSetIcon(int which, int on)
     return res;
 }
 
-#elif defined(ATEVIO7500) || defined(FORTIS_HDBOX)
+#elif defined(FORTIS_HDBOX)
 int nuvotonSetIcon(int which, int on)
 {
     char buffer[128];
@@ -424,53 +441,47 @@ int nuvotonSetIcon(int which, int on)
                 return -EINVAL;
             }
 
-            break;
+            memset(buffer, 0, 128);
+
+            buffer[0] = SOP;
+            buffer[1] = cCommandSetIconI;
+            buffer[2] = internalCode1;
+            if (on)
+                regs[internalCode1] = buffer[3] = regs[internalCode1] | SymbolData1;
+            else
+                regs[internalCode1] = buffer[3] = regs[internalCode1] & ~SymbolData1;
+
+            buffer[4] = EOP;
+
+            res = nuvotonWriteCommand(buffer, 5, 0);
+
+            /* e.g. timeshift is splitted in two parts */
+            if (internalCode2 != 0xff)
+            {
+                memset(buffer, 0, 128);
+
+                buffer[0] = SOP;
+                buffer[1] = cCommandSetIconI;
+                buffer[2] = internalCode2;
+
+                if (on)
+                    regs[internalCode2] = buffer[3] = regs[internalCode2] | SymbolData2;
+                else
+                    regs[internalCode2] = buffer[3] = regs[internalCode2] & ~SymbolData2;
+
+                buffer[4] = EOP;
+
+                res = nuvotonWriteCommand(buffer, 5, 0);
+            }
+            /* dont break; here, fall through for multisegment icons */
         }
-    }
-
-    if (internalCode1 == 0xff)
-    {
-        printk("%s: not known or not supported icon %d ->%s\n", __func__, which, nuvotonIcons[vLoop].name);
-        return -EINVAL;
-    }
-
-    memset(buffer, 0, 128);
-
-    buffer[0] = SOP;
-    buffer[1] = cCommandSetIconI;
-    buffer[2] = internalCode1;
-    if (on)
-        buffer[3] = SymbolData1;
-    else
-        buffer[3] = 0x00;
-
-    buffer[4] = EOP;
-
-    res = nuvotonWriteCommand(buffer, 5, 0);
-
-    /* e.g. timeshift is splitted in two parts */
-    if (internalCode2 != 0xff)
-    {
-        memset(buffer, 0, 128);
-
-        buffer[0] = SOP;
-        buffer[1] = cCommandSetIconI;
-        buffer[2] = internalCode2;
-        if (on)
-            buffer[3] = SymbolData2;
-        else
-            buffer[3] = 0x00;
-
-        buffer[4] = EOP;
-
-        res = nuvotonWriteCommand(buffer, 5, 0);
     }
 
     dprintk(100, "%s <\n", __func__);
 
     return res;
 }
-#else // HS7810A 7seg_vfd
+#else // HS7810A 7seg_vfd; AT7500
 int nuvotonSetIcon(int which, int on)
 {
 	return 0;
@@ -949,6 +960,9 @@ int nuvoton_init_func(void)
     res |= nuvotonSetBrightness(1);
 
     res |= nuvotonWriteString("T.-Ducktales", strlen("T.-Ducktales"));
+
+    for (vLoop = 0x00; vLoop < 0xff; vLoop++)
+       regs[vLoop] = 0x00;
 
     for (vLoop = ICON_MIN + 1; vLoop < ICON_MAX; vLoop++)
         res |= nuvotonSetIcon(vLoop, 0);
