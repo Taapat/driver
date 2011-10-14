@@ -47,13 +47,17 @@ extern long stmhdmiio_get_cec_address(unsigned int * arg);
 static unsigned char isFirstKiss = 0;
 
 static unsigned char logicalDeviceTypeChoicesIndex = 0;
+
+
 static const unsigned char logicalDeviceTypeChoices[] =  { 
-DEVICE_TYPE_DVD1, 
-DEVICE_TYPE_DVD2, 
-DEVICE_TYPE_DVD3, 
 DEVICE_TYPE_STB1, 
 DEVICE_TYPE_STB2, 
 DEVICE_TYPE_STB3,
+DEVICE_TYPE_REC1, //PREV_KEY_WORKING
+DEVICE_TYPE_REC2, 
+DEVICE_TYPE_DVD1, 
+DEVICE_TYPE_DVD2, 
+DEVICE_TYPE_DVD3, 
 DEVICE_TYPE_UNREG };
 
 static unsigned char logicalDeviceType = DEVICE_TYPE_STB1;
@@ -228,6 +232,10 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
         case USER_CONTROL_CODE_LEFTUP:         strcat(name, "LEFT-UP");        break;
         case USER_CONTROL_CODE_LEFTDOWN:       strcat(name, "LEFT-DOWN");      break;
         case USER_CONTROL_CODE_EXIT:           strcat(name, "EXIT");           break;
+
+        case USER_CONTROL_CODE_PREV_CHANNEL:   strcat(name, "PREV_CHANNEL");   break;
+        case USER_CONTROL_CODE_EPG:            strcat(name, "EPG");            break;
+
         case USER_CONTROL_CODE_NUMBERS_0:      strcat(name, "NUMBERS_0");      break;
         case USER_CONTROL_CODE_NUMBERS_1:      strcat(name, "NUMBERS_1");      break;
         case USER_CONTROL_CODE_NUMBERS_2:      strcat(name, "NUMBERS_2");      break;

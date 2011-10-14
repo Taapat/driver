@@ -53,6 +53,9 @@ int input_init(void)
 		return error;
 	}
 
+	input_event(button_dev, EV_REP, REP_DELAY, 500);
+	input_event(button_dev, EV_REP, REP_PERIOD, 200);
+
 	return 0;
 }
 
@@ -69,6 +72,8 @@ int input_inject(unsigned int key, unsigned int type)
 	case USER_CONTROL_CODE_LEFT: code = KEY_LEFT; break;
 	case USER_CONTROL_CODE_RIGHT: code = KEY_RIGHT; break;
 	case USER_CONTROL_CODE_EXIT: code = KEY_HOME; break;
+	case USER_CONTROL_CODE_PREV_CHANNEL: code = KEY_MEMO; break; //not perfect but also used on fortis boxes
+	case USER_CONTROL_CODE_EPG: code = KEY_INFO; break;
 	case USER_CONTROL_CODE_NUMBERS_0: code = KEY_0; break;
 	case USER_CONTROL_CODE_NUMBERS_1: code = KEY_1; break;
 	case USER_CONTROL_CODE_NUMBERS_2: code = KEY_2; break;
