@@ -148,6 +148,13 @@
 #define USER_CONTROL_CODE_F4_YELLOW     0x74
 #define USER_CONTROL_CODE_F5            0x75
 
+#define USER_CONTROL_CODE_PLAY          0x44
+#define USER_CONTROL_CODE_STOP          0x45
+#define USER_CONTROL_CODE_PAUSE         0x46
+#define USER_CONTROL_CODE_RECORD        0x47
+#define USER_CONTROL_CODE_REWIND        0x48
+#define USER_CONTROL_CODE_FASTFORWARD   0x49
+
 #define USER_CONTROL_CODE_FUNCTION_PLAY               0x60
 #define USER_CONTROL_CODE_FUNCTION_PAUSEPLAY          0x61
 #define USER_CONTROL_CODE_FUNCTION_RECORD             0x62
@@ -304,6 +311,11 @@ struct sDEVICE_VENDOR_ID {
 #define VENDOR_COMMAND          0x89
 struct sVENDOR_COMMAND {
   unsigned char  VendorSpecificData[14];
+};
+
+#define VENDOR_REMOTE_BUTTON_DOWN   0x8A
+struct sVENDOR_REMOTE_BUTTON_DOWN  {
+	unsigned char VendorSpecificRCCode;
 };
 
 #define GIVE_DEVICE_VENDOR_ID   0x8C

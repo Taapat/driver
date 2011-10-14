@@ -42,6 +42,7 @@
 #include "cec_opcodes.h"
 #include "cec_internal.h"
 #include "cec_proc.h"
+#include "cec_rc.h"
 
 //----------------------------
 
@@ -78,6 +79,8 @@ int __init cec_init(void)
     }
     
     init_e2_proc();
+
+    input_init();
 
     // TODO: how can we implement hotplug support?
     //while(!cancelStart && getPhysicalAddress() == 0) // HDMI is not plugged in
