@@ -917,7 +917,7 @@ int micomSetStandby(char* time)
         res = micomWriteCommand(buffer, 5, 0);
 
         //by schischu
-        res = micomSetIcon(4 /*Timer*/, 0);
+        res = micomSetIcon(5 /*Timer*/, 0);
     } else
     {
         dprintk(1, "set wakeup time\n");
@@ -937,7 +937,7 @@ int micomSetStandby(char* time)
         res = micomWriteCommand(buffer, 5, 0);
 
         //by schischu
-        res = micomSetIcon(4 /*Timer*/, 1);
+        res = micomSetIcon(5 /*Timer*/, 1);
     }
 
     /* now power off */
