@@ -40,12 +40,15 @@
 #include "cec_opcodes_def.h"
 #include "cec_internal.h"
 #include "cec_proc.h"
+#include "cec_rc.h"
 
 extern long stmhdmiio_get_cec_address(unsigned int * arg);
 
 static unsigned char isFirstKiss = 0;
 
 static unsigned char logicalDeviceTypeChoicesIndex = 0;
+
+
 static const unsigned char logicalDeviceTypeChoices[] =  { 
 DEVICE_TYPE_DVD1, 
 DEVICE_TYPE_DVD2, 
@@ -53,10 +56,12 @@ DEVICE_TYPE_DVD3,
 DEVICE_TYPE_STB1, 
 DEVICE_TYPE_STB2, 
 DEVICE_TYPE_STB3,
+DEVICE_TYPE_REC1, //PREV_KEY_WORKING
+DEVICE_TYPE_REC2, 
 DEVICE_TYPE_UNREG };
 
-static unsigned char logicalDeviceType = DEVICE_TYPE_DVD1;
-static unsigned char deviceType = DEVICE_TYPE_DVD; // cause we want deck control
+static unsigned char logicalDeviceType = DEVICE_TYPE_REC1;
+static unsigned char deviceType = DEVICE_TYPE_REC;
 
 static unsigned short ActiveSource = 0x0000;
 
@@ -87,9 +92,7 @@ unsigned short getPhysicalAddress(void) {
   return value & 0xffff;
 }
 
-
 //=================
-
 
 unsigned short getActiveSource(void) {
   return ActiveSource;
@@ -97,10 +100,10 @@ unsigned short getActiveSource(void) {
 
 void setActiveSource(unsigned short addr) {
   printk("[CEC] FROM: %04x TO: %04x\n", ActiveSource, addr);
-  if(ActiveSource != addr) {
+  //if(ActiveSource != addr) {
     ActiveSource = addr;
     setUpdatedActiveSource();
-  }
+  //}
 }
 
 //-----------------------------------------
@@ -227,6 +230,10 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
         case USER_CONTROL_CODE_LEFTUP:         strcat(name, "LEFT-UP");        break;
         case USER_CONTROL_CODE_LEFTDOWN:       strcat(name, "LEFT-DOWN");      break;
         case USER_CONTROL_CODE_EXIT:           strcat(name, "EXIT");           break;
+
+        case USER_CONTROL_CODE_PREV_CHANNEL:   strcat(name, "PREV_CHANNEL");   break;
+        case USER_CONTROL_CODE_EPG:            strcat(name, "EPG");            break;
+
         case USER_CONTROL_CODE_NUMBERS_0:      strcat(name, "NUMBERS_0");      break;
         case USER_CONTROL_CODE_NUMBERS_1:      strcat(name, "NUMBERS_1");      break;
         case USER_CONTROL_CODE_NUMBERS_2:      strcat(name, "NUMBERS_2");      break;
@@ -242,6 +249,12 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
         case USER_CONTROL_CODE_F3_GREEN:       strcat(name, "F3_(GREEN)");     break;
         case USER_CONTROL_CODE_F4_YELLOW:      strcat(name, "F4_(YELLOW)");    break;
         case USER_CONTROL_CODE_F5:             strcat(name, "F5");             break;
+        case USER_CONTROL_CODE_PLAY:           strcat(name, "PLAY");           break;
+        case USER_CONTROL_CODE_STOP:           strcat(name, "STOP");           break;
+        case USER_CONTROL_CODE_PAUSE:          strcat(name, "PAUSE");          break;
+        case USER_CONTROL_CODE_RECORD:         strcat(name, "RECORD");         break;
+        case USER_CONTROL_CODE_REWIND:         strcat(name, "REWIND");         break;
+        case USER_CONTROL_CODE_FASTFORWARD:    strcat(name, "FASTFORWARD");    break;
 
         case USER_CONTROL_CODE_FUNCTION_PLAY:               strcat(name, "PLAY");                break;
         case USER_CONTROL_CODE_FUNCTION_PAUSEPLAY:          strcat(name, "PAUSE-PLAY");          break;
@@ -259,55 +272,16 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
         case USER_CONTROL_CODE_FUNCTION_POWER_ON:           strcat(name, "POWER_ON");            break;
         default: break;
       }
+
+      input_inject(buf[1], 1);
+
       break;
 
     case USER_CONTROL_RELEASED: 
       strcpy(name, "USER_CONTROL_RELEASED");
-      strcat(name,": ");
-      switch(buf[1])
-      {
-        case USER_CONTROL_CODE_SELECT:         strcat(name, "SELECT");         break;
-        case USER_CONTROL_CODE_UP:             strcat(name, "UP");             break;
-        case USER_CONTROL_CODE_DOWN:           strcat(name, "DOWN");           break;
-        case USER_CONTROL_CODE_LEFT:           strcat(name, "LEFT");           break;
-        case USER_CONTROL_CODE_RIGHT:          strcat(name, "RIGHT");          break;
-        case USER_CONTROL_CODE_RIGHTUP:        strcat(name, "RIGHT-UP");       break;
-        case USER_CONTROL_CODE_RIGHTDOWN:      strcat(name, "RIGHT-DOWN");     break;
-        case USER_CONTROL_CODE_LEFTUP:         strcat(name, "LEFT-UP");        break;
-        case USER_CONTROL_CODE_LEFTDOWN:       strcat(name, "LEFT-DOWN");      break;
-        case USER_CONTROL_CODE_EXIT:           strcat(name, "EXIT");           break;
-        case USER_CONTROL_CODE_NUMBERS_0:      strcat(name, "NUMBERS_0");      break;
-        case USER_CONTROL_CODE_NUMBERS_1:      strcat(name, "NUMBERS_1");      break;
-        case USER_CONTROL_CODE_NUMBERS_2:      strcat(name, "NUMBERS_2");      break;
-        case USER_CONTROL_CODE_NUMBERS_3:      strcat(name, "NUMBERS_3");      break;
-        case USER_CONTROL_CODE_NUMBERS_4:      strcat(name, "NUMBERS_4");      break;
-        case USER_CONTROL_CODE_NUMBERS_5:      strcat(name, "NUMBERS_5");      break;
-        case USER_CONTROL_CODE_NUMBERS_6:      strcat(name, "NUMBERS_6");      break;
-        case USER_CONTROL_CODE_NUMBERS_7:      strcat(name, "NUMBERS_7");      break;
-        case USER_CONTROL_CODE_NUMBERS_8:      strcat(name, "NUMBERS_8");      break;
-        case USER_CONTROL_CODE_NUMBERS_9:      strcat(name, "NUMBERS_9");      break;
-        case USER_CONTROL_CODE_F1_BLUE  :      strcat(name, "F1_(BLUE)");      break;
-        case USER_CONTROL_CODE_F2_RED:         strcat(name, "F2_(RED)");       break;
-        case USER_CONTROL_CODE_F3_GREEN:       strcat(name, "F3_(GREEN)");     break;
-        case USER_CONTROL_CODE_F4_YELLOW:      strcat(name, "F4_(YELLOW)");    break;
-        case USER_CONTROL_CODE_F5:             strcat(name, "F5");             break;
 
-        case USER_CONTROL_CODE_FUNCTION_PLAY:               strcat(name, "PLAY");                break;
-        case USER_CONTROL_CODE_FUNCTION_PAUSEPLAY:          strcat(name, "PAUSE-PLAY");          break;
-        case USER_CONTROL_CODE_FUNCTION_RECORD:             strcat(name, "RECORD");              break;
-        case USER_CONTROL_CODE_FUNCTION_PAUSERECORD:        strcat(name, "PAUSE-RECORD");        break;
-        case USER_CONTROL_CODE_FUNCTION_STOP:               strcat(name, "STOP");                break;
-        case USER_CONTROL_CODE_FUNCTION_MUTE:               strcat(name, "MUTE");                break;
-        case USER_CONTROL_CODE_FUNCTION_RESTORE:            strcat(name, "RESTORE");             break;
-        case USER_CONTROL_CODE_FUNCTION_TUNE:               strcat(name, "TUNE");                break;
-        case USER_CONTROL_CODE_FUNCTION_SELECT_MEDIA:       strcat(name, "SELECT_MEDIA");        break;
-        case USER_CONTROL_CODE_FUNCTION_SELECT_AV_INPUT:    strcat(name, "SELECT_AV_INPUT");     break;
-        case USER_CONTROL_CODE_FUNCTION_SELECT_AUDIO_INPUT: strcat(name, "SELECT_AUDIO_INPUT");  break;
-        case USER_CONTROL_CODE_FUNCTION_POWER_TOGGLE:       strcat(name, "POWER_TOGGLE");        break;
-        case USER_CONTROL_CODE_FUNCTION_POWER_OFF:          strcat(name, "POWER_OFF");           break;
-        case USER_CONTROL_CODE_FUNCTION_POWER_ON:           strcat(name, "POWER_ON");            break;
-        default: break;
-      }
+      input_inject(0xFFFF, 0);
+
       break;
 
     case GIVE_OSD_NAME: 
@@ -362,7 +336,12 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
 
     case REQUEST_ACTIVE_SOURCE: 
       strcpy(name, "REQUEST_ACTIVE_SOURCE");
-      // if we are the current active source, than we have to answer here
+      unsigned short physicalAddress = getPhysicalAddress();
+      responseBuffer[0] = (getLogicalDeviceType() << 4) + (BROADCAST & 0xF);
+      responseBuffer[1] = ACTIVE_SOURCE;
+      responseBuffer[2] = (((physicalAddress >> 12)&0xf) << 4) + ((physicalAddress >> 8)&0xf);
+      responseBuffer[3] = (((physicalAddress >> 4)&0xf) << 4) + ((physicalAddress >> 0)&0xf);
+      sendMessage(4, responseBuffer);
       break;
 
     case SET_STREAM_PATH: 
@@ -391,18 +370,29 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
       sendMessage(4, responseBuffer);
       break;
 
+    case VENDOR_REMOTE_BUTTON_DOWN:
+      strcpy(name, "VENDOR_REMOTE_BUTTON_DOWN");
+      break;
+
     case GIVE_DEVICE_VENDOR_ID: 
       strcpy(name, "GIVE_DEVICE_VENDOR_ID");
       responseBuffer[0] = (getLogicalDeviceType() << 4) + (BROADCAST & 0xF);
       responseBuffer[1] = DEVICE_VENDOR_ID;
+      // http://standards.ieee.org/develop/regauth/oui/oui.txt
 #ifdef UFS912
       responseBuffer[2] = 0x00;
       responseBuffer[3] = 0xD0;
       responseBuffer[4] = 0x55;
 #else
+#ifdef ATEVIO7500
+      responseBuffer[2] = 0x00;
+      responseBuffer[3] = 0x1E;
+      responseBuffer[4] = 0xB8;
+#else
       responseBuffer[2] = 'D';
       responseBuffer[3] = 'B';
       responseBuffer[4] = 'X';
+#endif
 #endif
       sendMessage(5, responseBuffer);
       break;
@@ -418,7 +408,7 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
         default: break;
       }
 
-      responseBuffer[0] = (getLogicalDeviceType() << 4) + (BROADCAST & 0xF);
+      responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0xF);
       responseBuffer[1] = MENU_STATUS;
       responseBuffer[2] = MENU_STATE_ACTIVATE;
       sendMessage(3, responseBuffer);
@@ -445,6 +435,7 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
 
     case REPORT_POWER_STATUS: 
       strcpy(name, "REPORT_POWER_STATUS");
+      strcat(name, ": ");
       switch(buf[1])
       {
         case POWER_STATUS_ON:               strcat(name, "ON");               break;

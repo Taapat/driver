@@ -1,6 +1,7 @@
 from Plugins.Plugin import PluginDescriptor
 from Components.Scanner import scanDevice
 from Screens.InfoBar import InfoBar
+import Screens.Standby
 
 import time
 from threading import Thread 
@@ -31,7 +32,6 @@ class CEControlThread(Thread):
 			time.sleep(0.5)
 			try:
 				events = open("/proc/stb/cec/event_poll").readline()
-
 				
 				isDiscovery    = ord(events[0]) - ord('0')
 				isActiveSource = ord(events[1]) - ord('0')
@@ -45,25 +45,40 @@ class CEControlThread(Thread):
 						activesource = open("/proc/stb/cec/state_activesource").readline()
 						cecaddress = open("/proc/stb/cec/state_cecaddress").readline()
 						if activesource == cecaddress:
-							# We are not the active source, if we were in pause mode, continue
-							print "[CEControl] continue playback"
-							# TODO
+							if Screens.Standby.inStandby:
+								print "[CEControl] wakeup"
+								Screens.Standby.inStandby.Power()
+							else:
+								# We are not the active source, if we were in pause mode, continue
+								print "[CEControl] continue playback"
+								if global_session is not None and global_session.nav is not None:
+									service = global_session.nav.getCurrentService()
+									if service is not None:
+										pauseable = service.pause()
+										if pauseable is not None:
+											pauseable.unpause()
+						
 						else:
 							# we lost focus, pause if current playback in progress
 							print "[CEControl] pause playback"
-							# TODO
+							if global_session is not None and global_session.nav is not None:
+								service = global_session.nav.getCurrentService()
+								if service is not None:
+									pauseable = service.pause()
+									if pauseable is not None:
+										pauseable.pause()
 					except IOError:
 						continue
-						
+				
 				if isStandby > 0:
 					try:
 						standby = open("/proc/stb/cec/state_standby").readline()
 						# we were told to goto standby
 						print "[CEControl] entering standby"
-						# TODO go to standby
+						global_session.open(Screens.Standby.Standby)
 					except IOError:
 						continue
-						
+			
 			except IOError:
 				continue
 				
@@ -101,7 +116,6 @@ def autostart(reason, **kwargs):
 		global_shutdown = True
 		if global_thread is not None:
 			global_thread.join()
-		
 		
 		global_session = None
 

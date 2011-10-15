@@ -21,6 +21,8 @@
 #ifndef CEC_OPCODES_DEF_H_
 #define CEC_OPCODES_DEF_H_
 
+// http://www.cec-o-matic.com/
+
 #define BROADCAST 0xf
 #define SCREEN 0x0
 
@@ -93,7 +95,6 @@
 #define DEVICE_TYPE_REC3   0x09
 #define DEVICE_TYPE_STB4   0x0A
 #define DEVICE_TYPE_DVD3   0x0B
-
 #define DEVICE_TYPE_RES1    0x0C
 #define DEVICE_TYPE_RES2    0x0D
 #define DEVICE_TYPE_FREEUSE 0x0E
@@ -131,6 +132,11 @@
 #define USER_CONTROL_CODE_RIGHTDOWN     0x06
 #define USER_CONTROL_CODE_LEFTUP        0x07
 #define USER_CONTROL_CODE_LEFTDOWN      0x08
+
+#define USER_CONTROL_CODE_ROOT_MENU     0x09
+#define USER_CONTROL_CODE_SETUP_MENU    0x0A
+#define USER_CONTROL_CODE_CONTENTS_MENU 0x0B
+
 #define USER_CONTROL_CODE_EXIT          0x0D
 #define USER_CONTROL_CODE_NUMBERS_0     0x20
 #define USER_CONTROL_CODE_NUMBERS_1     0x21
@@ -142,11 +148,22 @@
 #define USER_CONTROL_CODE_NUMBERS_7     0x27
 #define USER_CONTROL_CODE_NUMBERS_8     0x28
 #define USER_CONTROL_CODE_NUMBERS_9     0x29
+
+#define USER_CONTROL_CODE_PREV_CHANNEL  0x32
+#define USER_CONTROL_CODE_EPG           0x53
+
 #define USER_CONTROL_CODE_F1_BLUE       0x71
 #define USER_CONTROL_CODE_F2_RED        0x72
 #define USER_CONTROL_CODE_F3_GREEN      0x73
 #define USER_CONTROL_CODE_F4_YELLOW     0x74
 #define USER_CONTROL_CODE_F5            0x75
+
+#define USER_CONTROL_CODE_PLAY          0x44
+#define USER_CONTROL_CODE_STOP          0x45
+#define USER_CONTROL_CODE_PAUSE         0x46
+#define USER_CONTROL_CODE_RECORD        0x47
+#define USER_CONTROL_CODE_REWIND        0x48
+#define USER_CONTROL_CODE_FASTFORWARD   0x49
 
 #define USER_CONTROL_CODE_FUNCTION_PLAY               0x60
 #define USER_CONTROL_CODE_FUNCTION_PAUSEPLAY          0x61
@@ -306,8 +323,15 @@ struct sVENDOR_COMMAND {
   unsigned char  VendorSpecificData[14];
 };
 
+#define VENDOR_REMOTE_BUTTON_DOWN   0x8A
+struct sVENDOR_REMOTE_BUTTON_DOWN  {
+	unsigned char VendorSpecificRCCode;
+};
+
 #define GIVE_DEVICE_VENDOR_ID   0x8C
 struct sGIVE_DEVICE_VENDOR_ID {
+  unsigned char VendorId[3];
+  unsigned char VendorSpecificData[14];
 };
 
 #define MENU_REQUEST   0x8D
