@@ -50,18 +50,18 @@ static unsigned char logicalDeviceTypeChoicesIndex = 0;
 
 
 static const unsigned char logicalDeviceTypeChoices[] =  { 
+DEVICE_TYPE_DVD1, 
+DEVICE_TYPE_DVD2, 
+DEVICE_TYPE_DVD3, 
 DEVICE_TYPE_STB1, 
 DEVICE_TYPE_STB2, 
 DEVICE_TYPE_STB3,
 DEVICE_TYPE_REC1, //PREV_KEY_WORKING
 DEVICE_TYPE_REC2, 
-DEVICE_TYPE_DVD1, 
-DEVICE_TYPE_DVD2, 
-DEVICE_TYPE_DVD3, 
 DEVICE_TYPE_UNREG };
 
-static unsigned char logicalDeviceType = DEVICE_TYPE_STB1;
-static unsigned char deviceType = DEVICE_TYPE_STB;
+static unsigned char logicalDeviceType = DEVICE_TYPE_REC1;
+static unsigned char deviceType = DEVICE_TYPE_REC;
 
 static unsigned short ActiveSource = 0x0000;
 
@@ -92,9 +92,7 @@ unsigned short getPhysicalAddress(void) {
   return value & 0xffff;
 }
 
-
 //=================
-
 
 unsigned short getActiveSource(void) {
   return ActiveSource;
@@ -102,10 +100,10 @@ unsigned short getActiveSource(void) {
 
 void setActiveSource(unsigned short addr) {
   printk("[CEC] FROM: %04x TO: %04x\n", ActiveSource, addr);
-  if(ActiveSource != addr) {
+  //if(ActiveSource != addr) {
     ActiveSource = addr;
     setUpdatedActiveSource();
-  }
+  //}
 }
 
 //-----------------------------------------
@@ -338,7 +336,12 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
 
     case REQUEST_ACTIVE_SOURCE: 
       strcpy(name, "REQUEST_ACTIVE_SOURCE");
-      // if we are the current active source, than we have to answer here
+      unsigned short physicalAddress = getPhysicalAddress();
+      responseBuffer[0] = (getLogicalDeviceType() << 4) + (BROADCAST & 0xF);
+      responseBuffer[1] = ACTIVE_SOURCE;
+      responseBuffer[2] = (((physicalAddress >> 12)&0xf) << 4) + ((physicalAddress >> 8)&0xf);
+      responseBuffer[3] = (((physicalAddress >> 4)&0xf) << 4) + ((physicalAddress >> 0)&0xf);
+      sendMessage(4, responseBuffer);
       break;
 
     case SET_STREAM_PATH: 
