@@ -953,6 +953,11 @@ int micomSetStandby(char* time)
  
     res = micomWriteCommand(buffer, 5, 0);
 
+    if (time[0] = '\0')
+        res = micomSetIcon(5 /*Timer*/, 0);
+    else
+        res = micomSetIcon(5 /*Timer*/, 1);
+
     dprintk(100, "%s <\n", __func__);
 
     return res;
