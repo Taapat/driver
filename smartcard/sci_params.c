@@ -527,20 +527,23 @@ SCI_ERROR sci_set_para_ETU(SCI_CONTROL_BLOCK *sci, SCI_PARAMETERS *p_sci_paramet
     if((p_sci_parameters->ETU >= SCI_MIN_ETU) && (p_sci_parameters->ETU <= SCI_MAX_ETU))
     {
         sci->sci_parameters.ETU = p_sci_parameters->ETU;
-
+        
 		if(sci->clk==357 || sci->clk==358)
 		{
 			switch(p_sci_parameters->f)
 			{
 				case 4:
 					req_baud=(CLOCK_417/sci->sci_parameters.ETU);
+				
 					set_req_baud(sci,req_baud);
+			    
 					smartcard_reset(sci, 1);
 
 					action_done=4;
 				break;
 				case 5:
 					req_baud=(CLOCK_500/sci->sci_parameters.ETU);
+				
 					set_req_baud(sci,req_baud);
 					smartcard_reset(sci, 1);
 
@@ -548,8 +551,9 @@ SCI_ERROR sci_set_para_ETU(SCI_CONTROL_BLOCK *sci, SCI_PARAMETERS *p_sci_paramet
 				break;
 				case 6:
 					req_baud=(CLOCK_625/sci->sci_parameters.ETU);
+				
 					set_req_baud(sci,req_baud);
-					smartcard_reset(sci, 1);
+				smartcard_reset(sci, 1);
 
 					action_done=6;
 				break;

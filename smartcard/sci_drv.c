@@ -97,7 +97,7 @@ static int SCI_ClockDisable(SCI_CONTROL_BLOCK *sci);
 static int detect_ATR(SCI_CONTROL_BLOCK *sci);
 static void sci_cb_init(SCI_CONTROL_BLOCK *sci);
 
-INT 	debug = 0;
+INT 	debug = 1;
 ULONG	sci_driver_init;
 SCI_CONTROL_BLOCK   sci_cb[SCI_NUMBER_OF_CONTROLLERS];
 
@@ -908,6 +908,11 @@ static void sci_detect_change(SCI_CONTROL_BLOCK *sci)
     {
         dprintk(1, "Inserting Smartcard %d!\n", sci->id);
         sci_hw_init(sci);
+#if defined(ADB_BOX)
+	stpio_set_pin(sci->cmdvcc, 1);
+#endif       
+    
+    
     }
 }
 
@@ -991,7 +996,8 @@ SCI_ERROR sci_hw_init(SCI_CONTROL_BLOCK *sci)
     smartcard_clock_config( sci, 357 );
 
     sci_cb_init(sci);
-
+                                            
+                                            
     if(sci->id==0)
     {
         set_reg_writeonly(sci, BASE_ADDRESS_ASC0, ASC0_TX_RST, 0xFF);
@@ -2012,7 +2018,7 @@ static ssize_t sci_read(struct file *file, char *buffer, size_t length, loff_t *
 	{
 		sci->rx_wptr=0;
 		sci->rx_rptr=0;
-#if defined(ATEVIO7500)
+#if defined(ATEVIO7500) || defined(ADB_BOX)
 		mdelay(3);   /*Hellmaster1024: on Atevio we seem to have some timing probs without that delay */
 #endif
 

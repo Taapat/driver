@@ -116,7 +116,7 @@
 
 #define SCI_MAX_F                   80000000
 #define SCI_MAX_ETU                 0xFFF
-#define SCI_MAX_WWT                 200000
+#define SCI_MAX_WWT                 0xFFFFFFFF //200000
 #define SCI_MAX_CWT                 0xFFFF
 #define SCI_MAX_BWT                 0xFFFFFFFF
 #define SCI_MAX_EGT                 0xFF

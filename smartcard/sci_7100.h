@@ -9,6 +9,7 @@
 
 #if defined(ADB_BOX)
 #define SUPPORT_NO_VOLTAGE
+#define SUPPORT_NO_AUTOSET
 #endif
 
 #define SYS_CFG_BASE_ADDRESS     	0x19001000
