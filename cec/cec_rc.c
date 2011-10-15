@@ -59,6 +59,14 @@ int input_init(void)
 	return 0;
 }
 
+int input_cleanup(void)
+{
+	printk("[CEC] unregistering button device\n");
+	input_unregister_device(button_dev);
+
+	return 0;
+}
+
 int input_inject(unsigned int key, unsigned int type)
 {
 	unsigned int code = 0;

@@ -102,6 +102,8 @@ static void __exit cec_exit(void)
 
     cleanup_e2_proc();
 
+    input_cleanup();
+
     free_irq(CEC_IRQ, NULL);
 
     cec_internal_exit();

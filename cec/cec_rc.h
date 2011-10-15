@@ -22,6 +22,7 @@
 #define CEC_RC_H_
 
 int input_init(void);
+int input_cleanup(void);
 int input_inject(unsigned int key, unsigned int type);
 
 

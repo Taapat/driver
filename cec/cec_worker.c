@@ -38,6 +38,7 @@
 
 
 #include <linux/interrupt.h>
+#include <linux/semaphore.h>
 //#include <linux/i2c.h> 
 
 #include "cec_internal.h"
@@ -59,12 +60,12 @@ static unsigned char sendBuf[SEND_BUF_SIZE];
 static unsigned char retries = DEFAULT_RETRY_COUNT;
 //-----
 
-static unsigned char sendCommand = 0;
+static struct semaphore sendCommand;
 static unsigned char sendCommandWithDelay = 0;
 
 int sendMessageWithRetry(unsigned int len, unsigned char buf[], unsigned int retry)
 {
-  unsigned long Counter = 1000;
+  unsigned long Counter = 100;
   unsigned char value = 0;
   unsigned char src;
   unsigned char dst;
@@ -72,7 +73,7 @@ int sendMessageWithRetry(unsigned int len, unsigned char buf[], unsigned int ret
   while(isSending && --Counter)
   {
     // We are to fast, lets make a break
-    udelay(1000);
+    udelay(10000);
   }
 
   if (Counter == 0)
@@ -104,7 +105,9 @@ int sendMessageWithRetry(unsigned int len, unsigned char buf[], unsigned int ret
 
   indexOfSendBuf++;
 
-  sendCommand++;
+  printk("[CEC] sendCommand - up ->\n");
+  up(&sendCommand);
+  printk("[CEC] sendCommand - up <-\n");
 
   /*if(sizeOfSendBuf == 1) // PING
   {
@@ -120,7 +123,9 @@ int sendMessageWithRetry(unsigned int len, unsigned char buf[], unsigned int ret
 void sendMessage(unsigned int len, unsigned char buf[])
 {
   sendMessageWithRetry(len, buf, DEFAULT_RETRY_COUNT);
-  sendCommand++;
+  //printk("[CEC] sendCommand - up ->\n");
+  //up(&sendCommand);
+  //printk("[CEC] sendCommand - up <-\n");
 }
 
 void cec_worker_init(void)
@@ -154,6 +159,7 @@ void startTask(void)
 void endTask(void)
 {
   notEndTask = 0;
+  up(&sendCommand);
   while(notEndTask == 0)
     udelay(10000);
 }
@@ -166,15 +172,21 @@ int cec_task(void* dummy)
 
   allow_signal(SIGTERM);
 
+  sema_init(&sendCommand, 0);
   notEndTask = 1;
 
   while(notEndTask)
   {
-    if(sendCommand || sendCommandWithDelay)
+  printk("[CEC] sendCommand - down ->\n");
+    down(&sendCommand);
+  printk("[CEC] sendCommand - down <-\n");
+    if(!notEndTask)
+      break;
+    //if(sendCommand || sendCommandWithDelay)
     {
       printk("[CEC] task - sendCommand || sendCommandWithDelay\n");
-      if(sendCommandWithDelay)
-        udelay(4000);
+      if(sendCommandWithDelay--)
+        udelay(10000);
 
       if(sizeOfSendBuf == 1) // PING
       {
@@ -184,10 +196,10 @@ int cec_task(void* dummy)
       {
         cec_start_sending(0);
       }
-      sendCommand = 0;
-      sendCommandWithDelay = 0;
+      //sendCommand = 0;
+      
     }
-    udelay(10000);
+    //udelay(10000);
   }
 
   notEndTask = 1;
@@ -244,13 +256,19 @@ irqreturn_t cec_interrupt(int irq, void *dev_id)
         else if(retries > 0)
         {
           sendMessageWithRetry(sizeOfSendBuf, sendBuf, retries - 1);
-          sendCommandWithDelay++;
+          //printk("[CEC] sendCommand - up ->\n");
+          //sendCommandWithDelay++;
+          //up(&sendCommand);
+          //printk("[CEC] sendCommand - up <-\n");
         }
     }
     else if(retries > 0)
     {
       sendMessageWithRetry(sizeOfSendBuf, sendBuf, retries - 1);
-      sendCommandWithDelay++;
+      //printk("[CEC] sendCommand - up ->\n");
+      //sendCommandWithDelay++;
+      //up(&sendCommand);
+      //printk("[CEC] sendCommand - up <-\n");
     }
   }
 
