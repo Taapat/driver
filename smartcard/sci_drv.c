@@ -87,7 +87,7 @@ static int SCI_ClockDisable(SCI_CONTROL_BLOCK *sci);
 static int detect_ATR(SCI_CONTROL_BLOCK *sci);
 static void sci_cb_init(SCI_CONTROL_BLOCK *sci);
 
-INT 	debug = 1;
+INT 	debug = 0;
 ULONG	sci_driver_init;
 SCI_CONTROL_BLOCK   sci_cb[SCI_NUMBER_OF_CONTROLLERS];
 
@@ -2609,7 +2609,7 @@ module_exit(sci_module_cleanup);
 MODULE_VERSION(SMARTCARD_VERSION);
 
 module_param(debug, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-MODULE_PARM_DESC(debug, "Turn on/off SmartCard debugging (default:on)");
+MODULE_PARM_DESC(debug, "Turn on/off SmartCard debugging (default:off)");
 
 MODULE_AUTHOR("Spider-Team");
 MODULE_DESCRIPTION("SmartCard Interface driver");
