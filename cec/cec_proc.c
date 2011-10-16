@@ -64,6 +64,10 @@ out: \
     int len = 0; \
     printk("[CEC] %s\n", __FUNCTION__);
 
+#define PR_INIT_SILENT() \
+    int len = 0; \
+    printk("[CEC] %s\n", __FUNCTION__);
+
 #define PR_EXIT(len) \
     return len;
 
@@ -93,7 +97,7 @@ void setUpdatedStandby(void) { INC(eventStandby); }
 
 int proc_event_poll_read (char *page, char **start, off_t off, int count, int *eof, void *data_unused)
 {
-    PR_INIT();
+    PR_INIT_SILENT();
 
     len = sprintf(page, "%1d%1d%1d%1d%1d%1d%1d%1d\n"
                         "||||||||-> Event 8\n"
