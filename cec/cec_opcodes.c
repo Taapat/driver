@@ -60,8 +60,8 @@ DEVICE_TYPE_REC1, //PREV_KEY_WORKING
 DEVICE_TYPE_REC2, 
 DEVICE_TYPE_UNREG };
 
-static unsigned char logicalDeviceType = DEVICE_TYPE_REC1;
-static unsigned char deviceType = DEVICE_TYPE_REC;
+static unsigned char logicalDeviceType = DEVICE_TYPE_DVD1;
+static unsigned char deviceType = DEVICE_TYPE_DVD;
 
 static unsigned short ActiveSource = 0x0000;
 
