@@ -104,7 +104,7 @@ static wait_queue_head_t   rx_wq;
 static wait_queue_head_t   ack_wq;
 static int dataReady = 0;
 
-const char* driver_version = "1.06";
+const char* driver_version = "1.07";
 
 //----------------------------------------------
 
