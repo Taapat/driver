@@ -358,7 +358,7 @@ static int wakeup_time_read(char *page, char **start, off_t off, int count,
 {
   int len = 0;
   if (wakeup_time == NULL)
-    len = sprintf(page, "3000000000");
+    len = sprintf(page, "%ld", LONG_MAX);
   else
     len = sprintf(page, wakeup_time);
   

@@ -18,7 +18,7 @@
  *
  */
 
-
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/string.h>
@@ -38,7 +38,12 @@
 
 
 #include <linux/interrupt.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
+#include <asm/semaphore.h>
+#else
 #include <linux/semaphore.h>
+#endif
+
 //#include <linux/i2c.h> 
 
 #include "cec_internal.h"

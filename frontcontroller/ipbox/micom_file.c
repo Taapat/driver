@@ -898,7 +898,7 @@ int micomSetStandby(char* time)
     /* set wakeup time */
     memset(buffer, 0, 5);
 
-    if (time[0] = '\0')
+    if (time[0] == '\0')
     {
         dprintk(1, "clear wakeup time\n");
         buffer[0] = VFD_SETWAKEUPDATE;
@@ -915,9 +915,6 @@ int micomSetStandby(char* time)
         buffer[2] = 0x00; //minute
         buffer[3] = 0; /* on/off */
         res = micomWriteCommand(buffer, 5, 0);
-
-        //by schischu
-        res = micomSetIcon(5 /*Timer*/, 0);
     } else
     {
         dprintk(1, "set wakeup time\n");
@@ -935,9 +932,6 @@ int micomSetStandby(char* time)
         buffer[2] = ((time[8] - '0') << 4) | (time[9] - '0'); //minute
         buffer[3] = 1; /* on/off */
         res = micomWriteCommand(buffer, 5, 0);
-
-        //by schischu
-        res = micomSetIcon(5 /*Timer*/, 1);
     }
 
     /* now power off */
@@ -952,11 +946,6 @@ int micomSetStandby(char* time)
     buffer[1] = 0;
  
     res = micomWriteCommand(buffer, 5, 0);
-
-    if (time[0] = '\0')
-        res = micomSetIcon(5 /*Timer*/, 0);
-    else
-        res = micomSetIcon(5 /*Timer*/, 1);
 
     dprintk(100, "%s <\n", __func__);
 
