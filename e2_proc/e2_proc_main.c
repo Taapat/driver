@@ -542,8 +542,9 @@ struct ProcStructure_s e2Proc[] =
 	{cProcDir,   "stb/video/plane"   	       , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/video/plane/psi_brightness"  , NULL, NULL, NULL, NULL, "psi_brightness"},
 	{cProcEntry, "stb/video/plane/psi_saturation"  , NULL, NULL, NULL, NULL, "psi_saturation"},
-	{cProcEntry, "stb/video/plane/psi_contrast"    , NULL, NULL, NULL, NULL, "psi_saturation"},
+	{cProcEntry, "stb/video/plane/psi_contrast"    , NULL, NULL, NULL, NULL, "psi_contrast"},
 	{cProcEntry, "stb/video/plane/psi_tint"        , NULL, NULL, NULL, NULL, "psi_tint"},
+	{cProcEntry, "stb/video/plane/psi_apply"        , NULL, NULL, NULL, NULL, "psi_apply"},
 #ifdef UFS912
 	{cProcDir  , "stb/cec"   	                   , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/cec/state_activesource"   	               , NULL, NULL, NULL, NULL, ""},

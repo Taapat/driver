@@ -713,28 +713,28 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		     res = run_draw_thread(data);
 		} else
 		{
-			//not suppoerted
+			//not supported
 		}
-
 		mode = 0;
-
 		break;
 	case VFDDISPLAYWRITEONOFF:
 		break;
 	case VFDDISPLAYCLR:
 		if(!thread_stop)
 		  kthread_stop(thread);
-
 		//wait thread stop
 		while(!thread_stop)
 		  {msleep(1);}
 		VFD_clr();
 		break;
+#if defined(SPARK)
+	case 0x5305:
+		break;
+#endif
 	case 0x5401:
 		break;
 	default:
 		printk("VFD/AOTOM: unknown IOCTL 0x%x\n", cmd);
-
 		mode = 0;
 		break;
 	}
