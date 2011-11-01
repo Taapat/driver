@@ -1248,7 +1248,11 @@ stmfb_encode_var_ex (struct stmfbio_var_screeninfo_ex * const v,
   {
     DPRINTK("Plane supports premultipled alpha\n");
     v->caps |= STMFBIO_VAR_CAPS_PREMULTIPLIED;
+#ifdef __TDT__
+    v->premultiplied_alpha = 0; //Set nonpremulitplied as default as on dreambox
+#else
     v->premultiplied_alpha = 1;
+#endif
   }
 
   if(caps.ulCaps & PLANE_CAPS_RESCALE_TO_VIDEO_RANGE)
