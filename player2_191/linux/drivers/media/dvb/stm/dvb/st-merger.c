@@ -119,6 +119,7 @@ unsigned long TSM_NUM_1394_ALT_OUT;
 
 #define SYS_CFG0      		0x100
 #define SYS_CFG1      		0x104
+#define SYS_CFG5      		0x114
 
 #define SYS_CFG7      		0x11C
 
@@ -485,7 +486,7 @@ void stm_tsm_init (int use_cimax)
 	/* ->TSIN0 routes to TSIN2
 	 */
       ctrl_outl(0x2, reg_sys_config + SYS_CFG0);
-#elif defined(UFS912) || defined(SPARK) || defined(HS7810A)
+#elif defined(UFS912) || defined(SPARK)
       ctrl_outl(0x3, reg_sys_config + SYS_CFG0);
 #elif defined(ATEVIO7500)
 /* pio12 */
