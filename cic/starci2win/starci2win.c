@@ -913,9 +913,6 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
   ctrl_outl(0x00000008, 0xfe0000b4);
   ctrl_outl(0x0000c1a0, 0xfe000010);
 
-  /* necessary to access i2c register */
-  ctrl_outl(0x1c, reg_sysconfig + 0x160);
-
   cic_enable_pin = stpio_request_pin (6, 2, "StarCI_RST", STPIO_OUT);
   stpio_set_pin (cic_enable_pin, 1);
   msleep(250);
