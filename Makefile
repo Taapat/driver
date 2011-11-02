@@ -190,6 +190,7 @@ endif
 ifdef HS7810A
 obj-y	+= cec/
 obj-y	+= smartcard/
+obj-y	+= cpu_frequ/
 endif
 
 ifdef SPARK
