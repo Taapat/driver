@@ -1222,7 +1222,7 @@ int proc_video_videomode_choices_read (char *page, char **start, off_t off, int 
 {
 	int len = 0;
 	printk("%s %d\n", __FUNCTION__, count);
-#if defined(UFS912) || defined(SPARK) || defined (SPARK7162) || defined(ATEVIO7500) || defined(HS7810A)
+#if defined(UFS912) || defined(SPARK) || defined (SPARK7162) || defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110)
 	len = sprintf(page, "pal 1080i50 720p50 576p50 576i50 1080i60 720p60 1080p24 1080p25 1080p30 1080p50 1080p59 1080p60 PC\n");
 #else
 	len = sprintf(page, "pal 1080i50 720p50 576p50 576i50 1080i60 720p60 1080p24 1080p25 1080p30 PC\n");

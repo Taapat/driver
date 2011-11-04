@@ -1,18 +1,25 @@
-TREE_ROOT?=$(DRIVER_TOPDIR)/player2
-CCFLAGSY += -I$(TREE_ROOT)/linux/include/linux/stm/
+############################################################
+#
+# File    : makefile
+# Synopsis: Top level makefile to build the server
+#
+# Copyright 2001 STMicroelectronics, all right reserved.
+#
+############################################################
 
-CONFIG_MONITOR_HAVANA=$(CONFIG_STM_UNIFY_MONITOR_HAVANA)
+include $(SRC_DIR)/modrules.mak
 
-CCFLAGSY += -DDEBUG_MONITOR
+CDEFS                   = -I$(LINUX_KERNEL_ROOT)/drivers/media/dvb/dvb-core -I$(CONFIG_PLAYER2_LOCATION)/linux/drivers/media/video/stm/ -DDEBUG_DVB
+MODULE                  = linuxdvb
+EXPORTED_HEADERS        = dvb_stm.h
+HEADERS                 = $(EXPORTED_HEADERS) backend.h
+OBJECTS                 = dvb_player.o dvb_audio.o dvb_video.o dvb_dvr.o dvb_dvp.o dvb_demux.o backend.o \
+DEPENDS                 =
+LIBRARIES               = -L$(LIB_DIR)
 
-ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
-ccflags-y += $(CCFLAGSY)
-else
-CFLAGS += $(CCFLAGSY)
-endif
+#
 
-obj-$(CONFIG_MONITOR_HAVANA)+= stm_monitor.o
+all:    $(LIBRARY_OR_MODULE) headers
 
-stm_monitor-objs:=      monitor_module.o \
-			monitor_device.o \
-			monitor_mme.o
+include $(SRC_DIR)/make$(LIBRARY_OR_MODULE)
+

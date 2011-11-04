@@ -20,7 +20,7 @@ Date        Modification                                    Name
 
 #if defined(__TDT__)
 
-#if defined(FORTIS_HDBOX) || defined(TF7700) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(UFS912) || defined(SPARK) || defined(SPARK7162) || defined(OCTAGON1008) || defined(HS7810A) || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA) || defined(ATEVIO7500) || defined(ADB_BOX) 
+#if defined(FORTIS_HDBOX) || defined(TF7700) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(UFS912) || defined(SPARK) || defined(SPARK7162) || defined(OCTAGON1008) || defined(HS7810A) || defined(HS7110) || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA) || defined(ATEVIO7500) || defined(ADB_BOX) 
 #define AUDIO_BUFFER_MEMORY                     0x00180000
 #else
 #define AUDIO_BUFFER_MEMORY                     0x00100000       // 1 mb

@@ -22,7 +22,7 @@ static struct stv090x_config tt1600_stv090x_config = {
 #if defined(FORTIS_HDBOX)
 	.device			= STV0903,
 	.demod_mode		= STV090x_DUAL	/*STV090x_SINGLE*/,
-#elif defined(UFS912) || defined(HS7810A) || defined(SPARK)
+#elif defined(UFS912) || defined(HS7810A) || defined(HS7110) || defined(SPARK)
 	.device			= STX7111,
 	.demod_mode		= STV090x_DUAL,
 #else
@@ -32,7 +32,7 @@ static struct stv090x_config tt1600_stv090x_config = {
 
 #if defined(FORTIS_HDBOX)
 	.xtal			= 8000000,
-#elif defined(UFS912) || defined(HS7810A) || defined(SPARK)
+#elif defined(UFS912) || defined(HS7810A) || defined(HS7110) || defined(SPARK)
 	.xtal			= 30000000,
 #else
 #warning  not supported architechture
@@ -43,7 +43,7 @@ static struct stv090x_config tt1600_stv090x_config = {
 #if defined(FORTIS_HDBOX)
 	.ts1_mode		= STV090x_TSMODE_DVBCI	/*STV090x_TSMODE_SERIAL_CONTINUOUS*/,
 	.ts2_mode		= STV090x_TSMODE_NOTSET,
-#elif defined(UFS912) || defined(HS7810A) || defined(SPARK)
+#elif defined(UFS912) || defined(HS7810A) || defined(HS7110) || defined(SPARK)
 	.ts1_mode		= STV090x_TSMODE_DVBCI,
 	.ts2_mode		= STV090x_TSMODE_SERIAL_CONTINUOUS,
 #else
@@ -54,7 +54,7 @@ static struct stv090x_config tt1600_stv090x_config = {
 
 #if defined(FORTIS_HDBOX)
 	.repeater_level		= STV090x_RPTLEVEL_16,
-#elif defined(UFS912) || defined(HS7810A) || defined(SPARK)
+#elif defined(UFS912) || defined(HS7810A) || defined(HS7110) || defined(SPARK)
 	.repeater_level		= STV090x_RPTLEVEL_64,
 #else
 #warning  not supported architechture
@@ -99,7 +99,7 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 
 	printk (KERN_INFO "%s >\n", __FUNCTION__);
 	
-#if defined(UFS912) || defined(HS7810A) || defined(SPARK)
+#if defined(UFS912) || defined(HS7810A) || defined(HS7110) || defined(SPARK)
 		frontend = stv090x_attach(&tt1600_stv090x_config, cfg->i2c_adap, STV090x_DEMODULATOR_0, STV090x_TUNER1);
 #else
 	if (i== 0)
@@ -202,7 +202,7 @@ init_stv090x_device (struct dvb_adapter *adapter,
   {
     stpio_set_pin (cfg->tuner_enable_pin, !cfg->tuner_enable_act);
     stpio_set_pin (cfg->tuner_enable_pin, cfg->tuner_enable_act);
-#if defined(UFS912) || defined(HS7810A)
+#if defined(UFS912) || defined(HS7810A) || defined(HS7110)
 /* give the tuner some time to power up. trial fix for tuner
  * not available after boot on some boxes.
  * 
@@ -263,7 +263,7 @@ struct plat_tuner_config tuner_resources[] = {
                 .i2c_addr = 0x68,
                 .tuner_enable = {2, 4, 1},
         },
-#elif defined(HS7810A)
+#elif defined(HS7810A) || defined(HS7110)
         [0] = {
                 .adapter = 0,
                 .i2c_bus = 3,

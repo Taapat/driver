@@ -5,11 +5,11 @@
 /* Access ASC3; from u-boot; copied from TF7700 ;-)   */
 /* ************************************************** */
 
-#if defined(ATEVIO7500) || defined(HS7810A)
+#if defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110)
 #define ASC0BaseAddress 0xfd030000
 #define ASC1BaseAddress 0xfd031000
 #define ASC2BaseAddress 0xfd032000
-#if defined(HS7810A)
+#if defined(HS7810A) || defined(HS7110)
 #define ASC3BaseAddress 0xfd034000
 #else
 #define ASC3BaseAddress 0xfd033000

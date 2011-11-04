@@ -899,7 +899,7 @@ restart:
     }
   }
 
-//#if (defined(UFS912) || defined(HS7810A) || defined(SPARK) || defined(AT7500)) && defined(__TDT__)
+//#if (defined(UFS912) || defined(HS7810A) || defined(HS7110) || defined(SPARK) || defined(AT7500)) && defined(__TDT__)
   // WORKAROUND: Clear the framebuffer 
   memset(i->info.screen_base, 0x00, i->ulFBSize);
 //#endif

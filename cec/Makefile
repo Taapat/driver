@@ -15,6 +15,10 @@ ifdef HS7810A
 EXTRA_CFLAGS	+= -DSTx7111
 endif
 
+ifdef HS7110
+EXTRA_CFLAGS	+= -DSTx7111
+endif
+
 ifdef ATEVIO7500
 EXTRA_CFLAGS	+= -DSTx7105
 endif

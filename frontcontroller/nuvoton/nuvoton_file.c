@@ -127,7 +127,7 @@ u8 c;
 
 #endif
 
-#ifdef HS7810A
+#ifdef HS7810A || HS7110
 typedef struct
 {
 	char ch;
@@ -310,7 +310,7 @@ struct iconToInternal {
 
 #if defined(OCTAGON1008)
 #define cCommandSetVFD           0xc4
-#elif defined(HS7810A)
+#elif defined(HS7810A) || defined(HS7110)
 #define cCommandSetVFD           0x24
 #else
 #define cCommandSetVFD           0xce /* 0xc0 */
@@ -319,7 +319,7 @@ struct iconToInternal {
 
 #define cCommandSetVFDBrightness 0xd2
 
-#if defined(ATEVIO7500) || defined(HS7810A)
+#if defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110)
 #define cCommandGetFrontInfo     0xd0
 #else
 #define cCommandGetFrontInfo     0xe0
@@ -525,6 +525,7 @@ int nuvotonSetBrightness(int level)
     dprintk(100, "%s > %d\n", __func__, level);
 
 #ifndef HS7810A
+#ifndef HS7110
     if (level < 0 || level > 7)
     {
         printk("VFD/Nuvoton brightness out of range %d\n", level);
@@ -542,6 +543,7 @@ int nuvotonSetBrightness(int level)
 
     res = nuvotonWriteCommand(buffer, 5, 0);
 #endif
+#endif
 
     dprintk(100, "%s <\n", __func__);
 
@@ -558,6 +560,7 @@ int nuvotonSetPwrLed(int level)
     dprintk(100, "%s > %d\n", __func__, level);
 
 #ifndef HS7810A
+#ifndef HS7110
     if (level < 0 || level > 15)
     {
         printk("VFD/Nuvoton PwrLed out of range %d\n", level);
@@ -574,6 +577,7 @@ int nuvotonSetPwrLed(int level)
     buffer[5] = EOP;
 
     res = nuvotonWriteCommand(buffer, 6, 0);
+#endif
 #endif
 
     dprintk(100, "%s <\n", __func__);
@@ -594,6 +598,7 @@ int nuvotonSetStandby(char* time)
     res = nuvotonWriteString("Bye bye ...", strlen("Bye bye ..."));
 
 #ifndef HS7810A
+#ifndef HS7110
     /* set wakeup time */
     memset(buffer, 0, 8);
 
@@ -607,6 +612,7 @@ int nuvotonSetStandby(char* time)
 
     /* now power off */
     res = nuvotonWriteCommand(power_off, sizeof(power_off), 0);
+#endif
 #endif
 
     dprintk(100, "%s <\n", __func__);
@@ -622,6 +628,7 @@ int nuvotonSetTime(char* time)
     dprintk(100, "%s >\n", __func__);
 
 #ifndef HS7810A
+#ifndef HS7110
     memset(buffer, 0, 8);
 
     buffer[0] = SOP;
@@ -631,6 +638,7 @@ int nuvotonSetTime(char* time)
     buffer[7] = EOP;
 
     res = nuvotonWriteCommand(buffer, 8, 0);
+#endif
 #endif
 
     dprintk(100, "%s <\n", __func__);
@@ -646,6 +654,7 @@ int nuvotonGetTime(void)
     dprintk(100, "%s >\n", __func__);
 
 #ifndef HS7810A
+#ifndef HS7110
     memset(buffer, 0, 3);
 
     buffer[0] = SOP;
@@ -669,6 +678,7 @@ int nuvotonGetTime(void)
                 , ioctl_data[2], ioctl_data[3], ioctl_data[4]);
     }
 #endif
+#endif
 
     dprintk(100, "%s <\n", __func__);
 
@@ -683,6 +693,7 @@ int nuvotonGetWakeUpMode(void)
     dprintk(100, "%s >\n", __func__);
 
 #ifndef HS7810A
+#ifndef HS7110
     memset(buffer, 0, 8);
 
     buffer[0] = SOP;
@@ -705,13 +716,14 @@ int nuvotonGetWakeUpMode(void)
         dprintk(1, "time received\n");
     }
 #endif
+#endif
 
     dprintk(100, "%s <\n", __func__);
 
     return res;
 }
 
-#if defined(HS7810A)
+#if defined(HS7810A) || defined(HS7110)
 int nuvotonWriteString(unsigned char* aBuf, int len)
 {
 	int i,j,k, res;
@@ -957,6 +969,7 @@ int nuvoton_init_func(void)
     res |= nuvotonWriteCommand(init5, sizeof(init5), 0);
 
 #ifndef HS7810A
+#ifndef HS7110
     res |= nuvotonSetBrightness(1);
 
     res |= nuvotonWriteString("T.-Ducktales", strlen("T.-Ducktales"));
@@ -968,6 +981,7 @@ int nuvoton_init_func(void)
         res |= nuvotonSetIcon(vLoop, 0);
 #else
     res |= nuvotonWriteString("----", 4);
+#endif
 #endif
 
     dprintk(100, "%s <\n", __func__);

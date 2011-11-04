@@ -51,7 +51,7 @@
 #ifdef UFS922
 extern void cx24116_register_frontend(struct dvb_adapter *dvb_adap);
 extern void avl2108_register_frontend(struct dvb_adapter *dvb_adap);
-#elif defined(FORTIS_HDBOX) || defined(UFS912) || defined(SPARK) || defined(HS7810A)
+#elif defined(FORTIS_HDBOX) || defined(UFS912) || defined(SPARK) || defined(HS7810A) || defined(HS7110)
 extern void stv090x_register_frontend(struct dvb_adapter *dvb_adap);
 #elif defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55) || defined(ADB_BOX)
 extern void fe_core_register_frontend(struct dvb_adapter *dvb_adap);
@@ -363,7 +363,7 @@ static int convert_source ( const dmx_source_t source)
   switch ( source )
   {
   case DMX_SOURCE_FRONT0:
-#if defined(UFS910) || defined(OCTAGON1008) || defined(UFS912) || defined(SPARK) || defined(HS7810A) || defined(ADB_BOX)
+#if defined(UFS910) || defined(OCTAGON1008) || defined(UFS912) || defined(SPARK) || defined(HS7810A) || defined(HS7110) || defined(ADB_BOX)
     /* in UFS910 the CIMAX output is connected to TSIN2 */
     tag = TSIN2;
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
@@ -403,7 +403,7 @@ static struct stpti pti;
 
 void ptiInit ( struct DeviceContext_s *pContext )
 {
-#if defined(UFS912) || defined(SPARK) || defined(SPARK7162) || defined(ATEVIO7500) || defined(HS7810A)
+#if defined(UFS912) || defined(SPARK) || defined(SPARK7162) || defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110)
   unsigned long start = 0xfe230000;
 #else
   unsigned long start = 0x19230000;
@@ -443,7 +443,7 @@ void ptiInit ( struct DeviceContext_s *pContext )
     pti_hal_init ( &pti, &pContext->DvbDemux, demultiplexDvbPackets, 1);
 #endif
 
-#if defined(FORTIS_HDBOX) || defined(UFS912) || defined(SPARK) || defined(HS7810A)
+#if defined(FORTIS_HDBOX) || defined(UFS912) || defined(SPARK) || defined(HS7810A) || defined(HS7110)
     stv090x_register_frontend(&pContext->DvbContext->DvbAdapter);
 #elif defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55) || defined (ADB_BOX)
     fe_core_register_frontend( &pContext->DvbContext->DvbAdapter);

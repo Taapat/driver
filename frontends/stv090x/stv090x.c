@@ -56,7 +56,7 @@ static unsigned int verbose = FE_DEBUGREG;
 int writereg_lnb_supply (struct stv090x_state *state, char data);
 #endif
 
-#if (LINUX_VERSION_CODE == KERNEL_VERSION(2,6,23)) && (defined(FORTIS_HDBOX) || defined(HS7810A))
+#if (LINUX_VERSION_CODE == KERNEL_VERSION(2,6,23)) && (defined(FORTIS_HDBOX) || defined(HS7810A) || defined(HS7110))
 void ctrl_fn_using_non_p3_address(void)
 {
 	printk("ctrl_fn_using_non_p3_address FRONTEND OK\n");
@@ -6292,7 +6292,7 @@ static int stv090x_setup(struct dvb_frontend *fe)
 	if (stv090x_write_reg(state, STV090x_P2_TNRCFG, 0x6c) < 0)
 		goto err;
 
-#if defined(UFS912) || defined(HS7810A) || defined(SPARK)
+#if defined(UFS912) || defined(HS7810A) || defined(HS7110) || defined(SPARK)
 	STV090x_SETFIELD_Px(reg, STOP_ENABLE_FIELD, 1);
 #endif
 
@@ -6308,7 +6308,7 @@ static int stv090x_setup(struct dvb_frontend *fe)
 	msleep(1);
 	if (stv090x_write_reg(state, STV090x_I2CCFG, 0x08) < 0) /* 1/41 oversampling */
 		goto err;
-#if defined(UFS912) || defined(HS7810A) || defined(SPARK)
+#if defined(UFS912) || defined(HS7810A) || defined(HS7110) || defined(SPARK)
 	if (stv090x_write_reg(state, STV090x_SYNTCTRL, 0x10 | config->clk_mode) < 0) /* enable PLL */
 		goto err;
 #else
@@ -6512,7 +6512,7 @@ static int hdbox_set_voltage(struct dvb_frontend *fe, enum fe_sec_voltage voltag
        dprintk(10, "%s <out:0x%x\n", __func__,res);
        return 0;
 }
-#elif defined(HS7810A) || defined(SPARK)
+#elif defined(HS7810A) || defined(HS7110) || defined(SPARK)
 
 #define LNB_VOLTAGE_OFF   	 	0x2b0010
 #define LNB_VOLTAGE_VER   	 	0x2b0011
@@ -6656,7 +6656,7 @@ static struct dvb_frontend_ops stv090x_ops = {
 
 #if defined(FORTIS_HDBOX)
 	.set_voltage				= hdbox_set_voltage,
-#elif  defined(HS7810A) || defined(SPARK)
+#elif  defined(HS7810A) || defined(HS7110) || defined(SPARK)
 	.set_voltage				= lnb_set_voltage,
 #elif defined(UFS912)
 	.set_voltage				= lnbh23_set_voltage,
@@ -6692,7 +6692,7 @@ struct dvb_frontend *stv090x_attach(const struct stv090x_config *config,
 
 	dprintk(10, "i2c adapter = %p\n", state->i2c);
 	
-#if defined(UFS912) || defined(HS7810A) || defined(SPARK)
+#if defined(UFS912) || defined(HS7810A) || defined(HS7110) || defined(SPARK)
 	mutex_init(&demod_lock);
 #else
 	if (state->demod == STV090x_DEMODULATOR_0)
