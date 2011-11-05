@@ -472,7 +472,7 @@ void stm_tsm_init (int use_cimax)
 	/* ->TSIN0 routes to TSIN2
 	 */
       ctrl_outl(0x2, reg_sys_config + SYS_CFG0);
-#elif defined(UFS912) || defined(SPARK) || defined(HS7810A) || defined(HS7110)
+#elif defined(UFS912) || defined(SPARK)
       ctrl_outl(0x3, reg_sys_config + SYS_CFG0);
 #elif defined(ATEVIO7500)
 /* pio12 */
