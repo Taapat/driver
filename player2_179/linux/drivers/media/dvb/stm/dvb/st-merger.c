@@ -422,7 +422,7 @@ void stm_tsm_init (int use_cimax)
        * packet len = 188
        */
 
-#if !defined(FORTIS_HDBOX) && !defined(UFS912) && !defined(SPARK) && !defined(OCTAGON1008) && !defined(HOMECAST5101) && !defined(ATEVIO7500) || !defined(HS7810A) || !defined(HS7110)
+#if !defined(FORTIS_HDBOX) && !defined(UFS912) && !defined(SPARK) && !defined(OCTAGON1008) && !defined(HOMECAST5101) && !defined(ATEVIO7500) && !defined(HS7810A) && !defined(HS7110)
       unsigned int stream_sync = 0xbc4733;
 #else
       unsigned int stream_sync = 0xbc4722;
@@ -691,7 +691,7 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(stream_sync, reg_config + TSM_STREAM3_SYNC);
       ctrl_outl(0x0, reg_config + 0x78 /* reserved ??? */);
 
-#if !defined(FORTIS_HDBOX) && !defined(UFS912) && !defined(SPARK) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA) && !defined(ATEVIO7500) && !defined(HS7810A) && !defined(HS7110) || !defined(IPBOX9900)
+#if !defined(FORTIS_HDBOX) && !defined(UFS912) && !defined(SPARK) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA) && !defined(ATEVIO7500) && !defined(HS7810A) && !defined(HS7110) && !defined(IPBOX9900)
       /* swts_req_trigger + pace cycles (1101) */
       ctrl_outl(0x800000d, reg_config + SWTS_CFG(0));
 #elif defined (UFS912) || defined(SPARK) || defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110)
