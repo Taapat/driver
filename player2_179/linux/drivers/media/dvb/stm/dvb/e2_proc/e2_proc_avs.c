@@ -87,7 +87,7 @@ extern struct DeviceContext_s* DeviceContext;
 
 static int current_standby = 0;
 static int current_input = 0;
-#if defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI_FTA) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(TF7700) || defined(UFS912) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(HOMECAST5101) || defined(ATEVIO7500) || defined(HS7810A) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55)
+#if defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI_FTA) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(TF7700) || defined(UFS912) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(HOMECAST5101) || defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55)
 static int current_volume = 0;
 #else
 static int current_volume = 31;
@@ -140,7 +140,7 @@ int proc_avs_0_volume_write(struct file *file, const char __user *buf,
 
 		sscanf(myString, "%d", &volume);
 
-#if defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI_FTA) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(TF7700) || defined(UFS912) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(HOMECAST5101) || defined(ATEVIO7500) || defined(HS7810A) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55)
+#if defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI_FTA) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(TF7700) || defined(UFS912) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(HOMECAST5101) || defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55)
       current_volume = volume;
 #else
 /* Dagobert: 04.10.2009: e2 delivers values from 0 to 63 db. the ak4705
@@ -265,7 +265,7 @@ int proc_avs_0_input_write(struct file *file, const char __user *buf,
 	    	if(!strncmp("encoder", myString, count - 1))
 	    	{
 			avs_command_kernel(SAAIOSSRCSEL, SAA_SRC_ENC);
-#if defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI_FTA) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(TF7700) || defined(UFS912) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(HOMECAST5101) || defined(ATEVIO7500) || defined(HS7810A) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55)
+#if defined(CUBEREVO) || defined(CUBEREVO_MINI) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI_FTA) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(TF7700) || defined(UFS912) || defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(HOMECAST5101) || defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55)
 			avs_command_kernel(AVSIOSVOL, (void*) current_volume);
 #else
 			avs_command_kernel(AVSIOSVOL, (void*) 31);

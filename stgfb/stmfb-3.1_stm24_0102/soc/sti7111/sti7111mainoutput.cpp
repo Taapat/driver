@@ -56,7 +56,7 @@ CSTi7111MainOutput::~CSTi7111MainOutput() {}
 
 void CSTi7111MainOutput::StartSDInterlacedClocks(const stm_mode_line_t *mode)
 {
-#if defined(__TDT__) && (defined(UFS912) || defined(HS7810A))
+#if defined(__TDT__) && (defined(UFS912) || defined(HS7810A) || defined(HS7110))
 /* from old stmfb; h264 problem appears with new version */
   ULONG val;
 
@@ -127,7 +127,7 @@ void CSTi7111MainOutput::StartSDProgressiveClocks(const stm_mode_line_t *mode)
 
   DENTRY();
 
-#if defined(__TDT__) && (defined(UFS912) || defined(HS7810A))
+#if defined(__TDT__) && (defined(UFS912) || defined(HS7810A) || defined(HS7110))
   WriteClkReg(CKGB_LCK, CKGB_LCK_UNLOCK);
 
   WriteDevReg(STi7111_CLKGEN_BASE + CKGB_DISPLAY_CFG, 0x3011);
@@ -163,7 +163,7 @@ void CSTi7111MainOutput::StartHDClocks(const stm_mode_line_t *mode)
 
   DENTRY();
 
-#if defined(__TDT__) && (defined(UFS912) || defined(HS7810A))
+#if defined(__TDT__) && (defined(UFS912) || defined(HS7810A) || defined(HS7110))
   WriteClkReg(CKGB_LCK, CKGB_LCK_UNLOCK);
 
   WriteDevReg(STi7111_CLKGEN_BASE + CKGB_DISPLAY_CFG, 0x3000);

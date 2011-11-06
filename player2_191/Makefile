@@ -4,4 +4,4 @@ else
 CFLAGS += $(CCFLAGSY)
 endif
 
-obj-y	+= linux/
+obj-y   += linux/

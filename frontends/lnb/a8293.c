@@ -16,6 +16,8 @@
 #include <linux/types.h>
 #include <linux/i2c.h>
 
+#include <asm/io.h>
+
 #include "lnb_core.h"
 
 

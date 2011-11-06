@@ -89,6 +89,9 @@ endif
 ifdef HS7810A
 CCFLAGSY += -DHS7810A
 endif
+ifdef HS7110
+CCFLAGSY += -DHS7110
+endif
 ifdef HOMECAST5101
 CCFLAGSY += -DHOMECAST5101
 endif
@@ -190,6 +193,13 @@ endif
 ifdef HS7810A
 obj-y	+= cec/
 obj-y	+= smartcard/
+obj-y	+= cpu_frequ/
+endif
+
+ifdef HS7110
+obj-y	+= cec/
+obj-y	+= smartcard/
+obj-y	+= cpu_frequ/
 endif
 
 ifdef SPARK

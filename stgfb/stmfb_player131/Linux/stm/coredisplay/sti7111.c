@@ -38,7 +38,7 @@
 
 #if defined(CONFIG_SH_ST_MB618)
 
-#if defined(UFS912) || defined(SPARK)  || defined(HS7810A)
+#if defined(UFS912) || defined(SPARK)  || defined(HS7810A) || defined(HS7110)
 #define HAS_DSUB 0
 #warning fixme: take a look if we have DSUB
 #else
@@ -68,7 +68,7 @@ static struct stmcore_display_pipeline_data platform_data[] = {
     .vtg_irq                  = evt2irq(0x1540),
     .blitter_irq              = evt2irq(0x1580),
     .hdmi_irq                 = evt2irq(0x15C0),
-#if defined(UFS912) || defined(HS7810A)
+#if defined(UFS912) || defined(HS7810A) || defined(HS7110)
     .hdmi_i2c_adapter_id      = 3,
 #elif defined(SPARK)
 	.hdmi_i2c_adapter_id	  = 2,

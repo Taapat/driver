@@ -12,7 +12,7 @@
 #ifndef _STI7111REG_H
 #define _STI7111REG_H
 
-#if defined(__TDT__) && (defined(UFS912) || defined(HS7810A))
+#if defined(__TDT__) && (defined(UFS912) || defined(HS7810A) || defined(HS7110))
 #define USE_FS1_FOR_SD
 
 #define CKGB_FS1_EN3	0x88

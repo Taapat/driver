@@ -167,7 +167,7 @@ void CSTi7111MainOutput::StartHDClocks(const stm_mode_line_t *mode)
 
   DENTRY();
 
-#if defined(__TDT__) && (defined(UFS912) || defined(SPARK) || defined(HS7810A))
+#if defined(__TDT__) && (defined(UFS912) || defined(SPARK) || defined(HS7810A) || defined(HS7110))
   WriteClkReg(CKGB_LCK, CKGB_LCK_UNLOCK);
 
   WriteDevReg(STi7111_CLKGEN_BASE + CKGB_DISPLAY_CFG, 0x3000);

@@ -14,5 +14,5 @@ endif
 obj-$(CONFIG_MONITOR_HAVANA)+= stm_monitor.o
 
 stm_monitor-objs:=      monitor_module.o \
-			monitor_device.o \
-			monitor_mme.o
+						monitor_device.o \
+						monitor_mme.o

@@ -51,7 +51,7 @@ CSTi7111Device::CSTi7111Device(void): CGenericGammaDevice()
    * Global setup of the display clock registers.
    */
   WriteDevReg(STi7111_CLKGEN_BASE + CKGB_LCK, CKGB_LCK_UNLOCK);
-#if defined(__TDT__) && (defined(UFS912) || defined(HS7810A))
+#if defined(__TDT__) && (defined(UFS912) || defined(HS7810A) || defined(HS7110))
   WriteDevReg(STi7111_CLKGEN_BASE + CKGB_CLK_REF_SEL, CKGB_REF_SEL_SYSA_CLKIN);
   WriteDevReg(STi7111_CLKGEN_BASE + CKGB_CLK_SRC, 0x07);
 #else
