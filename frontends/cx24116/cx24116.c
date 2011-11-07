@@ -87,6 +87,8 @@ static short paramDebug = 0;
 if (paramDebug > level) printk(TAGDEBUG x); \
 } while (0)
 
+extern int _12v_isON; //defined in e2_proc ->I will implement a better mechanism later
+
 // Fast i2c delay (1ms ~ 1MHz) is only used to speed up the firmware
 // download. All other read/write operations are executed with the default
 // i2c bus speed (100kHz ~ 10ms).
@@ -2630,7 +2632,8 @@ int set_voltage (struct dvb_frontend *fe, fe_sec_voltage_t voltage)
   switch (voltage)
   {
   case SEC_VOLTAGE_OFF:
-    stpio_set_pin (cfg->lnb_enable_pin, !cfg->lnb_enable_act);
+    if(_12v_isON == 0)
+        stpio_set_pin (cfg->lnb_enable_pin, !cfg->lnb_enable_act);
     break;
   case SEC_VOLTAGE_13:
     stpio_set_pin (cfg->lnb_enable_pin, cfg->lnb_enable_act);
@@ -2716,7 +2719,8 @@ int set_voltage(struct dvb_frontend *fe, fe_sec_voltage_t voltage)
   switch (voltage)
   {
   case SEC_VOLTAGE_OFF:
-    lnbh221_writereg_lnb_supply(state, 0xd0);
+    if(_12v_isON == 0)
+        lnbh221_writereg_lnb_supply(state, 0xd0);
     break;
   case SEC_VOLTAGE_13: //vertical
     lnbh221_writereg_lnb_supply(state, 0xd4);

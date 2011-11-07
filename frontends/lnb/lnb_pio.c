@@ -29,6 +29,8 @@ static struct stpio_pin	*lnb_power;
 static struct stpio_pin	*lnb_13_18;
 static struct stpio_pin	*lnb_14_19;
 
+extern int _12v_isON; //defined in e2_proc ->I will implement a better mechanism later
+
 int lnb_pio_command_kernel(unsigned int cmd, void *arg)
 {
 	dprintk("[LNB-PIO]: %s (%x)\n", __func__, cmd);
@@ -40,8 +42,10 @@ int lnb_pio_command_kernel(unsigned int cmd, void *arg)
 	{
 		case LNB_VOLTAGE_OFF:
 			dprintk("[LNB-PIO]: set voltage off\n");
-			if(lnb_power)
-				stpio_set_pin(lnb_power, 0);
+
+            if(_12v_isON == 0)
+			   if(lnb_power)
+				   stpio_set_pin(lnb_power, 0);
 			break;
 
 		case LNB_VOLTAGE_VER:
