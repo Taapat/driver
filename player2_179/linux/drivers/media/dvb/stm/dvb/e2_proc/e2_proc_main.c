@@ -258,8 +258,10 @@ extern int proc_tsmux_ci1_input_read(char *page, char **start, off_t off, int co
 extern int proc_tsmux_ci1_input_write(struct file *file, const char __user *buf, unsigned long count, void *data);
 extern int proc_tsmux_lnb_b_input_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
 extern int proc_tsmux_lnb_b_input_write(struct file *file, const char __user *buf, unsigned long count, void *data);
+#if defined(IPBOX9900)
 extern int proc_misc_12V_output_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
 extern int proc_misc_12V_output_write(struct file *file, const char __user *buf, unsigned long count, void *data);
+#endif
 extern int proc_audio_ac3_choices_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
 extern int proc_video_videomode_choices_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
 extern int proc_video_videomode_preferred_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
@@ -394,7 +396,9 @@ struct e2_procs
   {"stb/tsmux/ci0_input",               proc_tsmux_ci0_input_read,              proc_tsmux_ci0_input_write, 0},
   {"stb/tsmux/ci1_input",               proc_tsmux_ci1_input_read,              proc_tsmux_ci1_input_write, 0},
   {"stb/tsmux/lnb_b_input",             proc_tsmux_lnb_b_input_read,            proc_tsmux_lnb_b_input_write, 0},
+#if defined(IPBOX9900)
   {"stb/misc/12V_output",               proc_misc_12V_output_read,              proc_misc_12V_output_write, 0},
+#endif
   {"stb/vmpeg/0/dst_left",              proc_vmpeg_0_dst_left_read,             proc_vmpeg_0_dst_left_write, 0},
   {"stb/vmpeg/0/dst_top",               proc_vmpeg_0_dst_top_read,              proc_vmpeg_0_dst_top_write, 0},
   {"stb/vmpeg/0/dst_width",             proc_vmpeg_0_dst_width_read,            proc_vmpeg_0_dst_width_write, 0},

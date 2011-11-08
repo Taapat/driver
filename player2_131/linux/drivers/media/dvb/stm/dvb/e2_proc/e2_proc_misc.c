@@ -17,6 +17,8 @@
 
 extern struct DeviceContext_s* DeviceContext;
 
+#if 0
+
 int proc_misc_12V_output_write(struct file *file, const char __user *buf,
                            unsigned long count, void *data)
 {
@@ -51,3 +53,4 @@ int proc_misc_12V_output_read (char *page, char **start, off_t off, int count,
 
         return len;
 }
+#endif
