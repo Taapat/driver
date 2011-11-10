@@ -17,44 +17,7 @@
 
 extern struct DeviceContext_s* DeviceContext;
 
-#if !defined(IPBOX9900)
-
-int proc_misc_12V_output_write(struct file *file, const char __user *buf,
-                           unsigned long count, void *data)
-{
-	char 		*page;
-	ssize_t 	ret = -ENOMEM;
-	/* int		result; */
-	
-	printk("%s %ld\n", __FUNCTION__, count);
-
-	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
-	{
-		ret = -EFAULT;
-		if (copy_from_user(page, buf, count))
-			goto out;
-
-		//result = sscanf(page, "%3s %3s %3s %3s %3s", s1, s2, s3, s4, s5);
-	}
-	
-	ret = count;
-out:
-	free_page((unsigned long)page);
-	return ret;
-}
-
-
-int proc_misc_12V_output_read (char *page, char **start, off_t off, int count,
-			  int *eof, void *data_unused)
-{
-	int len = 0;
-	printk("%s %d\n", __FUNCTION__, count);
-
-        return len;
-}
-
-#else
+#if defined(IPBOX9900)
 
 #include <linux/version.h>
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)

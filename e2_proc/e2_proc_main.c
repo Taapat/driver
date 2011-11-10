@@ -402,6 +402,67 @@ out:
 	return ret;
 }
 
+#if !defined(IPBOX9900)
+
+int _12v_isON=0;
+
+int proc_misc_12V_output_write(struct file *file, const char __user *buf,
+                           unsigned long count, void *data)
+{
+	char 		*page;
+	ssize_t 	ret = -ENOMEM;
+    char        *myString;
+	
+	printk("%s %ld\n", __FUNCTION__, count);
+
+	page = (char *)__get_free_page(GFP_KERNEL);
+	if (page) 
+	{
+		ret = -EFAULT;
+		if (copy_from_user(page, buf, count))
+			goto out;
+
+        page[count] = 0;
+        //printk("%s", page);
+
+	    myString = (char *) kmalloc(count + 1, GFP_KERNEL);
+	    strncpy(myString, page, count);
+	    myString[count] = '\0';
+
+	    if(!strncmp("on", myString, count))
+		   _12v_isON=1;
+	    
+        if(!strncmp("off", myString, count))
+		   _12v_isON=0;
+
+	    kfree(myString);
+
+        ret = count;
+	}
+	
+	ret = count;
+out:
+	free_page((unsigned long)page);
+	return ret;
+}
+
+EXPORT_SYMBOL(_12v_isON);
+
+int proc_misc_12V_output_read (char *page, char **start, off_t off, int count,
+			  int *eof, void *data_unused)
+{
+	int len = 0;
+	printk("%s %d\n", __FUNCTION__, count);
+
+	if(_12v_isON)
+		len = sprintf(page, "on\n");
+	else
+		len = sprintf(page, "off\n");
+    
+    return len;
+}
+#endif
+
 static int zero_read(char *page, char **start, off_t off, int count,
                            int *eof, void *data)
 {
@@ -489,7 +550,11 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/tsmux/lnb_b_input"                                            , NULL, NULL, NULL, NULL, ""},
 
 	{cProcDir  , "stb/misc"                                                         , NULL, NULL, NULL, NULL, ""},
+#if !defined(IPBOX9900)
+	{cProcEntry, "stb/misc/12V_output"                                              , NULL, proc_misc_12V_output_read, proc_misc_12V_output_write, NULL, ""},
+#else
 	{cProcEntry, "stb/misc/12V_output"                                              , NULL, NULL, NULL, NULL, ""},
+#endif
 
 	{cProcDir  , "stb/vmpeg"                                                        , NULL, NULL, NULL, NULL, ""},
 	{cProcDir  , "stb/vmpeg/0"                                                      , NULL, NULL, NULL, NULL, ""},

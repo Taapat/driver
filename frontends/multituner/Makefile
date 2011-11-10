@@ -34,22 +34,57 @@ endif
 ifdef CUBEREVO
 cx24116-objs +=        frontends/cx24116/cx24116.o
 obj-m += cx24116.o
+
+stv090x-objs +=        frontends/stv090x/stv090x.o
+stv090x-objs +=        frontends/stv090x/stv6110x.o
+stv090x-objs +=        frontends/stv090x/core.o
+obj-m += stv090x.o
 else ifdef CUBEREVO_MINI
 cx24116-objs +=        frontends/cx24116/cx24116.o
 obj-m += cx24116.o
+
+stv090x-objs +=        frontends/stv090x/stv090x.o
+stv090x-objs +=        frontends/stv090x/stv6110x.o
+stv090x-objs +=        frontends/stv090x/core.o
+obj-m += stv090x.o
 else ifdef CUBEREVO_MINI2
 cx24116-objs +=        frontends/cx24116/cx24116.o
 obj-m += cx24116.o
+
+stv090x-objs +=        frontends/stv090x/stv090x.o
+stv090x-objs +=        frontends/stv090x/stv6110x.o
+stv090x-objs +=        frontends/stv090x/core.o
+obj-m += stv090x.o
 else ifdef CUBEREVO_250HD
 cx24116-objs +=        frontends/cx24116/cx24116.o
 obj-m += cx24116.o
+
+stv090x-objs +=        frontends/stv090x/stv090x.o
+stv090x-objs +=        frontends/stv090x/stv6110x.o
+stv090x-objs +=        frontends/stv090x/core.o
+obj-m += stv090x.o
 else ifdef CUBEREVO_9500HD
 cx24116-objs +=        frontends/cx24116/cx24116.o
 obj-m += cx24116.o
+
+stv090x-objs +=        frontends/stv090x/stv090x.o
+stv090x-objs +=        frontends/stv090x/stv6110x.o
+stv090x-objs +=        frontends/stv090x/core.o
+obj-m += stv090x.o
 else ifdef CUBEREVO_2000HD
 cx24116-objs +=        frontends/cx24116/cx24116.o
 obj-m += cx24116.o
+
+stv090x-objs +=        frontends/stv090x/stv090x.o
+stv090x-objs +=        frontends/stv090x/stv6110x.o
+stv090x-objs +=        frontends/stv090x/core.o
+obj-m += stv090x.o
 else ifdef CUBEREVO_MINI_FTA
 cx24116-objs +=        frontends/cx24116/cx24116.o
 obj-m += cx24116.o
+
+stv090x-objs +=        frontends/stv090x/stv090x.o
+stv090x-objs +=        frontends/stv090x/stv6110x.o
+stv090x-objs +=        frontends/stv090x/core.o
+obj-m += stv090x.o
 endif

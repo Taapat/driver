@@ -30,6 +30,8 @@ static short paramDebug;
 if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
 } while (0)
 
+extern int _12v_isON; //defined in e2_proc ->I will implement a better mechanism later
+
 struct lnb_state
 {
     struct i2c_adapter*  i2c;
@@ -104,7 +106,8 @@ u16 lnbh221_set_voltage(void *_state, struct dvb_frontend* fe, fe_sec_voltage_t 
     switch (voltage)
     {
     case SEC_VOLTAGE_OFF:
-        writereg_lnb_supply(state, state->lnb[3]);
+        if(_12v_isON == 0)
+            writereg_lnb_supply(state, state->lnb[3]);
         break;
     case SEC_VOLTAGE_13: //vertical
         writereg_lnb_supply(state, state->lnb[4]);
