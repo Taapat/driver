@@ -361,7 +361,7 @@ static int convert_source ( const dmx_source_t source)
   switch ( source )
   {
   case DMX_SOURCE_FRONT0:
-#if defined(UFS910) || defined(OCTAGON1008) || defined(UFS912) || defined(ADB_BOX)
+#if defined(UFS910) || defined(OCTAGON1008) || defined(UFS912) || defined(ADB_BOX) || defined(HS7110)
     /* in UFS910 the CIMAX output is connected to TSIN2 */
     tag = TSIN2;
 #elif defined(SPARK) || defined(SPARK7162)
