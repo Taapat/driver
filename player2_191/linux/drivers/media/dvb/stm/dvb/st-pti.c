@@ -72,6 +72,8 @@ extern void demultiplexDvbPackets(struct dvb_demux* demux, const u8 *buf, int co
 extern void pti_hal_init ( struct stpti *pti , struct dvb_demux* demux, void (*_demultiplexDvbPackets)(struct dvb_demux* demux, const u8 *buf, int count), int numVideoBuffers);
 
 extern int swts;
+extern int TSsource0;
+extern int TSsource1;
 
 int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
 		       struct DeviceContext_s *DeviceContext )
@@ -354,29 +356,31 @@ static int convert_source ( const dmx_source_t source)
 {
   int tag = TS_NOTAGS;
 
-  /*
-   from spider-team:
-   Note for all: most developers change this part ignoring other boxes,
-   so please :
-   add ur box only with #if defined(ur box)
-   */
+  // spider: it is recommended to add as module parameter
+
   switch ( source )
   {
   case DMX_SOURCE_FRONT0:
-#if defined(UFS910) || defined(OCTAGON1008) || defined(UFS912) || defined(SPARK) || defined(ADB_BOX)
+#if defined(UFS910) || defined(OCTAGON1008) || defined(UFS912) || defined(ADB_BOX)
     /* in UFS910 the CIMAX output is connected to TSIN2 */
     tag = TSIN2;
+#elif defined(SPARK) || defined(SPARK7162)
+    tag = TSsource0;
 #else
     tag = TSIN0;
 #endif
     break;
+
   case DMX_SOURCE_FRONT1:
 #if defined(ADB_BOX) 
     tag = TSIN0;
+#elif defined(SPARK) || defined(SPARK7162)
+    tag = TSsource1;
 #else
     tag = TSIN1;
 #endif
     break;
+
 #if defined(SPARK7162)
   case DMX_SOURCE_FRONT2:
     tag = TSIN2;
@@ -385,6 +389,7 @@ static int convert_source ( const dmx_source_t source)
   case DMX_SOURCE_DVR0:
     tag = SWTS0;
     break;
+
   default:
     printk ( "%s(): invalid frontend source (%d)\n", __func__, source );
   }
