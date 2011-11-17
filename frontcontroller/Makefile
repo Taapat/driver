@@ -58,10 +58,12 @@ obj-y	+= micom/
 endif
 
 ifdef SPARK
+obj-y	+= vfd.fulan/
 obj-y   += aotom/
 endif
 
 ifdef SPARK7162
+obj-y	+= vfd.fulan/
 obj-y   += aotom/
 endif
 
