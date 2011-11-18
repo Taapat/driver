@@ -2017,7 +2017,7 @@ static ssize_t sci_read(struct file *file, char *buffer, size_t length, loff_t *
 	{
 		sci->rx_wptr=0;
 		sci->rx_rptr=0;
-#if defined(ATEVIO7500) || defined(ADB_BOX)
+#if defined(ATEVIO7500) || defined(ADB_BOX) || defined(HL101)
 		mdelay(3);   /*Hellmaster1024: on Atevio we seem to have some timing probs without that delay */
 #endif
 
