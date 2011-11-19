@@ -406,7 +406,7 @@ void stm_tsm_init (int use_cimax)
       unsigned int     ret;
       int              n;
 
-#if defined(UFS912) || defined(HS7810A) || defined(HS7110)
+#if defined(UFS912) || defined(HS7810A)
       struct stpio* stream1_pin = stpio_request_pin (5, 0, "TSinterface1", STPIO_IN);
       struct stpio* stream2_pin = stpio_request_pin (5, 3, "TSinterface2", STPIO_IN);
 #elif defined(ATEVIO7500)
@@ -668,7 +668,7 @@ void stm_tsm_init (int use_cimax)
 #if defined(FORTIS_HDBOX) || defined(OCTAGON1008) || defined(ATEVIO7500)
       ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
       ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM2_CFG);
-#elif defined(UFS912) || defined(SPARK) || defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110)
+#elif defined(UFS912) || defined(SPARK) || defined(ATEVIO7500) || defined(HS7810A)
       ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
       ctrl_outl(ret | (0x20020), reg_config + TSM_STREAM2_CFG);
 #else
@@ -683,7 +683,7 @@ void stm_tsm_init (int use_cimax)
 #if defined(FORTIS_HDBOX) || defined(OCTAGON1008)
       ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
       ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM3_CFG);
-#elif defined(UFS912) || defined(SPARK) || defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110)
+#elif defined(UFS912) || defined(SPARK) || defined(ATEVIO7500) || defined(HS7810A)
       ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
       ctrl_outl(ret | (0x20020), reg_config + TSM_STREAM3_CFG);
 
@@ -721,7 +721,7 @@ void stm_tsm_init (int use_cimax)
       /* auto count */
       ctrl_outl(0x0, reg_config + TSM_PROG_CNT0);
 
-#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101) && !defined(VIP1_V2) && !defined(HOMECAST5101) && !defined(UFS912) && !defined(SPARK) && !defined(OCTAGON1008) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA) && !defined(ATEVIO7500) && !defined(HS7810A) && !defined(HS7110) && !defined(IPBOX9900)
+#if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101) && !defined(VIP1_V2) && !defined(HOMECAST5101) && !defined(UFS912) && !defined(SPARK) && !defined(OCTAGON1008) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA) && !defined(ATEVIO7500) && !defined(HS7810A) && !defined(HS7110) && !defined(IPBOX9900) && !defined(HS7110)
       /* UFS910 stream configuration */
       /* route stream 2 to PTI */
       ret = ctrl_inl(reg_config + TSM_PTI_SEL);
@@ -755,7 +755,7 @@ void stm_tsm_init (int use_cimax)
       ret = ctrl_inl(reg_config + TSM_1394_DEST);
       ctrl_outl(ret | 0x1 , reg_config + TSM_1394_DEST);
 
-#elif defined(UFS912) || defined(SPARK) || defined(HS7810A) || defined(HS7110)
+#elif defined(UFS912) || defined(SPARK) || defined(HS7810A)
       ctrl_outl(0x15 ,reg_config + TSM_PTI_SEL);
 
       /* set stream 2 on */
@@ -927,14 +927,19 @@ void stm_tsm_init (int use_cimax)
 	/* route stream 0 to PTI */
 	ret = ctrl_inl(reg_config + TSM_PTI_SEL);
 	ctrl_outl(ret | 0x1, reg_config + TSM_PTI_SEL);            
+#elif defined(HS7110)
+	/* route stream 0 to PTI */
+	ret = ctrl_inl(reg_config + TSM_PTI_SEL);
+	ctrl_outl(ret | 0x1, reg_config + TSM_PTI_SEL);            
 #endif
-      /* set stream on */
+      /* set stream0 on */
       ret = ctrl_inl(reg_config + TSM_STREAM0_CFG);
       ctrl_outl(ret | 0x80,reg_config + TSM_STREAM0_CFG);
 
 #if !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && \
     !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && \
-    !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA)      /* Dagobert: set-up swts */
+    !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA) && \
+    !defined(HS7110)      /* Dagobert: set-up swts */
       ctrl_outl( TSM_SWTS_REQ_TRIG(128/16) | 0x10, reg_config + TSM_SWTS_CFG(0));
 
       /* SWTS0 to PTI */
