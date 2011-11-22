@@ -351,39 +351,6 @@ EXPORT_SYMBOL(stm_tsm_inject_user_data);
  */
 
 
-void stm_tsm_interrupt ( void )
-{
-  int n;
-  for (n=0;n<2;n++)
-    {
-      int status = readl(tsm_io + TSM_STREAM_STATUS(n));
-
-      if (status & TSM_RAM_OVERFLOW)
-      {
-      writel( readl(tsm_io + TSM_STREAM_CONF(n)) & ~TSM_STREAM_ON,
-         tsm_io + TSM_STREAM_CONF(n));
-
-      udelay(500);
-
-      writel( status & ~TSM_RAM_OVERFLOW, tsm_io + TSM_STREAM_STATUS(n) );
-      printk(KERN_WARNING"%s: TSMerger RAM Overflow on channel %d(%x), deploying work around\n",__FUNCTION__,n,status);
-      writel( TSM_CHANNEL_RESET, tsm_io + TSM_STREAM_CONF2(n) );
-
-      udelay(500);
-
-      writel( readl(tsm_io + TSM_STREAM_CONF(n)) | TSM_STREAM_ON,
-          tsm_io + TSM_STREAM_CONF(n));
-      }
-    }
-}
-
-
-int read_tsm(int a)
-{
-  return readl(tsm_io + TSM_STREAM_STATUS(a));
-}
-
-
 void stm_tsm_init (int use_cimax)
 {
 
@@ -580,15 +547,41 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x1300, reg_config + TSM_STREAM4_CFG);  //256kb (4*64)
       ctrl_outl(0x1700, reg_config + TSM_STREAM5_CFG);  //192kb (3*64)
       ctrl_outl(0x1a00, reg_config + TSM_STREAM6_CFG);  //384kb (5*64)
-#elif defined (UFS912) || defined(SPARK) || defined(HS7810A) || defined(HS7110)
+#elif defined (UFS912)
       /* RAM partitioning of streams */
-      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG);
-      ctrl_outl(0x400, reg_config + TSM_STREAM1_CFG);
-      ctrl_outl(0x500, reg_config + TSM_STREAM2_CFG);
-      ctrl_outl(0xb00, reg_config + TSM_STREAM3_CFG);
-      ctrl_outl(0xc00, reg_config + TSM_STREAM4_CFG);
+      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG);     //448kb (8*64)
+      ctrl_outl(0x500, reg_config + TSM_STREAM1_CFG);   //448kb (6*64)
+      ctrl_outl(0xe00, reg_config + TSM_STREAM2_CFG);   //384kb (8*64)
+      ctrl_outl(0x1600, reg_config + TSM_STREAM3_CFG);  //384kb (6*64)
+      ctrl_outl(0x1a00, reg_config + TSM_STREAM4_CFG);  //320kb (5*64)
       ctrl_outl(0x1d00, reg_config + TSM_STREAM5_CFG);
       ctrl_outl(0x1e00, reg_config + TSM_STREAM6_CFG);
+/* I think this is a fault value !!! 0x1f00 is maximum but
+ * this is the lower address. nevertheless, stream7 not needed
+ */
+      ctrl_outl(0x1f00, reg_config + TSM_STREAM7_CFG);
+
+      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM1_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM2_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM3_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM4_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM5_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM6_CFG2);
+      ctrl_outl(0x0, reg_config + TSM_STREAM7_CFG2);
+
+#elif defined(SPARK) || defined(HS7810A) || defined(HS7110)
+      /* RAM partitioning of streams */
+      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG);     //448kb (8*64)
+      ctrl_outl(0x800, reg_config + TSM_STREAM1_CFG);   //448kb (6*64)
+      ctrl_outl(0xe00, reg_config + TSM_STREAM2_CFG);   //384kb (6*64)
+      ctrl_outl(0x1400, reg_config + TSM_STREAM3_CFG);  //384kb (6*64)
+      ctrl_outl(0x1a00, reg_config + TSM_STREAM4_CFG);  //320kb (5*64)
+      ctrl_outl(0x1d00, reg_config + TSM_STREAM5_CFG);
+      ctrl_outl(0x1e00, reg_config + TSM_STREAM6_CFG);
+/* I think this is a fault value !!! 0x1f00 is maximum but
+ * this is the lower address. nevertheless, stream7 not needed
+ */
       ctrl_outl(0x1f00, reg_config + TSM_STREAM7_CFG);
 
       ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG2);
@@ -978,7 +971,7 @@ void stm_tsm_init (int use_cimax)
   	int n;
 
     printk("Bypass ci\n");
-#if	defined(SPARK) || defined(SPARK7162)
+#if	defined(SPARK) || defined(SPARK7162) || defined(HS7110)
   	tsm_io = ioremap (/* config->tsm_base_address */ TSMergerBaseAddress,0x1000);
 #else
 	tsm_io = ioremap (/* config->tsm_base_address */ 0x19242000,0x1000);
