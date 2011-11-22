@@ -872,9 +872,9 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 #ifdef UFS912
         micomInitialize();
 #endif
-	case 0x5305:
-		break;
         break;
+    case 0x5305:
+	break;
     default:
         printk("VFD/MICOM: unknown IOCTL 0x%x\n", cmd);
 
