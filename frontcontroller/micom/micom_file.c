@@ -657,7 +657,7 @@ static ssize_t MICOMdev_read(struct file *filp, char __user *buff, size_t len, l
     {
         int           size = 0;
         unsigned char data[20];
-        
+
         memset(data, 0, 20);
 
         getRCData(data, &size);
@@ -669,14 +669,14 @@ static ssize_t MICOMdev_read(struct file *filp, char __user *buff, size_t len, l
 
             copy_to_user(buff, data, size);
 
-	        up(&FrontPanelOpen[minor].sem);
+		up(&FrontPanelOpen[minor].sem);
 
             dprintk(150, "%s < %d\n", __func__, size);
             return size;
         }
-        
+
         dumpValues();
-        
+
         return 0;
     }
 
@@ -736,7 +736,7 @@ int MICOMdev_open(struct inode *inode, struct file *filp)
     FrontPanelOpen[minor].read = 0;
 
     up(&write_sem);
-    
+
     dprintk(100, "%s <\n", __func__);
 
     return 0;
@@ -758,7 +758,7 @@ int MICOMdev_close(struct inode *inode, struct file *filp)
         printk("EUSER\n");
         return -EUSERS;
     }
-    
+
     FrontPanelOpen[minor].fp = NULL;
     FrontPanelOpen[minor].read = 0;
 
@@ -872,6 +872,8 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 #ifdef UFS912
         micomInitialize();
 #endif
+	case 0x5305:
+		break;
         break;
     default:
         printk("VFD/MICOM: unknown IOCTL 0x%x\n", cmd);
