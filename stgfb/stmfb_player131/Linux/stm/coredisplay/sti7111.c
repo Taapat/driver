@@ -36,7 +36,7 @@
 #include "Gamma/sti7111/sti7111reg.h"
 #include "Gamma/sti7111/sti7111device.h"
 
-#if defined(CONFIG_SH_ST_MB618)
+#if defined(CONFIG_SH_ST_MB618) || defined(CONFIG_SH_ST_SAT7111)
 
 #if defined(UFS912) || defined(SPARK)  || defined(HS7810A) || defined(HS7110)
 #define HAS_DSUB 0
@@ -68,9 +68,9 @@ static struct stmcore_display_pipeline_data platform_data[] = {
     .vtg_irq                  = evt2irq(0x1540),
     .blitter_irq              = evt2irq(0x1580),
     .hdmi_irq                 = evt2irq(0x15C0),
-#if defined(UFS912) || defined(HS7810A) || defined(HS7110)
+#if defined(UFS912)
     .hdmi_i2c_adapter_id      = 3,
-#elif defined(SPARK)
+#elif defined(SPARK) || defined(HS7810A) || defined(HS7110)
 	.hdmi_i2c_adapter_id	  = 2,
 #else
     .hdmi_i2c_adapter_id      = 0,

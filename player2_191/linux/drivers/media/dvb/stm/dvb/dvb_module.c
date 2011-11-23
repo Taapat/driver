@@ -84,20 +84,12 @@ MODULE_LICENSE          ("GPL");
 #ifdef __TDT__
 int highSR = 0;
 int swts = 0;
-int TSsource0 = 2;
-int TSsource1 = 1;
 
 module_param(highSR, int, 0444);
 MODULE_PARM_DESC(highSR, "Start Driver with support for Symbol Rates 30000.\nIf 1 then some CAMS will not work.");
 
 module_param(swts, int, 0444);
 MODULE_PARM_DESC(swts, "Do not route injected data through the tsm/pti\n");
-
-module_param(TSsource0, int, 0444);
-MODULE_PARM_DESC(TSsource0, "Transport stream 0 source\n");
-
-module_param(TSsource1, int, 0444);
-MODULE_PARM_DESC(TSsource1, "Transport stream 1 source\n");
 #endif
 
 struct DvbContext_s*     DvbContext;
@@ -129,7 +121,6 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
     else
       printk("no swts ->routing streams from dvr0 direct to the player\n");
 
-    printk("Transport stream inputs (%d,%d)\n", TSsource0, TSsource1);
 #endif
 
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)

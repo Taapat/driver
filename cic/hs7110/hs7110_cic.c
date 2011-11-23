@@ -149,6 +149,23 @@ void hs7110_write_register_u32(unsigned long address, unsigned int value)
 #endif
 }
 
+u32 hs7110_read_register_u32(unsigned long address)
+{
+    u32 res;
+#ifdef address_not_mapped
+    volatile unsigned long mapped_register = (unsigned long) ioremap_nocache(address, 4);
+#else
+    volatile unsigned long mapped_register = address;
+#endif
+
+    res = readl(mapped_register);
+     
+#ifdef address_not_mapped
+    iounmap((void*) mapped_register);
+#endif
+    return res;
+}
+
 #if 0
 void  hs7110_irq(struct stpio_pin *pin, void* dev_id)
 {
@@ -348,6 +365,80 @@ void getCiSource(int slot, int* source)
    *source = 0;
 }
 
+int setMuxSource(int source)
+{
+   u32 reg;
+
+   printk("%s: source %d\n", __func__, source);
+
+   reg = hs7110_read_register_u32(0xfe001114);
+
+   /* e2 request source tuner not ci */
+   if (source == 0)
+   {
+      //hs7110_write_register_u32(0xfe001114, reg & ~0x20001);
+      hs7110_write_register_u32(0xfe001114, 0x3f800100);
+
+      hs7110_write_register_u32(0xfd023000, 0x6b); /* pio3 */
+
+      hs7110_write_register_u32(0xfd022030, 0xf3); /* pio2 */
+      hs7110_write_register_u32(0xfd022020, 0x3); /* pio2 */
+      hs7110_write_register_u32(0xfd022040, 0x3); /* pio2 */
+      hs7110_write_register_u32(0xfd022000, 0xfb); /* pio2 */
+
+      hs7110_write_register_u32(0xfd025030, 0x8f); /* pio5 */
+      hs7110_write_register_u32(0xfd025020, 0x0); /* pio5 */
+      hs7110_write_register_u32(0xfd025040, 0xc0); /* pio5 */
+      hs7110_write_register_u32(0xfd025000, 0x2f); /* pio5 */
+
+      hs7110_write_register_u32(0xfd021030, 0x84); /* pio1 */
+      hs7110_write_register_u32(0xfd021020, 0x80); /* pio1 */
+      hs7110_write_register_u32(0xfd021040, 0x80); /* pio1 */
+      hs7110_write_register_u32(0xfd021000, 0x4); /* pio1 */
+
+      hs7110_write_register_u32(0xfd022030, 0xfb); /* pio2 */
+      hs7110_write_register_u32(0xfd022020, 0x3); /* pio2 */
+      hs7110_write_register_u32(0xfd022040, 0x3); /* pio2 */
+      hs7110_write_register_u32(0xfd022000, 0xfb); /* pio2 */
+
+      hs7110_write_register_u32(0xfd025030, 0xaf); /* pio5 */
+      hs7110_write_register_u32(0xfd025020, 0x0); /* pio5 */
+      hs7110_write_register_u32(0xfd025040, 0xc0); /* pio5 */
+      hs7110_write_register_u32(0xfd025000, 0x2f); /* pio5 */
+   }
+   else
+   {
+   /* source = CI0 = descrambled service */
+      //hs7110_write_register_u32(0xfe001114, reg | 0x20001);
+
+      hs7110_write_register_u32(0xfd023000, 0x63); /* pio3 */
+
+      hs7110_write_register_u32(0xfe001114, 0x3f820101);
+
+      hs7110_write_register_u32(0xfd022030, 0xb); /* pio2 */
+      hs7110_write_register_u32(0xfd022020, 0x3); /* pio2 */
+      hs7110_write_register_u32(0xfd022040, 0x3); /* pio2 */
+
+      hs7110_write_register_u32(0xfd025030, 0xa0); /* pio5 */
+      hs7110_write_register_u32(0xfd025020, 0x00); /* pio5 */
+      hs7110_write_register_u32(0xfd025040, 0xc0); /* pio5 */
+
+      hs7110_write_register_u32(0xfd021030, 0x80); /* pio1 */
+      hs7110_write_register_u32(0xfd021020, 0x80); /* pio1 */
+      hs7110_write_register_u32(0xfd021040, 0x80); /* pio1 */
+
+      hs7110_write_register_u32(0xfd022030, 0x3); /* pio2 */
+      hs7110_write_register_u32(0xfd022020, 0x3); /* pio2 */
+      hs7110_write_register_u32(0xfd022040, 0x3); /* pio2 */
+
+      hs7110_write_register_u32(0xfd025030, 0x80); /* pio5 */
+      hs7110_write_register_u32(0xfd025020, 0x00); /* pio5 */
+      hs7110_write_register_u32(0xfd025040, 0xc0); /* pio5 */
+   }
+
+   return 0;
+}
+
 int cic_init_hw(void)
 {
 	struct hs7110_cic_state *state = &ci_state;
@@ -358,14 +449,27 @@ int cic_init_hw(void)
     hs7110_write_register_u32(EMIConfigBaseAddress + EMIBank2 + EMI_CFG_DATA3, 0xa);
     hs7110_write_register_u32(EMIConfigBaseAddress + EMI_GEN_CFG, 0x08);
 
-    hs7110_write_register_u32(0xfe001114, 0x3f800100); /* dvb-cam disable in syscfg, not needed for us */
+    hs7110_write_register_u32(0xfe001114, 0x3f800100);
 
-#if 0
-/* fixme: needed ? */
+    hs7110_write_register_u32(0xfd026030, 0xe4); /* pio6 */
+
+    hs7110_write_register_u32(0xfd022000, 0xf3); /* pio2 */
+
+    hs7110_write_register_u32(0xfd025030, 0x8f); /* pio5 */
+    hs7110_write_register_u32(0xfd025000, 0xf); /* pio5 */
+
+    hs7110_write_register_u32(0xfd021030, 0x84); /* pio1 */
+    hs7110_write_register_u32(0xfd021000, 0x4); /* pio1 */
+
+    hs7110_write_register_u32(0xfd022030, 0xfb); /* pio2 */
+    hs7110_write_register_u32(0xfd022000, 0xfb); /* pio2 */
+
+    hs7110_write_register_u32(0xfd025030, 0xaf); /* pio5 */
+    hs7110_write_register_u32(0xfd025000, 0x2f); /* pio5 */
+
     hs7110_write_register_u32(0xfe001134, 0x600000); /* lmi */
     hs7110_write_register_u32(0xfe0011a8, 0x66f379b); /* lmi */
     hs7110_write_register_u32(0xfe0011ac, 0x1800019b); /* lmi */
-#endif
     
     slot_attr_mem[0] = 0x6008000;
     slot_ctrl_mem[0] = 0x6000000;
@@ -448,6 +552,7 @@ error:
 }
 
 EXPORT_SYMBOL(init_ci_controller);
+EXPORT_SYMBOL(setMuxSource);
 EXPORT_SYMBOL(setCiSource);
 EXPORT_SYMBOL(getCiSource);
 

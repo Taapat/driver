@@ -17,6 +17,9 @@
 
 extern struct DeviceContext_s* DeviceContext;
 
+#if defined(HS7110)
+extern int setMuxSource(int source);
+#endif
 int setCiSource(int slot, int source);
 void getCiSource(int slot, int* source);
 
@@ -41,17 +44,14 @@ int proc_tsmux_input0_write(struct file *file, const char __user *buf,
 		if(strcmp(page, "A") == 0)
 			setCiSource(0, -1);
 #endif
-/* Dagobert: fixme: currently just to see what e2 sends here
- * so maybe I understand what the developer
- * wants to do here.
- */
-#if defined(UFS922)
+
+/* ciN for source ciN, e.g. A for TUNER */
+#if defined(HS7110)
+		if(strcmp(page, "A") == 0)
+			setMuxSource(0);
+        else
 		if(strcmp(page, "CI0") == 0)
-			printk("%s ->CIO received\n", __func__);
-		else if(strcmp(page, "CI1") == 0)
-			printk("%s ->CI1 received\n", __func__);
-		else
-			ret = -EINVAL;
+			setMuxSource(1);
 #endif
 	}
 
