@@ -59,9 +59,9 @@ static struct stmcore_display_pipeline_data platform_data[] = {
     .blitter_irq              = evt2irq(0x1580),
     .blitter_irq_kernel       = evt2irq(0x1580),
     .hdmi_irq                 = evt2irq(0x15C0),
-#if (defined(UFS912) || defined(HS7810A) || defined(HS7110)) && defined(__TDT__)
+#if defined(UFS912)
     .hdmi_i2c_adapter_id      = 3,
-#elif defined(SPARK) && defined(__TDT__)
+#elif defined(SPARK) || defined(HS7810A) || defined(HS7110)
 	.hdmi_i2c_adapter_id	  = 2,
 #else
     .hdmi_i2c_adapter_id      = 0,
