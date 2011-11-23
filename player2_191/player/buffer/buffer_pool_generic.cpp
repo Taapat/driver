@@ -564,12 +564,12 @@ unsigned long long	 EntryTime;
 		BufferReleaseSignalWaitedOn	= false;
 	    }
 
-	    if( (OS_GetTimeInMicroSeconds() - EntryTime) > BUFFER_MAX_EXPECTED_WAIT_PERIOD )
+	    /*if( (OS_GetTimeInMicroSeconds() - EntryTime) > BUFFER_MAX_EXPECTED_WAIT_PERIOD )
 	    {
 		report( severity_info, "BufferPool_Generic_c::GetBuffer - Waiting for a buffer of type %04x - '%s'\n", BufferDescriptor->Type, 
 				(BufferDescriptor->TypeName == NULL) ? "Unnamed" : BufferDescriptor->TypeName );
 		EntryTime	= OS_GetTimeInMicroSeconds();
-	    }
+	    }*/
 
 	} while( !NonBlocking && !AbortGetBuffer && (RingStatus != RingNoError) );
 	OS_UnLockMutex( &Lock );

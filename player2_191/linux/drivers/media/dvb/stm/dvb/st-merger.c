@@ -350,28 +350,208 @@ EXPORT_SYMBOL(stm_tsm_inject_user_data);
  * ****************************************
  */
 
+#if defined(SPARK)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
+
+void spark_stm_tsm_init ( void )
+{
+    unsigned int     ret;
+    int              n;
+
+    void *reg_sys_config = NULL;
+
+    printk("[Spark] Init Stream Routing...\n");
+    /* first configure sysconfig */
+    reg_sys_config = ioremap(SysConfigBaseAddress, 0x1000);
+    /*
+	 ->TSIN0 routed to TSIN2
+	 ->TSMerger TSIN2 receives TSIN0 (based on config before)
+	 ->TS interface is as indicated by TSMerger configuration bits
+     */
+
+    ctrl_outl(0x3, reg_sys_config + SYS_CFG0);
+    ctrl_outl(0x0, reg_sys_config + SYS_CFG1);
+
+    /* set up tsmerger */
+    tsm_handle.tsm_io = tsm_io = ioremap(TSMergerBaseAddress, 0x0900);
+
+    /* 1. Reset */
+    ctrl_outl(0x0, tsm_io + TSM_SW_RST);
+    ctrl_outl(0x6, tsm_io + TSM_SW_RST);
+
+    /* set all registers to a defined state */
+    ctrl_outl(0x0, tsm_io + TSM_STREAM0_CFG);
+    ctrl_outl(0x0, tsm_io + TSM_STREAM0_SYNC);
+    ctrl_outl(0x0, tsm_io + TSM_STREAM0_STA);
+    ctrl_outl(0x0, tsm_io + 0x18 /* reserved ??? */);
+
+    ctrl_outl(0x0, tsm_io + TSM_STREAM1_CFG);
+    ctrl_outl(0x0, tsm_io + TSM_STREAM1_SYNC);
+    ctrl_outl(0x0, tsm_io + TSM_STREAM1_STA);
+    ctrl_outl(0x0, tsm_io + 0x38 /* reserved ??? */);
+
+    ctrl_outl(0x0, tsm_io + TSM_STREAM2_CFG);
+    ctrl_outl(0x0, tsm_io + TSM_STREAM2_SYNC);
+    ctrl_outl(0x0, tsm_io + TSM_STREAM2_STA);
+    ctrl_outl(0x0, tsm_io + 0x58 /* reserved ??? */);
+
+    ctrl_outl(0x0, tsm_io + TSM_STREAM3_CFG);
+    ctrl_outl(0x0, tsm_io + TSM_STREAM3_SYNC);
+    ctrl_outl(0x0, tsm_io + TSM_STREAM3_STA);
+    ctrl_outl(0x0, tsm_io + 0x78 /* reserved ??? */);
+
+    ctrl_outl(0x0, tsm_io + TSM_STREAM4_CFG);
+    ctrl_outl(0x0, tsm_io + TSM_STREAM4_SYNC);
+    ctrl_outl(0x0, tsm_io + TSM_STREAM4_STA);
+    ctrl_outl(0x0, tsm_io + 0x98 /* reserved ??? */);
+
+    ctrl_outl(0x0, tsm_io + TSM_PROG_CNT0);
+    ctrl_outl(0x0, tsm_io + TSM_PROG_CNT1);
+
+    ctrl_outl(0x0, tsm_io + TSM_PTI_SEL);
+    ctrl_outl(0x0, tsm_io + TSM_1394_SEL);
+    ctrl_outl(0x0, tsm_io + PTI_ALT_OUT_CFG);
+    ctrl_outl(0x0, tsm_io + TS_1394_CFG);
+
+    ctrl_outl(0x0, tsm_io + SWTS_CFG(0));
+
+    ctrl_outl(0x0, tsm_io + TSM_SYS_CFG);
+    ctrl_outl(0x0, tsm_io + TSM_SYS_CFG); /* 2 times ? */
+
+    /* RAM partitioning of streams max 1984kb (31*64) */
+    ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);
+    ctrl_outl(0x400,  tsm_io + TSM_STREAM1_CFG);
+    ctrl_outl(0x500,  tsm_io + TSM_STREAM2_CFG);
+    ctrl_outl(0xb00,  tsm_io + TSM_STREAM3_CFG);
+    ctrl_outl(0xc00,  tsm_io + TSM_STREAM4_CFG);
+    ctrl_outl(0x1d00, tsm_io + TSM_STREAM5_CFG);
+    ctrl_outl(0x1e00, tsm_io + TSM_STREAM6_CFG);
+    ctrl_outl(0x1f00, tsm_io + TSM_STREAM7_CFG);
+
+    ctrl_outl(0x0, tsm_io + TSM_STREAM0_CFG2);
+    ctrl_outl(0x0, tsm_io + TSM_STREAM1_CFG2);
+    ctrl_outl(0x0, tsm_io + TSM_STREAM2_CFG2);
+    ctrl_outl(0x0, tsm_io + TSM_STREAM3_CFG2);
+    ctrl_outl(0x0, tsm_io + TSM_STREAM4_CFG2);
+    ctrl_outl(0x0, tsm_io + TSM_STREAM5_CFG2);
+    ctrl_outl(0x0, tsm_io + TSM_STREAM6_CFG2);
+    ctrl_outl(0x0, tsm_io + TSM_STREAM7_CFG2);
+
+    /* configure streams: */
+    /* add tag bytes to stream + stream priority */
+    unsigned int stream_sync = 0xbc4722;
+
+    ret = ctrl_inl(tsm_io + TSM_STREAM0_CFG);
+    ctrl_outl(ret | (0x20020), tsm_io + TSM_STREAM0_CFG);
+
+    ctrl_outl(stream_sync, tsm_io + TSM_STREAM0_SYNC);
+    ctrl_outl(0x0, tsm_io + 0x18 /* reserved ??? */);
+
+    /* add tag bytes to stream + stream priority */
+    ret = ctrl_inl(tsm_io + TSM_STREAM1_CFG);
+    ctrl_outl(ret | (0x20020), tsm_io + TSM_STREAM1_CFG);
+
+    ctrl_outl(stream_sync, tsm_io + TSM_STREAM1_SYNC);
+    ctrl_outl(0x0, tsm_io + 0x38 /* reserved ??? */);
+
+    /* add tag bytes to stream + stream priority */
+    ret = ctrl_inl(tsm_io + TSM_STREAM2_CFG);
+    ctrl_outl(ret | (0x20020), tsm_io + TSM_STREAM2_CFG);
+
+    ctrl_outl(stream_sync, tsm_io + TSM_STREAM2_SYNC);
+    ctrl_outl(0x0, tsm_io + 0x58 /* reserved ??? */);
+
+    /* add tag bytes to stream + stream priority */
+    ret = ctrl_inl(tsm_io + TSM_STREAM3_CFG);
+    ctrl_outl(ret | (0x20020), tsm_io + TSM_STREAM3_CFG);
+
+    ret = ctrl_inl(tsm_io + TSM_STREAM4_CFG);
+    ctrl_outl(ret | (0x20020), tsm_io + TSM_STREAM4_CFG);
+
+    ctrl_outl(0x00 , tsm_io + TSM_STREAM5_SYNC);
+    ctrl_outl(0x00 , tsm_io + TSM_STREAM6_SYNC);
+
+    ctrl_outl(stream_sync, tsm_io + TSM_STREAM3_SYNC);
+    ctrl_outl(0x0, tsm_io + 0x78 /* reserved ??? */);
+
+    ctrl_outl(0x8f0000e, tsm_io + SWTS_CFG(0));
+    ctrl_outl(0x8000000, tsm_io + SWTS_CFG(1));
+    ctrl_outl(0x8000000, tsm_io + SWTS_CFG(2));
+
+    /* auto count */
+    ctrl_outl(0x0, tsm_io + TSM_PROG_CNT0);
+
+    ctrl_outl(0x15 ,tsm_io + TSM_PTI_SEL);
+
+    /* set stream 2 on */
+    ret = ctrl_inl(tsm_io + TSM_STREAM2_CFG);
+    ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM2_CFG);
+
+    /* set stream 4 on */
+    ret = ctrl_inl(tsm_io + TSM_STREAM4_CFG);
+    ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM4_CFG);
+
+    /* set stream on */
+    ret = ctrl_inl(tsm_io + TSM_STREAM0_CFG);
+    ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM0_CFG);
+
+    ctrl_outl( TSM_SWTS_REQ_TRIG(128/16) | 0x10, tsm_io + TSM_SWTS_CFG(0));
+
+    /* SWTS0 to PTI */
+    ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+    ctrl_outl(ret | 0x8, tsm_io + TSM_PTI_SEL);
+
+    ret = ctrl_inl(tsm_io + TSM_STREAM3_CFG);
+    ctrl_outl( (ret & TSM_RAM_ALLOC_START(0xff)) |
+		           TSM_PRIORITY(0x7) | TSM_STREAM_ON | TSM_ADD_TAG_BYTES | TSM_SYNC_NOT_ASYNC | TSM_ASYNC_SOP_TOKEN, tsm_io + TSM_STREAM3_CFG);
+
+    tsm_handle.swts_channel = 3;
+    tsm_handle.tsm_swts = (unsigned long)ioremap (0x1A300000, 0x1000);
+
+    /* Now lets get the SWTS info and setup an FDMA channel */
+    tsm_handle.fdma_reqline = 31;
+    tsm_handle.fdma_channel = request_dma_bycap(fdmac_id, fdma_cap_hb, "swts0");
+    tsm_handle.fdma_req     = dma_req_config(tsm_handle.fdma_channel,tsm_handle.fdma_reqline,&fdma_req_config);
+
+    /* Initilise the parameters for the FDMA SWTS data injection */
+    for (n=0;n<MAX_SWTS_PAGES;n++) {
+       dma_params_init(&tsm_handle.swts_params[n], MODE_PACED, STM_DMA_LIST_OPEN);
+       dma_params_DIM_1_x_0(&tsm_handle.swts_params[n]);
+       dma_params_req(&tsm_handle.swts_params[n],tsm_handle.fdma_req);
+    }
+}
+#endif
+#endif
 
 void stm_tsm_init (int use_cimax)
 {
+#if defined(SPARK)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
+	spark_stm_tsm_init();
+	return;
+#endif
+#endif
+
+	unsigned int     ret;
+    int              n;
 
 #if defined(VIP2_V1) || defined(SPARK) || defined(SPARK7162) || defined(IPBOX99) || defined(IPBOX55) || defined(ADB_BOX) // none ci targets
 	use_cimax = 0;
 #endif
 
-   if (use_cimax != 0)
-   {
+    /* first configure sysconfig */
 
-      //route tsmerger to cimax and then to pti
-      //first configure sysconfig
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
-      unsigned long    reg_sys_config = 0;
-      unsigned long    reg_config = 0;
+    unsigned long    reg_sys_config = 0;
 #else
-      void *reg_sys_config = NULL;
-      void *reg_config = NULL;
+    void *reg_sys_config = NULL;
 #endif
-      unsigned int     ret;
-      int              n;
+
+    reg_sys_config = ioremap(SysConfigBaseAddress, 0x0900);
+
+    if (use_cimax != 0)
+    {
+      /* route tsmerger to cimax and then to pti */
 
 #if defined(UFS912) || defined(HS7810A)
       struct stpio* stream1_pin = stpio_request_pin (5, 0, "TSinterface1", STPIO_IN);
@@ -388,7 +568,7 @@ void stm_tsm_init (int use_cimax)
       stpio_set_pin(pin, 0);
 #elif defined(OCTAGON1008)
       struct stpio* stream2_pin = stpio_request_pin (1, 3, "STREAM2", STPIO_OUT);
-/* disbaled on 1 */
+      /* disbaled on 1 */
       stpio_set_pin(stream2_pin, 0);
 #endif
 
@@ -423,10 +603,8 @@ void stm_tsm_init (int use_cimax)
 
       printk("Routing streams through cimax\n");
 
-      reg_sys_config = ioremap(SysConfigBaseAddress, 0x0900 /* ??? */);
-
 #if defined(OCTAGON1008)
-/* smartcard settings */
+      /* smartcard settings */
       ret = ctrl_inl(reg_sys_config + SYS_CFG7);
       ctrl_outl(ret | 0x1b0, reg_sys_config + SYS_CFG7);
 
@@ -446,22 +624,22 @@ void stm_tsm_init (int use_cimax)
 	 ->TS interface is as indicated by TSMerger configuration bits
        */
 
-/* from fw 202 rc ->see also pti */
+      /* from fw 202 rc ->see also pti */
       ctrl_outl(0x2, reg_sys_config + SYS_CFG0);
 
 #elif  defined(FORTIS_HDBOX)
-	/* ->TSIN0 routes to TSIN2
-	 */
+      /* ->TSIN0 routes to TSIN2
+       */
       ctrl_outl(0x2, reg_sys_config + SYS_CFG0);
 #elif defined(UFS912) || defined(SPARK)
       ctrl_outl(0x3, reg_sys_config + SYS_CFG0);
 #elif defined(ATEVIO7500)
-/* pio12 */
+      /* pio12 */
       ctrl_outl(0x0, 0xfe015020);
       ctrl_outl(0x0, 0xfe015030);
       ctrl_outl(0x0, 0xfe015040);
 
-/* pio13 */
+      /* pio13 */
       ctrl_outl(0x0, 0xfe016020);
       ctrl_outl(0x0, 0xfe016030);
       ctrl_outl(0x0, 0xfe016040);
@@ -488,241 +666,242 @@ void stm_tsm_init (int use_cimax)
 #endif
 
       /* set up tsmerger */
-      tsm_handle.tsm_io = tsm_io = reg_config = ioremap(TSMergerBaseAddress, 0x0900);
+      tsm_handle.tsm_io = tsm_io = ioremap(TSMergerBaseAddress, 0x0900);
 
       /* 1. Reset */
-      ctrl_outl(0x0, reg_config + TSM_SW_RST);
-      ctrl_outl(0x6, reg_config + TSM_SW_RST);
+      ctrl_outl(0x0, tsm_io + TSM_SW_RST);
+      ctrl_outl(0x6, tsm_io + TSM_SW_RST);
 
       /* set all registers to a defined state */
-      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG);
-      ctrl_outl(0x0, reg_config + TSM_STREAM0_SYNC);
-      ctrl_outl(0x0, reg_config + TSM_STREAM0_STA);
-      ctrl_outl(0x0, reg_config + 0x18 /* reserved ??? */);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM0_CFG);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM0_SYNC);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM0_STA);
+      ctrl_outl(0x0, tsm_io + 0x18 /* reserved ??? */);
 
-      ctrl_outl(0x0, reg_config + TSM_STREAM1_CFG);
-      ctrl_outl(0x0, reg_config + TSM_STREAM1_SYNC);
-      ctrl_outl(0x0, reg_config + TSM_STREAM1_STA);
-      ctrl_outl(0x0, reg_config + 0x38 /* reserved ??? */);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM1_CFG);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM1_SYNC);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM1_STA);
+      ctrl_outl(0x0, tsm_io + 0x38 /* reserved ??? */);
 
-      ctrl_outl(0x0, reg_config + TSM_STREAM2_CFG);
-      ctrl_outl(0x0, reg_config + TSM_STREAM2_SYNC);
-      ctrl_outl(0x0, reg_config + TSM_STREAM2_STA);
-      ctrl_outl(0x0, reg_config + 0x58 /* reserved ??? */);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM2_CFG);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM2_SYNC);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM2_STA);
+      ctrl_outl(0x0, tsm_io + 0x58 /* reserved ??? */);
 
-      ctrl_outl(0x0, reg_config + TSM_STREAM3_CFG);
-      ctrl_outl(0x0, reg_config + TSM_STREAM3_SYNC);
-      ctrl_outl(0x0, reg_config + TSM_STREAM3_STA);
-      ctrl_outl(0x0, reg_config + 0x78 /* reserved ??? */);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM3_CFG);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM3_SYNC);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM3_STA);
+      ctrl_outl(0x0, tsm_io + 0x78 /* reserved ??? */);
 
-      ctrl_outl(0x0, reg_config + TSM_STREAM4_CFG);
-      ctrl_outl(0x0, reg_config + TSM_STREAM4_SYNC);
-      ctrl_outl(0x0, reg_config + TSM_STREAM4_STA);
-      ctrl_outl(0x0, reg_config + 0x98 /* reserved ??? */);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM4_CFG);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM4_SYNC);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM4_STA);
+      ctrl_outl(0x0, tsm_io + 0x98 /* reserved ??? */);
 
-      ctrl_outl(0x0, reg_config + TSM_PROG_CNT0);
-      ctrl_outl(0x0, reg_config + TSM_PROG_CNT1);
+      ctrl_outl(0x0, tsm_io + TSM_PROG_CNT0);
+      ctrl_outl(0x0, tsm_io + TSM_PROG_CNT1);
 
-      ctrl_outl(0x0, reg_config + TSM_PTI_SEL);
-      ctrl_outl(0x0, reg_config + TSM_1394_SEL);
-      ctrl_outl(0x0, reg_config + PTI_ALT_OUT_CFG);
-      ctrl_outl(0x0, reg_config + TS_1394_CFG);
+      ctrl_outl(0x0, tsm_io + TSM_PTI_SEL);
+      ctrl_outl(0x0, tsm_io + TSM_1394_SEL);
+      ctrl_outl(0x0, tsm_io + PTI_ALT_OUT_CFG);
+      ctrl_outl(0x0, tsm_io + TS_1394_CFG);
 
-      ctrl_outl(0x0, reg_config + SWTS_CFG(0));
+      ctrl_outl(0x0, tsm_io + SWTS_CFG(0));
 
 #if  defined(FORTIS_HDBOX) || defined(UFS922) || defined(TF7700) || defined(HL101) || defined(VIP1_V2) || defined(UFS912) || defined(SPARK) || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA) || defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110) || defined(IPBOX9900)
-      ctrl_outl(0x0, reg_config + SWTS_CFG(1));
-      ctrl_outl(0x0, reg_config + SWTS_CFG(2));
+      ctrl_outl(0x0, tsm_io + SWTS_CFG(1));
+      ctrl_outl(0x0, tsm_io + SWTS_CFG(2));
 #endif
 
-      ctrl_outl(0x0, reg_config + TSM_SYS_CFG);
-      ctrl_outl(0x0, reg_config + TSM_SYS_CFG); /* 2 times ? */
+      ctrl_outl(0x0, tsm_io + TSM_SYS_CFG);
+      ctrl_outl(0x0, tsm_io + TSM_SYS_CFG); /* 2 times ? */
 
       /* RAM partitioning of streams max 1984kb (31*64) */
 #if  defined(FORTIS_HDBOX) || defined(UFS922) || defined(HL101) || defined(VIP1_V2)
-      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG);     //320kb (5*64)
-      ctrl_outl(0x500, reg_config + TSM_STREAM1_CFG);   //320kb (5*64)
-      ctrl_outl(0xa00, reg_config + TSM_STREAM2_CFG);   //256kb (4*64)
-      ctrl_outl(0xe00, reg_config + TSM_STREAM3_CFG);   //320kb (5*64)
-      ctrl_outl(0x1300, reg_config + TSM_STREAM4_CFG);  //256kb (4*64)
-      ctrl_outl(0x1700, reg_config + TSM_STREAM5_CFG);  //192kb (3*64)
-      ctrl_outl(0x1a00, reg_config + TSM_STREAM6_CFG);  //384kb (5*64)
+      ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);     	//320kb (5*64)
+      ctrl_outl(0x500,  tsm_io + TSM_STREAM1_CFG);   	//320kb (5*64)
+      ctrl_outl(0xa00,  tsm_io + TSM_STREAM2_CFG);   	//256kb (4*64)
+      ctrl_outl(0xe00,  tsm_io + TSM_STREAM3_CFG);   	//320kb (5*64)
+      ctrl_outl(0x1300, tsm_io + TSM_STREAM4_CFG);  	//256kb (4*64)
+      ctrl_outl(0x1700, tsm_io + TSM_STREAM5_CFG);  	//192kb (3*64)
+      ctrl_outl(0x1a00, tsm_io + TSM_STREAM6_CFG);  	//384kb (5*64)
 #elif defined (UFS912)
       /* RAM partitioning of streams */
-      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG);     //448kb (8*64)
-      ctrl_outl(0x500, reg_config + TSM_STREAM1_CFG);   //448kb (6*64)
-      ctrl_outl(0xe00, reg_config + TSM_STREAM2_CFG);   //384kb (8*64)
-      ctrl_outl(0x1600, reg_config + TSM_STREAM3_CFG);  //384kb (6*64)
-      ctrl_outl(0x1a00, reg_config + TSM_STREAM4_CFG);  //320kb (5*64)
-      ctrl_outl(0x1d00, reg_config + TSM_STREAM5_CFG);
-      ctrl_outl(0x1e00, reg_config + TSM_STREAM6_CFG);
+      ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);   //448kb (8*64)
+      ctrl_outl(0x500,  tsm_io + TSM_STREAM1_CFG);   //448kb (6*64)
+      ctrl_outl(0xe00,  tsm_io + TSM_STREAM2_CFG);   //384kb (8*64)
+      ctrl_outl(0x1600, tsm_io + TSM_STREAM3_CFG);   //384kb (6*64)
+      ctrl_outl(0x1a00, tsm_io + TSM_STREAM4_CFG);   //320kb (5*64)
+      ctrl_outl(0x1d00, tsm_io + TSM_STREAM5_CFG);
+      ctrl_outl(0x1e00, tsm_io + TSM_STREAM6_CFG);
+
 /* I think this is a fault value !!! 0x1f00 is maximum but
  * this is the lower address. nevertheless, stream7 not needed
  */
-      ctrl_outl(0x1f00, reg_config + TSM_STREAM7_CFG);
+      ctrl_outl(0x1f00, tsm_io + TSM_STREAM7_CFG);
 
-      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM1_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM2_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM3_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM4_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM5_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM6_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM7_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM0_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM1_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM2_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM3_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM4_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM5_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM6_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM7_CFG2);
 
-#elif defined(SPARK) || defined(HS7810A) || defined(HS7110)
+#elif defined(HS7810A) || defined(HS7110)
       /* RAM partitioning of streams */
-      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG);     //448kb (8*64)
-      ctrl_outl(0x800, reg_config + TSM_STREAM1_CFG);   //448kb (6*64)
-      ctrl_outl(0xe00, reg_config + TSM_STREAM2_CFG);   //384kb (6*64)
-      ctrl_outl(0x1400, reg_config + TSM_STREAM3_CFG);  //384kb (6*64)
-      ctrl_outl(0x1a00, reg_config + TSM_STREAM4_CFG);  //320kb (5*64)
-      ctrl_outl(0x1d00, reg_config + TSM_STREAM5_CFG);
-      ctrl_outl(0x1e00, reg_config + TSM_STREAM6_CFG);
+      ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);     //448kb (8*64)
+      ctrl_outl(0x800,  tsm_io + TSM_STREAM1_CFG);     //448kb (6*64)
+      ctrl_outl(0xe00,  tsm_io + TSM_STREAM2_CFG);     //384kb (6*64)
+      ctrl_outl(0x1400, tsm_io + TSM_STREAM3_CFG);     //384kb (6*64)
+      ctrl_outl(0x1a00, tsm_io + TSM_STREAM4_CFG);     //320kb (5*64)
+      ctrl_outl(0x1d00, tsm_io + TSM_STREAM5_CFG);
+      ctrl_outl(0x1e00, tsm_io + TSM_STREAM6_CFG);
 /* I think this is a fault value !!! 0x1f00 is maximum but
  * this is the lower address. nevertheless, stream7 not needed
  */
-      ctrl_outl(0x1f00, reg_config + TSM_STREAM7_CFG);
+      ctrl_outl(0x1f00, tsm_io + TSM_STREAM7_CFG);
 
-      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM1_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM2_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM3_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM4_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM5_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM6_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM7_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM0_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM1_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM2_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM3_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM4_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM5_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM6_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM7_CFG2);
 #elif defined(ATEVIO7500)
       /* RAM partitioning of streams */
-      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG);
-      ctrl_outl(0x400, reg_config + TSM_STREAM1_CFG);
-      ctrl_outl(0x800, reg_config + TSM_STREAM2_CFG);
-      ctrl_outl(0xc00, reg_config + TSM_STREAM3_CFG);
-      ctrl_outl(0x1300, reg_config + TSM_STREAM4_CFG);
-      ctrl_outl(0x1d00, reg_config + TSM_STREAM5_CFG);
-      ctrl_outl(0x1e00, reg_config + TSM_STREAM6_CFG);
-      ctrl_outl(0x1f00, reg_config + TSM_STREAM7_CFG);
+      ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);
+      ctrl_outl(0x400,  tsm_io + TSM_STREAM1_CFG);
+      ctrl_outl(0x800,  tsm_io + TSM_STREAM2_CFG);
+      ctrl_outl(0xc00,  tsm_io + TSM_STREAM3_CFG);
+      ctrl_outl(0x1300, tsm_io + TSM_STREAM4_CFG);
+      ctrl_outl(0x1d00, tsm_io + TSM_STREAM5_CFG);
+      ctrl_outl(0x1e00, tsm_io + TSM_STREAM6_CFG);
+      ctrl_outl(0x1f00, tsm_io + TSM_STREAM7_CFG);
 
-      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM1_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM2_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM3_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM4_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM5_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM6_CFG2);
-      ctrl_outl(0x0, reg_config + TSM_STREAM7_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM0_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM1_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM2_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM3_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM4_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM5_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM6_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM7_CFG2);
 #else
-      ctrl_outl(0x0, reg_config + TSM_STREAM0_CFG);     //448kb (7*64)
-      ctrl_outl(0x700, reg_config + TSM_STREAM1_CFG);   //448kb (7*64)
-      ctrl_outl(0xe00, reg_config + TSM_STREAM2_CFG);   //384kb (6*64)
-      ctrl_outl(0x1400, reg_config + TSM_STREAM3_CFG);  //384kb (6*64)
-      ctrl_outl(0x1a00, reg_config + TSM_STREAM4_CFG);  //320kb (5*64)
+      ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);     //448kb (7*64)
+      ctrl_outl(0x700,  tsm_io + TSM_STREAM1_CFG);     //448kb (7*64)
+      ctrl_outl(0xe00,  tsm_io + TSM_STREAM2_CFG);     //384kb (6*64)
+      ctrl_outl(0x1400, tsm_io + TSM_STREAM3_CFG);     //384kb (6*64)
+      ctrl_outl(0x1a00, tsm_io + TSM_STREAM4_CFG);     //320kb (5*64)
 #endif
 
 #if  defined(FORTIS_HDBOX) || defined(OCTAGON1008) || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
       /* configure streams: */
       /* add tag bytes to stream + stream priority */
-      ret = ctrl_inl(reg_config + TSM_STREAM0_CFG);
-      ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM0_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM0_CFG);
+      ctrl_outl(ret | (0x40020), tsm_io + TSM_STREAM0_CFG);
 
-      ret = ctrl_inl(reg_config + TSM_STREAM4_CFG);
-      ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM4_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM4_CFG);
+      ctrl_outl(ret | (0x40020), tsm_io + TSM_STREAM4_CFG);
 
-      ret = ctrl_inl(reg_config + TSM_STREAM5_CFG);
-      ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM5_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM5_CFG);
+      ctrl_outl(ret | (0x40020), tsm_io + TSM_STREAM5_CFG);
 #elif defined(ATEVIO7500)
       /* add tag bytes to stream + stream priority */
-      ret = ctrl_inl(reg_config + TSM_STREAM0_CFG);
-      ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM0_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM0_CFG);
+      ctrl_outl(ret | (0x40020), tsm_io + TSM_STREAM0_CFG);
 #else
       /* configure streams: */
       /* add tag bytes to stream + stream priority */
-      ret = ctrl_inl(reg_config + TSM_STREAM0_CFG);
-      ctrl_outl(ret | (0x20020), reg_config + TSM_STREAM0_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM0_CFG);
+      ctrl_outl(ret | (0x20020), tsm_io + TSM_STREAM0_CFG);
 #endif
 
-      ctrl_outl(stream_sync, reg_config + TSM_STREAM0_SYNC);
-      ctrl_outl(0x0, reg_config + 0x18 /* reserved ??? */);
+      ctrl_outl(stream_sync, tsm_io + TSM_STREAM0_SYNC);
+      ctrl_outl(0x0, tsm_io + 0x18 /* reserved ??? */);
 
 #if defined(FORTIS_HDBOX) || defined(OCTAGON1008) || defined(ATEVIO7500)
       /* add tag bytes to stream + stream priority */
-      ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
-      ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM1_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM1_CFG);
+      ctrl_outl(ret | (0x40020), tsm_io + TSM_STREAM1_CFG);
 #else
       /* add tag bytes to stream + stream priority */
-      ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
-      ctrl_outl(ret | (0x20020), reg_config + TSM_STREAM1_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM1_CFG);
+      ctrl_outl(ret | (0x20020), tsm_io + TSM_STREAM1_CFG);
 #endif
 
-      ctrl_outl(stream_sync, reg_config + TSM_STREAM1_SYNC);
-      ctrl_outl(0x0, reg_config + 0x38 /* reserved ??? */);
+      ctrl_outl(stream_sync, tsm_io + TSM_STREAM1_SYNC);
+      ctrl_outl(0x0, tsm_io + 0x38 /* reserved ??? */);
 
       /* add tag bytes to stream + stream priority */
 #if defined(FORTIS_HDBOX) || defined(OCTAGON1008) || defined(ATEVIO7500)
-      ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
-      ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM2_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM2_CFG);
+      ctrl_outl(ret | (0x40020), tsm_io + TSM_STREAM2_CFG);
 #elif defined(UFS912) || defined(SPARK) || defined(ATEVIO7500) || defined(HS7810A)
-      ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
-      ctrl_outl(ret | (0x20020), reg_config + TSM_STREAM2_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM2_CFG);
+      ctrl_outl(ret | (0x20020), tsm_io + TSM_STREAM2_CFG);
 #else
-      ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
-      ctrl_outl(ret | (0x30020), reg_config + TSM_STREAM2_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM2_CFG);
+      ctrl_outl(ret | (0x30020), tsm_io + TSM_STREAM2_CFG);
 #endif
 
-      ctrl_outl(stream_sync, reg_config + TSM_STREAM2_SYNC);
-      ctrl_outl(0x0, reg_config + 0x58 /* reserved ??? */);
+      ctrl_outl(stream_sync, tsm_io + TSM_STREAM2_SYNC);
+      ctrl_outl(0x0, tsm_io + 0x58 /* reserved ??? */);
 
       /* add tag bytes to stream + stream priority */
 #if defined(FORTIS_HDBOX) || defined(OCTAGON1008)
-      ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
-      ctrl_outl(ret | (0x40020), reg_config + TSM_STREAM3_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM3_CFG);
+      ctrl_outl(ret | (0x40020), tsm_io + TSM_STREAM3_CFG);
 #elif defined(UFS912) || defined(SPARK) || defined(ATEVIO7500) || defined(HS7810A)
-      ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
-      ctrl_outl(ret | (0x20020), reg_config + TSM_STREAM3_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM3_CFG);
+      ctrl_outl(ret | (0x20020), tsm_io + TSM_STREAM3_CFG);
 
-      ret = ctrl_inl(reg_config + TSM_STREAM4_CFG);
-      ctrl_outl(ret | (0x20020), reg_config + TSM_STREAM4_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM4_CFG);
+      ctrl_outl(ret | (0x20020), tsm_io + TSM_STREAM4_CFG);
 
-      ctrl_outl(0x00 , reg_config + TSM_STREAM5_SYNC);
-      ctrl_outl(0x00 , reg_config + TSM_STREAM6_SYNC);
+      ctrl_outl(0x00 , tsm_io + TSM_STREAM5_SYNC);
+      ctrl_outl(0x00 , tsm_io + TSM_STREAM6_SYNC);
 #elif  defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA) || defined(IPBOX9900)
 	  /* configure streams: */
       /* add tag bytes to stream + stream priority */
-      ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
-      ctrl_outl(ret | (0x70020), reg_config + TSM_STREAM3_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM3_CFG);
+      ctrl_outl(ret | (0x70020), tsm_io + TSM_STREAM3_CFG);
 #else
-      ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
-      ctrl_outl(ret | (0x30020), reg_config + TSM_STREAM3_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM3_CFG);
+      ctrl_outl(ret | (0x30020), tsm_io + TSM_STREAM3_CFG);
 #endif
 
-      ctrl_outl(stream_sync, reg_config + TSM_STREAM3_SYNC);
-      ctrl_outl(0x0, reg_config + 0x78 /* reserved ??? */);
+      ctrl_outl(stream_sync, tsm_io + TSM_STREAM3_SYNC);
+      ctrl_outl(0x0, tsm_io + 0x78 /* reserved ??? */);
 
-#if !defined(FORTIS_HDBOX) && !defined(UFS912) && !defined(SPARK) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA) && !defined(ATEVIO7500) && !defined(HS7810A) && !defined(HS7110) && !defined(IPBOX9900)
+#if !defined(FORTIS_HDBOX) && !defined(UFS912) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA) && !defined(ATEVIO7500) && !defined(HS7810A) && !defined(HS7110) && !defined(IPBOX9900)
       /* swts_req_trigger + pace cycles (1101) */
-      ctrl_outl(0x800000d, reg_config + SWTS_CFG(0));
-#elif defined (UFS912) || defined(SPARK) || defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110)
-      ctrl_outl(0x8f0000e, reg_config + SWTS_CFG(0));
-      ctrl_outl(0x8000000, reg_config + SWTS_CFG(1));
-      ctrl_outl(0x8000000, reg_config + SWTS_CFG(2));
+      ctrl_outl(0x800000d, tsm_io + SWTS_CFG(0));
+#elif defined (UFS912) || defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110)
+      ctrl_outl(0x8f0000e, tsm_io + SWTS_CFG(0));
+      ctrl_outl(0x8000000, tsm_io + SWTS_CFG(1));
+      ctrl_outl(0x8000000, tsm_io + SWTS_CFG(2));
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD)
-      ctrl_outl(0x88000010, reg_config + SWTS_CFG(0));
+      ctrl_outl(0x88000010, tsm_io + SWTS_CFG(0));
 #else
-      ctrl_outl(0x8000010, reg_config + SWTS_CFG(0));
+      ctrl_outl(0x8000010, tsm_io + SWTS_CFG(0));
 #endif
 
       /* auto count */
-      ctrl_outl(0x0, reg_config + TSM_PROG_CNT0);
+      ctrl_outl(0x0, tsm_io + TSM_PROG_CNT0);
 
 #if  !defined(TF7700) && !defined(UFS922) && !defined(FORTIS_HDBOX) && !defined(HL101) && !defined(VIP1_V2) && !defined(HOMECAST5101) && !defined(UFS912) && !defined(SPARK) && !defined(OCTAGON1008) && !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA) && !defined(ATEVIO7500) && !defined(HS7810A) && !defined(HS7110) && !defined(IPBOX9900) && !defined(HS7110)
       /* UFS910 stream configuration */
       /* route stream 2 to PTI */
-      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-      ctrl_outl(ret | 0x4, reg_config + TSM_PTI_SEL);
+      ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x4, tsm_io + TSM_PTI_SEL);
 
       /* set stream on */
-      ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
-      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM2_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM2_CFG);
+      ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM2_CFG);
 
       /* set firewire clock */
 
@@ -735,213 +914,213 @@ void stm_tsm_init (int use_cimax)
  */
 #ifdef FW1XX
       if (highSR)
-         ctrl_outl(0x7000f ,reg_config + TS_1394_CFG);
+         ctrl_outl(0x7000f ,tsm_io + TS_1394_CFG);
       else
-         ctrl_outl(0x70014 ,reg_config + TS_1394_CFG);
+         ctrl_outl(0x70014 ,tsm_io + TS_1394_CFG);
 #else
-/* logged from fw 202rc ->see also pti */
-         ctrl_outl(0x50014 ,reg_config + TS_1394_CFG);
+      /* logged from fw 202rc ->see also pti */
+      ctrl_outl(0x50014 ,tsm_io + TS_1394_CFG);
 #endif
 
 
       /* connect TSIN0 to TS1394 for routing tuner TS through the CIMAX */
-      ret = ctrl_inl(reg_config + TSM_1394_DEST);
-      ctrl_outl(ret | 0x1 , reg_config + TSM_1394_DEST);
+      ret = ctrl_inl(tsm_io + TSM_1394_DEST);
+      ctrl_outl(ret | 0x1 , tsm_io + TSM_1394_DEST);
 
-#elif defined(UFS912) || defined(SPARK) || defined(HS7810A)
-      ctrl_outl(0x15 ,reg_config + TSM_PTI_SEL);
+#elif defined(UFS912) || defined(HS7810A)
+      ctrl_outl(0x15 ,tsm_io + TSM_PTI_SEL);
 
       /* set stream 2 on */
-      ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
-      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM2_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM2_CFG);
+      ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM2_CFG);
 
       /* set stream 4 on */
-      ret = ctrl_inl(reg_config + TSM_STREAM4_CFG);
-      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM4_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM4_CFG);
+      ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM4_CFG);
 
 #elif  defined(TF7700) || defined(UFS922) || defined(HL101) || defined(VIP1_V2)
 
       /* TF7700 stream configuration */
       /* route stream 1 to PTI */
-      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-      ctrl_outl(ret | 0x2,reg_config + TSM_PTI_SEL);
+      ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x2,tsm_io + TSM_PTI_SEL);
 
       /* set stream 1 on */
-      ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
-      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM1_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM1_CFG);
+      ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM1_CFG);
 
       /* route stream 0 to PTI */
-      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-      ctrl_outl(ret | 0x1, reg_config + TSM_PTI_SEL);
+      ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x1, tsm_io + TSM_PTI_SEL);
 
       /* set firewire clock */
-      //ctrl_outl(0x70014 ,reg_config + TS_1394_CFG);
+      //ctrl_outl(0x70014 ,tsm_io + TS_1394_CFG);
 
       /* connect SWTS to TS1394 for routing through the StarCI2Win */
-      //ret = ctrl_inl(reg_config + TSM_1394_DEST);
-      //ctrl_outl(ret | 0x8 , reg_config + TSM_1394_DEST);
+      //ret = ctrl_inl(tsm_io + TSM_1394_DEST);
+      //ctrl_outl(ret | 0x8 , tsm_io + TSM_1394_DEST);
 #elif defined(FORTIS_HDBOX)
       /* route stream 1 to PTI */
-      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-      ctrl_outl(ret | 0x2,reg_config + TSM_PTI_SEL);
+      ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x2,tsm_io + TSM_PTI_SEL);
 
       /* route stream 2 to PTI */
-      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-      ctrl_outl(ret | 0x4, reg_config + TSM_PTI_SEL);
+      ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x4, tsm_io + TSM_PTI_SEL);
 
       /* set stream on */
-      ret = ctrl_inl(reg_config + TSM_STREAM5_CFG);
-      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM5_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM5_CFG);
+      ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM5_CFG);
 
       /* set stream on */
-      ret = ctrl_inl(reg_config + TSM_STREAM4_CFG);
-      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM4_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM4_CFG);
+      ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM4_CFG);
 
       /* set stream on */
-      ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
-      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM3_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM3_CFG);
+      ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM3_CFG);
 
       /* set stream on */
-      ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
-      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM2_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM2_CFG);
+      ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM2_CFG);
 
       /* set stream 1 on */
-      ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
-      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM1_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM1_CFG);
+      ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM1_CFG);
 
       /* route stream 0 to PTI */
-      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-      ctrl_outl(ret | 0x1, reg_config + TSM_PTI_SEL);
+      ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x1, tsm_io + TSM_PTI_SEL);
 
-      ctrl_outl(stream_sync, reg_config + TSM_STREAM4_SYNC);
-      ctrl_outl(stream_sync, reg_config + TSM_STREAM5_SYNC);
-      ctrl_outl(0x00, reg_config + TSM_STREAM6_SYNC);
+      ctrl_outl(stream_sync, tsm_io + TSM_STREAM4_SYNC);
+      ctrl_outl(stream_sync, tsm_io + TSM_STREAM5_SYNC);
+      ctrl_outl(0x00, tsm_io + TSM_STREAM6_SYNC);
 
-      ret = ctrl_inl(reg_config + TSM_1394_DEST);
-      ctrl_outl(ret | 0x38 , reg_config + TSM_1394_DEST);
+      ret = ctrl_inl(tsm_io + TSM_1394_DEST);
+      ctrl_outl(ret | 0x38 , tsm_io + TSM_1394_DEST);
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
       /* route stream 1 to PTI */
-      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-      ctrl_outl(ret | 0x2,reg_config + TSM_PTI_SEL);
+      ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x2,tsm_io + TSM_PTI_SEL);
 
       /* set stream 1 on */
-      ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
-      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM1_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM1_CFG);
+      ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM1_CFG);
 
       /* route stream 0 to PTI */
-      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-      ctrl_outl(ret | 0x1, reg_config + TSM_PTI_SEL);
+      ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x1, tsm_io + TSM_PTI_SEL);
 
-	   /* stream 5 and 6 
-	  ctrl_outl(0x1, reg_config + TSM_STREAM5_CFG);
-      ctrl_outl(0x1, reg_config + TSM_STREAM6_CFG);
-      ctrl_outl(0xbc4700, reg_config + TSM_STREAM5_SYNC);
-      ctrl_outl(0xbc4700, reg_config + TSM_STREAM6_SYNC);*/
+	   /* stream 5 and 6
+	  ctrl_outl(0x1, tsm_io + TSM_STREAM5_CFG);
+      ctrl_outl(0x1, tsm_io + TSM_STREAM6_CFG);
+      ctrl_outl(0xbc4700, tsm_io + TSM_STREAM5_SYNC);
+      ctrl_outl(0xbc4700, tsm_io + TSM_STREAM6_SYNC);*/
 
-      /* set 1394 stream Out 
-	  ctrl_outl(0x0001804c ,reg_config + TS_1394_CFG);
-      ret = ctrl_inl(reg_config + TSM_1394_DEST);
-      ctrl_outl(ret | 0x1 , reg_config + TSM_1394_DEST);*/
+      /* set 1394 stream Out
+	  ctrl_outl(0x0001804c ,tsm_io + TS_1394_CFG);
+      ret = ctrl_inl(tsm_io + TSM_1394_DEST);
+      ctrl_outl(ret | 0x1 , tsm_io + TSM_1394_DEST);*/
 #elif defined(HOMECAST5101)
-      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-      ctrl_outl(ret | 0x1,reg_config + TSM_PTI_SEL);
-      ret = ctrl_inl(reg_config + TSM_STREAM0_CFG);
-      ctrl_outl(ret | 0x0,reg_config + TSM_STREAM0_CFG);
+      ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x1,tsm_io + TSM_PTI_SEL);
+      ret = ctrl_inl(tsm_io + TSM_STREAM0_CFG);
+      ctrl_outl(ret | 0x0,tsm_io + TSM_STREAM0_CFG);
 #elif defined(OCTAGON1008)
       /* route stream 1 to PTI */
-      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-      ctrl_outl(ret | 0x2,reg_config + TSM_PTI_SEL);
+      ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x2,tsm_io + TSM_PTI_SEL);
 
       /* route stream 2 to PTI */
-      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-      ctrl_outl(ret | 0x4, reg_config + TSM_PTI_SEL);
+      ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x4, tsm_io + TSM_PTI_SEL);
 
       /* set stream on */
-      ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
-      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM2_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM2_CFG);
+      ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM2_CFG);
 
       /* set stream 1 on */
-      ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
-      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM1_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM1_CFG);
+      ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM1_CFG);
 
       /* route stream 0 to PTI */
-      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-      ctrl_outl(ret | 0x1, reg_config + TSM_PTI_SEL);
+      ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x1, tsm_io + TSM_PTI_SEL);
 
-      ret = ctrl_inl(reg_config + TSM_1394_DEST);
-      ctrl_outl(ret | 0x38 , reg_config + TSM_1394_DEST);
+      ret = ctrl_inl(tsm_io + TSM_1394_DEST);
+      ctrl_outl(ret | 0x38 , tsm_io + TSM_1394_DEST);
 #elif defined(ATEVIO7500)
 
       /* set stream 1 on */
-      ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
-      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM1_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM1_CFG);
+      ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM1_CFG);
 
       /* set stream 2 on */
-      ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
-      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM2_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM2_CFG);
+      ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM2_CFG);
 
       /* route stream 0/1/2 to PTI */
-      ctrl_outl(0x7, reg_config + TSM_PTI_SEL);
+      ctrl_outl(0x7, tsm_io + TSM_PTI_SEL);
 #elif defined(IPBOX9900)
 
      /* route stream 0/1 to PTI */
-      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-      ctrl_outl(ret | 0x2 | 0x1 | 0x4, reg_config + TSM_PTI_SEL);
+      ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x2 | 0x1 | 0x4, tsm_io + TSM_PTI_SEL);
 
       /* route stream 0/1 to PTI1 */
-      ret = ctrl_inl(reg_config + TSM_PTI1_SEL);
-      ctrl_outl(ret | 0x2 | 0x1 | 0x4, reg_config + TSM_PTI1_SEL);
+      ret = ctrl_inl(tsm_io + TSM_PTI1_SEL);
+      ctrl_outl(ret | 0x2 | 0x1 | 0x4, tsm_io + TSM_PTI1_SEL);
 
       /* set stream 1 on */
-      ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
-      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM1_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM1_CFG);
+      ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM1_CFG);
 
       /* set stream 2 on */
-      ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
-      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM2_CFG);
-#elif defined(ADB_BOX) 
+      ret = ctrl_inl(tsm_io + TSM_STREAM2_CFG);
+      ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM2_CFG);
+#elif defined(ADB_BOX)
 
 	/* route stream 1 to PTI */
-	ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-	ctrl_outl(ret | 0x2, reg_config + TSM_PTI_SEL);
+	ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+	ctrl_outl(ret | 0x2, tsm_io + TSM_PTI_SEL);
 
 	/* set stream 1 on */
-	ret = ctrl_inl(reg_config + TSM_STREAM1_CFG);
-	ctrl_outl(ret | 0x80,reg_config + TSM_STREAM1_CFG);
+	ret = ctrl_inl(tsm_io + TSM_STREAM1_CFG);
+	ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM1_CFG);
 
 	/* route stream 2 to PTI */
-	ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-	ctrl_outl(ret | 0x4, reg_config + TSM_PTI_SEL);
+	ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+	ctrl_outl(ret | 0x4, tsm_io + TSM_PTI_SEL);
 
 	/* set stream 2 on */
-	ret = ctrl_inl(reg_config + TSM_STREAM2_CFG);
-	ctrl_outl(ret | 0x80,reg_config + TSM_STREAM2_CFG);
+	ret = ctrl_inl(tsm_io + TSM_STREAM2_CFG);
+	ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM2_CFG);
 
 	/* route stream 0 to PTI */
-	ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-	ctrl_outl(ret | 0x1, reg_config + TSM_PTI_SEL);            
+	ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+	ctrl_outl(ret | 0x1, tsm_io + TSM_PTI_SEL);
 #elif defined(HS7110)
 	/* route stream 0 to PTI */
-	ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-	ctrl_outl(ret | 0x1, reg_config + TSM_PTI_SEL);            
+	ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+	ctrl_outl(ret | 0x1, tsm_io + TSM_PTI_SEL);
 #endif
       /* set stream0 on */
-      ret = ctrl_inl(reg_config + TSM_STREAM0_CFG);
-      ctrl_outl(ret | 0x80,reg_config + TSM_STREAM0_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM0_CFG);
+      ctrl_outl(ret | 0x80,tsm_io + TSM_STREAM0_CFG);
 
 #if !defined(CUBEREVO) && !defined(CUBEREVO_MINI2) && \
     !defined(CUBEREVO_MINI) && !defined(CUBEREVO_250HD) && !defined(CUBEREVO_2000HD) && \
     !defined(CUBEREVO_9500HD) && !defined(CUBEREVO_MINI_FTA) && \
     !defined(HS7110)      /* Dagobert: set-up swts */
-      ctrl_outl( TSM_SWTS_REQ_TRIG(128/16) | 0x10, reg_config + TSM_SWTS_CFG(0));
+      ctrl_outl( TSM_SWTS_REQ_TRIG(128/16) | 0x10, tsm_io + TSM_SWTS_CFG(0));
 
       /* SWTS0 to PTI */
-      ret = ctrl_inl(reg_config + TSM_PTI_SEL);
-      ctrl_outl(ret | 0x8, reg_config + TSM_PTI_SEL);
+      ret = ctrl_inl(tsm_io + TSM_PTI_SEL);
+      ctrl_outl(ret | 0x8, tsm_io + TSM_PTI_SEL);
 
-		ret = ctrl_inl(reg_config + TSM_STREAM3_CFG);
+      ret = ctrl_inl(tsm_io + TSM_STREAM3_CFG);
       ctrl_outl( (ret & TSM_RAM_ALLOC_START(0xff)) |
-		           TSM_PRIORITY(0x7) | TSM_STREAM_ON | TSM_ADD_TAG_BYTES | TSM_SYNC_NOT_ASYNC | TSM_ASYNC_SOP_TOKEN, reg_config + TSM_STREAM3_CFG);
+		           TSM_PRIORITY(0x7) | TSM_STREAM_ON | TSM_ADD_TAG_BYTES | TSM_SYNC_NOT_ASYNC | TSM_ASYNC_SOP_TOKEN, tsm_io + TSM_STREAM3_CFG);
 
       tsm_handle.swts_channel = 3;
       tsm_handle.tsm_swts = (unsigned long)ioremap (0x1A300000, 0x1000);
@@ -1000,21 +1179,22 @@ Dies sind die Options (also wohl auch view channel):
        STM_TSM_CHANNEL_3       = 0x030000,
 
 */
-	#if	defined(SPARK) || defined(HS7110)
-	ctrl_outl(0x0,   tsm_io + TSM_STREAM0_CFG);
-	ctrl_outl(0x400, tsm_io + TSM_STREAM1_CFG);
-	ctrl_outl(0x500, tsm_io + TSM_STREAM2_CFG);
-	ctrl_outl(0xb00, tsm_io + TSM_STREAM3_CFG);
-	ctrl_outl(0xc00, tsm_io + TSM_STREAM4_CFG);
+#if	defined(SPARK) || defined(HS7110)
+   /* RAM partitioning of streams */
+	ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);
+	ctrl_outl(0x400,  tsm_io + TSM_STREAM1_CFG);
+	ctrl_outl(0x500,  tsm_io + TSM_STREAM2_CFG);
+	ctrl_outl(0xb00,  tsm_io + TSM_STREAM3_CFG);
+	ctrl_outl(0xc00,  tsm_io + TSM_STREAM4_CFG);
 	ctrl_outl(0x1d00, tsm_io + TSM_STREAM5_CFG);
 	ctrl_outl(0x1e00, tsm_io + TSM_STREAM6_CFG);
 	ctrl_outl(0x1f00, tsm_io + TSM_STREAM7_CFG);
-	#else
+#else
   	for (n=0;n<5;n++)
   	{
 		writel( TSM_RAM_ALLOC_START( 0x3 *n ), tsm_io + TSM_STREAM_CONF(n));
   	}
-  	#endif  /* SPARK */
+#endif  /* SPARK */
 
   	for (n=0;n< 4/* config->nr_channels */;n++)
   	{

@@ -72,8 +72,6 @@ extern void demultiplexDvbPackets(struct dvb_demux* demux, const u8 *buf, int co
 extern void pti_hal_init ( struct stpti *pti , struct dvb_demux* demux, void (*_demultiplexDvbPackets)(struct dvb_demux* demux, const u8 *buf, int count), int numVideoBuffers);
 
 extern int swts;
-extern int TSsource0;
-extern int TSsource1;
 
 int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
 		       struct DeviceContext_s *DeviceContext )
@@ -174,7 +172,7 @@ int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
 	       int err;
 	       if ((err = pti_hal_descrambler_link(pSession->session, pSession->descramblers[pSession->descramblerindex[vLoop]], pSession->slots[vLoop])) != 0)
 	         printk("Error linking slot %d to descrambler %d, err = %d\n", pSession->slots[vLoop], pSession->descramblers[pSession->descramblerindex[vLoop]], err);
-	       else 
+	       else
              printk("linking slot %d to descrambler %d, session = %d type = %d\n", pSession->slots[vLoop], pSession->descramblers[pSession->descramblerindex[vLoop]], pSession->session, dvbdmxfeed->pes_type);
 	     }
       }
@@ -226,7 +224,7 @@ int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
 	      printk("Error linking slot %d to descrambler %d, err = %d\n",
                 pSession->slots[pSession->num_pids],
                 pSession->descramblers[pSession->descramblerindex[pSession->num_pids]], err);
-     else 
+     else
           printk("linking slot %d to descrambler %d, session = %d type=%d\n", pSession->slots[pSession->num_pids], pSession->descramblers[pSession->descramblerindex[pSession->num_pids]], pSession->session, dvbdmxfeed->pes_type);
     }
   }
@@ -356,26 +354,19 @@ static int convert_source ( const dmx_source_t source)
 {
   int tag = TS_NOTAGS;
 
-  // spider: it is recommended to add as module parameter
-
   switch ( source )
   {
   case DMX_SOURCE_FRONT0:
-#if defined(UFS910) || defined(OCTAGON1008) || defined(UFS912) || defined(ADB_BOX)
-    /* in UFS910 the CIMAX output is connected to TSIN2 */
+#if defined(UFS910) || defined(OCTAGON1008) || defined(UFS912) || defined(ADB_BOX) || defined(SPARK)
     tag = TSIN2;
-#elif defined(SPARK) || defined(SPARK7162)
-    tag = TSsource0;
 #else
     tag = TSIN0;
 #endif
     break;
 
   case DMX_SOURCE_FRONT1:
-#if defined(ADB_BOX) 
+#if defined(ADB_BOX)
     tag = TSIN0;
-#elif defined(SPARK) || defined(SPARK7162)
-    tag = TSsource1;
 #else
     tag = TSIN1;
 #endif
@@ -386,6 +377,7 @@ static int convert_source ( const dmx_source_t source)
     tag = TSIN2;
     break;
 #endif
+
   case DMX_SOURCE_DVR0:
     tag = SWTS0;
     break;
@@ -448,7 +440,7 @@ void ptiInit ( struct DeviceContext_s *pContext )
 
 #if defined(FORTIS_HDBOX) || defined(UFS912) || defined(SPARK) || defined(HS7810A) || defined(HS7110)
     stv090x_register_frontend(&pContext->DvbContext->DvbAdapter);
-#elif defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55) || defined(ADB_BOX) 
+#elif defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55) || defined(ADB_BOX)
     fe_core_register_frontend( &pContext->DvbContext->DvbAdapter);
 #elif defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA)
     socket_register_adapter(&pContext->DvbContext->DvbAdapter);

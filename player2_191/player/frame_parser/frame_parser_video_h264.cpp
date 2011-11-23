@@ -4832,7 +4832,7 @@ report( severity_info, "MMCO(%d %d %d) - %d - %3d %3d %3d %3d\n", Field, Top, Fr
 	    }
 	}
 
-	if( (NumShortTerm + NumLongTerm) > NumReferenceFrames )
+	/*if( (NumShortTerm + NumLongTerm) > NumReferenceFrames )
 	{
 	    report( severity_error, "FrameParser_VideoH264_c::MarkReferencePictures - After MMCO operations, \n\t\tthere are more than the allowed number of reference frames.\n\t\tThe oldest will be discarded." );
 	    for( i=0,j=1; j<(NumReferenceFrames+1); j++ )
@@ -4840,7 +4840,7 @@ report( severity_info, "MMCO(%d %d %d) - %d - %3d %3d %3d %3d\n", Field, Top, Fr
 		    i = j;
 
 	    ReleaseReference( true, i, ReferenceFrames[CurrentEntry].Usage );
-	}
+	}*/
 
 #ifdef DUMP_REFLISTS
     report( severity_info, "\n    List of reference frames After MMCO (%d %d):-\n", NumShortTerm, NumLongTerm );
