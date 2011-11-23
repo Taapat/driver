@@ -26,9 +26,9 @@
 #include "soc/sti7111/sti7111reg.h"
 #include "soc/sti7111/sti7111device.h"
 
-#if defined(CONFIG_SH_ST_MB618)
+#if defined(CONFIG_SH_ST_MB618) || defined(CONFIG_SH_ST_SAT7111)
 
-#if (defined(UFS912) || defined(SPARK) || defined(HS7810A) || defined(HS7110)) && defined(__TDT__)
+#if (defined(UFS912) || defined(SPARK) || defined(HS7110) || defined(HS7810A)) && defined(__TDT__)
 #define HAS_DSUB 0
 #warning fixme: take a look if we have DSUB
 #else
@@ -69,7 +69,7 @@ static struct stmcore_display_pipeline_data platform_data[] = {
 #endif
     .main_output_id           = STi7111_OUTPUT_IDX_VDP0_MAIN,
     .hdmi_output_id           = STi7111_OUTPUT_IDX_VDP0_HDMI,
-#if (defined(UFS912) || defined(HS7810A) || defined(HS7110)) && defined(__TDT__)
+#if (defined(UFS912) || defined(SPARK) || defined(HS7810A) || defined(HS7110)) && defined(__TDT__)
     .dvo_output_id            = -1,
 #else
     .dvo_output_id            = STi7111_OUTPUT_IDX_DVO0,
