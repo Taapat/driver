@@ -749,7 +749,7 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x0, tsm_io + TSM_STREAM6_CFG2);
       ctrl_outl(0x0, tsm_io + TSM_STREAM7_CFG2);
 
-#elif defined(HS7810A) || defined(HS7110)
+#elif defined(HS7810A)
       /* RAM partitioning of streams */
       ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);     //448kb (8*64)
       ctrl_outl(0x800,  tsm_io + TSM_STREAM1_CFG);     //448kb (6*64)
