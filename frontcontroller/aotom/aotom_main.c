@@ -2,6 +2,7 @@
  * aotom.c
  *
  * (c) 2010 Spider-Team
+ * (c) 2011 oSaoYa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +21,7 @@
  */
 
 /*
- * edision argus vip2 frontpanel driver.
+ * fulan front panel driver.
  *
  * Devices:
  *	- /dev/vfd (vfd ioctls and read/write function)
@@ -44,7 +45,7 @@
 #include <linux/poll.h>
 #include <linux/workqueue.h>
 
-#include "aotom.h"
+#include "aotom_main.h"
 #include "utf.h"
 
 static short paramDebug = 0;
@@ -67,9 +68,6 @@ if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
 #define REC_REPEAT_KEY  2
 
 static char *gmt = "+0000";
-
-module_param(gmt,charp,0);
-MODULE_PARM_DESC(gmt, "gmt offset (default +0000");
 
 typedef struct
 {
@@ -119,11 +117,6 @@ static struct saved_data_s lastdata;
  * by a semaphore and the threads goes to sleep until
  * the answer has been received or a timeout occurs.
  */
-
-#define VFD_RW_SEM
-#ifdef VFD_RW_SEM
-struct rw_semaphore vfd_rws;
-#endif
 
 unsigned char ASCII[48][2] =
 {
@@ -367,13 +360,7 @@ int aotomSetTime(char* time)
 int vfd_init_func(void)
 {
 	dprintk(5, "%s >\n", __func__);
-	printk("Edision argus vip2 VFD module initializing\n");
-
-
-#ifdef VFD_RW_SEM
-    init_rwsem(&vfd_rws);
-#endif
-
+	printk("Fulan VFD module initializing\n");
 	return 0;
 }
 
@@ -772,7 +759,7 @@ static struct file_operations vfd_fops =
 
 /*----- Button driver -------*/
 
-static char *button_driver_name = "argus vip2 frontpanel buttons";
+static char *button_driver_name = "fulan front panel buttons";
 static struct input_dev *button_dev;
 static int button_value = -1;
 static int bad_polling = 1;
@@ -937,7 +924,7 @@ static int __init aotom_init_module(void)
 
 	dprintk(5, "%s >\n", __func__);
 
-	printk("Edisio argus vip2 second stage front panel driver\n");
+	printk("Fulan front panel driver\n");
 
 	sema_init(&display_sem,1);
 
@@ -973,7 +960,7 @@ static void __exit aotom_cleanup_module(void)
 	//kthread_stop(time_thread);
 
 	unregister_chrdev(VFD_MAJOR,"VFD");
-	printk("Edision argus vip2 front panel module unloading\n");
+	printk("Fulan front panel module unloading\n");
 }
 
 module_init(aotom_init_module);
@@ -982,6 +969,9 @@ module_exit(aotom_cleanup_module);
 module_param(paramDebug, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 MODULE_PARM_DESC(paramDebug, "Debug Output 0=disabled >0=enabled(debuglevel)");
 
-MODULE_DESCRIPTION("VFD module for Edision argus vip2");
-MODULE_AUTHOR("Spider-Team");
+module_param(gmt,charp,0);
+MODULE_PARM_DESC(gmt, "gmt offset (default +0000");
+
+MODULE_DESCRIPTION("VFD module for fulan boxes");
+MODULE_AUTHOR("Spider-Team, oSaoYa");
 MODULE_LICENSE("GPL");
