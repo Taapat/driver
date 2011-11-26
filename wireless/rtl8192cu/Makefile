@@ -4,24 +4,22 @@ else
 CFLAGS += $(CCFLAGSY)
 endif
 
-EXTRA_CFLAGS += -O1 
+EXTRA_CFLAGS += -O2
 EXTRA_CFLAGS += -Wno-unused-variable -Wno-unused-value -Wno-unused-label -Wno-unused-parameter -Wno-uninitialized
 EXTRA_CFLAGS += -Wno-unused -Wno-unused-function
 EXTRA_CFLAGS += -I$(src)/include
 
-CONFIG_AUTOCFG_CP               =  n
-
-CONFIG_RTL8712					=	n
-CONFIG_RTL8192C					=   y
-
-CONFIG_USB_HCI					=	y
-CONFIG_SDIO_HCI					= 	n
-CONFIG_MP_INCLUDED				=	n
-CONFIG_POWER_SAVING				=	n
-CONFIG_USB_AUTOSUSPEND			=	n
-CONFIG_HW_PWRP_DETECTION		=	n
-CONFIG_RTL8192CU_REDEFINE_1X1 	=	n
-CONFIG_DRVEXT_MODULE			=	n
+CONFIG_AUTOCFG_CP               = n
+CONFIG_RTL8712					= n
+CONFIG_RTL8192C					= y
+CONFIG_USB_HCI					= y
+CONFIG_SDIO_HCI					= n
+CONFIG_MP_INCLUDED				= n
+CONFIG_POWER_SAVING				= n
+CONFIG_USB_AUTOSUSPEND			= n
+CONFIG_HW_PWRP_DETECTION		= n
+CONFIG_RTL8192CU_REDEFINE_1X1 	= n
+CONFIG_DRVEXT_MODULE			= n
 
 ifeq ($(CONFIG_RTL8712), y)
 
@@ -62,15 +60,6 @@ endif
 
 ifeq ($(CONFIG_USB_HCI), y)
  
-ifeq ($(CONFIG_AUTOCFG_CP), y)
-DRIVER_TOPDIR:=$(shell pwd)/..
-$(shell cp $(DRIVER_TOPDIR)/autoconf_$(RTL871X)_usb_linux.h $(DRIVER_TOPDIR)/include/autoconf.h)
-endif
-
-#ifeq ($(CONFIG_BEST_BATTERYLIFE), y)
-#EXTRA_CFLAGS += -DCONFIG_BEST_BATTERYLIFE
-#endif
-
 ifeq ($(CONFIG_POWER_SAVING), y)
 EXTRA_CFLAGS += -DCONFIG_POWER_SAVING
 endif
