@@ -442,7 +442,8 @@ int setMuxSource(int source)
 int cic_init_hw(void)
 {
 	struct hs7110_cic_state *state = &ci_state;
-	
+	int i;
+    
     hs7110_write_register_u32(EMIConfigBaseAddress + EMIBank2 + EMI_CFG_DATA0, 0xc447f9);
     hs7110_write_register_u32(EMIConfigBaseAddress + EMIBank2 + EMI_CFG_DATA1, 0xff86a8a8);
     hs7110_write_register_u32(EMIConfigBaseAddress + EMIBank2 + EMI_CFG_DATA2, 0xff86a8a8);
@@ -474,14 +475,13 @@ int cic_init_hw(void)
     slot_attr_mem[0] = 0x6008000;
     slot_ctrl_mem[0] = 0x6000000;
 
-    state->module_ready[0] = 0;
-    state->module_ready[1] = 0;
-    state->module_present[0] = 0;
-    state->module_present[1] = 0;
-
-    state->detection_timeout[0] = 0;
-    state->detection_timeout[1] = 0;
-
+    for (i = 0; i < cNumberSlots; i++)
+    {
+        state->module_ready[i] = 0;
+        state->module_present[i] = 0;
+        state->detection_timeout[i] = 0;
+    }
+    
 	state->slot_reset[0] = stpio_request_pin (6, 2, "SLOT_RESET", STPIO_OUT);
 	state->ci_enable = stpio_request_pin (6, 5, "CI_ENABLE", STPIO_OUT);
 	state->module_detect = stpio_request_pin (6, 0, "CI_DETECT", STPIO_IN);
@@ -511,7 +511,12 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 
 	core->dvb_adap = dvb_adap;
 
+printk("dvb_adap %p\n", dvb_adap);
+printk("core->dvb_adap %p\n", core->dvb_adap);
+
 	memset(&core->ca, 0, sizeof(struct dvb_ca_en50221));
+
+printk("core->dvb_adap %p\n", core->dvb_adap);
 
 	/* register CI interface */
 	core->ca.owner = THIS_MODULE;
@@ -528,11 +533,14 @@ int init_ci_controller(struct dvb_adapter* dvb_adap)
 
 	state->core 			      = core;
 	core->ca.data 			      = state;
+printk("core->dvb_adap %p\n", core->dvb_adap);
 
 	cic_init_hw();
+printk("core->dvb_adap %p\n", core->dvb_adap);
 	
 	dprintk(1, "init_hs7110_cic: call dvb_ca_en50221_init\n");
 
+printk("%p %d\n", core->dvb_adap, cNumberSlots);
 	if ((result = dvb_ca_en50221_init(core->dvb_adap, &core->ca, 0, cNumberSlots)) != 0) {
 		printk(KERN_ERR "ca0 initialisation failed.\n");
 		goto error;
