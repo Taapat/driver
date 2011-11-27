@@ -168,19 +168,44 @@ void CSTi7111MainOutput::StartHDClocks(const stm_mode_line_t *mode)
   DENTRY();
 
 #if defined(__TDT__) && (defined(UFS912) || defined(SPARK) || defined(HS7810A) || defined(HS7110))
-  WriteClkReg(CKGB_LCK, CKGB_LCK_UNLOCK);
+  if(mode->TimingParams.ulPixelClock == 148500000 ||
+     mode->TimingParams.ulPixelClock == 148351648)
+  {
+    /*
+     * Set the clock divides for each block for HD modes
+     */
+    val = ReadClkReg(CKGB_DISPLAY_CFG);
+    /*
+     * Preserve the aux pipeline clock configuration.
+     */
+    val &= (CKGB_CFG_PIX_SD_FS1(CKGB_CFG_MASK) |
+            CKGB_CFG_DISP_ID(CKGB_CFG_MASK)    |
+            CKGB_CFG_PIX_HD_FS1_N_FS0);
+    /*
+     * 1080p 50/60Hz
+     */
+    val |= CKGB_CFG_TMDS_HDMI(CKGB_CFG_BYPASS);
+    val |= CKGB_CFG_DISP_HD(CKGB_CFG_BYPASS);
+    val |= CKGB_CFG_656(CKGB_CFG_BYPASS);
+    val |= CKGB_CFG_PIX_SD_FS0(CKGB_CFG_BYPASS);
 
-  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_DISPLAY_CFG, 0x3000);
+    WriteClkReg(CKGB_DISPLAY_CFG, val);
 
-  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x0);
+  }
+  else
+  {
 
-  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_MD3, 0x19);
-  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_PE3, 0x3334);
-  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_SDIV3, 0x00);
+     WriteDevReg(STi7111_CLKGEN_BASE + CKGB_DISPLAY_CFG, 0x3000);
 
-  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x1);
-  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x0);
+     WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x0);
 
+     WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_MD3, 0x19);
+     WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_PE3, 0x3334);
+     WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_SDIV3, 0x00);
+
+     WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x1);
+     WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x0);
+   }
 #else
   WriteClkReg(CKGB_LCK, CKGB_LCK_UNLOCK);
 

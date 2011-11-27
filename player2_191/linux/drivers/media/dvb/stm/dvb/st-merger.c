@@ -343,6 +343,7 @@ out_unmap:
 
   return ret;
 }
+
 EXPORT_SYMBOL(stm_tsm_inject_user_data);
 
 /* ****************************************
@@ -418,14 +419,24 @@ void spark_stm_tsm_init ( void )
     ctrl_outl(0x0, tsm_io + TSM_SYS_CFG);
     ctrl_outl(0x0, tsm_io + TSM_SYS_CFG); /* 2 times ? */
 
-    /* RAM partitioning of streams max 1984kb (31*64) */
-    ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);
-    ctrl_outl(0x400,  tsm_io + TSM_STREAM1_CFG);
-    ctrl_outl(0x500,  tsm_io + TSM_STREAM2_CFG);
-    ctrl_outl(0xb00,  tsm_io + TSM_STREAM3_CFG);
-    ctrl_outl(0xc00,  tsm_io + TSM_STREAM4_CFG);
+    /* RAM partitioning of streams */
+
+    /* we use a little more ram for the tsm stream because
+     * of overflow of tsm in case of hight cpu load on
+     * sky sport hd live events. this leads to loss of
+     * some ts packets!
+     */
+
+    ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);     //448kb (8*64)
+    ctrl_outl(0x800,  tsm_io + TSM_STREAM1_CFG);     //448kb (6*64)
+    ctrl_outl(0xe00,  tsm_io + TSM_STREAM2_CFG);     //384kb (6*64)
+    ctrl_outl(0x1400, tsm_io + TSM_STREAM3_CFG);     //384kb (6*64)
+    ctrl_outl(0x1a00, tsm_io + TSM_STREAM4_CFG);     //320kb (5*64)
     ctrl_outl(0x1d00, tsm_io + TSM_STREAM5_CFG);
     ctrl_outl(0x1e00, tsm_io + TSM_STREAM6_CFG);
+    /* I think this is a fault value !!! 0x1f00 is maximum but
+     * this is the lower address. nevertheless, stream7 not needed
+     */
     ctrl_outl(0x1f00, tsm_io + TSM_STREAM7_CFG);
 
     ctrl_outl(0x0, tsm_io + TSM_STREAM0_CFG2);
@@ -749,8 +760,15 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x0, tsm_io + TSM_STREAM6_CFG2);
       ctrl_outl(0x0, tsm_io + TSM_STREAM7_CFG2);
 
-#elif defined(HS7810A)
+#elif defined(HS7810A) || defined(HS7110)
       /* RAM partitioning of streams */
+
+      /* we use a little more ram for the tsm stream because
+       * of overflow of tsm in case of hight cpu load on
+       * sky sport hd live events. this leads to loss of
+       * some ts packets!
+       */
+
       ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);     //448kb (8*64)
       ctrl_outl(0x800,  tsm_io + TSM_STREAM1_CFG);     //448kb (6*64)
       ctrl_outl(0xe00,  tsm_io + TSM_STREAM2_CFG);     //384kb (6*64)
@@ -758,9 +776,9 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x1a00, tsm_io + TSM_STREAM4_CFG);     //320kb (5*64)
       ctrl_outl(0x1d00, tsm_io + TSM_STREAM5_CFG);
       ctrl_outl(0x1e00, tsm_io + TSM_STREAM6_CFG);
-/* I think this is a fault value !!! 0x1f00 is maximum but
- * this is the lower address. nevertheless, stream7 not needed
- */
+      /* I think this is a fault value !!! 0x1f00 is maximum but
+       * this is the lower address. nevertheless, stream7 not needed
+       */
       ctrl_outl(0x1f00, tsm_io + TSM_STREAM7_CFG);
 
       ctrl_outl(0x0, tsm_io + TSM_STREAM0_CFG2);
@@ -906,12 +924,12 @@ void stm_tsm_init (int use_cimax)
       /* set firewire clock */
 
       /* This solves the SR 30000 Problem */
-/* this must be 0x70010 for SR 30000. for some modules
- * this must be 0x70012 or 0x70014 :-(
- * ->also the original pvrmain (fw 106) makes CC trouble
- * with this setting and some modules.
- * 0xf from 106 pvrmain
- */
+      /* this must be 0x70010 for SR 30000. for some modules
+       * this must be 0x70012 or 0x70014 :-(
+       * ->also the original pvrmain (fw 106) makes CC trouble
+       * with this setting and some modules.
+       * 0xf from 106 pvrmain
+       */
 #ifdef FW1XX
       if (highSR)
          ctrl_outl(0x7000f ,tsm_io + TS_1394_CFG);
