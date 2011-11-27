@@ -4,7 +4,7 @@ else
 CFLAGS += $(CCFLAGSY)
 endif
 
-EXTRA_CFLAGS += -O2
+EXTRA_CFLAGS += -O2 -DCONFIG_LITTLE_ENDIAN
 EXTRA_CFLAGS += -Wno-unused-variable -Wno-unused-value -Wno-unused-label -Wno-unused-parameter -Wno-uninitialized
 EXTRA_CFLAGS += -Wno-unused -Wno-unused-function
 EXTRA_CFLAGS += -I$(src)/include
