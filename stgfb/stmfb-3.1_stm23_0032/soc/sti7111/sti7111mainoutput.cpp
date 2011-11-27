@@ -167,7 +167,7 @@ void CSTi7111MainOutput::StartHDClocks(const stm_mode_line_t *mode)
 
   DENTRY();
 
-#if defined(__TDT__) && (defined(UFS912) || defined(SPARK) || defined(HS7810A))
+#if defined(__TDT__) && (defined(UFS912) || defined(SPARK) || defined(HS7810A) || defined(HS7110))
   if(mode->TimingParams.ulPixelClock == 148500000 ||
      mode->TimingParams.ulPixelClock == 148351648)
   {
