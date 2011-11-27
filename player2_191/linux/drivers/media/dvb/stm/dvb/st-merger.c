@@ -749,8 +749,15 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x0, tsm_io + TSM_STREAM6_CFG2);
       ctrl_outl(0x0, tsm_io + TSM_STREAM7_CFG2);
 
-#elif defined(HS7810A)
+#elif defined(HS7810A) || defined(HS7110)
       /* RAM partitioning of streams */
+
+/* we use a little more ram for the tsm stream because
+ * of overflow of tsm in case of hight cpu load on 
+ * sky sport hd live events. this leads to loss of
+ * some ts packets!
+ */
+
       ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);     //448kb (8*64)
       ctrl_outl(0x800,  tsm_io + TSM_STREAM1_CFG);     //448kb (6*64)
       ctrl_outl(0xe00,  tsm_io + TSM_STREAM2_CFG);     //384kb (6*64)
