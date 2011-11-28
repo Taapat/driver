@@ -899,7 +899,7 @@ static int rtw_drv_init(struct usb_interface *pusb_intf, const struct usb_device
 	//step 1-1., decide the chip_type via vid/pid
 	decide_chip_type_by_usb_device_id(padapter, pdid);	
 
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,18))
+/*   #if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,18))
 	if(padapter->pwrctrlpriv.bSupportRemoteWakeup)
 	{
 		pdvobjpriv->pusbdev->do_remote_wakeup=1;
@@ -908,7 +908,7 @@ static int rtw_drv_init(struct usb_interface *pusb_intf, const struct usb_device
 		printk("\n  padapter->pwrctrlpriv.bSupportRemoteWakeup~~~~~~\n");
 		printk("\n  padapter->pwrctrlpriv.bSupportRemoteWakeup~~~[%d]~~~\n",device_may_wakeup(&pusb_intf->dev));
 	}
-#endif
+#endif */
 
 #ifdef CONFIG_AUTOSUSPEND
 	if( padapter->registrypriv.power_mgnt != PS_MODE_ACTIVE )
