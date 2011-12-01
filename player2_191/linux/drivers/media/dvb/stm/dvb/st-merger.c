@@ -1197,7 +1197,7 @@ Dies sind die Options (also wohl auch view channel):
        STM_TSM_CHANNEL_3       = 0x030000,
 
 */
-#if	defined(SPARK) || defined(HS7110)
+#if	defined(SPARK)
    /* RAM partitioning of streams */
 	ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);
 	ctrl_outl(0x400,  tsm_io + TSM_STREAM1_CFG);
