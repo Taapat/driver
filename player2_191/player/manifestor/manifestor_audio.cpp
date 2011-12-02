@@ -518,7 +518,6 @@ unsigned int BufferIndex;
 	OS_LockMutex(&BufferQueueLock);
 	if( BufferQueueHead != INVALID_BUFFER_ID )
 	{
-/* deaktivate for orfhd sound test
 #ifdef __TDT__
                         if(QueuedBufferCount < 3) inject_silent_count = 3;
                         if(inject_silent_count > 0)
@@ -528,7 +527,6 @@ unsigned int BufferIndex;
                                 return ManifestorWouldBlock;
                         }
 #endif
-*/
 	    BufferIndex = BufferQueueHead;
 	    BufferQueueHead = StreamBuffer[BufferIndex].NextIndex;
             
