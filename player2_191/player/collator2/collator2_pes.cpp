@@ -31,6 +31,9 @@ Date        Modification                                    Name
 
 ************************************************************************/
 
+// Use wyplay findnextstartcode optimization
+//#define WYPLAY_OPTIMIZE
+
 // /////////////////////////////////////////////////////////////////////
 //
 //      Include any component headers
@@ -264,7 +267,7 @@ int             DataLeft;
     IgnoreLower                 = Configuration.IgnoreCodesRangeStart;
     IgnoreUpper                 = Configuration.IgnoreCodesRangeEnd;
 
-#if 1
+#if WYPLAY_OPTIMIZE
     StartCode = &RemainingData[0];
     DataLeft  = RemainingLength;
 
