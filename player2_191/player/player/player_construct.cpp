@@ -179,7 +179,7 @@ unsigned int    i;
         SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyDiscardLateFrames,                                       PolicyValueDiscardLateFramesAfterSynchronize );
     // Usage of the immediate start depends on the LateFrame policy. Though, it is not
     // quite clear what is meant by "agressive policy".
-    SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyVideoStartImmediate,                                 PolicyValueApply );
+//    SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyVideoStartImmediate,                                 PolicyValueApply );
 
     // This will fix N24 an hopefully every other interlaced-progressive miss interpretertation 
     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyMPEG2DoNotHonourProgressiveFrameFlag,                PolicyValueApply );
