@@ -740,6 +740,16 @@ void pti_hal_init ( struct stpti *pti , struct dvb_demux* demux, void (*_demulti
 
   memset(internal, 0, sizeof(struct pti_internal));
 
+	#if defined(SPARK7162)
+	{
+		int i;
+		for (i = 0; i < TAG_COUNT; i++)
+		{
+			internal->demux_tag[i] = i;
+		}
+	}
+	#endif
+
   /* Allocate the back buffer */
   internal->back_buffer = (char*)bigphysarea_alloc_pages((PTI_BUFFER_SIZE+PAGE_SIZE-1) / PAGE_SIZE,0,GFP_KERNEL);
 

@@ -359,6 +359,8 @@ static int convert_source ( const dmx_source_t source)
   case DMX_SOURCE_FRONT0:
 #if defined(UFS910) || defined(OCTAGON1008) || defined(UFS912) || defined(ADB_BOX) || defined(SPARK)
     tag = TSIN2;
+#elif defined(SPARK7162)
+    tag = TSIN2;
 #else
     tag = TSIN0;
 #endif
@@ -374,7 +376,7 @@ static int convert_source ( const dmx_source_t source)
 
 #if defined(SPARK7162)
   case DMX_SOURCE_FRONT2:
-    tag = TSIN2;
+    tag = TSIN0;
     break;
 #endif
 

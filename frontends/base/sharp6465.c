@@ -21,7 +21,7 @@ static long calculate_mop_xtal(void);
 static	void calculate_mop_ic(u32 freq, u32 baud, int *byte); //[kHz]
 static	void calculate_mop_divider(u32 freq, int *byte);
 static	void calculate_mop_uv_cp(u32 freq, int *cp, int *uv);
-static	long calculate_mop_if(void);
+//static	long calculate_mop_if(void);
 static long calculate_mop_step(int *byte);
 static	void calculate_mop_bw(u32 baud, int *byte);
 
@@ -48,7 +48,7 @@ static int sharp6465_write(struct sharp6465_state *state, u8 *buf, u8 length)
 	struct i2c_msg msg = { .addr = config->addr, .flags = 0, .buf = buf, .len = length };
 
 	printk(KERN_ERR "%s: state->i2c=<%d>, config->addr = %d\n",
-			__func__, state->i2c, config->addr);
+			__func__, (int)state->i2c, config->addr);
 
 	err = i2c_transfer(state->i2c, &msg, 1);
 	if (err != 1)
@@ -126,7 +126,8 @@ static	void calculate_mop_divider(u32 freq, int *byte)
 static	void calculate_mop_uv_cp(u32 freq, int *cp, int *uv)
 {
 	int i;
-	int cp_value=599,CP_DATA[601];
+	int cp_value=599;
+	int *CP_DATA = kzalloc(sizeof(int) * 601, GFP_KERNEL);
 	/*charge pump lib*/
 	for(i=0;i<=600;i++)
 		CP_DATA[i]=0;
@@ -147,23 +148,25 @@ static	void calculate_mop_uv_cp(u32 freq, int *cp, int *uv)
 		else  cp_value=600;
 	}
 	*cp=CP_DATA[cp_value];
+	kfree(CP_DATA);
 }
 
+#if 0
 static	long calculate_mop_if()
 {
 	long if_freq;
 	if_freq=(long)36166667/1000;
 	return if_freq;
-
 }
+#endif  /* 0 */
 
 static long calculate_mop_step(int *byte)
 {
 	int byte4;
-	byte4=byte[3];
 	long mop_step_ratio,mop_freq_step;
-	int R210 = 0	;
-	R210 = (byte4&0x07)	;
+	int R210 = 0;
+	byte4 = byte[3];
+	R210 = (byte4&0x07);
 	//if(R210==0)
 	mop_step_ratio = 24;
 	//else if(R210==1) mop_step_ratio = 28.;
