@@ -208,6 +208,10 @@ obj-y	+= cpu_frequ/
 obj-y	+= wireless/
 endif
 
+ifdef SPARK7162
+obj-y	+= i2c_spi/
+endif
+
 ifdef OCTAGON1008
 obj-y    += smartcard/
 endif

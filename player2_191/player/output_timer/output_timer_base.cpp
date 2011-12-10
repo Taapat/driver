@@ -1981,7 +1981,7 @@ PlayerEventRecord_t		  Event;
 				    Rebase	= Policy == PolicyValueApply;
 				    EventCode	= EventFailedToDeliverDataInTime;
 				}
-				/*else if( FailedBy > DecodeInTimeBehind )
+				else if( FailedBy > DecodeInTimeBehind )
 				{
 				    //
 				    // Failure to decode in time
@@ -2001,7 +2001,7 @@ PlayerEventRecord_t		  Event;
 					report( severity_error, "OutputTimer_Base_c::DecodeInTimeFailure(%s) - Both PolicyRebaseOnFailureToDecodeInTime & \n\t\t\t\t\tPolicyAllowFrameDiscardAtNormalSpeed are enabled at the same time, \n\t\t\t\t\tthe use of one of these should preclude the use of the other.\n" );
 
 				    EventCode			= EventFailedToDecodeInTime;
-				}*/
+				}
 				else
 				{
 				    //
