@@ -461,6 +461,8 @@ VOID RtmpChipOpsHook(
 
 
 
+
+/*
 #ifdef RT30xx
 
 
@@ -471,7 +473,8 @@ VOID RtmpChipOpsHook(
 		else
 			RT30xx_Init(pAd);
 	}
-#endif /* RT30xx */
+#endif  RT30xx 
+*/  
 
 	DBGPRINT(RT_DEBUG_TRACE, ("Chip specific bbpRegTbSize=%d!\n", pChipCap->bbpRegTbSize));
 	

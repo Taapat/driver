@@ -28,9 +28,9 @@
 #ifndef	__RT_CONFIG_H__
 #define	__RT_CONFIG_H__
 
-/* #define WDS_VLAN_SUPPORT */
+/*#define WDS_VLAN_SUPPORT */
 
-/*#include "rtmp_comm.h" */
+#include "rtmp_comm.h" 
 #include "rtmp_type.h"
 #include "rtmp_os.h"
 
