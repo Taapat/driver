@@ -1,0 +1,86 @@
+*******************************************************************
+*               RALINK TECHNOLOGY, CORP.                  
+*              RALINK RT73 Wireless Card          
+*             SOFTWARE DRIVER RELEASE NOTE
+*                                                                                                                                
+*******************************************************************
+[V 1.1.0.2]
+1.) Modify for kernel 2.6.27. 
+*******************************************************************
+
+[V 1.1.0.1]
+1.) Modify for kernel 2.6.24 and up. 
+*******************************************************************
+
+[V1.1.0.0]
+1.) Use USB single write and new firmware to support USB single write.
+2.) Support USB 1.1 and improve its throughput.
+3.) Fix the bug: reboot AP,sta unload then load«á, excuting supplicant would
+     crash.
+4.) Fix the AdHoc problem with Connexant STA at A band.
+5.) Fix the problem: can't link to Broadcom AP,when AP set auth:wpa2 cipher:aes
+6.) Ap set 802.1x & Fragmentation set 256,station can't connect AP
+7.) There are hidden AP in enviroment,sta connect to AP hardly.
+ 
+[V1.0.5.0]
+1.) Fix the bug about deciding which BSSID is higher in IBSS mode.
+
+[V1.0.4.1]
+1.) Support configuration by NetworkManager
+2.) Support linux kernel version 2.6.21
+*******************************************************************
+ 
+[V1.0.4.0]
+1.) Support big endian
+2.) Support x64 platform
+3.) Support ATE function
+4.) Fix the rekey issue on WPA-Preshared
+5.) Add A-band country region code #8(W53), #9(J52), #10
+6.) Fix Long/Short Preamble setting
+7.) Show mix mode in the results of site survey if any
+8.) Driver sends disassociate event to WPA Supplicant when AP turns off
+9.) Bug Fixed: compile failed on FC5 kernel more than 2.6.15
+*******************************************************************
+
+
+[V 1.0.3.0]
+1.) Support WPA Supplicant
+2.) Support fast roaming
+3.) Support IEEE802.11H - radar detection
+4.) RTS/CTS Rate set to 2Mb
+5.) Add 11G Region #7 (Channel 5 ~ Channel 13)
+
+
+*******************************************************************
+[V 1.0.2.0]
+1.) Improve ping lost
+2.) Support HW radio control
+3.) Support roaming from an weaker AP to a strong AP
+4.) Support Adhoc rates (11b only, 11b/11g mixed, 11g only and 11a only)
+5.) Bug Fixed: Adhoc mode in WPANONE
+6.) Bug Fixed: Can not work well with WEP encryption used the configuration file
+7.) Verify process between RaConfig(utility) and rt73 dirver
+8.) Support WPAPSK Both mode (TKIP+AES)
+9.) Firmware version: 1.7
+10.) Improve power saving mode
+
+
+*******************************************************************
+[V 1.0.1.0]
+1.) Prevent no error handling while reading profile and firmwave
+2.) Bug fixed: an  Ad-Hoc connection under corner case of incomplete scanning
+3.) Bug fixed: AES shared group key
+4.) Support Infra "11g only" 
+5.) Support Adhoc rates including 11b only and 11b/g mixed 
+6.) Support Asic Advanced Power Saving
+7.) Short/Long slot time or Short/Long preamble follow by the capability of  beacon
+8.) Firmware version: 1.2
+
+
+*******************************************************************
+[V 1.0.0.0]
+1.) Support little endian platform
+2.) Support infrastructure and adhoc mode
+3.) Supoort OPEN or SHARED or WPA-PSK or WPA2-PSK or WPA-NONE authentication method  
+4.) Supoort NONE, WEP, TKIP and AES encryption
+

@@ -1,0 +1,7 @@
+DEVICE=rausb0
+ONBOOT=yes
+
+## Confirm your AP supports dhcp or connects up the ethernet 
+## before set-up as a dynamic IP
+#BOOTPROTO=dhcp
+
