@@ -670,7 +670,7 @@ int proc_video_videomode_read (char *page, char **start, off_t off, int count,
 	//whithout -1 if resolution not found hangs the driver
 	for (vLoop = 0; vLoop < (sizeof(Options) / sizeof(struct Modes)) - 1; vLoop++)
 	{
-/*
+
 printk("%d\n", info->var.xres);
 printk("%d\n", info->var.yres);
 printk("%d\n", info->var.xres_virtual);
@@ -683,7 +683,7 @@ printk("%d\n", info->var.lower_margin);
 printk("%d\n", info->var.hsync_len);
 printk("%d\n", info->var.vsync_len);
 printk("%d\n", info->var.sync);
-*/
+
 		if (Options[vLoop].xres     == info->var.xres &&
 			 Options[vLoop].yres     == info->var.yres &&
 			 Options[vLoop].vxres    == info->var.xres_virtual &&
