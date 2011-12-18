@@ -1,39 +1,35 @@
-/*
- ***************************************************************************
- * Ralink Tech Inc.
- * 5F, No. 36 Taiyuan St.
- * Jhubei City
- * Hsinchu County 302, Taiwan, R.O.C.
+/***************************************************************************
+ * RT2x00 SourceForge Project - http://rt2x00.serialmonkey.com             *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ *                                                                         *
+ *   Licensed under the GNU GPL                                            *
+ *   Original code supplied under license from RaLink Inc, 2004.           *
+ ***************************************************************************/
+
+/***************************************************************************
+ *	Module Name:	wpa.h
  *
- * (c) Copyright 2002-2008, Ralink Technology, Inc.
+ *	Abstract:
  *
- * This program is free software; you can redistribute it and/or modify  * 
- * it under the terms of the GNU General Public License as published by  * 
- * the Free Software Foundation; either version 2 of the License, or     * 
- * (at your option) any later version.                                   * 
- *                                                                       * 
- * This program is distributed in the hope that it will be useful,       * 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of        * 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         * 
- * GNU General Public License for more details.                          * 
- *                                                                       * 
- * You should have received a copy of the GNU General Public License     * 
- * along with this program; if not, write to the                         * 
- * Free Software Foundation, Inc.,                                       * 
- * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             * 
- *                                                                       * 
- *************************************************************************
-
-	Module Name:
-	wpa.h
-
-	Abstract:
-
-	Revision History:
-	Who			When			What
-	--------	----------		----------------------------------------------
-	Name		Date			Modification logs
-*/
+ *	Revision History:
+ *	Who		When		What
+ *	--------	----------	-----------------------------
+ *
+ ***************************************************************************/
 
 #ifndef __WPA_H__
 #define __WPA_H__
@@ -54,7 +50,7 @@
 #define WPA1_KEY_DESC		        0xFE
 #define WPA2_KEY_DESC		        0x2
 
-#define LEN_MASTER_KEY              32  
+#define LEN_MASTER_KEY              32
 
 // EAPOL EK, MK
 #define LEN_EAP_EK                  16
@@ -86,7 +82,7 @@
 #define EAPOL_PAIR_MSG_3    2
 #define EAPOL_GROUP_MSG_1   3
 
-//#if RALINK_WPA_SUPPLICANT_SUPPORT
+//#if WPA_SUPPLICANT_SUPPORT
 
 /* RFC 3748 - Extensible Authentication Protocol (EAP) */
 
@@ -171,7 +167,7 @@ typedef struct PACKED _KEY_DESCRIPTER
     UCHAR       KeyRsc[LEN_KEY_DESC_RSC];
     UCHAR       KeyId[LEN_KEY_DESC_ID];
     UCHAR       KeyMic[LEN_KEY_DESC_MIC];
-    UCHAR       KeyDataLen[2];     
+    UCHAR       KeyDataLen[2];
     UCHAR       KeyData[MAX_LEN_OF_RSNIE];
 }   KEY_DESCRIPTER, *PKEY_DESCRIPTER;
 
@@ -184,23 +180,16 @@ typedef struct PACKED _EAPOL_PACKET
 }   EAPOL_PACKET, *PEAPOL_PACKET;
 
 //802.11i D10 page 83
-typedef struct PACKED _GTK_ENCAP
+typedef struct  _GTK_ENCAP
 {
-#ifdef BIG_ENDIAN
-    UCHAR               rsv:5;
-    UCHAR               tx:1;
-    UCHAR               Kid:2;
-    UCHAR               rsv1;
-#else
     UCHAR               Kid:2;
     UCHAR               tx:1;
     UCHAR               rsv:5;
     UCHAR               rsv1;
-#endif
     UCHAR               GTK[32];
 }   GTK_ENCAP, *PGTK_ENCAP;
 
-typedef struct PACKED _KDE_ENCAP
+typedef struct  _KDE_ENCAP
 {
     UCHAR               Type;
     UCHAR               Len;

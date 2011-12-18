@@ -1,41 +1,39 @@
-/*
- ***************************************************************************
- * Ralink Tech Inc.
- * 5F, No. 36 Taiyuan St.
- * Jhubei City
- * Hsinchu County 302, Taiwan, R.O.C.
+/***************************************************************************
+ * RT2x00 SourceForge Project - http://rt2x00.serialmonkey.com             *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ *                                                                         *
+ *   Licensed under the GNU GPL                                            *
+ *   Original code supplied under license from RaLink Inc, 2004.           *
+ ***************************************************************************/
+
+/***************************************************************************
+ *	Module Name:	rtmp_def.h
  *
- * (c) Copyright 2002-2008, Ralink Technology, Inc.
+ *	Abstract: Miniport related definition header
  *
- * This program is free software; you can redistribute it and/or modify  * 
- * it under the terms of the GNU General Public License as published by  * 
- * the Free Software Foundation; either version 2 of the License, or     * 
- * (at your option) any later version.                                   * 
- *                                                                       * 
- * This program is distributed in the hope that it will be useful,       * 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of        * 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         * 
- * GNU General Public License for more details.                          * 
- *                                                                       * 
- * You should have received a copy of the GNU General Public License     * 
- * along with this program; if not, write to the                         * 
- * Free Software Foundation, Inc.,                                       * 
- * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             * 
- *                                                                       * 
- *************************************************************************
+ *	Revision History:
+ *	Who		When		What
+ *	--------	----------	-----------------------------
+ *	Paul Lin	08-01-2002	created
+ *	John Chang	08-05-2003	add definition for 11g & other drafts
+ *	idamlaj	04-10-2006	Add extra devices
+ *
+ ***************************************************************************/
 
-	Module Name:
-	rtmp_def.h
-
-	Abstract:
-	Miniport related definition header
-
-	Revision History:
-	Who 		When		  What
-	--------	----------	  ----------------------------------------------
-	Paul Lin	08-01-2002	  created
-	John Chang	08-05-2003	  add definition for 11g & other drafts
-*/
 #ifndef __RTMP_DEF_H__
 #define __RTMP_DEF_H__
 
@@ -45,12 +43,9 @@
 #define RT_DEBUG_OFF		0
 #define RT_DEBUG_ERROR		1
 #define RT_DEBUG_WARN		2
-#define RT_DEBUG_TRACE		3
-#define RT_DEBUG_INFO		4
-#define RT_DEBUG_LOUD		5
-
-#define NIC_TAG 			((ULONG)'3752')
-#define NIC_DBG_STRING		("-RT73-")
+#define RT_DEBUG_TRACE		4
+#define RT_DEBUG_INFO		8
+#define RT_DEBUG_LOUD		16
 
 #ifdef BIG_ENDIAN
 #define DIR_READ					0
@@ -59,17 +54,16 @@
 #define TYPE_RXD					1
 #endif
 
-//WEP 
+//WEP
 #define WEP_SMALL_KEY_LEN	(40/8)
 #define WEP_LARGE_KEY_LEN	(104/8)
 
 //
 // Entry number for each DMA descriptor ring
 //
-#define MAX_TX_QUEUE_SIZE		1600
-#define TX_RING_SIZE			64
+#define TX_RING_SIZE			32
 #define PRIO_RING_SIZE			16
-#define RX_RING_SIZE			64
+#define RX_RING_SIZE			32
 #define	BEACON_RING_SIZE		2
 #define MGMT_RING_SIZE			PRIO_RING_SIZE
 #define PRIO_BUFFER_SIZE		1024	// 2048
@@ -126,7 +120,7 @@
 #define fRTMP_ADAPTER_RESET_PIPE_IN_PROGRESS 0x00200000
 #define fRTMP_ADAPTER_SCAN_CHANNEL_IN_PROGRESS 0x04000000
 #define	fRTMP_ADAPTER_RADIO_MEASUREMENT		0x08000000
-#define fRTMP_ADAPTER_REMOVE_IN_PROGRESS	0x10000000
+
 #define fRTMP_ADAPTER_MEDIA_STATE_CHANGE	0x20000000
 
 
@@ -157,6 +151,8 @@
 #define fOP_STATUS_DOZE 					0x00000400
 #define fOP_STATUS_MAX_RETRY_ENABLED		0x00000800
 #define fOP_STATUS_RTS_PROTECTION_ENABLE	0x00001000
+#define fOP_STATUS_FIRMWARE_LOAD			0x00002000
+#define fOP_STATUS_BSSID_SET				0x00004000
 
 //
 // Flags for Bulkflags control for bulk out data
@@ -178,9 +174,6 @@
 #define	fRTUSB_BULK_OUT_DATA_FRAG_2				0x00000080
 #define	fRTUSB_BULK_OUT_DATA_FRAG_3				0x00000100
 #define	fRTUSB_BULK_OUT_DATA_FRAG_4				0x00000200
-#ifdef RALINK_ATE
-#define	fRTUSB_BULK_OUT_DATA_ATE				0x00100000
-#endif
 
 //
 //	AP's client table operation status flags
@@ -239,7 +232,7 @@
 #define MAX_LEN_OF_SUPPORTED_RATES        12    // 1, 2, 5.5, 11, 6, 9, 12, 18, 24, 36, 48, 54
 #define MAX_LEN_OF_KEY                    32      // 32 octets == 256 bits, Redefine for WPA
 
-#define MAX_NUM_OF_CHANNELS               43    //1-14, 36/40/44/48/52/56/60/64/100/104/108/112/116/120/124/ 
+#define MAX_NUM_OF_CHANNELS               43    //1-14, 36/40/44/48/52/56/60/64/100/104/108/112/116/120/124/
                                                 //128/132/136/140/149/153/157/161/165/34/38/42/46 + 1 as NULL termination
 #define MAX_NUM_OF_A_CHANNELS             24    //36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 149, 153, 157, 161, 165
 #define J52_CHANNEL_START_OFFSET          38    //1-14, 36/40/44/48/52/56/60/64/100/104/108/112/116/120/124/
@@ -247,9 +240,9 @@
 #define MAX_LEN_OF_SSID                   32
 #define CIPHER_TEXT_LEN                   128
 #define MAX_LEN_OF_MLME_BUFFER            2048
-#define MAX_MLME_HANDLER_MEMORY           20    //each them cantains  MAX_LEN_OF_MLME_BUFFER size 
+#define MAX_MLME_HANDLER_MEMORY           20    //each them cantains  MAX_LEN_OF_MLME_BUFFER size
 #define MAX_FRAME_LEN                     2338
-#define	MAX_VIE_LEN                       300	// edit by johnli, variable ie length could be > 256, fix WiFi WPS test bug for Conexant AP
+#define	MAX_VIE_LEN                       160	// New for WPA cipher suite variable IE sizes.
 
 #define MAX_TX_POWER_LEVEL                100   /* mW */
 #define MAX_RSSI_TRIGGER                 -10    /* dBm */
@@ -257,6 +250,7 @@
 #define MAX_FRAG_THRESHOLD                2346  /* byte count */
 #define MIN_FRAG_THRESHOLD                256   /* byte count */
 #define MAX_RTS_THRESHOLD                 2347  /* byte count */
+#define MIN_RTS_THRESHOLD                 0
 
 // key related definitions
 #define SHARE_KEY_NUM                     4
@@ -276,6 +270,7 @@
 #define BSS_ADHOC                         0  // = Ndis802_11IBSS
 #define BSS_INFRA                         1  // = Ndis802_11Infrastructure
 #define BSS_ANY                           2  // = Ndis802_11AutoUnknown
+#define BSS_MONITOR			  3  // = Ndis802_11Monitor
 
 // Reason code definitions
 #define REASON_RESERVED                   0
@@ -305,7 +300,7 @@
 #define MLME_SUCCESS                      0
 #define MLME_UNSPECIFY_FAIL               1
 #define MLME_CANNOT_SUPPORT_CAP           10
-#define MLME_REASSOC_DENY_ASSOC_EXIST     11 
+#define MLME_REASSOC_DENY_ASSOC_EXIST     11
 #define MLME_ASSOC_DENY_OUT_SCOPE         12
 #define MLME_ALG_NOT_SUPPORT              13
 #define MLME_SEQ_NR_OUT_OF_SEQUENCE       14
@@ -335,7 +330,7 @@
 #define IE_802_11D_REQUEST                10    // 802.11d
 #define IE_QBSS_LOAD                      11    // 802.11e d9
 #define IE_EDCA_PARAMETER                 12    // 802.11e d9
-#define IE_TSPEC                          13    // 802.11e d9 
+#define IE_TSPEC                          13    // 802.11e d9
 #define IE_TCLAS                          14    // 802.11e d9
 #define IE_SCHEDULE                       15    // 802.11e d9
 #define IE_CHALLENGE_TEXT                 16
@@ -423,7 +418,7 @@
 #define ASSOC_MACHINE_BASE              0
 #define MT2_MLME_ASSOC_REQ              0
 #define MT2_MLME_REASSOC_REQ            1
-#define MT2_MLME_DISASSOC_REQ           2  
+#define MT2_MLME_DISASSOC_REQ           2
 #define MT2_PEER_DISASSOC_REQ           3
 #define MT2_PEER_ASSOC_REQ              4
 #define MT2_PEER_ASSOC_RSP              5
@@ -492,7 +487,7 @@
 
 //
 // STA's WPA-PSK State machine: states, events, total function #
-// 
+//
 #define WPA_PSK_IDLE					0
 #define MAX_WPA_PSK_STATE				1
 
@@ -651,15 +646,14 @@
 #define	CIPHER_AES				4
 #define CIPHER_CKIP64			5
 #define CIPHER_CKIP128			6
-#define CIPHER_TKIP_NO_MIC		7	 // MIC has been appended by driver, not a valid value in hardware key table 
-									
+#define CIPHER_TKIP_NO_MIC		7	 // MIC has been appended by driver, not a valid value in hardware key table
+
 
 // value domain for pAd->RfIcType
 #define RFIC_5226				1  //A/B/G
 #define RFIC_2528				2  //B/G
 #define RFIC_5225				3  //A/B/G
 #define RFIC_2527				4  //B/G
-#define RFIC_3020               5  //B/G
 
 // LED Status.
 #define LED_LINK_DOWN               0
@@ -695,8 +689,7 @@
 
 // 802.1X controlled port definition
 #define	WPA_802_1X_PORT_SECURED			1
-#define WPA_802_1X_PORT_PASS_4_WAY  	2
-#define	WPA_802_1X_PORT_NOT_SECURED		3
+#define	WPA_802_1X_PORT_NOT_SECURED		2
 
 #define	PAIRWISE_KEY			1
 #define	GROUP_KEY				2
@@ -797,7 +790,6 @@
 
 #define MAX_WIRELESS_SIZE               WIRELESS_HEADER_OVERHEAD + HEADER_SIZE + MAXIMUM_PACKET_SIZE + CRC32_BYTES
 
-#define INT_MAIN		0x0100
 
 //--------------------
 // REQUEST SUPPORT
@@ -812,53 +804,79 @@
 
 typedef UCHAR ADDRESS[MAC_ADDRESS_LENGTH];
 
-#ifdef RALINK_ATE
-#define	ATE_STASTOP                 0   // Stop STA
-#define	ATE_STASTART                1   // Start STA
-#define	ATE_TXCONT                  2   // Continuous Transmit
-#define	ATE_TXCARR                  3   // Transmit Carrier
-#define	ATE_TXFRAME                 4   // Transmit Frames
-#define	ATE_RXFRAME                 5   // Receive Frames
-#endif	// RALINK_ATE
 
 //-------------------
 // VID/PID
 //-------------------
 
 #define RT73_USB_DEVICES { \
- {USB_DEVICE(0x148f,0x2573)}, /* Ralink */      \
- {USB_DEVICE(0x148f,0x2671)}, /* Ralink */      \
- {USB_DEVICE(0x04bb,0x093d)}, /* Ralink */      \
- {USB_DEVICE(0x18e8,0x6196)}, /* Qcom */        \
- {USB_DEVICE(0x18e8,0x6229)}, /* Qcom */        \
- {USB_DEVICE(0x18e8,0x6238)}, /* Qcom */        \
- {USB_DEVICE(0x1044,0x8008)}, /* Gigabyte */    \
- {USB_DEVICE(0x14b2,0x3c22)}, /* Conceptronic */    \
- {USB_DEVICE(0x0db0,0x6877)}, /* MSI */         \
- {USB_DEVICE(0x0db0,0xa874)}, /* MSI */         \
- {USB_DEVICE(0x0db0,0xa861)}, /* MSI */         \
- {USB_DEVICE(0x07b8,0xb21d)}, /* AboCom */      \
- {USB_DEVICE(0x0769,0x31f3)}, /* Surecom */     \
- {USB_DEVICE(0x1472,0x0009)}, /* Huawei-3Com */     \
- {USB_DEVICE(0x1371,0x9022)}, /* CNet */        \
- {USB_DEVICE(0x1371,0x9032)}, /* CNet */        \
- {USB_DEVICE(0x1631,0xc019)}, /* Billionton */  \
- {USB_DEVICE(0x1044,0x800a)}, /* Gigabyte */	\
- {USB_DEVICE(0x1690,0x0722)}, /* Askey */		\
- {USB_DEVICE(0x0df6,0x9712)}, /* Sitecom WL-113 v1 002 */	\
- {USB_DEVICE(0x0df6,0x90ac)}, /* Sitecom */  \
- {USB_DEVICE(0x148f,0x9021)}, /* Amigo */	\
- {USB_DEVICE(0x0eb0,0x9021)}, /* Amigo */	\
- {USB_DEVICE(0x0411,0x00D8)}, /* BUFFALO WLI-U2-SG54HP */	\
- {USB_DEVICE(0x0586,0x3415)}, /* ZyXEL */	\
- {USB_DEVICE(0x0b05,0x1723)}, /* ASUS */  \
- {USB_DEVICE(0x0b05,0x1724)}, /* ASUS */	\
- {USB_DEVICE(0x050d,0x705a)}, /* Belkin */  \
- {USB_DEVICE(0x07d1,0x3c03)}, /* D-Link */  \
- {USB_DEVICE(0x13b1,0x0023)}, /* Linksys */  \
- {USB_DEVICE(0x13b1,0x0020)}, /* Linksys WUS54GC */ \
- { }/* Terminating entry */  					\
-} /* end marker */
+ /* AboCom */\
+ {USB_DEVICE(0x07b8,0xb21d)},\
+ /* Askey */\
+ {USB_DEVICE(0x1690,0x0722)},\
+ /* ASUS */\
+ {USB_DEVICE(0x0b05,0x1723)},\
+ {USB_DEVICE(0x0b05,0x1724)},\
+ /* Buffalo */\
+ {USB_DEVICE(0x0411,0x00d8)},	/* WLI-US-SG54HP */\
+ {USB_DEVICE(0x0411,0x00f4)},\
+ /* Belkin */\
+ {USB_DEVICE(0x050d,0x7050)},\
+ {USB_DEVICE(0x050d,0x705a)},\
+ {USB_DEVICE(0x050d,0x905b)},\
+ {USB_DEVICE(0x050d,0x905c)},\
+ /* Billionton */\
+ {USB_DEVICE(0x1631,0xc019)},\
+ /* CNet */\
+ {USB_DEVICE(0x1371,0x9022)},\
+ {USB_DEVICE(0x1371,0x9032)},\
+ /* Conceptronic */\
+ {USB_DEVICE(0x14b2,0x3c22)},\
+ /* Corega */\
+ {USB_DEVICE(0x07aa, 0x002e)}, /* CG-WLUSB2GPX*/\
+ /* D-Link */\
+ {USB_DEVICE(0x07d1,0x3c03)},\
+ {USB_DEVICE(0x07d1,0x3c04)},\
+ {USB_DEVICE(0x07d1,0x3c06)}, /* D-Link DWA111 - thanks to zenon_666 */ \
+ {USB_DEVICE(0x07d1,0x3c07)},\
+ /* Gemtek*/\
+ {USB_DEVICE(0x15a9,0x0004)},\
+ /* Gigabyte */\
+ {USB_DEVICE(0x1044,0x8008)},\
+ {USB_DEVICE(0x1044,0x800a)},\
+ /* Huawei-3Com */\
+ {USB_DEVICE(0x1472,0x0009)},\
+ /* Hercules */\
+ {USB_DEVICE(0x06f8,0xe010)},\
+ {USB_DEVICE(0x06f8,0xe020)},\
+ /* LinkSys */\
+ {USB_DEVICE(0x13b1,0x0020)},\
+ {USB_DEVICE(0x13b1,0x0023)},\
+ /* MSI */\
+ {USB_DEVICE(0x0db0,0x6877)},\
+ {USB_DEVICE(0x0db0,0x6874)},\
+ {USB_DEVICE(0x0db0,0xa861)},\
+ {USB_DEVICE(0x0db0,0xa874)},\
+ /* Ralink */\
+ {USB_DEVICE(0x04bb,0x093d)},/* From ver 1.1.0.2 of their driver */\
+ {USB_DEVICE(0x148f,0x2573)},\
+ {USB_DEVICE(0x148f,0x2671)},\
+ /* Qcom */\
+ {USB_DEVICE(0x18e8,0x6196)},\
+ {USB_DEVICE(0x18e8,0x6229)},\
+ {USB_DEVICE(0x18e8,0x6238)},\
+ /* Sitecom */\
+ {USB_DEVICE(0x0df6,0x9712)},\
+ {USB_DEVICE(0x0df6,0x90ac)},\
+ /* Surecom */\
+ {USB_DEVICE(0x0769,0x31f3)},\
+ /* Planex */\
+ {USB_DEVICE(0x2019,0xab01)},\
+ {USB_DEVICE(0x2019,0xab50)},\
+ /* Senao */\
+ {USB_DEVICE(0x1740,0x7100)},\
+ {0}} /* end marker */
+
 
 #endif	// __RTMP_DEF_H__
 

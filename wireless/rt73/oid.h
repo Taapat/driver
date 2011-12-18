@@ -1,39 +1,39 @@
-/*
- ***************************************************************************
- * Ralink Tech Inc.
- * 5F, No. 36 Taiyuan St.
- * Jhubei City
- * Hsinchu County 302, Taiwan, R.O.C.
+/***************************************************************************
+ * RT2x00 SourceForge Project - http://rt2x00.serialmonkey.com             *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ *                                                                         *
+ *   Licensed under the GNU GPL                                            *
+ *   Original code supplied under license from RaLink Inc, 2004.           *
+ ***************************************************************************/
+
+/***************************************************************************
+ *	Module Name:	mlme.h
  *
- * (c) Copyright 2002-2008, Ralink Technology, Inc.
+ *	Abstract:
  *
- * This program is free software; you can redistribute it and/or modify  * 
- * it under the terms of the GNU General Public License as published by  * 
- * the Free Software Foundation; either version 2 of the License, or     * 
- * (at your option) any later version.                                   * 
- *                                                                       * 
- * This program is distributed in the hope that it will be useful,       * 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of        * 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         * 
- * GNU General Public License for more details.                          * 
- *                                                                       * 
- * You should have received a copy of the GNU General Public License     * 
- * along with this program; if not, write to the                         * 
- * Free Software Foundation, Inc.,                                       * 
- * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             * 
- *                                                                       * 
- *************************************************************************
-
-	Module Name:
-	oid.h
-
-	Abstract:
-
-	Revision History:
-	Who			When			What
-	--------	----------		----------------------------------------------
-	Name		Date			Modification logs
-*/
+ *	Revision History:
+ *	Who		When		What
+ *	--------	----------	-----------------------------
+ *	idamlaj		05-10-2006	Import rfmon implementation
+ *	idamlaj		14-10-2006	Mac Address Changing
+ *	idamlaj		14-10-2006	RFMONTx (based on MarkW's code)
+ *	RomainB     31-12-2006  RFMONTx getter, update of some ioctl values
+ *
+ ***************************************************************************/
 
 #ifndef _OID_H_
 #define _OID_H_
@@ -48,27 +48,26 @@
 #define SIOCIWFIRSTPRIV								SIOCDEVPRIVATE
 #endif
 
-#define RT_PRIV_IOCTL								(SIOCIWFIRSTPRIV + 0x0E)
-#define RTPRIV_IOCTL_SET							(SIOCIWFIRSTPRIV + 0x02) 
-#define RTPRIV_IOCTL_SHOW							(SIOCIWFIRSTPRIV + 0x13)
-				
-#ifdef DBG
-#define RTPRIV_IOCTL_BBP                            (SIOCIWFIRSTPRIV + 0x03)
-#define RTPRIV_IOCTL_MAC                            (SIOCIWFIRSTPRIV + 0x05)
-#ifdef RALINK_ATE
-#define RTPRIV_IOCTL_E2P                            (SIOCIWFIRSTPRIV + 0x11)
-#endif
-#endif
-#define RTPRIV_IOCTL_STATISTICS                     (SIOCIWFIRSTPRIV + 0x09)
-#define RTPRIV_IOCTL_GSITESURVEY					(SIOCIWFIRSTPRIV + 0x0D)
-#define RTPRIV_IOCTL_GETRAAPCFG                     (SIOCIWFIRSTPRIV + 0x0F)
+#define RT_PRIV_IOCTL								(SIOCIWFIRSTPRIV + 0x01)
+#define RT_PRIV_IOCTL_WPA_SUPPLICANT				(SIOCIWFIRSTPRIV + 0x0E)
+#define RTPRIV_IOCTL_SET							(SIOCIWFIRSTPRIV + 0x02)
 
-#if 1
-#define RTPRIV_IOCTL_AUTH                           (SIOCIWFIRSTPRIV + 0x07)
-#define RTPRIV_IOCTL_WEPSTATUS                      (SIOCIWFIRSTPRIV + 0x08)
-#define RTPRIV_IOCTL_WPAPSK                         (SIOCIWFIRSTPRIV + 0x0A)
-#define RTPRIV_IOCTL_PSM                            (SIOCIWFIRSTPRIV + 0x0B)
+#ifdef DBG
+#define RTPRIV_IOCTL_BBP				(SIOCIWFIRSTPRIV + 0x03)
+#define RTPRIV_IOCTL_MAC				(SIOCIWFIRSTPRIV + 0x05)
 #endif
+
+#define RTPRIV_IOCTL_ADHOCOFDM				(SIOCIWFIRSTPRIV + 0x06)
+#define RTPRIV_IOCTL_AUTH				(SIOCIWFIRSTPRIV + 0x07)
+#define RTPRIV_IOCTL_WEPSTATUS				(SIOCIWFIRSTPRIV + 0x08)
+#define RTPRIV_IOCTL_STATISTICS				(SIOCIWFIRSTPRIV + 0x09)
+#define RTPRIV_IOCTL_WPAPSK				(SIOCIWFIRSTPRIV + 0x0A)
+#define RTPRIV_IOCTL_PSM				(SIOCIWFIRSTPRIV + 0x0B)
+#define RTPRIV_IOCTL_SETRFMONTX				(SIOCIWFIRSTPRIV + 0x0C)
+#define RTPRIV_IOCTL_GETRFMONTX				(SIOCIWFIRSTPRIV + 0x0D)
+#define RTPRIV_IOCTL_GSITESURVEY			(SIOCIWFIRSTPRIV + 0x0F)
+#define RTPRIV_IOCTL_GETRAAPCFG				(SIOCIWFIRSTPRIV + 0x11)
+#define RTPRIV_IOCTL_FORCEPRISMHEADER			(SIOCIWFIRSTPRIV + 0x12)
 
 #define OID_GET_SET_TOGGLE							0x8000
 
@@ -85,7 +84,6 @@
 #define OID_802_11_ADD_WEP                          0x0112
 #define OID_802_11_REMOVE_WEP                       0x0113
 #define OID_802_11_DISASSOCIATE                     0x0114
-#define OID_802_11_MIC_FAILURE_REPORT_FRAME         0x0115 //BensonLiu 07-11-22 add for countermeasure
 #define OID_802_11_PRIVACY_FILTER                   0x0118
 #define OID_802_11_ASSOCIATION_INFORMATION          0x011E
 #define OID_802_11_TEST                             0x011F
@@ -131,13 +129,15 @@
 #define RT_OID_802_11_TX_POWER_LEVEL_1              0x0614
 #define RT_OID_802_11_QUERY_PIDVID                  0x0615
 
-//#ifdef RALINK_WPA_SUPPLICANT_SUPPORT
+//#if WPA_SUPPLICANT_SUPPORT
 #define OID_SET_COUNTERMEASURES                     0x0616
 #define OID_802_11_SET_IEEE8021X                    0x0617
 #define OID_802_11_SET_IEEE8021X_REQUIRE_KEY        0x0618
 #define OID_802_11_PMKID                            0x0620
 #define RT_OID_WPA_SUPPLICANT_SUPPORT               0x0621
 #define RT_OID_WE_VERSION_COMPILED                  0x0622
+#define OID_SET_WSC_IE_PROBE_REQ                    0x0624
+#define OID_802_11_RCV_BEACON                       0x0625
 //#endif
 
 #define OID_802_11_ENCRYPTION_STATUS                OID_802_11_WEP_STATUS
@@ -289,7 +289,7 @@
 #define RT_OID_802_11_QUERY_IEEE80211H			0x0D710128
 #define RT_OID_802_11_SET_IEEE80211H			(OID_GET_SET_TOGGLE | RT_OID_802_11_QUERY_IEEE80211H)
 
-//#ifdef RALINK_WPA_SUPPLICANT_SUPPORT
+//#if WPA_SUPPLICANT_SUPPORT
 #define	RT_ASSOC_EVENT_FLAG                         0x0101
 #define	RT_DISASSOC_EVENT_FLAG                      0x0102
 #define	RT_REQIE_EVENT_FLAG                         0x0103
@@ -297,7 +297,6 @@
 #define	RT_ASSOCINFO_EVENT_FLAG                     0x0105
 #define RT_PMKIDCAND_FLAG                           0x0106
 //#endif
-
 
 //
 // IEEE 802.11 Structures and definitions
@@ -311,7 +310,7 @@ typedef enum _NDIS_802_11_STATUS_TYPE
 {
 	Ndis802_11StatusType_Authentication,
 	Ndis802_11StatusType_MediaStreamMode,
-	Ndis802_11StatusType_PMKID_CandidateList,		
+	Ndis802_11StatusType_PMKID_CandidateList,
 	Ndis802_11StatusTypeMax    // not a real type, defined as an upper bound
 } NDIS_802_11_STATUS_TYPE, *PNDIS_802_11_STATUS_TYPE;
 
@@ -341,8 +340,8 @@ typedef struct _NDIS_802_11_AUTHENTICATION_REQUEST
 // Added new types for OFDM 5G and 2.4G
 typedef enum _NDIS_802_11_NETWORK_TYPE
 {
-    Ndis802_11FH, 
-    Ndis802_11DS, 
+    Ndis802_11FH,
+    Ndis802_11DS,
     Ndis802_11OFDM5,
     Ndis802_11OFDM24,
     Ndis802_11Automode,
@@ -373,7 +372,7 @@ typedef LONG    NDIS_802_11_RSSI;           // in dBm
 typedef struct _NDIS_802_11_CONFIGURATION_FH
 {
     ULONG           Length;            // Length of structure
-    ULONG           HopPattern;        // As defined by 802.11, MSB set 
+    ULONG           HopPattern;        // As defined by 802.11, MSB set
     ULONG           HopSet;            // to one if non-802.11
     ULONG           DwellTime;         // units are Kusec
 } NDIS_802_11_CONFIGURATION_FH, *PNDIS_802_11_CONFIGURATION_FH;
@@ -408,10 +407,10 @@ typedef  ULONG  NDIS_802_11_KEY_INDEX;
 typedef ULONGLONG   NDIS_802_11_KEY_RSC;
 
 // Key mapping keys require a BSSID
-typedef struct PACKED _NDIS_802_11_KEY
+typedef struct _NDIS_802_11_KEY
 {
     ULONG           Length;             // Length of this structure
-    ULONG           KeyIndex;           
+    ULONG           KeyIndex;
     ULONG           KeyLength;          // length of key in bytes
     NDIS_802_11_MAC_ADDRESS BSSID;
     NDIS_802_11_KEY_RSC KeyRSC;
@@ -421,8 +420,8 @@ typedef struct PACKED _NDIS_802_11_KEY
 typedef struct _NDIS_802_11_REMOVE_KEY
 {
     ULONG                   Length;        // Length of this structure
-    ULONG                   KeyIndex;           
-    NDIS_802_11_MAC_ADDRESS BSSID;      
+    ULONG                   KeyIndex;
+    NDIS_802_11_MAC_ADDRESS BSSID;
 } NDIS_802_11_REMOVE_KEY, *PNDIS_802_11_REMOVE_KEY;
 
 typedef struct PACKED _NDIS_802_11_WEP
@@ -439,6 +438,7 @@ typedef enum _NDIS_802_11_NETWORK_INFRASTRUCTURE
     Ndis802_11IBSS,
     Ndis802_11Infrastructure,
     Ndis802_11AutoUnknown,
+    Ndis802_11Monitor,
     Ndis802_11InfrastructureMax     // Not a real value, defined as upper bound
 } NDIS_802_11_NETWORK_INFRASTRUCTURE, *PNDIS_802_11_NETWORK_INFRASTRUCTURE;
 
@@ -485,7 +485,7 @@ typedef enum _NDIS_802_11_AUTHENTICATION_MODE
     Ndis802_11AuthModeWPAPSK,
     Ndis802_11AuthModeWPANone,
     Ndis802_11AuthModeWPA2,
-    Ndis802_11AuthModeWPA2PSK,    
+    Ndis802_11AuthModeWPA2PSK,
     Ndis802_11AuthModeMax           // Not a real mode, defined as upper bound
 } NDIS_802_11_AUTHENTICATION_MODE, *PNDIS_802_11_AUTHENTICATION_MODE;
 
@@ -494,13 +494,10 @@ typedef enum _NDIS_802_11_AUTHENTICATION_MODE
 #define WPA1PSKAKMBIT   4
 #define WPA2PSKAKMBIT   8
 
-#define TKIPBIT         0x01
-#define CCMPBIT         0x02
-
 typedef UCHAR NDIS_802_11_RATES[NDIS_802_11_LENGTH_RATES];        // Set of 8 data rates
 typedef UCHAR NDIS_802_11_RATES_EX[NDIS_802_11_LENGTH_RATES_EX];  // Set of 16 data rates
 
-typedef struct PACKED _NDIS_802_11_SSID 
+typedef struct PACKED _NDIS_802_11_SSID
 {
     ULONG   SsidLength;         // length of SSID field below, in bytes; this can be zero.
     UCHAR   Ssid[NDIS_802_11_LENGTH_SSID];           // SSID information field
@@ -514,7 +511,7 @@ typedef struct PACKED _NDIS_WLAN_BSSID
     UCHAR                               Reserved[2];
     NDIS_802_11_SSID                    Ssid;       // SSID
     ULONG                               Privacy;    // WEP encryption requirement
-    NDIS_802_11_RSSI                    Rssi;       // receive signal, strength in dBm                                                    
+    NDIS_802_11_RSSI                    Rssi;       // receive signal, strength in dBm
     NDIS_802_11_NETWORK_TYPE            NetworkTypeInUse;
     NDIS_802_11_CONFIGURATION           Configuration;
     NDIS_802_11_NETWORK_INFRASTRUCTURE  InfrastructureMode;
@@ -551,14 +548,14 @@ typedef struct _NDIS_802_11_BSSID_LIST_EX
     NDIS_WLAN_BSSID_EX      Bssid[1];
 } NDIS_802_11_BSSID_LIST_EX, *PNDIS_802_11_BSSID_LIST_EX;
 
-typedef struct _NDIS_802_11_FIXED_IEs 
+typedef struct _NDIS_802_11_FIXED_IEs
 {
     UCHAR Timestamp[8];
     USHORT BeaconInterval;
     USHORT Capabilities;
 } NDIS_802_11_FIXED_IEs, *PNDIS_802_11_FIXED_IEs;
 
-typedef struct _NDIS_802_11_VARIABLE_IEs 
+typedef struct _NDIS_802_11_VARIABLE_IEs
 {
     UCHAR ElementID;
     UCHAR Length;    // Number of bytes in data field
@@ -589,9 +586,9 @@ typedef enum _NDIS_802_11_WEP_STATUS
     Ndis802_11Encryption1KeyAbsent = Ndis802_11WEPKeyAbsent,
     Ndis802_11WEPNotSupported,
     Ndis802_11EncryptionNotSupported = Ndis802_11WEPNotSupported,
-    Ndis802_11Encryption2Enabled,	// TKIP
+    Ndis802_11Encryption2Enabled,
     Ndis802_11Encryption2KeyAbsent,
-    Ndis802_11Encryption3Enabled,	// AES
+    Ndis802_11Encryption3Enabled,
     Ndis802_11Encryption3KeyAbsent
 } NDIS_802_11_WEP_STATUS, *PNDIS_802_11_WEP_STATUS,
   NDIS_802_11_ENCRYPTION_STATUS, *PNDIS_802_11_ENCRYPTION_STATUS;
@@ -641,7 +638,7 @@ typedef struct _NDIS_802_11_AUTHENTICATION_EVENT
     NDIS_802_11_STATUS_INDICATION       Status;
     NDIS_802_11_AUTHENTICATION_REQUEST  Request[1];
 } NDIS_802_11_AUTHENTICATION_EVENT, *PNDIS_802_11_AUTHENTICATION_EVENT;
-        
+
 typedef struct _NDIS_802_11_TEST
 {
     ULONG Length;
@@ -659,7 +656,7 @@ typedef enum _RT_802_11_PREAMBLE {
     Rt802_11PreambleAuto
 } RT_802_11_PREAMBLE, *PRT_802_11_PREAMBLE;
 
-// 2005-03-08 match current RaConfig. 
+// 2005-03-08 match current RaConfig.
 typedef enum _RT_802_11_PHY_MODE {
     PHY_11BG_MIXED,
     PHY_11B,
@@ -712,7 +709,7 @@ typedef struct _RT_802_11_STA_CONFIG {
     ULONG   SystemErrorBitmap;  // ignore upon SET, return system error upon QUERY
 } RT_802_11_STA_CONFIG, *PRT_802_11_STA_CONFIG;
 
-typedef struct PACKED _RT_VERSION_INFO{
+typedef struct _RT_VERSION_INFO{
     UCHAR       DriverVersionW;
     UCHAR       DriverVersionX;
     UCHAR       DriverVersionY;
