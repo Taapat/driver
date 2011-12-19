@@ -150,11 +150,11 @@ static struct Modes {
     { 17, "1600x1200_60", 1600, 1200, 1600, 1200, 8, 6411, 256, 32, 52, 10, 160, 8,
 	FB_VMODE_NONINTERLACED | FB_VMODE_CONUPDATE},
 
-    { 16, "1080p60", 1920, 1080, 1920, 1080, 16, 6734, 148,  88, 35, 5, 44, 5,
+    { 16, "1080p60", 1920, 1080, 1920, 1080, 16, 6734, 148,  88, 36, 4, 44, 5,
 	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_CONUPDATE},
-    { 15, "1080p59", 1920, 1080, 1920, 1080, 16, 6741, 148,  88, 35, 5, 44, 5,
+    { 15, "1080p59", 1920, 1080, 1920, 1080, 16, 6741, 148,  88, 36, 4, 44, 5,
 	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_CONUPDATE},
-    { 14, "1080p50", 1920, 1080, 1920, 1080, 16, 6734, 148,  528, 35, 5, 44, 5,
+    { 14, "1080p50", 1920, 1080, 1920, 1080, 16, 6734, 148,  528, 36, 4, 44, 5,
 	FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT, FB_VMODE_CONUPDATE},
 
     { 13, "1080p30", 1920, 1080, 1920, 1080, 16, 13468, 148,  88, 36, 4, 44, 5,
@@ -670,7 +670,7 @@ int proc_video_videomode_read (char *page, char **start, off_t off, int count,
 	//whithout -1 if resolution not found hangs the driver
 	for (vLoop = 0; vLoop < (sizeof(Options) / sizeof(struct Modes)) - 1; vLoop++)
 	{
-
+/*
 printk("%d\n", info->var.xres);
 printk("%d\n", info->var.yres);
 printk("%d\n", info->var.xres_virtual);
@@ -683,7 +683,7 @@ printk("%d\n", info->var.lower_margin);
 printk("%d\n", info->var.hsync_len);
 printk("%d\n", info->var.vsync_len);
 printk("%d\n", info->var.sync);
-
+*/
 		if (Options[vLoop].xres     == info->var.xres &&
 			 Options[vLoop].yres     == info->var.yres &&
 			 Options[vLoop].vxres    == info->var.xres_virtual &&
