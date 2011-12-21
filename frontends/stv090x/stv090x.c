@@ -4574,9 +4574,7 @@ static int stv090x_get_feclock(struct stv090x_state *state, s32 timeout)
 {
 	s32 timer = 0, lock = 0, stat;
 	u32 reg;
-	// workaround start
-	timeout *= 5;
-	// workaround end
+
 	dprintk(10, "%s >\n", __func__);
 	while ((timer < timeout) && (!lock)) {
 		reg = STV090x_READ_DEMOD(state, DMDSTATE);
