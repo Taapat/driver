@@ -380,9 +380,22 @@ void smartcard_reset(SCI_CONTROL_BLOCK *sci, unsigned char wait)
 #endif
        }
     
-    else if (sci->id == 1)
+    else if (sci->id == 1){
         disable_irq(SCI1_INT_RX_TX);
-	else
+#if defined(ADB_BOX)
+
+        /*VCC Low */
+        stpio_set_pin(sci->cmdvcc, 0);
+
+        /* Reset low */
+         stpio_set_pin(sci->reset, 0); 
+         mdelay(500); 
+
+         /* VCC High */
+         stpio_set_pin(sci->cmdvcc, 1);
+         mdelay(200); 
+#endif	
+      } else
 	{
 		PERROR("Invalid SC ID controller '%ld'", sci->id);
 		return;
@@ -427,8 +440,11 @@ void smartcard_reset(SCI_CONTROL_BLOCK *sci, unsigned char wait)
     	set_reg_writeonly(sci, BASE_ADDRESS_ASC1, ASC1_TX_RST, 0xFF);
         set_reg_writeonly(sci, BASE_ADDRESS_ASC1, ASC1_RX_RST, 0xFF);
     	set_serial_irq(sci, RX_FULL_IRQ);
+		
+#if !defined(ADB_BOX)
 		if(wait)
 			msleep(1000);
+#endif
 		enable_irq(SCI1_INT_RX_TX);
     }
 
@@ -488,7 +504,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
         {
 			sci->sci_atr_class=SCI_CLASS_B;
 #if !defined(SUPPORT_NO_VOLTAGE)
-#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO3, PIO_CLR_P3OUT, 0x40);
 #endif
 #endif
@@ -498,7 +514,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
         {
 			sci->sci_atr_class=SCI_CLASS_A;
 #if !defined(SUPPORT_NO_VOLTAGE)
-#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO3, PIO_SET_P3OUT, 0x40);
 #endif
 #endif
@@ -508,7 +524,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
             PERROR("Invalid Vcc value '%d', set Vcc 5V", vcc);
             sci->sci_atr_class=SCI_CLASS_A;
 #if !defined(SUPPORT_NO_VOLTAGE)
-#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500)  // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO3, PIO_CLR_P3OUT, 0x40);
 #endif
 #endif
@@ -1127,7 +1143,7 @@ static int SCI_SetClockSource(SCI_CONTROL_BLOCK *sci)
 	U32 reg_address = 0;
 	U32 val = 0;
 
-#if defined(CONFIG_CPU_SUBTYPE_STB7100) || defined(CONFIG_CPU_SUBTYPE_STX7100) || defined(CONFIG_SH_ST_MB442) || defined(CONFIG_SH_ST_MB411) || defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(HS7810A) || defined(HS7110) || defined(UFS912) || defined(SPARK) 
+#if defined(CONFIG_CPU_SUBTYPE_STB7100) || defined(CONFIG_CPU_SUBTYPE_STX7100) || defined(CONFIG_SH_ST_MB442) || defined(CONFIG_SH_ST_MB411) || defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(HS7810A) || defined(UFS912) || defined(SPARK) 
 	reg_address = (U32)checked_ioremap(SYS_CFG_BASE_ADDRESS+SYS_CFG7, 4);
 	if(!reg_address)
 		return 0;
@@ -1147,7 +1163,7 @@ static int SCI_SetClockSource(SCI_CONTROL_BLOCK *sci)
 
 	iounmap((void *)reg_address);
 
-#if defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(UFS912) || defined(SPARK) || defined(HS7810A) || defined(HS7110)
+#if defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(UFS912) || defined(SPARK) || defined(HS7810A)
 	reg_address = (U32)checked_ioremap(SYS_CFG_BASE_ADDRESS+SYS_CFG5, 4);
 	if(!reg_address)
 		return 0;
@@ -2017,7 +2033,7 @@ static ssize_t sci_read(struct file *file, char *buffer, size_t length, loff_t *
 	{
 		sci->rx_wptr=0;
 		sci->rx_rptr=0;
-#if defined(ATEVIO7500) || defined(ADB_BOX) || defined(HL101) || defined(SPARK)
+#if defined(ATEVIO7500) || defined(ADB_BOX)
 		mdelay(3);   /*Hellmaster1024: on Atevio we seem to have some timing probs without that delay */
 #endif
 
