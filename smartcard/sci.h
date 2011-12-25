@@ -54,7 +54,7 @@
 
 /******* SC generic *******/
 
-#if defined(HL101) || defined(ATEVIO7500) || defined(FORTIS_HDBOX) || defined(CUBEREVO)
+#if defined(HL101) || defined(ATEVIO7500) || defined(FORTIS_HDBOX) || defined(CUBEREVO) || defined(ADB_BOX)
 #define SCI_NUMBER_OF_CONTROLLERS   2           /* Num of SC controllers */
 #else
 #define SCI_NUMBER_OF_CONTROLLERS   1           /* Num of SC controllers */
