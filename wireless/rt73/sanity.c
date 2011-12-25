@@ -1,36 +1,39 @@
-/***************************************************************************
- * RT2x00 SourceForge Project - http://rt2x00.serialmonkey.com             *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- *                                                                         *
- *   Licensed under the GNU GPL                                            *
- *   Original code supplied under license from RaLink Inc, 2004.           *
- ***************************************************************************/
+/*
+ ***************************************************************************
+ * Ralink Tech Inc.
+ * 5F, No. 36 Taiyuan St.
+ * Jhubei City
+ * Hsinchu County 302, Taiwan, R.O.C.
+ *
+ * (c) Copyright 2002-2008, Ralink Technology, Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify  * 
+ * it under the terms of the GNU General Public License as published by  * 
+ * the Free Software Foundation; either version 2 of the License, or     * 
+ * (at your option) any later version.                                   * 
+ *                                                                       * 
+ * This program is distributed in the hope that it will be useful,       * 
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of        * 
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         * 
+ * GNU General Public License for more details.                          * 
+ *                                                                       * 
+ * You should have received a copy of the GNU General Public License     * 
+ * along with this program; if not, write to the                         * 
+ * Free Software Foundation, Inc.,                                       * 
+ * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             * 
+ *                                                                       * 
+ *************************************************************************
 
-/***************************************************************************
- *	Module Name:	sanity.c
- *
- *	Abstract:
- *
- *	Revision History:
- *	Who		When		What
- *	--------	----------	-----------------------------
- *	John Chang	2004-09-01	add WMM support
- *
- ***************************************************************************/
+	Module Name:
+	sanity.c
+
+	Abstract:
+
+	Revision History:
+	Who			When			What
+	--------	----------		----------------------------------------------
+	John Chang  2004-09-01      add WMM support
+*/
 
 #include "rt_config.h"
 #include <net/iw_handler.h>
@@ -40,9 +43,8 @@ UCHAR	RSN_OUI[] = {0x00, 0x0f, 0xac};
 UCHAR   WME_INFO_ELEM[]  = {0x00, 0x50, 0xf2, 0x02, 0x00, 0x01};
 UCHAR   WME_PARM_ELEM[] = {0x00, 0x50, 0xf2, 0x02, 0x01, 0x01};
 UCHAR   RALINK_OUI[]  = {0x00, 0x0c, 0x43};
-UCHAR   WSC_OUI[] = {0x00, 0x50, 0xf2, 0x04};
 
-/*
+/* 
     ==========================================================================
     Description:
         MLME message sanity check
@@ -51,33 +53,33 @@ UCHAR   WSC_OUI[] = {0x00, 0x50, 0xf2, 0x04};
     ==========================================================================
  */
 BOOLEAN MlmeScanReqSanity(
-    IN PRTMP_ADAPTER pAd,
-    IN VOID *Msg,
-    IN ULONG MsgLen,
-    OUT UCHAR *pBssType,
-    OUT CHAR Ssid[],
-    OUT UCHAR *pSsidLen,
-    OUT UCHAR *pScanType)
+    IN PRTMP_ADAPTER pAd, 
+    IN VOID *Msg, 
+    IN ULONG MsgLen, 
+    OUT UCHAR *pBssType, 
+    OUT CHAR Ssid[], 
+    OUT UCHAR *pSsidLen, 
+    OUT UCHAR *pScanType) 
 {
     MLME_SCAN_REQ_STRUCT *Info;
 
     Info = (MLME_SCAN_REQ_STRUCT *)(Msg);
     *pBssType = Info->BssType;
     *pSsidLen = Info->SsidLen;
-    memcpy(Ssid, Info->Ssid, *pSsidLen);
+    NdisMoveMemory(Ssid, Info->Ssid, *pSsidLen);
     *pScanType = Info->ScanType;
-
+    
     if ((*pBssType == BSS_INFRA || *pBssType == BSS_ADHOC || *pBssType == BSS_ANY) &&
-       (*pScanType == SCAN_ACTIVE || *pScanType == FAST_SCAN_ACTIVE || *pScanType == SCAN_PASSIVE))
+       (*pScanType == SCAN_ACTIVE || *pScanType == FAST_SCAN_ACTIVE || *pScanType == SCAN_PASSIVE)) 
         return TRUE;
-    else
+    else 
     {
         DBGPRINT(RT_DEBUG_TRACE, "MlmeScanReqSanity fail - wrong BssType or ScanType\n");
         return FALSE;
     }
 }
 
-/*
+/* 
     ==========================================================================
     Description:
         MLME message sanity check
@@ -86,16 +88,16 @@ BOOLEAN MlmeScanReqSanity(
     ==========================================================================
  */
 BOOLEAN MlmeStartReqSanity(
-    IN PRTMP_ADAPTER pAd,
-    IN VOID *Msg,
-    IN ULONG MsgLen,
-    OUT CHAR Ssid[],
-    OUT UCHAR *pSsidLen)
+    IN PRTMP_ADAPTER pAd, 
+    IN VOID *Msg, 
+    IN ULONG MsgLen, 
+    OUT CHAR Ssid[], 
+    OUT UCHAR *pSsidLen) 
 {
     MLME_START_REQ_STRUCT *Info;
 
     Info = (MLME_START_REQ_STRUCT *)(Msg);
-
+    
     if (Info->SsidLen > MAX_LEN_OF_SSID)
     {
         DBGPRINT(RT_DEBUG_TRACE, "MlmeStartReqSanity fail - wrong SSID length\n");
@@ -103,12 +105,12 @@ BOOLEAN MlmeStartReqSanity(
     }
 
     *pSsidLen = Info->SsidLen;
-    memcpy(Ssid, Info->Ssid, *pSsidLen);
+    NdisMoveMemory(Ssid, Info->Ssid, *pSsidLen);
 
     return TRUE;
 }
 
-/*
+/* 
     ==========================================================================
     Description:
         MLME message sanity check
@@ -117,13 +119,13 @@ BOOLEAN MlmeStartReqSanity(
     ==========================================================================
  */
 BOOLEAN MlmeAssocReqSanity(
-    IN PRTMP_ADAPTER pAd,
-    IN VOID *Msg,
-    IN ULONG MsgLen,
-    OUT PUCHAR pApAddr,
-    OUT USHORT *pCapabilityInfo,
-    OUT ULONG *pTimeout,
-    OUT USHORT *pListenIntv)
+    IN PRTMP_ADAPTER pAd, 
+    IN VOID *Msg, 
+    IN ULONG MsgLen, 
+    OUT PUCHAR pApAddr, 
+    OUT USHORT *pCapabilityInfo, 
+    OUT ULONG *pTimeout, 
+    OUT USHORT *pListenIntv) 
 {
     MLME_ASSOC_REQ_STRUCT *pInfo;
 
@@ -132,11 +134,11 @@ BOOLEAN MlmeAssocReqSanity(
     COPY_MAC_ADDR(pApAddr, pInfo->Addr);                   // AP address
     *pCapabilityInfo = pInfo->CapabilityInfo;               // capability info
     *pListenIntv = pInfo->ListenIntv;
-
+    
     return TRUE;
 }
 
-/*
+/* 
     ==========================================================================
     Description:
         MLME message sanity check
@@ -145,12 +147,12 @@ BOOLEAN MlmeAssocReqSanity(
     ==========================================================================
  */
 BOOLEAN MlmeAuthReqSanity(
-    IN PRTMP_ADAPTER pAd,
-    IN VOID *Msg,
-    IN ULONG MsgLen,
-    OUT PUCHAR pAddr,
-    OUT ULONG *pTimeout,
-    OUT USHORT *pAlg)
+    IN PRTMP_ADAPTER pAd, 
+    IN VOID *Msg, 
+    IN ULONG MsgLen, 
+    OUT PUCHAR pAddr, 
+    OUT ULONG *pTimeout, 
+    OUT USHORT *pAlg) 
 {
     MLME_AUTH_REQ_STRUCT *pInfo;
 
@@ -158,20 +160,20 @@ BOOLEAN MlmeAuthReqSanity(
     COPY_MAC_ADDR(pAddr, pInfo->Addr);
     *pTimeout = pInfo->Timeout;
     *pAlg = pInfo->Alg;
-
-    if (((*pAlg == Ndis802_11AuthModeShared) ||(*pAlg == Ndis802_11AuthModeOpen)) &&
-        ((*pAddr & 0x01) == 0))
+    
+    if (((*pAlg == Ndis802_11AuthModeShared) ||(*pAlg == Ndis802_11AuthModeOpen)) && 
+        ((*pAddr & 0x01) == 0)) 
     {
         return TRUE;
-    }
-    else
+    } 
+    else 
     {
         DBGPRINT(RT_DEBUG_TRACE, "MlmeAuthReqSanity fail - wrong algorithm\n");
         return FALSE;
     }
 }
 
-/*
+/* 
     ==========================================================================
     Description:
         MLME message sanity check
@@ -180,16 +182,16 @@ BOOLEAN MlmeAuthReqSanity(
     ==========================================================================
  */
 BOOLEAN PeerAssocRspSanity(
-    IN PRTMP_ADAPTER pAd,
-    IN VOID *pMsg,
-    IN ULONG MsgLen,
-    OUT PUCHAR pAddr2,
-    OUT USHORT *pCapabilityInfo,
-    OUT USHORT *pStatus,
-    OUT USHORT *pAid,
-    OUT UCHAR SupRate[],
+    IN PRTMP_ADAPTER pAd, 
+    IN VOID *pMsg, 
+    IN ULONG MsgLen, 
+    OUT PUCHAR pAddr2, 
+    OUT USHORT *pCapabilityInfo, 
+    OUT USHORT *pStatus, 
+    OUT USHORT *pAid, 
+    OUT UCHAR SupRate[], 
     OUT UCHAR *pSupRateLen,
-    OUT UCHAR ExtRate[],
+    OUT UCHAR ExtRate[], 
     OUT UCHAR *pExtRateLen,
     OUT PEDCA_PARM pEdcaParm)
 {
@@ -197,30 +199,30 @@ BOOLEAN PeerAssocRspSanity(
     PFRAME_802_11 pFrame = (PFRAME_802_11)pMsg;
     PEID_STRUCT   pEid;
 	ULONG		  Length = 0;
-
+    
     COPY_MAC_ADDR(pAddr2, pFrame->Hdr.Addr2);
     Ptr = pFrame->Octet;
-	Length += LENGTH_802_11;
-
-	*pCapabilityInfo = *(USHORT *)(&pFrame->Octet[0]);
-	Length += 2;
-	*pStatus = *(USHORT *)(&pFrame->Octet[2]);
-	Length += 2;
+	Length += LENGTH_802_11;	
+        
+    NdisMoveMemory(pCapabilityInfo, &pFrame->Octet[0], 2);
+	Length += 2;	
+    NdisMoveMemory(pStatus,         &pFrame->Octet[2], 2);
+	Length += 2;	
 
     *pExtRateLen = 0;
     pEdcaParm->bValid = FALSE;
-
-    if (*pStatus != MLME_SUCCESS)
+    
+    if (*pStatus != MLME_SUCCESS) 
         return TRUE;
-
-	*pAid = *(USHORT *)(&pFrame->Octet[4]);
+    
+    NdisMoveMemory(pAid, &pFrame->Octet[4], 2);
 	Length += 2;
     // 	change Endian in RTMPFrameEndianChange() on big endian platform
     //*pAid = le2cpu16(*pAid);
-
+    
     // TODO: check big endian issue &0x3fff
     *pAid = (*pAid) & 0x3fff; // AID is low 14-bit
-
+        
     // -- get supported rates from payload and advance the pointer
     IeType = pFrame->Octet[6];
     *pSupRateLen = pFrame->Octet[7];
@@ -228,16 +230,16 @@ BOOLEAN PeerAssocRspSanity(
     {
         DBGPRINT(RT_DEBUG_TRACE, "PeerAssocRspSanity fail - wrong SupportedRates IE\n");
         return FALSE;
-    }
-    else
-   		memcpy(SupRate, &pFrame->Octet[8], *pSupRateLen);
+    } 
+    else 
+   		NdisMoveMemory(SupRate, &pFrame->Octet[8], *pSupRateLen);
 
 	Length = Length + 2 + *pSupRateLen;
 
     // many AP implement proprietary IEs in non-standard order, we'd better
     // tolerate mis-ordered IEs to get best compatibility
     pEid = (PEID_STRUCT) &pFrame->Octet[8 + (*pSupRateLen)];
-
+            
     // get variable fields from payload and advance the pointer
 	while ((Length + 2 + pEid->Len) <= MsgLen)
     {
@@ -246,18 +248,18 @@ BOOLEAN PeerAssocRspSanity(
             case IE_EXT_SUPP_RATES:
                 if (pEid->Len <= MAX_LEN_OF_SUPPORTED_RATES)
                 {
-                    memcpy(ExtRate, pEid->Octet, pEid->Len);
+                    NdisMoveMemory(ExtRate, pEid->Octet, pEid->Len);
                     *pExtRateLen = pEid->Len;
                 }
                 break;
-
+				
 			case IE_VENDOR_SPECIFIC:
                 // handle WME PARAMTER ELEMENT
                 if (NdisEqualMemory(pEid->Octet, WME_PARM_ELEM, 6) && (pEid->Len == 24))
                 {
                     PUCHAR ptr;
                     int i;
-
+        
                     // parsing EDCA parameters
                     pEdcaParm->bValid          = TRUE;
                     pEdcaParm->bQAck           = FALSE; // pEid->Octet[0] & 0x10;
@@ -279,7 +281,7 @@ BOOLEAN PeerAssocRspSanity(
                 }
                 break;
 
-#if 0
+#if 0				
             case IE_EDCA_PARAMETER:
                 if (pEid->Len == 18)
                 {
@@ -309,38 +311,38 @@ BOOLEAN PeerAssocRspSanity(
                 DBGPRINT(RT_DEBUG_TRACE, "PeerAssocRspSanity - ignore unrecognized EID = %d\n", pEid->Eid);
                 break;
         }
-
+                   
 		Length = Length + 2 + pEid->Len;
-        pEid = (PEID_STRUCT)((UCHAR*)pEid + 2 + pEid->Len);
+        pEid = (PEID_STRUCT)((UCHAR*)pEid + 2 + pEid->Len);        
     }
 
     return TRUE;
 }
 
-/*
+/* 
     ==========================================================================
     Description:
         MLME message sanity check
     Return:
-        TRUE if all parameters are OK, FALSE otherwise
+        TRUE if all parameters are OK, FALSE otherwise       
     ==========================================================================
  */
 BOOLEAN PeerDisassocSanity(
-    IN PRTMP_ADAPTER pAd,
-    IN VOID *Msg,
-    IN ULONG MsgLen,
-    OUT PUCHAR pAddr2,
-    OUT USHORT *pReason)
+    IN PRTMP_ADAPTER pAd, 
+    IN VOID *Msg, 
+    IN ULONG MsgLen, 
+    OUT PUCHAR pAddr2, 
+    OUT USHORT *pReason) 
 {
     PFRAME_802_11 pFrame = (PFRAME_802_11)Msg;
 
     COPY_MAC_ADDR(pAddr2, pFrame->Hdr.Addr2);
-	*pReason = *(USHORT *)(&pFrame->Octet[0]);
+    NdisMoveMemory(pReason, &pFrame->Octet[0], 2);
 
     return TRUE;
 }
 
-/*
+/* 
     ==========================================================================
     Description:
         MLME message sanity check
@@ -349,21 +351,21 @@ BOOLEAN PeerDisassocSanity(
     ==========================================================================
  */
 BOOLEAN PeerDeauthSanity(
-    IN PRTMP_ADAPTER pAd,
-    IN VOID *Msg,
-    IN ULONG MsgLen,
-    OUT PUCHAR pAddr2,
-    OUT USHORT *pReason)
+    IN PRTMP_ADAPTER pAd, 
+    IN VOID *Msg, 
+    IN ULONG MsgLen, 
+    OUT PUCHAR pAddr2, 
+    OUT USHORT *pReason) 
 {
     PFRAME_802_11 pFrame = (PFRAME_802_11)Msg;
 
     COPY_MAC_ADDR(pAddr2, pFrame->Hdr.Addr2);
-	*pReason = *(USHORT *)(&pFrame->Octet[0]);
+    NdisMoveMemory(pReason, &pFrame->Octet[0], 2);
 
     return TRUE;
 }
 
-/*
+/* 
     ==========================================================================
     Description:
         MLME message sanity check
@@ -372,59 +374,59 @@ BOOLEAN PeerDeauthSanity(
     ==========================================================================
  */
 BOOLEAN PeerAuthSanity(
-    IN PRTMP_ADAPTER pAd,
-    IN VOID *Msg,
-    IN ULONG MsgLen,
-    OUT PUCHAR pAddr,
-    OUT USHORT *pAlg,
-    OUT USHORT *pSeq,
-    OUT USHORT *pStatus,
-    CHAR *pChlgText)
+    IN PRTMP_ADAPTER pAd, 
+    IN VOID *Msg, 
+    IN ULONG MsgLen, 
+    OUT PUCHAR pAddr, 
+    OUT USHORT *pAlg, 
+    OUT USHORT *pSeq, 
+    OUT USHORT *pStatus, 
+    CHAR *pChlgText) 
 {
     PFRAME_802_11 pFrame = (PFRAME_802_11)Msg;
 
     COPY_MAC_ADDR(pAddr,   pFrame->Hdr.Addr2);
-	*pAlg = *(USHORT *)(&pFrame->Octet[0]);
-	*pSeq = *(USHORT *)(&pFrame->Octet[2]);
-	*pStatus = *(USHORT *)(&pFrame->Octet[4]);
+    NdisMoveMemory(pAlg,    &pFrame->Octet[0], 2);
+    NdisMoveMemory(pSeq,    &pFrame->Octet[2], 2);
+    NdisMoveMemory(pStatus, &pFrame->Octet[4], 2);
 
     if (*pAlg == Ndis802_11AuthModeOpen)
     {
-        if (*pSeq == 1 || *pSeq == 2)
+        if (*pSeq == 1 || *pSeq == 2) 
         {
             return TRUE;
-        }
-        else
+        } 
+        else 
         {
             DBGPRINT(RT_DEBUG_TRACE, "PeerAuthSanity fail - wrong Seg#\n");
             return FALSE;
         }
-    }
-    else if (*pAlg == Ndis802_11AuthModeShared)
+    } 
+    else if (*pAlg == Ndis802_11AuthModeShared) 
     {
-        if (*pSeq == 1 || *pSeq == 4)
+        if (*pSeq == 1 || *pSeq == 4) 
         {
             return TRUE;
-        }
-        else if (*pSeq == 2 || *pSeq == 3)
+        } 
+        else if (*pSeq == 2 || *pSeq == 3) 
         {
-            memcpy(pChlgText, &pFrame->Octet[8], CIPHER_TEXT_LEN);
+            NdisMoveMemory(pChlgText, &pFrame->Octet[8], CIPHER_TEXT_LEN);
             return TRUE;
-        }
-        else
+        } 
+        else 
         {
             DBGPRINT(RT_DEBUG_TRACE, "PeerAuthSanity fail - wrong Seg#\n");
             return FALSE;
         }
-    }
-    else
+    } 
+    else 
     {
         DBGPRINT(RT_DEBUG_TRACE, "PeerAuthSanity fail - wrong algorithm\n");
         return FALSE;
     }
 }
 
-/*
+/* 
     ==========================================================================
     Description:
         MLME message sanity check
@@ -433,12 +435,12 @@ BOOLEAN PeerAuthSanity(
     ==========================================================================
  */
 BOOLEAN PeerProbeReqSanity(
-    IN PRTMP_ADAPTER pAd,
-    IN VOID *Msg,
-    IN ULONG MsgLen,
+    IN PRTMP_ADAPTER pAd, 
+    IN VOID *Msg, 
+    IN ULONG MsgLen, 
     OUT PUCHAR pAddr2,
-    OUT CHAR Ssid[],
-    OUT UCHAR *pSsidLen)
+    OUT CHAR Ssid[], 
+    OUT UCHAR *pSsidLen) 
 {
     UCHAR         Idx;
 	UCHAR	      RateLen;
@@ -447,21 +449,21 @@ BOOLEAN PeerProbeReqSanity(
 
     COPY_MAC_ADDR(pAddr2, pFrame->Hdr.Addr2);
 
-    if ((pFrame->Octet[0] != IE_SSID) || (pFrame->Octet[1] > MAX_LEN_OF_SSID))
+    if ((pFrame->Octet[0] != IE_SSID) || (pFrame->Octet[1] > MAX_LEN_OF_SSID)) 
     {
         DBGPRINT(RT_DEBUG_TRACE, "PeerProbeReqSanity fail - wrong SSID IE(Type=%d,Len=%d)\n",pFrame->Octet[0],pFrame->Octet[1]);
         return FALSE;
-    }
-
+    } 
+    
     *pSsidLen = pFrame->Octet[1];
-    memcpy(Ssid, &pFrame->Octet[2], *pSsidLen);
+    NdisMoveMemory(Ssid, &pFrame->Octet[2], *pSsidLen);
 
     Idx = *pSsidLen + 2;
 
 	// -- get supported rates from payload and advance the pointer
 	IeType = pFrame->Octet[Idx];
 	RateLen = pFrame->Octet[Idx + 1];
-	if (IeType != IE_SUPP_RATES)
+	if (IeType != IE_SUPP_RATES) 
     {
         DBGPRINT(RT_DEBUG_TRACE, "PeerProbeReqSanity fail - wrong SupportRates IE(Type=%d,Len=%d)\n",pFrame->Octet[Idx],pFrame->Octet[Idx+1]);
         return FALSE;
@@ -475,7 +477,7 @@ BOOLEAN PeerProbeReqSanity(
     return TRUE;
 }
 
-/*
+/* 
 	==========================================================================
 	Description:
 		MLME message sanity check
@@ -484,26 +486,26 @@ BOOLEAN PeerProbeReqSanity(
 	==========================================================================
  */
 BOOLEAN PeerBeaconAndProbeRspSanity(
-	IN PRTMP_ADAPTER pAd,
-	IN VOID *Msg,
-	IN ULONG MsgLen,
-	OUT PUCHAR pAddr2,
-	OUT PUCHAR pBssid,
-	OUT CHAR Ssid[],
-	OUT UCHAR *pSsidLen,
-	OUT UCHAR *pBssType,
-	OUT USHORT *pBeaconPeriod,
+	IN PRTMP_ADAPTER pAd, 
+	IN VOID *Msg, 
+	IN ULONG MsgLen, 
+	OUT PUCHAR pAddr2, 
+	OUT PUCHAR pBssid, 
+	OUT CHAR Ssid[], 
+	OUT UCHAR *pSsidLen, 
+	OUT UCHAR *pBssType, 
+	OUT USHORT *pBeaconPeriod, 
 	OUT UCHAR *pChannel,
 	OUT UCHAR *pNewChannel,
-	OUT LARGE_INTEGER *pTimestamp,
-	OUT CF_PARM *pCfParm,
-	OUT USHORT *pAtimWin,
-	OUT USHORT *pCapabilityInfo,
+	OUT LARGE_INTEGER *pTimestamp, 
+	OUT CF_PARM *pCfParm, 
+	OUT USHORT *pAtimWin, 
+	OUT USHORT *pCapabilityInfo, 
 	OUT UCHAR *pErp,
-	OUT UCHAR *pDtimCount,
-	OUT UCHAR *pDtimPeriod,
-	OUT UCHAR *pBcastFlag,
-	OUT UCHAR *pMessageToMe,
+	OUT UCHAR *pDtimCount, 
+	OUT UCHAR *pDtimPeriod, 
+	OUT UCHAR *pBcastFlag, 
+	OUT UCHAR *pMessageToMe, 
 	OUT UCHAR SupRate[],
 	OUT UCHAR *pSupRateLen,
 	OUT UCHAR ExtRate[],
@@ -514,7 +516,8 @@ BOOLEAN PeerBeaconAndProbeRspSanity(
 	OUT PQBSS_LOAD_PARM  pQbssLoad,
 	OUT PQOS_CAPABILITY_PARM pQosCapability,
 	OUT ULONG *pRalinkIe,
-	OUT UCHAR *LengthVIE,
+//	OUT UCHAR *LengthVIE,	
+	OUT USHORT *LengthVIE,	// edit by johnli, variable ie length could be > 256
 	OUT	PNDIS_802_11_VARIABLE_IEs pVIE)
 {
 	CHAR				*Ptr, TimLen;
@@ -528,7 +531,7 @@ BOOLEAN PeerBeaconAndProbeRspSanity(
 	Sanity = 0;
 
 	*pAtimWin = 0;
-	*pErp = 0;
+	*pErp = 0;	
 	*pDtimCount = 0;
 	*pDtimPeriod = 0;
 	*pBcastFlag = 0;
@@ -543,43 +546,43 @@ BOOLEAN PeerBeaconAndProbeRspSanity(
 	pQbssLoad->bValid = FALSE;		// default: no IE_QBSS_LOAD found
 	pEdcaParm->bValid = FALSE;		// default: no IE_EDCA_PARAMETER found
 	pQosCapability->bValid = FALSE; // default: no IE_QOS_CAPABILITY found
-
+	
 	pFrame = (PFRAME_802_11)Msg;
-
+	
 	// get subtype from header
 	SubType = (UCHAR)pFrame->Hdr.FC.SubType;
 
 	// get Addr2 and BSSID from header
 	COPY_MAC_ADDR(pAddr2, pFrame->Hdr.Addr2);
 	COPY_MAC_ADDR(pBssid, pFrame->Hdr.Addr3);
-
+	
 	Ptr = pFrame->Octet;
 	Length += LENGTH_802_11;
-
+	
 	// get timestamp from payload and advance the pointer
-	memcpy(pTimestamp, Ptr, TIMESTAMP_LEN);
+	NdisMoveMemory(pTimestamp, Ptr, TIMESTAMP_LEN);
 	Ptr += TIMESTAMP_LEN;
 	Length += TIMESTAMP_LEN;
 
 	// get beacon interval from payload and advance the pointer
-	*pBeaconPeriod = *(USHORT *)(Ptr);
+	NdisMoveMemory(pBeaconPeriod, Ptr, 2);
 	Ptr += 2;
 	Length += 2;
 
 	// get capability info from payload and advance the pointer
-	*pCapabilityInfo = *(USHORT *)(Ptr);
+	NdisMoveMemory(pCapabilityInfo, Ptr, 2);
 	Ptr += 2;
 	Length += 2;
 
-	if (CAP_IS_ESS_ON(*pCapabilityInfo))
+	if (CAP_IS_ESS_ON(*pCapabilityInfo)) 
 		*pBssType = BSS_INFRA;
-	else
+	else 
 		*pBssType = BSS_ADHOC;
 
 	pEid = (PEID_STRUCT) Ptr;
 
 	// get variable fields from payload and advance the pointer
-	while ((Length + 2 + pEid->Len) <= MsgLen)
+	while ((Length + 2 + pEid->Len) <= MsgLen) 
 	{
 
 		switch(pEid->Eid)
@@ -587,10 +590,10 @@ BOOLEAN PeerBeaconAndProbeRspSanity(
 			case IE_SSID:
 				// Already has one SSID EID in this beacon, ignore the second one
 				if (Sanity & 0x1)
-					break;
+					break;				
 				if(pEid->Len <= MAX_LEN_OF_SSID)
 				{
-					memcpy(Ssid, pEid->Octet, pEid->Len);
+					NdisMoveMemory(Ssid, pEid->Octet, pEid->Len);
 					*pSsidLen = pEid->Len;
 					Sanity |= 0x1;
 				}
@@ -605,10 +608,10 @@ BOOLEAN PeerBeaconAndProbeRspSanity(
 				if(pEid->Len <= MAX_LEN_OF_SUPPORTED_RATES)
 				{
 					Sanity |= 0x2;
-					memcpy(SupRate, pEid->Octet, pEid->Len);
+					NdisMoveMemory(SupRate, pEid->Octet, pEid->Len);
 					*pSupRateLen = pEid->Len;
 
-					// TODO: 2004-09-14 not a good design here, cause it exclude extra rates
+					// TODO: 2004-09-14 not a good design here, cause it exclude extra rates 
 					// from ScanTab. We should report as is. And filter out unsupported
 					// rates in MlmeAux.
 					// Check against the supported rates
@@ -628,7 +631,7 @@ BOOLEAN PeerBeaconAndProbeRspSanity(
 			case IE_DS_PARM:
 				if(pEid->Len == 1)
 				{
-					*pChannel = *pEid->Octet;
+					*pChannel = *pEid->Octet;					 
 					if (ChannelSanity(pAd, *pChannel) == 0)
 					{
 						DBGPRINT(RT_DEBUG_INFO, "PeerBeaconAndProbeRspSanity - wrong IE_DS_PARM (ch=%d)\n",*pChannel);
@@ -662,7 +665,7 @@ BOOLEAN PeerBeaconAndProbeRspSanity(
 			case IE_IBSS_PARM:
 				if(pEid->Len == 2)
 				{
-					*pAtimWin = le16_to_cpup((PUSHORT)pEid->Octet);
+					NdisMoveMemory(pAtimWin, pEid->Octet, pEid->Len);
 				}
 				else
 				{
@@ -698,16 +701,16 @@ BOOLEAN PeerBeaconAndProbeRspSanity(
 				{
 					// Copy to pVIE used by driver, wpa supplicant and ui
 					Ptr = (PUCHAR) pVIE;
-
+					
 					// Secure copy VIE to VarIE[MAX_VIE_LEN] didn't overflow.
                     if ((*LengthVIE + pEid->Len + 2) >= MAX_VIE_LEN)
                     {
                         DBGPRINT(RT_DEBUG_WARN, "PeerBeaconAndProbeRspSanity - Variable IEs out of resource [len(=%d) > MAX_VIE_LEN(=%d)]\n",
     					    (*LengthVIE + pEid->Len + 2), MAX_VIE_LEN);
-    			        break;
+    			        break;		    
                     }
 
-					memcpy(Ptr + *LengthVIE, &pEid->Eid, pEid->Len + 2);
+					NdisMoveMemory(Ptr + *LengthVIE, &pEid->Eid, pEid->Len + 2);
 					*LengthVIE += (pEid->Len + 2);
 				}
 				else if (NdisEqualMemory(pEid->Octet, WME_PARM_ELEM, 6) && (pEid->Len == 24))
@@ -767,54 +770,36 @@ BOOLEAN PeerBeaconAndProbeRspSanity(
 					pEdcaParm->Cwmax[QID_AC_VO] = CW_MAX_IN_BITS-1;
 					pEdcaParm->Txop[QID_AC_VO]	= 48;	// AC_VO: 48*32us ~= 1.5ms
 				}
-#if WPA_SUPPLICANT_SUPPORT
-				else if (NdisEqualMemory(pEid->Octet, WSC_OUI, 4) && (SubType == SUBTYPE_BEACON) && (pAd->PortCfg.Send_Beacon == TRUE))
+#if 1	// WSC_SUPPORT, edit by johnli, Let pVIE dedicated to wpa1 and wpa2 ie + wsc_ie
+				else	
 				{
-					union iwreq_data wrqu;
-					char buf[560] = {0};
-
-					pAd->PortCfg.WscIEBeacon.ValueLen = pEid->Len - 4;
-					memcpy(pAd->PortCfg.WscIEBeacon.Value, &pEid->Octet[4], pEid->Len - 4);
-
-
-					//Send WSC beacon to wpa_supplicant
-					memset(&wrqu, 0, sizeof(wrqu));
-					sprintf(buf, "WSCBEACON=<%d>", pAd->PortCfg.WscIEBeacon.ValueLen);
-					wrqu.data.length = strlen(buf);
-					memcpy(&buf[wrqu.data.length], pAd->PortCfg.WscIEBeacon.Value, pAd->PortCfg.WscIEBeacon.ValueLen);
-					wrqu.data.length += pAd->PortCfg.WscIEBeacon.ValueLen;
-					wireless_send_event(pAd->net_dev, IWEVCUSTOM, &wrqu, buf);
-					//COPY_MAC_ADDR(pAd->PortCfg.MBSSID[pAd->IoctlIF].WscIEProbRspAddr2, pAddr2);
-					//return FALSE;
-				}
-#endif
-				else
-				{
+				    //
 					// Gemtek ask us to pass other vendor's IE for their applications
-					Ptr = (PUCHAR) pVIE;
-
-					// Secure copy VIE to VarIE[MAX_VIE_LEN] didn't overflow.
+				    //
                     if ((*LengthVIE + pEid->Len + 2) >= MAX_VIE_LEN)
                     {
                         DBGPRINT(RT_DEBUG_WARN, "PeerBeaconAndProbeRspSanity - Variable IEs out of resource [len(=%d) > MAX_VIE_LEN(=%d)]\n",
     					    (*LengthVIE + pEid->Len + 2), MAX_VIE_LEN);
-    			        break;
+    			        break;		    
                     }
 
-					memcpy(Ptr + *LengthVIE, &pEid->Eid, pEid->Len + 2);
+					Ptr = (PUCHAR) pVIE;
+					NdisMoveMemory(Ptr + *LengthVIE, &pEid->Eid, pEid->Len + 2);
 					*LengthVIE += (pEid->Len + 2);
 				}
-
+#endif					
+				
+			
 				DBGPRINT(RT_DEBUG_INFO, "PeerBeaconAndProbeRspSanity - Receive IE_WPA\n");
 				break;
 
 			case IE_EXT_SUPP_RATES:
 				if (pEid->Len <= MAX_LEN_OF_SUPPORTED_RATES)
 				{
-					memcpy(ExtRate, pEid->Octet, pEid->Len);
+					NdisMoveMemory(ExtRate, pEid->Octet, pEid->Len);
 					*pExtRateLen = pEid->Len;
 
-					// TODO: 2004-09-14 not a good design here, cause it exclude extra rates
+					// TODO: 2004-09-14 not a good design here, cause it exclude extra rates 
 					// from ScanTab. We should report as is. And filter out unsupported
 					// rates in MlmeAux.
 					// Check against the supported rates
@@ -828,7 +813,7 @@ BOOLEAN PeerBeaconAndProbeRspSanity(
 					*pErp = (UCHAR)pEid->Octet[0];
 				}
 				break;
-
+						
 			// WPA2 & 802.11i RSN
 			case IE_RSN:
 				// There is no OUI for version anymore, check the group cipher OUI before copying
@@ -836,20 +821,20 @@ BOOLEAN PeerBeaconAndProbeRspSanity(
 				{
 					// Copy to pVIE used by driver, wpa supplicant and ui
 					Ptr = (PUCHAR) pVIE;
-
+					
 					// Secure copy VIE to VarIE[MAX_VIE_LEN] didn't overflow.
                     if ((*LengthVIE + pEid->Len + 2) >= MAX_VIE_LEN)
                     {
                         DBGPRINT(RT_DEBUG_WARN, "PeerBeaconAndProbeRspSanity - Variable IEs out of resource [len(=%d) > MAX_VIE_LEN(=%d)]\n",
     					    (*LengthVIE + pEid->Len + 2), MAX_VIE_LEN);
-    			        break;
+    			        break;		    
                     }
 
-					memcpy(Ptr + *LengthVIE, &pEid->Eid, pEid->Len + 2);
+					NdisMoveMemory(Ptr + *LengthVIE, &pEid->Eid, pEid->Len + 2);
 					*LengthVIE += (pEid->Len + 2);
 				}
 				DBGPRINT(RT_DEBUG_INFO, "IE_RSN length = %d\n", pEid->Len);
-				break;
+				break;				
 #if 0
 			case IE_QBSS_LOAD:
 				if (pEid->Len == 5)
@@ -860,7 +845,7 @@ BOOLEAN PeerBeaconAndProbeRspSanity(
 					pQbssLoad->RemainingAdmissionControl = pEid->Octet[3] + pEid->Octet[4] * 256;
 				}
 				break;
-
+				
 			case IE_EDCA_PARAMETER:
 				if (pEid->Len == 18)
 				{
@@ -901,22 +886,22 @@ BOOLEAN PeerBeaconAndProbeRspSanity(
 #endif
 
 			default:
-				// Unknown IE, do nothing!!!
+				// Unknown IE, do nothing!!!          
 				DBGPRINT(RT_DEBUG_INFO, "PeerBeaconAndProbeRspSanity - unrecognized EID = %d\n", pEid->Eid);
-				break;
+				break;         
 		}
-
-		Length = Length + 2 + pEid->Len;  // Eid[1] + Len[1]+ content[Len]
-		pEid = (PEID_STRUCT)((UCHAR*)pEid + 2 + pEid->Len);
+		
+		Length = Length + 2 + pEid->Len;  // Eid[1] + Len[1]+ content[Len]	
+		pEid = (PEID_STRUCT)((UCHAR*)pEid + 2 + pEid->Len); 	   
 	}
 
 	// For some 11a AP. it did not have the channel EID, patch here
 	if ((pAd->LatchRfRegs.Channel > 14) && ((Sanity & 0x04) == 0))
 	{
-		*pChannel = pAd->LatchRfRegs.Channel;
-		Sanity |= 0x4;
+		*pChannel = pAd->LatchRfRegs.Channel;				 
+		Sanity |= 0x4;		
 	}
-
+	
 	if (Sanity != 0x7)
 	{
 		DBGPRINT(RT_DEBUG_WARN, "PeerBeaconAndProbeRspSanity - missing field, Sanity=0x%02x\n", Sanity);
@@ -929,50 +914,50 @@ BOOLEAN PeerBeaconAndProbeRspSanity(
 
 }
 
-/*
+/* 
     ==========================================================================
     Description:
-
+        
     ==========================================================================
  */
 BOOLEAN GetTimBit(
-    IN CHAR *Ptr,
-    IN USHORT Aid,
-    OUT UCHAR *TimLen,
-    OUT UCHAR *BcastFlag,
-    OUT UCHAR *DtimCount,
+    IN CHAR *Ptr, 
+    IN USHORT Aid, 
+    OUT UCHAR *TimLen, 
+    OUT UCHAR *BcastFlag, 
+    OUT UCHAR *DtimCount, 
     OUT UCHAR *DtimPeriod,
-    OUT UCHAR *MessageToMe)
+    OUT UCHAR *MessageToMe) 
 {
     UCHAR          BitCntl, N1, N2, MyByte, MyBit;
     CHAR          *IdxPtr;
 
     IdxPtr = Ptr;
-
+    
     IdxPtr ++;
     *TimLen = *IdxPtr;
-
+    
     // get DTIM Count from TIM element
     IdxPtr ++;
     *DtimCount = *IdxPtr;
-
+    
     // get DTIM Period from TIM element
     IdxPtr++;
     *DtimPeriod = *IdxPtr;
-
+        
     // get Bitmap Control from TIM element
     IdxPtr++;
     BitCntl = *IdxPtr;
 
-    if ((*DtimCount == 0) && (BitCntl & 0x01))
+    if ((*DtimCount == 0) && (BitCntl & 0x01)) 
         *BcastFlag = TRUE;
-    else
+    else 
         *BcastFlag = FALSE;
-
+    
     // Parse Partial Virtual Bitmap from TIM element
     N1 = BitCntl & 0xfe;    // N1 is the first bitmap byte#
     N2 = *TimLen - 4 + N1;  // N2 is the last bitmap byte#
-
+    
     if ((Aid < (N1 << 3)) || (Aid >= ((N2 + 1) << 3)))
         *MessageToMe = FALSE;
     else
@@ -984,10 +969,10 @@ BOOLEAN GetTimBit(
 
         //if (*IdxPtr)
         //    DBGPRINT(RT_DEBUG_WARN, "TIM bitmap = 0x%02x\n", *IdxPtr);
-
+            
         if (*IdxPtr & (0x01 << MyBit))
             *MessageToMe = TRUE;
-        else
+        else 
             *MessageToMe = FALSE;
     }
 
@@ -995,7 +980,7 @@ BOOLEAN GetTimBit(
 }
 
 UCHAR ChannelSanity(
-    IN PRTMP_ADAPTER pAd,
+    IN PRTMP_ADAPTER pAd, 
     IN UCHAR channel)
 {
     int i;
@@ -1012,7 +997,7 @@ UCHAR ChannelSanity(
 	========================================================================
 	Routine Description:
 		Sanity check NetworkType (11b, 11g or 11a)
-
+		
 	Arguments:
 		Channel				Current Channel
 		SupRate				Peer's Supported Rate Buffer
@@ -1035,7 +1020,7 @@ NDIS_802_11_NETWORK_TYPE NetworkTypeInUseSanity(
 	IN UCHAR  ExtRateLen)
 {
 	NDIS_802_11_NETWORK_TYPE	NetWorkType;
-	UCHAR						Type = 0;
+	UCHAR						Type = 0;	
 	//UCHAR						rate, i;
 
 	Type = PeerTxTypeInUseSanity(Channel, SupRate, SupRateLen, ExtRate, ExtRateLen);
@@ -1052,14 +1037,14 @@ NDIS_802_11_NETWORK_TYPE NetworkTypeInUseSanity(
 			break;
 		case CCKOFDM_RATE:
 			NetWorkType = Ndis802_11OFDM24;
-			break;
+			break;			
 		default:
 			NetWorkType = Ndis802_11DS;
 			break;
 	}
 
 	return NetWorkType;
-}
+}	
 
 /*
 	========================================================================
@@ -1071,7 +1056,7 @@ NDIS_802_11_NETWORK_TYPE NetworkTypeInUseSanity(
 		SupRateLen			Peer's Supported Rate Length
 		ExtRate				Peer's Extended Rate Buffer
 		ExtRateLen			Peer's Extended Rate Length
-
+		
 	Return Value:
     		1 - CCK
     		2 - OFDM
@@ -1108,12 +1093,12 @@ UCHAR PeerTxTypeInUseSanity(
 				//
 				Type |= 0x02;   // OFDM
 				break;
-			}
+			}	
 		}
 
 		//
 		// Second check Extend Rate.
-		// Maybe OFDM rate store on Extend Rate.
+		// Maybe OFDM rate store on Extend Rate. 
 		//
 		if ((Type & 0x02) == 0)
 		{
@@ -1141,13 +1126,13 @@ UCHAR PeerTxTypeInUseSanity(
 	}
 
 	return Type;
-}
+}	
 
 /*
 	========================================================================
 	Routine Description:
 		Sanity check pairwise key on Encryption::Ndis802_11Encryption1Enabled
-
+		
 	Arguments:
 		pAd      - Pointer to our adapter
 		pBuf 	 - Pointer to NDIS_802_11_KEY structure
@@ -1155,7 +1140,7 @@ UCHAR PeerTxTypeInUseSanity(
 	Return Value:
 		NDIS_STATUS_SUCCESS
 		NDIS_STATUS_FAILURE
-
+        
 	Note:
 		For OID_802_11_ADD_KEY setting, on old wep stuff also need to verify
 		the structure of NIDS_802_11_KEY
@@ -1170,8 +1155,8 @@ NDIS_STATUS	RTMPWPAWepKeySanity(
 	NDIS_STATUS			Status = NDIS_STATUS_SUCCESS;
 	BOOLEAN 			bTxKey; 		// Set the key as transmit key
 	BOOLEAN 			bPairwise;		// Indicate the key is pairwise key
-	//UCHAR			CipherAlg;
-	//UINT			i;
+//	UCHAR			CipherAlg;
+//	UINT			i;
 
 	pKey = (PNDIS_802_11_KEY) pBuf;
 	KeyIdx = pKey->KeyIndex & 0x0fffffff;
@@ -1183,11 +1168,11 @@ NDIS_STATUS	RTMPWPAWepKeySanity(
 	// 1. Check Group / Pairwise Key
 	if (bPairwise)	// Pairwise Key
 	{
-		// 1. Check KeyIdx
+		// 1. Check KeyIdx 
 		// it is a shared key
 		if (KeyIdx > 4)
 			return (NDIS_STATUS_FAILURE);
-
+			
 		// 2. Check bTx, it must be true, otherwise, return NDIS_STATUS_FAILURE
 		if (bTxKey == FALSE)
 			return(NDIS_STATUS_FAILURE);
@@ -1212,9 +1197,9 @@ NDIS_STATUS	RTMPWPAWepKeySanity(
 		// 2. Check Key index for supported Group Key
 		if (KeyIdx > 4)
 			return(NDIS_STATUS_FAILURE);
-
+	
 	}
-
+     
 	if (pKey->KeyIndex & 0x80000000)
 	{
 		// Default key for tx (shared key)
@@ -1222,9 +1207,6 @@ NDIS_STATUS	RTMPWPAWepKeySanity(
 	}
     //always use BSS0=0
 //	AsicAddSharedKeyEntry(pAd, 0, (UCHAR)KeyIdx, CipherAlg, pAd->SharedKey[KeyIdx].Key, NULL, NULL);
-
-
-     	pAd->PortCfg.PortSecured = WPA_802_1X_PORT_SECURED;	//For Test
 
 	return (Status);
 }
@@ -1246,7 +1228,7 @@ NDIS_STATUS	RTMPRemoveKeySanity(
 	DBGPRINT(RT_DEBUG_TRACE,"---> RTMPWPARemoveKeyProc\n");
 
 	pKey = (PNDIS_802_11_REMOVE_KEY) pBuf;
-
+		
 	if (pAd->PortCfg.AuthMode >= Ndis802_11AuthModeWPA)
 	{
 		pKey = (PNDIS_802_11_REMOVE_KEY) pBuf;
@@ -1295,7 +1277,7 @@ NDIS_STATUS	RTMPRemoveKeySanity(
 	else
 	{
 		KeyIdx = pKey->KeyIndex;
-
+		
 		if (KeyIdx & 0x80000000)
 		{
 			// Should never set default bit when remove key
@@ -1314,32 +1296,35 @@ NDIS_STATUS	RTMPRemoveKeySanity(
 			}
 		}
 	}
-
+	
 	return (Status);
 }
 
-/*
+/* 
     ==========================================================================
     Description:
         MLME message sanity check to get config data from AP
     Return:
         TRUE if all parameters are OK, FALSE otherwise
-
+        
     ==========================================================================
  */
 BOOLEAN BackDoorProbeRspSanity(
-    IN PRTMP_ADAPTER pAd,
-    IN VOID *Msg,
+    IN PRTMP_ADAPTER pAd, 
+    IN VOID *Msg, 
     IN ULONG MsgLen,
     OUT CHAR *pCfgDataBuf)
 {
-    PFRAME_802_11       pFrame = (PFRAME_802_11)Msg;
+//    PFRAME_802_11       pFrame = (PFRAME_802_11)Msg;  // remove by johnli, fix WPAPSK/WPA2PSK bugs for receiving EAPoL fragmentation packets
     CHAR                *Ptr, CfgData[255] = {0};
     PEID_STRUCT         eid_ptr;
     USHORT              cfgDataLen = 0;
 
-    Ptr = pFrame->Octet;
-
+    // edit by johnli, fix WPAPSK/WPA2PSK bugs for receiving EAPoL fragmentation packets
+//    Ptr = pFrame->Octet;
+    Ptr = (CHAR *)Msg;
+    // end johnli
+    
     // timestamp from payload and advance the pointer
     Ptr += TIMESTAMP_LEN;
 
@@ -1352,7 +1337,10 @@ BOOLEAN BackDoorProbeRspSanity(
     eid_ptr = (PEID_STRUCT) Ptr;
 
     // get variable fields from payload and advance the pointer
-    while(((UCHAR*)eid_ptr + eid_ptr->Len + 1) < ((UCHAR*)pFrame + MsgLen))
+    // edit by johnli, fix WPAPSK/WPA2PSK bugs for receiving EAPoL fragmentation packets
+//    while(((UCHAR*)eid_ptr + eid_ptr->Len + 1) < ((UCHAR*)pFrame + MsgLen))
+    while(((UCHAR*)eid_ptr + eid_ptr->Len + 1) < ((UCHAR*)Msg + MsgLen))
+    // end johnli
     {
         memset(CfgData, 0, 255);
         switch(eid_ptr->Eid)
@@ -1360,43 +1348,36 @@ BOOLEAN BackDoorProbeRspSanity(
 	        case IE_VENDOR_SPECIFIC:
                 if (NdisEqualMemory(eid_ptr->Octet, RALINK_OUI, 3))
                 {
-                    if ((eid_ptr->Octet[3] & 0x80) == 0x80)
+                    if ((eid_ptr->Octet[3] & 0x80) == 0x80) 
                     {
-                        if ( (cfgDataLen + eid_ptr->Len - 4) <= MAX_CFG_BUFFER_LEN)
+                        if ( (cfgDataLen + eid_ptr->Len - 4) <= MAX_CFG_BUFFER_LEN) 
                         {
-                            //memcpy((pCfgDataBuf + cfgDataLen), (eid_ptr->Octet + 4), (eid_ptr->Len - 4));
-                            memcpy(CfgData, (eid_ptr->Octet + 4), (eid_ptr->Len - 4));
-                            DBGPRINT(RT_DEBUG_INFO, "%s\n", CfgData);
-                            KPRINT(KERN_INFO, "%s\n", CfgData);
+                            //NdisMoveMemory((pCfgDataBuf + cfgDataLen), (eid_ptr->Octet + 4), (eid_ptr->Len - 4));
+                            NdisMoveMemory(CfgData, (eid_ptr->Octet + 4), (eid_ptr->Len - 4));
+                            printk("%s\n", CfgData);
                             return TRUE;
                         }
-                        else
+                        else 
                         {
-                            DBGPRINT(RT_DEBUG_ERROR, "BackDoorProbeRspSanity: cfgDataLen > MAX_CFG_BUFFER_LEN\n");
-                            KPRINT(KERN_INFO,
-								"BackDoorProbeRspSanity: cfgDataLen > MAX_CFG_BUFFER_LEN\n");
+                            printk("BackDoorProbeRspSanity: cfgDataLen > MAX_CFG_BUFFER_LEN\n");
                             return FALSE;
                         }
                     }
-                    else if ((eid_ptr->Octet[3] & 0x40) == 0x40)
+                    else if ((eid_ptr->Octet[3] & 0x40) == 0x40) 
                     {
-                        //memcpy((pCfgDataBuf + cfgDataLen), (eid_ptr->Octet + 4), (eid_ptr->Len - 4));
+                        //NdisMoveMemory((pCfgDataBuf + cfgDataLen), (eid_ptr->Octet + 4), (eid_ptr->Len - 4));
                         cfgDataLen += (eid_ptr->Len - 4);
-                        memcpy(CfgData, (eid_ptr->Octet + 4), (eid_ptr->Len - 4));
-                        if (cfgDataLen > MAX_CFG_BUFFER_LEN)
+                        NdisMoveMemory(CfgData, (eid_ptr->Octet + 4), (eid_ptr->Len - 4));
+                        if (cfgDataLen > MAX_CFG_BUFFER_LEN) 
                         {
-                            DBGPRINT(RT_DEBUG_ERROR, "BackDoorProbeRspSanity: cfgDataLen > MAX_CFG_BUFFER_LEN\n");
-                            KPRINT(KERN_INFO,
-								"BackDoorProbeRspSanity: cfgDataLen > MAX_CFG_BUFFER_LEN\n");
+                            printk("BackDoorProbeRspSanity: cfgDataLen > MAX_CFG_BUFFER_LEN\n");
                             return FALSE;
                         }
-                        else {
-                            DBGPRINT(RT_DEBUG_INFO, "%s", CfgData);
-                            KPRINT(KERN_INFO, "%s", CfgData);
-						}
+                        else
+                            printk("%s", CfgData);
                     }
                     break;
-                }
+                }            
             default:
                 break;
         }

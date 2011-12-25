@@ -4,46 +4,58 @@ else
 CFLAGS += $(CCFLAGSY)
 endif
 
-MODULE_NAME := rt73
-IF_NAME :=     wlan*
 
-FIRMWARES :=   rt73.bin
-FIRM_DIR :=    /lib/firmware
-
-CONFIG_DIR :=  /etc/Wireless/RT73STA
-CONFIG_FILE := rt73sta.dat
+HAS_RALINK_WPA_SUPPLICANT_SUPPORT=n
+HAS_NATIVE_WPA_SUPPLICANT_SUPPORT=y
+HAS_BLOCK_NET_IF=y
 
 EXTRA_CFLAGS += -I$(src)/include 
-EXTRA_CFLAGS += -DAGGREGATION_SUPPORT -DWMM_SUPPORT
-#EXTRA_CFLAGS += -DRALINK_ATE
+EXTRA_CFLAGS += -Wall -O2 -Wundef -Wstrict-prototypes
+EXTRA_CFLAGS += -Wno-trigraphs 
 
 
-EXTRA_CFLAGS += -o $(WFLAGS)
+WFLAGS := -Wall -Wstrict-prototypes -Wno-trigraphs
 
-$(MODULE_NAME)-objs := 	rtmp_main.o \
-		mlme.o \
-		connect.o \
-		rtusb_bulk.o \
-		rtusb_io.o \
-		sync.o \
-		assoc.o \
-		auth.o \
-		auth_rsp.o \
-		rtusb_data.o \
-		rtmp_init.o  \
-		sanity.o \
-		rtmp_wep.o \
-		rtmp_info.o \
-		rtmp_tkip.o \
-		wpa.o \
-		md5.o \
-		rt2x00debug.o
+ifeq ($(HAS_RALINK_WPA_SUPPLICANT_SUPPORT),y)
+WFLAGS += -DRALINK_WPA_SUPPLICANT_SUPPORT
+endif
 
-ifdef TOPDIR
-obj-m += $(MODULE_NAME).o
+ifeq ($(HAS_NATIVE_WPA_SUPPLICANT_SUPPORT),y)
+WFLAGS += -DNATIVE_WPA_SUPPLICANT_SUPPORT
+endif
+
+ifeq ($(HAS_BLOCK_NET_IF),y)
+WFLAGS += -DBLOCK_NET_IF
+endif
+#EXTRA_CFLAGS += -DDBG
+EXTRA_CFLAGS += -o $(WFLAGS) 
+
+
+rt73-objs := \
+	rtmp_main.o \
+	mlme.o \
+	connect.o \
+	rtusb_bulk.o \
+	rtusb_io.o \
+	sync.o \
+	assoc.o \
+	auth.o \
+	auth_rsp.o \
+	rtusb_data.o \
+	rtmp_init.o \
+	sanity.o \
+	rtmp_wep.o \
+	rtmp_info.o \
+	rtmp_tkip.o \
+	wpa.o md5.o
+
+ifeq ($(HAS_NATIVE_WPA_SUPPLICANT_SUPPORT),y)
+rt73-objs += rtmp_wext.o
+endif
+
+ifeq ($(HAS_BLOCK_NET_IF),y)
+rt73-objs += netif_block.o
 endif
 
 
-
-
-
+obj-m := rt73.o

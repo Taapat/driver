@@ -1,37 +1,41 @@
-/***************************************************************************
- * RT2x00 SourceForge Project - http://rt2x00.serialmonkey.com             *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- *                                                                         *
- *   Licensed under the GNU GPL                                            *
- *   Original code supplied under license from RaLink Inc, 2004.           *
- ***************************************************************************/
+/*
+ ***************************************************************************
+ * Ralink Tech Inc.
+ * 5F, No. 36 Taiyuan St.
+ * Jhubei City
+ * Hsinchu County 302, Taiwan, R.O.C.
+ *
+ * (c) Copyright 2002-2008, Ralink Technology, Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify  * 
+ * it under the terms of the GNU General Public License as published by  * 
+ * the Free Software Foundation; either version 2 of the License, or     * 
+ * (at your option) any later version.                                   * 
+ *                                                                       * 
+ * This program is distributed in the hope that it will be useful,       * 
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of        * 
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         * 
+ * GNU General Public License for more details.                          * 
+ *                                                                       * 
+ * You should have received a copy of the GNU General Public License     * 
+ * along with this program; if not, write to the                         * 
+ * Free Software Foundation, Inc.,                                       * 
+ * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             * 
+ *                                                                       * 
+ *************************************************************************
 
-/***************************************************************************
- *	Module Name:	rt73.h
- *
- *	Abstract: RT2573 ASIC related definition & structures
- *
- *	Revision History:
- *	Who		When		What
- *	--------	----------	-----------------------------
- *	Nemo Tang	02-20-2005	created
- *	idamlaj	05-10-2006	Import rfmon implementation
- *
- ***************************************************************************/
+	Module Name:
+	rt73.h
+
+	Abstract:
+	RT2573 ASIC	related	definition & structures
+
+	Revision History:
+	Who			When		  What
+	--------	----------	  ----------------------------------------------
+	Nemo Tang	02-20-2005	  created
+
+*/
 
 #ifndef	__RT73_H__
 #define	__RT73_H__
@@ -42,7 +46,8 @@
 
 // 8051 firmware image - base address = 0x4000
 #define FIRMWARE_IMAGE_BASE     0x800
-#define FIRMWARE_IMAGE_SIZE	2048	// 2k byte
+#define MAX_FIRMWARE_IMAGE_SIZE 2048   // 2kbytes
+
 
 //
 // Security key table memory, base address = 0x1000
@@ -56,7 +61,7 @@ typedef struct _HW_KEY_ENTRY {          // 32-byte per entry
 	UCHAR   Key[16];
 	UCHAR   TxMic[8];
 	UCHAR   RxMic[8];
-} HW_KEY_ENTRY, *PHW_KEY_ENTRY;
+} HW_KEY_ENTRY, *PHW_KEY_ENTRY; 
 #define HW_KEY_ENTRY_SIZE           sizeof(HW_KEY_ENTRY)
 
 // 64-entry for pairwise key table
@@ -298,38 +303,38 @@ typedef struct _HW_PAIRWISE_TA_ENTRY {  // 8-byte per entry
 //
 #ifdef BIG_ENDIAN
 typedef	struct	_TXD_STRUC {
-	// Word 0
-	ULONG       CipherAlg:3;
-	ULONG       Burst2:1;			// definition as same as "Burst", for backward compatible set this one to the same as "Burst" set.
+	// word 0
+	ULONG       CipherAlg:3;	
+	ULONG       Burst2:1;            // definition as same as "Burst", for backward compatible set this one to the same as "Burst" set.
 	ULONG       DataByteCnt:12;
 	ULONG       KeyIndex:6;         // Key index (0~31) to the pairwise KEY table; or
 									// 0~3 to shared KEY table 0 (BSS0). STA always use BSS0
 									// 4~7 to shared KEY table 1 (BSS1)
 									// 8~11 to shared KEY table 2 (BSS2)
 									// 12~15 to shared KEY table 3 (BSS3)
-
-	ULONG       KeyTable:1;        	// 1: use per-client pairwise KEY table, 0: shared KEY table
-	ULONG       TkipMic:1;         	// 1: ASIC is responsible for appending TKIP MIC if TKIP is inused
-	ULONG		RetryMd:1;         	// 1: Long retry (4 times), 0: short retry (7 times)
-	ULONG		IFS:1;             	// 1: require a BACKOFF before this frame, 0:SIFS before this frame
-	ULONG      	Ofdm:1;				// 1: TX using OFDM rates
-	ULONG		Timestamp:1;		// 1: MAC auto overwrite current TSF into frame body
-	ULONG		ACK:1;             	// 1: ACK is required
+									
+	ULONG       KeyTable:1;         // 1: use per-client pairwise KEY table, 0: shared KEY table
+	ULONG       TkipMic:1;          // 1: ASIC is responsible for appending TKIP MIC if TKIP is inused
+	ULONG		RetryMd:1;          // 1: Long retry (4 times), 0: short retry (7 times)
+	ULONG		IFS:1;              // 1: require a BACKOFF before this frame, 0:SIFS before this frame
+	ULONG       Ofdm:1;             // 1: TX using OFDM rates
+	ULONG		Timestamp:1;        // 1: MAC auto overwrite current TSF into frame body
+	ULONG		ACK:1;              // 1: ACK is required
 	ULONG		MoreFrag:1;			// 1: More fragment following this frame
-	ULONG		Drop:1;				// 0: skip this frame, 1:valid frame inside
+	ULONG		Drop:1;			    // 0: skip this frame, 1:valid frame inside
 	ULONG		Burst:1;			// 1: Contiguously used current End Ponit, eg, Fragment packet should turn on.
-									//	Tell EDCA that the next frame belongs to the same "burst" even though TXOP=0
+									//    Tell EDCA that the next frame belongs to the same "burst" even though TXOP=0
 
 	// Word	1
 	ULONG       BufCount:3;         // number of buffers in this TXD
 	ULONG       HwSeq:1;            // MAC auto replace the 12-bit frame sequence #
-	ULONG       :6;
-	ULONG       IvOffset:6;
-	ULONG       Cwmax:4;
-	ULONG       Cwmin:4;
-	ULONG       Aifsn:4;
-	ULONG       HostQId:4;          // EDCA/HCCA queue ID
-
+	ULONG       :6;	
+	ULONG       IvOffset:6;	
+	ULONG       Cwmax:4;	
+	ULONG       Cwmin:4;	
+	ULONG       Aifsn:4;	
+	ULONG       HostQId:4;          // EDCA/HCCA queue ID	
+	
 	// Word	2
 	ULONG      	PlcpLengthHigh:8;
 	ULONG      	PlcpLengthLow:8;
@@ -343,9 +348,9 @@ typedef	struct	_TXD_STRUC {
 	ULONG       Eiv;
 
 	// Word 5
-	ULONG       Reserved:7;
+	ULONG       Reserved:7;	
 	ULONG       bWaitingDmaDoneInt:1; // pure s/w flag. 1:TXD been filled with data and waiting for TxDoneISR for housekeeping
-	ULONG       BbpTxPower:8;
+	ULONG       BbpTxPower:8;	
 	ULONG       PktId:8;            // driver assigned packet ID to categorize TXResult in TxDoneInterrupt
 	ULONG       FrameOffset:8;      // frame start offset inside ASIC TXFIFO (after TXINFO field)
 
@@ -354,7 +359,7 @@ typedef	struct	_TXD_STRUC {
 
 	// The following fields are not used by MAC block. They are used by DMA block and HOST
 	// driver only. Once a frame has been DMA to ASIC, all the following fields are useless
-	// to ASIC.
+	// to ASIC.	
 }	TXD_STRUC, *PTXD_STRUC;
 #else
 typedef	struct	_TXD_STRUC {
@@ -376,7 +381,7 @@ typedef	struct	_TXD_STRUC {
 									// 4~7 to shared KEY table 1 (BSS1)
 									// 8~11 to shared KEY table 2 (BSS2)
 									// 12~15 to shared KEY table 3 (BSS3)
-
+	
 	ULONG       DataByteCnt:12;
 	ULONG       Burst2:1;            // definition as same as "Burst", for backward compatible set this one to the same as "Burst" set.
 	ULONG       CipherAlg:3;
@@ -390,7 +395,7 @@ typedef	struct	_TXD_STRUC {
 	ULONG       :6;
 	ULONG       HwSeq:1;            // MAC auto replace the 12-bit frame sequence #
 	ULONG       BufCount:3;         // number of buffers in this TXD
-
+	
 	// Word	2
 	ULONG      	PlcpSignal:8;
 	ULONG      	PlcpService:8;
@@ -425,10 +430,10 @@ typedef	struct	_TXD_STRUC {
 #ifdef BIG_ENDIAN
 typedef	struct	_RXD_STRUC	{
 	// Word	0
-	ULONG		CipherAlg:3;
-	ULONG		Rsv:1;
-	ULONG		DataByteCnt:12;
-	ULONG		KeyIndex:6;         // decryption key actually used
+	ULONG       CipherAlg:3;	
+	ULONG       Rsv:1;
+	ULONG		DataByteCnt:12;	
+	ULONG       KeyIndex:6;         // decryption key actually used
 	ULONG		CipherErr:2;        // 0: decryption okay, 1:ICV error, 2:MIC error, 3:KEY not valid
 //	ULONG		PhyErr:1;           // 1: this frame is received with PHY error
 	ULONG		Ofdm:1;             // 1: this frame is received in OFDM rate
@@ -437,33 +442,33 @@ typedef	struct	_RXD_STRUC	{
 	ULONG		Bcast:1;            // 1: this is a broadcast frame
 	ULONG		Mcast:1;            // 1: this is a multicast frame
 	ULONG		U2M:1;              // 1: this RX frame is unicast to me
-	ULONG		Drop:1;             // 1: drop without receiving to HOST
+	ULONG       Drop:1;             // 1: drop without receiving to HOST
 	ULONG		Owner:1;            // 1: owned by ASIC, 0: owned by HOST driver
-
-	// Word 1
-	ULONG		Rsv1:1;
-	ULONG		FrameOffset:7;
-	ULONG		Rsv0:8;
-	ULONG		PlcpRssi:8;         // RSSI reported by BBP
-	ULONG		PlcpSignal:8;       // RX raw data rate reported by BBP
-
-	// Word 2
-	ULONG		Iv;                 // received IV if originally encrypted; for replay attack checking
+	
+	// word 1	
+	ULONG       Rsv1:1;	
+	ULONG       FrameOffset:7;			
+	ULONG       Rsv0:8;
+	ULONG       PlcpRssi:8;         // RSSI reported by BBP
+	ULONG       PlcpSignal:8;       // RX raw data rate reported by BBP
+    
+	// Word	2
+	ULONG       Iv;                 // received IV if originally encrypted; for replay attack checking
 
 	// Word 3
 	ULONG       Eiv;                // received EIV if originally encrypted; for replay attack checking
 
-	// Word 4
-	ULONG		Rsv2;
+	// word 4
+	ULONG       Rsv2;
 
 	// The above 20-byte is called RXINFO and is prepared by MAC RX block and passed
 	// the HOST driver.
 
-	// The following fields are for DMA block and HOST usage only. Can't be touched
+	// The following fields are for DMA block and HOST usage only. Can't be touched 
 	// by ASIC MAC block.
-
+	
 	// Word	5
-	ULONG		Rsv3;	// BufPhyAddr;
+	ULONG		Rsv3;	// BufPhyAddr;	
 #if 0
 	// Word	6~15
 	ULONG       Rsv3;
@@ -476,7 +481,7 @@ typedef	struct	_RXD_STRUC	{
 	ULONG       Rsv10;
 	ULONG       Rsv11;
 	ULONG       Rsv12;
-#endif
+#endif	
 }	RXD_STRUC, *PRXD_STRUC;
 #else
 typedef	struct	_RXD_STRUC	{
@@ -502,7 +507,7 @@ typedef	struct	_RXD_STRUC	{
 	ULONG       Rsv0:8;
 	ULONG       FrameOffset:7;
 	ULONG       Rsv1:1;
-
+    
 	// Word	2
 	ULONG       Iv;                 // received IV if originally encrypted; for replay attack checking
 
@@ -515,9 +520,9 @@ typedef	struct	_RXD_STRUC	{
 	// The above 20-byte is called RXINFO and is prepared by MAC RX block and passed
 	// the HOST driver.
 
-	// The following fields are for DMA block and HOST usage only. Can't be touched
+	// The following fields are for DMA block and HOST usage only. Can't be touched 
 	// by ASIC MAC block.
-
+	
 	// Word	5
 	ULONG		Rsv3;	// BufPhyAddr;
 #if 0
@@ -647,7 +652,7 @@ typedef union  _MCU_LEDCS_STRUC {
 		USHORT		LinkAStatus:1;
 		USHORT		LinkGStatus:1;
 		USHORT		RadioStatus:1;
-		USHORT		LedMode:5;
+		USHORT		LedMode:5;		
 	} field;
 	USHORT			word;
 } MCU_LEDCS_STRUC, *PMCU_LEDCS_STRUC;
@@ -835,7 +840,7 @@ typedef	union	_MAC_CSR9_STRUC	{
 		ULONG		SlotTime:8;		// Slot time, default is 20us for 802.11B
 	}	field;
 	ULONG			word;
-}	MAC_CSR9_STRUC, *PMAC_CSR9_STRUC;
+}	MAC_CSR9_STRUC, *PMAC_CSR9_STRUC; 
 #else
 typedef	union	_MAC_CSR9_STRUC	{
 	struct {
@@ -846,13 +851,14 @@ typedef	union	_MAC_CSR9_STRUC	{
 		ULONG		Rsvd:15;
 	}	field;
 	ULONG			word;
-}	MAC_CSR9_STRUC, *PMAC_CSR9_STRUC;
+}	MAC_CSR9_STRUC, *PMAC_CSR9_STRUC; 
 #endif
 
 //
 // MAC_CSR11: Power saving transition time register
 //
-#ifdef BIG_ENDIAN
+//2007/12/21:KH modified this erratum
+#ifdef BIG_ENDIAN 
 typedef union _MAC_CSR11_STRUC {
 	struct {
 		ULONG       :12;
@@ -883,7 +889,7 @@ typedef union _MAC_CSR11_STRUC {
 typedef	union	_MAC_CSR12_STRUC	{
 	struct	{
 		ULONG		:28;
-		ULONG		BbpRfStatus:1;			// 0: not ready, 1:ready
+		ULONG		BbpRfStatus:1;			// 0: not ready, 1:ready		
 		ULONG       ForceWakeup:1;          // ForceWake has high privilege than PutToSleep when both set
 		ULONG       PutToSleep:1;
 		ULONG		CurrentPowerState:1;	// 0:sleep, 1:awake
@@ -940,7 +946,7 @@ typedef	union	_MAC_CSR14_STRUC	{
 #ifdef BIG_ENDIAN
 typedef	union	TXRX_CSR0_STRUC	{
 	struct	{
-		ULONG		:5;
+		ULONG		:5;		
 		ULONG       TxWithoutWaitingSBox:1;
 		ULONG       DropAckCts:1;       // 1: drop received ACK and CTS
 		ULONG		DropBcast:1;		// Drop broadcast frames
@@ -1014,7 +1020,7 @@ typedef	union	_TXRX_CSR4_STRUC	{
 		ULONG       OfdmTxRateDownEnable:1;     // 1:enable
 		ULONG       OfdmTxRateDownStep:2;       // 0:1-step, 1: 2-step, 2:3-step, 3:4-step
 		ULONG		OfdmTxFallbacktoCCK:1;      // 0: Fallbackt o OFDM 6M oly, 1: Fallback to CCK 1M,2M
-		ULONG		Rsv1:1;
+		ULONG		Rsv1:1;		
 		ULONG       LongRetryLimit:4;
 		ULONG       ShortRetryLimit:4;
 	}	field;
@@ -1059,8 +1065,8 @@ typedef	union	_TXRX_CSR9_STRUC	{
 #ifdef BIG_ENDIAN
 typedef	union	_PHY_CSR3_STRUC	{
 	struct	{
-		ULONG		:15;
-		ULONG		Busy:1;				// 1: ASIC is busy execute BBP programming.
+		ULONG		:15;		
+		ULONG		Busy:1;				// 1: ASIC is busy execute BBP programming.	
 		ULONG		fRead:1;		    // 0: Write	BBP, 1:	Read BBP
 		ULONG		RegNum:7;			// Selected	BBP	register
 		ULONG		Value:8;			// Register	value to program into BBP
@@ -1073,7 +1079,7 @@ typedef	union	_PHY_CSR3_STRUC	{
 		ULONG		Value:8;			// Register	value to program into BBP
 		ULONG		RegNum:7;			// Selected	BBP	register
 		ULONG		fRead:1;		    // 0: Write	BBP, 1:	Read BBP
-		ULONG		Busy:1;				// 1: ASIC is busy execute BBP programming.
+		ULONG		Busy:1;				// 1: ASIC is busy execute BBP programming.	
 		ULONG		:15;
 	}	field;
 	ULONG			word;
@@ -1086,7 +1092,7 @@ typedef	union	_PHY_CSR3_STRUC	{
 #ifdef BIG_ENDIAN
 typedef	union	_PHY_CSR4_STRUC	{
 	struct	{
-		ULONG		Busy:1;				// 1: ASIC is busy execute RF programming.
+		ULONG		Busy:1;				// 1: ASIC is busy execute RF programming.		
 		ULONG		PLL_LD:1;			// RF PLL_LD status
 		ULONG		IFSelect:1;			// 1: select IF	to program,	0: select RF to	program
 		ULONG		NumberOfBits:5;		// Number of bits used in RFRegValue (I:20,	RFMD:22)
@@ -1536,7 +1542,7 @@ typedef	union	_RX_RING_CSR_STRUC	{
 		ULONG   Rsv:13;
 		ULONG   RxdWritebackSize:3;
 		ULONG   :2;
-		ULONG   RxdSize:6;      // in unit of 32-bit
+		ULONG   RxdSize:6;      // in unit of 32-bit     
 		ULONG   RxRingTotal:8;
 	}	field;
 	ULONG			word;
@@ -1545,7 +1551,7 @@ typedef	union	_RX_RING_CSR_STRUC	{
 typedef	union	_RX_RING_CSR_STRUC	{
 	struct	{
 		ULONG   RxRingTotal:8;
-		ULONG   RxdSize:6;      // in unit of 32-bit
+		ULONG   RxdSize:6;      // in unit of 32-bit     
 		ULONG   :2;
 		ULONG   RxdWritebackSize:3;
 		ULONG   Rsv:13;
@@ -1729,11 +1735,11 @@ typedef	union	_AC_TXOP_CSR1_STRUC	{
 #ifdef BIG_ENDIAN
 typedef	union	_EEPROM_ANTENNA_STRUC	{
 	struct	{
-		USHORT      RfIcType:5;             // see E2PROM document
+		USHORT      RfIcType:5;             // see E2PROM document		
 		USHORT		HardwareRadioControl:1;	// 1: Hardware controlled radio enabled, Read GPIO0 required.
 		USHORT      DynamicTxAgcControl:1;
 		USHORT		Rsv:2;
-		USHORT		FrameType:1;			// 0: DPDT , 1: SPDT , noted this bit is valid for g only.
+		USHORT		FrameType:1;			// 0: DPDT , 1: SPDT , noted this bit is valid for g only.				
 		USHORT		RxDefaultAntenna:2;		// default of antenna, 0: diversity, 1:antenna-A, 2:antenna-B reserved (default = 0)
 		USHORT		TxDefaultAntenna:2;		// default of antenna, 0: diversity, 1:antenna-A, 2:antenna-B reserved (default = 0)
 		USHORT		NumOfAntenna:2;			// Number of antenna
@@ -1746,7 +1752,7 @@ typedef	union	_EEPROM_ANTENNA_STRUC	{
 		USHORT		NumOfAntenna:2;			// Number of antenna
 		USHORT		TxDefaultAntenna:2;		// default of antenna, 0: diversity, 1:antenna-A, 2:antenna-B reserved (default = 0)
 		USHORT		RxDefaultAntenna:2;		// default of antenna, 0: diversity, 1:antenna-A, 2:antenna-B reserved (default = 0)
-		USHORT		FrameType:1;			// 0: DPDT , 1: SPDT , noted this bit is valid for g only.
+		USHORT		FrameType:1;			// 0: DPDT , 1: SPDT , noted this bit is valid for g only.				
 		USHORT		Rsv:2;
 		USHORT      DynamicTxAgcControl:1;
 		USHORT		HardwareRadioControl:1;	// 1: Hardware controlled radio enabled, Read GPIO0 required.
@@ -1840,7 +1846,7 @@ typedef	union	_EEPROM_LED_STRUC	{
 		USHORT	PolarityGPIO_3:1;	// Polarity GPIO#3 setting.
 		USHORT	PolarityGPIO_4:1;	// Polarity GPIO#4 setting.
 		USHORT	LedMode:5;			// Led mode.
-		USHORT	Rsvd:3;				// Reserved
+		USHORT	Rsvd:3;				// Reserved		
 	}	field;
 	USHORT	word;
 }	EEPROM_LED_STRUC, *PEEPROM_LED_STRUC;
@@ -1866,55 +1872,37 @@ typedef	union	_EEPROM_TXPOWER_DELTA_STRUC	{
 }	EEPROM_TXPOWER_DELTA_STRUC, *PEEPROM_TXPOWER_DELTA_STRUC;
 #endif
 
-#ifndef _PRISMHEADER
-#define _PRISMHEADER
+#define BUILD_TIMER_FUNCTION(_func)												\
+void linux_##_func(unsigned long data)											\
+{																				\
+	PRALINK_TIMER_STRUCT	pTimer = (PRALINK_TIMER_STRUCT) data;				\
+	unsigned long timeout;																			\
+	_func(NULL, (PVOID) pTimer->cookie, NULL, pTimer); 							\
+	if (pTimer->Repeat)															\
+		{	timeout=pTimer->TimerValue;											\
+			timeout=((timeout*HZ) / 1000);      					            \
+		 	pTimer->TimerObj.expires = jiffies + timeout;						\
+	     	add_timer(&pTimer->TimerObj);}                                      \
+}
 
-enum {
-	DIDmsg_lnxind_wlansniffrm		= 0x00000044,
-	DIDmsg_lnxind_wlansniffrm_hosttime	= 0x00010044,
-	DIDmsg_lnxind_wlansniffrm_mactime	= 0x00020044,
-	DIDmsg_lnxind_wlansniffrm_channel	= 0x00030044,
-	DIDmsg_lnxind_wlansniffrm_rssi		= 0x00040044,
-	DIDmsg_lnxind_wlansniffrm_sq		= 0x00050044,
-	DIDmsg_lnxind_wlansniffrm_signal	= 0x00060044,
-	DIDmsg_lnxind_wlansniffrm_noise		= 0x00070044,
-	DIDmsg_lnxind_wlansniffrm_rate		= 0x00080044,
-	DIDmsg_lnxind_wlansniffrm_istx		= 0x00090044,
-	DIDmsg_lnxind_wlansniffrm_frmlen	= 0x000A0044
-};
-enum {
-	P80211ENUM_msgitem_status_no_value	= 0x00
-};
-enum {
-	P80211ENUM_truth_false			= 0x00,
-	P80211ENUM_truth_true			= 0x01
-};
 
-typedef struct {
-	u_int32_t did;
-	u_int16_t status;
-	u_int16_t len;
-	u_int32_t data;
-} p80211item_uint32_t;
+#define DECLARE_TIMER_FUNCTION(_func)			\
+void linux_##_func(unsigned long data)
 
-typedef struct {
-	u_int32_t msgcode;
-	u_int32_t msglen;
-#define WLAN_DEVNAMELEN_MAX 16
-	u_int8_t devname[WLAN_DEVNAMELEN_MAX];
-	p80211item_uint32_t hosttime;
-	p80211item_uint32_t mactime;
-	p80211item_uint32_t channel;
-	p80211item_uint32_t rssi;
-	p80211item_uint32_t sq;
-	p80211item_uint32_t signal;
-	p80211item_uint32_t noise;
-	p80211item_uint32_t rate;
-	p80211item_uint32_t istx;
-	p80211item_uint32_t frmlen;
-} wlan_ng_prism2_header;
+#define GET_TIMER_FUNCTION(_func)				\
+		linux_##_func
 
-#endif
+
+DECLARE_TIMER_FUNCTION(MlmePeriodicExec);
+DECLARE_TIMER_FUNCTION(AsicRxAntEvalTimeout);
+DECLARE_TIMER_FUNCTION(LinkDownExec);
+DECLARE_TIMER_FUNCTION(BeaconTimeout);
+DECLARE_TIMER_FUNCTION(ScanTimeout);
+DECLARE_TIMER_FUNCTION(AssocTimeout);
+DECLARE_TIMER_FUNCTION(ReassocTimeout);
+DECLARE_TIMER_FUNCTION(DisassocTimeout);
+DECLARE_TIMER_FUNCTION(AuthTimeout);
+DECLARE_TIMER_FUNCTION(StaQuickResponeForRateUpExec);
 
 #endif	// __RT73_H__
 

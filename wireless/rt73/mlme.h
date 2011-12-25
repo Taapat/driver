@@ -1,44 +1,48 @@
-/***************************************************************************
- * RT2x00 SourceForge Project - http://rt2x00.serialmonkey.com             *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- *                                                                         *
- *   Licensed under the GNU GPL                                            *
- *   Original code supplied under license from RaLink Inc, 2004.           *
- ***************************************************************************/
+/*
+ ***************************************************************************
+ * Ralink Tech Inc.
+ * 5F, No. 36 Taiyuan St.
+ * Jhubei City
+ * Hsinchu County 302, Taiwan, R.O.C.
+ *
+ * (c) Copyright 2002-2008, Ralink Technology, Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify  * 
+ * it under the terms of the GNU General Public License as published by  * 
+ * the Free Software Foundation; either version 2 of the License, or     * 
+ * (at your option) any later version.                                   * 
+ *                                                                       * 
+ * This program is distributed in the hope that it will be useful,       * 
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of        * 
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         * 
+ * GNU General Public License for more details.                          * 
+ *                                                                       * 
+ * You should have received a copy of the GNU General Public License     * 
+ * along with this program; if not, write to the                         * 
+ * Free Software Foundation, Inc.,                                       * 
+ * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             * 
+ *                                                                       * 
+ *************************************************************************
+ 
+	Module Name:
+	mlme.h
 
-/***************************************************************************
- *	Module Name:	mlme.h
- *
- *	Abstract:
- *
- *	Revision History:
- *	Who		When		What
- *	--------	----------	-----------------------------
- *	John Chang	2003-08-28	Created
- *	John Chang	2004-09-06	modified for RT2600
- *
- ***************************************************************************/
+	Abstract:
+
+	Revision History:
+	Who			When			What
+	--------	----------		----------------------------------------------
+	John Chang	2003-08-28		Created
+	John Chang  2004-09-06      modified for RT2600
+	
+*/
 
 #ifndef __MLME_H__
 #define __MLME_H__
 
 #include "oid.h"
 
-// maximum supported capability information -
+// maximum supported capability information - 
 // ESS, IBSS, Privacy, Short Preamble, Spectrum mgmt, Short Slot
 #define SUPPORTED_CAPABILITY_INFO   0x0533
 
@@ -63,7 +67,7 @@
 // SHould not refer to this constant anymore
 #define RSSI_TO_DBM_OFFSET          120 // for RT2530 RSSI-115 = dBm
 #define RSSI_FOR_MID_TX_POWER       -55  // -55 db is considered mid-distance
-#define RSSI_FOR_LOW_TX_POWER       -45  // -45 db is considered very short distance and
+#define RSSI_FOR_LOW_TX_POWER       -45  // -45 db is considered very short distance and 
                                         // eligible to use a lower TX power
 #define RSSI_FOR_LOWEST_TX_POWER    -30
 //#define MID_TX_POWER_DELTA          0   // 0 db from full TX power upon mid-distance to AP
@@ -93,8 +97,7 @@
 #define SCAN_PASSIVE                     18
 #define SCAN_ACTIVE                      19
 #define FAST_SCAN_ACTIVE                 24		// scan with probe request, and wait beacon and probe response
-#define MAX_LEN_OF_MLME_QUEUE            20
-
+#define MAX_LEN_OF_MLME_QUEUE            40
 
 // bit definition of the 2-byte pBEACON->Capability field
 #define CAP_IS_ESS_ON(x)                 (((x) & 0x0001) != 0)
@@ -192,7 +195,7 @@ typedef	struct	PACKED _HEADER_802_11	{
 
 typedef struct PACKED _FRAME_802_11 {
     HEADER_802_11   Hdr;
-    UCHAR			Octet[0];
+    UCHAR           Octet[1];
 }   FRAME_802_11, *PFRAME_802_11;
 
 typedef struct _PSPOLL_FRAME {
@@ -220,7 +223,7 @@ typedef struct PACKED {
     USHORT      CfpDurRemaining;
 } CF_PARM, *PCF_PARM;
 
-typedef	struct	_CIPHER_SUITE	{
+typedef	struct	PACKED _CIPHER_SUITE	{
 	NDIS_802_11_ENCRYPTION_STATUS	PairCipher;		// Unicast cipher 1, this one has more secured cipher suite
 	NDIS_802_11_ENCRYPTION_STATUS	PairCipherAux;	// Unicast cipher 2 if AP announce two unicast cipher suite
 	NDIS_802_11_ENCRYPTION_STATUS	GroupCipher;	// Group cipher
@@ -285,19 +288,21 @@ typedef struct {
     USHORT  CfpMaxDuration;
     USHORT  CfpDurRemaining;
     UCHAR   SsidLen;
-    CHAR    Ssid[MAX_LEN_OF_SSID];
-
-    unsigned long   LastBeaconRxTime; // OS's timestamp
+	
+    CHAR    Ssid[MAX_LEN_OF_SSID+1];
+    
+    ULONG   LastBeaconRxTime; // OS's timestamp
 
     // New for WPA2
 	CIPHER_SUITE					WPA;			// AP announced WPA cipher suite
 	CIPHER_SUITE					WPA2;			// AP announced WPA2 cipher suite
-
+	
 	// New for microsoft WPA support
 	NDIS_802_11_FIXED_IEs	FixIEs;
 	NDIS_802_11_AUTHENTICATION_MODE	AuthModeAux;	// Addition mode for WPA2 / WPA capable AP
-	NDIS_802_11_AUTHENTICATION_MODE	AuthMode;
-	UCHAR                           AuthBitMode;
+	NDIS_802_11_AUTHENTICATION_MODE	AuthMode;	
+	UCHAR                           AuthBitMode;        // authTypeFlags for WPA, a bitwise OR
+	UCHAR                           PairCipherBitMode;  // encTypeFlags for WPA, a bitwise OR
 	NDIS_802_11_WEP_STATUS	WepStatus;				// Unicast Encryption Algorithm extract from VAR_IE
 	UCHAR					VarIELen;				// Length of next VIE include EID & Length
 	UCHAR					VarIEs[MAX_VIE_LEN];
@@ -321,7 +326,7 @@ typedef struct {
 } BSS_TABLE, *PBSS_TABLE;
 
 typedef struct _MLME_QUEUE_ELEM {
-    UCHAR             Msg[MAX_LEN_OF_MLME_BUFFER];
+    UCHAR             Msg[MAX_LEN_OF_MLME_BUFFER];  // add by johnli, fix the bug of alignment
     ULONG             Machine;
     ULONG             MsgType;
     ULONG             MsgLen;
@@ -331,6 +336,7 @@ typedef struct _MLME_QUEUE_ELEM {
     UCHAR             Channel;
     BOOLEAN           Occupied;
     BOOLEAN           bReqIsFromNdis;
+//    UCHAR             Msg[MAX_LEN_OF_MLME_BUFFER];  // remove by johnli, move above, fix the bug of alignment
 } MLME_QUEUE_ELEM, *PMLME_QUEUE_ELEM;
 
 typedef struct _MLME_QUEUE {
@@ -359,10 +365,12 @@ typedef struct _STATE_MACHINE {
 // this new attempt failed, driver can auto-recover back to the active settings.
 typedef struct _MLME_AUX {
     UCHAR               BssType;
-    UCHAR               Ssid[MAX_LEN_OF_SSID];
+	
+    UCHAR               Ssid[MAX_LEN_OF_SSID+1];
     UCHAR               SsidLen;
     UCHAR               Bssid[MAC_ADDR_LEN];
-	UCHAR				AutoReconnectSsid[MAX_LEN_OF_SSID];
+	
+	UCHAR				AutoReconnectSsid[MAX_LEN_OF_SSID+1];
 	UCHAR				AutoReconnectSsidLen;
     USHORT              Alg;
     UCHAR               ScanType;
@@ -373,7 +381,7 @@ typedef struct _MLME_AUX {
     USHORT              CfpMaxDuration;
     USHORT              CfpPeriod;
     USHORT              AtimWin;
-
+    
 	// Copy supported rate from desired AP's beacon. We are trying to match
 	// AP's supported and extended rate settings.
 	UCHAR		        SupRate[MAX_LEN_OF_SUPPORTED_RATES];
@@ -388,19 +396,19 @@ typedef struct _MLME_AUX {
 
     // new to keep Ralink specific feature
     ULONG               APRalinkIe;
-
+    
     BSS_TABLE           SsidBssTab;     // AP list for the same SSID
     BSS_TABLE           RoamTab;        // AP list eligible for roaming
     ULONG               BssIdx;
     ULONG               RoamIdx;
 
 	BOOLEAN				CurrReqIsFromNdis;  // TRUE - then we should call NdisMSetInformationComplete()
-                                            // FALSE - req is from driver itself.
+                                            // FALSE - req is from driver itself. 
                                             // no NdisMSetInformationComplete() is required
 
 	RALINK_TIMER_STRUCT BeaconTimer, ScanTimer;
 	RALINK_TIMER_STRUCT AuthTimer;
-	RALINK_TIMER_STRUCT AssocTimer, ReassocTimer;
+	RALINK_TIMER_STRUCT AssocTimer, ReassocTimer, DisassocTimer;
 } MLME_AUX, *PMLME_AUX;
 
 // assoc struct is equal to reassoc
@@ -436,18 +444,20 @@ typedef struct _MLME_SCAN_REQ_STRUCT {
     UCHAR      BssType;
     UCHAR      ScanType;
     UCHAR      SsidLen;
-    CHAR       Ssid[MAX_LEN_OF_SSID];
+
+    CHAR       Ssid[MAX_LEN_OF_SSID+1];
 } MLME_SCAN_REQ_STRUCT, *PMLME_SCAN_REQ_STRUCT;
 
 typedef struct _MLME_START_REQ_STRUCT {
-    CHAR        Ssid[MAX_LEN_OF_SSID];
+	
+    CHAR        Ssid[MAX_LEN_OF_SSID+1];
     UCHAR       SsidLen;
 } MLME_START_REQ_STRUCT, *PMLME_START_REQ_STRUCT;
 
 typedef struct {
     UCHAR   Eid;
     UCHAR   Len;
-    CHAR   Octet[1];
+    UCHAR   Octet[1];
 } EID_STRUCT,*PEID_STRUCT;
 
 #endif  // __MLME_H__

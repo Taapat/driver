@@ -13,6 +13,7 @@ HAS_DOT11_N_SUPPORT       = y
 HAS_DOT11N_DRAFT3_SUPPORT = y
 HAS_STATS_COUNT           = y
 HAS_RESOURCE_PRE_ALLOC    = y
+HAS_NATIVE_WPA_SUPPLICANT_SUPPORT=y
 
 EXTRA_CFLAGS += -I$(src)/include 
 EXTRA_CFLAGS += -Wall -O2 -Wundef -Wstrict-prototypes
