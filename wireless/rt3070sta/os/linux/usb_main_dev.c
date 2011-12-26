@@ -674,6 +674,7 @@ static int rt2870_probe(
 	  * cause a symlink during initialization.
 	 */
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0))
+	printk("kernel >= 2.6.0!!");
 	SET_NETDEV_DEV(net_dev, &(usb_dev->dev));
 #endif
 #endif /* NATIVE_WPA_SUPPLICANT_SUPPORT */
