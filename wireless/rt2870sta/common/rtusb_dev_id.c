@@ -97,8 +97,9 @@ USB_DEVICE_ID rtusb_dev_id[] = {
 	{USB_DEVICE(0x1690,0x0740)}, /* Askey */
 	{USB_DEVICE(0x5A57,0x0280)}, /* Zinwell */
 	{USB_DEVICE(0x5A57,0x0282)}, /* Zinwell */
-	{USB_DEVICE(0x7392,0x7718)},
-	{USB_DEVICE(0x7392,0x7717)},
+	{USB_DEVICE(0x7392,0x7718)}, /* Ralink */
+	{USB_DEVICE(0x7392,0x7717)}, /* Ralink */
+	{USB_DEVICE(0x7392,0x7711)}, /* Ralink */
 	{USB_DEVICE(0x1737,0x0070)}, /* Linksys WUSB100 */
 	{USB_DEVICE(0x1737,0x0071)}, /* Linksys WUSB600N */
 	{USB_DEVICE(0x0411,0x00e8)}, /* Buffalo WLI-UC-G300N*/
