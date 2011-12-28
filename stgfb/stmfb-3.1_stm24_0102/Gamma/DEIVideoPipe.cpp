@@ -2405,7 +2405,7 @@ CDEIVideoPipe::set422RInterleavedMemoryAddressing (DEISetup                     
      * correctly if its stride is not already this multiple.
      */
     const ULONG wordsperline  = (((pixelsperline + (m_nRasterOpcodeSize*2)-1) / (m_nRasterOpcodeSize*2))
-                                 * (m_nRasterOpcodeSize/4));
+                                 * (m_nRasterOpcodeSize/8));
 
     switch(m_nRasterOpcodeSize)
     {
@@ -2480,8 +2480,8 @@ CDEIVideoPipe::setPlanarMemoryAddressing (DEISetup                      &display
 
     const ULONG nlines = (qbinfo.src.y / m_fixedpointONE) + qbinfo.src.height;
     const ULONG pixelsperline = pFrame->src.ulStride / (pFrame->src.ulPixelDepth >> 3);
-    const ULONG wordsperline = (pixelsperline + 7) / 8;
-    const ULONG wordpairsperline = (pixelsperline + 15) / 16;
+    const ULONG wordsperline = (pixelsperline + 8) / 8;
+    const ULONG wordpairsperline = (pixelsperline + 16) / 16;
 
     const ULONG baseAddress = pFrame->src.ulVideoBufferAddr;
     ULONG chromaBaseAddress = baseAddress + pFrame->src.chromaBufferOffset;
