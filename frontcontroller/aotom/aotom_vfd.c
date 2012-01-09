@@ -1186,7 +1186,7 @@ bool YWPANEL_FP_ParseI2cData(YWPANEL_FPData_t  *data,YWPANEL_I2CData_t	 *I2CData
 			data->data.version.DisplayInfo = (I2CData->readBuff[3]>>4)&0x0f;
 			data->data.version.scankeyNum = I2CData->readBuff[3]&0x0f;
 			data->data.version.swMajorVersion = I2CData->readBuff[4];
-			data->data.version.swMajorVersion = I2CData->readBuff[5];
+			data->data.version.swSubVersion = I2CData->readBuff[5];
 
 			data->ack = true;
 		}
