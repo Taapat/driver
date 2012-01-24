@@ -8,12 +8,12 @@ RT28xx_MODE               = STA
 CHIPSET                   = 3070
 OSABL                     = NO
 
-
-HAS_WPA_SUPPLICANT	  =y
+HAS_WPA_SUPPLICANT	  = y
 HAS_NATIVE_WPA_SUPPLICANT_SUPPORT=y
 HAS_DOT11_N_SUPPORT       = y
 HAS_DOT11N_DRAFT3_SUPPORT = y
 HAS_KTHREAD_SUPPORT       = y
+
 
 EXTRA_CFLAGS += -I$(src)/include 
 EXTRA_CFLAGS += -Wall -O2 -Wundef -Wstrict-prototypes
@@ -23,6 +23,7 @@ EXTRA_CFLAGS += -fomit-frame-pointer -ffreestanding -m4-nofpu
 
 WFLAGS := -DAGGREGATION_SUPPORT -DPIGGYBACK_SUPPORT -DWMM_SUPPORT  -DLINUX -Wall -Wstrict-prototypes -Wno-trigraphs 
 WFLAGS += -DSYSTEM_LOG_SUPPORT  -DRT28xx_MODE=$(RT28xx_MODE) -DCHIPSET=$(CHIPSET) -DRESOURCE_PRE_ALLOC
+WFLAGS += -DST
 
 ifeq ($(CHIPSET),2070)
 WFLAGS +=-DRTMP_MAC_USB -DRT30xx -DRT3070 -DRT2070 -DRTMP_USB_SUPPORT -DRTMP_TIMER_TASK_SUPPORT -DRTMP_RF_RW_SUPPORT -DRTMP_EFUSE_SUPPORT
@@ -31,6 +32,11 @@ endif
 
 ifeq ($(CHIPSET),3070)
 WFLAGS +=-DRTMP_MAC_USB -DRT30xx -DRT3070 -DRTMP_USB_SUPPORT -DRTMP_TIMER_TASK_SUPPORT -DRTMP_RF_RW_SUPPORT -DRTMP_EFUSE_SUPPORT -DSPECIFIC_VCORECAL_SUPPORT
+CHIPSET_DAT = 2870
+endif
+
+ifeq ($(CHIPSET),3370)
+WFLAGS +=-DRTMP_MAC_USB -DRT30xx -DRT33xx -DRT3070 -DRT3370 -DRTMP_USB_SUPPORT -DRTMP_TIMER_TASK_SUPPORT -DRTMP_RF_RW_SUPPORT -DRTMP_EFUSE_SUPPORT -DRTMP_INTERNAL_TX_ALC -DSPECIFIC_VCORECAL_SUPPORT
 CHIPSET_DAT = 2870
 endif
 
@@ -263,6 +269,34 @@ rt$(CHIPSET)sta-objs += \
 endif
 endif
 #endif // RT3070 //
+
+#ifdef RT3370
+ifeq ($(CHIPSET),3370)
+rt$(CHIPSET)sta-objs += \
+	common/cmm_mac_usb.o\
+	common/rtusb_io.o\
+	common/rtusb_data.o\
+	common/cmm_data_usb.o\
+	common/rtusb_bulk.o\
+	common/ee_prom.o\
+	common/ee_efuse.o\
+	common/rtmp_mcu.o\
+	common/rt_rf.o\
+	chips/rt3070.o\
+	chips/rt30xx.o\
+	chips/rt33xx.o\
+	chips/rt3370.o
+
+ifeq ($(OSABL),NO)
+rt$(CHIPSET)sta-objs += \
+	common/rtusb_dev_id.o\
+	os/linux/rt_usb.o\
+	os/linux/rt_usb_util.o\
+	os/linux/usb_main_dev.o
+endif
+endif
+#endif // RT3370 //
+
 ifeq ($(CHIPSET),USB)
 rt$(CHIPSET)sta-objs += \
 	common/cmm_mac_usb.o\

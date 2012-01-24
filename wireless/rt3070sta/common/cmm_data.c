@@ -101,8 +101,9 @@ NDIS_STATUS MiniportMMRequest(
 		/* Reset is in progress, stop immediately*/
 		if (RTMP_TEST_FLAG(pAd, fRTMP_ADAPTER_RESET_IN_PROGRESS) ||
 			 RTMP_TEST_FLAG(pAd, fRTMP_ADAPTER_HALT_IN_PROGRESS | fRTMP_ADAPTER_NIC_NOT_EXIST)||
-			 !RTMP_TEST_FLAG(pAd, fRTMP_ADAPTER_START_UP))
-		{
+			 !RTMP_TEST_FLAG(pAd, fRTMP_ADAPTER_START_UP)
+				)
+		 {
 			Status = NDIS_STATUS_FAILURE;
 			break;
 		}

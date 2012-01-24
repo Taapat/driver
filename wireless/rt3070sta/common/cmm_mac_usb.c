@@ -1747,11 +1747,13 @@ VOID RT28xxUsbMlmeRadioOn(
 
 #ifdef LED_CONTROL_SUPPORT
 	/* Set LED*/
+#ifdef CONFIG_STA_SUPPORT
 	RTMPSetLED(pAd, LED_RADIO_ON);
+#endif /* CONFIG_STA_SUPPORT */
 #endif /* LED_CONTROL_SUPPORT */
 
-#if defined(RT5370) || defined(RT5372) || defined(RT5390) || defined(RT5392)
-	if (IS_RT5390(pAd))
+#if defined(RT5370) || defined(RT5390)
+	if ((IS_RT5390(pAd)) && !(IS_RT5392(pAd)))
 	{
 		if (pAd->NicConfig2.field.AntOpt == 1)
 		{
@@ -1834,7 +1836,7 @@ VOID RT28xxUsbMlmeRadioOFF(
 
 #ifdef LED_CONTROL_SUPPORT
 	/* Set LED*/
-	RTMPSetLED(pAd, LED_RADIO_OFF);
+	RTMPSetLEDStatus(pAd, LED_RADIO_OFF);
 #endif /* LED_CONTROL_SUPPORT */
 
 

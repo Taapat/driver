@@ -1599,6 +1599,9 @@ typedef struct _COMMON_CONFIG {
 
 	BOOLEAN NdisRadioStateOff;	/*For HCT 12.0, set this flag to TRUE instead of called MlmeRadioOff. */
 	ABGBAND_STATE BandState;	/* For setting BBP used on B/G or A mode. */
+#ifdef ANT_DIVERSITY_SUPPORT
+	UCHAR bRxAntDiversity;	/* 0:disable, 1:enable Software Rx Antenna Diversity. */
+#endif				/* ANT_DIVERSITY_SUPPORT */
 
 	/* IEEE802.11H--DFS. */
 	RADAR_DETECT_STRUCT RadarDetect;
@@ -3231,10 +3234,7 @@ struct _RTMP_ADAPTER {
 #endif /* OS_ABL_SUPPORT */
 
 
-#ifdef HW_ANTENNA_DIVERSITY_SUPPORT
-	BOOLEAN bHardwareAntennaDivesity;
-	UCHAR FixDefaultAntenna;
-#endif /* HW_ANTENNA_DIVERSITY_SUPPORT */
+
 };
 
 
@@ -3986,6 +3986,11 @@ VOID	RTMPReleaseTimer(
 
 VOID RTMPEnableRxTx(
 	IN PRTMP_ADAPTER	pAd);
+
+
+VOID AntCfgInit(
+IN  PRTMP_ADAPTER   pAd);
+
 
 /* */
 /* prototype in action.c */
@@ -6145,6 +6150,12 @@ VOID CntlChannelWidth(
 VOID APAsicEvaluateRxAnt(
 	IN PRTMP_ADAPTER	pAd);
 
+#ifdef ANT_DIVERSITY_SUPPORT
+VOID	APAsicAntennaAvg(
+	IN	PRTMP_ADAPTER	pAd,
+	IN	UCHAR	              AntSelect,
+	IN	SHORT	              *RssiAvg);
+#endif /* ANT_DIVERSITY_SUPPORT */
 
 VOID APAsicRxAntEvalTimeout(
 	IN PRTMP_ADAPTER	pAd);
@@ -7725,5 +7736,14 @@ INT RTMP_COM_IoctlHandle(
 
 
 
+INT	Set_Antenna_Proc(
+	IN	PRTMP_ADAPTER	pAd, 
+	IN	PSTRING			arg);
+
+#ifdef RT5350
+INT Set_Hw_Antenna_Div_Proc(
+	IN	PRTMP_ADAPTER	pAd,
+	IN	PSTRING			arg);
+#endif // RT5350 //
 #endif  /* __RTMP_H__ */
 

@@ -181,6 +181,16 @@ VOID MlmeCntlMachinePerformAction(
 								TRUE);
 			}
 #endif /* DOT11N_DRAFT3 */
+#ifdef WPA_SUPPLICANT_SUPPORT
+
+                                if (pAd->IndicateMediaState != NdisMediaStateConnected && (pAd->StaCfg.WpaSupplicantUP != WPA_SUPPLICANT_ENABLE_WITH_WEB_UI) )
+                                {
+                                        BssTableSsidSort(pAd, &pAd->MlmeAux.SsidBssTab, (PCHAR)pAd->MlmeAux.Ssid, pAd->MlmeAux.SsidLen);
+                                        pAd->MlmeAux.BssIdx = 0;
+                                        IterateOnBssTab(pAd);
+                                }
+#endif // WPA_SUPPLICANT_SUPPORT //
+
 
 				if (Status == MLME_SUCCESS)
 				{
@@ -191,11 +201,14 @@ VOID MlmeCntlMachinePerformAction(
 					*/
 					MaintainBssTable(pAd, &pAd->ScanTab, 120, 2);
 					
-#if WIRELESS_EXT >= 14
-				RtmpOSWrielessEventSend(pAd->net_dev,
-						RT_WLAN_EVENT_SCAN, -1, NULL,
-						NULL, 0);
-#endif
+				{
+					RTMPSendWirelessEvent(pAd, IW_SCAN_COMPLETED_EVENT_FLAG, NULL, BSS0, 0);
+
+#ifdef WPA_SUPPLICANT_SUPPORT
+					RtmpOSWrielessEventSend(pAd->net_dev, RT_WLAN_EVENT_SCAN, -1, NULL, NULL, 0);
+#endif /* WPA_SUPPLICANT_SUPPORT */
+				}
+
 			}
 		}
 		break;
@@ -1021,7 +1034,12 @@ VOID CntlWaitDisassocProc(
 		}
 		/* case 2. try each matched BSS */
 		else {
-			pAd->MlmeAux.BssIdx = 0;
+			/*
+			   Some customer would set AP1 & AP2 same SSID, AuthMode & EncrypType but different WPAPSK,
+			   therefore we need to try next AP here.
+			 */
+			/*pAd->MlmeAux.BssIdx = 0;*/
+			pAd->MlmeAux.BssIdx++;
 
 				IterateOnBssTab(pAd);
 		}
@@ -1477,8 +1495,8 @@ VOID LinkUp(
 	ULONG Now;
 	UINT32 Data;
 	BOOLEAN Cancelled;
-	UCHAR Value = 0, idx = 0, HashIdx = 0;
-	MAC_TABLE_ENTRY *pEntry = NULL, *pCurrEntry = NULL;
+	UCHAR Value = 0, idx = 0; /*, HashIdx = 0; */
+	MAC_TABLE_ENTRY *pEntry = NULL; /* *pCurrEntry = NULL; */
 
 	/* Init ChannelQuality to prevent DEAD_CQI at initial LinkUp */
 	pAd->Mlme.ChannelQuality = 50;
@@ -1578,7 +1596,9 @@ VOID LinkUp(
 	}
 #endif /* DOT11_N_SUPPORT */
 
+/*
 	NdisZeroMemory(&pAd->DrsCounters, sizeof (COUNTER_DRS));
+*/
 
 	NdisGetSystemUpTime(&Now);
 	pAd->StaCfg.LastBeaconRxTime = Now;	/* last RX timestamp */
@@ -1744,8 +1764,11 @@ VOID LinkUp(
 #ifdef PCIE_PS_SUPPORT
 			RTMP_CLEAR_PSFLAG(pAd, fRTMP_PS_CAN_GO_SLEEP);
 #endif /* PCIE_PS_SUPPORT */
-
-			RTMPWPARemoveAllKeys(pAd);
+/*
+ 		 for dhcp,issue ,wpa_supplicant ioctl too fast , at link_up, it will add key before driver remove key  
+		 move to assoc.c 
+ */
+/*			RTMPWPARemoveAllKeys(pAd);*/
 			pAd->StaCfg.PortSecured = WPA_802_1X_PORT_NOT_SECURED;
 			pAd->StaCfg.PrivacyFilter =
 			    Ndis802_11PrivFilter8021xWEP;
@@ -2618,6 +2641,12 @@ VOID LinkDown(
 	else
 		pAd->StaCfg.bAdhocCreator = FALSE;
 
+/*After change from one ap to another , we need to re-init rssi for AdjustTxPower  */
+	pAd->StaCfg.RssiSample.AvgRssi0	= -127;
+	pAd->StaCfg.RssiSample.AvgRssi1	= -127;
+	pAd->StaCfg.RssiSample.AvgRssi2	= -127;
+
+
 #ifdef RTMP_FREQ_CALIBRATION_SUPPORT
 	/*if (IS_RT3593(pAd)) */
 	RTMP_CHIP_ASIC_FREQ_CAL_STOP(pAd);	/* To stop the frequency calibration */
@@ -3327,6 +3356,7 @@ VOID	MaintainBssTable(
 	{
 		PBSS_ENTRY	pBss = &Tab->BssEntry[i];
 
+		bDelEntry = FALSE;
 		if (pBss->LastBeaconRxTimeA != pBss->LastBeaconRxTime)
 		{
 			pBss->LastBeaconRxTimeA = pBss->LastBeaconRxTime;

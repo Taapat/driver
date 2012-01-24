@@ -218,6 +218,7 @@ INT	Show_PMK_Proc(
 	OUT	PSTRING			pBuf,
 	IN	ULONG			BufLen);
 
+
 extern INT	Set_AP_WscConfStatus_Proc(
 	IN	PRTMP_ADAPTER	pAd, 
 	IN	PSTRING			arg);
@@ -2443,7 +2444,7 @@ VOID RTMPIoctlGetSiteSurvey(
 
 
 
-#define	MAC_LINE_LEN	(14+4+4+10+10+10+6+6)	/* Addr+aid+psm+datatime+rxbyte+txbyte+current tx rate+last tx rate*/
+#define	MAC_LINE_LEN	(1+14+4+4+4+4+10+10+10+6+6+1)	/* "\n"+Addr+AP+aid+psm+AUTH+datatime+rxbyte+txbyte+current tx rate+last tx rate+"\n" */
 VOID RTMPIoctlGetMacTable(
 	IN PRTMP_ADAPTER pAd, 
 	IN RTMP_IOCTL_INPUT_STRUCT *wrq)
@@ -2502,7 +2503,7 @@ VOID RTMPIoctlGetMacTable(
 
 
 /*	msg = kmalloc(sizeof(CHAR)*(MAX_LEN_OF_MAC_TABLE*MAC_LINE_LEN), MEM_ALLOC_FLAG);*/
-	os_alloc_mem(NULL, (UCHAR **)&msg, sizeof(CHAR)*(MAX_LEN_OF_MAC_TABLE*MAC_LINE_LEN)+100);
+	os_alloc_mem(NULL, (UCHAR **)&msg, sizeof(CHAR)*(MAX_LEN_OF_MAC_TABLE*MAC_LINE_LEN));
 	if (msg == NULL)
 	{
 		DBGPRINT(RT_DEBUG_ERROR, ("%s():Alloc memory failed\n", __FUNCTION__));
@@ -4190,4 +4191,84 @@ void  getRate(HTTRANSMIT_SETTING HTSetting, ULONG* fLastTxRxRate)
 	return;
 }
 
+INT	Set_Antenna_Proc(
+	IN	PRTMP_ADAPTER	pAd, 
+	IN	PSTRING			arg)
+{
+	ANT_DIVERSITY_TYPE UsedAnt;
+	DBGPRINT(RT_DEBUG_OFF, ("==> Set_Antenna_Proc *******************\n"));
 
+	UsedAnt = simple_strtol(arg, 0, 10);
+#ifdef ANT_DIVERSITY_SUPPORT
+    pAd->CommonCfg.bRxAntDiversity = UsedAnt;
+#endif /* ANT_DIVERSITY_SUPPORT */
+
+	switch (UsedAnt)
+	{
+#ifdef ANT_DIVERSITY_SUPPORT
+		/* 0: Disabe --> set Antenna CON1*/
+		case ANT_DIVERSITY_DISABLE:
+#endif /* ANT_DIVERSITY_SUPPORT */
+		/* 2: Fix in the PHY Antenna CON1*/
+		case ANT_FIX_ANT0:
+			AsicSetRxAnt(pAd, 0);
+			DBGPRINT(RT_DEBUG_OFF, ("<== Set_Antenna_Proc(Fix in Ant CON1), (%d,%d)\n", 
+					pAd->RxAnt.Pair1PrimaryRxAnt, pAd->RxAnt.Pair1SecondaryRxAnt));
+			break;
+#ifdef ANT_DIVERSITY_SUPPORT
+		/* 1: Enable --> HW/SW Antenna diversity*/
+		case ANT_DIVERSITY_ENABLE:
+			if ((pAd->chipCap.FlgIsHwAntennaDiversitySup) && (pAd->chipOps.HwAntEnable)) // HW_ANT_DIV (PPAD)
+			{
+				pAd->chipOps.HwAntEnable(pAd);
+				pAd->CommonCfg.bRxAntDiversity = ANT_HW_DIVERSITY_ENABLE;
+			}	
+			else // SW_ANT_DIV
+			{
+				pAd->RxAnt.EvaluateStableCnt = 0;
+				pAd->CommonCfg.bRxAntDiversity = ANT_SW_DIVERSITY_ENABLE;
+			}
+
+			DBGPRINT(RT_DEBUG_OFF, ("<== Set_Antenna_Proc(Auto Switch Mode), (%d,%d)\n", 
+					pAd->RxAnt.Pair1PrimaryRxAnt, pAd->RxAnt.Pair1SecondaryRxAnt));
+			break;
+#endif /* ANT_DIVERSITY_SUPPORT */
+    	/* 3: Fix in the PHY Antenna CON2*/
+		case ANT_FIX_ANT1:
+			AsicSetRxAnt(pAd, 1);
+			DBGPRINT(RT_DEBUG_OFF, ("<== Set_Antenna_Proc(Fix in Ant CON2), (%d,%d)\n", 
+					pAd->RxAnt.Pair1PrimaryRxAnt, pAd->RxAnt.Pair1SecondaryRxAnt));
+			break;
+#ifdef ANT_DIVERSITY_SUPPORT
+		/* 4: Enable SW Antenna Diversity */
+		case ANT_SW_DIVERSITY_ENABLE:
+			pAd->RxAnt.EvaluateStableCnt = 0;
+			DBGPRINT(RT_DEBUG_OFF, ("<== Set_Antenna_Proc(Auto Switch Mode --> SW), (%d,%d)\n", 
+					pAd->RxAnt.Pair1PrimaryRxAnt, pAd->RxAnt.Pair1SecondaryRxAnt));
+			break;
+		/* 5: Enable HW Antenna Diversity - PPAD */
+		case ANT_HW_DIVERSITY_ENABLE:
+			if ((pAd->chipCap.FlgIsHwAntennaDiversitySup) && (pAd->chipOps.HwAntEnable)) // HW_ANT_DIV (PPAD)
+				pAd->chipOps.HwAntEnable(pAd);
+			DBGPRINT(RT_DEBUG_OFF, ("<== Set_Antenna_Proc(Auto Switch Mode --> HW), (%d,%d)\n", 
+					pAd->RxAnt.Pair1PrimaryRxAnt, pAd->RxAnt.Pair1SecondaryRxAnt));
+			break;
+#endif /* ANT_DIVERSITY_SUPPORT */
+		default:
+			DBGPRINT(RT_DEBUG_ERROR, ("<== Set_Antenna_Proc(N/A cmd: %d), (%d,%d)\n", UsedAnt,
+					pAd->RxAnt.Pair1PrimaryRxAnt, pAd->RxAnt.Pair1SecondaryRxAnt));
+			break;
+	}
+	
+	return TRUE;
+}
+			
+
+#ifdef RT5350
+INT Set_Hw_Antenna_Div_Proc(
+	IN	PRTMP_ADAPTER	pAd,
+	IN	PSTRING			arg)
+{
+	return Set_Antenna_Proc(pAd, arg);	
+}
+#endif // RT5350 //

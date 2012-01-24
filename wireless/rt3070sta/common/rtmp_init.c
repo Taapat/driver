@@ -1116,6 +1116,14 @@ VOID	NICReadEEPROMParameters(
 
 	RtmpChipOpsHook(pAd);
 
+#ifdef TXRX_SW_ANTDIV_SUPPORT
+	if( ((Antenna.word & 0xF000) != 0xF000) && (Antenna.word & 0x2000))  /* EEPROM 0x34[15:12] = 0xF is invalid, 0x2~0x3 is TX/RX SW AntDiv */
+	{																	  
+		pAd->chipCap.bTxRxSwAntDiv = TRUE;
+		DBGPRINT(RT_DEBUG_OFF, ("\x1b[mAntenna word %X/%d, AntDiv %d\x1b[m\n", 
+					pAd->Antenna.word, pAd->Antenna.field.BoardType, pAd->NicConfig2.field.AntDiversity));
+	}
+#endif /* TXRX_SW_ANTDIV_SUPPORT */
 	
 	/* Reset PhyMode if we don't support 802.11a*/
 	/* Only RFIC_2850 & RFIC_2750 support 802.11a*/
@@ -1374,39 +1382,7 @@ VOID	NICReadEEPROMParameters(
 			pAd->TxPowerCtrl.bInternalTxALC));
 #endif /* RTMP_INTERNAL_TX_ALC */
 
-#ifdef HW_ANTENNA_DIVERSITY_SUPPORT
-	if (pAd->chipCap.FlgIsHwAntennaDiversitySup == TRUE)
-	{
-		DBGPRINT(RT_DEBUG_TRACE, ("HwAnDi> Read from EEPROM!\n"));
 
-		/*
-			0b00: OFF (Disable antenna diversity function)
-			0b01: ON (Enable antenna diversity function)
-			0b10: Fix to main antenna
-			0b11: Fix to aux antenna
-		*/
-		RT28xx_EEPROM_READ16(pAd, EEPROM_NIC2_OFFSET, value);
-		value &= 0x1800;
-		value = value >> 11;
-		if (value == 0) {
-			// hw antenna divsersity is disabled, fix to main antenna by default
-			pAd->bHardwareAntennaDivesity = FALSE;
-			pAd->FixDefaultAntenna = 0;
-		}
-		else if (value == 1)
-			pAd->bHardwareAntennaDivesity = TRUE;
-		else if (value == 2) {
-			// hw antenna divsersity is disabled, fix to main antenna
-			pAd->bHardwareAntennaDivesity = FALSE;
-			pAd->FixDefaultAntenna = 0;
-		}
-		else if (value == 3) {
-			// hw antenna divsersity is disabled, fix to aux antenna
-			pAd->bHardwareAntennaDivesity = FALSE;
-			pAd->FixDefaultAntenna = 1;
-		}
-	}
-#endif // HW_ANTENNA_DIVERSITY_SUPPORT //
 		DBGPRINT(RT_DEBUG_TRACE, ("%s: pAd->Antenna.field.BoardType = %d, IS_MINI_CARD(pAd) = %d, IS_RT5390U(pAd) = %d\n", 
 		__FUNCTION__,
 		pAd->Antenna.field.BoardType,
@@ -1472,10 +1448,20 @@ VOID	NICInitAsicFromEEPROM(
 	RTMPInitLEDMode(pAd);	
 #endif /* LED_CONTROL_SUPPORT */
 
+	/* finally set primary ant */
+	AntCfgInit(pAd);
+
 #ifdef RTMP_RF_RW_SUPPORT
 	/*Init RT30xx RFRegisters after read RFIC type from EEPROM*/
 	NICInitRFRegisters(pAd);
 #endif /* RTMP_RF_RW_SUPPORT */
+
+#ifdef ANT_DIVERSITY_SUPPORT
+	if ((pAd->CommonCfg.bRxAntDiversity == ANT_HW_DIVERSITY_ENABLE) &&
+			(pAd->chipOps.HwAntEnable))
+		pAd->chipOps.HwAntEnable(pAd);
+#endif
+
 
 #ifdef CONFIG_STA_SUPPORT
 	IF_DEV_CONFIG_OPMODE_ON_STA(pAd)
@@ -2183,7 +2169,7 @@ NDIS_STATUS	NICInitializeAsic(
 
 		for (apidx = 0; apidx < HW_BEACON_MAX_COUNT(pAd); apidx++)
 		{
-			for (i = 0; i < HW_BEACON_OFFSET>>2; i+=4)
+			for (i = 0; i < HW_BEACON_OFFSET; i+=4)
 				RTMP_IO_WRITE32(pAd, pAd->BeaconOffset[apidx] + i, 0x00); 
 		}
 		
@@ -3319,6 +3305,16 @@ VOID	UserCfgInit(
 	RTMP_SET_PSFLAG(pAd, fRTMP_PS_CAN_GO_SLEEP);
 #endif /* PCIE_PS_SUPPORT */
 #endif /* CONFIG_STA_SUPPORT */
+#ifdef ANT_DIVERSITY_SUPPORT
+		pAd->RxAnt.Pair1PrimaryRxAnt = 0;
+		pAd->RxAnt.Pair1SecondaryRxAnt = 1;
+
+		pAd->RxAnt.EvaluatePeriod = 0;
+		pAd->RxAnt.RcvPktNumWhenEvaluate = 0;
+#ifdef CONFIG_STA_SUPPORT
+		pAd->RxAnt.Pair1AvgRssi[0] = pAd->RxAnt.Pair1AvgRssi[1] = 0;
+#endif /* CONFIG_STA_SUPPORT */
+#endif /* ANT_DIVERSITY_SUPPORT */
 
 
 #if defined(AP_SCAN_SUPPORT) || defined(CONFIG_STA_SUPPORT)
@@ -3964,4 +3960,53 @@ VOID RTMP_BBP_IO_WRITE8(
 #endif /* VENDOR_FEATURE3_SUPPORT */
 
 
+
+VOID AntCfgInit(
+IN  PRTMP_ADAPTER   pAd)
+{
+
+#ifdef ANT_DIVERSITY_SUPPORT
+	if (pAd->CommonCfg.bRxAntDiversity == ANT_DIVERSITY_DEFAULT)
+#endif
+	{
+		if (pAd->NicConfig2.field.AntOpt== 1) //ant selected by efuse
+		{	
+			if (pAd->NicConfig2.field.AntDiversity == 0) //main
+			{
+				pAd->RxAnt.Pair1PrimaryRxAnt = 0;
+				pAd->RxAnt.Pair1SecondaryRxAnt = 1;
+			}
+			else//aux
+			{
+				pAd->RxAnt.Pair1PrimaryRxAnt = 1;
+				pAd->RxAnt.Pair1SecondaryRxAnt = 0;
+			}
+		}
+		else if (pAd->NicConfig2.field.AntDiversity == 0) //Ant div off: default ant is main
+		{
+			pAd->RxAnt.Pair1PrimaryRxAnt = 0;
+			pAd->RxAnt.Pair1SecondaryRxAnt = 1;
+		}
+		else if (pAd->NicConfig2.field.AntDiversity == 1)//Ant div on
+#ifdef ANT_DIVERSITY_SUPPORT
+			if (pAd->chipCap.FlgIsHwAntennaDiversitySup)
+				pAd->CommonCfg.bRxAntDiversity = ANT_HW_DIVERSITY_ENABLE; //filter by PPAD_Init() --> MAC Address
+#else
+		{//eeprom on, but ant div support is not enabled: default ant is man
+			pAd->RxAnt.Pair1PrimaryRxAnt = 0;
+			pAd->RxAnt.Pair1SecondaryRxAnt = 1;
+		}
+#endif
+	}
+
+	DBGPRINT(RT_DEBUG_OFF, ("\x1b[m%s: primary/secondary ant %d/%d\n\x1b[m", 
+					__FUNCTION__,
+					pAd->RxAnt.Pair1PrimaryRxAnt,
+					pAd->RxAnt.Pair1SecondaryRxAnt));
+#ifdef ANT_DIVERSITY_SUPPORT
+	DBGPRINT(RT_DEBUG_OFF, ("\x1b[m%s: AntDiv %d\n\x1b[m", 
+					__FUNCTION__,
+					pAd->CommonCfg.bRxAntDiversity));
+#endif
+}
 

@@ -1964,7 +1964,7 @@ VOID RtmpDrvAllE2PPrint(IN VOID *pReserved,
 
 					printk("%s", msg);
 					eepAddr += AddrStep;
-					pMacContent += AddrStep;
+					pMacContent += (AddrStep/2);
 				}
 				sprintf(msg, "\nDump all EEPROM values to %s\n",
 					fileName);

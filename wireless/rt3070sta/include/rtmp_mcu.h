@@ -34,6 +34,12 @@ INT RtmpAsicEraseFirmware(
 NDIS_STATUS RtmpAsicLoadFirmware(
 	IN PRTMP_ADAPTER pAd);
 
+NDIS_STATUS isMCUnotReady(
+	IN PRTMP_ADAPTER pAd);
+
+NDIS_STATUS isMCUNeedToLoadFIrmware(
+	IN PRTMP_ADAPTER pAd);
+
 INT RtmpAsicSendCommandToMcu(
 	IN PRTMP_ADAPTER	pAd,
 	IN UCHAR			Command,

@@ -381,7 +381,7 @@ static int blit(stm_display_blitter_t         *blitter,
     if (!pGAL->CopyRect(*op, *dstrect, srcLocation))
     {
       DEBUGF2(1,("pGAL->CopyRect failed\n"));
-      ret = -1;
+      ret = -2;
     }
   }
   else
@@ -389,7 +389,7 @@ static int blit(stm_display_blitter_t         *blitter,
     if (!pGAL->CopyRectComplex(*op, *dstrect, *srcrect))
     {
       DEBUGF2(1,("pGAL->CopyRectComplex failed\n"));
-      ret = -1;
+      ret = -3;
     }
   }
 

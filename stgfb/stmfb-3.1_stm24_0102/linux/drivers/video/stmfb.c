@@ -343,11 +343,7 @@ static int stmfb_parse_module_parameters(struct stmfb_info *i, int display)
     }
   }
 
-#ifdef __TDT__
-  i->blitter_api = 0;
-#else
   i->blitter_api = 1;
-#endif
   if (blit_api_ver)
   {
     if (blit_api_ver[0] >= '0' && blit_api_ver[0] <= '9'

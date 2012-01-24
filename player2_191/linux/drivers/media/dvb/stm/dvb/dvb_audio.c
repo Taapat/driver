@@ -427,7 +427,7 @@ static int AudioIoctlSetBypassMode (struct DeviceContext_s* Context, unsigned in
       Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_DTS;
     else if (Mode == 6)
       Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_LPCM;
-    else if (Mode == 8)
+    else if (Mode == 8 || Mode == 9)
       Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_AAC;
     else
       Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_MPEG2;

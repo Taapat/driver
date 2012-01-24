@@ -197,8 +197,13 @@ static struct {
 	{"efuseBufferModeWriteBack",		set_eFuseBufferModeWriteBack_Proc},
 #endif /* RALINK_ATE */
 #endif /* RTMP_EFUSE_SUPPORT */
+	{"ant",					Set_Antenna_Proc},
 #endif /* RT30xx */
-/*2008/09/11:KH add to support efuse--> */
+
+#ifdef RT5350
+    {"HwAntDiv",                Set_Hw_Antenna_Div_Proc},
+#endif // RT5350 //
+
 	{"BeaconLostTime",				Set_BeaconLostTime_Proc},
 	{"AutoRoaming",					Set_AutoRoaming_Proc},
 	{"SiteSurvey",					Set_SiteSurvey_Proc},
@@ -291,6 +296,12 @@ INT Set_SSID_Proc(
 	}	 
         pSsid = &Ssid;
 
+        if (pAd->Mlme.CntlMachine.CurrState != CNTL_IDLE)
+        {
+            RTMP_MLME_RESET_STATE_MACHINE(pAd);
+            DBGPRINT(RT_DEBUG_TRACE, ("!!! MLME busy, reset MLME state machine !!!\n"));
+        }
+
 		if ((pAd->StaCfg.WpaPassPhraseLen >= 8) &&
 			(pAd->StaCfg.WpaPassPhraseLen <= 64))
 		{
@@ -321,21 +332,13 @@ INT Set_SSID_Proc(
 		pAd->bConfigChanged = TRUE;
         pAd->StaCfg.bNotFirstScan = FALSE;     
 
-        if (pAd->Mlme.CntlMachine.CurrState != CNTL_IDLE && (pAd->Mlme.CntlMachine.CurrState != CNTL_WAIT_OID_LIST_SCAN))
-        {
-		RTMP_MLME_RESET_STATE_MACHINE(pAd);
-		DBGPRINT(RT_DEBUG_TRACE, ("!!! MLME busy, reset MLME state machine !!!\n"));
+	MlmeEnqueue(pAd, 
+		MLME_CNTL_STATE_MACHINE, 
+		OID_802_11_SSID,
+		sizeof(NDIS_802_11_SSID),
+		(VOID *)pSsid, 0);
 
-		MlmeEnqueue(pAd, 
-			MLME_CNTL_STATE_MACHINE, 
-			OID_802_11_SSID,
-			sizeof(NDIS_802_11_SSID),
-			(VOID *)pSsid, 0);
-
-		StateMachineTouched = TRUE;	
-        }
-
-        
+	StateMachineTouched = TRUE;	
 
 		if (Ssid.SsidLength == MAX_LEN_OF_SSID)
 			hex_dump("Set_SSID_Proc::Ssid", Ssid.Ssid, Ssid.SsidLength);
@@ -5140,13 +5143,21 @@ RtmpIoctl_rt_ioctl_siwfreq(
 {
 	RT_CMD_STA_IOCTL_FREQ *pIoctlFreq = (RT_CMD_STA_IOCTL_FREQ *)pData;
 	int 	chan = -1;
+	ULONG	freq;
+	
+	if ( pIoctlFreq->m > 100000000 )
+		freq = pIoctlFreq->m / 100000;
+	else if ( pIoctlFreq->m > 100000 )
+		freq = pIoctlFreq->m / 100;
+	else
+		freq = pIoctlFreq->m;
 
 
-	if((pIoctlFreq->e == 0) && (pIoctlFreq->m <= 1000))
+	if((pIoctlFreq->e == 0) && (freq <= 1000))
 		chan = pIoctlFreq->m;	/* Setting by channel number */
 	else
 	{
-		MAP_KHZ_TO_CHANNEL_ID( (pIoctlFreq->m /100) , chan); /* Setting by frequency - search the table , like 2.412G, 2.422G, */
+		MAP_KHZ_TO_CHANNEL_ID( freq , chan); /* Setting by frequency - search the table , like 2.412G, 2.422G, */
 	}
 
     if (ChannelSanity(pAd, chan) == TRUE)

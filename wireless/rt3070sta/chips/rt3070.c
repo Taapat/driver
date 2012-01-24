@@ -60,6 +60,10 @@ VOID NICInitRT3070RFRegisters(IN PRTMP_ADAPTER pAd)
         RfReg &= 0x7F;
         RT30xxWriteRFRegister(pAd, RF_R30, (UCHAR)RfReg);        
 
+		/* set default antenna as main */
+		if (pAd->RfIcType == RFIC_3020 || pAd->RfIcType == RFIC_2020)
+			AsicSetRxAnt(pAd, pAd->RxAnt.Pair1PrimaryRxAnt);	
+
         /* Initialize RF register to default value */
 		for (i = 0; i < NUM_RF_3020_REG_PARMS; i++)
         {

@@ -1947,6 +1947,8 @@ int rt_ioctl_siwgenie(struct net_device *dev,
 	if (RTMP_STA_IoctlHandle(pAd, NULL, CMD_RTPRIV_IOCTL_STA_SIOCSIWGENIE, 0,
 						extra, wrqu->data.length, dev->priv_flags) != NDIS_STATUS_SUCCESS)
 		return -EINVAL;
+	else
+		return 0;
 #endif /* WPA_SUPPLICANT_SUPPORT */
 
 	return -EOPNOTSUPP;

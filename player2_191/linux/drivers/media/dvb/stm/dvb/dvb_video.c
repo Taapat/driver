@@ -1623,7 +1623,7 @@ static unsigned int VideoPoll (struct file* File, poll_table* Wait)
     //      Is beeing reset at the end after nonblocking flush ioctl
     //      So not really a problem but still not nice
     if (DvbStreamCheckDrained(Context->VideoStream) == 1) {
-        printk("Video Stream drained\n");
+        DVB_DEBUG("Video Stream drained\n");
         Mask |= (POLLIN);
     }
 #endif

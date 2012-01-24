@@ -681,6 +681,9 @@ VOID STAHandleRxMgmtFrame(
 	IN PRTMP_ADAPTER pAd,
 	IN RX_BLK *pRxBlk)
 {
+#ifdef ANT_DIVERSITY_SUPPORT
+	PRT28XX_RXD_STRUC pRxD = &(pRxBlk->RxD);
+#endif /* ANT_DIVERSITY_SUPPORT */
 	PRXWI_STRUC pRxWI = pRxBlk->pRxWI;
 	PHEADER_802_11 pHeader = pRxBlk->pHeader;
 	PNDIS_PACKET pRxPacket = pRxBlk->pRxPacket;
@@ -720,6 +723,23 @@ VOID STAHandleRxMgmtFrame(
 						   pRxWI);
 		}
 #ifdef RT30xx
+#ifdef ANT_DIVERSITY_SUPPORT
+		/* collect rssi information for antenna diversity */
+		if (((pAd->NicConfig2.field.AntDiversity) 
+#if TXRX_SW_ANTDIV_SUPPORT
+			|| (pAd->chipCap.bTxRxSwAntDiv)	
+#endif
+			) && (pAd->CommonCfg.bRxAntDiversity != ANT_DIVERSITY_DISABLE)) {
+			if ((pRxD->U2M)
+			    || ((pHeader->FC.SubType == SUBTYPE_BEACON)
+				&&
+				(MAC_ADDR_EQUAL
+				 (&pAd->CommonCfg.Bssid, &pHeader->Addr2)))) {
+				STA_COLLECT_RX_ANTENNA_AVERAGE_RSSI(pAd, ConvertToRssi(pAd, (UCHAR) pRxWI->RSSI0, RSSI_0), 0);	/* Note: RSSI2 not used on RT73 */
+				pAd->StaCfg.NumOfAvgRssiSample++;
+			}
+		}
+#endif /* ANT_DIVERSITY_SUPPORT */
 #endif /* RT30xx */
 
 		/* First check the size, it MUST not exceed the mlme queue size */

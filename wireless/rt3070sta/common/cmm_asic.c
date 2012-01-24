@@ -832,6 +832,67 @@ VOID AsicLockChannel(
 	
 	==========================================================================
  */
+#ifdef ANT_DIVERSITY_SUPPORT
+VOID	AsicAntennaSelect(
+	IN	PRTMP_ADAPTER	pAd,
+	IN	UCHAR			Channel) 
+{
+
+#ifdef CONFIG_STA_SUPPORT
+	if(RTMP_TEST_FLAG(pAd, fRTMP_ADAPTER_IDLE_RADIO_OFF))
+		return;
+
+	IF_DEV_CONFIG_OPMODE_ON_STA(pAd)
+	if (pAd->Mlme.OneSecPeriodicRound % 2 == 1)
+#endif /* CONFIG_STA_SUPPORT */
+	{
+		/* patch for AsicSetRxAnt failed*/
+		pAd->RxAnt.EvaluatePeriod = 0;
+
+		/* check every 2 second. If rcv-beacon less than 5 in the past 2 second, then AvgRSSI is no longer a */
+		/* valid indication of the distance between this AP and its clients.*/
+		if (OPSTATUS_TEST_FLAG(pAd, fOP_STATUS_MEDIA_STATE_CONNECTED)  ||
+			OPSTATUS_TEST_FLAG(pAd, fOP_AP_STATUS_MEDIA_STATE_CONNECTED)) 
+		{
+			SHORT	realavgrssi1;
+
+			/* if no traffic then reset average rssi to trigger evaluation*/
+#ifdef CONFIG_STA_SUPPORT
+			if (pAd->StaCfg.NumOfAvgRssiSample < 5)
+			{
+				pAd->RxAnt.Pair1LastAvgRssi = (-99);
+				pAd->RxAnt.Pair2LastAvgRssi = (-99);
+				DBGPRINT(RT_DEBUG_TRACE, ("MlmePeriodicExec: no traffic/beacon, reset RSSI\n"));
+			}
+
+			pAd->StaCfg.NumOfAvgRssiSample = 0;
+			realavgrssi1 = (pAd->RxAnt.Pair1AvgRssi[pAd->RxAnt.Pair1PrimaryRxAnt] >> 3);
+#endif /* CONFIG_STA_SUPPORT */
+
+			DBGPRINT(RT_DEBUG_TRACE,("Ant-realrssi0(%d), Lastrssi0(%d), EvaluateStableCnt=%d\n", realavgrssi1, pAd->RxAnt.Pair1LastAvgRssi, pAd->RxAnt.EvaluateStableCnt));
+
+			/* if the difference between two rssi is larger or less than 5, then evaluate the other antenna*/
+			if ((pAd->RxAnt.EvaluateStableCnt < 2) || (realavgrssi1 > (pAd->RxAnt.Pair1LastAvgRssi + 5)) || (realavgrssi1 < (pAd->RxAnt.Pair1LastAvgRssi - 5)))
+				AsicEvaluateRxAnt(pAd);
+
+				pAd->RxAnt.Pair1LastAvgRssi = realavgrssi1;
+		}
+		else
+		{
+			/* if not connected, always switch antenna to try to connect*/
+			UCHAR	temp;
+
+			temp = pAd->RxAnt.Pair1PrimaryRxAnt;
+			pAd->RxAnt.Pair1PrimaryRxAnt = pAd->RxAnt.Pair1SecondaryRxAnt;
+			pAd->RxAnt.Pair1SecondaryRxAnt = temp;
+
+			DBGPRINT(RT_DEBUG_TRACE, ("MlmePeriodicExec: no connect, switch to another one to try connection\n"));
+
+			AsicSetRxAnt(pAd, pAd->RxAnt.Pair1PrimaryRxAnt);
+		}
+	}
+}
+#endif /* ANT_DIVERSITY_SUPPORT */
 
 #ifdef RTMP_INTERNAL_TX_ALC
 
@@ -1328,7 +1389,7 @@ VOID AsicAdjustSingleSkuTxPower(
 	/* calculate delta power based on the percentage specified from UI */
 	/* E2PROM setting is calibrated for maximum TX power (i.e. 100%)*/
 	/* We lower TX power here according to the percentage specified from UI*/
-	if (pAd->CommonCfg.TxPowerPercentage == 0xffffffff)       /* AUTO TX POWER control*/
+	if (pAd->CommonCfg.TxPowerPercentage >= 100)       /* AUTO TX POWER control*/
 	{
 #ifdef CONFIG_STA_SUPPORT
 		IF_DEV_CONFIG_OPMODE_ON_STA(pAd)
@@ -1574,7 +1635,7 @@ VOID AsicAdjustTxPower(
 	/* calculate delta power based on the percentage specified from UI */
 	/* E2PROM setting is calibrated for maximum TX power (i.e. 100%)*/
 	/* We lower TX power here according to the percentage specified from UI*/
-	if (pAd->CommonCfg.TxPowerPercentage == 0xffffffff)       /* AUTO TX POWER control*/
+	if (pAd->CommonCfg.TxPowerPercentage >= 100)       /* AUTO TX POWER control*/
 	{
 #ifdef CONFIG_STA_SUPPORT
 		IF_DEV_CONFIG_OPMODE_ON_STA(pAd)
@@ -1582,11 +1643,11 @@ VOID AsicAdjustTxPower(
 			/* to patch high power issue with some APs, like Belkin N1.*/
 			if (Rssi > -35)
 			{
-				BbpR1 |= 0x02;		/* DeltaPwr -= 12;*/
+				DeltaPwr -= 12;
 			}
 			else if (Rssi > -40)
 			{
-				BbpR1 |= 0x01;		/* DeltaPwr -= 6;*/
+				DeltaPwr -= 6;
 			}
 			else
 		;
@@ -2651,6 +2712,8 @@ VOID AsicSetEdcaParm(
 		Ac3Cfg.field.Cwmax = pEdcaParm->Cwmax[QID_AC_VO];
 		Ac3Cfg.field.Aifsn = pEdcaParm->Aifsn[QID_AC_VO];
 
+
+
 /*#ifdef WIFI_TEST*/
 		if (pAd->CommonCfg.bWiFiTest)
 		{
@@ -2664,6 +2727,8 @@ VOID AsicSetEdcaParm(
 			} /* End of if */
 		}
 /*#endif  WIFI_TEST */
+#ifdef CONFIG_STA_SUPPORT
+#endif /* CONFIG_STA_SUPPORT */
 
 		RTMP_IO_WRITE32(pAd, EDCA_AC0_CFG, Ac0Cfg.word);
 		RTMP_IO_WRITE32(pAd, EDCA_AC1_CFG, Ac1Cfg.word);

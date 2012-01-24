@@ -109,6 +109,7 @@ VOID RT33xx_Init(
 	pChipCap->pRFRegTable = RT3020_RFRegTable;
 	pChipCap->MaxNumOfBbpId = 185;
 
+
 	/* init operator */
 	if (IS_RT3390(pAd))
 	{
@@ -128,7 +129,9 @@ VOID RT33xx_Init(
 		pChipOps->ChipSwitchChannel = RT33xx_ChipSwitchChannel;
 		pChipOps->ChipBBPAdjust = RT30xx_ChipBBPAdjust;
 		pChipOps->RTMPSetAGCInitValue = RT30xx_RTMPSetAGCInitValue;
+		/* 1T1R only */
 		pChipOps->SetRxAnt = RT33xxSetRxAnt;
+		pAd->Mlme.bEnableAutoAntennaCheck = FALSE;
 
 		pChipOps->ChipResumeMsduTransmission = NULL;
 		pChipOps->VdrTuning1 = NULL;
@@ -496,6 +499,13 @@ VOID RT33xx_ChipSwitchChannel(
 					;
 				RT30xxWriteRFRegister(pAd, RF_R01, RFValue);
 
+                                RT30xxReadRFRegister(pAd, RF_R30, (PUCHAR)&RFValue);
+                                RFValue |= 0x80;
+                                RT30xxWriteRFRegister(pAd, RF_R30, (UCHAR)RFValue);
+                                RTMPusecDelay(1000);
+                                RFValue &= 0x7F;
+                                RT30xxWriteRFRegister(pAd, RF_R30, (UCHAR)RFValue);
+
 				/* Set RF offset*/
 				RT30xxReadRFRegister(pAd, RF_R23, &RFValue);
 				RFValue = (RFValue & 0x80) | pAd->RfFreqOffset;
@@ -546,6 +556,13 @@ VOID RT33xx_ChipSwitchChannel(
 				RT30xxReadRFRegister(pAd, RF_R07, &RFValue);
 				RFValue = RFValue | 0x1;
 				RT30xxWriteRFRegister(pAd, RF_R07, RFValue);
+
+          			RT30xxReadRFRegister(pAd, RF_R30, (PUCHAR)&RFValue);
+                            RFValue |= 0x80;
+                            RT30xxWriteRFRegister(pAd, RF_R30, (UCHAR)RFValue);
+                            RTMPusecDelay(1000);
+                            RFValue &= 0x7F;
+                            RT30xxWriteRFRegister(pAd, RF_R30, (UCHAR)RFValue);   
 
 				/* latch channel for future usage.*/
 				pAd->LatchRfRegs.Channel = Channel;

@@ -1952,6 +1952,49 @@ NDIS_STATUS	RTMPSetProfileParameters(
 
 
 #ifdef RT30xx
+#ifdef ANT_DIVERSITY_SUPPORT
+				/*IF_DEV_CONFIG_OPMODE_ON_STA(pAd)*/
+				{
+					if (RTMPGetKeyParameter("AntDiversity", tmpbuf, 10, pBuffer, TRUE))
+					{
+						for (i = 0, macptr = rstrtok(tmpbuf,";"); macptr; macptr = rstrtok(NULL,";"), i++)
+						{
+							ANT_DIVERSITY_TYPE Ant = simple_strtol(tmpbuf, 0, 10);
+							if ((Ant <= ANT_FIX_ANT1) && (Ant >= ANT_DIVERSITY_DISABLE))
+								pAd->CommonCfg.bRxAntDiversity = Ant;
+							else
+								pAd->CommonCfg.bRxAntDiversity = ANT_DIVERSITY_DEFAULT;
+
+						}
+					}
+					else
+						pAd->CommonCfg.bRxAntDiversity = ANT_DIVERSITY_DEFAULT;
+
+					switch (pAd->CommonCfg.bRxAntDiversity)
+					{
+						case ANT_DIVERSITY_DISABLE:
+						case ANT_FIX_ANT0:
+							pAd->RxAnt.Pair1PrimaryRxAnt = 0;
+							pAd->RxAnt.Pair1SecondaryRxAnt = 1;
+							break;
+						case ANT_FIX_ANT1:
+							pAd->RxAnt.Pair1PrimaryRxAnt = 1;
+							pAd->RxAnt.Pair1SecondaryRxAnt = 0;
+							break;
+						case ANT_DIVERSITY_ENABLE:
+							if ((pAd->chipCap.FlgIsHwAntennaDiversitySup)) // HW_ANT_DIV (PPAD)
+								pAd->CommonCfg.bRxAntDiversity = ANT_HW_DIVERSITY_ENABLE;
+							else // SW_ANT_DIV
+							{
+								pAd->RxAnt.EvaluateStableCnt = 0;
+								pAd->CommonCfg.bRxAntDiversity = ANT_SW_DIVERSITY_ENABLE;
+							}
+							break;
+					}
+
+					DBGPRINT(RT_DEBUG_ERROR, ("AntDiversity=%d\n", pAd->CommonCfg.bRxAntDiversity));
+				}
+#endif /* ANT_DIVERSITY_SUPPORT */
 #endif /* RT30xx */
 
 

@@ -1130,6 +1130,12 @@ VOID DefaultATEAsicSwitchChannel(
 				RFValue = RFValue | 0x1;
 				ATE_RF_IO_WRITE8_BY_REG_ID(pAd, RF_R07, (UCHAR)RFValue);
 
+				   ATE_RF_IO_READ8_BY_REG_ID(pAd, RF_R30, (PUCHAR)&RFValue);
+                                RFValue |= 0x80;
+                                ATE_RF_IO_WRITE8_BY_REG_ID(pAd, RF_R30, (UCHAR)RFValue);
+                                RTMPusecDelay(1000);
+                                RFValue &= 0x7F;
+                                ATE_RF_IO_WRITE8_BY_REG_ID(pAd, RF_R30, (UCHAR)RFValue);   
 				/* latch channel for future usage */
 				pAd->LatchRfRegs.Channel = Channel;
  				if (pAd->Antenna.field.RxPath > 1)
@@ -1186,6 +1192,12 @@ VOID DefaultATEAsicSwitchChannel(
 					ATE_RF_IO_WRITE8_BY_REG_ID(pAd, RF_R01, (UCHAR)RFValue);
 					ATE_BBP_IO_WRITE8_BY_REG_ID(pAd, BBP_R1, BbpValue);
 	                     }
+				ATE_RF_IO_READ8_BY_REG_ID(pAd, RF_R30, (PUCHAR)&RFValue);
+				RFValue |= 0x80;
+				ATE_RF_IO_WRITE8_BY_REG_ID(pAd, RF_R30, (UCHAR)RFValue);
+				RTMPusecDelay(1000);
+				RFValue &= 0x7F;
+				ATE_RF_IO_WRITE8_BY_REG_ID(pAd, RF_R30, (UCHAR)RFValue);
 				break;				
 			}
 		}
@@ -1245,6 +1257,12 @@ VOID DefaultATEAsicSwitchChannel(
 				}	
 				ATE_RF_IO_WRITE8_BY_REG_ID(pAd, RF_R01, RFValue);
 
+				ATE_RF_IO_READ8_BY_REG_ID(pAd, RF_R02, (PUCHAR)&RFValue);
+                                RFValue |= 0x80;
+                                ATE_RF_IO_WRITE8_BY_REG_ID(pAd, RF_R02, (UCHAR)RFValue);
+                                RTMPusecDelay(1000);
+                                RFValue &= 0x7F;
+                                ATE_RF_IO_WRITE8_BY_REG_ID(pAd, RF_R02, (UCHAR)RFValue);   
 				{
 					/* Zero patch based on windows driver */
 					if (IS_RT5392(pAd))
@@ -1266,14 +1284,16 @@ VOID DefaultATEAsicSwitchChannel(
 					{
 						ATE_RF_IO_WRITE8_BY_REG_ID(pAd, RF_R32, 0xC0);
 
-						if (IS_RT5390F(pAd) || IS_RT5392C(pAd)) /* >= RT5390F */
+						if (IS_RT5390F(pAd)) /* >= RT5390F */
 						{
-							ATE_RF_IO_WRITE8_BY_REG_ID(pAd, RF_R55, 0x47);
+							ATE_RF_IO_WRITE8_BY_REG_ID(pAd, RF_R55, 0x46);
 						}
+						else if (IS_RT5392C(pAd))
+							ATE_RF_IO_WRITE8_BY_REG_ID(pAd, RF_R55, 0x47);
 					}
 					else
 					{
-						ATE_RF_IO_WRITE8_BY_REG_ID(pAd, RF_R32, 0x80);
+						ATE_RF_IO_WRITE8_BY_REG_ID(pAd, RF_R32, 0x20);
 
 						if (IS_RT5390F(pAd) || IS_RT5392C(pAd)) /* >= RT5390F */
 						{
@@ -8227,7 +8247,7 @@ INT	Set_ATE_TX_MODE_Proc(
 	if (IS_RT5390F(pAd))
 	{
 		if (pAd->ate.TxWI.PHYMODE == MODE_CCK)
-			ATE_RF_IO_WRITE8_BY_REG_ID(pAd, RF_R55, 0x47);
+			ATE_RF_IO_WRITE8_BY_REG_ID(pAd, RF_R55, 0x46);
 		else			
 			ATE_RF_IO_WRITE8_BY_REG_ID(pAd, RF_R55, 0x43);
 	}

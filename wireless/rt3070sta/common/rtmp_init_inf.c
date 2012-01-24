@@ -431,7 +431,6 @@ int rt28xx_init(
 #endif /* RTMP_MAC_USB */
 	}/* end of else*/
 
-
 	/* Set up the Mac address*/
 #ifdef CONFIG_STA_SUPPORT
 	RtmpOSNetDevAddrSet(pAd->OpMode, pAd->net_dev, &pAd->CurrentAddress[0], (PUCHAR)(pAd->StaCfg.dev_name));
@@ -462,10 +461,6 @@ int rt28xx_init(
 
 
 
-#ifdef HW_ANTENNA_DIVERSITY_SUPPORT
-	if (pAd->chipCap.FlgIsHwAntennaDiversitySup == TRUE)
-		SetHWAntennaDivsersity(pAd, pAd->bHardwareAntennaDivesity);
-#endif // HW_ANTENNA_DIVERSITY_SUPPORT //
 
 	RTMP_CHIP_SPECIFIC(pAd, RTMP_CHIP_SPEC_STATE_INIT,
 						RTMP_CHIP_SPEC_INITIALIZATION, NULL, 0);
@@ -568,6 +563,9 @@ VOID RTMPDrvOpen(
 	if (pAd->OpMode == OPMODE_STA)
 		MlmeAutoReconnectLastSSID(pAd);
 #endif /* CONFIG_STA_SUPPORT */
+
+
+
 
 }
 
