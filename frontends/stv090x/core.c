@@ -112,9 +112,11 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 		printk("%s: attached\n", __FUNCTION__);
 		
 		switch (tunerType) {
+#if !defined(FORTIS_HDBOX)
 		case SHARP7306:
 			ctl = dvb_attach(ix7306_attach, frontend, &bs2s7hz7306a_config, cfg->i2c_adap);
 			break;
+#endif
 		case STV6110X:
 		default:
 			ctl = dvb_attach(stv6110x_attach, frontend, &stv6110x_config, cfg->i2c_adap);
