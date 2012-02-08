@@ -1274,9 +1274,10 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
     
     // Hm why is here not the decimate value used from havana_stream ?
     // Lets set it depending on the value from havana_stream
-    int decimate = Player->PolicyValue (Playback, Stream, PolicyDecimateDecoderOutput);
-    if (decimate == PolicyValueDecimateDecoderOutputDisabled) DecimateIfAvailable = false;
-    else DecimateIfAvailable = true;
+    //Gost deaktivate temporary
+    //int decimate = Player->PolicyValue (Playback, Stream, PolicyDecimateDecoderOutput);
+    //if (decimate == PolicyValueDecimateDecoderOutputDisabled) DecimateIfAvailable = false;
+    //else DecimateIfAvailable = true;
     
 #if defined (CROP_INPUT_WHEN_DECIMATION_NEEDED_BUT_NOT_AVAILABLE)
     if ((Player->PolicyValue (Playback, Stream, PolicyDecimateDecoderOutput) != PolicyValueDecimateDecoderOutputDisabled) &&
