@@ -5,15 +5,15 @@ typedef unsigned int YWI2CSoft_Handle_t;
 
 typedef struct  YWI2cSoft_InitParam_s
 {
-    bool    		IsSlaveDevice;
-    unsigned int     SCLPioIndex;
-    unsigned int     SDAPioIndex;
-    unsigned int     Speed;
+	bool IsSlaveDevice;
+	unsigned int SCLPioIndex;
+	unsigned int SDAPioIndex;
+	unsigned int Speed;
 } YWI2cSoft_InitParam_t;
 
 typedef struct YWI2cSoft_OpenParams_s
 {
-	unsigned short     I2cAddress;
+	unsigned short I2cAddress;
 } YWI2cSoft_OpenParams_t;
 
 int  softi2c_init(void);
