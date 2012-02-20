@@ -1,0 +1,143 @@
+===================================================================================================
+ATE Test Command Format for station driver
+
+****** IMPORTANT ******
+If you are not familiar with hardware, it is recommanded not to modify hardware default value.
+It may damage hardware.
+
+
+Usage:
+	iwpriv rausb0 [act] [parameters]=[val]
+
+
+where
+
+[act]	[parameters] 	[val] constraints		explaination
+-----	------------- 	-----------------    	--------------------------------
+set		ATEDA		    xx:xx:xx:xx:xx:xx   	set ATE frame header addr1
+
+		ATESA		    xx:xx:xx:xx:xx:xx		set ATE frame header addr2
+
+		ATEBSSID	    xx:xx:xx:xx:xx:xx		set ATE frame header addr3
+
+		ATETXPOW	    0 ~ 31			   		set ATE Tx power
+		
+		ATECHANNEL	    1 ~ 14			   		set ATE Channel
+
+		ATETXFREQOFFSET	1 ~ 14    				set ATE RF frequency offset
+
+		ATETXLEN	    24 ~ 1500			   	set ATE frame length
+
+		ATETXCNT	    1 ~				   		set ATE frame Tx count
+
+		ATETXRATE	    0 ~ 11			   		set ATE frame Tx rate (rate_1 ~ rate_54)
+
+		------- set ATE actions ------- 
+		ATE		    	STASTOP			   		stop STA & ATE function
+		ATE          	STASTART           		start STA function
+		ATE           	TXCONT			   		start STA continuous TX
+		ATE           	TXCARR			   		start STA carrier test
+		ATE          	TXFRAME			   		transmit frame
+		ATE         	RXFRAME			   		continuous RX
+		-------------------------------                     
+		ResetCounter	0				   		reset statistic counter
+
+		bbp				0 ~	xx				   	read/write BBP register
+
+		mac				0 ~	xxxxxxxx			read/write MAC register
+
+		e2p				0 ~ xxxx				read/write E2PROM
+
+
+For example:
+============
+1. Check EVM & Power
+	iwpriv rausb0 set ATE=STASTOP				; Stop STA working
+	iwpriv rausb0 set ATEDA=00:11:22:33:44:55
+	iwpriv rausb0 set ATESA=00:aa:bb:cc:dd:ee
+	iwpriv rausb0 set ATEBSSID=00:11:22:33:44:55
+	iwpriv rausb0 set ATETXRATE=11				; Set Tx Rate 0~11
+	iwpriv rausb0 set ATECHANNEL=1				; Set Ate channel
+	iwpriv rausb0 set ATETXLEN=1024				; Tx frame length(no include 802.11 header)
+	iwpriv rausb0 set ATETXPOW=18				; Tx power(decmial)
+	iwpriv rausb0 set ATETXCNT=100000			; Tx frame count(decmial, this value must
+												; larger than meausurement period)
+	iwpriv rausb0 set ATE=TXFRAME				; Start Tx Frame
+	...											; Measure EVM and Power with instrument
+	iwpriv rausb0 set ATETXPOW=19				; dynamic adjust Tx Power in decmial
+	...
+	iwpriv rausb0 set ATETXPOW=20
+	...
+	iwpriv rausb0 set ATE=STASTOP				; Stop
+
+
+2. Check Carrier
+	iwpriv rausb0 set ATE=STASTOP
+	iwpriv rausb0 set ATETXRATE=11				; Set Tx Rate 0~11
+	iwpriv rausb0 set ATETXCNT=50				; Tx frame count(decmial)
+	iwpriv rausb0 set ATE=TXFRAME				; Start Tx Frame(inform BBP to change 												; modulation mode)
+	iwpriv rausb0 set ATE=TXCARR				; Start Tx carrier
+	...											; Measure carrier with instrument
+	iwpriv rausb0 set ATE=STASTOP
+
+
+3. Check specturm mask
+	iwpriv rausb0 set ATE=STASTOP
+	iwpriv rausb0 set ATETXRATE=11				; Set Tx Rate 0~11
+	iwpriv rausb0 set ATETXCNT=50				; Tx frame count(decmial)
+	iwpriv rausb0 set ATE=TXCONT				; Start continuous TX
+	...                          				; Measure specturm mask with instrument
+	iwpriv rausb0 set ATE=STASTOP
+
+ 
+4. Frequency offset tuning
+	iwpriv rausb0 set ATE=STASTOP
+	iwpriv rausb0 set ATETXRATE=11				; Set Tx Rate 0~11
+	iwpriv rausb0 set ATETXCNT=50				; Tx frame count(decmial)
+	iwpriv rausb0 set ATE=TXFRAME				; Start Tx Frame
+	iwpriv rausb0 set ATETXFREQOFFSET=0			; Set frequency offset 0(decimal)
+	iwpriv rausb0 set ATE=TXCARR				; Start Tx carrier
+	...											; Measure carrier frequency with instrument
+	iwpriv rausb0 set ATETXFREQOFFSET=10		; Dynamic turning frequency offset 													; 10(decimal)
+	...                                 	
+	iwpriv rausb0 set ATETXFREQOFFSET=20		; Dynamic turning frequency offset 													; 20(decimal)
+	...                                 	
+	iwpriv rausb0 set ATE=STASTOP				; Stop
+												; Store the tuning result to EEPROM
+
+
+5. Rx
+	iwpriv rausb0 set ATE=STASTOP
+	iwpriv rausb0 set ResetCounter=0			; Reset statistic counter
+	iwpriv rausb0 set ATETXRATE=11				; Set Tx Rate 0~11
+	iwpriv rausb0 set ATE=RXFRAME				; Start Rx
+	...											; Transmit test packets
+	iwpriv rausb0 set ATE=STASTOP				; Stop
+	iwpriv rausb0 stat
+
+6. Hardware access
+	iwpriv rausb0 bbp 0							; read BBP register 0
+	iwpriv rausb0 bbp 0=12						; write BBP register 0 as 0x12
+	iwpriv rausb0 mac 0							; read MAC register 0
+	iwpriv rausb0 mac 0=1234abcd				; write MAC register 0 as 0x1234abcd
+	iwpriv rausb0 e2p 0							; read E2PROM 0
+	iwpriv rausb0 e2p c=12ab					; write E2PROM 0xc as 0x12ab
+
+7. ASIC model check status
+	iwpriv rausb0 chk_asic_ver
+	{status = 0}							; The result mismatched between EEPROM and ASIC hard code.
+	{status = 1}							; The result matched between EEPROM and ASIC hard code.
+
+
+	
+Suggestion:
+============
+	1. To turn on ATE functionality, you have to add compile flag "DBG" and "RALINK_ATE" to Makefile
+	2. Before doing ATE testing, please stop STA function (iwpriv rausb0 set ATE=STASTOP)
+	3. If you want to test another ATE action, prefer to stop STA & ATE function (iwpriv rausb0 set ATE=STASTOP)
+	4. All ATE function settings will lose efficacy after reboot.
+	5. Before hardware register access, please reference hardware spec.
+
+*Note.
+======
+	1. In ATE mode, the channel must set via "ATECHANNEL"

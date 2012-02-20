@@ -3,3 +3,4 @@ obj-y	+= rt3070sta/
 obj-y	+= rtl8192cu/
 obj-y	+= rtl871x/
 obj-y	+= rt5370sta/
+#obj-y	+= rt73/
