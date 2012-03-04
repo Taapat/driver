@@ -427,11 +427,11 @@ void spark_stm_tsm_init ( void )
      * some ts packets!
      */
 
-    ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);     //448kb (8*64)
-    ctrl_outl(0x800,  tsm_io + TSM_STREAM1_CFG);     //448kb (6*64)
-    ctrl_outl(0xe00,  tsm_io + TSM_STREAM2_CFG);     //384kb (6*64)
-    ctrl_outl(0x1400, tsm_io + TSM_STREAM3_CFG);     //384kb (6*64)
-    ctrl_outl(0x1a00, tsm_io + TSM_STREAM4_CFG);     //320kb (5*64)
+    ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG); //448kb (8*64)
+    ctrl_outl(0x500,  tsm_io + TSM_STREAM1_CFG); //448kb (6*64)
+    ctrl_outl(0xe00,  tsm_io + TSM_STREAM2_CFG); //384kb (8*64)
+    ctrl_outl(0x1600, tsm_io + TSM_STREAM3_CFG); //384kb (6*64)
+    ctrl_outl(0x1a00, tsm_io + TSM_STREAM4_CFG); //320kb (5*64)
     ctrl_outl(0x1d00, tsm_io + TSM_STREAM5_CFG);
     ctrl_outl(0x1e00, tsm_io + TSM_STREAM6_CFG);
     /* I think this is a fault value !!! 0x1f00 is maximum but
