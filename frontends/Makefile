@@ -167,12 +167,11 @@ else ifdef TF7700
 cx24116-objs += cx24116/cx24116.o
 obj-m += cx24116.o
 else  ifdef ADB_BOX
-fe-core-objs +=        adb/stb0899_algo.o
-fe-core-objs +=        adb/stb0899_drv.o
-fe-core-objs +=        adb/stb6100.o
-fe-core-objs +=        adb/core.o
+fe-core-objs +=  adb/stb0899_algo.o
+fe-core-objs +=  adb/stb0899_drv.o
+fe-core-objs +=  adb/stb6100.o
+fe-core-objs +=  adb/core.o
 obj-m += fe-core.o
- 
 endif
 
 else
@@ -319,13 +318,6 @@ fe-core-objs +=        adb/stb6100.o
 fe-core-objs +=        adb/core.o
 obj-m += fe-core.o
 
-#fe-core-objs +=        nbox1/isl6405.o
-#fe-core-objs +=        nbox1/isl6423.o
-#fe-core-objs +=        nbox1/stb0899_algo.o
-#fe-core-objs +=        nbox1/stb0899_drv.o
-#fe-core-objs +=        nbox1/stb6100.o
-#fe-core-objs +=        nbox1/core.o
-#obj-m += fe-core.o 
 endif
 
 # other drivers already in kernel

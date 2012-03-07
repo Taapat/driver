@@ -584,9 +584,6 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 				goto error_out;
 			}
 
-			stb0899_config.lnb_enable  = cfg->lnb_enable;
-			stb0899_config.lnb_vsel    = cfg->lnb_vsel;
-
 	return frontend;
 
 error_out:
@@ -658,6 +655,7 @@ struct plat_tuner_config tuner_resources[] = {
         [0] = {
                 .adapter 	= 0,
                 .i2c_bus 	= 0,
+                .i2c_addr 	= I2C_ADDR_STB0899,
         },
 };
 
