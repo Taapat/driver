@@ -1507,9 +1507,6 @@ static int stb0899_read_ber(struct dvb_frontend *fe, u32 *ber)
 	return 0;
 }
 
-enum { VOLTAGE_13 = 1, VOLTAGE_18  = 0 };
-enum { VOLTAGE_ON = 1, VOLTAGE_OFF = 0 };
-
 static int stb0899_set_voltage(struct dvb_frontend *fe, fe_sec_voltage_t voltage)
 {
 	struct stb0899_state *state = fe->demodulator_priv;
