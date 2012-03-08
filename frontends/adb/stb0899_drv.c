@@ -2295,9 +2295,9 @@ static struct dvb_frontend_ops stb0899_ops = {
 
 	.info = {
 		.name				= "STB0899 Multistandard",
-		.type				= FE_QPSK, /* with old API */
-		.frequency_min		= 950000,
-		.frequency_max 		= 2150000,
+		//.type				= FE_QPSK, /* with old API */
+		//.frequency_min		= 950000,
+		//.frequency_max 		= 2150000,
 		.frequency_stepsize	= 0,
 		.frequency_tolerance= 0,
 		.symbol_rate_min 	=  1000000,
