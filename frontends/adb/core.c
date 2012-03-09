@@ -515,9 +515,6 @@ static struct stb0899_config stb0899_config = {
 	.init_s2_fec     = stb0899_init_s2_fec,
 	.init_tst        = stb0899_init_tst,
 
-	.lnb_enable 		= NULL,
-	.lnb_vsel	 		= NULL,
-
 	.demod_address   = I2C_ADDR_STB0899, /* I2C Address */
 	.block_sync_mode = STB0899_SYNC_FORCED, /* ? */
 
