@@ -157,17 +157,15 @@ endif
 endif
 endif
 
-ifndef HOMECAST5101
-ifndef FORTIS_HDBOX
-ifndef ATEVIO7500
-ifndef UFS922
-ifndef TF7700
+# Button and Led Driver only needed for old 14W Kathrein Ufs 910 boxes
+ifdef UFS910
 obj-y	+= button/
 obj-y	+= led/
 endif
-endif
-endif
-endif
+
+ifdef FLASH_UFS910
+obj-y	+= button/
+obj-y	+= led/
 endif
 
 ifdef UFS922
