@@ -45,6 +45,9 @@ enum
 {
     DemultiplexorNoError			= PlayerNoError,
     DemultiplexorError				= PlayerError,
+#ifdef __TDT__
+    DemultiplexorBufferOverflow,
+#endif
 
 						// GetBuffer
 //    Demultiplexor...				= BASE_DEMULTIPLEXOR

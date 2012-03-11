@@ -74,6 +74,9 @@ unsigned int              Length;
 void                     *Data;
 PlayerInputMuxType_t      MuxType;
 PlayerStatus_t            Status;
+#ifdef __TDT__
+DemultiplexorStatus_t	  DemuxStatus;
+#endif
 PlayerInputDescriptor_t  *Descriptor;
 
 //
@@ -117,7 +120,11 @@ PlayerInputDescriptor_t  *Descriptor;
 
 	if( i < DemultiplexorCount )
 	{
+#ifdef __TDT__
+	    DemuxStatus = Demultiplexors[i]->Demux( Playback, Descriptor->DemultiplexorContext, Buffer );
+#else
 	    Status = Demultiplexors[i]->Demux( Playback, Descriptor->DemultiplexorContext, Buffer );
+#endif
 	}
 	else
 	{
@@ -125,6 +132,12 @@ PlayerInputDescriptor_t  *Descriptor;
 	    Status = PlayerUnknowMuxType;
 	}       
     }
+
+#ifdef __TDT__
+    if(DemuxStatus == DemultiplexorBufferOverflow)
+	for(PlayerStream_t Stream = Playback->ListOfStreams; Stream != NULL; Stream = Stream->Next)
+        	Stream->Collator->DiscardAccumulatedData();
+#endif
 
     //
     // Release the buffer
