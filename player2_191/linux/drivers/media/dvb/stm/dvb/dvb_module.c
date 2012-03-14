@@ -91,6 +91,9 @@ MODULE_PARM_DESC(highSR, "Start Driver with support for Symbol Rates 30000.\nIf 
 module_param(swts, int, 0444);
 MODULE_PARM_DESC(swts, "Do not route injected data through the tsm/pti\n");
 #endif
+int reset_tsm = 1;
+module_param(reset_tsm, int, S_IRUGO | S_IWUSR);
+MODULE_PARM_DESC(reset_tsm, "reset the tsm when pti is idle? (default=1)");
 
 struct DvbContext_s*     DvbContext;
 
@@ -263,6 +266,7 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
                              DVB_DEVICE_VIDEO);                             
 
         DeviceContext->Id                       = i;
+        DeviceContext->numRunningFeeds          = 0;
         DeviceContext->DemuxContext             = DeviceContext;        /* wire directly to own demux by default */
         DeviceContext->SyncContext              = DeviceContext;        /* we are our own sync group by default */
         DeviceContext->Playback                 = NULL;
