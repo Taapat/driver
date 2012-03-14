@@ -100,7 +100,7 @@ struct Rectangle_s
 struct DeviceContext_s
 {
     unsigned int                Id;
-
+    int                         numRunningFeeds;
 
     struct dvb_device*          AudioDevice;
     struct audio_status         AudioState;

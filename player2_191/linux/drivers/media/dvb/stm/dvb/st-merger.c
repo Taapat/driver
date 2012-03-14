@@ -124,9 +124,9 @@ unsigned long TSM_NUM_1394_ALT_OUT;
 #define SYS_CFG7      		0x11C
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
-unsigned long tsm_io;
+unsigned long tsm_io = 0;
 #else
-void* tsm_io;
+void* tsm_io = NULL;
 #endif
 
 extern int highSR;
@@ -351,6 +351,13 @@ EXPORT_SYMBOL(stm_tsm_inject_user_data);
  * ****************************************
  */
 
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
+    static unsigned long    reg_sys_config = 0;
+#else
+    static void *reg_sys_config = NULL;
+#endif
+
 #if defined(SPARK)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
 
@@ -359,11 +366,22 @@ void spark_stm_tsm_init ( void )
     unsigned int     ret;
     int              n;
 
-    void *reg_sys_config = NULL;
+    /* ugly hack: the TSM sometimes seems to stop working, a
+    * reset of the config registers fixes it
+    * but the DMA stuff must not be touched or everything
+    * blows up badly */
+    int reinit = 0;
 
-    printk("[Spark] Init Stream Routing...\n");
-    /* first configure sysconfig */
-    reg_sys_config = ioremap(SysConfigBaseAddress, 0x1000);
+    if (tsm_io)
+        reinit = 1;
+
+    if (reinit) {
+        printk("[Spark] reinit stream routing...\n");
+    } else {
+        printk("[Spark] Init Stream Routing...\n");
+        /* first configure sysconfig */
+        reg_sys_config = ioremap(SysConfigBaseAddress, 0x1000);
+    }
     /*
 	 ->TSIN0 routed to TSIN2
 	 ->TSMerger TSIN2 receives TSIN0 (based on config before)
@@ -372,10 +390,15 @@ void spark_stm_tsm_init ( void )
 
     ctrl_outl(0x3, reg_sys_config + SYS_CFG0);
     ctrl_outl(0x0, reg_sys_config + SYS_CFG1);
-
-    /* set up tsmerger */
-    tsm_handle.tsm_io = tsm_io = ioremap(TSMergerBaseAddress, 0x0900);
-
+    if (reinit) {
+        /* this seems to shorten the window for the race condition,
+         * however I don't believe it is enough to be really safe.
+         * but it works for now. */
+        dma_wait_for_completion(tsm_handle.fdma_channel);
+    } else {
+        /* set up tsmerger */
+        tsm_handle.tsm_io = tsm_io = ioremap(TSMergerBaseAddress, 0x0900);
+    }
     /* 1. Reset */
     ctrl_outl(0x0, tsm_io + TSM_SW_RST);
     ctrl_outl(0x6, tsm_io + TSM_SW_RST);
@@ -427,11 +450,12 @@ void spark_stm_tsm_init ( void )
      * some ts packets!
      */
 
-    ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);     //448kb (8*64)
-    ctrl_outl(0x800,  tsm_io + TSM_STREAM1_CFG);     //448kb (6*64)
-    ctrl_outl(0xe00,  tsm_io + TSM_STREAM2_CFG);     //384kb (6*64)
-    ctrl_outl(0x1400, tsm_io + TSM_STREAM3_CFG);     //384kb (6*64)
-    ctrl_outl(0x1a00, tsm_io + TSM_STREAM4_CFG);     //320kb (5*64)
+    /* RAM partitioning of streams */
+    ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);   //448kb (8*64)
+    ctrl_outl(0x500,  tsm_io + TSM_STREAM1_CFG);   //448kb (6*64)
+    ctrl_outl(0xe00,  tsm_io + TSM_STREAM2_CFG);   //384kb (8*64)
+    ctrl_outl(0x1600, tsm_io + TSM_STREAM3_CFG);   //384kb (6*64)
+    ctrl_outl(0x1a00, tsm_io + TSM_STREAM4_CFG);   //320kb (5*64)
     ctrl_outl(0x1d00, tsm_io + TSM_STREAM5_CFG);
     ctrl_outl(0x1e00, tsm_io + TSM_STREAM6_CFG);
     /* I think this is a fault value !!! 0x1f00 is maximum but
@@ -516,6 +540,10 @@ void spark_stm_tsm_init ( void )
     ctrl_outl( (ret & TSM_RAM_ALLOC_START(0xff)) |
 		           TSM_PRIORITY(0x7) | TSM_STREAM_ON | TSM_ADD_TAG_BYTES | TSM_SYNC_NOT_ASYNC | TSM_ASYNC_SOP_TOKEN, tsm_io + TSM_STREAM3_CFG);
 
+    /* don't touch the DMA engine -- seems unnecessary on reinit */
+    if (reinit)
+        return;
+
     tsm_handle.swts_channel = 3;
     tsm_handle.tsm_swts = (unsigned long)ioremap (0x1A300000, 0x1000);
 
@@ -552,35 +580,48 @@ void stm_tsm_init (int use_cimax)
 
     /* first configure sysconfig */
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
-    unsigned long    reg_sys_config = 0;
-#else
-    void *reg_sys_config = NULL;
-#endif
+    /* ugly hack: the TSM sometimes seems to stop working, a
+     * reset of the config registers fixes it
+     * but the DMA stuff must not be touched or everything
+     * blows up badly */
 
-    reg_sys_config = ioremap(SysConfigBaseAddress, 0x0900);
+    int reinit = 0;
+    if (tsm_io)
+        reinit = 1;
+ 
+    if (reinit) {
+        printk("[TSM] reinit stream routing...\n");
+    } else {
+        printk("[TSM] init stream routing...\n");
+        reg_sys_config = ioremap(SysConfigBaseAddress, 0x0900);
+    }
 
     if (use_cimax != 0)
     {
       /* route tsmerger to cimax and then to pti */
 
 #if defined(UFS912) || defined(HS7810A)
-      struct stpio* stream1_pin = stpio_request_pin (5, 0, "TSinterface1", STPIO_IN);
-      struct stpio* stream2_pin = stpio_request_pin (5, 3, "TSinterface2", STPIO_IN);
+      if (!reinit) {
+          struct stpio* stream1_pin = stpio_request_pin (5, 0, "TSinterface1", STPIO_IN);
+          struct stpio* stream2_pin = stpio_request_pin (5, 3, "TSinterface2", STPIO_IN);
+      } else printk("[TSM] skip stpio stuff in reinit\n");
 #elif defined(ATEVIO7500)
-      struct stpio* pin;
-
-      /* set the muxer pin otherwise startci output will
-       * not properly passed to tsmerger.
-       */
-      pin = stpio_request_pin (5, 3, "tuner2_mux", STPIO_OUT);
-      stpio_set_pin(pin, 0);
-      pin = stpio_request_pin (5, 4, "tuner2_mux", STPIO_OUT);
-      stpio_set_pin(pin, 0);
+      if (!reinit) {
+          struct stpio* pin;
+          /* set the muxer pin otherwise startci output will
+           * not properly passed to tsmerger.
+           */
+          pin = stpio_request_pin (5, 3, "tuner2_mux", STPIO_OUT);
+          stpio_set_pin(pin, 0);
+          pin = stpio_request_pin (5, 4, "tuner2_mux", STPIO_OUT);
+          stpio_set_pin(pin, 0);
+      } else printk("[TSM] skip stpio stuff in reinit\n");
 #elif defined(OCTAGON1008)
-      struct stpio* stream2_pin = stpio_request_pin (1, 3, "STREAM2", STPIO_OUT);
-      /* disbaled on 1 */
-      stpio_set_pin(stream2_pin, 0);
+      if (!reinit) {
+          struct stpio* stream2_pin = stpio_request_pin (1, 3, "STREAM2", STPIO_OUT);
+          /* disbaled on 1 */
+          stpio_set_pin(stream2_pin, 0);
+      } else printk("[TSM] skip stpio stuff in reinit\n");
 #endif
 
       /*
@@ -675,10 +716,15 @@ void stm_tsm_init (int use_cimax)
 #if !defined(ATEVIO7500) && !defined(UFS912) && !defined(HS7810A) && !defined(HS7110)
       ctrl_outl(0x0, reg_sys_config + SYS_CFG1);
 #endif
-
-      /* set up tsmerger */
-      tsm_handle.tsm_io = tsm_io = ioremap(TSMergerBaseAddress, 0x0900);
-
+      if (reinit) {
+          /* this seems to shorten the window for the race condition,
+           * however I don't believe it is enough to be really safe.
+           * but it works for now. */
+          dma_wait_for_completion(tsm_handle.fdma_channel);
+       } else {
+          /* set up tsmerger */
+          tsm_handle.tsm_io = tsm_io = ioremap(TSMergerBaseAddress, 0x0900);
+      }
       /* 1. Reset */
       ctrl_outl(0x0, tsm_io + TSM_SW_RST);
       ctrl_outl(0x6, tsm_io + TSM_SW_RST);
@@ -736,7 +782,7 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x1300, tsm_io + TSM_STREAM4_CFG);  	//256kb (4*64)
       ctrl_outl(0x1700, tsm_io + TSM_STREAM5_CFG);  	//192kb (3*64)
       ctrl_outl(0x1a00, tsm_io + TSM_STREAM6_CFG);  	//384kb (5*64)
-#elif defined (UFS912)
+#elif defined (UFS912) || defined(HS7810A) || defined(HS7110)
       /* RAM partitioning of streams */
       ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);   //448kb (8*64)
       ctrl_outl(0x500,  tsm_io + TSM_STREAM1_CFG);   //448kb (6*64)
@@ -760,35 +806,6 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x0, tsm_io + TSM_STREAM6_CFG2);
       ctrl_outl(0x0, tsm_io + TSM_STREAM7_CFG2);
 
-#elif defined(HS7810A) || defined(HS7110)
-      /* RAM partitioning of streams */
-
-      /* we use a little more ram for the tsm stream because
-       * of overflow of tsm in case of hight cpu load on
-       * sky sport hd live events. this leads to loss of
-       * some ts packets!
-       */
-
-      ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);     //448kb (8*64)
-      ctrl_outl(0x800,  tsm_io + TSM_STREAM1_CFG);     //448kb (6*64)
-      ctrl_outl(0xe00,  tsm_io + TSM_STREAM2_CFG);     //384kb (6*64)
-      ctrl_outl(0x1400, tsm_io + TSM_STREAM3_CFG);     //384kb (6*64)
-      ctrl_outl(0x1a00, tsm_io + TSM_STREAM4_CFG);     //320kb (5*64)
-      ctrl_outl(0x1d00, tsm_io + TSM_STREAM5_CFG);
-      ctrl_outl(0x1e00, tsm_io + TSM_STREAM6_CFG);
-      /* I think this is a fault value !!! 0x1f00 is maximum but
-       * this is the lower address. nevertheless, stream7 not needed
-       */
-      ctrl_outl(0x1f00, tsm_io + TSM_STREAM7_CFG);
-
-      ctrl_outl(0x0, tsm_io + TSM_STREAM0_CFG2);
-      ctrl_outl(0x0, tsm_io + TSM_STREAM1_CFG2);
-      ctrl_outl(0x0, tsm_io + TSM_STREAM2_CFG2);
-      ctrl_outl(0x0, tsm_io + TSM_STREAM3_CFG2);
-      ctrl_outl(0x0, tsm_io + TSM_STREAM4_CFG2);
-      ctrl_outl(0x0, tsm_io + TSM_STREAM5_CFG2);
-      ctrl_outl(0x0, tsm_io + TSM_STREAM6_CFG2);
-      ctrl_outl(0x0, tsm_io + TSM_STREAM7_CFG2);
 #elif defined(ATEVIO7500)
       /* RAM partitioning of streams */
       ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);
@@ -1140,6 +1157,10 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl( (ret & TSM_RAM_ALLOC_START(0xff)) |
 		           TSM_PRIORITY(0x7) | TSM_STREAM_ON | TSM_ADD_TAG_BYTES | TSM_SYNC_NOT_ASYNC | TSM_ASYNC_SOP_TOKEN, tsm_io + TSM_STREAM3_CFG);
 
+      /* don't touch the DMA engine -- seems unnecessary on reinit */
+      if (reinit)
+          return;
+
       tsm_handle.swts_channel = 3;
       tsm_handle.tsm_swts = (unsigned long)ioremap (0x1A300000, 0x1000);
 
@@ -1168,11 +1189,16 @@ void stm_tsm_init (int use_cimax)
   	int n;
 
     printk("Bypass ci\n");
+    if (reinit) {
+        printk("reinit\n");
+    } else {
 #if	defined(SPARK) || defined(SPARK7162) || defined(HS7110)
   	tsm_io = ioremap (/* config->tsm_base_address */ TSMergerBaseAddress,0x1000);
 #else
 	tsm_io = ioremap (/* config->tsm_base_address */ 0x19242000,0x1000);
 #endif
+    }
+
 
 #ifdef LOAD_TSM_DATA
   	TSM_NUM_PTI_ALT_OUT  = 1/* config->tsm_num_pti_alt_out*/;
@@ -1198,14 +1224,14 @@ Dies sind die Options (also wohl auch view channel):
 
 */
 #if	defined(SPARK) || defined(HS7110)
-   /* RAM partitioning of streams */
-	ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);
-	ctrl_outl(0x400,  tsm_io + TSM_STREAM1_CFG);
-	ctrl_outl(0x500,  tsm_io + TSM_STREAM2_CFG);
-	ctrl_outl(0xb00,  tsm_io + TSM_STREAM3_CFG);
-	ctrl_outl(0xc00,  tsm_io + TSM_STREAM4_CFG);
-	ctrl_outl(0x1d00, tsm_io + TSM_STREAM5_CFG);
-	ctrl_outl(0x1e00, tsm_io + TSM_STREAM6_CFG);
+        /* RAM partitioning of streams */
+        ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);   //448kb (8*64)
+        ctrl_outl(0x500,  tsm_io + TSM_STREAM1_CFG);   //448kb (6*64)
+        ctrl_outl(0xe00,  tsm_io + TSM_STREAM2_CFG);   //384kb (8*64)
+        ctrl_outl(0x1600, tsm_io + TSM_STREAM3_CFG);   //384kb (6*64)
+        ctrl_outl(0x1a00, tsm_io + TSM_STREAM4_CFG);   //320kb (5*64)
+        ctrl_outl(0x1d00, tsm_io + TSM_STREAM5_CFG);
+        ctrl_outl(0x1e00, tsm_io + TSM_STREAM6_CFG);
 	ctrl_outl(0x1f00, tsm_io + TSM_STREAM7_CFG);
 #else
   	for (n=0;n<5;n++)

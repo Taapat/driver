@@ -202,6 +202,10 @@ int StartFeed (struct dvb_demux_feed* Feed)
  *              StartFeed is called by the demux device immediately before starting
  *              to demux data.
  ********************************************************************************/
+
+extern void stm_tsm_init ( int cfg );
+extern int reset_tsm;
+
 static const unsigned int AudioId[DVB_MAX_DEVICES_PER_ADAPTER]  = {DMX_TS_PES_AUDIO0, DMX_TS_PES_AUDIO1, DMX_TS_PES_AUDIO2, DMX_TS_PES_AUDIO3};
 static const unsigned int VideoId[DVB_MAX_DEVICES_PER_ADAPTER]  = {DMX_TS_PES_VIDEO0, DMX_TS_PES_VIDEO1, DMX_TS_PES_VIDEO2, DMX_TS_PES_VIDEO3};
 int StartFeed (struct dvb_demux_feed* Feed)
@@ -220,6 +224,14 @@ int StartFeed (struct dvb_demux_feed* Feed)
 #endif
 
     DVB_DEBUG ("(demux%d)\n", Context->Id);
+
+    /* either numRunningFeeds == 0 and reset_tsm == 1 or reset_tsm > 1 */
+    if (Context->numRunningFeeds == 0 && reset_tsm)
+    {
+        printk(KERN_WARNING "reset_tsm: %d numRunningFeeds: %d => calling stm_tsm_init(1)\n", reset_tsm, Context->numRunningFeeds);
+        stm_tsm_init(1);
+    }
+
 
 #ifdef __TDT__
 #ifdef no_subtitles
@@ -262,6 +274,10 @@ int StartFeed (struct dvb_demux_feed* Feed)
               (Feed->pes_type == DMX_TS_PES_OTHER))
             {
               mutex_lock (&(DvbContext->Lock));
+
+              Context->numRunningFeeds++;
+              //printk("%s:%d numRunningFeeds: %d\n", __func__,__LINE__,Context->numRunningFeeds);
+
               stpti_start_feed (Feed, Context);
               mutex_unlock (&(DvbContext->Lock));
 
@@ -341,6 +357,9 @@ int StartFeed (struct dvb_demux_feed* Feed)
 #ifdef __TDT__
 	        if (Video)
 	        {
+		       Context->numRunningFeeds++;
+                       //printk("%s:%d numRunningFeeds: %d\n", __func__,__LINE__,Context->numRunningFeeds);
+
 		       stpti_start_feed (Feed, Context);
 
 		       if(Feed->ts_type & TS_DECODER)
@@ -348,6 +367,9 @@ int StartFeed (struct dvb_demux_feed* Feed)
 	        }
 	        else if (Audio)
 	        {
+		        Context->numRunningFeeds++;
+			//printk("%s:%d numRunningFeeds: %d\n", __func__,__LINE__,Context->numRunningFeeds);
+
 		       stpti_start_feed (Feed, Context);
 
 		       if(Feed->ts_type & TS_DECODER)
@@ -385,6 +407,9 @@ int StartFeed (struct dvb_demux_feed* Feed)
             //DVB_DEBUG ("feed type = SEC\n");
 
             mutex_lock (&(DvbContext->Lock));
+	    Context->numRunningFeeds++;
+            //printk("%s:%d numRunningFeeds: %d\n", __func__,__LINE__,Context->numRunningFeeds);
+
             stpti_start_feed (Feed, Context);
             mutex_unlock (&(DvbContext->Lock));
 #endif
@@ -432,7 +457,11 @@ int StopFeed (struct dvb_demux_feed* Feed)
                       AudioIoctlStop (AvContext);
                     }*/
                     stpti_stop_feed(Feed, Context);
+                    Context->numRunningFeeds--;
+                    //printk("%s:%d numRunningFeeds: %d\n", __func__,__LINE__,Context->numRunningFeeds);		
                     mutex_unlock (&(DvbContext->Lock));
+                    if (Context->numRunningFeeds < 0)
+                        printk(KERN_ERR "%s: numRunningFeeds < 0: %d\n", __func__, Context->numRunningFeeds);
                     break;
                 }
                 if (Feed->pes_type == VideoId[i])
@@ -442,7 +471,11 @@ int StopFeed (struct dvb_demux_feed* Feed)
                     if(Feed->ts_type & TS_DECODER)
                       VideoIoctlStop(AvContext, AvContext->VideoState.video_blank);*/
                     stpti_stop_feed(Feed, Context);
+                    Context->numRunningFeeds--;
+                    //printk("%s:%d numRunningFeeds: %d\n", __func__,__LINE__,Context->numRunningFeeds);	
                     mutex_unlock (&(DvbContext->Lock));
+                    if (Context->numRunningFeeds < 0)
+                        printk(KERN_ERR "%s: numRunningFeeds < 0: %d\n", __func__, Context->numRunningFeeds);
                     break;
                 }
                 //videotext & subtitles (other)
@@ -452,7 +485,11 @@ int StopFeed (struct dvb_demux_feed* Feed)
                 {
                     mutex_lock (&(DvbContext->Lock));
                     stpti_stop_feed(Feed, Context);
+                    Context->numRunningFeeds--;
+                    //printk("%s:%d numRunningFeeds: %d\n", __func__,__LINE__,Context->numRunningFeeds);	
                     mutex_unlock (&(DvbContext->Lock));
+                    if (Context->numRunningFeeds < 0)
+                        printk(KERN_ERR "%s: numRunningFeeds < 0: %d\n", __func__, Context->numRunningFeeds);
                     break;
                 }
                 else if (Feed->pes_type == DMX_TS_PES_PCR)
@@ -508,7 +545,11 @@ int StopFeed (struct dvb_demux_feed* Feed)
 #ifdef __TDT__
             mutex_lock (&(DvbContext->Lock));
             stpti_stop_feed(Feed, Context);
+            Context->numRunningFeeds--;
+            //printk("%s:%d numRunningFeeds: %d\n", __func__,__LINE__,Context->numRunningFeeds);	
             mutex_unlock (&(DvbContext->Lock));
+            if (Context->numRunningFeeds < 0)
+                printk(KERN_ERR "%s: numRunningFeeds < 0: %d\n", __func__, Context->numRunningFeeds);
 #endif
             break;
         default:
