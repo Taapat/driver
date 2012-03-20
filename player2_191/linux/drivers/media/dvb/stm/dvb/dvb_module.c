@@ -86,14 +86,23 @@ int highSR = 0;
 int swts = 0;
 
 module_param(highSR, int, 0444);
-MODULE_PARM_DESC(highSR, "Start Driver with support for Symbol Rates 30000.\nIf 1 then some CAMS will not work.");
+MODULE_PARM_DESC(highSR, "Start Driver with support for Symbol Rates 30000.\nIf 1 then some CAMS will not work.\n");
 
 module_param(swts, int, 0444);
-MODULE_PARM_DESC(swts, "Do not route injected data through the tsm/pti\n");
+MODULE_PARM_DESC(swts, "Do not route injected data through the tsm/pti.\n");
 #endif
+
+#if defined(UFS910)
+int reset_tsm = 0;
+#else
 int reset_tsm = 1;
+#endif
 module_param(reset_tsm, int, S_IRUGO | S_IWUSR);
-MODULE_PARM_DESC(reset_tsm, "reset the tsm when pti is idle? (default=1)");
+#if defined(UFS910)
+MODULE_PARM_DESC(reset_tsm, "Reset the tsm when pti is idle? (default=0)\n");
+#else
+MODULE_PARM_DESC(reset_tsm, "Reset the tsm when pti is idle? (default=1)\n");
+#endif
 
 struct DvbContext_s*     DvbContext;
 

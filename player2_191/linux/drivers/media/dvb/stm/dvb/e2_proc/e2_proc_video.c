@@ -53,6 +53,7 @@ struct stmfbio_var_screeninfo_ex
 
 struct stmfb_info;
 
+extern int stmfb_get_var_ex   (struct stmfbio_var_screeninfo_ex *v, struct stmfb_info *i);
 extern int stmfb_set_var_ex   (struct stmfbio_var_screeninfo_ex *v, struct stmfb_info *i);
 extern int isDisplayCreated (char*           Media,
                       unsigned int    SurfaceId);
@@ -1309,8 +1310,6 @@ int proc_video_alpha_write(struct file *file, const char __user *buf,
 
 		sscanf(myString, "%d", &alpha);
 
-
-
 		varEx.layerid  = 0;
 		varEx.caps     = 0;
 		varEx.activate = 0; //STMFBIO_ACTIVATE_IMMEDIATE;
@@ -1336,18 +1335,12 @@ int proc_video_alpha_read (char *page, char **start, off_t off, int count,
 	int len = 0;
 	printk("%s\n", __FUNCTION__);
 
-	/*void* fb =  stmfb_get_fbinfo_ptr();
+	struct stmfb_info *info = stmfb_get_fbinfo_ptr();
+	struct stmfbio_var_screeninfo_ex varEx;
+	stmfb_get_var_ex(&varEx, info);
+	
+	len = sprintf(page, "%d\n", varEx.opacity);
 
-	struct stmfb_info *info = (struct stmfb_info*) fb;
-
-	struct stmfbio_var_screeninfo_ex screen_info;
-	memcpy(&screen_info, &info->current_var_ex, sizeof(struct stmfbio_var_screeninfo_ex));
-
-	if (fb != NULL)
-	{
-		len = sprintf(page, "%d\n", screen_info.opacity);
-	} else*/
-		len = sprintf(page, "0\n");
-
-        return len;
+	return len;
 }
+

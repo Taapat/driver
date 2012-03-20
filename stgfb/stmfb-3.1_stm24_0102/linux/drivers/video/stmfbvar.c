@@ -1115,6 +1115,16 @@ stmfb_decode_var_ex (struct stmfbio_var_screeninfo_ex * const v,
   return 0;
 }
 
+#ifdef __TDT__
+int
+stmfb_get_var_ex (struct stmfbio_var_screeninfo_ex * const v,
+                  struct stmfb_info                * const i)
+{
+  *v = i->current_var_ex;
+  return 0;
+}
+EXPORT_SYMBOL(stmfb_get_var_ex); 
+#endif
 
 #ifdef __TDT__
 EXPORT_SYMBOL(stmfb_set_var_ex); 
