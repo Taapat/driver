@@ -677,7 +677,7 @@ void stm_tsm_init (int use_cimax)
        */
 
       /* from fw 202 rc ->see also pti */
-      ctrl_outl(0x2, reg_sys_config + SYS_CFG0);
+      ctrl_outl(0x6, reg_sys_config + SYS_CFG0);
 
 #elif  defined(FORTIS_HDBOX)
       /* ->TSIN0 routes to TSIN2
@@ -952,6 +952,8 @@ void stm_tsm_init (int use_cimax)
          ctrl_outl(0x7000f ,tsm_io + TS_1394_CFG);
       else
          ctrl_outl(0x70014 ,tsm_io + TS_1394_CFG);
+#elif defined(UFS910)
+		 ctrl_outl(0x70014 ,tsm_io + TS_1394_CFG);
 #else
       /* logged from fw 202rc ->see also pti */
       ctrl_outl(0x50014 ,tsm_io + TS_1394_CFG);
