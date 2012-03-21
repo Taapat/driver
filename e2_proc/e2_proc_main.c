@@ -327,17 +327,17 @@ static int three_d_mode_write(struct file *file, const char __user *buf,
 
 		printk("%s\n", myString);
 		
-		if (strncmp("sbs", myString, 3) == 0)
+		if (strncmp("sbs", myString, 3) == 0 || strncmp("sidebyside", myString, 10) == 0)
 		{
 			if(three_d_mode != NULL) kfree(three_d_mode);
 			three_d_mode = myString;
 		}		
-		else if (strncmp("tab", myString, 3) == 0)
+		else if (strncmp("tab", myString, 3) == 0 || strncmp("topandbottom", myString, 12) == 0)
 		{
 			if(three_d_mode != NULL) kfree(three_d_mode);
 			three_d_mode = myString;
 		}
-		else if (strncmp("off", myString, 3) == 0)
+		else if (strncmp("off", myString, 3) == 0 || strncmp("auto", myString, 4) == 0)
 		{
 			if(three_d_mode != NULL) kfree(three_d_mode);
 			three_d_mode = myString;
@@ -532,6 +532,10 @@ struct ProcStructure_s e2Proc[] =
 	{cProcDir  , "stb/denc/0"                                                       , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/denc/0/wss"                                                   , NULL, NULL, NULL, NULL, ""},
 
+	{cProcDir  , "stb/fb"                                                           , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/fb/3dmode"                                                    , NULL, three_d_mode_read, three_d_mode_write, NULL, ""},
+	{cProcEntry, "stb/fb/znorm"                                                     , NULL, NULL, default_write_proc, NULL, ""},
+	
 	{cProcDir  , "stb/fp"                                                           , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/fp/lnb_sense1"                                                , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/fp/lnb_sense2"                                                , NULL, NULL, NULL, NULL, ""},
