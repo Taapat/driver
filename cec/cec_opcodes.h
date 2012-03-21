@@ -23,6 +23,8 @@
 
 unsigned char getLogicalDeviceType(void);
 
+unsigned char getDeviceType(void);
+
 unsigned short getPhysicalAddress(void);
 
 unsigned short getActiveSource(void);
