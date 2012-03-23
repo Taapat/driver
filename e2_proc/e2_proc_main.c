@@ -586,6 +586,8 @@ struct ProcStructure_s e2Proc[] =
 	{cProcDir  , "stb/hdmi"                                                         , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/hdmi/bypass_edid_checking"                                    , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/hdmi/enable_hdmi_resets"                                      , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/hdmi/output"                                                  , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/hdmi/output_choices"                                          , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/hdmi/audio_source"                                            , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/hdmi/audio_source_choices"                                    , NULL, NULL, NULL, NULL, ""},
 
