@@ -37,12 +37,12 @@
 #include <linux/interrupt.h>
 #include <linux/version.h>
 
-#include "cec_debug.h"
-#include "cec_worker.h"
+//#include "cec_debug.h"
+//#include "cec_worker.h"
 #include "cec_opcodes.h"
-#include "cec_internal.h"
-#include "cec_proc.h"
-#include "cec_rc.h"
+//#include "cec_internal.h"
+//#include "cec_proc.h"
+//#include "cec_rc.h"
 #include "cec_dev.h"
 
 //----------------------------
