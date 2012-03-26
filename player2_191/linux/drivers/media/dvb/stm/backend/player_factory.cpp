@@ -10,9 +10,7 @@
 /// 09-Feb-07   Created                                         Julian
 ///
 /// ////////////////////////////////////////////////////////////////////
-#ifdef __TDT__
-#include <linux/version.h>
-#endif
+
 #include "backend_ops.h"
 #include "player.h"
 #include "collator_pes_video_mpeg2.h"
