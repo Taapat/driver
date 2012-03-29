@@ -531,7 +531,13 @@ report( severity_info, "Collator PTS %d - %2d:%02d:%02d.%03d - %016llx - %c%lld 
 	    // Read the DTS
 	    //
 
+#if __TDT__
+	    // It seems that for BibleTV these 4 bits are set incorecctly
+	    // So lets ignore it like above for PTS
+	    Bits.FlushUnseen( 4 );
+#else
 	    MarkerBits( 4, 1 );
+#endif
 	    DecodeTime           = (unsigned long long)(Bits.Get( 3 )) << 30;
 	    MarkerBit( 1 );
 	    DecodeTime          |= Bits.Get( 15 ) << 15;

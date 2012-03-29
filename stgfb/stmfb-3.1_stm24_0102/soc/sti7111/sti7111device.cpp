@@ -51,9 +51,24 @@ CSTi7111Device::CSTi7111Device(void): CGenericGammaDevice()
    * Global setup of the display clock registers.
    */
   WriteDevReg(STi7111_CLKGEN_BASE + CKGB_LCK, CKGB_LCK_UNLOCK);
-#if defined(__TDT__) && (defined(UFS912) || defined(SPARK) || defined(HS7810A) || defined(HS7110))
+#if defined(__TDT__) && defined(USE_FS1_FOR_SD)
+  DEBUGF2(1,("+++ USING FS1 for SCART OUTPUT +++\n"));
   WriteDevReg(STi7111_CLKGEN_BASE + CKGB_CLK_REF_SEL, CKGB_REF_SEL_SYSA_CLKIN);
-  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_CLK_SRC, 0x07);
+
+  // Setup FS1 CHANNEL 3 -> DeltaMu Preprocessor clock, what ever that is
+  // Jup we need this, else hd channels will sufer from microfractures
+  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x0);
+
+  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_MD3, 0x19);
+  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_PE3, 0x3334);
+  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_SDIV3, 0x00);
+
+  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x1);
+  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x0);
+
+
+  //WriteDevReg(STi7111_CLKGEN_BASE + CKGB_CLK_SRC, 0x07);
+
 #else
   WriteDevReg(STi7111_CLKGEN_BASE + CKGB_CLK_REF_SEL, CKGB_REF_SEL_SYSB_CLKIN);
 #endif

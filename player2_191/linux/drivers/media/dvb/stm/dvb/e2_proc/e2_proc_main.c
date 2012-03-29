@@ -299,6 +299,11 @@ extern int proc_hdmi_audio_source_choices_read(char *page, char **start, off_t o
 extern int proc_hdmi_edid_handling_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
 extern int proc_hdmi_edid_handling_write(struct file *file, const char __user *buf, unsigned long count, void *data);
 
+
+extern int proc_hdmi_output_write(struct file *file, const char __user *buf, unsigned long count, void *data);
+extern int proc_hdmi_output_read (char *page, char **start, off_t off, int count, int *eof, void *data_unused);
+extern int proc_hdmi_output_choices_read (char *page, char **start, off_t off, int count, int *eof, void *data_unused);
+
 extern int proc_stream_AV_SYNC_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
 extern int proc_stream_AV_SYNC_write(struct file *file, const char __user *buf, unsigned long count, void *data);
 extern int proc_stream_TRICK_MODE_AUDIO_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
@@ -422,6 +427,9 @@ struct e2_procs
 */
   {"stb/hdmi/audio_source",             proc_hdmi_audio_source_read,            proc_hdmi_audio_source_write, 0},
   {"stb/hdmi/audio_source_choices",     proc_hdmi_audio_source_choices_read,    NULL, 0},
+
+  {"stb/hdmi/output",                   proc_hdmi_output_read,                  proc_hdmi_output_write, 0},
+  {"stb/hdmi/output_choices",           proc_hdmi_output_choices_read,          NULL, 0},
 
   {"stb/stream/policy/AV_SYNC"                                        , proc_stream_AV_SYNC_read, proc_stream_AV_SYNC_write, 0},
   {"stb/stream/policy/TRICK_MODE_AUDIO"                               , proc_stream_TRICK_MODE_AUDIO_read, proc_stream_TRICK_MODE_AUDIO_write, 0},

@@ -43,10 +43,12 @@
 #include "cec_internal.h"
 #include "cec_proc.h"
 #include "cec_rc.h"
+#include "cec_dev.h"
 
 //----------------------------
 
 static unsigned char cancelStart = 0;
+int activemode = 0;
 
 //----------------------------
 
@@ -77,10 +79,17 @@ int __init cec_init(void)
     {
        printk("[CEC] Can't get irq\n");
     }
-    
-    init_e2_proc();
 
-    input_init();
+    if(activemode)
+    {
+        init_e2_proc();
+
+        input_init();
+    }
+    else
+    {
+        init_dev();
+    }
 
     // TODO: how can we implement hotplug support?
     //while(!cancelStart && getPhysicalAddress() == 0) // HDMI is not plugged in
@@ -100,9 +109,16 @@ static void __exit cec_exit(void)
 
     endTask();
 
-    cleanup_e2_proc();
+    if(activemode)
+    {
+        cleanup_e2_proc();
 
-    input_cleanup();
+        input_cleanup();
+    }
+    else
+    {
+        cleanup_dev();
+    }
 
     free_irq(CEC_IRQ, NULL);
 
@@ -117,5 +133,7 @@ MODULE_AUTHOR           ("konfetti & schischu");
 MODULE_LICENSE          ("GPL");
 
 module_param(debug, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+module_param(activemode, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 MODULE_PARM_DESC(debug, "Debug Output 0=disabled >0=enabled(debuglevel)");
+MODULE_PARM_DESC(activemode, "Active mode 0=disabled >0=enabled(activemode)");
 

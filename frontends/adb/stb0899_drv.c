@@ -1507,9 +1507,6 @@ static int stb0899_read_ber(struct dvb_frontend *fe, u32 *ber)
 	return 0;
 }
 
-enum { VOLTAGE_13 = 1, VOLTAGE_18  = 0 };
-enum { VOLTAGE_ON = 1, VOLTAGE_OFF = 0 };
-
 static int stb0899_set_voltage(struct dvb_frontend *fe, fe_sec_voltage_t voltage)
 {
 	struct stb0899_state *state = fe->demodulator_priv;
@@ -2298,9 +2295,9 @@ static struct dvb_frontend_ops stb0899_ops = {
 
 	.info = {
 		.name				= "STB0899 Multistandard",
-		.type				= FE_QPSK, /* with old API */
-		.frequency_min		= 950000,
-		.frequency_max 		= 2150000,
+		//.type				= FE_QPSK, /* with old API */
+		//.frequency_min		= 950000,
+		//.frequency_max 		= 2150000,
 		.frequency_stepsize	= 0,
 		.frequency_tolerance= 0,
 		.symbol_rate_min 	=  1000000,

@@ -515,9 +515,6 @@ static struct stb0899_config stb0899_config = {
 	.init_s2_fec     = stb0899_init_s2_fec,
 	.init_tst        = stb0899_init_tst,
 
-	.lnb_enable 		= NULL,
-	.lnb_vsel	 		= NULL,
-
 	.demod_address   = I2C_ADDR_STB0899, /* I2C Address */
 	.block_sync_mode = STB0899_SYNC_FORCED, /* ? */
 
@@ -583,9 +580,6 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 				printk (KERN_INFO "%s: error attaching stb0899\n", __FUNCTION__);
 				goto error_out;
 			}
-
-			stb0899_config.lnb_enable  = cfg->lnb_enable;
-			stb0899_config.lnb_vsel    = cfg->lnb_vsel;
 
 	return frontend;
 
@@ -658,6 +652,7 @@ struct plat_tuner_config tuner_resources[] = {
         [0] = {
                 .adapter 	= 0,
                 .i2c_bus 	= 0,
+                .i2c_addr 	= I2C_ADDR_STB0899,
         },
 };
 

@@ -56,7 +56,7 @@ CSTi7111MainOutput::~CSTi7111MainOutput() {}
 
 void CSTi7111MainOutput::StartSDInterlacedClocks(const stm_mode_line_t *mode)
 {
-#if defined(UFS912)
+#if defined(__TDT__)
 /* from old stmfb; h264 problem appears with new version */
   ULONG val;
 
@@ -71,6 +71,13 @@ void CSTi7111MainOutput::StartSDInterlacedClocks(const stm_mode_line_t *mode)
    */
   val &= (CKGB_CFG_PIX_SD_FS1(CKGB_CFG_MASK) | CKGB_CFG_DISP_ID(CKGB_CFG_MASK));
 
+#if defined(__TDT__) && defined(USE_FS1_FOR_SD)
+// It seems that FS1 does not work if 576i
+  val &= ~CKGB_CFG_PIX_SD_FS1(3); // Clear
+  val |= CKGB_CFG_PIX_SD_FS1(CKGB_CFG_DIV4); // CLK_PIX_SD_SEL_WHEN_FS1 (<<12)
+  val &= ~CKGB_CFG_DISP_ID(3); // Clear
+  val |= CKGB_CFG_DISP_ID(CKGB_CFG_DIV8); // CLK_DISP_ID_SEL (<<8)
+#endif
   val |= CKGB_CFG_TMDS_HDMI(CKGB_CFG_DIV4);
   val |= CKGB_CFG_DISP_HD(CKGB_CFG_DIV8);
   val |= CKGB_CFG_656(CKGB_CFG_DIV4);
@@ -127,16 +134,6 @@ void CSTi7111MainOutput::StartSDProgressiveClocks(const stm_mode_line_t *mode)
 
   DENTRY();
 
-#if defined(__TDT__) && defined(UFS912)
-  WriteClkReg(CKGB_LCK, CKGB_LCK_UNLOCK);
-
-  WriteDevReg(STi7111_CLKGEN_BASE + CKGB_DISPLAY_CFG, 0x3011);
-
-/* maybe we must set fs1_md3 and co here too? especially
- * if 576p is set as default?
- */
-
-#else
   WriteClkReg(CKGB_LCK, CKGB_LCK_UNLOCK);
 
   val = ReadClkReg(CKGB_DISPLAY_CFG);
@@ -150,9 +147,15 @@ void CSTi7111MainOutput::StartSDProgressiveClocks(const stm_mode_line_t *mode)
   val |= CKGB_CFG_TMDS_HDMI(CKGB_CFG_DIV4);
   val |= CKGB_CFG_DISP_HD(CKGB_CFG_DIV4);
   val |= CKGB_CFG_656(CKGB_CFG_DIV2);
+#if defined(__TDT__) && defined(USE_FS1_FOR_SD)
+  val &= ~CKGB_CFG_PIX_SD_FS1(3); // Clear
+  val |= CKGB_CFG_PIX_SD_FS1(CKGB_CFG_BYPASS); // CLK_PIX_SD_SEL_WHEN_FS1 (<<12)
+  val &= ~CKGB_CFG_DISP_ID(3); // Clear
+  val |= CKGB_CFG_DISP_ID(CKGB_CFG_DIV2); // CLK_DISP_ID_SEL (<<8)
+#else
   val |= CKGB_CFG_PIX_SD_FS0(CKGB_CFG_DIV4);
-  WriteClkReg(CKGB_DISPLAY_CFG, val);
 #endif
+  WriteClkReg(CKGB_DISPLAY_CFG, val);
   DEXIT();
 }
 
@@ -163,48 +166,6 @@ void CSTi7111MainOutput::StartHDClocks(const stm_mode_line_t *mode)
 
   DENTRY();
 
-#if defined(__TDT__) && (defined(UFS912) || defined(SPARK) || defined(HS7810A) || defined(HS7110))
-  WriteClkReg(CKGB_LCK, CKGB_LCK_UNLOCK);
-
-  if(mode->TimingParams.ulPixelClock == 148500000 ||
-     mode->TimingParams.ulPixelClock == 148351648)
-  {
-    /*
-     * Set the clock divides for each block for HD modes
-     */
-    val = ReadClkReg(CKGB_DISPLAY_CFG);
-    /*
-     * Preserve the aux pipeline clock configuration.
-     */
-    val &= (CKGB_CFG_PIX_SD_FS1(CKGB_CFG_MASK) |
-            CKGB_CFG_DISP_ID(CKGB_CFG_MASK)    |
-            CKGB_CFG_PIX_HD_FS1_N_FS0);
-    /*
-     * 1080p 50/60Hz
-     */
-    val |= CKGB_CFG_TMDS_HDMI(CKGB_CFG_BYPASS);
-    val |= CKGB_CFG_DISP_HD(CKGB_CFG_BYPASS);
-    val |= CKGB_CFG_656(CKGB_CFG_BYPASS);
-    val |= CKGB_CFG_PIX_SD_FS0(CKGB_CFG_BYPASS);
-
-    WriteClkReg(CKGB_DISPLAY_CFG, val);
-
-  }
-  else
-  {
-
-     WriteDevReg(STi7111_CLKGEN_BASE + CKGB_DISPLAY_CFG, 0x3000);
-
-     WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x0);
-
-     WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_MD3, 0x19);
-     WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_PE3, 0x3334);
-     WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_SDIV3, 0x00);
-
-     WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x1);
-     WriteDevReg(STi7111_CLKGEN_BASE + CKGB_FS1_EN3, 0x0);
-   }
-#else
   WriteClkReg(CKGB_LCK, CKGB_LCK_UNLOCK);
 
   /*
@@ -217,6 +178,13 @@ void CSTi7111MainOutput::StartHDClocks(const stm_mode_line_t *mode)
   val &= (CKGB_CFG_PIX_SD_FS1(CKGB_CFG_MASK) |
           CKGB_CFG_DISP_ID(CKGB_CFG_MASK)    |
           CKGB_CFG_PIX_HD_FS1_N_FS0);
+
+#if defined(__TDT__) && defined(USE_FS1_FOR_SD)
+  val &= ~CKGB_CFG_PIX_SD_FS1(3); // Clear
+  val |= CKGB_CFG_PIX_SD_FS1(CKGB_CFG_BYPASS); // CLK_PIX_SD_SEL_WHEN_FS1 (<<12)
+  val &= ~CKGB_CFG_DISP_ID(3); // Clear
+  val |= CKGB_CFG_DISP_ID(CKGB_CFG_DIV2); // CLK_DISP_ID_SEL (<<8)
+#endif
 
   if(mode->TimingParams.ulPixelClock == 148500000 ||
      mode->TimingParams.ulPixelClock == 148351648)
@@ -243,7 +211,6 @@ void CSTi7111MainOutput::StartHDClocks(const stm_mode_line_t *mode)
   }
 
   WriteClkReg(CKGB_DISPLAY_CFG, val);
-#endif
   DEXIT();
 }
 

@@ -41,6 +41,9 @@
 #include "cec_internal.h"
 #include "cec_proc.h"
 #include "cec_rc.h"
+#include "cec_dev.h"
+
+extern int activemode;
 
 extern long stmhdmiio_get_cec_address(unsigned int * arg);
 
@@ -74,7 +77,10 @@ unsigned char getIsFirstKiss(void) {
 void setIsFirstKiss(unsigned char kiss) {
   isFirstKiss = kiss;
   if(isFirstKiss == 0)
-    sendReportPhysicalAddress();
+  {
+    if (activemode)
+      sendReportPhysicalAddress();
+  }
 }
 
 unsigned char getLogicalDeviceType(void) {
@@ -173,10 +179,13 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
         default: break;
       }
 
+      if (activemode)
+      {
       responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0xF);
       responseBuffer[1] = DECK_STATUS;
       responseBuffer[2] = DECK_INFO_PLAY;
       sendMessage(3, responseBuffer);
+      }
       break;
 
     case DECK_STATUS: 
@@ -273,19 +282,27 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
         default: break;
       }
 
+      if (activemode)
+      {
       input_inject(buf[1], 1);
+      }
 
       break;
 
     case USER_CONTROL_RELEASED: 
       strcpy(name, "USER_CONTROL_RELEASED");
 
+      if (activemode)
+      {
       input_inject(0xFFFF, 0);
+      }
 
       break;
 
     case GIVE_OSD_NAME: 
       strcpy(name, "GIVE_OSD_NAME");
+      if (activemode)
+      {
       responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0xF);
       responseBuffer[1] = SET_OSD_NAME;
       responseBuffer[2] = 'D';
@@ -296,6 +313,7 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
       responseBuffer[7] = 'O'; 
       responseBuffer[8] = 'X'; 
       sendMessage(9, responseBuffer);
+      }
       break;
 
     case SET_OSD_NAME: 
@@ -336,16 +354,21 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
 
     case REQUEST_ACTIVE_SOURCE: 
       strcpy(name, "REQUEST_ACTIVE_SOURCE");
+      if (activemode)
+      {
       unsigned short physicalAddress = getPhysicalAddress();
       responseBuffer[0] = (getLogicalDeviceType() << 4) + (BROADCAST & 0xF);
       responseBuffer[1] = ACTIVE_SOURCE;
       responseBuffer[2] = (((physicalAddress >> 12)&0xf) << 4) + ((physicalAddress >> 8)&0xf);
       responseBuffer[3] = (((physicalAddress >> 4)&0xf) << 4) + ((physicalAddress >> 0)&0xf);
       sendMessage(4, responseBuffer);
+      }
       break;
 
     case SET_STREAM_PATH: 
       strcpy(name, "SET_STREAM_PATH");
+      if (activemode)
+      {
       if(((buf[1]<<8) + buf[2]) == getPhysicalAddress()) // If we are the active source
       {
         unsigned short physicalAddress = getPhysicalAddress();
@@ -355,6 +378,7 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
         responseBuffer[3] = (((physicalAddress >> 4)&0xf) << 4) + ((physicalAddress >> 0)&0xf);
         sendMessage(4, responseBuffer);
       }
+      }
       break;
 
     case DEVICE_VENDOR_ID: 
@@ -363,11 +387,14 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
 
     case VENDOR_COMMAND: 
       strcpy(name, "VENDOR_COMMAND");
+      if (activemode)
+      {
       responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0xF);
       responseBuffer[1] = FEATURE_ABORT;
       responseBuffer[2] = VENDOR_COMMAND;
       responseBuffer[3] = ABORT_REASON_UNRECOGNIZED_OPCODE;
       sendMessage(4, responseBuffer);
+      }
       break;
 
     case VENDOR_REMOTE_BUTTON_DOWN:
@@ -376,6 +403,8 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
 
     case GIVE_DEVICE_VENDOR_ID: 
       strcpy(name, "GIVE_DEVICE_VENDOR_ID");
+      if (activemode)
+      {
       responseBuffer[0] = (getLogicalDeviceType() << 4) + (BROADCAST & 0xF);
       responseBuffer[1] = DEVICE_VENDOR_ID;
       // http://standards.ieee.org/develop/regauth/oui/oui.txt
@@ -395,6 +424,7 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
 #endif
 #endif
       sendMessage(5, responseBuffer);
+      }
       break;
 
     case MENU_REQUEST: 
@@ -408,10 +438,13 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
         default: break;
       }
 
+      if (activemode)
+      {
       responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0xF);
       responseBuffer[1] = MENU_STATUS;
       responseBuffer[2] = MENU_STATE_ACTIVATE;
       sendMessage(3, responseBuffer);
+      }
       break;
 
     case MENU_STATUS: 
@@ -427,10 +460,13 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
 
     case GIVE_DEVICE_POWER_STATUS: 
       strcpy(name, "GIVE_DEVICE_POWER_STATUS");
+      if (activemode)
+      {
       responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0xF);
       responseBuffer[1] = REPORT_POWER_STATUS;
       responseBuffer[2] = POWER_STATUS_ON;
       sendMessage(3, responseBuffer);
+      }
       break;
 
     case REPORT_POWER_STATUS: 
@@ -478,19 +514,25 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
 
     case GET_CEC_VERSION: 
       strcpy(name, "GET_CEC_VERSION");
+      if (activemode)
+      {
       responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0xF);
       responseBuffer[1] = CEC_VERSION;
       responseBuffer[2] = CEC_VERSION_V13A;
       sendMessage(3, responseBuffer);
+      }
       break;
 
     case VENDOR_COMMAND_WITH_ID: 
       strcpy(name, "VENDOR_COMMAND_WITH_ID");
+      if (activemode)
+      {
       responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0xF);
       responseBuffer[1] = FEATURE_ABORT;
       responseBuffer[2] = VENDOR_COMMAND_WITH_ID;
       responseBuffer[3] = ABORT_REASON_UNRECOGNIZED_OPCODE;
       sendMessage(4, responseBuffer);
+      }
       break;
 
     default:
@@ -523,7 +565,11 @@ void parseRawMessage(unsigned int len, unsigned char buf[])
   printk("\n");
 
   if (dataLen > 0)
+  {
     parseMessage(src, dst, dataLen, buf + 1);
+    if (!activemode)
+      AddMessageToBuffer(buf, len);
+  }
   else
   {
     printk("[CEC]\tis PING\n");
