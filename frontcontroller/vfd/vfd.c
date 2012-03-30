@@ -530,6 +530,8 @@ static int VFDdev_ioctl(struct inode *Inode, struct file *File, unsigned int cmd
 	case VFDCGRAMWRITE2:
 		VFD_CGRAM_Write((struct vfd_ioctl_data *)arg);
 		break;	
+	case 0x5305:
+		break;
 	default:
 		printk("VFD: unknown IOCTL 0x%x\n", cmd);
 		break;
