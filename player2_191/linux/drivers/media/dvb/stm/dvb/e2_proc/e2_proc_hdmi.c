@@ -25,11 +25,41 @@
 #define STMHDMIIO_EDID_STRICT_MODE_HANDLING 0
 #define STMHDMIIO_EDID_NON_STRICT_MODE_HANDLING 1
 
+#define STMFBIO_ACTIVATE_IMMEDIATE           0
+#define STMFBIO_OUTPUT_CAPS_HDMI_CONFIG      (1L<<3)
+#define STMFBIO_OUTPUT_HDMI_DISABLED         (1L<<0)
+
+struct stmfb_info;
+struct stmfbio_output_configuration;
+
 extern long stmhdmiio_set_audio_source(unsigned int arg);
 extern long stmhdmiio_get_audio_source(unsigned int * arg);
 
 extern long stmhdmiio_set_edid_handling(unsigned int arg);
 extern long stmhdmiio_get_edid_handling(unsigned int * arg);
+
+extern int stmfb_set_output_configuration(struct stmfbio_output_configuration *c, struct stmfb_info *i);
+extern int stmfb_get_output_configuration(struct stmfbio_output_configuration *c, struct stmfb_info *i);
+struct stmfb_info* stmfb_get_fbinfo_ptr(void);
+
+//stgfb.h
+struct stmfbio_output_configuration
+{
+  __u32 outputid;
+  __u32 caps;
+  __u32 failed;
+  __u32 activate;
+
+  __u32 sdtv_encoding;
+  __u32 analogue_config;
+  __u32 dvo_config;
+  __u32 hdmi_config;
+  __u32 mixer_background;
+  __u8  brightness;
+  __u8  saturation;
+  __u8  contrast;
+  __u8  hue;
+};
 
 extern struct DeviceContext_s* ProcDeviceContext;
 
@@ -221,4 +251,105 @@ int proc_hdmi_edid_handling_read (char *page, char **start, off_t off, int count
 	mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
 
         return len;
+}
+
+int proc_hdmi_output_write(struct file *file, const char __user *buf,
+                           unsigned long count, void *data)
+{
+	char 		*page;
+	ssize_t 	ret = -ENOMEM;
+	struct stmfbio_output_configuration outputConfig = {0};
+	struct stmfb_info *info = NULL;
+
+	char* myString = kmalloc(count + 1, GFP_KERNEL);
+
+	printk("%s %ld - ", __FUNCTION__, count);
+
+	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
+
+	page = (char *)__get_free_page(GFP_KERNEL);
+	if (page) 
+	{
+		ret = -EFAULT;
+		if (copy_from_user(page, buf, count))
+			goto out;
+
+		strncpy(myString, page, count);
+		myString[count] = '\0';
+
+		printk("%s\n", myString);
+		
+		outputConfig.outputid = 1;
+		info = stmfb_get_fbinfo_ptr();
+		stmfb_get_output_configuration(&outputConfig, info);
+
+		outputConfig.caps = 0;
+		outputConfig.activate = STMFBIO_ACTIVATE_IMMEDIATE;
+		outputConfig.analogue_config = 0;
+
+		outputConfig.caps |= STMFBIO_OUTPUT_CAPS_HDMI_CONFIG;
+
+		if (!strncmp("off", myString, count))
+		{
+			outputConfig.hdmi_config |= STMFBIO_OUTPUT_HDMI_DISABLED;
+		}
+		else if (!strncmp("on", myString, count))
+		{
+			outputConfig.hdmi_config &= ~STMFBIO_OUTPUT_HDMI_DISABLED;
+		}
+
+		stmfb_set_output_configuration(&outputConfig, info);
+
+		/* always return count to avoid endless loop */
+		ret = count;
+	}
+	
+out:
+	free_page((unsigned long)page);
+	kfree(myString);
+	mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
+	return ret;
+}
+
+int proc_hdmi_output_read (char *page, char **start, off_t off, int count,
+			  int *eof, void *data_unused)
+{
+	int len = 0;
+	unsigned int disabled = 0;
+	struct stmfbio_output_configuration outputConfig = {0};
+	struct stmfb_info *info = NULL;
+
+	mutex_lock (&(ProcDeviceContext->DvbContext->Lock));
+
+	outputConfig.outputid = 1;
+	info = stmfb_get_fbinfo_ptr();
+	stmfb_get_output_configuration(&outputConfig, info);
+
+	disabled = (outputConfig.hdmi_config & STMFBIO_OUTPUT_HDMI_DISABLED)?1:0;
+
+	printk("%s - %u\n", __FUNCTION__, disabled);
+	switch (disabled)
+	{
+	case 0:
+		len = sprintf(page, "on\n");
+		break;
+	case 1:
+	default:
+		len = sprintf(page, "off\n");
+		break;
+	}
+
+	mutex_unlock (&(ProcDeviceContext->DvbContext->Lock));
+	return len;
+}
+
+int proc_hdmi_output_choices_read (char *page, char **start, off_t off, int count,
+			  int *eof, void *data_unused)
+{
+	int len = 0;
+
+	printk("%s\n", __FUNCTION__);
+	len = sprintf(page, "on off\n");
+
+	return len;
 }

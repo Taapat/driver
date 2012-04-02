@@ -365,35 +365,48 @@ void smartcard_reset(SCI_CONTROL_BLOCK *sci, unsigned char wait)
 
     if (sci->id == 0) {
         disable_irq(SCI0_INT_RX_TX);
-#if defined(ADB_BOX)
 
-        /*VCC Low */
+#if defined(ADB_BOX)
+        /* VCC cmd low */
         stpio_set_pin(sci->cmdvcc, 0);
+#else
+	/* VCC cmd high */
+	stpio_set_pin(sci->cmdvcc, 1);
+#endif
 
         /* Reset low */
          stpio_set_pin(sci->reset, 0); 
          mdelay(500); 
 
-         /* VCC High */
-         stpio_set_pin(sci->cmdvcc, 1);
-         mdelay(200); 
+#if defined(ADB_BOX)
+        /* VCC cmd low */
+        stpio_set_pin(sci->cmdvcc, 1);
+#else
+	/* VCC cmd high */
+	stpio_set_pin(sci->cmdvcc, 0);
 #endif
        }
     
     else if (sci->id == 1){
         disable_irq(SCI1_INT_RX_TX);
 #if defined(ADB_BOX)
-
-        /*VCC Low */
+        /* VCC cmd low */
         stpio_set_pin(sci->cmdvcc, 0);
+#else
+	/* VCC cmd high */
+	stpio_set_pin(sci->cmdvcc, 1);
+#endif
 
         /* Reset low */
          stpio_set_pin(sci->reset, 0); 
          mdelay(500); 
 
-         /* VCC High */
-         stpio_set_pin(sci->cmdvcc, 1);
-         mdelay(200); 
+#if defined(ADB_BOX)
+        /* VCC cmd low */
+        stpio_set_pin(sci->cmdvcc, 1);
+#else
+	/* VCC cmd high */
+	stpio_set_pin(sci->cmdvcc, 0);
 #endif	
       } else
 	{
@@ -406,13 +419,6 @@ void smartcard_reset(SCI_CONTROL_BLOCK *sci, unsigned char wait)
 	sci->rx_wptr = 0;
 	sci->tx_rptr = 0;
 	sci->tx_wptr = 0;
-#if !defined(ADB_BOX)
-    /* Reset high */
-    stpio_set_pin(sci->reset, 1);
-    mdelay(10);
-    /* Reset low */
-    stpio_set_pin(sci->reset, 0);
-#endif
     /* Wait 100 ms */
     mdelay(100);
 
@@ -422,17 +428,10 @@ void smartcard_reset(SCI_CONTROL_BLOCK *sci, unsigned char wait)
    		set_reg_writeonly(sci, BASE_ADDRESS_ASC0, ASC0_TX_RST, 0xFF);
         set_reg_writeonly(sci, BASE_ADDRESS_ASC0, ASC0_RX_RST, 0xFF);
         set_serial_irq(sci, RX_FULL_IRQ);
-#if !defined(ADB_BOX)
-		if(wait)
-			msleep(1000);
-#endif
         enable_irq(SCI0_INT_RX_TX);
-
-#if defined(ADB_BOX)
         mdelay(20);
         /* Reset high */
         stpio_set_pin(sci->reset, 1);
-#endif
     }
     else if (sci->id == 1)
     {
@@ -440,12 +439,7 @@ void smartcard_reset(SCI_CONTROL_BLOCK *sci, unsigned char wait)
     	set_reg_writeonly(sci, BASE_ADDRESS_ASC1, ASC1_TX_RST, 0xFF);
         set_reg_writeonly(sci, BASE_ADDRESS_ASC1, ASC1_RX_RST, 0xFF);
     	set_serial_irq(sci, RX_FULL_IRQ);
-		
-#if !defined(ADB_BOX)
-		if(wait)
-			msleep(1000);
-#endif
-		enable_irq(SCI1_INT_RX_TX);
+	enable_irq(SCI1_INT_RX_TX);
     }
 
     /* Reset high */
@@ -919,8 +913,9 @@ static void sci_detect_change(SCI_CONTROL_BLOCK *sci)
         sci_hw_init(sci);
 #if defined(ADB_BOX)
 	stpio_set_pin(sci->cmdvcc, 1);
-#endif       
-    
+#else
+	stpio_set_pin(sci->cmdvcc, 0);
+#endif
     
     }
 }
@@ -2033,9 +2028,7 @@ static ssize_t sci_read(struct file *file, char *buffer, size_t length, loff_t *
 	{
 		sci->rx_wptr=0;
 		sci->rx_rptr=0;
-#if defined(ATEVIO7500) || defined(HL101) || defined(SPARK) || defined(ADB_BOX)
 		mdelay(3);   /*Hellmaster1024: on Atevio we seem to have some timing probs without that delay */
-#endif
 
 	}
 	return (ssize_t) real_num_bytes;
