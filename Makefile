@@ -198,7 +198,7 @@ ifdef HS7110
 obj-y	+= cec/
 obj-y	+= smartcard/
 obj-y	+= cpu_frequ/
-#obj-y	+= wireless/
+obj-y	+= wireless/
 endif
 
 ifdef SPARK
