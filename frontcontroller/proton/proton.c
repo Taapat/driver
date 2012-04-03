@@ -60,7 +60,7 @@ static short paramDebug = 0;
 if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
 } while (0)
 
-#define VFD_CS_CLR() {udelay(10); stpio_set_pin(cfg.cs, 0);}
+#define VFD_CS_CLR() {udelay(5);while(stpio_get_pin(cfg.cs)==0) udelay(10); stpio_set_pin(cfg.cs, 0);}
 #define VFD_CS_SET() {udelay(10); stpio_set_pin(cfg.cs, 1);}
 
 #define VFD_CLK_CLR() {stpio_set_pin(cfg.clk, 0);udelay(1);}
