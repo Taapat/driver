@@ -13,6 +13,9 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/init.h>
+#if defined(__TDT__) // downgraded from 103 to fix hdmi hotplug
+#include <linux/clk.h>
+#endif
 #include <linux/gpio.h>
 #include <linux/stm/gpio.h>
 #include <linux/stm/sysconf.h>
@@ -141,12 +144,27 @@ static const int DAC456SaturationPoint;
 static bool claimed_gpio_hotplug;
 static struct sysconf_field *syscfg2_27;
 
+#if defined(__TDT__) // downgraded from 103 to fix hdmi hotplug
+enum _clocks { CLOCK_PCM0, CLOCK_PCM1, CLOCK_SPDIF };
+struct coredisplay_clk {
+  struct clk *clk;
+  const char *name;
+};
+static struct coredisplay_clk coredisplay_clks[] = {
+  [CLOCK_PCM0]  = { .name = "CLKC_FS0_CH1" },
+  [CLOCK_PCM1]  = { .name = "CLKC_FS0_CH2" },
+  [CLOCK_SPDIF] = { .name = "CLKC_FS0_CH3" }
+};
+#endif
 
 int __init stmcore_probe_device(struct stmcore_display_pipeline_data **pd,
                                 int *nr_platform_devices)
 {
   if(boot_cpu_data.type == CPU_STX7105)
   {
+#if defined(__TDT__) // downgraded from 103 to fix hdmi hotplug
+    int i;
+#endif
     *pd = platform_data;
     *nr_platform_devices = ARRAY_SIZE(platform_data);
 
@@ -179,6 +197,15 @@ int __init stmcore_probe_device(struct stmcore_display_pipeline_data **pd,
       printk(KERN_INFO "stmcore-display: using HDMI hotplug\n");
     else
       printk(KERN_WARNING "stmcore-display: HDMI hotplug not available\n");
+
+#if defined(__TDT__) // downgraded from 103 to fix hdmi hotplug
+    for(i = 0; i < N_ELEMENTS (coredisplay_clks); ++i)
+    {
+      coredisplay_clks[i].clk = clk_get_sys ("hdmi", coredisplay_clks[i].name);
+      if(coredisplay_clks[i].clk)
+        clk_enable (coredisplay_clks[i].clk);
+    }
+#endif
 
     printk(KERN_INFO "stmcore-display: STi7105 display: probed\n");
     return 0;
@@ -213,6 +240,19 @@ int __init stmcore_display_postinit(struct stmcore_display *p)
 
 void stmcore_cleanup_device(void)
 {
+#if defined(__TDT__) // downgraded from 103 to fix hdmi hotplug
+  int i;
+
+  for(i = 0; i < N_ELEMENTS (coredisplay_clks); ++i)
+  {
+    if(coredisplay_clks[i].clk)
+    {
+      clk_disable (coredisplay_clks[i].clk);
+      clk_put (coredisplay_clks[i].clk);
+    }
+  }
+#endif
+
   if(claimed_gpio_hotplug)
   {
     gpio_free(GPIO_PIN_HOTPLUG);

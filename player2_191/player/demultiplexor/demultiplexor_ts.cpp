@@ -367,9 +367,20 @@ DemultiplexorBaseStreamContext_t *BaseStream;
 	  memcpy(&Stream->AccumulationBuffer[Stream->AccumulationBufferPointer],&Context->Base.BufferData[NewPacketStart+DataOffset],DVB_PACKET_SIZE-DataOffset);
 	  Stream->AccumulationBufferPointer += DVB_PACKET_SIZE-DataOffset;
 #else
+#ifdef __TDT__
+	    CollatorStatus_t Status = BaseStream->Collator->Input( Context->Base.Descriptor, 
+					  DVB_PACKET_SIZE-DataOffset, 
+					  &Context->Base.BufferData[NewPacketStart+DataOffset] );
+	    if(Status == CollatorBufferOverflow)
+	    {
+	    	OS_UnLockMutex(&Context->Base.Lock);
+	    	return DemultiplexorBufferOverflow;
+	    }
+#else
 	    BaseStream->Collator->Input( Context->Base.Descriptor, 
 					  DVB_PACKET_SIZE-DataOffset, 
 					  &Context->Base.BufferData[NewPacketStart+DataOffset] );           
+#endif      
 #endif
 
 	}
