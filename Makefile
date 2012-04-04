@@ -241,7 +241,6 @@ obj-y    += smartcard/
 endif
 ifdef CUBEREVO_250HD
 obj-y    += smartcard/
-obj-y	 += wireless/
 endif
 ifdef CUBEREVO_2000HD
 obj-y    += smartcard/
