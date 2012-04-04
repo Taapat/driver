@@ -1,22 +1,3 @@
-/******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
 #ifndef __RTL871X_SECURITY_H_
 #define __RTL871X_SECURITY_H_
 
@@ -32,7 +13,6 @@
 #define _TKIP_WTMIC_	0x3
 #define _AES_			0x4
 #define _WEP104_		0x5
-
 
 #define _WPA_IE_ID_	0xdd
 #define _WPA2_IE_ID_	0x30
@@ -108,7 +88,7 @@ struct security_priv
 
 	u32 dot118021XGrpPrivacy;	// This specify the privacy algthm. used for Grp key 
 	u32	dot118021XGrpKeyid;		// key id used for Grp Key
-	union Keytype	dot118021XGrpKey[4];	// 802.1x Group Key, for inx0 and inx1	
+	union Keytype	dot118021XGrpKey[2];	// 802.1x Group Key, for inx0 and inx1	
 	union Keytype	dot118021XGrptxmickey;
 	union Keytype	dot118021XGrprxmickey;
 	union pn48		dot11Grptxpn;			// PN48 used for Grp Key xmit.
@@ -245,12 +225,12 @@ struct mic_data
 	u32     nBytesInM;      // # bytes in M
 };
 
-void rtw_secmicsetkey(struct mic_data *pmicdata, u8 * key );
-void rtw_secmicappendbyte(struct mic_data *pmicdata, u8 b );
-void rtw_secmicappend(struct mic_data *pmicdata, u8 * src, u32 nBytes );
-void rtw_secgetmic(struct mic_data *pmicdata, u8 * dst );
+void secmicsetkey(struct mic_data *pmicdata, u8 * key );
+void secmicappendbyte(struct mic_data *pmicdata, u8 b );
+void secmicappend(struct mic_data *pmicdata, u8 * src, u32 nBytes );
+void secgetmic(struct mic_data *pmicdata, u8 * dst );
 
-void rtw_seccalctkipmic(
+void seccalctkipmic(
 	u8 * key,
 	u8 *header,
 	u8 *data,
@@ -258,18 +238,18 @@ void rtw_seccalctkipmic(
 	u8 *Miccode,
 	u8   priority);
 
-u32 rtw_aes_encrypt(_adapter *padapter, u8 *pxmitframe);
-u32 rtw_tkip_encrypt(_adapter *padapter, u8 *pxmitframe);
-void rtw_wep_encrypt(_adapter *padapter, u8  *pxmitframe);
+u32 aes_encrypt(_adapter *padapter, u8 *pxmitframe);
+u32 tkip_encrypt(_adapter *padapter, u8 *pxmitframe);
+void wep_encrypt(_adapter *padapter, u8  *pxmitframe);
 
-u32 rtw_aes_decrypt(_adapter *padapter, u8  *precvframe);
-u32 rtw_tkip_decrypt(_adapter *padapter, u8  *precvframe);
-void rtw_wep_decrypt(_adapter *padapter, u8  *precvframe);
+u32 aes_decrypt(_adapter *padapter, u8  *precvframe);
+u32 tkip_decrypt(_adapter *padapter, u8  *precvframe);
+void wep_decrypt(_adapter *padapter, u8  *precvframe);
 
 
 
 #ifdef PLATFORM_WINDOWS
-void rtw_use_tkipkey_handler (
+void use_tkipkey_handler (
 	IN	PVOID					SystemSpecific1,
 	IN	PVOID					FunctionContext,
 	IN	PVOID					SystemSpecific2,
@@ -277,7 +257,7 @@ void rtw_use_tkipkey_handler (
 	);
 #endif
 #ifdef PLATFORM_LINUX
-void rtw_use_tkipkey_handler(void* FunctionContext);
+void use_tkipkey_handler(void* FunctionContext);
 #endif
 #endif	//__RTL871X_SECURITY_H_
 

@@ -1,22 +1,3 @@
-/******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
 #ifndef __RTL8712_LED_H
 #define __RTL8712_LED_H
 
@@ -80,17 +61,17 @@ typedef struct _LED_871x{
 	_adapter				*padapter;
 	LED_PIN_871x			LedPin;	// Identify how to implement this SW led.
 	unsigned int		CurrLedState; // Current LED state.
-	u8					bLedOn; // true if LED is ON, false if LED is OFF.
+	bool					bLedOn; // true if LED is ON, false if LED is OFF.
 
-	u8					bSWLedCtrl;
+	bool					bSWLedCtrl;
 
-	u8					bLedBlinkInProgress; // true if it is blinking, false o.w..
+	bool					bLedBlinkInProgress; // true if it is blinking, false o.w..
 	// ALPHA, added by chiyoko, 20090106
-	u8					bLedNoLinkBlinkInProgress;
-	u8					bLedLinkBlinkInProgress;
-	u8					bLedStartToLinkBlinkInProgress;
-	u8					bLedScanBlinkInProgress;
-	u8					bLedWPSBlinkInProgress;
+	bool					bLedNoLinkBlinkInProgress;
+	bool					bLedLinkBlinkInProgress;
+	bool					bLedStartToLinkBlinkInProgress;
+	bool					bLedScanBlinkInProgress;
+	bool					bLedWPSBlinkInProgress;
 	
 	u32					BlinkTimes; // Number of times to toggle led state for blinking.
 	unsigned int		BlinkingLedState; // Next state for blinking, either LED_ON or LED_OFF are.
@@ -107,7 +88,6 @@ struct led_priv{
 	LED_871x			SwLed1;
 	LED_STRATEGY_871x	LedStrategy;
 	u8					bRegUseLed;
-	u8					bLedOpenDrain; // Support Open-drain arrangement for controlling the LED. 
 	void (*LedControlHandler)(_adapter *padapter, LED_CTL_MODE LedAction);
 	/* add for led controll */
 };
@@ -115,9 +95,9 @@ struct led_priv{
 //================================================================================
 // Interface to manipulate LED objects.
 //================================================================================
-void rtw_InitSwLeds(_adapter *padapter);
-void rtw_DeInitSwLeds(_adapter *padapter);
-void rtw_LedControl871x(_adapter *padapter,LED_CTL_MODE LedAction);
+void InitSwLeds(_adapter *padapter);
+void DeInitSwLeds(_adapter *padapter);
+void LedControl871x(_adapter *padapter,LED_CTL_MODE LedAction);
 
 #endif
 

@@ -1,24 +1,4 @@
 /******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
-
-/******************************************************************************
 
      (c) Copyright 2008, RealTEK Technologies Inc. All Rights Reserved.
 
@@ -173,7 +153,7 @@ phy_SetRFPowerState8192CU(
 	);
 #endif
 
-#if DEV_BUS_TYPE==DEV_BUS_PCI_INTERFACE
+#if DEV_BUS_TYPE==PCI_INTERFACE
 static	VOID
 phy_CheckEphySwitchReady(
 	IN	PADAPTER			Adapter
@@ -236,7 +216,7 @@ PHY_QueryBBReg(
 
 	//RT_TRACE(COMP_RF, DBG_TRACE, ("--->PHY_QueryBBReg(): RegAddr(%#lx), BitMask(%#lx)\n", RegAddr, BitMask));
 
-	OriginalValue = rtw_read32(Adapter, RegAddr);
+	OriginalValue = read32(Adapter, RegAddr);
 	BitShift = phy_CalculateBitShift(BitMask);
 	ReturnValue = (OriginalValue & BitMask) >> BitShift;
 
@@ -285,12 +265,12 @@ PHY_SetBBReg(
 	//RT_TRACE(COMP_RF, DBG_TRACE, ("--->PHY_SetBBReg(): RegAddr(%#lx), BitMask(%#lx), Data(%#lx)\n", RegAddr, BitMask, Data));
 
 	if(BitMask!= bMaskDWord){//if not "double word" write
-		OriginalValue = rtw_read32(Adapter, RegAddr);
+		OriginalValue = read32(Adapter, RegAddr);
 		BitShift = phy_CalculateBitShift(BitMask);
 		Data = (((OriginalValue) & (~BitMask)) | (Data << BitShift));
 	}
 
-	rtw_write32(Adapter, RegAddr, Data);
+	write32(Adapter, RegAddr, Data);
 
 	//RTPRINT(FPHY, PHY_BBW, ("BBW MASK=0x%lx Addr[0x%lx]=0x%lx\n", BitMask, RegAddr, Data));
 	//RT_TRACE(COMP_RF, DBG_TRACE, ("<---PHY_SetBBReg(): RegAddr(%#lx), BitMask(%#lx), Data(%#lx)\n", RegAddr, BitMask, Data));
@@ -335,7 +315,7 @@ PHY_QueryRFReg(
 	
 	//RT_TRACE(COMP_RF, DBG_TRACE, ("--->PHY_QueryRFReg(): RegAddr(%#lx), eRFPath(%#x), BitMask(%#lx)\n", RegAddr, eRFPath,BitMask));
 	
-#if (DEV_BUS_TYPE==DEV_BUS_USB_INTERFACE)
+#if (DEV_BUS_TYPE==USB_INTERFACE)
 	//PlatformAcquireMutex(&pHalData->mxRFOperate);
 #else
 	//PlatformAcquireSpinLock(Adapter, RT_RF_OPERATE_SPINLOCK);
@@ -347,7 +327,7 @@ PHY_QueryRFReg(
 	BitShift =  phy_CalculateBitShift(BitMask);
 	Readback_Value = (Original_Value & BitMask) >> BitShift;	
 
-#if (DEV_BUS_TYPE==DEV_BUS_USB_INTERFACE)
+#if (DEV_BUS_TYPE==USB_INTERFACE)
 	//PlatformReleaseMutex(&pHalData->mxRFOperate);
 #else
 	//PlatformReleaseSpinLock(Adapter, RT_RF_OPERATE_SPINLOCK);
@@ -403,7 +383,7 @@ PHY_SetRFReg(
 	//	RegAddr, BitMask, Data, eRFPath));
 
 
-#if (DEV_BUS_TYPE==DEV_BUS_USB_INTERFACE)
+#if (DEV_BUS_TYPE==USB_INTERFACE)
 	//PlatformAcquireMutex(&pHalData->mxRFOperate);
 #else
 	//PlatformAcquireSpinLock(Adapter, RT_RF_OPERATE_SPINLOCK);
@@ -422,7 +402,7 @@ PHY_SetRFReg(
 	
 
 
-#if (DEV_BUS_TYPE==DEV_BUS_USB_INTERFACE)
+#if (DEV_BUS_TYPE==USB_INTERFACE)
 	//PlatformReleaseMutex(&pHalData->mxRFOperate);
 #else
 	//PlatformReleaseSpinLock(Adapter, RT_RF_OPERATE_SPINLOCK);
@@ -554,17 +534,16 @@ phy_RFSerialRead(
 		tmplong2 = tmplong;
 	else
 	tmplong2 = PHY_QueryBBReg(Adapter, pPhyReg->rfHSSIPara2, bMaskDWord);
-	
 	tmplong2 = (tmplong2 & (~bLSSIReadAddress)) | (NewOffset<<23) | bLSSIReadEdge;	//T65 RF
 	
 	PHY_SetBBReg(Adapter, rFPGA0_XA_HSSIParameter2, bMaskDWord, tmplong&(~bLSSIReadEdge));	
-	rtw_udelay_os(10);// PlatformStallExecution(1000);
+	udelay_os(1000);// PlatformStallExecution(1000);
 	
 	PHY_SetBBReg(Adapter, pPhyReg->rfHSSIPara2, bMaskDWord, tmplong2);	
-	rtw_udelay_os(100);//PlatformStallExecution(1000);
+	udelay_os(1000);//PlatformStallExecution(1000);
 	
 	PHY_SetBBReg(Adapter, rFPGA0_XA_HSSIParameter2, bMaskDWord, tmplong|bLSSIReadEdge);	
-	rtw_udelay_os(10);//PlatformStallExecution(1000);
+	udelay_os(1000);//PlatformStallExecution(1000);
 
 	if(eRFPath == RF90_PATH_A)
 		RfPiEnable = (u8)PHY_QueryBBReg(Adapter, rFPGA0_XA_HSSIParameter1, BIT8);
@@ -743,7 +722,7 @@ PHY_MACConfig8192C(
 	int		rtStatus = _SUCCESS;
 	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(Adapter);
 
-#if DEV_BUS_TYPE == DEV_BUS_PCI_INTERFACE
+#if DEV_BUS_TYPE == PCI_INTERFACE
 	u8			pszMACRegFile[] = RTL819X_PHY_MACREG;
 #else
 	u8			sz88CMACRegFile[] = RTL8188C_PHY_MACREG;
@@ -770,14 +749,7 @@ PHY_MACConfig8192C(
 	//RT_TRACE(COMP_INIT, DBG_LOUD, ("Read MACREG.txt\n"));
 	rtStatus = phy_ConfigMACWithParaFile(Adapter, pszMACRegFile);
 #endif
-	
-	#if 0 
-	//this switching setting cause some 8192cu hw have redownload fw fail issue
-	//improve 2-stream TX EVM by Jenyu
-	if(IS_NORMAL_CHIP(pHalData->VersionID) && IS_92C_SERIAL(pHalData->VersionID))
-		rtw_write8(Adapter, 0x14,0x71);
-	#endif
-	
+
 	return rtStatus;
 
 }
@@ -796,23 +768,31 @@ PHY_BBConfig8192C(
 	phy_InitBBRFRegisterDefinition(Adapter);
 
 	// Enable BB and RF
-	RegVal = rtw_read16(Adapter, REG_SYS_FUNC_EN);
-	rtw_write16(Adapter, REG_SYS_FUNC_EN, (u16)(RegVal|BIT13|BIT0|BIT1));
+	RegVal = read16(Adapter, REG_SYS_FUNC_EN);
+	write16(Adapter, REG_SYS_FUNC_EN, RegVal|BIT13|BIT0|BIT1);
 
 	// 20090923 Joseph: Advised by Steven and Jenyu. Power sequence before init RF.
-	rtw_write8(Adapter, REG_AFE_PLL_CTRL, 0x83);
-	rtw_write8(Adapter, REG_AFE_PLL_CTRL+1, 0xdb);
-	rtw_write8(Adapter, REG_RF_CTRL, RF_EN|RF_RSTB|RF_SDMRSTB);
+	write8(Adapter, REG_AFE_PLL_CTRL, 0x83);
+	write8(Adapter, REG_AFE_PLL_CTRL+1, 0xdb);
+	write8(Adapter, REG_RF_CTRL, RF_EN|RF_RSTB|RF_SDMRSTB);
 
-#if DEV_BUS_TYPE == DEV_BUS_USB_INTERFACE
-	rtw_write8(Adapter, REG_SYS_FUNC_EN, FEN_USBA | FEN_USBD | FEN_BB_GLB_RSTn | FEN_BBRSTB);
+#if DEV_BUS_TYPE == USB_INTERFACE
+	write8(Adapter, REG_SYS_FUNC_EN, FEN_USBA | FEN_USBD | FEN_BB_GLB_RSTn | FEN_BBRSTB);
 #else
-	rtw_write8(Adapter, REG_SYS_FUNC_EN, FEN_PPLL|FEN_PCIEA|FEN_DIO_PCIE|FEN_USBA|FEN_BB_GLB_RSTn|FEN_BBRSTB);
+	write8(Adapter, REG_SYS_FUNC_EN, FEN_PPLL|FEN_PCIEA|FEN_DIO_PCIE|FEN_USBA|FEN_BB_GLB_RSTn|FEN_BBRSTB);
 #endif
-	//To Fix MAC loopback mode fail. Suggested by SD4 Johnny. 2010.03.23.
-	rtw_write8(Adapter, REG_LDOHCI12_CTRL, 0x0f);	
-	rtw_write8(Adapter, 0x15, 0xe9);
-	rtw_write8(Adapter, REG_AFE_XTAL_CTRL+1, 0x80);
+
+	write8(Adapter, 0x15, 0xe9);
+	write8(Adapter, REG_AFE_XTAL_CTRL+1, 0x80);
+
+#if DEV_BUS_TYPE == PCI_INTERFACE
+	// Force use left antenna by default for 88C.
+	if(!IS_92C_SERIAL(pHalData->VersionID)|| IS_92C_1T2R(pHalData->VersionID))
+	{
+		RegVal = read32(Adapter, REG_LEDCFG0);
+		write32(Adapter, REG_LEDCFG0, RegVal|BIT23);
+	}
+#endif
 
 	//
 	// Config BB and AGC
@@ -861,7 +841,7 @@ PHY_BBConfig8192C(
 		RT_TRACE(
 			COMP_INIT, 
 			DBG_LOUD, 
-			("PHY_BBConfig8192C: RF_Type(%x) does not match RF_Num(%x)!!\n", pHalData->rf_type, rf_num));
+			("PHY_BBConfig8192C: RF_Type(%x) does not match RF_Num(%x)!!\n", pHalData->RF_Type, rf_num));
 	}
 #endif
 
@@ -905,75 +885,6 @@ PHY_RFConfig8192C(
 	return rtStatus;
 }
 
-
-#ifdef RTL8192C_RECONFIG_TO_1T1R
-void	PHY_Reconfig_To_1T1R(_adapter *padapter)
-{
-	printk("###### %s #######\n",__FUNCTION__);
-	//BB (path B off)
-	PHY_SetBBReg(padapter, 0xc04, 0x000000ff, 0x11);
-	PHY_SetBBReg(padapter, 0xd04, 0x0000000f, 0x1);
-	PHY_SetBBReg(padapter, 0x90C, 0x000000ff, 0x11);
-	PHY_SetBBReg(padapter, 0x90C, 0x00f00000, 0x1);
-	PHY_SetBBReg(padapter, 0x88c, 0x00C00000, 0x11);
-
-	//ADDA (path-B off)
-	PHY_SetBBReg(padapter, 0x85C, bMaskDWord, 0x00db25a4);	
-	PHY_SetBBReg(padapter, 0xe6c, bMaskDWord, 0x20db25a4);
-	PHY_SetBBReg(padapter, 0xe70, bMaskDWord, 0x20db25a4);
-	PHY_SetBBReg(padapter, 0xe74, bMaskDWord, 0x041b25a4);	
-	PHY_SetBBReg(padapter, 0xe78, bMaskDWord, 0x041b25a4);	
-	PHY_SetBBReg(padapter, 0xe7c, bMaskDWord, 0x041b25a4);
-	PHY_SetBBReg(padapter, 0xe80, bMaskDWord, 0x041b25a4);
-	PHY_SetBBReg(padapter, 0xe84, bMaskDWord, 0x63db25a4);
-	PHY_SetBBReg(padapter, 0xe88, bMaskDWord, 0x041b25a4);
-	PHY_SetBBReg(padapter, 0xe8c, bMaskDWord, 0x20db25a4);
-	PHY_SetBBReg(padapter, 0xed0, bMaskDWord, 0x20db25a4);
-	PHY_SetBBReg(padapter, 0xed4, bMaskDWord, 0x20db25a4);
-	PHY_SetBBReg(padapter, 0xed8, bMaskDWord, 0x20db25a4);
-	PHY_SetBBReg(padapter, 0xedc, bMaskDWord, 0x001b25a4);
-	PHY_SetBBReg(padapter, 0xee0, bMaskDWord, 0x001b25a4);
-	PHY_SetBBReg(padapter, 0xeec, bMaskDWord, 0x24db25a4);
-
-	//RF
-	//path B to standby mode
-	PHY_SetBBReg(padapter, 0x844, bMaskDWord, 0x00010000);
-	
-}
-#endif
-
-VOID
-phy_BB8192C_Config_1T(
-	IN PADAPTER Adapter
-	)
-{
-#if 0
-	//for path - A
-	PHY_SetBBReg(Adapter, rFPGA0_TxInfo, 0x3, 0x1);
-	PHY_SetBBReg(Adapter, rFPGA1_TxInfo, 0x0303, 0x0101);
-	PHY_SetBBReg(Adapter, 0xe74, 0x0c000000, 0x1);
-	PHY_SetBBReg(Adapter, 0xe78, 0x0c000000, 0x1);
-	PHY_SetBBReg(Adapter, 0xe7c, 0x0c000000, 0x1);
-	PHY_SetBBReg(Adapter, 0xe80, 0x0c000000, 0x1);
-	PHY_SetBBReg(Adapter, 0xe88, 0x0c000000, 0x1);
-#endif
-	//for path - B
-	PHY_SetBBReg(Adapter, rFPGA0_TxInfo, 0x3, 0x2);
-	PHY_SetBBReg(Adapter, rFPGA1_TxInfo, 0x300033, 0x200022);
-
-	// 20100519 Joseph: Add for 1T2R config. Suggested by Kevin, Jenyu and Yunan.
-	PHY_SetBBReg(Adapter, rCCK0_AFESetting, bMaskByte3, 0x45);
-	PHY_SetBBReg(Adapter, rOFDM0_TRxPathEnable, bMaskByte0, 0x23);
-	PHY_SetBBReg(Adapter, rOFDM0_AGCParameter1, 0x30, 0x1);	// B path first AGC
-	
-	PHY_SetBBReg(Adapter, 0xe74, 0x0c000000, 0x2);
-	PHY_SetBBReg(Adapter, 0xe78, 0x0c000000, 0x2);
-	PHY_SetBBReg(Adapter, 0xe7c, 0x0c000000, 0x2);
-	PHY_SetBBReg(Adapter, 0xe80, 0x0c000000, 0x2);
-	PHY_SetBBReg(Adapter, 0xe88, 0x0c000000, 0x2);
-
-	
-}
 
 // Joseph test: new initialize order!!
 // Test only!! This part need to be re-organized.
@@ -1034,18 +945,10 @@ phy_BB8192C_Config_ParaFile(
 		goto phy_BB8190_Config_ParaFile_Fail;
 	}
 
-	// 20100318 Config 2T2R to 1T2R if necessary.
-	//
-	if(pHalData->rf_type== RF_1T2R)
-	{
-		phy_BB8192C_Config_1T(Adapter);
-		//RT_TRACE(COMP_INIT, DBG_LOUD, ("phy_BB8192S_Config_ParaFile():Config to 1T!!\n"));
-	}
-
 	//
 	// 2. If EEPROM or EFUSE autoload OK, We must config by PHY_REG_PG.txt
 	//
-	if (pEEPROM->bAutoload== _SUCCESS)
+	if (pEEPROM->bautoload_fail_flag == _FALSE)
 	{
 		pHalData->pwrGroupCnt = 0;
 
@@ -1148,7 +1051,7 @@ phy_ConfigMACWithHeaderFile(
 	ptrArray = (u32*)&Rtl819XMAC_Array[0];	
 
 	for(i = 0 ;i < ArrayLength;i=i+2){ // Add by tynli for 2 column
-		rtw_write8(Adapter, ptrArray[i], (u8)ptrArray[i+1]);
+		write8(Adapter, ptrArray[i], (u8)ptrArray[i+1]);
 	}
 	
 	return _SUCCESS;
@@ -1224,7 +1127,7 @@ phy_ConfigBBExternalPA(
 	IN	PADAPTER			Adapter
 )
 {
-#if (DEV_BUS_TYPE == DEV_BUS_USB_INTERFACE)
+#if (DEV_BUS_TYPE == USB_INTERFACE)
 	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(Adapter);
 	u16 i=0;
 	u32 temp=0;
@@ -1280,45 +1183,15 @@ phy_ConfigBBWithHeaderFile(
 	{
 		AGCTAB_ArrayLen = AGCTAB_2TArrayLength;
 		Rtl819XAGCTAB_Array_Table = (u32*)Rtl819XAGCTAB_2TArray;
-#if DEV_BUS_TYPE==DEV_BUS_USB_INTERFACE
-		if(pHalData->BoardType == BOARD_MINICARD )
-		{
-			PHY_REGArrayLen = PHY_REG_2T_mCardArrayLength;
-			Rtl819XPHY_REGArray_Table = (u32*)Rtl819XPHY_REG_2T_mCardArray;			
-		}
-		else
-#endif
-		{
-			PHY_REGArrayLen = PHY_REG_2TArrayLength;
-			Rtl819XPHY_REGArray_Table = (u32*)Rtl819XPHY_REG_2TArray;
-		}
-	
+		PHY_REGArrayLen = PHY_REG_2TArrayLength;
+		Rtl819XPHY_REGArray_Table = (u32*)Rtl819XPHY_REG_2TArray;
 	}
 	else
 	{
 		AGCTAB_ArrayLen = AGCTAB_1TArrayLength;
 		Rtl819XAGCTAB_Array_Table = (u32*)Rtl819XAGCTAB_1TArray;
-		
-#if DEV_BUS_TYPE==DEV_BUS_USB_INTERFACE
-		if(pHalData->BoardType == BOARD_MINICARD )
-		{
-			PHY_REGArrayLen = PHY_REG_1T_mCardArrayLength;
-			Rtl819XPHY_REGArray_Table = (u32*)Rtl819XPHY_REG_1T_mCardArray;			
-		}
-		else if(pHalData->BoardType == BOARD_USB_High_PA)
-		{
-			AGCTAB_ArrayLen = AGCTAB_1T_HPArrayLength;
-			Rtl819XAGCTAB_Array_Table =(u32*) Rtl819XAGCTAB_1T_HPArray;
-			PHY_REGArrayLen = PHY_REG_1T_HPArrayLength;
-			Rtl819XPHY_REGArray_Table = (u32*)Rtl819XPHY_REG_1T_HPArray;			
-		}
-		else
-#endif
-		{
-		        PHY_REGArrayLen = PHY_REG_1TArrayLength;
-		        Rtl819XPHY_REGArray_Table = (u32*)Rtl819XPHY_REG_1TArray;
-		}
-
+		PHY_REGArrayLen = PHY_REG_1TArrayLength;
+		Rtl819XPHY_REGArray_Table = (u32*)Rtl819XPHY_REG_1TArray;
 	}
 
 	if(ConfigType == BaseBand_Config_PHY_REG)
@@ -1326,27 +1199,26 @@ phy_ConfigBBWithHeaderFile(
 		for(i=0;i<PHY_REGArrayLen;i=i+2)
 		{
 			if (Rtl819XPHY_REGArray_Table[i] == 0xfe)
-				rtw_mdelay_os(50);
+				mdelay_os(50);
 			else if (Rtl819XPHY_REGArray_Table[i] == 0xfd)
-				rtw_mdelay_os(5);
+				mdelay_os(5);
 			else if (Rtl819XPHY_REGArray_Table[i] == 0xfc)
-				rtw_mdelay_os(1);
+				mdelay_os(1);
 			else if (Rtl819XPHY_REGArray_Table[i] == 0xfb)
-				rtw_udelay_os(50);
+				udelay_os(50);
 			else if (Rtl819XPHY_REGArray_Table[i] == 0xfa)
-				rtw_udelay_os(5);
+				udelay_os(5);
 			else if (Rtl819XPHY_REGArray_Table[i] == 0xf9)
-				rtw_udelay_os(1);
+				udelay_os(1);
 			PHY_SetBBReg(Adapter, Rtl819XPHY_REGArray_Table[i], bMaskDWord, Rtl819XPHY_REGArray_Table[i+1]);		
 
 			// Add 1us delay between BB/RF register setting.
-			rtw_udelay_os(1);
+			udelay_os(1);
 
 			//RT_TRACE(COMP_INIT, DBG_TRACE, ("The Rtl819XPHY_REGArray_Table[0] is %lx Rtl819XPHY_REGArray[1] is %lx \n",Rtl819XPHY_REGArray_Table[i], Rtl819XPHY_REGArray_Table[i+1]));
 		}
 		// for External PA
 		phy_ConfigBBExternalPA(Adapter);
-
 	}
 	else if(ConfigType == BaseBand_Config_AGC_TAB)
 	{
@@ -1355,7 +1227,7 @@ phy_ConfigBBWithHeaderFile(
 			PHY_SetBBReg(Adapter, Rtl819XAGCTAB_Array_Table[i], bMaskDWord, Rtl819XAGCTAB_Array_Table[i+1]);		
 
 			// Add 1us delay between BB/RF register setting.
-			rtw_udelay_os(1);
+			udelay_os(1);
 			
 			//RT_TRACE(COMP_INIT, DBG_TRACE, ("The Rtl819XAGCTAB_Array_Table[0] is %lx Rtl819XPHY_REGArray[1] is %lx \n",Rtl819XAGCTAB_Array_Table[i], Rtl819XAGCTAB_Array_Table[i+1]));
 		}
@@ -1609,43 +1481,29 @@ phy_ConfigBBWithPgHeaderFile(
 	int i;
 	u32*	Rtl819XPHY_REGArray_Table_PG;
 	u16	PHY_REGArrayPGLen;
-	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(Adapter);
+	//HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(Adapter);
 
-	// Default: pHalData->rf_type = RF_2T2R.
+	// Default: pHalData->RF_Type = RF_2T2R.
 	
 	PHY_REGArrayPGLen = PHY_REG_Array_PGLength;
 	Rtl819XPHY_REGArray_Table_PG = (u32*)Rtl819XPHY_REG_Array_PG;
-
-#if DEV_BUS_TYPE==DEV_BUS_USB_INTERFACE
-	if(pHalData->BoardType == BOARD_MINICARD )
-	{
-		PHY_REGArrayPGLen = PHY_REG_Array_PG_mCardLength;
-		Rtl819XPHY_REGArray_Table_PG = (u32*)Rtl819XPHY_REG_Array_PG_mCard;
-	}
-	else if(pHalData->BoardType ==BOARD_USB_High_PA )
-	{
-		PHY_REGArrayPGLen = PHY_REG_Array_PG_HPLength;
-		Rtl819XPHY_REGArray_Table_PG = (u32*)Rtl819XPHY_REG_Array_PG_HP;		
-	}
-#endif		
-			
 
 	if(ConfigType == BaseBand_Config_PHY_REG)
 	{
 		for(i=0;i<PHY_REGArrayPGLen;i=i+3)
 		{
 			if (Rtl819XPHY_REGArray_Table_PG[i] == 0xfe)
-				rtw_mdelay_os(50);
+				mdelay_os(50);
 			else if (Rtl819XPHY_REGArray_Table_PG[i] == 0xfd)
-				rtw_mdelay_os(5);
+				mdelay_os(5);
 			else if (Rtl819XPHY_REGArray_Table_PG[i] == 0xfc)
-				rtw_mdelay_os(1);
+				mdelay_os(1);
 			else if (Rtl819XPHY_REGArray_Table_PG[i] == 0xfb)
-				rtw_udelay_os(50);
+				udelay_os(50);
 			else if (Rtl819XPHY_REGArray_Table_PG[i] == 0xfa)
-				rtw_udelay_os(5);
+				udelay_os(5);
 			else if (Rtl819XPHY_REGArray_Table_PG[i] == 0xf9)
-				rtw_udelay_os(1);
+				udelay_os(1);
 			storePwrIndexDiffRateOffset(Adapter, Rtl819XPHY_REGArray_Table_PG[i], 
 				Rtl819XPHY_REGArray_Table_PG[i+1], 
 				Rtl819XPHY_REGArray_Table_PG[i+2]);
@@ -1721,7 +1579,7 @@ PHY_ConfigRFExternalPA(
 )
 {
 	int	rtStatus = _SUCCESS;
-#if (DEV_BUS_TYPE == DEV_BUS_USB_INTERFACE)
+#if (DEV_BUS_TYPE == USB_INTERFACE)
 	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(Adapter);
 	u16 i=0;
 
@@ -1783,9 +1641,9 @@ PHY_ConfigRFWithHeaderFile(
 		Rtl819XRadioB_Array_Table = (u32*)Rtl819XRadioB_2TArray;
 			
 	}
-	else//8188
+	else
 	{
-#if (DEV_BUS_TYPE==DEV_BUS_USB_INTERFACE)		
+#if DEV_BUS_TYPE==USB_INTERFACE		
 		if( BOARD_MINICARD == pHalData->BoardType )
 		{
 			RadioA_ArrayLen = RadioA_1T_mCardArrayLength;
@@ -1793,12 +1651,6 @@ PHY_ConfigRFWithHeaderFile(
 			RadioB_ArrayLen = RadioB_1T_mCardArrayLength;	
 			Rtl819XRadioB_Array_Table = (u32*)Rtl819XRadioB_1T_mCardArray;			
 		}
-		else if( BOARD_USB_High_PA == pHalData->BoardType )
-		{
-			RadioA_ArrayLen = RadioA_1T_HPArrayLength;
-			Rtl819XRadioA_Array_Table=(u32*)Rtl819XRadioA_1T_HPArray;
-		}
-
 		else
 #endif				
 		{
@@ -1817,22 +1669,22 @@ PHY_ConfigRFWithHeaderFile(
 			for(i = 0;i<RadioA_ArrayLen; i=i+2)
 			{
 				if(Rtl819XRadioA_Array_Table[i] == 0xfe)
-					rtw_mdelay_os(50);
+					mdelay_os(50);
 				else if (Rtl819XRadioA_Array_Table[i] == 0xfd)
-					rtw_mdelay_os(5);
+					mdelay_os(5);
 				else if (Rtl819XRadioA_Array_Table[i] == 0xfc)
-					rtw_mdelay_os(1);
+					mdelay_os(1);
 				else if (Rtl819XRadioA_Array_Table[i] == 0xfb)
-					rtw_udelay_os(50);
+					udelay_os(50);
 				else if (Rtl819XRadioA_Array_Table[i] == 0xfa)
-					rtw_udelay_os(5);
+					udelay_os(5);
 				else if (Rtl819XRadioA_Array_Table[i] == 0xf9)
-					rtw_udelay_os(1);
+					udelay_os(1);
 				else
 				{
 					PHY_SetRFReg(Adapter, eRFPath, Rtl819XRadioA_Array_Table[i], bRFRegOffsetMask, Rtl819XRadioA_Array_Table[i+1]);
 					// Add 1us delay between BB/RF register setting.
-					rtw_udelay_os(1);
+					udelay_os(1);
 				}
 			}			
 			//Add for High Power PA
@@ -1843,27 +1695,27 @@ PHY_ConfigRFWithHeaderFile(
 			{
 				if(Rtl819XRadioB_Array_Table[i] == 0xfe)
 				{ // Deay specific ms. Only RF configuration require delay.												
-#if (DEV_BUS_TYPE == DEV_BUS_USB_INTERFACE)
-					rtw_mdelay_os(1000);
+#if (DEV_BUS_TYPE == USB_INTERFACE)
+					mdelay_os(1000);
 #else
-					rtw_mdelay_os(50);
+					mdelay_os(50);
 #endif
 				}
 				else if (Rtl819XRadioB_Array_Table[i] == 0xfd)
-					rtw_mdelay_os(5);
+					mdelay_os(5);
 				else if (Rtl819XRadioB_Array_Table[i] == 0xfc)
-					rtw_mdelay_os(1);
+					mdelay_os(1);
 				else if (Rtl819XRadioB_Array_Table[i] == 0xfb)
-					rtw_udelay_os(50);
+					udelay_os(50);
 				else if (Rtl819XRadioB_Array_Table[i] == 0xfa)
-					rtw_udelay_os(5);
+					udelay_os(5);
 				else if (Rtl819XRadioB_Array_Table[i] == 0xf9)
-					rtw_udelay_os(1);
+					udelay_os(1);
 				else
 				{
 					PHY_SetRFReg(Adapter, eRFPath, Rtl819XRadioB_Array_Table[i], bRFRegOffsetMask, Rtl819XRadioB_Array_Table[i+1]);
 					// Add 1us delay between BB/RF register setting.
-					rtw_udelay_os(1);
+					udelay_os(1);
 				}	
 			}			
 			break;
@@ -1929,8 +1781,8 @@ PHY_CheckBBAndRFOK(
 			
 		case HW90_BLOCK_PHY0:
 		case HW90_BLOCK_PHY1:
-			rtw_write32(Adapter, WriteAddr[CheckBlock], WriteData[i]);
-			ulRegRead = rtw_read32(Adapter, WriteAddr[CheckBlock]);
+			write32(Adapter, WriteAddr[CheckBlock], WriteData[i]);
+			ulRegRead = read32(Adapter, WriteAddr[CheckBlock]);
 			break;
 
 		case HW90_BLOCK_RF:
@@ -1942,9 +1794,9 @@ PHY_CheckBBAndRFOK(
 			WriteData[i] &= 0xfff;
 			PHY_SetRFReg(Adapter, eRFPath, WriteAddr[HW90_BLOCK_RF], bRFRegOffsetMask, WriteData[i]);
 			// TODO: we should not delay for such a long time. Ask SD3
-			rtw_mdelay_os(10);
+			mdelay_os(10);
 			ulRegRead = PHY_QueryRFReg(Adapter, eRFPath, WriteAddr[HW90_BLOCK_RF], bMaskDWord);				
-			rtw_mdelay_os(10);
+			mdelay_os(10);
 			//cosa PlatformReleaseSpinLock(Adapter, RT_INITIAL_SPINLOCK);
 			break;
 			
@@ -2215,9 +2067,9 @@ PHY_SetRFPowerState(
 		RT_TRACE(COMP_RF, DBG_LOUD, ("<--------- PHY_SetRFPowerState(): discard the request for eRFPowerState(%d) is the same.\n", eRFPowerState));
 		return bResult;
 	}
-#if (DEV_BUS_TYPE == DEV_BUS_PCI_INTERFACE)
+#if (DEV_BUS_TYPE == PCI_INTERFACE)
 	bResult = phy_SetRFPowerState8192SE(Adapter, eRFPowerState);
-#elif (DEV_BUS_TYPE == DEV_BUS_USB_INTERFACE)
+#elif (DEV_BUS_TYPE == USB_INTERFACE)
 	bResult = phy_SetRFPowerState8192CU(Adapter, eRFPowerState);
 #endif
 		
@@ -2227,7 +2079,7 @@ PHY_SetRFPowerState(
 }
 
 
-#if (DEV_BUS_TYPE == DEV_BUS_PCI_INTERFACE)
+#if (DEV_BUS_TYPE == PCI_INTERFACE)
 /*-----------------------------------------------------------------------------
  * Function:	PHY_SetRtl8192seRfHalt()
  *
@@ -2342,7 +2194,7 @@ phy_SetRFPowerState8192SE(
 						QueueID++;
 						continue;
 					}
-					#if( DEV_BUS_TYPE==DEV_BUS_PCI_INTERFACE)
+					#if( DEV_BUS_TYPE==PCI_INTERFACE)
 					else if(IsLowPowerState(Adapter))
 					{
 							RT_TRACE(COMP_POWER, DBG_LOUD, 
@@ -2408,7 +2260,7 @@ phy_SetRFPowerState8192SE(
 							QueueID++;
 							continue;
 						}
-#if( DEV_BUS_TYPE==DEV_BUS_PCI_INTERFACE)
+#if( DEV_BUS_TYPE==PCI_INTERFACE)
 						else if(IsLowPowerState(Adapter))
 						{
 							RT_TRACE(COMP_POWER, DBG_LOUD, ("eRf Off/Sleep: %d times TcbBusyQueue[%d] !=0 but lower power state!\n", (i+1), QueueID));
@@ -2484,7 +2336,7 @@ PHY_SwitchEphyParameter(
 
 #endif
 
-#if (DEV_BUS_TYPE == DEV_BUS_USB_INTERFACE)
+#if (DEV_BUS_TYPE == USB_INTERFACE)
 //
 // Description:
 //	Set the RF power state for 8192CU.
@@ -2689,6 +2541,7 @@ void getTxPowerIndex(
 	EEPROM_EFUSE_PRIV *pEEPROM = GET_EEPROM_EFUSE_PRIV(Adapter);
 	//HAL_DATA_TYPE		*pHalData = GET_HAL_DATA(Adapter);
 	u8				index = (channel -1);
+	u8				i;
 	// 1. CCK
 	cckPowerLevel[RF90_PATH_A] = pEEPROM->TxPwrLevelCck[RF90_PATH_A][index];	//RF-A
 	cckPowerLevel[RF90_PATH_B] = pEEPROM->TxPwrLevelCck[RF90_PATH_B][index];	//RF-B
@@ -3098,8 +2951,8 @@ _PHY_SetBWMode92C(
 	//3//
 	//Adapter->HalFunc.SetBWModeHandler();
 	
-	regBwOpMode = rtw_read8(Adapter, REG_BWOPMODE);
-	regRRSR_RSC = rtw_read8(Adapter, REG_RRSR+2);
+	regBwOpMode = read8(Adapter, REG_BWOPMODE);
+	regRRSR_RSC = read8(Adapter, REG_RRSR+2);
 	//regBwOpMode = Adapter->HalFunc.GetHwRegHandler(Adapter,HW_VAR_BWMODE,(pu1Byte)&regBwOpMode);
 	
 	switch(pHalData->CurrentChannelBW)
@@ -3107,16 +2960,16 @@ _PHY_SetBWMode92C(
 		case HT_CHANNEL_WIDTH_20:
 			regBwOpMode |= BW_OPMODE_20MHZ;
 			   // 2007/02/07 Mark by Emily becasue we have not verify whether this register works
-			rtw_write8(Adapter, REG_BWOPMODE, regBwOpMode);
+			write8(Adapter, REG_BWOPMODE, regBwOpMode);
 			break;
 			   
 		case HT_CHANNEL_WIDTH_40:
 			regBwOpMode &= ~BW_OPMODE_20MHZ;
 				// 2007/02/07 Mark by Emily becasue we have not verify whether this register works
-			rtw_write8(Adapter, REG_BWOPMODE, regBwOpMode);
+			write8(Adapter, REG_BWOPMODE, regBwOpMode);
 
 			regRRSR_RSC = (regRRSR_RSC&0x90) |(pHalData->nCur40MhzPrimeSC<<5);
-			rtw_write8(Adapter, REG_RRSR+2, regRRSR_RSC);
+			write8(Adapter, REG_RRSR+2, regRRSR_RSC);
 			break;
 
 		default:
@@ -3723,7 +3576,7 @@ phy_FinishSwChnlNow(	// We should not call this function directly
 	while(!phy_SwChnlStepByStep(Adapter,channel,&pHalData->SwChnlStage,&pHalData->SwChnlStep,&delay))
 	{
 		if(delay>0)
-			rtw_mdelay_os(delay);
+			mdelay_os(delay);
 	}
 #endif	
 }
@@ -3795,7 +3648,7 @@ PHY_CheckIsLegalRfPath8192C(
 
 	// NOt check RF Path now.!
 #if 0	
-	if (pHalData->rf_type == RF_1T2R && eRFPath != RF90_PATH_A)
+	if (pHalData->RF_Type == RF_1T2R && eRFPath != RF90_PATH_A)
 	{		
 		rtValue = FALSE;
 	}
@@ -3813,15 +3666,11 @@ PHY_CheckIsLegalRfPath8192C(
 //	IQK
 //
 //-------------------------------------------------------------------------
-
+#define IQK_ADDA_REG_NUM	16
 #define MAX_TOLERANCE		5
 #define IQK_DELAY_TIME		1 	//ms
 
-#define PHY_SetMacReg			PHY_SetBBReg
 #define IQK_MAC_REG_NUM		4
-#define IQK_ADDA_REG_NUM		16
-#define IQK_BB_REG_NUM		9
-#define HP_THERMAL_NUM		8
 
 u8			//bit0 = 1 => Tx OK, bit1 = 1 => Rx OK
 _PHY_PathA_IQK(
@@ -3863,7 +3712,7 @@ _PHY_PathA_IQK(
 	
 	// delay x ms
 	//RTPRINT(FINIT, INIT_IQK, ("Delay %d ms for One shot, path A LOK & IQK.\n", IQK_DELAY_TIME));
-	rtw_udelay_os(IQK_DELAY_TIME*1000);//PlatformStallExecution(IQK_DELAY_TIME*1000);
+	udelay_os(IQK_DELAY_TIME*1000);//PlatformStallExecution(IQK_DELAY_TIME*1000);
 
 	// Check failed
 	regEAC = PHY_QueryBBReg(pAdapter, 0xeac, bMaskDWord);
@@ -3921,7 +3770,7 @@ _PHY_PathB_IQK(
 
 	// delay x ms
 	//RTPRINT(FINIT, INIT_IQK, ("Delay %d ms for One shot, path B LOK & IQK.\n", IQK_DELAY_TIME));
-	rtw_udelay_os(IQK_DELAY_TIME*1000);//PlatformStallExecution(IQK_DELAY_TIME*1000);
+	udelay_os(IQK_DELAY_TIME*1000);//PlatformStallExecution(IQK_DELAY_TIME*1000);
 
 	// Check failed
 	regEAC = PHY_QueryBBReg(pAdapter, 0xeac, bMaskDWord);
@@ -3954,7 +3803,8 @@ _PHY_PathB_IQK(
 
 }
 
-VOID _PHY_PathAFillIQKMatrix(
+VOID
+_PHY_PathAFillIQKMatrix(
 	IN	PADAPTER	pAdapter,
 	IN  BOOLEAN    	bIQKOK,
 	IN	int		result[][8],
@@ -3971,24 +3821,24 @@ VOID _PHY_PathAFillIQKMatrix(
 		return;
 	else if(bIQKOK)
 	{
-		Oldval_0 = (PHY_QueryBBReg(pAdapter, rOFDM0_XATxIQImbalance, bMaskDWord) >> 22) & 0x3FF;
+		Oldval_0 = (PHY_QueryBBReg(pAdapter, 0xc80, bMaskDWord) >> 22) & 0x3FF;
 
 			X = result[final_candidate][0];
 		if ((X & 0x00000200) != 0)
 			X = X | 0xFFFFFC00;				
 		TX0_A = (X * Oldval_0) >> 8;
 		//RTPRINT(FINIT, INIT_IQK, ("X = 0x%lx, TX0_A = 0x%lx, Oldval_0 0x%lx\n", X, TX0_A, Oldval_0));
-		PHY_SetBBReg(pAdapter, rOFDM0_XATxIQImbalance, 0x3FF, TX0_A);
-		PHY_SetBBReg(pAdapter, rOFDM0_ECCAThreshold, BIT(31), ((X* Oldval_0>>7) & 0x1));
+		PHY_SetBBReg(pAdapter, 0xc80, 0x3FF, TX0_A);
+		PHY_SetBBReg(pAdapter, 0xc4c, BIT(24), ((X* Oldval_0>>7) & 0x1));
 
 		Y = result[final_candidate][1];
 		if ((Y & 0x00000200) != 0)
 			Y = Y | 0xFFFFFC00;		
 		TX0_C = (Y * Oldval_0) >> 8;
 		//RTPRINT(FINIT, INIT_IQK, ("Y = 0x%lx, TX = 0x%lx\n", Y, TX0_C));
-		PHY_SetBBReg(pAdapter, rOFDM0_XCTxAFE, 0xF0000000, ((TX0_C&0x3C0)>>6));
-		PHY_SetBBReg(pAdapter, rOFDM0_XATxIQImbalance, 0x003F0000, (TX0_C&0x3F));
-		PHY_SetBBReg(pAdapter, rOFDM0_ECCAThreshold, BIT(29), ((Y* Oldval_0>>7) & 0x1));
+		PHY_SetBBReg(pAdapter, 0xc94, 0xF0000000, ((TX0_C&0x3C0)>>6));
+		PHY_SetBBReg(pAdapter, 0xc80, 0x003F0000, (TX0_C&0x3F));
+		PHY_SetBBReg(pAdapter, 0xc4c, BIT(26), ((Y* Oldval_0>>7) & 0x1));
 
 	        if(bTxOnly)
 		{
@@ -3997,10 +3847,10 @@ VOID _PHY_PathAFillIQKMatrix(
 		}
 
 		reg = result[final_candidate][2];
-		PHY_SetBBReg(pAdapter, rOFDM0_XARxIQImbalance, 0x3FF, reg);
+		PHY_SetBBReg(pAdapter, 0xc14, 0x3FF, reg);
 	
 		reg = result[final_candidate][3] & 0x3F;
-		PHY_SetBBReg(pAdapter, rOFDM0_XARxIQImbalance, 0xFC00, reg);
+		PHY_SetBBReg(pAdapter, 0xc14, 0xFC00, reg);
 
 		reg = (result[final_candidate][3] >> 6) & 0xF;
 		PHY_SetBBReg(pAdapter, 0xca0, 0xF0000000, reg);
@@ -4025,36 +3875,36 @@ _PHY_PathBFillIQKMatrix(
 		return;
 	else if(bIQKOK)
 	{
-		Oldval_1 = (PHY_QueryBBReg(pAdapter, rOFDM0_XBTxIQImbalance, bMaskDWord) >> 22) & 0x3FF;
+		Oldval_1 = (PHY_QueryBBReg(pAdapter, 0xc88, bMaskDWord) >> 22) & 0x3FF;
 
 		X = result[final_candidate][4];
 		if ((X & 0x00000200) != 0)
 			X = X | 0xFFFFFC00;		
 		TX1_A = (X * Oldval_1) >> 8;
 		//RTPRINT(FINIT, INIT_IQK, ("X = 0x%lx, TX1_A = 0x%lx\n", X, TX1_A));
-		PHY_SetBBReg(pAdapter, rOFDM0_XBTxIQImbalance, 0x3FF, TX1_A);
-		PHY_SetBBReg(pAdapter, rOFDM0_ECCAThreshold, BIT(27), ((X* Oldval_1>>7) & 0x1));
+		PHY_SetBBReg(pAdapter, 0xc88, 0x3FF, TX1_A);
+		PHY_SetBBReg(pAdapter, 0xc4c, BIT(28), ((X* Oldval_1>>7) & 0x1));
 
 		Y = result[final_candidate][5];
 		if ((Y & 0x00000200) != 0)
 			Y = Y | 0xFFFFFC00;		
 		TX1_C = (Y * Oldval_1) >> 8;
 		//RTPRINT(FINIT, INIT_IQK, ("Y = 0x%lx, TX1_C = 0x%lx\n", Y, TX1_C));
-		PHY_SetBBReg(pAdapter, rOFDM0_XDTxAFE, 0xF0000000, ((TX1_C&0x3C0)>>6));
-		PHY_SetBBReg(pAdapter, rOFDM0_XBTxIQImbalance, 0x003F0000, (TX1_C&0x3F));
-		PHY_SetBBReg(pAdapter, rOFDM0_ECCAThreshold, BIT(25), ((Y* Oldval_1>>7) & 0x1));
+		PHY_SetBBReg(pAdapter, 0xc9c, 0xF0000000, ((TX1_C&0x3C0)>>6));
+		PHY_SetBBReg(pAdapter, 0xc88, 0x003F0000, (TX1_C&0x3F));
+		PHY_SetBBReg(pAdapter, 0xc4c, BIT(30), ((Y* Oldval_1>>7) & 0x1));
 
 		if(bTxOnly)
 			return;
 
 		reg = result[final_candidate][6];
-		PHY_SetBBReg(pAdapter, rOFDM0_XBRxIQImbalance, 0x3FF, reg);
+		PHY_SetBBReg(pAdapter, 0xc1c, 0x3FF, reg);
 	
 		reg = result[final_candidate][7] & 0x3F;
-		PHY_SetBBReg(pAdapter, rOFDM0_XBRxIQImbalance, 0xFC00, reg);
+		PHY_SetBBReg(pAdapter, 0xc1c, 0xFC00, reg);
 
 		reg = (result[final_candidate][7] >> 6) & 0xF;
-		PHY_SetBBReg(pAdapter, rOFDM0_AGCRSSITable, 0x0000F000, reg);
+		PHY_SetBBReg(pAdapter, 0xc78, 0x0000F000, reg);
 	}
 }
 
@@ -4062,14 +3912,13 @@ VOID
 _PHY_SaveADDARegisters(
 	IN	PADAPTER	pAdapter,
 	IN	u32*		ADDAReg,
-	IN	u32*		ADDABackup,
-	IN	u32		RegisterNum
+	IN	u32*		ADDABackup
 	)
 {
 	u32	i;
 	
 	//RTPRINT(FINIT, INIT_IQK, ("Save ADDA parameters.\n"));
-	for( i = 0 ; i < RegisterNum ; i++){
+	for( i = 0 ; i < IQK_ADDA_REG_NUM ; i++){
 		ADDABackup[i] = PHY_QueryBBReg(pAdapter, ADDAReg[i], bMaskDWord);
 	}
 }
@@ -4084,9 +3933,9 @@ _PHY_SaveMACRegisters(
 	
 	//RTPRINT(FINIT, INIT_IQK, ("Save MAC parameters.\n"));
 	for( i = 0 ; i < (IQK_MAC_REG_NUM - 1); i++){
-		MACBackup[i] =rtw_read8(pAdapter, MACReg[i]);		
+		MACBackup[i] =read8(pAdapter, MACReg[i]);		
 	}
-	MACBackup[i] = rtw_read32(pAdapter, MACReg[i]);		
+	MACBackup[i] = read32(pAdapter, MACReg[i]);		
 
 }
 VOID
@@ -4100,12 +3949,12 @@ _PHY_MACSettingCalibration(
 
 	//RTPRINT(FINIT, INIT_IQK, ("MAC settings for Calibration.\n"));
 
-	rtw_write8(pAdapter, MACReg[i], 0x3F);
+	write8(pAdapter, MACReg[i], 0x3F);
 
 	for(i = 1 ; i < (IQK_MAC_REG_NUM - 1); i++){
-		rtw_write8(pAdapter, MACReg[i], (u8)(MACBackup[i]&(~BIT3)));
+		write8(pAdapter, MACReg[i], (u8)(MACBackup[i]&(~BIT3)));
 	}
-	rtw_write8(pAdapter, MACReg[i], (u8)(MACBackup[i]&(~BIT5)));	
+	write8(pAdapter, MACReg[i], (u8)(MACBackup[i]&(~BIT5)));	
 
 }
 
@@ -4120,23 +3969,22 @@ _PHY_ReloadMACRegisters(
 
 	//RTPRINT(FINIT, INIT_IQK, ("Reload MAC parameters !\n"));
 	for(i = 0 ; i < (IQK_MAC_REG_NUM - 1); i++){
-		rtw_write8(pAdapter, MACReg[i], (u8)MACBackup[i]);
+		write8(pAdapter, MACReg[i], (u8)MACBackup[i]);
 	}
-	rtw_write32(pAdapter, MACReg[i], MACBackup[i]);	
+	write32(pAdapter, MACReg[i], MACBackup[i]);	
 }
 
 VOID
 _PHY_ReloadADDARegisters(
 	IN	PADAPTER	pAdapter,
 	IN	u32*		ADDAReg,
-	IN	u32*		ADDABackup,
-	IN	u32		RegiesterNum
+	IN	u32*		ADDABackup
 	)
 {
 	u32	i;
 
 	//RTPRINT(FINIT, INIT_IQK, ("Reload ADDA power saving parameters !\n"));
-	for(i = 0 ; i < RegiesterNum; i++){
+	for(i = 0 ; i < IQK_ADDA_REG_NUM ; i++){
 		PHY_SetBBReg(pAdapter, ADDAReg[i], bMaskDWord, ADDABackup[i]);
 	}
 }
@@ -4280,17 +4128,11 @@ _PHY_IQCalibrate(
 	u32			i;
 	u8			PathAOK, PathBOK;
 	u32			ADDA_REG[IQK_ADDA_REG_NUM] = {	0x85c, 0xe6c, 0xe70, 0xe74,
-												0xe78, 0xe7c, 0xe80, 0xe84,
-												0xe88, 0xe8c, 0xed0, 0xed4,
-												0xed8, 0xedc, 0xee0, 0xeec };
+													0xe78, 0xe7c, 0xe80, 0xe84,
+													0xe88, 0xe8c, 0xed0, 0xed4,
+													0xed8, 0xedc, 0xee0, 0xeec };
 
 	u32			IQK_MAC_REG[IQK_MAC_REG_NUM] = {0x522, 0x550,	0x551,0x040};
-
-	u32			IQK_BB_REG[IQK_BB_REG_NUM] = {
-						0xc04, 	0xc08,	0x874,	0xb68,	0xb6c,
-						0x870,	0x860,	0x864,	0x800	
-						};	
-	
 #if MP_DRIVER
 	const u32	retryCount = 9;
 #else
@@ -4311,9 +4153,8 @@ _PHY_IQCalibrate(
 		//RTPRINT(FINIT, INIT_IQK, ("IQ Calibration for %s\n", (is2T ? "2T2R" : "1T1R")));
 	
 	 	// Save ADDA parameters, turn Path A ADDA on
-	 	_PHY_SaveADDARegisters(pAdapter, ADDA_REG, pHalData->ADDA_backup,IQK_ADDA_REG_NUM);
+	 	_PHY_SaveADDARegisters(pAdapter, ADDA_REG, pHalData->ADDA_backup);
 		_PHY_SaveMACRegisters(pAdapter, IQK_MAC_REG, pHalData->IQK_MAC_backup);
-		_PHY_SaveADDARegisters(pAdapter, IQK_BB_REG, pHalData->IQK_BB_backup, IQK_BB_REG_NUM);
 	}
  	_PHY_PathADDAOn(pAdapter, ADDA_REG, _TRUE, is2T);
 
@@ -4325,16 +4166,16 @@ _PHY_IQCalibrate(
 		// Switch BB to PI mode to do IQ Calibration.
 		_PHY_PIModeSwitch(pAdapter, _TRUE);
 	}
-
-	
-	PHY_SetBBReg(pAdapter, 0x800, BIT24, 0x00);		
+	if(t==0)
+	{
+	// Store 0xC04, 0xC08, 0x874 vale
+	 	pHalData->RegC04 = PHY_QueryBBReg(pAdapter, 0xc04, bMaskDWord);
+	 	pHalData->RegC08 = PHY_QueryBBReg(pAdapter, 0xc08, bMaskDWord);
+	 	pHalData->Reg874 = PHY_QueryBBReg(pAdapter, 0x874, bMaskDWord);
+	}
 	PHY_SetBBReg(pAdapter, 0xc04, bMaskDWord, 0x03a05600);
 	PHY_SetBBReg(pAdapter, 0xc08, bMaskDWord, 0x000800e4);
 	PHY_SetBBReg(pAdapter, 0x874, bMaskDWord, 0x22204000);
-	PHY_SetBBReg(pAdapter, 0x870, BIT10, 0x01);
-	PHY_SetBBReg(pAdapter, 0x870, BIT26, 0x01);	
-	PHY_SetBBReg(pAdapter, 0x860, BIT10, 0x00);
-	PHY_SetBBReg(pAdapter, 0x864, BIT10, 0x00);	
 
 	if(is2T)
 	{
@@ -4416,11 +4257,25 @@ _PHY_IQCalibrate(
 		}
 	}
 
-
+#if 0
+	_PHY_PathAFillIQKMatrix(pAdapter,bPathAOK);
+	if(is2T){
+		_PHY_PathBFillIQKMatrix(pAdapter,bPathBOK);
+	}
+#endif	
 	//Back to BB mode, load original value
 	//RTPRINT(FINIT, INIT_IQK, ("IQK:Back to BB mode, load original value!\n"));
+	PHY_SetBBReg(pAdapter, 0xc04, bMaskDWord, pHalData->RegC04);
+	PHY_SetBBReg(pAdapter, 0x874, bMaskDWord, pHalData->Reg874);
+	PHY_SetBBReg(pAdapter, 0xc08, bMaskDWord, pHalData->RegC08);
+
 	PHY_SetBBReg(pAdapter, 0xe28, bMaskDWord, 0);
 
+	// Restore RX initial gain
+	PHY_SetBBReg(pAdapter, 0x840, bMaskDWord, 0x00032ed3);
+	if(is2T){
+		PHY_SetBBReg(pAdapter, 0x844, bMaskDWord, 0x00032ed3);
+	}
 	if(t!=0)
 	{
 		if(!pHalData->bRfPiEnable){
@@ -4429,26 +4284,11 @@ _PHY_IQCalibrate(
 	        }
 
 		// Reload ADDA power saving parameters
-	 	_PHY_ReloadADDARegisters(pAdapter, ADDA_REG, pHalData->ADDA_backup, IQK_ADDA_REG_NUM);
+	 	_PHY_ReloadADDARegisters(pAdapter, ADDA_REG, pHalData->ADDA_backup);
 
 		// Reload MAC parameters
 		_PHY_ReloadMACRegisters(pAdapter, IQK_MAC_REG, pHalData->IQK_MAC_backup);
-		
-	 	// Reload BB parameters
-	 	_PHY_ReloadADDARegisters(pAdapter, IQK_BB_REG, pHalData->IQK_BB_backup, IQK_BB_REG_NUM);
-
-		// Restore RX initial gain
-		PHY_SetBBReg(pAdapter, 0x840, bMaskDWord, 0x00032ed3);
-		if(is2T){
-			PHY_SetBBReg(pAdapter, 0x844, bMaskDWord, 0x00032ed3);
-	        }
-
-		//load 0xe30 IQC default value
-		PHY_SetBBReg(pAdapter, 0xe30, bMaskDWord, 0x01008c00);		
-		PHY_SetBBReg(pAdapter, 0xe34, bMaskDWord, 0x01008c00);				
-		
 	}
-	
 	//RTPRINT(FINIT, INIT_IQK, ("_PHY_IQCalibrate() <==\n"));
 	
 }
@@ -4466,12 +4306,12 @@ _PHY_LCCalibrate(
 	BOOLEAN	isNormal = IS_NORMAL_CHIP(pHalData->VersionID);
 
 	//Check continuous TX and Packet TX
-	tmpReg = (u8)rtw_read32(pAdapter, 0xd03);
+	tmpReg = read32(pAdapter, 0xd03);
 
 	if((tmpReg&0x70) != 0)			//Deal with contisuous TX case
-		rtw_write8(pAdapter, 0xd03, tmpReg&0x8F);	//disable all continuous TX
+		write8(pAdapter, 0xd03, tmpReg&0x8F);	//disable all continuous TX
 	else 							// Deal with Packet TX case
-		rtw_write8(pAdapter, REG_TXPAUSE, 0xFF);			// block all queues
+		write8(pAdapter, 0x42, 0xFF);			// block all queues
 
 	if((tmpReg&0x70) != 0)
 	{
@@ -4499,15 +4339,15 @@ _PHY_LCCalibrate(
 	PHY_SetRFReg(pAdapter, RF90_PATH_A, 0x18, bMask12Bits, LC_Cal|0x08000);
 
 	if(isNormal)
-		rtw_mdelay_os(100);		
+		mdelay_os(100);		
 	else
-		rtw_mdelay_os(3);
+		mdelay_os(3);
 
 	//Restore original situation
 	if((tmpReg&0x70) != 0)	//Deal with contisuous TX case 
 	{  
 		//Path-A
-		rtw_write8(pAdapter, 0xd03, tmpReg);
+		write8(pAdapter, 0xd03, tmpReg);
 		PHY_SetRFReg(pAdapter, RF90_PATH_A, 0x00, bMask12Bits, RF_Amode);
 		
 		//Path-B
@@ -4516,7 +4356,7 @@ _PHY_LCCalibrate(
 	}
 	else // Deal with Packet TX case
 	{
-		rtw_write8(pAdapter, REG_TXPAUSE, 0x00);	
+		write8(pAdapter, 0x42, 0x00);	
 	}
 	
 }
@@ -4540,7 +4380,7 @@ _PHY_APCalibrate(
 	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(pAdapter);
 
 	u32 			regD[PATH_NUM];
-	u32			tmpReg, index, offset, path, i, pathbound = PATH_NUM, apkbound;
+	u32			tmpReg, index, offset, path, i, pathbound = PATH_NUM;
 			
 	u32			BB_backup[APK_BB_REG_NUM];
 	u32			BB_REG[APK_BB_REG_NUM] = {	
@@ -4559,18 +4399,14 @@ _PHY_APCalibrate(
 						0xed0, 0xed4, 0xed8, 0xedc, 0xee0,
 						0xeec};
 
-	u32			MAC_backup[IQK_MAC_REG_NUM];
-	u32			MAC_REG[IQK_MAC_REG_NUM] = {
-						0x522, 0x550, 0x551, 0x040};
-
 	u32			APK_RF_init_value[PATH_NUM][APK_BB_REG_NUM] = {
 					{0x0852c, 0x1852c, 0x5852c, 0x1852c, 0x5852c},
 					{0x2852e, 0x0852e, 0x3852e, 0x0852e, 0x0852e}
 					};	
 
 	u32			APK_normal_RF_init_value[PATH_NUM][APK_BB_REG_NUM] = {
-					{0x0852c, 0x0a52c, 0x3a52c, 0x5a52c, 0x5a52c},	//path settings equal to path b settings
-					{0x0852c, 0x0a52c, 0x5a52c, 0x5a52c, 0x5a52c}
+					{0x0852c, 0x3852c, 0x0852c, 0x0852c, 0x4852c},
+					{0x2852e, 0x0852e, 0x3852e, 0x0852e, 0x0852e}
 					};
 	
 	u32			APK_RF_value_0[PATH_NUM][APK_BB_REG_NUM] = {
@@ -4579,8 +4415,8 @@ _PHY_APCalibrate(
 					};
 
 	u32			APK_normal_RF_value_0[PATH_NUM][APK_BB_REG_NUM] = {
-					{0x52019, 0x52017, 0x52010, 0x5200d, 0x5206a},	//path settings equal to path b settings
-					{0x52019, 0x52017, 0x52010, 0x5200d, 0x5206a}
+					{0x52019, 0x52017, 0x52013, 0x52010, 0x5200d},
+					{0x5201a, 0x52019, 0x52016, 0x52033, 0x52050}
 					};
 	
 	u32			APK_RF_value_A[PATH_NUM][APK_BB_REG_NUM] = {
@@ -4603,7 +4439,7 @@ _PHY_APCalibrate(
 	u32			APK_normal_value[PATH_NUM] = {
 					0x92680000, 0x12680000};					
 
-	s8			APK_delta_mapping[APK_BB_REG_NUM][13] = {
+	char			APK_delta_mapping[APK_BB_REG_NUM][13] = {
 					{-4, -3, -2, -2, -1, -1, 0, 1, 2, 3, 4, 5, 6},
 					{-4, -3, -2, -2, -1, -1, 0, 1, 2, 3, 4, 5, 6},											
 					{-6, -4, -2, -2, -1, -1, 0, 1, 2, 3, 4, 5, 6},
@@ -4612,16 +4448,16 @@ _PHY_APCalibrate(
 					};
 	
 	u32			APK_normal_setting_value_1[13] = {
-					0x01017018, 0xf7ed8f84, 0x1b1a1816, 0x2522201e, 0x322e2b28,
-					0x433f3a36, 0x5b544e49, 0x7b726a62, 0xa69a8f84, 0xdfcfc0b3,
+					0x01017018, 0xf7ed8f84, 0x40372d20, 0x5b554e48, 0x6f6a6560,
+					0x807c7873, 0x8f8b8884, 0x9d999693, 0xa9a6a3a0, 0xb5b2afac,
 					0x12680000, 0x00880000, 0x00880000
 					};
 
 	u32			APK_normal_setting_value_2[16] = {
-					0x01c7021d, 0x01670183, 0x01000123, 0x00bf00e2, 0x008d00a3,
-					0x0068007b, 0x004d0059, 0x003a0042, 0x002b0031, 0x001f0025,
-					0x0017001b, 0x00110014, 0x000c000f, 0x0009000b, 0x00070008,
-					0x00050006
+					0x00810100, 0x00400056, 0x002b0032, 0x001f0024, 0x0019001c,
+					0x00150017, 0x00120013, 0x00100011, 0x000e000f, 0x000c000d,
+					0x000b000c, 0x000a000b, 0x0009000a, 0x00090009, 0x00080008,
+					0x00080008
 					};
 	
 	u32			APK_result[PATH_NUM][APK_BB_REG_NUM];	//val_1_1a, val_1_2a, val_2a, val_3a, val_4a
@@ -4647,10 +4483,6 @@ _PHY_APCalibrate(
 
 	if(isNormal)
 	{
-// Temporarily do not allow normal driver to do the following settings because these offset
-// and value will cause RF internal PA to be unpredictably disabled by HW, such that RF Tx signal
-// will disappear after disable/enable card many times on 88CU. RF SD and DD have not find the
-// root cause, so we remove these actions temporarily. 
 #if (MP_DRIVER != 1)
 		return;
 #endif
@@ -4665,125 +4497,70 @@ _PHY_APCalibrate(
 
 		for(index = 0; index < APK_BB_REG_NUM; index ++)
 		{
-			for(path = 0; path < pathbound; path++)
-			{
-				APK_RF_init_value[path][index] = APK_normal_RF_init_value[path][index];
-				APK_RF_value_0[path][index] = APK_normal_RF_value_0[path][index];
-			}
+			APK_RF_init_value[0][index] = APK_normal_RF_init_value[0][index];
+			APK_RF_value_0[0][index] = APK_normal_RF_value_0[0][index];
 			BB_AP_MODE[index] = BB_normal_AP_MODE[index];
-		}			
+		}
 
-		apkbound = 6;
+		//path A APK
+		//load APK setting
+		//path-A		
+		offset = 0xb00;
+		for(index = 0; index < 11; index ++)			
+		{
+			PHY_SetBBReg(pAdapter, offset, bMaskDWord, APK_normal_setting_value_1[index]);
+			//RTPRINT(FINIT, INIT_IQK, ("PHY_APCalibrate() offset 0x%x value 0x%x\n", offset, PHY_QueryBBReg(pAdapter, offset, bMaskDWord))); 	
+			
+			offset += 0x04;
+		}
+
+		PHY_SetBBReg(pAdapter, 0xb98, bMaskDWord, 0x12680000);
+
+		offset = 0xb68;
+		for(; index < 13; index ++)			
+		{
+			PHY_SetBBReg(pAdapter, offset, bMaskDWord, APK_normal_setting_value_1[index]);
+			//RTPRINT(FINIT, INIT_IQK, ("PHY_APCalibrate() offset 0x%x value 0x%x\n", offset, PHY_QueryBBReg(pAdapter, offset, bMaskDWord))); 	
+			
+			offset += 0x04;
+		}	
+
+		//page-B1
+		PHY_SetBBReg(pAdapter, 0xe28, bMaskDWord, 0x40000000);
+
+		offset = 0xb00;
+		for(index = 0; index < 16; index++)
+		{
+			PHY_SetBBReg(pAdapter, offset, bMaskDWord, APK_normal_setting_value_2[index]);		
+			//RTPRINT(FINIT, INIT_IQK, ("PHY_APCalibrate() offset 0x%x value 0x%x\n", offset, PHY_QueryBBReg(pAdapter, offset, bMaskDWord))); 	
+			
+			offset += 0x04;
+		}
+
+		PHY_SetBBReg(pAdapter, 0xe28, bMaskDWord, 0x00000000);
+		
+			
 	}
 	else
 	{
 		PHY_SetBBReg(pAdapter, 0xb68, bMaskDWord, 0x0fe00000);
 		if(is2T)
 			PHY_SetBBReg(pAdapter, 0xb68, bMaskDWord, 0x0fe00000);
-		apkbound = 12;
 	}
 	
-	//save BB default value
+	//save BB default value													
 	for(index = 0; index < APK_BB_REG_NUM ; index++)
-	{
-		if(index == 0 && isNormal)		//skip 
-			continue;				
 		BB_backup[index] = PHY_QueryBBReg(pAdapter, BB_REG[index], bMaskDWord);
-	}
-	
-	//save MAC default value													
-	_PHY_SaveMACRegisters(pAdapter, MAC_REG, MAC_backup);
-	
+
 	//save AFE default value
-	_PHY_SaveADDARegisters(pAdapter, AFE_REG, AFE_backup,16);
+	for(index = 0; index < APK_AFE_REG_NUM ; index++)
+		AFE_backup[index] = PHY_QueryBBReg(pAdapter, AFE_REG[index], bMaskDWord);
 
 	for(path = 0; path < pathbound; path++)
 	{
 		//save old AP curve													
 		if(isNormal)
 		{
-			if(path == RF90_PATH_A)
-			{
-				//path A APK
-				//load APK setting
-				//path-A		
-				offset = 0xb00;
-				for(index = 0; index < 11; index ++)			
-				{
-					PHY_SetBBReg(pAdapter, offset, bMaskDWord, APK_normal_setting_value_1[index]);
-					//RTPRINT(FINIT, INIT_IQK, ("PHY_APCalibrate() offset 0x%x value 0x%x\n", offset, PHY_QueryBBReg(pAdapter, offset, bMaskDWord))); 	
-					
-					offset += 0x04;
-				}
-				
-				PHY_SetBBReg(pAdapter, 0xb98, bMaskDWord, 0x12680000);
-				
-				offset = 0xb68;
-				for(; index < 13; index ++) 		
-				{
-					PHY_SetBBReg(pAdapter, offset, bMaskDWord, APK_normal_setting_value_1[index]);
-					//RTPRINT(FINIT, INIT_IQK, ("PHY_APCalibrate() offset 0x%x value 0x%x\n", offset, PHY_QueryBBReg(pAdapter, offset, bMaskDWord))); 	
-					
-					offset += 0x04;
-				}	
-				
-				//page-B1
-				PHY_SetBBReg(pAdapter, 0xe28, bMaskDWord, 0x40000000);
-				
-				//path A
-				offset = 0xb00;
-				for(index = 0; index < 16; index++)
-				{
-					PHY_SetBBReg(pAdapter, offset, bMaskDWord, APK_normal_setting_value_2[index]);		
-					//RTPRINT(FINIT, INIT_IQK, ("PHY_APCalibrate() offset 0x%x value 0x%x\n", offset, PHY_QueryBBReg(pAdapter, offset, bMaskDWord))); 	
-					
-					offset += 0x04;
-				}				
-				PHY_SetBBReg(pAdapter, 0xe28, bMaskDWord, 0x00000000);							
-			}
-			else if(path == RF90_PATH_B)
-			{
-				//path B APK
-				//load APK setting
-				//path-B		
-				offset = 0xb70;
-				for(index = 0; index < 10; index ++)			
-				{
-					PHY_SetBBReg(pAdapter, offset, bMaskDWord, APK_normal_setting_value_1[index]);
-					//RTPRINT(FINIT, INIT_IQK, ("PHY_APCalibrate() offset 0x%x value 0x%x\n", offset, PHY_QueryBBReg(pAdapter, offset, bMaskDWord))); 	
-					
-					offset += 0x04;
-				}
-				PHY_SetBBReg(pAdapter, 0xb28, bMaskDWord, 0x12680000);
-				
-				PHY_SetBBReg(pAdapter, 0xb98, bMaskDWord, 0x12680000);
-				
-				offset = 0xb68;
-				index = 11;
-				for(; index < 13; index ++) //offset 0xb68, 0xb6c		
-				{
-					PHY_SetBBReg(pAdapter, offset, bMaskDWord, APK_normal_setting_value_1[index]);
-					//RTPRINT(FINIT, INIT_IQK, ("PHY_APCalibrate() offset 0x%x value 0x%x\n", offset, PHY_QueryBBReg(pAdapter, offset, bMaskDWord))); 	
-					
-					offset += 0x04;
-				}	
-				
-				//page-B1
-				PHY_SetBBReg(pAdapter, 0xe28, bMaskDWord, 0x40000000);
-				
-				//path B
-				offset = 0xb60;
-				for(index = 0; index < 16; index++)
-				{
-					PHY_SetBBReg(pAdapter, offset, bMaskDWord, APK_normal_setting_value_2[index]);		
-					//RTPRINT(FINIT, INIT_IQK, ("PHY_APCalibrate() offset 0x%x value 0x%x\n", offset, PHY_QueryBBReg(pAdapter, offset, bMaskDWord))); 	
-					
-					offset += 0x04;
-				}				
-				PHY_SetBBReg(pAdapter, 0xe28, bMaskDWord, 0x00000000);							
-			}
-		
-#if 0		
 			tmpReg = PHY_QueryRFReg(pAdapter, (RF90_RADIO_PATH_E)path, 0x3, bMaskDWord);
 			AP_curve[path][0] = tmpReg & 0x1F;				//[4:0]
 
@@ -4791,7 +4568,6 @@ _PHY_APCalibrate(
 			AP_curve[path][1] = (tmpReg & 0xF8000) >> 15; 	//[19:15]						
 			AP_curve[path][2] = (tmpReg & 0x7C00) >> 10;	//[14:10]
 			AP_curve[path][3] = (tmpReg & 0x3E0) >> 5;		//[9:5]			
-#endif			
 		}
 		else
 		{
@@ -4813,30 +4589,17 @@ _PHY_APCalibrate(
 
 		//BB to AP mode
 		if(path == 0)
-		{				
+		{
 			for(index = 0; index < APK_BB_REG_NUM ; index++)
-			{
-				if(index == 0 && isNormal)		//skip 
-					continue;			
 				PHY_SetBBReg(pAdapter, BB_REG[index], bMaskDWord, BB_AP_MODE[index]);
-			}
 		}
 
 		//RTPRINT(FINIT, INIT_IQK, ("PHY_APCalibrate() offset 0x800 %x\n", PHY_QueryBBReg(pAdapter, 0x800, bMaskDWord)));				
-
-		//MAC settings
-		_PHY_MACSettingCalibration(pAdapter, MAC_REG, MAC_backup);
 		
-		if(path == RF90_PATH_A)	//Path B to standby mode
-		{
+		if(path == 0)	//Path B to standby mode
 			PHY_SetRFReg(pAdapter, RF90_PATH_B, 0x0, bMaskDWord, 0x10000);			
-		}
 		else			//Path A to standby mode
-		{
-			PHY_SetRFReg(pAdapter, RF90_PATH_A, 0x00, bMaskDWord, 0x10000);			
-			PHY_SetRFReg(pAdapter, RF90_PATH_A, 0x10, bMaskDWord, 0x1000f);			
-			PHY_SetRFReg(pAdapter, RF90_PATH_A, 0x11, bMaskDWord, 0x20103);						
-		}
+			PHY_SetRFReg(pAdapter, RF90_PATH_A, 0x0, bMaskDWord, 0x10000);			
 
 		delta_offset = ((delta+14)/2);
 		if(delta_offset < 0)
@@ -4847,7 +4610,8 @@ _PHY_APCalibrate(
 		//AP calibration
 		for(index = 0; index < APK_BB_REG_NUM; index++)
 		{
-			if(index != 1 && isNormal)		//only DO PA11+PAD01001, AP RF setting
+	
+			if(index == 0 && isNormal)		//skip 
 				continue;
 					
 			tmpReg = APK_RF_init_value[path][index];
@@ -4865,7 +4629,7 @@ _PHY_APCalibrate(
 				
 				BB_offset += delta_V;
 
-				//RTPRINT(FINIT, INIT_IQK, ("PHY_APCalibrate() APK index %d tmpReg 0x%x delta_V %d delta_offset %d\n", index, tmpReg, delta_V, delta_offset));		
+				//RTPRINT(FINIT, INIT_IQK, ("PHY_APCalibrate() APK num %d delta_V %d delta_offset %d\n", index, delta_V, delta_offset));		
 				
 				if(BB_offset < 0)
 				{
@@ -4879,9 +4643,6 @@ _PHY_APCalibrate(
 				tmpReg = (tmpReg & 0xFFF0FFFF) | (BB_offset << 16);
 			}
 #endif
-
-			PHY_SetRFReg(pAdapter, (RF90_RADIO_PATH_E)path, 0xc, bMaskDWord, 0x8992e);
-			//RTPRINT(FINIT, INIT_IQK, ("PHY_APCalibrate() offset 0xc %x\n", PHY_QueryRFReg(pAdapter, (RF90_RADIO_PATH_E)path, 0xc, bMaskDWord)));		
 			PHY_SetRFReg(pAdapter, (RF90_RADIO_PATH_E)path, 0x0, bMaskDWord, APK_RF_value_0[path][index]);
 			//RTPRINT(FINIT, INIT_IQK, ("PHY_APCalibrate() offset 0x0 %x\n", PHY_QueryRFReg(pAdapter, (RF90_RADIO_PATH_E)path, 0x0, bMaskDWord)));		
 			PHY_SetRFReg(pAdapter, (RF90_RADIO_PATH_E)path, 0xd, bMaskDWord, tmpReg);
@@ -4897,103 +4658,70 @@ _PHY_APCalibrate(
 			do
 			{
 				PHY_SetBBReg(pAdapter, 0xe28, bMaskDWord, 0x80000000);
+//				if(index == 4)
 				{
 					PHY_SetBBReg(pAdapter, APK_offset[path], bMaskDWord, APK_value[0]);		
 					//RTPRINT(FINIT, INIT_IQK, ("PHY_APCalibrate() offset 0x%x value 0x%x\n", APK_offset[path], PHY_QueryBBReg(pAdapter, APK_offset[path], bMaskDWord)));
-					rtw_mdelay_os(3);
+					mdelay_os(3);				
 					PHY_SetBBReg(pAdapter, APK_offset[path], bMaskDWord, APK_value[1]);
 					//RTPRINT(FINIT, INIT_IQK, ("PHY_APCalibrate() offset 0x%x value 0x%x\n", APK_offset[path], PHY_QueryBBReg(pAdapter, APK_offset[path], bMaskDWord)));
 					if(isNormal)
-					 	rtw_mdelay_os(20);
+					    mdelay_os(20);
 					else
-						rtw_mdelay_os(3);
+					    mdelay_os(3);
 				}
 				PHY_SetBBReg(pAdapter, 0xe28, bMaskDWord, 0x00000000);
+				tmpReg = PHY_QueryRFReg(pAdapter, (RF90_RADIO_PATH_E)path, 0xb, bMaskDWord);
+				//RTPRINT(FINIT, INIT_IQK, ("PHY_APCalibrate() offset 0xb %x\n", tmpReg));		
 				
-				if(!isNormal)
-				{
-					tmpReg = PHY_QueryRFReg(pAdapter, (RF90_RADIO_PATH_E)path, 0xb, bMaskDWord);
 				tmpReg = (tmpReg & 0x3E00) >> 9;
-				}
-				else
-				{
-					if(path == RF90_PATH_A)
-						tmpReg = PHY_QueryBBReg(pAdapter, 0xbd8, 0x03E00000);
-					else
-						tmpReg = PHY_QueryBBReg(pAdapter, 0xbd8, 0xF8000000);
-				}
-				//RTPRINT(FINIT, INIT_IQK, ("PHY_APCalibrate() offset 0xbd8[25:21] %x\n", tmpReg));		
-				
-
 				i++;
 			}
-			while(tmpReg > apkbound && i < 4);
+			while(tmpReg > 12 && i < 4);
 
 			APK_result[path][index] = tmpReg;
 		}
 	}
-
-	//reload MAC default value	
-	_PHY_ReloadMACRegisters(pAdapter, MAC_REG, MAC_backup);
 	
 	//reload BB default value	
 	for(index = 0; index < APK_BB_REG_NUM ; index++)
-	{
-		if(index == 0 && isNormal)		//skip 
-			continue;					
 		PHY_SetBBReg(pAdapter, BB_REG[index], bMaskDWord, BB_backup[index]);
-	}
 
 	//reload AFE default value
-	_PHY_ReloadADDARegisters(pAdapter, AFE_REG, AFE_backup, 16);
+	for(index = 0; index < APK_AFE_REG_NUM ; index++)
+		PHY_SetBBReg(pAdapter, AFE_REG[index], bMaskDWord, AFE_backup[index]);
 
 	//reload RF path default value
 	for(path = 0; path < pathbound; path++)
 	{
 		PHY_SetRFReg(pAdapter, (RF90_RADIO_PATH_E)path, 0xd, bMaskDWord, regD[path]);
-		if(path == RF90_PATH_B)
+
+#if 0
+		for(index = 0; index < APK_BB_REG_NUM ; index++)
 		{
-			PHY_SetRFReg(pAdapter, RF90_PATH_A, 0x10, bMaskDWord, 0x1000f);			
-			PHY_SetRFReg(pAdapter, RF90_PATH_A, 0x11, bMaskDWord, 0x20101);						
+			if(APK_result[path][index] > 12)
+				APK_result[path][index] = AP_curve[path][index];
+				
+			RTPRINT(FINIT, INIT_IQK, ("apk result %d 0x%x \t", index, APK_result[path][index]));
 		}
-#if 1
-		if(!isNormal)
-		{
-			for(index = 0; index < APK_BB_REG_NUM ; index++)
-			{
-				if(APK_result[path][index] > 12)
-					APK_result[path][index] = AP_curve[path][index-1];
-				//RTPRINT(FINIT, INIT_IQK, ("apk result %d 0x%x \t", index, APK_result[path][index]));
-			}
-		}
-		else
-		{		//note no index == 0
-			if (APK_result[path][1] > 6)
-				APK_result[path][1] = 6;
-			//RTPRINT(FINIT, INIT_IQK, ("apk path %d result %d 0x%x \t", path, 1, APK_result[path][1]));			
+#endif
+		if(APK_result[path][1] < 1 || APK_result[path][1] > 5)
+			APK_result[path][1] = AP_curve[path][0];
+		//RTPRINT(FINIT, INIT_IQK, ("apk result %d 0x%x \t", 1, APK_result[path][1]));			
 
-#if 0			
-			if(APK_result[path][2] < 2)
-				APK_result[path][2] = 2;
-			else if (APK_result[path][2] > 6)
-				APK_result[path][2] = 6;			
-		RTPRINT(FINIT, INIT_IQK, ("apk result %d 0x%x \t", 2, APK_result[path][2]));			
+		if(APK_result[path][2] < 2 || APK_result[path][2] > 6)
+			APK_result[path][2] = AP_curve[path][1];
+		//RTPRINT(FINIT, INIT_IQK, ("apk result %d 0x%x \t", 2, APK_result[path][2]));			
 
-			if(APK_result[path][3] < 2)
-				APK_result[path][3] = 2;
-			else if (APK_result[path][3] > 6)
-				APK_result[path][3] = 6;			
-		RTPRINT(FINIT, INIT_IQK, ("apk result %d 0x%x \t", 3, APK_result[path][3]));			
+		if(APK_result[path][3] < 2 || APK_result[path][3] > 6)
+			APK_result[path][3] = AP_curve[path][2];
+		//RTPRINT(FINIT, INIT_IQK, ("apk result %d 0x%x \t", 3, APK_result[path][3]));			
 
-			if(APK_result[path][4] < 5)
-				APK_result[path][4] = 5;
-			else if (APK_result[path][4] > 9)
-				APK_result[path][4] = 9;			
-		RTPRINT(FINIT, INIT_IQK, ("apk result %d 0x%x \t", 4, APK_result[path][4]));			
-#endif			
+		if(APK_result[path][4] < 5 || APK_result[path][4] > 9)
+			APK_result[path][4] = AP_curve[path][3];
+		//RTPRINT(FINIT, INIT_IQK, ("apk result %d 0x%x \t", 4, APK_result[path][4]));			
 		
-		}
-#endif		
+		
 		
 	}
 
@@ -5006,21 +4734,17 @@ _PHY_APCalibrate(
 		{
 			PHY_SetRFReg(pAdapter, (RF90_RADIO_PATH_E)path, 0x3, bMaskDWord, 
 			((APK_result[path][1] << 15) | (APK_result[path][1] << 10) | (APK_result[path][1] << 5) | APK_result[path][1]));
-			if(path == RF90_PATH_A)
-				PHY_SetRFReg(pAdapter, (RF90_RADIO_PATH_E)path, 0x4, bMaskDWord, 
-				((APK_result[path][1] << 15) | (APK_result[path][1] << 10) | (0x00 << 5) | 0x05));		
-			else
 			PHY_SetRFReg(pAdapter, (RF90_RADIO_PATH_E)path, 0x4, bMaskDWord, 
-				((APK_result[path][1] << 15) | (APK_result[path][1] << 10) | (0x02 << 5) | 0x05));						
+			((APK_result[path][2] << 15) | (APK_result[path][3] << 10) | (APK_result[path][4] << 5) | APK_result[path][4]));		
 			PHY_SetRFReg(pAdapter, (RF90_RADIO_PATH_E)path, 0xe, bMaskDWord, 
-			((0x08 << 15) | (0x08 << 10) | (0x08 << 5) | 0x08));			
+			((APK_result[path][4] << 15) | (APK_result[path][4] << 10) | (APK_result[path][4] << 5) | APK_result[path][4]));			
 		}
 		else
 		{
 			for(index = 0; index < 2; index++)
 				pHalData->APKoutput[path][index] = ((APK_result[path][index] << 15) | (APK_result[path][2] << 10) | (APK_result[path][3] << 5) | APK_result[path][4]);
 
-#if MP_DRIVER == 1
+#if (MP_DRIVER == 1)
 			if(pMptCtx->TxPwrLevel[path] > pMptCtx->APK_bound[path])	
 			{
 				PHY_SetRFReg(pAdapter, (RF90_RADIO_PATH_E)path, 0xe, bMaskDWord, 
@@ -5052,7 +4776,6 @@ void PHY_SetRFPath(IN	PADAPTER	pAdapter,u8 antenna)
 	HAL_DATA_TYPE	*pHalData	= GET_HAL_DATA(pAdapter);
 	PHY_SetBBReg(pAdapter, rFPGA0_XA_RFInterfaceOE, 0x300, antenna);
 #ifdef CONFIG_ANTENNA_DIVERSITY
-	printk("PHY_SetRFPath==> set RF_(%s) to RF_(%s) \n",(2==pHalData->CurAntenna)?"A":"B",(2==antenna)?"A":"B");
 	pHalData->CurAntenna = antenna ;
 #endif
 	
@@ -5118,21 +4841,16 @@ _PHY_DumpRFReg(IN	PADAPTER	pAdapter)
 
 VOID
 PHY_IQCalibrate(
-	IN	PADAPTER	pAdapter,
-	IN	BOOLEAN 	bReCovery
-	
+	IN	PADAPTER	pAdapter
 	)
 {
 	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(pAdapter);
-	u32			IQK_BB_REG[10] = {
-				rOFDM0_XARxIQImbalance, rOFDM0_XBRxIQImbalance, rOFDM0_ECCAThreshold, rOFDM0_AGCRSSITable,
-				rOFDM0_XATxIQImbalance, rOFDM0_XBTxIQImbalance, rOFDM0_XCTxIQImbalance, rOFDM0_XCTxAFE, rOFDM0_XDTxAFE, rOFDM0_RxIQExtAnta};
 	int			result[4][8];	//last is final result
 	u8			i, final_candidate;
 	BOOLEAN			bPathAOK, bPathBOK;
 	int			RegE94, RegE9C, RegEA4, RegEAC, RegEB4, RegEBC, RegEC4, RegECC, RegTmp = 0;
 	BOOLEAN			is12simular, is13simular, is23simular;	
-	BOOLEAN 		bStartContTx = _FALSE, bSingleTone = _FALSE;
+	BOOLEAN 		bStartContTx = _FALSE;
 #if (MP_DRIVER == 1)
 	bStartContTx = pAdapter->MptCtx.bStartContTx;
 #endif
@@ -5144,12 +4862,6 @@ PHY_IQCalibrate(
 #if DISABLE_BB_RF
 	return;
 #endif
-
-	if(bReCovery)
-	{
-		_PHY_ReloadADDARegisters(pAdapter, IQK_BB_REG, pHalData->IQK_BB_backup, 10);
-		return;
-	}
 
         DBG_8192C("IQK:Start!!!\n");
 
@@ -5256,13 +4968,6 @@ PHY_IQCalibrate(
 		if((RegEB4 != 0)/*&&(RegEC4 != 0)*/)
 		_PHY_PathBFillIQKMatrix(pAdapter, bPathBOK, result, final_candidate, (RegEC4 == 0));
 	}
-	_PHY_SaveADDARegisters(pAdapter, IQK_BB_REG, pHalData->IQK_BB_backup, 10);
-
-	#ifdef RTL8192C_RECONFIG_TO_1T1R
-	if(IS_92C_SERIAL(pHalData->VersionID))
-		//path B to standby mode
-		PHY_SetBBReg(pAdapter, 0x844, bMaskDWord, 0x00010000);
-	#endif
 
 }
 
@@ -5327,7 +5032,7 @@ PHY_APCalibrate(
 // Move from phycfg.c to gen.c to be code independent later
 // 
 //-------------------------Move to other DIR later----------------------------*/
-#if (DEV_BUS_TYPE == DEV_BUS_USB_INTERFACE)
+#if (DEV_BUS_TYPE == USB_INTERFACE)
 VOID
 DebugAllRegister_92SU_FPGA(
 	IN	PADAPTER			Adapter
@@ -5353,7 +5058,7 @@ DebugAllRegister_92SU_FPGA(
 		}
 			//RT_TRACE(COMP_FPGA, DBG_LOUD, ("%03lX              ", i));
 			}
-		u4bMacReg = rtw_read32(Adapter, i);
+		u4bMacReg = read32(Adapter, i);
 		//RT_TRACE(COMP_FPGA, DBG_LOUD, ("%08lX    ", u4bMacReg));
 		}
 	//RT_TRACE(COMP_FPGA, DBG_LOUD, ("\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"));
@@ -5379,26 +5084,26 @@ DumpAllTxFIFO_92SU(
 		//RT_TRACE(COMP_TXAGG, DBG_SERIOUS, ("\nDump all Tx FIFO Reg Section1:\n"));
 		for(PageIdx=0; PageIdx<0xff; PageIdx++)
 		{
-			rtw_write32(Adapter, 0x2b0, 0xb0280000+PageIdx*8);
-			u4bFIFOReg = rtw_read32(Adapter, 0x2b4);
+			write32(Adapter, 0x2b0, 0xb0280000+PageIdx*8);
+			u4bFIFOReg = read32(Adapter, 0x2b4);
 			//RT_TRACE(COMP_TXAGG, DBG_SERIOUS, ("%#x:\t%08x\n", PageIdx, u4bFIFOReg));
 		}
 
 		//RT_TRACE(COMP_TXAGG, DBG_SERIOUS, ("\nDump all Tx FIFO Reg Section2:\n"));
 		for(PageIdx=0; PageIdx<0xff; PageIdx++)
 		{
-			rtw_write32(Adapter, 0x2b0, 0xb0270000+PageIdx*8);
-			u4bFIFOReg = rtw_read32(Adapter, 0x2b4);
+			write32(Adapter, 0x2b0, 0xb0270000+PageIdx*8);
+			u4bFIFOReg = read32(Adapter, 0x2b4);
 			//RT_TRACE(COMP_TXAGG, DBG_SERIOUS, ("%#x:\t%08x\n", PageIdx, u4bFIFOReg));
 		}
 
 		//RT_TRACE(COMP_TXAGG, DBG_SERIOUS, ("\nDump Specific Data section:\n"));
 		for(PageIdx=0; PageIdx<0xff; PageIdx++)
 		{
-			rtw_write16(Adapter, 0x348, 0x2000+PageIdx*0x20);
-			u4bFIFOReg = rtw_read32(Adapter, 0x340);
+			write16(Adapter, 0x348, 0x2000+PageIdx*0x20);
+			u4bFIFOReg = read32(Adapter, 0x340);
 			PktOffset = (u8)((u4bFIFOReg & 0x00ff0000)>>16);			
-			u4bFIFOReg = rtw_read32(Adapter, 0x344);
+			u4bFIFOReg = read32(Adapter, 0x344);
 			QueueSel = (u8)((u4bFIFOReg & 0x00001f00)>>8);
 			if((PktOffset == 0x20) && (QueueSel == 0x13))
 			{
@@ -5484,7 +5189,7 @@ RtUsbCheckForHangWorkItemCallback(
 	//
 #if (HAL_CODE_BASE==RTL8192_C)
 
-#if (SILENT_RESET && (DEV_BUS_TYPE != DEV_BUS_USB_INTERFACE))
+#if (SILENT_RESET && (DEV_BUS_TYPE != USB_INTERFACE))
 	if((!Adapter->bDriverStopped) && (!Adapter->bSurpriseRemoved))	
 		PlatformScheduleWorkItem(&(pHalData->RtUsbCheckResetWorkItem));
 #endif
@@ -6137,7 +5842,7 @@ phy_SetRTL8192CERfSleep(
 		//Jump out the LPS turn off sequence to RF_ON_EXCEP
 		PlatformEFIOWrite1Byte(Adapter, REG_APSD_CTRL, 0x00);
 	
-#if (DEV_BUS_TYPE == DEV_BUS_PCI_INTERFACE)
+#if (DEV_BUS_TYPE == PCI_INTERFACE)
 		PlatformEFIOWrite1Byte(Adapter, REG_SYS_FUNC_EN, 0xE2);
 		PlatformEFIOWrite1Byte(Adapter, REG_SYS_FUNC_EN, 0xE3);
 #else
@@ -6150,7 +5855,7 @@ phy_SetRTL8192CERfSleep(
 	}
 
 	// e.	For PCIE: SYS_FUNC_EN 0x02[7:0] = 0xE2	//reset BB TRX function
-#if (DEV_BUS_TYPE == DEV_BUS_PCI_INTERFACE)
+#if (DEV_BUS_TYPE == PCI_INTERFACE)
 	PlatformEFIOWrite1Byte(Adapter, REG_SYS_FUNC_EN, 0xE2);
 #else
 	//e. For USB: SYS_FUNC_EN 0x02[7:0] = 0x16	//reset BB TRX function
@@ -6186,7 +5891,7 @@ phy_SetRTL8192CERfOn(
 
 	// c.	For PCIE: SYS_FUNC_EN 0x02[7:0] = 0xE3	//enable BB TRX function
 	//	For USB: SYS_FUNC_EN 0x02[7:0] = 0x17
-#if (DEV_BUS_TYPE == DEV_BUS_PCI_INTERFACE)
+#if (DEV_BUS_TYPE == PCI_INTERFACE)
 	PlatformEFIOWrite1Byte(Adapter, REG_SYS_FUNC_EN, 0xE3);
 #else
 	PlatformEFIOWrite1Byte(Adapter, REG_SYS_FUNC_EN, 0x17);
@@ -6198,7 +5903,7 @@ phy_SetRTL8192CERfOn(
 
 	// e.	For PCIE: SYS_FUNC_EN 0x02[7:0] = 0xE2	//reset BB TRX function again
 	//f.	For PCIE: SYS_FUNC_EN 0x02[7:0] = 0xE3	//enable BB TRX function
-#if (DEV_BUS_TYPE == DEV_BUS_PCI_INTERFACE)
+#if (DEV_BUS_TYPE == PCI_INTERFACE)
 	PlatformEFIOWrite1Byte(Adapter, REG_SYS_FUNC_EN, 0xE2);
 	PlatformEFIOWrite1Byte(Adapter, REG_SYS_FUNC_EN, 0xE3);
 #else

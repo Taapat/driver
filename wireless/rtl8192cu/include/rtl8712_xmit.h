@@ -1,22 +1,3 @@
-/******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
 #ifndef _RTL8712_XMIT_H_
 #define _RTL8712_XMIT_H_
 
@@ -283,18 +264,18 @@ int free_amsdu_xmitframe(struct xmit_priv *pxmitpriv, struct amsdu_xmit_frame *p
 struct agg_xmit_frame *alloc_txagg_xmitframe(struct xmit_priv *pxmitpriv);
 int free_txagg_xmitframe(struct xmit_priv *pxmitpriv, struct agg_xmit_frame *pxmitframe);
 
-void rtw_update_txdesc(struct xmit_frame *pxmitframe, uint *ptxdesc, int sz);
-void rtw_dump_xframe(_adapter *padapter, struct xmit_frame *pxmitframe);
+void update_txdesc(struct xmit_frame *pxmitframe, uint *ptxdesc, int sz);
+void dump_xframe(_adapter *padapter, struct xmit_frame *pxmitframe);
 
-int rtw_xmitframe_complete(_adapter *padapter, struct xmit_priv *pxmitpriv, struct xmit_buf *pxmitbuf);
+int xmitframe_complete(_adapter *padapter, struct xmit_priv *pxmitpriv, struct xmit_buf *pxmitbuf);
 
 
 struct xmit_frame *dequeue_one_xmitframe(struct xmit_priv *pxmitpriv, struct hw_xmit *phwxmit, struct tx_servq *ptxservq, _queue *pframe_queue);
 struct xmit_frame *dequeue_amsdu_xmitframe(struct xmit_priv *pxmitpriv, struct hw_xmit *phwxmit, struct tx_servq *ptxservq, _queue *pframe_queue);
-struct xmit_frame *rtw_dequeue_xframe(struct xmit_priv *pxmitpriv, struct hw_xmit *phwxmit, sint entry);
+struct xmit_frame *dequeue_xframe(struct xmit_priv *pxmitpriv, struct hw_xmit *phwxmit, sint entry);
 
-void rtw_do_queue_select(_adapter *padapter, struct pkt_attrib *pattrib);
-u32 rtw_get_ff_hwaddr(struct xmit_frame	*pxmitframe);
+void do_queue_select(_adapter *padapter, struct pkt_attrib *pattrib);
+u32 get_ff_hwaddr(struct xmit_frame	*pxmitframe);
 
 #endif
 

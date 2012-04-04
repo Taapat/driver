@@ -1,22 +1,4 @@
-/******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
+
 #ifndef _IO_H_
 #define _IO_H_
 
@@ -254,7 +236,6 @@ struct	intf_hdl {
 */
 	_adapter *padapter;
 	struct dvobj_priv *pintf_dev;//	pointer to &(padapter->dvobjpriv);
-	_mutex io_mutex;
 	struct _io_ops	io_ops;
 
 };
@@ -407,25 +388,25 @@ extern struct io_req *alloc_ioreq(struct io_queue *pio_q);
 extern uint register_intf_hdl(u8 *dev, struct intf_hdl *pintfhdl);
 extern void unregister_intf_hdl(struct intf_hdl *pintfhdl);
 
-extern void rtw_attrib_read(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
-extern void rtw_attrib_write(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
+extern void attrib_read(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
+extern void attrib_write(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
 
-extern u8 rtw_read8(_adapter *adapter, u32 addr);
-extern u16 rtw_read16(_adapter *adapter, u32 addr);
-extern u32 rtw_read32(_adapter *adapter, u32 addr);
-extern void rtw_read_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
-extern void rtw_read_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
-extern void rtw_write8(_adapter *adapter, u32 addr, u8 val);
-extern void rtw_write16(_adapter *adapter, u32 addr, u16 val);
-extern void rtw_write32(_adapter *adapter, u32 addr, u32 val);
+extern u8 read8(_adapter *adapter, u32 addr);
+extern u16 read16(_adapter *adapter, u32 addr);
+extern u32 read32(_adapter *adapter, u32 addr);
+extern void read_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
+extern void read_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
+extern void write8(_adapter *adapter, u32 addr, u8 val);
+extern void write16(_adapter *adapter, u32 addr, u16 val);
+extern void write32(_adapter *adapter, u32 addr, u32 val);
 extern void writeN(_adapter *adapter, u32 addr, u32 length, u8 *pdata);
 
 extern void write8_async(_adapter *adapter, u32 addr, u8 val);
 extern void write16_async(_adapter *adapter, u32 addr, u16 val);
 extern void write32_async(_adapter *adapter, u32 addr, u32 val);
 
-extern void rtw_write_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
-extern void rtw_write_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
+extern void write_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
+extern void write_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
 extern void write_scsi(_adapter *adapter, u32 cnt, u8 *pmem);
 
 void write_port_cancel(_adapter *adapter);
@@ -471,12 +452,12 @@ extern void dev_power_down(_adapter * Adapter, u8 bpwrup);
 
 
 
-#define RTL_R8(reg)		rtw_read8(padapter, reg)
-#define RTL_R16(reg)            rtw_read16(padapter, reg)
-#define RTL_R32(reg)            rtw_read32(padapter, reg)
-#define RTL_W8(reg, val8)       rtw_write8(padapter, reg, val8)
-#define RTL_W16(reg, val16)     rtw_write16(padapter, reg, val16)
-#define RTL_W32(reg, val32)     rtw_write32(padapter, reg, val32)
+#define RTL_R8(reg)		read8(padapter, reg)
+#define RTL_R16(reg)            read16(padapter, reg)
+#define RTL_R32(reg)            read32(padapter, reg)
+#define RTL_W8(reg, val8)       write8(padapter, reg, val8)
+#define RTL_W16(reg, val16)     write16(padapter, reg, val16)
+#define RTL_W32(reg, val32)     write32(padapter, reg, val32)
 
 /*
 #define RTL_W8_ASYNC(reg, val8) write32_async(padapter, reg, val8)

@@ -1,22 +1,3 @@
-/******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
 #ifndef _WIFI_H_
 #define _WIFI_H_
 
@@ -270,29 +251,29 @@ enum WIFI_REG_DOMAIN {
 		*(unsigned short *)(pbuf) |= cpu_to_le16(type); \
 	} while(0)
 
-#define GetSequence(pbuf)	(cpu_to_le16(*(unsigned short *)((SIZE_PTR)(pbuf) + 22)) >> 4)
+#define GetSequence(pbuf)	(cpu_to_le16(*(unsigned short *)((unsigned int)(pbuf) + 22)) >> 4)
 
-#define GetFragNum(pbuf)	(cpu_to_le16(*(unsigned short *)((SIZE_PTR)(pbuf) + 22)) & 0x0f)
+#define GetFragNum(pbuf)	(cpu_to_le16(*(unsigned short *)((unsigned int)(pbuf) + 22)) & 0x0f)
 
-#define GetTupleCache(pbuf)	(cpu_to_le16(*(unsigned short *)((SIZE_PTR)(pbuf) + 22)))
+#define GetTupleCache(pbuf)	(cpu_to_le16(*(unsigned short *)((unsigned int)(pbuf) + 22)))
 
 #define SetFragNum(pbuf, num) \
 	do {    \
-		*(unsigned short *)((SIZE_PTR)(pbuf) + 22) = \
-			((*(unsigned short *)((SIZE_PTR)(pbuf) + 22)) & le16_to_cpu(~(0x000f))) | \
+		*(unsigned short *)((unsigned int)(pbuf) + 22) = \
+			((*(unsigned short *)((unsigned int)(pbuf) + 22)) & le16_to_cpu(~(0x000f))) | \
 			cpu_to_le16(0x0f & (num));     \
 	} while(0)
 
 #define SetSeqNum(pbuf, num) \
 	do {    \
-		*(unsigned short *)((SIZE_PTR)(pbuf) + 22) = \
-			((*(unsigned short *)((SIZE_PTR)(pbuf) + 22)) & le16_to_cpu((unsigned short)~0xfff0)) | \
+		*(unsigned short *)((unsigned int)(pbuf) + 22) = \
+			((*(unsigned short *)((unsigned int)(pbuf) + 22)) & le16_to_cpu((unsigned short)~0xfff0)) | \
 			le16_to_cpu((unsigned short)(0xfff0 & (num << 4))); \
 	} while(0)
 
 #define SetDuration(pbuf, dur) \
 	do {    \
-		*(unsigned short *)((SIZE_PTR)(pbuf) + 2) = cpu_to_le16(0xffff & (dur)); \
+		*(unsigned short *)((unsigned int)(pbuf) + 2) |= cpu_to_le16(0xffff & (dur)); \
 	} while(0)
 
 
@@ -317,27 +298,21 @@ enum WIFI_REG_DOMAIN {
 		*(unsigned short *)(pbuf) |= cpu_to_le16( (amsdu & 1) << 7); \
 	} while(0)	
 
-#define GetAid(pbuf)	(cpu_to_le16(*(unsigned short *)((SIZE_PTR)(pbuf) + 2)) & 0x3fff)
+#define GetAid(pbuf)	(cpu_to_le16(*(unsigned short *)((unsigned int)(pbuf) + 2)) & 0x3fff)
 
-#define GetTid(pbuf)	(cpu_to_le16(*(unsigned short *)((SIZE_PTR)(pbuf) + (((GetToDs(pbuf)<<1)|GetFrDs(pbuf))==3?30:24))) & 0x000f)
+#define GetTid(pbuf)	(cpu_to_le16(*(unsigned short *)((unsigned int)(pbuf) + (((GetToDs(pbuf)<<1)|GetFrDs(pbuf))==3?30:24))) & 0x000f)
 
-#define GetAddr1Ptr(pbuf)	((unsigned char *)((SIZE_PTR)(pbuf) + 4))
+#define GetAddr1Ptr(pbuf)	((unsigned char *)((unsigned int)(pbuf) + 4))
 
-#define GetAddr2Ptr(pbuf)	((unsigned char *)((SIZE_PTR)(pbuf) + 10))
+#define GetAddr2Ptr(pbuf)	((unsigned char *)((unsigned int)(pbuf) + 10))
 
-#define GetAddr3Ptr(pbuf)	((unsigned char *)((SIZE_PTR)(pbuf) + 16))
+#define GetAddr3Ptr(pbuf)	((unsigned char *)((unsigned int)(pbuf) + 16))
 
-#define GetAddr4Ptr(pbuf)	((unsigned char *)((SIZE_PTR)(pbuf) + 24))
-
-#define MacAddr_isBcst(addr) \
-( \
-	( (addr[0] == 0xff) && (addr[1] == 0xff) && \
-		(addr[2] == 0xff) && (addr[3] == 0xff) && \
-		(addr[4] == 0xff) && (addr[5] == 0xff) )  ? _TRUE : _FALSE \
-)
+#define GetAddr4Ptr(pbuf)	((unsigned char *)((unsigned int)(pbuf) + 24))
 
 
-__inline static int IS_MCAST(unsigned char *da)
+
+static __inline int IS_MCAST(unsigned char *da)
 {
 	if ((*da) & 0x01)
 		return _TRUE;
@@ -346,7 +321,7 @@ __inline static int IS_MCAST(unsigned char *da)
 }
 
 
-__inline static unsigned char * get_da(unsigned char *pframe)
+static __inline unsigned char * get_da(unsigned char *pframe)
 {
 	unsigned char 	*da;
 	unsigned int	to_fr_ds	= (GetToDs(pframe) << 1) | GetFrDs(pframe);
@@ -370,7 +345,7 @@ __inline static unsigned char * get_da(unsigned char *pframe)
 }
 
 
-__inline static unsigned char * get_sa(unsigned char *pframe)
+static __inline unsigned char * get_sa(unsigned char *pframe)
 {
 	unsigned char 	*sa;
 	unsigned int	to_fr_ds	= (GetToDs(pframe) << 1) | GetFrDs(pframe);
@@ -393,7 +368,7 @@ __inline static unsigned char * get_sa(unsigned char *pframe)
 	return sa;
 }
 
-__inline static unsigned char * get_hdr_bssid(unsigned char *pframe)
+static __inline unsigned char * get_hdr_bssid(unsigned char *pframe)
 {
 	unsigned char 	*sa;
 	unsigned int	to_fr_ds	= (GetToDs(pframe) << 1) | GetFrDs(pframe);
@@ -409,7 +384,7 @@ __inline static unsigned char * get_hdr_bssid(unsigned char *pframe)
 			sa = GetAddr1Ptr(pframe);
 			break;
 		default:	// ToDs=1, FromDs=1
-			sa = GetAddr2Ptr(pframe);
+			sa =NULL; //???????
 			break;
 	}
 
@@ -417,7 +392,7 @@ __inline static unsigned char * get_hdr_bssid(unsigned char *pframe)
 }
 
 
-__inline static int IsFrameTypeCtrl(unsigned char *pframe)
+static __inline int IsFrameTypeCtrl(unsigned char *pframe)
 {
 	if(WIFI_CTRL_TYPE == GetFrameType(pframe))
 		return _TRUE;
@@ -465,9 +440,6 @@ __inline static int IsFrameTypeCtrl(unsigned char *pframe)
 #define _HT_CAPABILITY_IE_			45
 #define _HT_EXTRA_INFO_IE_			61
 #define _HT_ADD_INFO_IE_			61 //_HT_EXTRA_INFO_IE_
-
-#define	EID_BSSCoexistence			72 // 20/40 BSS Coexistence
-#define	EID_BSSIntolerantChlReport	73
 
 #define _VENDOR_SPECIFIC_IE_		221
 

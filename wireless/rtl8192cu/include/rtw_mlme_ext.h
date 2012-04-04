@@ -1,22 +1,4 @@
-/******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
+
 #ifndef __RTL871X_MLME_EXT_H_
 #define __RTL871X_MLME_EXT_H_
 
@@ -29,7 +11,7 @@
 #define REAUTH_TO			(50)
 #define REASSOC_TO		(50)
 //#define DISCONNECT_TO	(3000)
-#define ADDBA_TO			(2000)
+#define ADDBA_TO			(50)
 
 #define LINKED_TO (1) //unit:2 sec, 1x2=2 sec
 
@@ -101,22 +83,6 @@ typedef enum _RT_CHANNEL_DOMAIN
 	RT_CHANNEL_DOMAIN_MAX,
 }RT_CHANNEL_DOMAIN, *PRT_CHANNEL_DOMAIN;
 
-typedef struct _RT_CHANNEL_PLAN
-{
-	u8	Channel[32];
-	u8	Len;
-}RT_CHANNEL_PLAN, *PRT_CHANNEL_PLAN;
-
-
-// Scan type including active and passive scan.
-typedef enum _RT_SCAN_TYPE
-{
-	SCAN_PASSIVE,
-	SCAN_ACTIVE,
-	SCAN_MIX,
-}RT_SCAN_TYPE, *PRT_SCAN_TYPE;
-
-
 enum Associated_AP
 {
 	atherosAP	= 0,
@@ -137,18 +103,12 @@ struct mlme_handler {
 	unsigned int (*func)(_adapter *padapter, union recv_frame *precv_frame);
 };
 
-struct action_handler {
-	unsigned int   num;
-	char* str;
-	unsigned int (*func)(_adapter *padapter, union recv_frame *precv_frame);
-};
-
 struct	ss_res	
 {
 	int							state;
 	int							bss_cnt;
 	int							channel_idx;
-	int							scan_mode;
+	int							active_mode;
 	int							ss_ssidlen;
 	unsigned char 	ss_ssid[IW_ESSID_MAX_SIZE + 1];
 };
@@ -207,7 +167,6 @@ struct mlme_ext_info
 	unsigned char		HT_enable;
 	unsigned char		HT_caps_enable;
 	unsigned char		HT_info_enable;
-	unsigned char		HT_protection;
 	unsigned char		agg_enable_bitmap;
 	unsigned char		ADDBA_retry_count;
 	unsigned char		candidate_tid_bitmap;
@@ -219,17 +178,7 @@ struct mlme_ext_info
 	struct FW_Sta_Info FW_sta_info[NUM_STA];
 	// Accept ADDBA Request
 	BOOLEAN				bAcceptAddbaReq;	
-	unsigned char              bwmode_updated;	
 };
-// The channel information about this channel including joining, scanning, and power constraints.
-typedef struct _RT_CHANNEL_INFO
-{
-	u8				ChannelNum;		// The channel number.
-	RT_SCAN_TYPE	ScanType;		// Scan type such as passive or active scan.
-	//u16				ScanPeriod;		// Listen time in millisecond in this channel.
-	//s32				MaxTxPwrDbm;	// Max allowed tx power.
-	//u32				ExInfo;			// Extended Information for this channel.
-}RT_CHANNEL_INFO, *PRT_CHANNEL_INFO;
 
 struct mlme_ext_priv
 {
@@ -244,10 +193,7 @@ struct mlme_ext_priv
 	unsigned char		cur_bwmode;
 	unsigned char 		cur_ch_offset;//PRIME_CHNL_OFFSET
 	unsigned char 		cur_wireless_mode;
-	//unsigned char		channel_set[NUM_CHANNELS];
-	unsigned char			max_chan_nums;
-	RT_CHANNEL_INFO		channel_set[NUM_CHANNELS];
-	
+	unsigned char		channel_set[NUM_CHANNELS];
 	unsigned char		basicrate[NumRates];
 	unsigned char		datarate[NumRates];
 	
@@ -256,8 +202,8 @@ struct mlme_ext_priv
                                                      //for ap mode, network includes ap's cap_info
 	_timer		survey_timer;
 	_timer		link_timer;
-	//_timer		ADDBA_timer;
-	u8			chan_scan_time;
+	_timer		ADDBA_timer;
+	u8			chan_stay_time;
 
 	unsigned int	linked_to;//linked timeout
 	
@@ -272,7 +218,6 @@ struct mlme_ext_priv
 int init_mlme_ext_priv(_adapter* padapter);
 void free_mlme_ext_priv (struct mlme_ext_priv *pmlmeext);
 extern void init_mlme_ext_timer(_adapter *padapter);
-extern void init_addba_retry_timer(_adapter *padapter, struct sta_info *psta);
 
 extern struct xmit_frame *alloc_mgtxmitframe(struct xmit_priv *pxmitpriv);
 
@@ -296,7 +241,6 @@ void SetBWMode(_adapter *padapter, unsigned short bwmode, unsigned char channel_
 unsigned int decide_wait_for_beacon_timeout(unsigned int bcn_interval);
 
 void write_cam(_adapter *padapter, u8 entry, u16 ctrl, u8 *mac, u8 *key);
-void read_cam(_adapter *padapter ,u8 entry);
 
 void invalidate_cam_all(_adapter *padapter);
 void CAM_mark_invalid(PADAPTER Adapter, u8 ucIndex);
@@ -336,7 +280,7 @@ void update_IOT_info(_adapter *padapter);
 void update_EDCA_param(_adapter *padapter);
 int update_sta_support_rate(_adapter *padapter, u8* pvar_ie, uint var_ie_len, int cam_idx);
 
-void Update_RA_Entry(_adapter *padapter, unsigned int mac_id);
+void Update_RA_Entry(_adapter *padapter, unsigned int cam_idx);
 void enable_rate_adaptive(_adapter *padapter);
 void set_sta_rate(_adapter *padapter);
 
@@ -369,8 +313,8 @@ void issue_auth(_adapter *padapter, struct sta_info *psta, unsigned short status
 void issue_probereq(_adapter *padapter, u8 blnbc);
 void issue_nulldata(_adapter *padapter, unsigned int power_mode);
 void issue_deauth(_adapter *padapter, unsigned char *da, unsigned short reason);
-void issue_action_BA(_adapter *padapter, unsigned char *raddr, unsigned char action, unsigned short status);
-unsigned int send_delba(_adapter *padapter, u8 initiator, u8 *addr);
+void issue_action_BA(_adapter *padapter, unsigned char category, unsigned char action, unsigned short status);
+unsigned int send_delba(_adapter *padapter, u8 initiator);
 
 void start_clnt_assoc(_adapter *padapter);
 void start_clnt_auth(_adapter* padapter);
@@ -390,12 +334,6 @@ unsigned int OnAuthClient(_adapter *padapter, union recv_frame *precv_frame);
 unsigned int OnDeAuth(_adapter *padapter, union recv_frame *precv_frame);
 unsigned int OnAction(_adapter *padapter, union recv_frame *precv_frame);
 
-unsigned int OnAction_qos(_adapter *padapter, union recv_frame *precv_frame);
-unsigned int OnAction_dls(_adapter *padapter, union recv_frame *precv_frame);
-unsigned int OnAction_back(_adapter *padapter, union recv_frame *precv_frame);
-unsigned int OnAction_public(_adapter *padapter, union recv_frame *precv_frame);
-unsigned int OnAction_ht(_adapter *padapter, union recv_frame *precv_frame);
-unsigned int OnAction_wmm(_adapter *padapter, union recv_frame *precv_frame);
 
 void mlmeext_joinbss_event_callback(_adapter *padapter);
 void mlmeext_sta_del_event_callback(_adapter *padapter);
@@ -405,7 +343,7 @@ void linked_status_chk(_adapter *padapter);
 
 void survey_timer_hdl (_adapter *padapter);
 void link_timer_hdl (_adapter *padapter);
-void addba_timer_hdl(struct sta_info *psta);
+void addba_timer_hdl(_adapter *padapter);
 //void reauth_timer_hdl(_adapter *padapter);
 //void reassoc_timer_hdl(_adapter *padapter);
 
@@ -429,9 +367,5 @@ void	expire_timeout_chk(_adapter *padapter);
 	
 #endif //end of CONFIG_AP_MODE
 
-
-#ifdef SILENT_RESET_FOR_SPECIFIC_PLATFOM
-void silentreset_for_specific_platform(_adapter *padapter);
-#endif
 #endif
 

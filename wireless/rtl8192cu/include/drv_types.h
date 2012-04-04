@@ -1,23 +1,3 @@
-/******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
-
 /*-------------------------------------------------------------------------------
 	
 	For type defines and data structure defines
@@ -139,7 +119,6 @@ struct registry_priv
 	 u8                  long_retry_lmt;
 	 u8                  short_retry_lmt;
   	 u16                 busy_thresh;
-
     	 u8                  ack_policy;
 	 u8		     mp_mode;	
 	 u8 		     software_encrypt;
@@ -180,10 +159,6 @@ struct registry_priv
 #ifdef CONFIG_ANTENNA_DIVERSITY
 	u8		antdiv_cfg;
 #endif
-	  
-	u8		usbss_enable;//0:disable,1:enable
-	u8		hwpdn_mode;//0:disable,1:enable,2:deside by EFUSE config
-	u8		hwpwrp_detect;//0:disable,1:enable
 	  
 };
 
@@ -236,7 +211,7 @@ struct dvobj_priv {
 	u8 cmdfifo_cnt;
 	u8 rxfifo_cnt;
 	u16	sdio_hisr;
-	u16	sdio_himr;
+	u16	sdio_himr;	
 #endif//	CONFIG_SDIO_HCI
 
 /*-------- below is for USB INTERFACE --------*/
@@ -266,15 +241,12 @@ struct dvobj_priv {
 #ifdef PLATFORM_OS_CE
 	WCHAR			active_path[MAX_ACTIVE_REG_PATH];	// adapter regpath
 	USB_EXTENSION	usb_extension;
-
-	_nic_hdl		pipehdls_r8192c[0x10];
 #endif
 
 	u32	config_descriptor_len;//ULONG UsbConfigurationDescriptorLength;	
 #endif//PLATFORM_WINDOWS
 
 #ifdef PLATFORM_LINUX
-	struct usb_interface *pusbintf;
 	struct usb_device *pusbdev;
 #endif//PLATFORM_LINUX
 
@@ -282,28 +254,8 @@ struct dvobj_priv {
 	
 };
 
-#ifdef SILENT_RESET_FOR_SPECIFIC_PLATFOM
-#define	WIFI_STATUS_SUCCESS 		0
-#define	USB_VEN_REQ_CMD_FAIL 	BIT0
-#define	USB_READ_PORT_FAIL 		BIT1
-#define	USB_WRITE_PORT_FAIL		BIT2
-#define	WIFI_MAC_TXDMA_ERROR 	BIT3			
-#define   WIFI_TX_HANG				BIT4
-#define	WIFI_RX_HANG				BIT5
-#define 	WIFI_IF_NOT_EXIST			BIT6
-#endif	
 
-typedef enum _DRIVER_STATE{
-	DRIVER_NORMAL = 0,
-	DRIVER_DISAPPEAR = 1,
-	DRIVER_REPLACE_DONGLE = 2,
-}DRIVER_STATE;
-
-struct _ADAPTER{
-	int	DriverState;// for disable driver using module, use dongle to replace module.
-	int 	chip_type;
-	int	pid;//process id from UI
-	int	bDongle;//build-in module or external dongle
+struct _ADAPTER{	
  	
 	struct 	dvobj_priv dvobjpriv;
 	struct	mlme_priv mlmepriv;
@@ -336,16 +288,13 @@ struct _ADAPTER{
 	struct	hostapd_priv	*phostapdpriv;		
 #endif
 
+	int 	chip_type;
+#ifdef CONFIG_BT_COEXIST
+	struct btcoexist_priv		bt_coexist;	
+#endif
 	s32	bDriverStopped; 
 	s32	bSurpriseRemoved;
 	s32  bCardDisableWOHSM;
-	_mutex 	silentreset_mutex;
-#ifdef SILENT_RESET_FOR_SPECIFIC_PLATFOM
-	u8 	silent_reset_inprogress;
-	u8	Wifi_Error_Status;
-	unsigned long last_tx_time;
-	unsigned long last_tx_complete_time;
-#endif		
 
 	u32	IsrContent;
 	u32	ImrContent;	
@@ -379,21 +328,18 @@ struct _ADAPTER{
 	int bup;
 	struct net_device_stats stats;
 	struct iw_statistics iwstats;
-	struct proc_dir_entry *dir_dev;// for proc directory
 #endif //end of PLATFORM_LINUX
+
+	int pid;//process id from UI
 
 	int net_closed;
 
 	u8 bFWReady;
 	u8 bReadPortCancel;
-	u8 bWritePortCancel;	
-
-#ifdef CONFIG_AUTOSUSPEND
-	u8	bDisableAutosuspend;
-#endif
+	u8 bWritePortCancel;
 };	
   
-__inline static u8 *myid(struct eeprom_priv *peepriv)
+static __inline u8 *myid(struct eeprom_priv *peepriv)
 {
 	return (peepriv->mac_addr);
 }

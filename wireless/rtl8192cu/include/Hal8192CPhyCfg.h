@@ -1,23 +1,3 @@
-/******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
-
 /*****************************************************************************
  *	Copyright(c) 2008,  RealTEK Technology Inc. All Right Reserved.
  *
@@ -53,7 +33,7 @@
 #define PHY_SetMacReg			PHY_SetBBReg
 
 
-#if (DEV_BUS_TYPE == DEV_BUS_PCI_INTERFACE)
+#if (DEV_BUS_TYPE == PCI_INTERFACE)
 #define	SET_RTL8192SE_RF_SLEEP(_pAdapter)							\
 {																	\
 	u1Byte		u1bTmp;												\
@@ -306,10 +286,6 @@ extern	void	PHY_SetRFReg(	IN	PADAPTER			Adapter,
 extern	int	PHY_MACConfig8192C(	IN	PADAPTER	Adapter	);
 extern	int	PHY_BBConfig8192C(	IN	PADAPTER	Adapter	);
 extern	int	PHY_RFConfig8192C(	IN	PADAPTER	Adapter	);
-
-#ifdef RTL8192C_RECONFIG_TO_1T1R
-extern void	PHY_Reconfig_To_1T1R(_adapter *padapter);
-#endif
 /* RF config */
 extern	int	PHY_ConfigRFWithParaFile(	IN	PADAPTER	Adapter,
 												IN	u8* 	pFileName,
@@ -401,7 +377,7 @@ extern	BOOLEAN	PHY_CheckIsLegalRfPath8192C(IN	PADAPTER	pAdapter,
 //
 // IQ calibrate
 //
-void	PHY_IQCalibrate(	IN	PADAPTER	pAdapter, IN BOOLEAN bReCovery);
+void	PHY_IQCalibrate(	IN	PADAPTER	pAdapter);
 
 
 //

@@ -1,22 +1,4 @@
-/******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
+
 #ifndef __IEEE80211_H
 #define __IEEE80211_H
 
@@ -1135,104 +1117,35 @@ extern __inline int ieee80211_get_hdrlen(u16 fc)
 	return hdrlen;
 }
 
-#if 0
-/* Action frame categories (IEEE 802.11-2007, 7.3.1.11, Table 7-24) */
-#define WLAN_ACTION_SPECTRUM_MGMT 0
-#define WLAN_ACTION_QOS 1
-#define WLAN_ACTION_DLS 2
-#define WLAN_ACTION_BLOCK_ACK 3
-#define WLAN_ACTION_RADIO_MEASUREMENT 5
-#define WLAN_ACTION_FT 6
-#define WLAN_ACTION_SA_QUERY 8
-#define WLAN_ACTION_WMM 17
-#endif
 
+u8 *set_fixed_ie(unsigned char *pbuf, unsigned int len, unsigned char *source, unsigned int *frlen);
+u8 *set_ie(u8 *pbuf, sint index, uint len, u8 *source, uint *frlen);
+u8 *get_ie(u8*pbuf, sint index, sint *len, sint limit);
+void set_supported_rate(u8* SupportedRates, uint mode) ;
 
-/* Action category code */
-enum ieee80211_category {
-	WLAN_CATEGORY_SPECTRUM_MGMT = 0,
-	WLAN_CATEGORY_QOS = 1,
-	WLAN_CATEGORY_DLS = 2,
-	WLAN_CATEGORY_BACK = 3,
-	WLAN_CATEGORY_PUBLIC = 4, //P2P public action frames
-	WLAN_CATEGORY_RADIO_MEASUREMENT  = 5,
-	WLAN_CATEGORY_FT = 6,
-	WLAN_CATEGORY_HT = 7,
-	WLAN_CATEGORY_SA_QUERY = 8,
-	WLAN_CATEGORY_WMM = 17,
-};
+unsigned char *get_wpa_ie(unsigned char *pie, int *wpa_ie_len, int limit);
+unsigned char *get_wpa2_ie(unsigned char *pie, int *rsn_ie_len, int limit);
+int get_wpa_cipher_suite(u8 *s);
+int get_wpa2_cipher_suite(u8 *s);
+int parse_wpa_ie(u8* wpa_ie, int wpa_ie_len, int *group_cipher, int *pairwise_cipher);
+int parse_wpa2_ie(u8* wpa_ie, int wpa_ie_len, int *group_cipher, int *pairwise_cipher);
 
-/* SPECTRUM_MGMT action code */
-enum ieee80211_spectrum_mgmt_actioncode {
-	WLAN_ACTION_SPCT_MSR_REQ = 0,
-	WLAN_ACTION_SPCT_MSR_RPRT = 1,
-	WLAN_ACTION_SPCT_TPC_REQ = 2,
-	WLAN_ACTION_SPCT_TPC_RPRT = 3,
-	WLAN_ACTION_SPCT_CHL_SWITCH = 4,
-	WLAN_ACTION_SPCT_EXT_CHL_SWITCH = 5,
-};
+int get_sec_ie(u8 *in_ie,uint in_len,u8 *rsn_ie,u16 *rsn_len,u8 *wpa_ie,u16 *wpa_len);
+int get_wps_ie(u8 *in_ie, uint in_len, u8 *wps_ie, uint *wps_ielen);
 
-enum _PUBLIC_ACTION{
-	ACT_PUBLIC_BSSCOEXIST = 0, // 20/40 BSS Coexistence
-	ACT_PUBLiC_MP = 7, // Measurement Pilot
-};
-
-/* BACK action code */
-enum ieee80211_back_actioncode {
-	WLAN_ACTION_ADDBA_REQ = 0,
-	WLAN_ACTION_ADDBA_RESP = 1,
-	WLAN_ACTION_DELBA = 2,
-};
-
-/* HT features action code */
-enum ieee80211_ht_actioncode {
-	WLAN_ACTION_NOTIFY_CH_WIDTH = 0,
-       WLAN_ACTION_SM_PS = 1,
-       WLAN_ACTION_PSPM = 2,
-       WLAN_ACTION_PCO_PHASE = 3,
-       WLAN_ACTION_MIMO_CSI_MX = 4,
-       WLAN_ACTION_MIMO_NONCP_BF = 5,
-       WLAN_ACTION_MIMP_CP_BF = 6,
-       WLAN_ACTION_ASEL_INDICATES_FB = 7,
-       WLAN_ACTION_HI_INFO_EXCHG = 8,
-};
-
-/* BACK (block-ack) parties */
-enum ieee80211_back_parties {
-	WLAN_BACK_RECIPIENT = 0,
-	WLAN_BACK_INITIATOR = 1,
-	WLAN_BACK_TIMER = 2,
-};
-
-
-u8 *rtw_set_fixed_ie(unsigned char *pbuf, unsigned int len, unsigned char *source, unsigned int *frlen);
-u8 *rtw_set_ie(u8 *pbuf, sint index, uint len, u8 *source, uint *frlen);
-u8 *rtw_get_ie(u8*pbuf, sint index, sint *len, sint limit);
-void rtw_set_supported_rate(u8* SupportedRates, uint mode) ;
-
-unsigned char *rtw_get_wpa_ie(unsigned char *pie, int *wpa_ie_len, int limit);
-unsigned char *rtw_get_wpa2_ie(unsigned char *pie, int *rsn_ie_len, int limit);
-int rtw_get_wpa_cipher_suite(u8 *s);
-int rtw_get_wpa2_cipher_suite(u8 *s);
-int rtw_parse_wpa_ie(u8* wpa_ie, int wpa_ie_len, int *group_cipher, int *pairwise_cipher);
-int rtw_parse_wpa2_ie(u8* wpa_ie, int wpa_ie_len, int *group_cipher, int *pairwise_cipher);
-
-int rtw_get_sec_ie(u8 *in_ie,uint in_len,u8 *rsn_ie,u16 *rsn_len,u8 *wpa_ie,u16 *wpa_len);
-int rtw_get_wps_ie(u8 *in_ie, uint in_len, u8 *wps_ie, uint *wps_ielen);
-
-uint	rtw_get_rateset_len(u8	*rateset);
+uint	get_rateset_len(u8	*rateset);
 
 struct registry_priv;
-int rtw_generate_ie(struct registry_priv *pregistrypriv);
+int generate_ie(struct registry_priv *pregistrypriv);
 
 
-int rtw_get_bit_value_from_ieee_value(u8 val);
+int get_bit_value_from_ieee_value(u8 val);
 
-uint	rtw_is_cckrates_included(u8 *rate);
+uint	is_cckrates_included(u8 *rate);
 
-uint	rtw_is_cckratesonly_included(u8 *rate);
+uint	is_cckratesonly_included(u8 *rate);
 
-int rtw_check_network_type(unsigned char *rate, int ratelen, int channel);
+int check_network_type(unsigned char *rate, int ratelen, int channel);
 
 
 #endif /* IEEE80211_H */

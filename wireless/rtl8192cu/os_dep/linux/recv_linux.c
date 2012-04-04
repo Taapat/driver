@@ -1,22 +1,20 @@
 /******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
+* recv_linux.c                                                                                                                                 *
+*                                                                                                                                          *
+* Description :                                                                                                                       *
+*                                                                                                                                           *
+* Author :                                                                                                                       *
+*                                                                                                                                         *
+* History :                                                          
+*
+*                                        
+*                                                                                                                                       *
+* Copyright 2007, Realtek Corp.                                                                                                  *
+*                                                                                                                                        *
+* The contents of this file is the sole property of Realtek Corp.  It can not be                                     *
+* be used, copied or modified without written permission from Realtek Corp.                                         *
+*                                                                                                                                          *
+*******************************************************************************/
 #define _RECV_OSDEP_C_
 
 #include <drv_conf.h>
@@ -36,7 +34,7 @@
 #endif
 
 //init os related resource in struct recv_priv
-int rtw_os_recv_resource_init(struct recv_priv *precvpriv, _adapter *padapter)
+int os_recv_resource_init(struct recv_priv *precvpriv, _adapter *padapter)
 {	
 	int	res=_SUCCESS;
 
@@ -44,7 +42,7 @@ int rtw_os_recv_resource_init(struct recv_priv *precvpriv, _adapter *padapter)
 }
 
 //alloc os related resource in union recv_frame
-int rtw_os_recv_resource_alloc(_adapter *padapter, union recv_frame *precvframe)
+int os_recv_resource_alloc(_adapter *padapter, union recv_frame *precvframe)
 {	
 	int	res=_SUCCESS;
 	struct recv_priv *precvpriv = &(padapter->recvpriv);	
@@ -56,14 +54,14 @@ int rtw_os_recv_resource_alloc(_adapter *padapter, union recv_frame *precvframe)
 }
 
 //free os related resource in union recv_frame
-void rtw_os_recv_resource_free(struct recv_priv *precvpriv)
+void os_recv_resource_free(struct recv_priv *precvpriv)
 {
 
 }
 
 
 //alloc os related resource in struct recv_buf
-int rtw_os_recvbuf_resource_alloc(_adapter *padapter, struct recv_buf *precvbuf)
+int os_recvbuf_resource_alloc(_adapter *padapter, struct recv_buf *precvbuf)
 {
 	int res=_SUCCESS;
 
@@ -103,7 +101,7 @@ int rtw_os_recvbuf_resource_alloc(_adapter *padapter, struct recv_buf *precvbuf)
 }
 
 //free os related resource in struct recv_buf
-int rtw_os_recvbuf_resource_free(_adapter *padapter, struct recv_buf *precvbuf)
+int os_recvbuf_resource_free(_adapter *padapter, struct recv_buf *precvbuf)
 {
 	int ret = _SUCCESS;
 	
@@ -121,14 +119,14 @@ int rtw_os_recvbuf_resource_free(_adapter *padapter, struct recv_buf *precvbuf)
 	return ret;	
 }
 
-void rtw_handle_tkip_mic_err(_adapter *padapter,u8 bgroup)
+void handle_tkip_mic_err(_adapter *padapter,u8 bgroup)
 {
     union iwreq_data wrqu;
     struct iw_michaelmicfailure    ev;
     struct mlme_priv*              pmlmepriv  = &padapter->mlmepriv;
 
     
-    _rtw_memset( &ev, 0x00, sizeof( ev ) );
+    _memset( &ev, 0x00, sizeof( ev ) );
     if ( bgroup )
     {
         ev.flags |= IW_MICFAILURE_GROUP;
@@ -139,9 +137,9 @@ void rtw_handle_tkip_mic_err(_adapter *padapter,u8 bgroup)
     }
    
     ev.src_addr.sa_family = ARPHRD_ETHER;
-    _rtw_memcpy( ev.src_addr.sa_data, &pmlmepriv->assoc_bssid[ 0 ], ETH_ALEN );
+    _memcpy( ev.src_addr.sa_data, &pmlmepriv->assoc_bssid[ 0 ], ETH_ALEN );
 
-    _rtw_memset( &wrqu, 0x00, sizeof( wrqu ) );
+    _memset( &wrqu, 0x00, sizeof( wrqu ) );
     wrqu.data.length = sizeof( ev );
 
     wireless_send_event( padapter->pnetdev, IWEVMICHAELMICFAILURE, &wrqu, (char*) &ev );
@@ -180,20 +178,19 @@ void hostapd_mlme_rx(_adapter *padapter, union recv_frame *precv_frame)
 	skb_reset_mac_header(skb);
 
        //skb_pull(skb, 24);
-       _rtw_memset(skb->cb, 0, sizeof(skb->cb));        
+       _memset(skb->cb, 0, sizeof(skb->cb));        
 
 	netif_rx(skb);
 
-	precv_frame->u.hdr.pkt = NULL; // set pointer to NULL before rtw_free_recvframe() if call netif_rx()
+	precv_frame->u.hdr.pkt = NULL; // set pointer to NULL before free_recvframe() if call netif_rx()
 #endif	
 }
 
-void rtw_recv_indicatepkt(_adapter *padapter, union recv_frame *precv_frame)
+void recv_indicatepkt(_adapter *padapter, union recv_frame *precv_frame)
 {	
        struct recv_priv *precvpriv;
        _queue	*pfree_recv_queue;	     
 	_pkt *skb;	
-	struct mlme_priv*pmlmepriv = &padapter->mlmepriv;
 #ifdef CONFIG_RTL8712_TCP_CSUM_OFFLOAD_RX
 	struct rx_pkt_attrib *pattrib = &precv_frame->u.hdr.attrib;
 #endif
@@ -206,7 +203,7 @@ _func_enter_;
 #ifdef CONFIG_DRVEXT_MODULE		
 	if (drvext_rx_handler(padapter, precv_frame->u.hdr.rx_data, precv_frame->u.hdr.len) == _SUCCESS)
 	{		
-		rtw_free_recvframe(precv_frame, pfree_recv_queue);
+		free_recvframe(precv_frame, pfree_recv_queue);
 		return;
 	}
 #endif
@@ -214,75 +211,20 @@ _func_enter_;
 	skb = precv_frame->u.hdr.pkt;	       
        if(skb == NULL)
        {        
-            RT_TRACE(_module_recv_osdep_c_,_drv_err_,("rtw_recv_indicatepkt():skb==NULL something wrong!!!!\n"));		   
+            RT_TRACE(_module_recv_osdep_c_,_drv_err_,("recv_indicatepkt():skb==NULL something wrong!!!!\n"));		   
 	     goto _recv_indicatepkt_drop;
 	}
 
 	   
-	RT_TRACE(_module_recv_osdep_c_,_drv_info_,("rtw_recv_indicatepkt():skb != NULL !!!\n"));		
-	RT_TRACE(_module_recv_osdep_c_,_drv_info_,("rtw_recv_indicatepkt():precv_frame->u.hdr.rx_head=%p  precv_frame->hdr.rx_data=%p\n", precv_frame->u.hdr.rx_head, precv_frame->u.hdr.rx_data));
+	RT_TRACE(_module_recv_osdep_c_,_drv_info_,("recv_indicatepkt():skb != NULL !!!\n"));		
+	RT_TRACE(_module_recv_osdep_c_,_drv_info_,("recv_indicatepkt():precv_frame->u.hdr.rx_head=%p  precv_frame->hdr.rx_data=%p\n", precv_frame->u.hdr.rx_head, precv_frame->u.hdr.rx_data));
 	RT_TRACE(_module_recv_osdep_c_,_drv_info_,("precv_frame->hdr.rx_tail=%p precv_frame->u.hdr.rx_end=%p precv_frame->hdr.len=%d \n", precv_frame->u.hdr.rx_tail, precv_frame->u.hdr.rx_end, precv_frame->u.hdr.len));
 		
 	skb->data = precv_frame->u.hdr.rx_data;
-	
-#ifdef NET_SKBUFF_DATA_USES_OFFSET	
-	skb_set_tail_pointer(skb, precv_frame->u.hdr.len);
-#else
-	skb->tail = precv_frame->u.hdr.rx_tail;
-#endif
-
+	skb->tail = precv_frame->u.hdr.rx_tail;	
 	skb->len = precv_frame->u.hdr.len;
 	
 	RT_TRACE(_module_recv_osdep_c_,_drv_info_,("\n skb->head=%p skb->data=%p skb->tail=%p skb->end=%p skb->len=%d\n", skb->head, skb->data, skb->tail, skb->end, skb->len));
-	
-	if(check_fwstate(pmlmepriv, WIFI_AP_STATE) == _TRUE)	 	
-	{	 	
-	 	_pkt *pskb2=NULL;
-	 	struct sta_info *psta = NULL;
-	 	struct sta_priv *pstapriv = &padapter->stapriv;	
-		struct rx_pkt_attrib *pattrib = &precv_frame->u.hdr.attrib;	
-		int bmcast = IS_MCAST(pattrib->dst);
-
-		//DBG_871X("bmcast=%d\n", bmcast);
-
-		if(_rtw_memcmp(pattrib->dst, myid(&padapter->eeprompriv), ETH_ALEN)==_FALSE)		
-		{
-			psta = rtw_get_stainfo(pstapriv, pattrib->dst);
-
-			//DBG_871X("not ap psta=%p, addr=%pM\n", psta, pattrib->dst);
-
-			if(bmcast)
-			{
-				pskb2 = skb_clone(skb, GFP_ATOMIC);	
-			}
-
-			if(psta)
-			{
-				//DBG_871X("directly forwarding to the xmit_entry\n");
-
-				//skb->ip_summed = CHECKSUM_NONE;	
-				//skb->protocol = eth_type_trans(skb, pnetdev);
-
-				skb->dev = padapter->pnetdev;	
-				rtw_xmit_entry(skb, padapter->pnetdev);			
-		
-				if(bmcast == _FALSE)				
-				        goto _recv_indicatepkt_end;			
-			
-			}
-
-			if(bmcast)
-				skb = pskb2;
-			
-		}
-		else// to APself
-		{
-			//DBG_871X("to APSelf\n");
-		}
-		
-	}
-
-
 	
 #ifdef CONFIG_RTL8712_TCP_CSUM_OFFLOAD_RX
         if ( (pattrib->tcpchk_valid == 1) && (pattrib->tcp_chkrpt == 1) ) {
@@ -297,19 +239,17 @@ _func_enter_;
 	skb->ip_summed = CHECKSUM_NONE;
 
 #endif
-
 	skb->dev = padapter->pnetdev;
 	skb->protocol = eth_type_trans(skb, padapter->pnetdev);
 	
 	netif_rx(skb);
 
-_recv_indicatepkt_end:
 
-	precv_frame->u.hdr.pkt = NULL; // pointers to NULL before rtw_free_recvframe()
+	precv_frame->u.hdr.pkt = NULL; // pointers to NULL before free_recvframe()
 
-	rtw_free_recvframe(precv_frame, pfree_recv_queue);
+	free_recvframe(precv_frame, pfree_recv_queue);
 
-	RT_TRACE(_module_recv_osdep_c_,_drv_info_,("\n rtw_recv_indicatepkt :after netif_rx!!!!\n"));
+	RT_TRACE(_module_recv_osdep_c_,_drv_info_,("\n recv_indicatepkt :after netif_rx!!!!\n"));
 
 _func_exit_;		
 
@@ -319,7 +259,7 @@ _recv_indicatepkt_drop:
 
 	 //enqueue back to free_recv_queue	
 	 if(precv_frame)
-		 rtw_free_recvframe(precv_frame, pfree_recv_queue);
+		 free_recvframe(precv_frame, pfree_recv_queue);
 
 	 
  	 precvpriv->rx_drop++;	
@@ -328,7 +268,7 @@ _func_exit_;
 
 }
 
-void rtw_os_read_port(_adapter *padapter, struct recv_buf *precvbuf)
+void os_read_port(_adapter *padapter, struct recv_buf *precvbuf)
 {	
 	struct recv_priv *precvpriv = &padapter->recvpriv;
 
@@ -344,7 +284,7 @@ void rtw_os_read_port(_adapter *padapter, struct recv_buf *precvbuf)
 
 	if(precvbuf->irp_pending == _FALSE)
 	{
-		rtw_read_port(padapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
+		read_port(padapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
 	}	
 		
 
@@ -355,17 +295,17 @@ void rtw_os_read_port(_adapter *padapter, struct recv_buf *precvbuf)
 
 }
 
-void _rtw_reordering_ctrl_timeout_handler (void *FunctionContext)
+void _reordering_ctrl_timeout_handler (void *FunctionContext)
 {
 	struct recv_reorder_ctrl *preorder_ctrl = (struct recv_reorder_ctrl *)FunctionContext;
-	rtw_reordering_ctrl_timeout_handler(preorder_ctrl);
+	reordering_ctrl_timeout_handler(preorder_ctrl);
 }
 
-void rtw_init_recv_timer(struct recv_reorder_ctrl *preorder_ctrl)
+void init_recv_timer(struct recv_reorder_ctrl *preorder_ctrl)
 {
 	_adapter *padapter = preorder_ctrl->padapter;
 
-	_init_timer(&(preorder_ctrl->reordering_ctrl_timer), padapter->pnetdev, _rtw_reordering_ctrl_timeout_handler, preorder_ctrl);
+	_init_timer(&(preorder_ctrl->reordering_ctrl_timer), padapter->pnetdev, _reordering_ctrl_timeout_handler, preorder_ctrl);
 	
 }
 

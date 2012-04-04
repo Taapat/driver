@@ -1,22 +1,3 @@
-/******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
 #ifndef	__RTL871X_RF_H_ 
 #define __RTL871X_RF_H_
 
@@ -108,10 +89,10 @@ typedef	enum _RT_RF_TYPE_DEFINITION
 }RT_RF_TYPE_DEF_E;
 
 struct setphyinfo_parm;
-static void init_phyinfo(_adapter  *adapter, struct setphyinfo_parm* psetphyinfopara);
-static u8 writephyinfo_fw(_adapter *padapter, u32 addr);
-u32 rtw_ch2freq(u32 ch);
-u32 rtw_freq2ch(u32 freq);
+void init_phyinfo(_adapter  *adapter, struct setphyinfo_parm* psetphyinfopara);
+u8 writephyinfo_fw(_adapter *padapter, u32 addr);
+u32 ch2freq(u32 ch);
+u32 freq2ch(u32 freq);
 
 
 #ifdef CONFIG_RTL8712

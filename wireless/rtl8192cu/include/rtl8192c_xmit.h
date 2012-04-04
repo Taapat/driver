@@ -1,22 +1,3 @@
-/******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
 #ifndef _RTL8192C_XMIT_H_
 #define _RTL8192C_XMIT_H_
 
@@ -116,17 +97,19 @@ union txdesc {
 };
 
 void cal_txdesc_chksum(struct tx_desc	*ptxdesc);
-s32 rtw_update_txdesc(struct xmit_frame *pxmitframe, u32 *ptxdesc, s32 sz);
-void rtw_dump_xframe(_adapter *padapter, struct xmit_frame *pxmitframe);
+s32 update_txdesc(struct xmit_frame *pxmitframe, u32 *ptxdesc, s32 sz);
+void dump_xframe(_adapter *padapter, struct xmit_frame *pxmitframe);
 
-s32 rtw_xmitframe_complete(_adapter *padapter, struct xmit_priv *pxmitpriv, struct xmit_buf *pxmitbuf);
+s32 xmitframe_complete(_adapter *padapter, struct xmit_priv *pxmitpriv, struct xmit_buf *pxmitbuf);
 
-void rtw_do_queue_select(_adapter *padapter, struct pkt_attrib *pattrib);
-u32 rtw_get_ff_hwaddr(struct xmit_frame	*pxmitframe);
+void do_queue_select(_adapter *padapter, struct pkt_attrib *pattrib);
+u32 get_ff_hwaddr(struct xmit_frame	*pxmitframe);
 
 s32 pre_xmitframe(_adapter *padapter, struct xmit_frame *pxmitframe);
+s32 xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitframe);
 s32 xmitframe_direct(_adapter *padapter, struct xmit_frame *pxmitframe);
 
+s32 hal_xmit(_adapter *padapter, struct xmit_frame *pxmitframe);
 
 #endif
 

@@ -1,22 +1,3 @@
-/******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
 #ifndef _RTL871X_MP_IOCTL_H
 #define _RTL871X_MP_IOCTL_H
 
@@ -507,7 +488,6 @@ enum RTL871X_MP_IOCTL_SUBCODE {
 	GEN_MP_IOCTL_SUBCODE(TRIGGER_GPIO),		/*34*/
 	GEN_MP_IOCTL_SUBCODE(SET_DM_BT),		/*35*/
 	GEN_MP_IOCTL_SUBCODE(DEL_BA),			/*36*/
-	GEN_MP_IOCTL_SUBCODE(GET_WIFI_STATUS),	/*37*/
 	MAX_MP_IOCTL_SUBCODE,
 };
 
@@ -558,7 +538,7 @@ struct mp_ioctl_handler mp_ioctl_hdl[] = {
 	GEN_MP_IOCTL_HANDLER(sizeof(u32), oid_rt_get_thermal_meter_hdl, OID_RT_PRO_GET_THERMAL_METER)/*25*/
 	GEN_MP_IOCTL_HANDLER(sizeof(u32), oid_rt_get_power_mode_hdl, OID_RT_GET_POWER_MODE)/*26*/
 	GEN_MP_IOCTL_HANDLER(sizeof(EFUSE_ACCESS_STRUCT), oid_rt_pro_efuse_hdl, OID_RT_PRO_EFUSE)/*27*/
-	GEN_MP_IOCTL_HANDLER(EFUSE_MAX_LOGICAL_SIZE, oid_rt_pro_efuse_map_hdl, OID_RT_PRO_EFUSE_MAP)/*28*/
+	GEN_MP_IOCTL_HANDLER(EFUSE_MAP_MAX_SIZE, oid_rt_pro_efuse_map_hdl, OID_RT_PRO_EFUSE_MAP)/*28*/
 	GEN_MP_IOCTL_HANDLER(sizeof(u32), oid_rt_get_efuse_max_size_hdl, OID_RT_GET_EFUSE_MAX_SIZE)/*29*/
 	GEN_MP_IOCTL_HANDLER(sizeof(u32), oid_rt_get_efuse_current_size_hdl, OID_RT_GET_EFUSE_CURRENT_SIZE)/*30*/
 	GEN_MP_IOCTL_HANDLER(sizeof(u32), oid_rt_pro_set_single_carrier_tx_hdl, OID_RT_PRO_SET_SINGLE_CARRIER_TX)/*31*/

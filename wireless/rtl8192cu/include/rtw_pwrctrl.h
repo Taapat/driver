@@ -1,22 +1,3 @@
-/******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
 #ifndef __RTL871X_PWRCTRL_H_
 #define __RTL871X_PWRCTRL_H_
 
@@ -106,26 +87,26 @@ struct reportpwrstate_parm {
 typedef _sema _pwrlock;
 
 
-__inline static void _init_pwrlock(_pwrlock *plock)
+static void __inline _init_pwrlock(_pwrlock *plock)
 {
-	_rtw_init_sema(plock, 1);
+	_init_sema(plock, 1);
 }
 
-__inline static void _free_pwrlock(_pwrlock *plock)
+static void __inline _free_pwrlock(_pwrlock *plock)
 {
-	_rtw_free_sema(plock);
-}
-
-
-__inline static void _enter_pwrlock(_pwrlock *plock)
-{
-	_rtw_down_sema(plock);
+	_free_sema(plock);
 }
 
 
-__inline static void _exit_pwrlock(_pwrlock *plock)
+static void __inline _enter_pwrlock(_pwrlock *plock)
 {
-	_rtw_up_sema(plock);
+	_down_sema(plock);
+}
+
+
+static void __inline _exit_pwrlock(_pwrlock *plock)
+{
+	_up_sema(plock);
 }
 
 #define LPS_DELAY_TIME	1*HZ // 1 sec
@@ -144,20 +125,6 @@ typedef enum _rt_rf_power_state
 	rf_max
 }rt_rf_power_state;
 
-
-enum _PS_BBRegBackup_ {
-	PSBBREG_RF0 = 0,
-	PSBBREG_RF1,
-	PSBBREG_RF2,
-	PSBBREG_AFE0,
-	PSBBREG_TOTALCNT
-};
-
-enum _SS_LEVEL_{
-	SS_LEVEL_MIN,//rf on/off ,keep 8051
-	SS_LEVEL_DEEP,//card disable, 8051 reset 
-};
-	
 struct	pwrctrl_priv {
 	_pwrlock	lock;
 	volatile u8 rpwm; // requested power state for fw
@@ -167,6 +134,23 @@ struct	pwrctrl_priv {
 	uint pwr_mode;
 	uint smart_ps;
 	uint alives;
+
+
+	_timer 	pwr_state_check_timer;
+
+	//u8	ips_enable;//for dbg
+	//u8	lps_enable;//for dbg
+	
+	uint 	bips_processing;
+	rt_rf_power_state	inactive_pwrstate;
+	rt_rf_power_state	change_pwrstate;
+	uint 	ips_enter_cnts;
+	uint 	ips_leave_cnts;
+		
+	_workitem InactivePSWorkItem;
+	_timer 	ips_check_timer;
+
+
 	u8	bLeisurePs;
 	u8	LpsIdleCount;
 	//u8	FWCtrlPSMode;
@@ -176,68 +160,31 @@ struct	pwrctrl_priv {
 
 	s32		pnp_current_pwr_state;
 	u8		pnp_bstop_trx;
-	u8		bInternalAutoSuspend;
-	u8		bSupportRemoteWakeup;	
-//===========================================
-	_timer 	pwr_state_check_timer;
-	int		pwr_state_check_inverval;
-	u8		pwr_state_check_cnts;
-	uint 		bips_processing;
-
-	_workitem InactivePSWorkItem;
-
-	rt_rf_power_state current_rfpwrstate;
-	rt_rf_power_state	change_rfpwrstate;
-	
-	uint 		ips_enter_cnts;
-	uint 		ips_leave_cnts;		
-	
-	u8		wepkeymask;
-	u8		bHWPowerdown;//if support hw power down
-	u8		bHWPwrPindetect;
-	u8		bkeepfwalive;		
-	u8		brfoffbyhw;
-	unsigned long PS_BBRegBackup[PSBBREG_TOTALCNT];
-	//=========================================
-	#ifdef CONFIG_WOWLAN
-	u8		bSupportWakeOnWlan;
-	#endif
-	
 };
 
 
 
-extern void rtw_init_pwrctrl_priv(_adapter *adapter);
-extern void rtw_free_pwrctrl_priv(_adapter * adapter);
-extern sint rtw_register_tx_alive(_adapter *padapter);
-extern void rtw_unregister_tx_alive(_adapter *padapter);
-extern sint rtw_register_rx_alive(_adapter *padapter);
-extern void rtw_unregister_rx_alive(_adapter *padapter);
-extern sint rtw_register_cmd_alive(_adapter *padapter);
-extern void rtw_unregister_cmd_alive(_adapter *padapter);
-extern sint rtw_register_evt_alive(_adapter *padapter);
-extern void rtw_unregister_evt_alive(_adapter *padapter);
+extern void init_pwrctrl_priv(_adapter *adapter);
+extern void free_pwrctrl_priv(_adapter * adapter);
+extern sint register_tx_alive(_adapter *padapter);
+extern void unregister_tx_alive(_adapter *padapter);
+extern sint register_rx_alive(_adapter *padapter);
+extern void unregister_rx_alive(_adapter *padapter);
+extern sint register_cmd_alive(_adapter *padapter);
+extern void unregister_cmd_alive(_adapter *padapter);
+extern sint register_evt_alive(_adapter *padapter);
+extern void unregister_evt_alive(_adapter *padapter);
 extern void cpwm_int_hdl(_adapter *padapter, struct reportpwrstate_parm *preportpwrstate);
-extern void rtw_set_ps_mode(_adapter * padapter, uint ps_mode, uint smart_ps);
-static void set_rpwm(_adapter * padapter, u8 val8);
+extern void set_ps_mode(_adapter * padapter, uint ps_mode, uint smart_ps);
+extern void set_rpwm(_adapter * padapter, u8 val8);
 extern void LeaveAllPowerSaveMode(PADAPTER Adapter);
-
-#ifdef CONFIG_AUTOSUSPEND
-int autoresume_enter(_adapter* padapter);
-#endif
-#ifdef SUPPORT_HW_RFOFF_DETECTED
-rt_rf_power_state RfOnOffDetect(IN	PADAPTER pAdapter );
-#endif
-
-#ifdef CONFIG_IPS
 void ips_enter(_adapter * padapter);
 int ips_leave(_adapter * padapter);
-#endif
 
 #ifdef CONFIG_LPS
 void LPS_Enter(PADAPTER padapter);
 void LPS_Leave(PADAPTER padapter);
 u8 FWLPS_RF_ON(PADAPTER padapter);
 #endif
-void power_saving_ctrl_wk_hdl(_adapter *padapter, u8 *pbuf, int sz);
+
 #endif  //__RTL871X_PWRCTRL_H_

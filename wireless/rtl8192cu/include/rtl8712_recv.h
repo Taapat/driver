@@ -1,22 +1,4 @@
-/******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
+
 #ifndef _RTL8712_RECV_H_
 #define _RTL8712_RECV_H_
 
@@ -260,12 +242,12 @@ union recv_frame{
 };
 
 
-int rtw_init_recvbuf(_adapter *padapter, struct recv_buf *precvbuf);
+int init_recvbuf(_adapter *padapter, struct recv_buf *precvbuf);
 int recvbuf2recvframe(_adapter *padapter, struct recv_buf *precvbuf);
 void rxcmd_event_hdl(_adapter *padapter, void *prxcmdbuf);
 
 
-void rtw_reordering_ctrl_timeout_handler(void *pcontext);
+void reordering_ctrl_timeout_handler(void *pcontext);
 
 #ifdef PLATFORM_LINUX
 #ifdef CONFIG_RECV_TASKLET
