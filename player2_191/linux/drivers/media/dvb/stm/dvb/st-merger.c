@@ -129,6 +129,14 @@ unsigned long tsm_io = 0;
 void* tsm_io = NULL;
 #endif
 
+#if defined(ADB_BOX)
+extern int TsinMode;
+enum{
+    SERIAL,
+	PARALLEL,
+	    }; 
+#endif
+
 extern int highSR;
 
 extern void paceSwtsByPti(void);
@@ -1253,14 +1261,42 @@ Dies sind die Options (also wohl auch view channel):
 
     		writel( readl(tsm_io + TSM_DESTINATION(0)) | (1 << chan), tsm_io + TSM_DESTINATION(0));
 
-    		writel( (readl(tsm_io + TSM_STREAM_CONF(chan)) & TSM_RAM_ALLOC_START(0xff)) |
+#if defined(ADB_BOX)
+            if(TsinMode == SERIAL){ 
+            
+            printk("BZZB TsinMode = SERIAL*st-merger*\n\t");
+
+            writel( (readl(tsm_io + TSM_STREAM_CONF(chan)) & TSM_RAM_ALLOC_START(0xff)) |
+        	    (options & STM_SERIAL_NOT_PARALLEL ? TSM_SERIAL_NOT_PARALLEL : 1 ) |
+        	    (options & STM_INVERT_CLOCK        ? TSM_INVERT_BYTECLK : 0 ) |
+        	    (options & STM_PACKET_CLOCK_VALID  ? TSM_SYNC_NOT_ASYNC : 0 ) |
+        	    TSM_ALIGN_BYTE_SOP |
+        	    TSM_PRIORITY(0xf) | TSM_STREAM_ON | TSM_ADD_TAG_BYTES ,
+        	    tsm_io + TSM_STREAM_CONF(chan));
+            }
+            if(TsinMode == PARALLEL){
+
+            printk("BSKA,BSLA,BXZB TsinMode = Parallel *st-merger*\n\t");
+
+            writel( (readl(tsm_io + TSM_STREAM_CONF(chan)) & TSM_RAM_ALLOC_START(0xff)) |
+        	    (options & STM_SERIAL_NOT_PARALLEL ? TSM_SERIAL_NOT_PARALLEL : 0 ) |
+        	    (options & STM_INVERT_CLOCK        ? TSM_INVERT_BYTECLK : 0 ) |
+        	    (options & STM_PACKET_CLOCK_VALID  ? TSM_SYNC_NOT_ASYNC : 0 ) |
+        	    TSM_ALIGN_BYTE_SOP |
+        	    TSM_PRIORITY(0xf) | TSM_STREAM_ON | TSM_ADD_TAG_BYTES ,
+        	    tsm_io + TSM_STREAM_CONF(chan));
+            }
+#else
+            printk("TsinMode = Parallel *st-merger*\n\t");        
+    		
+    	    writel( (readl(tsm_io + TSM_STREAM_CONF(chan)) & TSM_RAM_ALLOC_START(0xff)) |
        			(options & STM_SERIAL_NOT_PARALLEL ? TSM_SERIAL_NOT_PARALLEL : 0 ) |
        			(options & STM_INVERT_CLOCK        ? TSM_INVERT_BYTECLK : 0 ) |
        			(options & STM_PACKET_CLOCK_VALID  ? TSM_SYNC_NOT_ASYNC : 0 ) |
        			TSM_ALIGN_BYTE_SOP |
        			TSM_PRIORITY(0xf) | TSM_STREAM_ON | TSM_ADD_TAG_BYTES ,
        			tsm_io + TSM_STREAM_CONF(chan));
-
+#endif
 #ifdef alt
     writel( TSM_SYNC(config->channels[n].lock) |
        TSM_DROP(config->channels[n].drop) |
