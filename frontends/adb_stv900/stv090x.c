@@ -5536,23 +5536,23 @@ static int stv090x_sleep(struct dvb_frontend *fe)
 	struct stv090x_state *state = fe->demodulator_priv;
 	u32 reg;
 
-	//if (state->config->tuner_sleep) {
-	//	if (state->config->tuner_sleep(fe) < 0)
-	//		goto err;
-	//}
+	if (state->config->tuner_sleep) {
+		if (state->config->tuner_sleep(fe) < 0)
+			goto err;
+	}
 
-	//dprintk(10, "Set %s to sleep\n",
-	//	state->device == STV0900 ? "STV0900" : "STV0903");
+	dprintk(10, "Set %s to sleep\n",
+		state->device == STV0900 ? "STV0900" : "STV0903");
 
-	//reg = stv090x_read_reg(state, STV090x_SYNTCTRL);
-	//STV090x_SETFIELD(reg, STANDBY_FIELD, 0x01);
-	//if (stv090x_write_reg(state, STV090x_SYNTCTRL, reg) < 0)
-	//	goto err;
+	reg = stv090x_read_reg(state, STV090x_SYNTCTRL);
+	STV090x_SETFIELD(reg, STANDBY_FIELD, 0x01);
+	if (stv090x_write_reg(state, STV090x_SYNTCTRL, reg) < 0)
+		goto err;
 
-	//reg = stv090x_read_reg(state, STV090x_TSTTNR1);
-	//STV090x_SETFIELD(reg, ADC1_PON_FIELD, 0);
-	//if (stv090x_write_reg(state, STV090x_TSTTNR1, reg) < 0)
-	//	goto err;
+	reg = stv090x_read_reg(state, STV090x_TSTTNR1);
+	STV090x_SETFIELD(reg, ADC1_PON_FIELD, 0);
+	if (stv090x_write_reg(state, STV090x_TSTTNR1, reg) < 0)
+		goto err;
 
 	return 0;
 err:
