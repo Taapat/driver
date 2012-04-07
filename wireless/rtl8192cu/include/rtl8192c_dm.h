@@ -1,22 +1,3 @@
-/******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
 #ifndef	__HAL8190PCIDM_H__
 #define __HAL8190PCIDM_H__
 //============================================================
@@ -30,16 +11,15 @@
 //============================================================
 // structure and define
 //============================================================
+
 typedef struct _FALSE_ALARM_STATISTICS{
 	u32	Cnt_Parity_Fail;
-	u32  Cnt_Rate_Illegal;
+	u32	Cnt_Rate_Illegal;
 	u32	Cnt_Crc8_fail;
 	u32	Cnt_Mcs_fail;
 	u32	Cnt_Ofdm_fail;
 	u32	Cnt_Cck_fail;
 	u32	Cnt_all;
-	u32	Cnt_Fast_Fsync;
-	u32	Cnt_SB_Search_fail;
 }FALSE_ALARM_STATISTICS, *PFALSE_ALARM_STATISTICS;
 
 typedef struct _Dynamic_Initial_Gain_Threshold_
@@ -73,10 +53,6 @@ typedef struct _Dynamic_Initial_Gain_Threshold_
 	u8		CurCCKFAState;
 	u8		PreCCAState;
 	u8		CurCCAState;
-
-	u8		LargeFAHit;
-	u8		ForbiddenIGI;
-	u32		Recover_cnt;
 	
 }DIG_T;
 
@@ -96,7 +72,9 @@ typedef enum tag_CCK_Packet_Detection_Threshold_Type_Definition
 {
 	CCK_PD_STAGE_LowRssi = 0,
 	CCK_PD_STAGE_HighRssi = 1,
-	CCK_PD_STAGE_MAX = 3,
+	CCK_FA_STAGE_Low = 2,
+	CCK_FA_STAGE_High = 3,
+	CCK_PD_STAGE_MAX = 4,
 }DM_CCK_PDTH_E;
 
 typedef enum tag_1R_CCA_Type_Definition
@@ -136,9 +114,9 @@ typedef	enum _BT_Ant_NUM{
 typedef	enum _BT_CoType{
 	BT_2Wire		= 0,		
 	BT_ISSC_3Wire	= 1,
-	BT_Accel		= 2,
-	BT_CSR_BC4		= 3,
-	BT_CSR_BC8		= 4,
+	BT_Accel			= 2,
+	BT_CSR			= 3,
+	BT_CSR_ENHAN	= 4,
 	BT_RTL8756		= 5,
 } BT_CoType, *PBT_CoType;
 
@@ -185,17 +163,6 @@ struct btcoexist_priv	{
 	u32					BtEdcaDL;
 	u32					BT_EDCA[2];
 	u8					bCOBT;
-
-	u8					bInitSet;
-	u8					bBTBusyTraffic;
-	u8					bBTTrafficModeSet;
-	u8					bBTNonTrafficModeSet;
-//	BTTraffic				BT21TrafficStatistics;
-	u32					CurrentState;
-	u32					PreviousState;
-	u8					BtPreRssiState;
-	u8					bFWCoexistAllOff;
-	u8					bSWCoexistAllOff;
 };
 
 #define		BW_AUTO_SWITCH_HIGH_LOW	25
@@ -277,24 +244,19 @@ typedef struct _RATE_ADAPTIVE
 #define SWAW_STEP_PEAK		0
 #define SWAW_STEP_DETERMINE	1
 
-#define	TP_MODE		0
-#define	RSSI_MODE		1
-#define	TRAFFIC_LOW	0
-#define	TRAFFIC_HIGH	1
-
 typedef struct _SW_Antenna_Switch_
 {
+	u8		failure_cnt;
 	u8		try_flag;
+	u8		stop_trying;
+	u8		penalty;
 	s32		PreRSSI;
+	s32		Trying_Threshold;
 	u8		CurAntenna;
 	u8		PreAntenna;
-	u8		RSSI_Trying;
-	u8		TestMode;
-	u8		bTriggerAntennaSwitch;
-	u8		SelectAntennaMap;
+
 	// Before link Antenna Switch check
 	u8		SWAS_NoLink_State;
-	
 }SWAT_T;
 typedef enum tag_SW_Antenna_Switch_Definition
 {
@@ -352,22 +314,7 @@ struct 	dm_priv
 #ifdef CONFIG_ANTENNA_DIVERSITY
 	_timer SwAntennaSwitchTimer;
 	SWAT_T DM_SWAT_Table;
-	
-	u64	lastTxOkCnt;
-	u64	lastRxOkCnt;
-	u64	TXByteCnt_A;
-	u64	TXByteCnt_B;
-	u64	RXByteCnt_A;
-	u64	RXByteCnt_B;
-	u8	DoubleComfirm;
-	u8	TrafficLoad;
 #endif
-
-	u8		initial_gain_Multi_STA_binitialized ;
-	u8		TM_Trigger;
-	u8		BT_ServiceTypeCnt;
-	u8		BT_LastServiceType;
-	BOOLEAN		BT_bMediaConnect;
 };
 
 
@@ -401,10 +348,9 @@ void issue_delete_ba(_adapter *padapter, u8 dir);
 
 #ifdef CONFIG_ANTENNA_DIVERSITY
 void SwAntDivRSSICheck(_adapter *padapter ,u32 RxPWDBAll); 
-
-u8 SwAntDivBeforeLink8192C(IN PADAPTER Adapter);
+void SwAntDivResetBeforeLink(IN PADAPTER Adapter);
+bool SwAntDivBeforeLink8192C(IN PADAPTER Adapter);
 void dm_SW_AntennaSwitchCallback(void *FunctionContext);
-void SwAntDivRestAfterLink(	IN	PADAPTER	Adapter);
 #endif
 
 #endif	//__HAL8190PCIDM_H__

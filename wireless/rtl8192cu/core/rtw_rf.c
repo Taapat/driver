@@ -1,22 +1,20 @@
 /******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
+* rtl871x_rf.c                                                                                                                                 *
+*                                                                                                                                          *
+* Description :                                                                                                                       *
+*                                                                                                                                           *
+* Author :                                                                                                                       *
+*                                                                                                                                         *
+* History :                                                          
+*
+*                                        
+*                                                                                                                                       *
+* Copyright 2007, Realtek Corp.                                                                                                  *
+*                                                                                                                                        *
+* The contents of this file is the sole property of Realtek Corp.  It can not be                                     *
+* be used, copied or modified without written permission from Realtek Corp.                                         *
+*                                                                                                                                          *
+*******************************************************************************/
 #define _RTL871X_RF_C_
 
 #include <drv_conf.h>
@@ -31,7 +29,7 @@
 #define channel2freq(starting_freq, channel) \
 	((starting_freq + (5 * channel)))
 
-u32 rtw_ch2freq(u32 ch)
+u32 ch2freq(u32 ch)
 {
 	u32 starting_freq;
 	
@@ -48,7 +46,7 @@ u32 rtw_ch2freq(u32 ch)
 		
 }
 
-u32 rtw_freq2ch(u32 freq)
+u32 freq2ch(u32 freq)
 {
 	u32 starting_freq;
 	
@@ -71,7 +69,7 @@ u32 rtw_freq2ch(u32 freq)
 }
 
 
-static void set_channelset_a(_adapter  *padapter, struct regulatory_class *reg_class, u8 index, u8 channel_set)
+void set_channelset_a(_adapter  *padapter, struct regulatory_class *reg_class, u8 index, u8 channel_set)
 {
 
 	struct eeprom_priv* peeprompriv = &padapter->eeprompriv;
@@ -86,7 +84,7 @@ static void set_channelset_a(_adapter  *padapter, struct regulatory_class *reg_c
 }
 
 
-static void set_channelset_bg(_adapter  *padapter, struct regulatory_class *reg_class, u8 index, u8 channel_set)
+void set_channelset_bg(_adapter  *padapter, struct regulatory_class *reg_class, u8 index, u8 channel_set)
 {
 	struct eeprom_priv* peeprompriv = &padapter->eeprompriv;
 
@@ -152,7 +150,7 @@ static void set_channelset_bg(_adapter  *padapter, struct regulatory_class *reg_
          	- Transmit power limit (dBm):   
   		   psetphyinfopara->class_sets[class_index].txpower_limit
 */     	   	  
-static void init_phyinfo(_adapter  *adapter, struct setphyinfo_parm* psetphyinfopara)
+void init_phyinfo(_adapter  *adapter, struct setphyinfo_parm* psetphyinfopara)
 {
 
 	struct eeprom_priv* peeprompriv = &adapter->eeprompriv;
@@ -494,19 +492,19 @@ static void init_phyinfo(_adapter  *adapter, struct setphyinfo_parm* psetphyinfo
 }
 
 
-static u8 writephyinfo_fw(_adapter *padapter, u32 addr)
+u8 writephyinfo_fw(_adapter *padapter, u32 addr)
 {
 	u32	i;
 	u32 *tmpWrite;
 	struct setphyinfo_parm*	psetphyinfopara;
 
-	psetphyinfopara = (struct setphyinfo_parm*)_rtw_zmalloc(sizeof(struct setphyinfo_parm)); 
+	psetphyinfopara = (struct setphyinfo_parm*)_malloc(sizeof(struct setphyinfo_parm)); 
 
 	if(psetphyinfopara==NULL){
 		return _FAIL;
 	}
 
-	//_rtw_memset((unsigned char *)psetphyinfopara, 0, sizeof (struct setphyinfo_parm));
+	_memset((unsigned char *)psetphyinfopara, 0, sizeof (struct setphyinfo_parm));
 	
 	init_phyinfo(padapter, psetphyinfopara);
 
@@ -514,11 +512,11 @@ static u8 writephyinfo_fw(_adapter *padapter, u32 addr)
 
 	for(i = 0; i < sizeof(struct setphyinfo_parm); i = i + sizeof(u32)) 
 	{
-		rtw_write32(padapter, addr+i, *tmpWrite);
+		write32(padapter, addr+i, *tmpWrite);
 		tmpWrite++;
 	}
 
-	_rtw_mfree((unsigned char *) psetphyinfopara, sizeof(struct	setphyinfo_parm));
+	_mfree((unsigned char *) psetphyinfopara, sizeof(struct	setphyinfo_parm));
 	
 	return _SUCCESS;
 }

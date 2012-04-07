@@ -1,22 +1,20 @@
 /******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+ * rtl871x_mp.c                                                                                                                                 *
+ *                                                                                                                                          *
+ * Description :                                                                                                                       *
+ *                                                                                                                                           *
+ * Author :                                                                                                                       *
+ *                                                                                                                                         *
+ * History :
  *
  *
- ******************************************************************************/
+ *                                                                                                                                       *
+ * Copyright 2007, Realtek Corp.                                                                                                  *
+ *                                                                                                                                        *
+ * The contents of this file is the sole property of Realtek Corp. It can not be                                     *
+ * be used, copied or modified without written permission from Realtek Corp.                                         *
+ *                                                                                                                                          *
+*******************************************************************************/
 #define _RTL871X_MP_C_
 
 #include <drv_conf.h>
@@ -111,7 +109,7 @@ int init_mp_priv (struct mp_priv *pmp_priv)
 	pnetwork->network.MacAddress[5] = 0x55;
 
 	pnetwork->network.Ssid.SsidLength = 8;
-	_rtw_memcpy(pnetwork->network.Ssid.Ssid, "mp_871x", pnetwork->network.Ssid.SsidLength);
+	_memcpy(pnetwork->network.Ssid.Ssid, "mp_871x", pnetwork->network.Ssid.SsidLength);
 
 	pmp_priv->rx_testcnt = 0;
 	pmp_priv->rx_testcnt1 = 0;
@@ -138,10 +136,10 @@ int init_mp_priv(struct mp_priv *pmp_priv)
 
 	_init_mp_priv_(pmp_priv);
 
-	_rtw_init_queue(&pmp_priv->free_mp_xmitqueue);
+	_init_queue(&pmp_priv->free_mp_xmitqueue);
 
 	pmp_priv->pallocated_mp_xmitframe_buf = NULL;
-	pmp_priv->pallocated_mp_xmitframe_buf = _rtw_zmalloc(NR_MP_XMITFRAME * sizeof(struct mp_xmit_frame) + 4);
+	pmp_priv->pallocated_mp_xmitframe_buf = _malloc(NR_MP_XMITFRAME * sizeof(struct mp_xmit_frame) + 4);
 	if (pmp_priv->pallocated_mp_xmitframe_buf == NULL) {
 		//ERR_8712("_init_mp_priv, alloc mp_xmitframe_buf fail\n");
 		res = _FAIL;
@@ -154,8 +152,8 @@ int init_mp_priv(struct mp_priv *pmp_priv)
 
 	for (i = 0; i < NR_MP_XMITFRAME; i++)
 	{
-		_rtw_init_listhead(&(pmp_xmitframe->list));
-		rtw_list_insert_tail(&(pmp_xmitframe->list), &(pmp_priv->free_mp_xmitqueue.queue));
+		_init_listhead(&(pmp_xmitframe->list));
+		list_insert_tail(&(pmp_xmitframe->list), &(pmp_priv->free_mp_xmitqueue.queue));
 
 		pmp_xmitframe->pkt = NULL;
 		pmp_xmitframe->frame_tag = MP_FRAMETAG;
@@ -180,7 +178,7 @@ int free_mp_priv(struct mp_priv *pmp_priv)
 	//DBG_871X("+_free_mp_priv\n");
 
 	if (pmp_priv->pallocated_mp_xmitframe_buf)
-		_rtw_mfree(pmp_priv->pallocated_mp_xmitframe_buf, 0);
+		_mfree(pmp_priv->pallocated_mp_xmitframe_buf, 0);
 
 	return res;
 }
@@ -224,11 +222,11 @@ static u8 fw_cmd(PADAPTER pAdapter, u32 cmd)
 {
 	int pollingcnts = 50;
 
-	rtw_write32(pAdapter, IOCMD_CTRL_REG, cmd);
-	rtw_usleep_os(100);
-	while ((0 != rtw_read32(pAdapter, IOCMD_CTRL_REG)) && (pollingcnts > 0)) {
+	write32(pAdapter, IOCMD_CTRL_REG, cmd);
+	usleep_os(100);
+	while ((0 != read32(pAdapter, IOCMD_CTRL_REG)) && (pollingcnts > 0)) {
 		pollingcnts--;
-		rtw_usleep_os(10);
+		usleep_os(10);
 	}
 
 	if (pollingcnts == 0) {
@@ -242,9 +240,9 @@ static u8 fw_cmd(PADAPTER pAdapter, u32 cmd)
 static void fw_cmd_data(PADAPTER pAdapter, u32 *value, u8 flag)
 {
 	if (flag == 0)	// set
-		rtw_write32(pAdapter, IOCMD_DATA_REG, *value);
+		write32(pAdapter, IOCMD_DATA_REG, *value);
 	else		// query
-		*value = rtw_read32(pAdapter, IOCMD_DATA_REG);
+		*value = read32(pAdapter, IOCMD_DATA_REG);
 }
 
 /*
@@ -278,7 +276,7 @@ static u8 fw_iocmd_write(PADAPTER pAdapter, IOCMD_STRUCT iocmd, u32 value)
 	u8 iocmd_idx	= iocmd.index;
 
 	fw_cmd_data(pAdapter, &value, 0);
-	rtw_usleep_os(100);
+	usleep_os(100);
 
 	cmd32 = (iocmd_class << 24) | (iocmd_value << 8) | iocmd_idx ;
 	return fw_cmd(pAdapter, cmd32);
@@ -455,17 +453,17 @@ void SetChannel(PADAPTER pAdapter)
 	RT_TRACE(_module_rtl871x_mp_ioctl_c_, _drv_notice_,
 		 ("+SetChannel: %d\n", pAdapter->mppriv.curr_ch));
 
-	pcmd = (struct cmd_obj*)_rtw_zmalloc(sizeof(struct cmd_obj));
+	pcmd = (struct cmd_obj*)_malloc(sizeof(struct cmd_obj));
 	if (pcmd == NULL) {
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("SetChannel: memory allocate for cmd_obj fail!!!\n"));
 		return;
 	}
 
-	pparm = (struct SetChannel_parm*)_rtw_zmalloc(sizeof(struct SetChannel_parm));
+	pparm = (struct SetChannel_parm*)_malloc(sizeof(struct SetChannel_parm));
  	if (pparm == NULL) {
 		if (pcmd != NULL)
-			_rtw_mfree((u8*)pcmd, sizeof(struct cmd_obj));
+			_mfree((u8*)pcmd, sizeof(struct cmd_obj));
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("SetChannel: memory allocate for parm fail!!!\n"));
 		return;
@@ -473,7 +471,7 @@ void SetChannel(PADAPTER pAdapter)
 	pparm->curr_ch = pAdapter->mppriv.curr_ch;
 
 	init_h2fwcmd_w_parm_no_rsp(pcmd, pparm, code);
-	rtw_enqueue_cmd(pcmdpriv, pcmd);
+	enqueue_cmd(pcmdpriv, pcmd);
 #else
 	u32 curr_ch = pAdapter->mppriv.curr_ch;
 	u8 eRFPath;
@@ -481,7 +479,7 @@ void SetChannel(PADAPTER pAdapter)
 	RT_TRACE(_module_rtl871x_mp_ioctl_c_, _drv_alert_, ("+SetChannel: %d\n", curr_ch));
 	for (eRFPath = 0; eRFPath < MAX_RF_PATH_NUMS; eRFPath++) {
 		set_rf_reg(pAdapter, eRFPath, rRfChannel, 0x3FF, curr_ch);
-		rtw_usleep_os(100);
+		usleep_os(100);
 	}
 #endif
 }
@@ -518,17 +516,17 @@ void SetTxPower(PADAPTER pAdapter)
 	struct SetTxPower_parm *pparm = NULL;
 	u16 code = GEN_CMD_CODE(_SetTxPower);
 
-	pcmd = (struct cmd_obj*)_rtw_zmalloc(sizeof(struct cmd_obj));
+	pcmd = (struct cmd_obj*)_malloc(sizeof(struct cmd_obj));
 	if (pcmd == NULL) {
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("-SetTxPower: memory allocate for cmd_obj fail!!!\n"));
 		return;
 	}
 
-	pparm = (struct SetTxPower_parm*)_rtw_zmalloc(sizeof(struct SetTxPower_parm));
+	pparm = (struct SetTxPower_parm*)_malloc(sizeof(struct SetTxPower_parm));
  	if (pparm == NULL) {
 		if (pcmd != NULL)
-			_rtw_mfree((u8*)pcmd, sizeof(struct cmd_obj));
+			_mfree((u8*)pcmd, sizeof(struct cmd_obj));
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("-SetTxPower: memory allocate for parm fail!!!\n"));
 		return;
@@ -536,7 +534,7 @@ void SetTxPower(PADAPTER pAdapter)
 	pparm->TxPower = pAdapter->mppriv.curr_txpoweridx;
 
 	init_h2fwcmd_w_parm_no_rsp(pcmd, pparm, code);
-	rtw_enqueue_cmd(pcmdpriv, pcmd);
+	enqueue_cmd(pcmdpriv, pcmd);
 #else
 
 	u8 TxPower = pAdapter->mppriv.curr_txpoweridx;
@@ -574,24 +572,24 @@ void SetDataRate(PADAPTER pAdapter)
 {
 #ifdef MP_FIRMWARE_OFFLOAD
 #if 1
-	rtw_setdatarate_cmd(pAdapter, &pAdapter->mppriv.curr_rateidx)
+	setdatarate_cmd(pAdapter, &pAdapter->mppriv.curr_rateidx)
 #else
 	struct cmd_priv *pcmdpriv = &pAdapter->cmdpriv;
 	struct cmd_obj *pcmd = NULL;
 	struct setdatarate_parm *pparm = NULL;
 	u16 code = GEN_CMD_CODE(_SetDataRate);
 
-	pcmd = (struct cmd_obj*)_rtw_zmalloc(sizeof(struct cmd_obj));
+	pcmd = (struct cmd_obj*)_malloc(sizeof(struct cmd_obj));
 	if (pcmd == NULL) {
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("SetDataRate: memory allocate for cmd_obj fail!!!\n"));
 		return;
 	}
 
-	pparm = (struct setdatarate_parm*)_rtw_zmalloc(sizeof(struct setdatarate_parm));
+	pparm = (struct setdatarate_parm*)_malloc(sizeof(struct setdatarate_parm));
 	if (pparm == NULL) {
 		if (pcmd != NULL)
-			_rtw_mfree((u8*)pcmd, sizeof(struct cmd_obj));
+			_mfree((u8*)pcmd, sizeof(struct cmd_obj));
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("SetDataRate: memory allocate for parm fail!!!\n"));
 		return;
@@ -599,7 +597,7 @@ void SetDataRate(PADAPTER pAdapter)
 	pparm->curr_rateidx = pAdapter->mppriv.curr_rateidx;
 
 	init_h2fwcmd_w_parm_no_rsp(pcmd, pparm, code);
-	rtw_enqueue_cmd(pcmdpriv, pcmd);
+	enqueue_cmd(pcmdpriv, pcmd);
 #endif
 #else
 	u8 path = RF_PATH_A;
@@ -620,17 +618,17 @@ void SwitchBandwidth(PADAPTER pAdapter)
 	struct SwitchBandwidth_parm *pparm = NULL;
 	u16 code = GEN_CMD_CODE(_SwitchBandwidth);
 
-	pcmd = (struct cmd_obj*)_rtw_zmalloc(sizeof(struct cmd_obj));
+	pcmd = (struct cmd_obj*)_malloc(sizeof(struct cmd_obj));
 	if (pcmd == NULL) {
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("SwitchBandwidth: memory allocate for cmd_obj fail!!!\n"));
 		return;
 	}
 
-	pparm = (struct SwitchBandwidth_parm*)_rtw_zmalloc(sizeof(struct SwitchBandwidth_parm));
+	pparm = (struct SwitchBandwidth_parm*)_malloc(sizeof(struct SwitchBandwidth_parm));
 	if (pparm == NULL) {
 		if (pcmd != NULL)
-			_rtw_mfree((u8*)pcmd, sizeof(struct cmd_obj));
+			_mfree((u8*)pcmd, sizeof(struct cmd_obj));
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("SwitchBandwidth: memory allocate for parm fail!!!\n"));
 		return;
@@ -638,21 +636,21 @@ void SwitchBandwidth(PADAPTER pAdapter)
 	pparm->curr_bandwidth = pAdapter->mppriv.curr_bandwidth;
 
 	init_h2fwcmd_w_parm_no_rsp(pcmd, pparm, code);
-	rtw_enqueue_cmd(pcmdpriv, pcmd);
+	enqueue_cmd(pcmdpriv, pcmd);
 
 #else
 	//3 1.Set MAC register : BWOPMODE  bit2:1 20MhzBW
 	u8 regBwOpMode = 0;
 	u8 Bandwidth = pAdapter->mppriv.curr_bandwidth;
 
-	regBwOpMode = rtw_read8(pAdapter, 0x10250203);
+	regBwOpMode = read8(pAdapter, 0x10250203);
 
 	if (Bandwidth == HT_CHANNEL_WIDTH_20) {
 		regBwOpMode |= BIT(2);
 	} else {
 		regBwOpMode &= ~(BIT(2));
 	}
-	rtw_write8(pAdapter, 0x10250203, regBwOpMode);
+	write8(pAdapter, 0x10250203, regBwOpMode);
 
 	//3 2.Set PHY related register
 	switch (Bandwidth)
@@ -742,17 +740,17 @@ void SwitchAntenna(PADAPTER pAdapter)
 	struct SwitchAntenna_parm *pparm = NULL;
 	u16 code = GEN_CMD_CODE(_SwitchAntenna);
 
-	pcmd = (struct cmd_obj*)_rtw_zmalloc(sizeof(struct cmd_obj));
+	pcmd = (struct cmd_obj*)_malloc(sizeof(struct cmd_obj));
 	if (pcmd == NULL) {
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("SwitchAntenna: memory allocate for cmd_obj fail!!!\n"));
 		return;
 	}
 
-	pparm = (struct SwitchAntenna_parm*)_rtw_zmalloc(sizeof(struct SwitchAntenna_parm));
+	pparm = (struct SwitchAntenna_parm*)_malloc(sizeof(struct SwitchAntenna_parm));
 	if (pparm == NULL) {
 		if (pcmd != NULL)
-			_rtw_mfree((u8*)pcmd, sizeof(struct cmd_obj));
+			_mfree((u8*)pcmd, sizeof(struct cmd_obj));
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("SwitchAntenna: memory allocate for parm fail!!!\n"));
 		return;
@@ -761,7 +759,7 @@ void SwitchAntenna(PADAPTER pAdapter)
 	pparm->antenna_rx = pAdapter->mppriv.antenna_rx;
 
 	init_h2fwcmd_w_parm_no_rsp(pcmd, pparm, code);
-	rtw_enqueue_cmd(pcmdpriv, pcmd);
+	enqueue_cmd(pcmdpriv, pcmd);
 #else
 	u32	ofdm_tx_en_val = 0, ofdm_tx_ant_sel_val = 0;
 	u8	ofdm_rx_ant_sel_val = 0;
@@ -853,17 +851,17 @@ void SetCrystalCap(PADAPTER pAdapter)
 	struct SetCrystalCap_parm *pparm = NULL;
 	u16 code = GEN_CMD_CODE(_SetCrystalCap);
 
-	pcmd = (struct cmd_obj*)_rtw_zmalloc(sizeof(struct cmd_obj));
+	pcmd = (struct cmd_obj*)_malloc(sizeof(struct cmd_obj));
 	if (pcmd == NULL) {
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("SetCrystalCap: memory allocate for cmd_obj fail!!!\n"));
 		return;
 	}
 
-	pparm = (struct SetCrystalCap_parm*)_rtw_zmalloc(sizeof(struct SetCrystalCap_parm));
+	pparm = (struct SetCrystalCap_parm*)_malloc(sizeof(struct SetCrystalCap_parm));
 	if (pparm == NULL) {
 		if (pcmd != NULL)
-			_rtw_mfree((u8*)pcmd, sizeof(struct cmd_obj));
+			_mfree((u8*)pcmd, sizeof(struct cmd_obj));
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("SetCrystalCap: memory allocate for parm fail!!!\n"));
 		return;
@@ -871,7 +869,7 @@ void SetCrystalCap(PADAPTER pAdapter)
 	pparm->curr_crystalcap = pAdapter->mppriv.curr_crystalcap;
 
 	init_h2fwcmd_w_parm_no_rsp(pcmd, pparm, code);
-	rtw_enqueue_cmd(pcmdpriv, pcmd);
+	enqueue_cmd(pcmdpriv, pcmd);
 #else
 	set_bb_reg(pAdapter, rFPGA0_AnalogParameter1, bXtalCap, pAdapter->mppriv.curr_crystalcap);
 	RT_TRACE(_module_rtl871x_mp_c_, _drv_notice_, ("-SetCrystalCap: %d\n", pAdapter->mppriv.curr_crystalcap));
@@ -897,12 +895,12 @@ void GetThermalMeter(PADAPTER pAdapter, u32 *value)
 {
 #if 0
 	fw_cmd(pAdapter, IOCMD_GET_THERMAL_METER);
-	rtw_msleep_os(1000);
+	msleep_os(1000);
 	fw_cmd_data(pAdapter, value, 1);
 	*value &= 0xFF;
 #else
 	TriggerRFThermalMeter(pAdapter);
-	rtw_msleep_os(1000);
+	msleep_os(1000);
 	*value = ReadRFThermalMeter(pAdapter);
 #endif
 }
@@ -916,17 +914,17 @@ void SetSingleCarrierTx(PADAPTER pAdapter, u8 bStart)
 	struct SetSingleCarrierTx_parm *pparm = NULL;
 	u16 code = GEN_CMD_CODE(_SetSingleCarrierTx);
 
-	pcmd = (struct cmd_obj*)_rtw_zmalloc(sizeof(struct cmd_obj));
+	pcmd = (struct cmd_obj*)_malloc(sizeof(struct cmd_obj));
 	if (pcmd == NULL) {
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("SetSingleCarrierTx: memory allocate for cmd_obj fail!!!\n"));
 		return;
 	}
 
-	pparm = (struct SetSingleCarrierTx_parm*)_rtw_zmalloc(sizeof(struct SetSingleCarrierTx_parm));
+	pparm = (struct SetSingleCarrierTx_parm*)_malloc(sizeof(struct SetSingleCarrierTx_parm));
 	if (pparm == NULL) {
 		if (pcmd != NULL)
-			_rtw_mfree((u8*)pcmd, sizeof(struct cmd_obj));
+			_mfree((u8*)pcmd, sizeof(struct cmd_obj));
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("SetSingleCarrierTx: memory allocate for parm fail!!!\n"));
 		return;
@@ -934,7 +932,7 @@ void SetSingleCarrierTx(PADAPTER pAdapter, u8 bStart)
 	pparm->bStart = bStart;
 
 	init_h2fwcmd_w_parm_no_rsp(pcmd, pparm, code);
-	rtw_enqueue_cmd(pcmdpriv, pcmd);
+	enqueue_cmd(pcmdpriv, pcmd);
 
 #else
 
@@ -965,7 +963,7 @@ void SetSingleCarrierTx(PADAPTER pAdapter, u8 bStart)
 		set_bb_reg(pAdapter, rOFDM1_LSTF, bOFDMSingleTone, bDisable);
 
 		//Delay 10 ms //delay_ms(10);
-		rtw_msleep_os(10);
+		msleep_os(10);
 
 		//BB Reset
 		set_bb_reg(pAdapter, rPMAC_Reset, bBBResetB, 0x0);
@@ -983,17 +981,17 @@ void SetSingleToneTx(PADAPTER pAdapter, u8 bStart)
 	struct SetSingleToneTx_parm *pparm = NULL;
 	u16 code = GEN_CMD_CODE(_SetSingleToneTx);
 
-	pcmd = (struct cmd_obj*)_rtw_zmalloc(sizeof(struct cmd_obj));
+	pcmd = (struct cmd_obj*)_malloc(sizeof(struct cmd_obj));
 	if (pcmd == NULL) {
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("SetSingleToneTx: memory allocate for cmd_obj fail!!!\n"));
 		return;
 	}
 
-	pparm = (struct SetSingleToneTx_parm*)_rtw_zmalloc(sizeof(struct SetSingleToneTx_parm));
+	pparm = (struct SetSingleToneTx_parm*)_malloc(sizeof(struct SetSingleToneTx_parm));
 	if (pparm == NULL) {
 		if (pcmd != NULL)
-			_rtw_mfree((u8*)pcmd, sizeof(struct cmd_obj));
+			_mfree((u8*)pcmd, sizeof(struct cmd_obj));
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("SetSingleToneTx: memory allocate for parm fail!!!\n"));
 		return;
@@ -1011,7 +1009,7 @@ void SetSingleToneTx(PADAPTER pAdapter, u8 bStart)
 	}
 
 	init_h2fwcmd_w_parm_no_rsp(pcmd, pparm, code);
-	rtw_enqueue_cmd(pcmdpriv, pcmd);
+	enqueue_cmd(pcmdpriv, pcmd);
 
 #else
 	u8 rfPath = pAdapter->mppriv.curr_rfpath;
@@ -1035,9 +1033,9 @@ void SetSingleToneTx(PADAPTER pAdapter, u8 bStart)
 		//set_bb_reg(pAdapter, rFPGA0_RFMOD, bOFDMTxDACPhase, 0x1);
 
 		set_rf_reg(pAdapter, rfPath, 0x21, bRFRegOffsetMask, 0xd4000);
-		rtw_usleep_os(100);
+		usleep_os(100);
 		set_rf_reg(pAdapter, rfPath, 0x00, bRFRegOffsetMask, 0x2001f); // PAD all on.
-		rtw_usleep_os(100);
+		usleep_os(100);
 	}
 	else// Stop Single Tone.
 	{
@@ -1046,9 +1044,9 @@ void SetSingleToneTx(PADAPTER pAdapter, u8 bStart)
 		set_bb_reg(pAdapter, rFPGA0_RFMOD, bOFDMEn, 0x1);
 		//set_bb_reg(pAdapter, rFPGA0_RFMOD, bOFDMTxDACPhase, 0x1);
 		set_rf_reg(pAdapter, rfPath, 0x21, bRFRegOffsetMask, 0x54000);
-		rtw_usleep_os(100);
+		usleep_os(100);
 		set_rf_reg(pAdapter, rfPath, 0x00, bRFRegOffsetMask, 0x30000); // PAD all on.
-		rtw_usleep_os(100);
+		usleep_os(100);
 	}
 #endif
 }
@@ -1062,17 +1060,17 @@ void SetCarrierSuppressionTx(PADAPTER pAdapter, u8 bStart)
 	struct SetCarrierSuppressionTx_parm *pparm = NULL;
 	u16 code = GEN_CMD_CODE(_SetCarrierSuppressionTx);
 
-	pcmd = (struct cmd_obj*)_rtw_zmalloc(sizeof(struct cmd_obj));
+	pcmd = (struct cmd_obj*)_malloc(sizeof(struct cmd_obj));
 	if (pcmd == NULL) {
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("SetSingleToneTx: memory allocate for cmd_obj fail!!!\n"));
 		return;
 	}
 
-	pparm = (struct SetCarrierSuppressionTx_parm*)_rtw_zmalloc(sizeof(struct SetCarrierSuppressionTx_parm));
+	pparm = (struct SetCarrierSuppressionTx_parm*)_malloc(sizeof(struct SetCarrierSuppressionTx_parm));
 	if (pparm == NULL) {
 		if (pcmd != NULL)
-			_rtw_mfree((u8*)pcmd, sizeof(struct cmd_obj));
+			_mfree((u8*)pcmd, sizeof(struct cmd_obj));
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("SetCarrierSuppressionTx: memory allocate for parm fail!!!\n"));
 		return;
@@ -1081,7 +1079,7 @@ void SetCarrierSuppressionTx(PADAPTER pAdapter, u8 bStart)
 	pparm->curr_rateidx = pAdapter->mppriv.curr_rateidx;
 
 	init_h2fwcmd_w_parm_no_rsp(pcmd, pparm, code);
-	rtw_enqueue_cmd(pcmdpriv, pcmd);
+	enqueue_cmd(pcmdpriv, pcmd);
 
 #else
 
@@ -1202,7 +1200,7 @@ void SetOFDMContinuousTx(PADAPTER pAdapter, u8 bStart)
 		set_bb_reg(pAdapter, rOFDM1_LSTF, bOFDMSingleCarrier, bDisable);
 		set_bb_reg(pAdapter, rOFDM1_LSTF, bOFDMSingleTone, bDisable);
 		//Delay 10 ms
-		rtw_msleep_os(10);
+		msleep_os(10);
 		//BB Reset
 		set_bb_reg(pAdapter, rPMAC_Reset, bBBResetB, 0x0);
 		set_bb_reg(pAdapter, rPMAC_Reset, bBBResetB, 0x1);
@@ -1218,17 +1216,17 @@ void SetContinuousTx(PADAPTER pAdapter, u8 bStart)
 	struct SetContinuousTx_parm *pparm = NULL;
 	u16 code = GEN_CMD_CODE(_SetContinuousTx);
 
-	pcmd = (struct cmd_obj*)_rtw_zmalloc(sizeof(struct cmd_obj));
+	pcmd = (struct cmd_obj*)_malloc(sizeof(struct cmd_obj));
 	if (pcmd == NULL) {
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("SetContinuousTx: memory allocate for cmd_obj fail!!!\n"));
 		return;
 	}
 
-	pparm = (struct SetContinuousTx_parm*)_rtw_zmalloc(sizeof(struct SetContinuousTx_parm));
+	pparm = (struct SetContinuousTx_parm*)_malloc(sizeof(struct SetContinuousTx_parm));
 	if (pparm == NULL) {
 		if (pcmd != NULL)
-			_rtw_mfree((u8*)pcmd, sizeof(struct cmd_obj));
+			_mfree((u8*)pcmd, sizeof(struct cmd_obj));
 		RT_TRACE(_module_rtl871x_mp_c_, _drv_err_,
 			 ("SetContinuousTx: memory allocate for parm fail!!!\n"));
 		return;
@@ -1241,13 +1239,13 @@ void SetContinuousTx(PADAPTER pAdapter, u8 bStart)
 		pparm->CCK_flag = 2;	// OFDM
 
 	init_h2fwcmd_w_parm_no_rsp(pcmd, pparm, code);
-	rtw_enqueue_cmd(pcmdpriv, pcmd);
+	enqueue_cmd(pcmdpriv, pcmd);
 
 #else
 	// ADC turn off [bit24-21] adc port0 ~ port1
 	if (bStart) {
 		bb_reg_write(pAdapter, rRx_Wait_CCCA, bb_reg_read(pAdapter, rRx_Wait_CCCA) & 0xFE1FFFFF);
-		rtw_usleep_os(100);
+		usleep_os(100);
 	}
 	RT_TRACE(_module_rtl871x_mp_c_,_drv_alert_, ("SetContinuousTx #2 rate:%d........\n", pAdapter->mppriv.curr_rateidx));
 	if (pAdapter->mppriv.curr_rateidx <= MPT_RATE_11M)
@@ -1274,7 +1272,7 @@ void ResetPhyRxPktCount(PADAPTER pAdapter)
 		phyrx_set = 0;
 		phyrx_set |= (i << 28);		//select
 		phyrx_set |= 0x08000000;	// set counter to zero
-		rtw_write32(pAdapter, RXERR_RPT, phyrx_set);
+		write32(pAdapter, RXERR_RPT, phyrx_set);
 	}
 }
 
@@ -1287,10 +1285,10 @@ static u32 GetPhyRxPktCounts(PADAPTER pAdapter, u32 selbit)
 	SelectBit = selbit << 28;
 	phyrx_set |= (SelectBit & 0xF0000000);
 
-	rtw_write32(pAdapter, RXERR_RPT, phyrx_set);
+	write32(pAdapter, RXERR_RPT, phyrx_set);
 
 	//Read packet count
-	count = rtw_read32(pAdapter, RXERR_RPT) & RPTMaxCount;
+	count = read32(pAdapter, RXERR_RPT) & RPTMaxCount;
 
 	return count;
 }
@@ -1399,49 +1397,49 @@ void IQCalibrateBcut(PADAPTER pAdapter)
 		// 2. IQ calibration & LO leakage calibration
 		set_bb_reg(pAdapter, 0xc04, bMaskDWord, 0x00a05430);
 
-		rtw_udelay_os(5);
+		udelay_os(5);
 		set_bb_reg(pAdapter, 0xc08, bMaskDWord, 0x000800e4);
 
-		rtw_udelay_os(5);
+		udelay_os(5);
 		set_bb_reg(pAdapter, 0xe28, bMaskDWord, 0x80800000);
-		rtw_udelay_os(5);
+		udelay_os(5);
 		//path-A IQ K and LO K gain setting
 		set_bb_reg(pAdapter, 0xe40, bMaskDWord, 0x02140102);
-		rtw_udelay_os(5);
+		udelay_os(5);
 		set_bb_reg(pAdapter, 0xe44, bMaskDWord, 0x681604c2);
-		rtw_udelay_os(5);
+		udelay_os(5);
 		//set LO calibration
 		set_bb_reg(pAdapter, 0xe4c, bMaskDWord, 0x000028d1);
-		rtw_udelay_os(5);
+		udelay_os(5);
 		//path-B IQ K and LO K gain setting
 		set_bb_reg(pAdapter, 0xe60, bMaskDWord, 0x02140102);
-		rtw_udelay_os(5);
+		udelay_os(5);
 		set_bb_reg(pAdapter, 0xe64, bMaskDWord, 0x28160d05);
-		rtw_udelay_os(5);
+		udelay_os(5);
 		//K idac_I & IQ
 		set_bb_reg(pAdapter, 0xe48, bMaskDWord, 0xfb000000);
-		rtw_udelay_os(5);
+		udelay_os(5);
 		set_bb_reg(pAdapter, 0xe48, bMaskDWord, 0xf8000000);
-		rtw_udelay_os(5);
+		udelay_os(5);
 
 		// delay 2ms
-		rtw_udelay_os(2000);
+		udelay_os(2000);
 
 		//idac_Q setting
 		set_bb_reg(pAdapter, 0xe6c, bMaskDWord, 0x020028d1);
-		rtw_udelay_os(5);
+		udelay_os(5);
 		//K idac_Q & IQ
 		set_bb_reg(pAdapter, 0xe48, bMaskDWord, 0xfb000000);
-		rtw_udelay_os(5);
+		udelay_os(5);
 		set_bb_reg(pAdapter, 0xe48, bMaskDWord, 0xf8000000);
 
 		// delay 2ms
-		rtw_udelay_os(2000);
+		udelay_os(2000);
 
 		set_bb_reg(pAdapter, 0xc04, bMaskDWord, 0x00a05433);
-		rtw_udelay_os(5);
+		udelay_os(5);
 		set_bb_reg(pAdapter, 0xc08, bMaskDWord, 0x000000e4);
-		rtw_udelay_os(5);
+		udelay_os(5);
 		set_bb_reg(pAdapter, 0xe28, bMaskDWord, 0x0);
 
 		//f (pMgntInfo->bRFSiOrPi == 0)	// SI
@@ -1466,7 +1464,7 @@ void IQCalibrateBcut(PADAPTER pAdapter)
 			reg = get_bb_reg(pAdapter, 0xc80, bMaskDWord);
 			reg = (reg & 0xFFFFFC00) | (u32)TXA[RF90_PATH_A];
 			set_bb_reg(pAdapter, 0xc80, bMaskDWord, reg);
-			rtw_udelay_os(5);
+			udelay_os(5);
 
 			// Calibrate init gain for C path for TX0
 			Y = ( get_bb_reg(pAdapter, 0xe9C, bMaskDWord) & 0x03FF0000)>>16;
@@ -1477,7 +1475,7 @@ void IQCalibrateBcut(PADAPTER pAdapter)
 			reg = get_bb_reg(pAdapter, 0xc94, bMaskDWord);
 			reg = (reg & 0x0fffffff) |(((Y&0x3c0)>>6)<<28);
 			set_bb_reg(pAdapter, 0xc94, bMaskDWord, reg);
-			rtw_udelay_os(5);
+			udelay_os(5);
 
 			// Calibrate RX A and B for RX0
 			reg = get_bb_reg(pAdapter, 0xc14, bMaskDWord);
@@ -1487,7 +1485,7 @@ void IQCalibrateBcut(PADAPTER pAdapter)
 			Y = (get_bb_reg(pAdapter, 0xeac, bMaskDWord) & 0x003F0000)>>16;
 			reg = (reg & 0xFFFF03FF) |(Y<<10);
 			set_bb_reg(pAdapter, 0xc14, bMaskDWord, reg);
-			rtw_udelay_os(5);
+			udelay_os(5);
 			old_value = (get_bb_reg(pAdapter, 0xc88, bMaskDWord) & 0x3FF);
 
 			// Calibrate init gain for A path for TX1 !!!!!!
@@ -1496,7 +1494,7 @@ void IQCalibrateBcut(PADAPTER pAdapter)
 			TXA[RF90_PATH_A] = (X * old_value) / 0x100;
 			reg = (reg & 0xFFFFFC00) | TXA[RF90_PATH_A];
 			set_bb_reg(pAdapter, 0xc88, bMaskDWord, reg);
-			rtw_udelay_os(5);
+			udelay_os(5);
 
 			// Calibrate init gain for C path for TX1
 			Y = (get_bb_reg(pAdapter, 0xebc, bMaskDWord)& 0x03FF0000)>>16;
@@ -1507,7 +1505,7 @@ void IQCalibrateBcut(PADAPTER pAdapter)
 			reg = get_bb_reg(pAdapter, 0xc9c, bMaskDWord);
 			reg = (reg & 0x0fffffff) |(((Y&0x3c0)>>6)<<28);
 			set_bb_reg(pAdapter, 0xc9c, bMaskDWord, reg);
-			rtw_udelay_os(5);
+			udelay_os(5);
 
 			// Calibrate RX A and B for RX1
 			reg = get_bb_reg(pAdapter, 0xc1c, bMaskDWord);
@@ -1518,7 +1516,7 @@ void IQCalibrateBcut(PADAPTER pAdapter)
 			Y = (get_bb_reg(pAdapter, 0xecc, bMaskDWord) & 0x003F0000)>>16;
 			reg = (reg & 0xFFFF03FF) |Y<<10;
 			set_bb_reg(pAdapter, 0xc1c, bMaskDWord, reg);
-			rtw_udelay_os(5);
+			udelay_os(5);
 
 			//RT_TRACE(COMP_INIT, DBG_LOUD, ("PHY_IQCalibrate OK\n"));
 			RT_TRACE(_module_rtl871x_mp_c_,_drv_alert_, ("@@@@@@ PHY_IQCalibrate OK\n"));

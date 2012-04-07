@@ -1,4 +1,4 @@
-ifdef HS7110
+ifdef STM23
 obj-y	+= rt2870sta/
 obj-y	+= rt3070sta/
 obj-y	+= rt5370sta/

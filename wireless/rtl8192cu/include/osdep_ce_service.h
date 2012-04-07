@@ -21,7 +21,7 @@ typedef NDIS_STATUS _OS_STATUS;
 
 typedef NDIS_SPIN_LOCK	_lock;
 
-typedef HANDLE 		_mutex; //Mutex
+typedef HANDLE 		_rwlock; //Mutex
 
 typedef u32	_irqL;
 
@@ -49,83 +49,83 @@ typedef NDIS_WORK_ITEM _workitem;
 
 #define SEMA_UPBND	(0x7FFFFFFF)   //8192
 
-__inline static _list *get_prev(_list	*list)
+static __inline _list *get_prev(_list	*list)
 {
 	return list->Blink;
 }
 	
-__inline static _list *get_next(_list	*list)
+static __inline _list *get_next(_list	*list)
 {
 	return list->Flink;
 }
 
-__inline static _list	*get_list_head(_queue	*queue)
+static __inline _list	*get_list_head(_queue	*queue)
 {
 	return (&(queue->queue));
 }
 
 #define LIST_CONTAINOR(ptr, type, member) CONTAINING_RECORD(ptr, type, member)
 
-__inline static void _enter_critical(_lock *plock, _irqL *pirqL)
+static void __inline _enter_critical(_lock *plock, _irqL *pirqL)
 {
 	NdisAcquireSpinLock(plock);
 }
 
-__inline static void _exit_critical(_lock *plock, _irqL *pirqL)
+static void __inline _exit_critical(_lock *plock, _irqL *pirqL)
 {
 	NdisReleaseSpinLock(plock);
 }
 
-__inline static _enter_critical_ex(_lock *plock, _irqL *pirqL)
+static __inline _enter_critical_ex(_lock *plock, _irqL *pirqL)
 {
 	NdisDprAcquireSpinLock(plock);	
 }
 
-__inline static _exit_critical_ex(_lock *plock, _irqL *pirqL)
+static __inline _exit_critical_ex(_lock *plock, _irqL *pirqL)
 {
 	NdisDprReleaseSpinLock(plock);	
 }
 
 
-__inline static void _enter_critical_mutex(_mutex *pmutex, _irqL *pirqL)
+static void __inline _enter_hwio_critical(_rwlock *prwlock, _irqL *pirqL)
 {
-	WaitForSingleObject(*pmutex, INFINITE );
+	WaitForSingleObject(*prwlock, INFINITE );
 
 }
 
-__inline static void _exit_critical_mutex(_mutex *pmutex, _irqL *pirqL)
+static void __inline _exit_hwio_critical(_rwlock *prwlock, _irqL *pirqL)
 {
-	ReleaseMutex(*pmutex);
+	ReleaseMutex(*prwlock);
 }
 
-__inline static void list_delete(_list *plist)
+static __inline void list_delete(_list *plist)
 {
 	RemoveEntryList(plist);
 	InitializeListHead(plist);
 }
 
-__inline static void _init_timer(_timer *ptimer,_nic_hdl padapter,void *pfunc,PVOID cntx)
+static __inline void _init_timer(_timer *ptimer,_nic_hdl padapter,void *pfunc,PVOID cntx)
 {
 	NdisMInitializeTimer(ptimer, padapter, pfunc, cntx);
 }
 
-__inline static void _set_timer(_timer *ptimer,u32 delay_time)
+static __inline void _set_timer(_timer *ptimer,u32 delay_time)
 {
  	NdisMSetTimer(ptimer,delay_time);
 }
 
-__inline static void _cancel_timer(_timer *ptimer,u8 *bcancelled)
+static __inline void _cancel_timer(_timer *ptimer,u8 *bcancelled)
 {
 	NdisMCancelTimer(ptimer,bcancelled);
 }
 
-__inline static void _init_workitem(_workitem *pwork, void *pfunc, PVOID cntx)
+static __inline void _init_workitem(_workitem *pwork, void *pfunc, PVOID cntx)
 {
 
 	NdisInitializeWorkItem(pwork, pfunc, cntx);
 }
 
-__inline static void _set_workitem(_workitem *pwork)
+static __inline void _set_workitem(_workitem *pwork)
 {
 	NdisScheduleWorkItem(pwork);
 }

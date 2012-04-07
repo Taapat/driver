@@ -1,22 +1,20 @@
 /******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
+* rtl871x_eeprom.c                                                                                                                                 *
+*                                                                                                                                          *
+* Description :                                                                                                                       *
+*                                                                                                                                           *
+* Author :                                                                                                                       *
+*                                                                                                                                         *
+* History :                                                          
+*
+*                                        
+*                                                                                                                                       *
+* Copyright 2007, Realtek Corp.                                                                                                  *
+*                                                                                                                                        *
+* The contents of this file is the sole property of Realtek Corp.  It can not be                                     *
+* be used, copied or modified without written permission from Realtek Corp.                                         *
+*                                                                                                                                          *
+*******************************************************************************/
 #define _RTL871X_EEPROM_C_
 
 #include <drv_conf.h>
@@ -27,8 +25,8 @@ void up_clk(_adapter*	padapter,	 u16 *x)
 {
 _func_enter_;
 	*x = *x | _EESK;
-	rtw_write8(padapter, EE_9346CR, (u8)*x);
-	rtw_udelay_os(CLOCK_RATE);
+	write8(padapter, EE_9346CR, (u8)*x);
+	udelay_os(CLOCK_RATE);
 
 _func_exit_;
 	
@@ -38,8 +36,8 @@ void down_clk(_adapter *	padapter, u16 *x	)
 {
 _func_enter_;
 	*x = *x & ~_EESK;
-	rtw_write8(padapter, EE_9346CR, (u8)*x);
-	rtw_udelay_os(CLOCK_RATE);
+	write8(padapter, EE_9346CR, (u8)*x);
+	udelay_os(CLOCK_RATE);
 _func_exit_;	
 }
 
@@ -53,7 +51,7 @@ _func_enter_;
 		goto out;
 	}
 	mask = 0x01 << (count - 1);
-	x = rtw_read8(padapter, EE_9346CR);
+	x = read8(padapter, EE_9346CR);
 
 	x &= ~(_EEDO | _EEDI);
 
@@ -66,8 +64,8 @@ _func_enter_;
 		RT_TRACE(_module_rtl871x_eeprom_c_,_drv_err_,("padapter->bSurpriseRemoved==_TRUE"));
 		goto out;
 		}
-		rtw_write8(padapter, EE_9346CR, (u8)x);
-		rtw_udelay_os(CLOCK_RATE);
+		write8(padapter, EE_9346CR, (u8)x);
+		udelay_os(CLOCK_RATE);
 		up_clk(padapter, &x);
 		down_clk(padapter, &x);
 		mask = mask >> 1;
@@ -77,7 +75,7 @@ _func_enter_;
 		goto out;
 	}
 	x &= ~_EEDI;
-	rtw_write8(padapter, EE_9346CR, (u8)x);
+	write8(padapter, EE_9346CR, (u8)x);
 out:	
 _func_exit_;		
 }
@@ -90,7 +88,7 @@ _func_enter_;
 		RT_TRACE(_module_rtl871x_eeprom_c_,_drv_err_,("padapter->bSurpriseRemoved==_TRUE"));
 		goto out;
 	}
-	x = rtw_read8(padapter, EE_9346CR);
+	x = read8(padapter, EE_9346CR);
 
 	x &= ~( _EEDO | _EEDI);
 	d = 0;
@@ -103,7 +101,7 @@ _func_enter_;
 		RT_TRACE(_module_rtl871x_eeprom_c_,_drv_err_,("padapter->bSurpriseRemoved==_TRUE"));
 		goto out;
 	}
-		x = rtw_read8(padapter, EE_9346CR);
+		x = read8(padapter, EE_9346CR);
 
 		x &= ~(_EEDI);
 		if(x & _EEDO)
@@ -121,15 +119,15 @@ void standby(_adapter *	padapter	)
 {
 	u8   x;
 _func_enter_;	
-	x = rtw_read8(padapter, EE_9346CR);
+	x = read8(padapter, EE_9346CR);
 
 	x &= ~(_EECS | _EESK);
-	rtw_write8(padapter, EE_9346CR,x);
+	write8(padapter, EE_9346CR,x);
 
-	rtw_udelay_os(CLOCK_RATE);
+	udelay_os(CLOCK_RATE);
 	x |= _EECS;
-	rtw_write8(padapter, EE_9346CR, x);
-	rtw_udelay_os(CLOCK_RATE);
+	write8(padapter, EE_9346CR, x);
+	udelay_os(CLOCK_RATE);
 _func_exit_;		
 }
 
@@ -141,12 +139,12 @@ _func_enter_;
 	standby(padapter );
 	for (i=0; i<200; i++) 
 	{
-		x = rtw_read8(padapter, EE_9346CR);
+		x = read8(padapter, EE_9346CR);
 		if (x & _EEDO){
 			res=_TRUE;
 			goto exit;
 			}
-		rtw_udelay_os(CLOCK_RATE);
+		udelay_os(CLOCK_RATE);
 	}
 exit:	
 _func_exit_;			
@@ -161,13 +159,13 @@ _func_enter_;
 		RT_TRACE(_module_rtl871x_eeprom_c_,_drv_err_,("padapter->bSurpriseRemoved==_TRUE"));
 		goto out;
 	}
-	x = rtw_read8(padapter, EE_9346CR);
+	x = read8(padapter, EE_9346CR);
 	if(padapter->bSurpriseRemoved==_TRUE){
 		RT_TRACE(_module_rtl871x_eeprom_c_,_drv_err_,("padapter->bSurpriseRemoved==_TRUE"));
 		goto out;
 	}
 	x &= ~(_EECS | _EEDI);
-	rtw_write8(padapter, EE_9346CR, (u8)x);
+	write8(padapter, EE_9346CR, (u8)x);
 	if(padapter->bSurpriseRemoved==_TRUE){
 		RT_TRACE(_module_rtl871x_eeprom_c_,_drv_err_,("padapter->bSurpriseRemoved==_TRUE"));
 		goto out;
@@ -187,26 +185,26 @@ void eeprom_write16(_adapter * padapter, u16 reg, u16 data)
 	u8 x;
 #ifdef CONFIG_RTL8712
 	u8	tmp8_ori,tmp8_new,tmp8_clk_ori,tmp8_clk_new;
-	tmp8_ori=rtw_read8(padapter, 0x102502f1);
+	tmp8_ori=read8(padapter, 0x102502f1);
 	tmp8_new=tmp8_ori & 0xf7;
 	if(tmp8_ori != tmp8_new){	
-		rtw_write8(padapter, 0x102502f1, tmp8_new);
+		write8(padapter, 0x102502f1, tmp8_new);
 		RT_TRACE(_module_rtl871x_mp_ioctl_c_,_drv_err_,("====write 0x102502f1=====\n"));
 	}
-	tmp8_clk_ori=rtw_read8(padapter,0x10250003);
+	tmp8_clk_ori=read8(padapter,0x10250003);
 	tmp8_clk_new=tmp8_clk_ori|0x20;
 	if(tmp8_clk_new!=tmp8_clk_ori){
 		RT_TRACE(_module_rtl871x_mp_ioctl_c_,_drv_err_,("====write 0x10250003=====\n"));
-		rtw_write8(padapter, 0x10250003, tmp8_clk_new);
+		write8(padapter, 0x10250003, tmp8_clk_new);
 	}	
 #endif
 _func_enter_;		
 	
-	x = rtw_read8(padapter, EE_9346CR);
+	x = read8(padapter, EE_9346CR);
 
 	x &= ~(_EEDI | _EEDO | _EESK | _EEM0);
 	x |= _EEM1 | _EECS;
-	rtw_write8(padapter, EE_9346CR, x);
+	write8(padapter, EE_9346CR, x);
 
 	shift_out_bits(padapter, EEPROM_EWEN_OPCODE, 5);
 	
@@ -257,9 +255,9 @@ _func_enter_;
 exit:	
 #ifdef CONFIG_RTL8712
 	if(tmp8_clk_new!=tmp8_clk_ori)
-		rtw_write8(padapter, 0x10250003, tmp8_clk_ori);
+		write8(padapter, 0x10250003, tmp8_clk_ori);
 	if(tmp8_new!=tmp8_ori)
-		rtw_write8(padapter, 0x102502f1, tmp8_ori);
+		write8(padapter, 0x102502f1, tmp8_ori);
 
 #endif
 _func_exit_;	
@@ -273,17 +271,17 @@ u16 eeprom_read16(_adapter * padapter, u16 reg) //ReadEEprom
 	u16 data=0;
 #ifdef CONFIG_RTL8712
 	u8	tmp8_ori,tmp8_new,tmp8_clk_ori,tmp8_clk_new;
-	tmp8_ori= rtw_read8(padapter, 0x102502f1);
+	tmp8_ori= read8(padapter, 0x102502f1);
 	tmp8_new = tmp8_ori & 0xf7;
 	if(tmp8_ori != tmp8_new){	
-		rtw_write8(padapter, 0x102502f1, tmp8_new);
+		write8(padapter, 0x102502f1, tmp8_new);
 		RT_TRACE(_module_rtl871x_mp_ioctl_c_,_drv_err_,("====write 0x102502f1=====\n"));
 	}
-	tmp8_clk_ori=rtw_read8(padapter,0x10250003);
+	tmp8_clk_ori=read8(padapter,0x10250003);
 	tmp8_clk_new=tmp8_clk_ori|0x20;
 	if(tmp8_clk_new!=tmp8_clk_ori){
 		RT_TRACE(_module_rtl871x_mp_ioctl_c_,_drv_err_,("====write 0x10250003=====\n"));
-		rtw_write8(padapter, 0x10250003, tmp8_clk_new);
+		write8(padapter, 0x10250003, tmp8_clk_new);
 	}	
 #endif
 _func_enter_;		
@@ -293,7 +291,7 @@ _func_enter_;
 		goto out;
 	}
 	// select EEPROM, reset bits, set _EECS
-	x = rtw_read8(padapter, EE_9346CR);
+	x = read8(padapter, EE_9346CR);
 
 	if(padapter->bSurpriseRemoved==_TRUE){
 		RT_TRACE(_module_rtl871x_eeprom_c_,_drv_err_,("padapter->bSurpriseRemoved==_TRUE"));
@@ -302,7 +300,7 @@ _func_enter_;
 
 	x &= ~(_EEDI | _EEDO | _EESK | _EEM0);
 	x |= _EEM1 | _EECS;
-	rtw_write8(padapter, EE_9346CR, (unsigned char)x);
+	write8(padapter, EE_9346CR, (unsigned char)x);
 
 	// write the read opcode and register number in that order
 	// The opcode is 3bits in length, reg is 6 bits long
@@ -316,9 +314,9 @@ _func_enter_;
 out:	
 #ifdef CONFIG_RTL8712
 	if(tmp8_clk_new!=tmp8_clk_ori)
-		rtw_write8(padapter, 0x10250003, tmp8_clk_ori);
+		write8(padapter, 0x10250003, tmp8_clk_ori);
 	if(tmp8_new!=tmp8_ori)
-		rtw_write8(padapter, 0x102502f1, tmp8_ori);
+		write8(padapter, 0x102502f1, tmp8_ori);
 
 #endif
 _func_exit_;		
@@ -342,7 +340,7 @@ _func_enter_;
 		goto out;
 	}
 	// select EEPROM, reset bits, set _EECS
-	x = rtw_read8(padapter, EE_9346CR);
+	x = read8(padapter, EE_9346CR);
 
 	if(padapter->bSurpriseRemoved==_TRUE){
 		RT_TRACE(_module_rtl871x_eeprom_c_,_drv_err_,("padapter->bSurpriseRemoved==_TRUE"));
@@ -351,7 +349,7 @@ _func_enter_;
 
 	x &= ~(_EEDI | _EEDO | _EESK | _EEM0);
 	x |= _EEM1 | _EECS;
-	rtw_write8(padapter, EE_9346CR, (unsigned char)x);
+	write8(padapter, EE_9346CR, (unsigned char)x);
 
 	// write the read opcode and register number in that order
 	// The opcode is 3bits in length, reg is 6 bits long

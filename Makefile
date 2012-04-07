@@ -124,6 +124,7 @@ obj-y	+= simu_button/
 obj-y	+= e2_proc/
 obj-y	+= frontends/
 obj-y	+= frontcontroller/
+obj-y	+= wireless/
 
 ifneq (,$(findstring pti_np,*))
 obj-y	+= pti_np/
@@ -198,13 +199,11 @@ ifdef HS7110
 obj-y	+= cec/
 obj-y	+= smartcard/
 obj-y	+= cpu_frequ/
-#obj-y	+= wireless/
 endif
 
 ifdef SPARK
 obj-y	+= smartcard/
 obj-y	+= cpu_frequ/
-obj-y	+= wireless/
 endif
 
 ifdef SPARK7162

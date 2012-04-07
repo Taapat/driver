@@ -1,22 +1,4 @@
-/******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
+
 #ifndef __WLAN_BSSDEF_H__
 #define __WLAN_BSSDEF_H__
 
@@ -124,6 +106,8 @@ partial sum.
 
 */
 #if 0
+#define BCN_FRAM_IDX 0
+#define OPT_ANT_IDX	1
 typedef struct _NDIS_WLAN_BSSID_EX
 {
   ULONG  Length;
@@ -147,7 +131,6 @@ typedef struct _NDIS_802_11_BSSID_LIST_EX
   NDIS_WLAN_BSSID_EX  Bssid[1];
 } NDIS_802_11_BSSID_LIST_EX, *PNDIS_802_11_BSSID_LIST_EX;
 #endif
-
 typedef enum _NDIS_802_11_AUTHENTICATION_MODE
 {
     Ndis802_11AuthModeOpen,
@@ -298,14 +281,6 @@ typedef struct _NDIS_802_11_TEST
 #define Ndis802_11APMode (Ndis802_11InfrastructureMax+1)
 #endif
 
-typedef struct _WLAN_PHY_INFO
-{
-	u8	SignalStrength;//(in percentage)
-  	u8	SignalQuality;//(in percentage)
-  	u8	Optimum_antenna;  //for Antenna diversity
-  	u8  	Reserved_0;
-}WLAN_PHY_INFO,*PWLAN_PHY_INFO;
-
 typedef struct _WLAN_BSSID_EX
 {
   ULONG  Length;
@@ -318,12 +293,15 @@ typedef struct _WLAN_BSSID_EX
   NDIS_802_11_CONFIGURATION  Configuration;
   NDIS_802_11_NETWORK_INFRASTRUCTURE  InfrastructureMode;
   NDIS_802_11_RATES_EX  SupportedRates;  
-  WLAN_PHY_INFO	PhyInfo;  	
+  u8	SignalStrength;//(in percentage)
+  u8	SignalQuality;//(in percentage)
+  u8	Optimum_antenna;  //for Antenna diversity
+  u8  Reserved_0;
   ULONG  IELength;
   UCHAR  IEs[MAX_IE_SZ];	//(timestamp, beacon interval, and capability information)
 } WLAN_BSSID_EX, *PWLAN_BSSID_EX;
 
-__inline  static uint get_WLAN_BSSID_EX_sz(WLAN_BSSID_EX *bss)
+static __inline  uint get_WLAN_BSSID_EX_sz(WLAN_BSSID_EX *bss)
 {
 	uint t_len;
 	
@@ -334,7 +312,7 @@ __inline  static uint get_WLAN_BSSID_EX_sz(WLAN_BSSID_EX *bss)
 			sizeof (NDIS_802_11_NETWORK_INFRASTRUCTURE) +   
 			sizeof (NDIS_802_11_RATES_EX)+ 
 			//all new member add here
-			sizeof(WLAN_PHY_INFO)+	 
+			sizeof(u8)+sizeof(u8)+sizeof(u8)+sizeof(u8)+	 
 			//all new member add here
 			sizeof (ULONG) + bss->IELength;	
 	return t_len;

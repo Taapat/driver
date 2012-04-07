@@ -1,22 +1,3 @@
-/******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
 #ifndef _LINUX_BYTEORDER_SWAB_H
 #define _LINUX_BYTEORDER_SWAB_H
 
@@ -37,7 +18,7 @@ typedef unsigned long long	__u64;
 #endif
 
 
-__inline static __u16  ___swab16(__u16 x)
+static __inline __u16  ___swab16(__u16 x)
 {
 	__u16 __x = x; 
 	return 
@@ -47,7 +28,7 @@ __inline static __u16  ___swab16(__u16 x)
 
 }
 
-__inline static __u32  ___swab32(__u32 x)
+static __inline __u32  ___swab32(__u32 x)
 {
 	__u32 __x = (x);
 	return ((__u32)(
@@ -57,7 +38,7 @@ __inline static __u32  ___swab32(__u32 x)
 		(((__u32)(__x) & (__u32)0xff000000UL) >> 24) ));
 }
 
-__inline static __u64  ___swab64(__u64 x)
+static __inline __u64  ___swab64(__u64 x)
 {
 	__u64 __x = (x);
 	
@@ -74,7 +55,7 @@ __inline static __u64  ___swab64(__u64 x)
 }
 
 #ifndef __arch__swab16
-__inline static __u16 __arch__swab16(__u16 x)
+static __inline __u16 __arch__swab16(__u16 x)
 {
 	return ___swab16(x);
 }
@@ -82,7 +63,7 @@ __inline static __u16 __arch__swab16(__u16 x)
 #endif
 
 #ifndef __arch__swab32
-__inline static __u32 __arch__swab32(__u32 x)
+static __inline __u32 __arch__swab32(__u32 x)
 {
 	__u32 __tmp = (x) ; 
 	return ___swab32(__tmp);
@@ -91,7 +72,7 @@ __inline static __u32 __arch__swab32(__u32 x)
 
 #ifndef __arch__swab64
 
-__inline static __u64 __arch__swab64(__u64 x)
+static __inline __u64 __arch__swab64(__u64 x)
 {
 	__u64 __tmp = (x) ; 
 	return ___swab64(__tmp);
@@ -104,11 +85,11 @@ __inline static __u64 __arch__swab64(__u64 x)
 #define __swab32(x) __fswab32(x)
 #define __swab64(x) __fswab64(x)
 
-__inline static const __u16 __fswab16(__u16 x)
+static __inline const __u16 __fswab16(__u16 x)
 {
 	return __arch__swab16(x);
 }
-__inline static const __u32 __fswab32(__u32 x)
+static __inline const __u32 __fswab32(__u32 x)
 {
 	return __arch__swab32(x);
 }

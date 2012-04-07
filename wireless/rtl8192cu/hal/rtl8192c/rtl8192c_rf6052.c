@@ -1,24 +1,4 @@
 /******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
- 
-/******************************************************************************
  * 
  *     (c) Copyright  2008, RealTEK Technologies Inc. All Rights Reserved.
  * 
@@ -190,7 +170,8 @@ VOID
 PHY_RF6052SetBandwidth(
 	IN	PADAPTER				Adapter,
 	IN	HT_CHANNEL_WIDTH		Bandwidth)	//20M or 40M
-{		
+{	
+	u8			eRFPath;	
 	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(Adapter);
 	
 	switch(Bandwidth)
@@ -247,17 +228,15 @@ PHY_RF6052SetCckTxPower(
 	BOOLEAN			TurboScanOff = _FALSE;
 	u8			idx1, idx2;
 	u8*			ptr;
-
-	// 2010/10/18 MH Accorsing to SD3 eechou's suggestion, we need to disable turbo scan for RU.	
-	// Otherwise, external PA will be broken if power index > 0x20.
-	if((pEEPROM->EEPROMRegulatory != 0)||( pHalData->ExternalPA))
+	
+	if(pEEPROM->EEPROMRegulatory != 0)
 		TurboScanOff = _TRUE;
 
 		
 	if( pmlmeext->sitesurvey_res.state == _TRUE)
 	{
-		TxAGC[RF90_PATH_A] = 0x3f3f3f3f;
-		TxAGC[RF90_PATH_B] = 0x3f3f3f3f;
+		//TxAGC[RF90_PATH_A] = 0x3f3f3f3f;
+		//TxAGC[RF90_PATH_B] = 0x3f3f3f3f;
 
 		TurboScanOff = _TRUE;
 		
@@ -268,21 +247,11 @@ PHY_RF6052SetCckTxPower(
 				TxAGC[idx1] = 
 					pPowerlevel[idx1] | (pPowerlevel[idx1]<<8) |
 					(pPowerlevel[idx1]<<16) | (pPowerlevel[idx1]<<24);
-
-#if (DEV_BUS_TYPE == DEV_BUS_USB_INTERFACE)
-				// 2010/10/18 MH For external PA module. We need to limit power index to be less than 0x20.
-				if (TxAGC[idx1] > 0x20 && pHalData->ExternalPA)
-					TxAGC[idx1] = 0x20;
-#endif
 			}
 		}
 	}
 	else
 	{
-// 20100427 Joseph: Driver dynamic Tx power shall not affect Tx power. It shall be determined by power training mechanism.
-// Currently, we cannot fully disable driver dynamic tx power mechanism because it is referenced by BT coexist mechanism.
-// In the future, two mechanism shall be separated from each other and maintained independantly. Thanks for Lanhsin's reminder.
-
 		if(pdmpriv->DynamicTxHighPowerLvl == TxHighPwrLevel_Level1)
 		{	
 			TxAGC[RF90_PATH_A] = 0x10101010;
@@ -522,6 +491,7 @@ void writeOFDMPowerReg(
 							rTxAGC_B_Mcs03_Mcs00, rTxAGC_B_Mcs07_Mcs04,
 							rTxAGC_B_Mcs11_Mcs08, rTxAGC_B_Mcs15_Mcs12};
 	u8 i, rf, pwr_val[4];
+	u8 rfa_lower_bound, rfa_upper_bound, rf_pwr_diff;
 	u32 writeVal;
 	u16 RegOffset;
 
@@ -575,7 +545,8 @@ PHY_RF6052SetOFDMTxPower(
 {
 	//HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(Adapter);
 	u32 writeVal[2], powerBase0[2], powerBase1[2];
-	u8 index = 0;	
+	u8 index = 0;
+	u8 i;
 
 	getPowerBase(Adapter, pPowerLevel, Channel, &powerBase0[0], &powerBase1[0]);
 
@@ -662,10 +633,9 @@ phy_RF6052_Config_ParaFile(
 	HAL_DATA_TYPE			*pHalData = GET_HAL_DATA(Adapter);
 	static u8				sz88CRadioAFile[] = RTL8188C_PHY_RADIO_A;	
 	static u8				sz88CRadioBFile[] = RTL8188C_PHY_RADIO_B;
-#if DEV_BUS_TYPE==DEV_BUS_USB_INTERFACE	
+#if DEV_BUS_TYPE==USB_INTERFACE	
 	static u8				sz88CRadioAFile_mCard[] = RTL8188C_PHY_RADIO_A_mCard;	
 	static u8				sz88CRadioBFile_mCard[] = RTL8188C_PHY_RADIO_B_mCard;
-	static u8				sz88CRadioAFile_HP[] = RTL8188C_PHY_RADIO_A_HP;	
 #endif
 	static u8				sz92CCRadioAFile[] = RTL8192C_PHY_RADIO_A;	
 	static u8				sz92CRadioBFile[] = RTL8192C_PHY_RADIO_B;
@@ -677,15 +647,11 @@ phy_RF6052_Config_ParaFile(
 		pszRadioBFile = (u8*)&sz92CRadioBFile;
 	}
 	else{
-#if DEV_BUS_TYPE==DEV_BUS_USB_INTERFACE
+#if DEV_BUS_TYPE==USB_INTERFACE
 		if( BOARD_MINICARD == pHalData->BoardType)
 		{
 			pszRadioAFile = sz88CRadioAFile_mCard;
 			pszRadioBFile = sz88CRadioBFile_mCard;
-		}
-		else if( BOARD_USB_High_PA == pHalData->BoardType)
-		{
-			pszRadioAFile = sz88CRadioAFile_HP;
 		}
 		else
 #endif	
@@ -719,18 +685,18 @@ phy_RF6052_Config_ParaFile(
 
 		/*----Set RF_ENV enable----*/		
 		PHY_SetBBReg(Adapter, pPhyReg->rfintfe, bRFSI_RFENV<<16, 0x1);
-		rtw_udelay_os(1);//PlatformStallExecution(1);
+		udelay_os(1);//PlatformStallExecution(1);
 		
 		/*----Set RF_ENV output high----*/
 		PHY_SetBBReg(Adapter, pPhyReg->rfintfo, bRFSI_RFENV, 0x1);
-		rtw_udelay_os(1);//PlatformStallExecution(1);
+		udelay_os(1);//PlatformStallExecution(1);
 
 		/* Set bit number of Address and Data for RF register */
 		PHY_SetBBReg(Adapter, pPhyReg->rfHSSIPara2, b3WireAddressLength, 0x0); 	// Set 1 to 4 bits for 8255
-		rtw_udelay_os(1);//PlatformStallExecution(1);
+		udelay_os(1);//PlatformStallExecution(1);
 
 		PHY_SetBBReg(Adapter, pPhyReg->rfHSSIPara2, b3WireDataLength, 0x0);	// Set 0 to 12  bits for 8255
-		rtw_udelay_os(1);//PlatformStallExecution(1);
+		udelay_os(1);//PlatformStallExecution(1);
 
 		/*----Initialize RF fom connfiguration file----*/
 		switch(eRFPath)

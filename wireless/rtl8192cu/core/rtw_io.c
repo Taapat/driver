@@ -1,22 +1,49 @@
 /******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
+* rtl871x_io.c                                                                                                                                 *
+*                                                                                                                                          *
+* Description :                                                                                                                       *
+*                                                                                                                                           *
+* Author :                                                                                                                       *
+*                                                                                                                                         *
+* History :                                                          
+*
+*                                        
+*                                                                                                                                       *
+* Copyright 2007, Realtek Corp.                                                                                                  *
+*                                                                                                                                        *
+* The contents of this file is the sole property of Realtek Corp.  It can not be                                     *
+* be used, copied or modified without written permission from Realtek Corp.                                         *
+*                                                                                                                                          *
+*******************************************************************************/
+/*
+
+The purpose of rtl871x_io.c
+
+a. provides the API 
+
+b. provides the protocol engine
+
+c. provides the software interface between caller and the hardware interface
+
+
+Compiler Flag Option:
+
+1. CONFIG_SDIO_HCI:
+    a. USE_SYNC_IRP:  Only sync operations are provided.
+    b. USE_ASYNC_IRP:Both sync/async operations are provided.
+
+2. CONFIG_USB_HCI:
+   a. USE_ASYNC_IRP: Both sync/async operations are provided.
+
+3. CONFIG_CFIO_HCI:
+   b. USE_SYNC_IRP: Only sync operations are provided.
+
+
+Only sync read/write_mem operations are provided.
+
+jackson@realtek.com.tw
+
+*/
 
 #define _RTL871X_IO_C_
 #include <drv_conf.h>
@@ -66,98 +93,86 @@
 #endif
 
 
-u8 rtw_read8(_adapter *adapter, u32 addr)
+u8 read8(_adapter *adapter, u32 addr)
 {
 	u8 r_val;
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
 	u8 (*_read8)(struct intf_hdl *pintfhdl, u32 addr);
-	_irqL irqL;
 	_func_enter_;
 	_read8 = pintfhdl->io_ops._read8;
-	_enter_critical_mutex(&pintfhdl->io_mutex, &irqL);
+	
 	r_val = _read8(pintfhdl, addr);
-	_exit_critical_mutex(&pintfhdl->io_mutex, &irqL);
 	_func_exit_;
 	return r_val;
 }
 
-u16 rtw_read16(_adapter *adapter, u32 addr)
+u16 read16(_adapter *adapter, u32 addr)
 {
 	u16 r_val;
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
 	u16 	(*_read16)(struct intf_hdl *pintfhdl, u32 addr);
-	_irqL irqL;
 	_func_enter_;
 	_read16 = pintfhdl->io_ops._read16;
-	_enter_critical_mutex(&pintfhdl->io_mutex, &irqL);
+
 	r_val = _read16(pintfhdl, addr);
-	_exit_critical_mutex(&pintfhdl->io_mutex, &irqL);
 	_func_exit_;
 	return r_val;
 }
 	
-u32 rtw_read32(_adapter *adapter, u32 addr)
+u32 read32(_adapter *adapter, u32 addr)
 {
 	u32 r_val;
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
 	u32 	(*_read32)(struct intf_hdl *pintfhdl, u32 addr);
-	_irqL irqL;
 	_func_enter_;
 	_read32 = pintfhdl->io_ops._read32;
-	_enter_critical_mutex(&pintfhdl->io_mutex, &irqL);
+	
 	r_val = _read32(pintfhdl, addr);
-	_exit_critical_mutex(&pintfhdl->io_mutex, &irqL);
 	_func_exit_;
 	return r_val;	
 
 }
 
-void rtw_write8(_adapter *adapter, u32 addr, u8 val)
+void write8(_adapter *adapter, u32 addr, u8 val)
 {
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
 	void (*_write8)(struct intf_hdl *pintfhdl, u32 addr, u8 val);
-	_irqL irqL;
 	_func_enter_;
 	_write8 = pintfhdl->io_ops._write8;
-	_enter_critical_mutex(&pintfhdl->io_mutex, &irqL);
+	
 	_write8(pintfhdl, addr, val);
-	_exit_critical_mutex(&pintfhdl->io_mutex, &irqL);
 }
-void rtw_write16(_adapter *adapter, u32 addr, u16 val)
+void write16(_adapter *adapter, u32 addr, u16 val)
 {
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
 	void (*_write16)(struct intf_hdl *pintfhdl, u32 addr, u16 val);
-	_irqL irqL;
 	_func_enter_;
 	_write16 = pintfhdl->io_ops._write16;
-	_enter_critical_mutex(&pintfhdl->io_mutex, &irqL);
+	
 	_write16(pintfhdl, addr, val);
-	_exit_critical_mutex(&pintfhdl->io_mutex, &irqL);
 	_func_exit_;
 
 }
-void rtw_write32(_adapter *adapter, u32 addr, u32 val)
+void write32(_adapter *adapter, u32 addr, u32 val)
 {
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
 	void (*_write32)(struct intf_hdl *pintfhdl, u32 addr, u32 val);
-	_irqL irqL;
 	_func_enter_;
 	_write32 = pintfhdl->io_ops._write32;
-	_enter_critical_mutex(&pintfhdl->io_mutex, &irqL);
+	
 	_write32(pintfhdl, addr, val);	
-	_exit_critical_mutex(&pintfhdl->io_mutex, &irqL);
 	_func_exit_;
 
 }
@@ -167,12 +182,10 @@ void writeN(_adapter *adapter, u32 addr ,u32 length , u8 *pdata)
 	struct io_priv *pio_priv = &adapter->iopriv;
         struct	intf_hdl	*pintfhdl = (struct intf_hdl*)(&(pio_priv->intf));
 	void (*_writeN)(struct intf_hdl *pintfhdl, u32 addr,u32 length, u8 *pdata);
-	_irqL irqL;
 	_func_enter_;
 	_writeN = pintfhdl->io_ops._writeN;
-	_enter_critical_mutex(&pintfhdl->io_mutex, &irqL);
+	
 	_writeN(pintfhdl, addr,length,pdata);	
-	_exit_critical_mutex(&pintfhdl->io_mutex, &irqL);
 	_func_exit_;
 
 }
@@ -215,7 +228,7 @@ void write32_async(_adapter *adapter, u32 addr, u32 val)
 	_func_exit_;
 
 }
-void rtw_read_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
+void read_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
 {
 	void (*_read_mem)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);	
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
@@ -226,7 +239,7 @@ void rtw_read_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
 
 	if( (adapter->bDriverStopped ==_TRUE) || (adapter->bSurpriseRemoved == _TRUE))
 	{
-	     RT_TRACE(_module_rtl871x_io_c_, _drv_info_, ("rtw_read_mem:bDriverStopped(%d) OR bSurpriseRemoved(%d)", adapter->bDriverStopped, adapter->bSurpriseRemoved));	    
+	     RT_TRACE(_module_rtl871x_io_c_, _drv_info_, ("read_mem:bDriverStopped(%d) OR bSurpriseRemoved(%d)", adapter->bDriverStopped, adapter->bSurpriseRemoved));	    
 	     return;
 	}	
 	
@@ -238,7 +251,7 @@ void rtw_read_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
 	
 }
 
-void rtw_write_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
+void write_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
 {	
 	void (*_write_mem)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);	
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
@@ -255,7 +268,7 @@ void rtw_write_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
 	
 }
 
-void rtw_read_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
+void read_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
 {	
 	u32 (*_read_port)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);	
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
@@ -266,7 +279,7 @@ void rtw_read_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
 
 	if( (adapter->bDriverStopped ==_TRUE) || (adapter->bSurpriseRemoved == _TRUE))
 	{
-	     RT_TRACE(_module_rtl871x_io_c_, _drv_info_, ("rtw_read_port:bDriverStopped(%d) OR bSurpriseRemoved(%d)", adapter->bDriverStopped, adapter->bSurpriseRemoved));	    
+	     RT_TRACE(_module_rtl871x_io_c_, _drv_info_, ("read_port:bDriverStopped(%d) OR bSurpriseRemoved(%d)", adapter->bDriverStopped, adapter->bSurpriseRemoved));	    
 	     return;
 	}	
 
@@ -291,7 +304,7 @@ void read_port_cancel(_adapter *adapter)
 			
 }
 
-void rtw_write_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
+void write_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
 {	
 	u32 (*_write_port)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
@@ -314,7 +327,7 @@ void write_port_cancel(_adapter *adapter)
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct intf_hdl *pintfhdl = &(pio_priv->intf);
 	
-	_write_port_cancel = pintfhdl->io_ops._write_port_cancel;
+	_write_port_cancel = pintfhdl->io_ops._read_port_cancel;
 
 	if(_write_port_cancel)
 		_write_port_cancel(pintfhdl);	
@@ -322,7 +335,7 @@ void write_port_cancel(_adapter *adapter)
 }
 
 
-void rtw_attrib_read(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem){
+void attrib_read(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem){
 #ifdef CONFIG_SDIO_HCI
 	void (*_attrib_read)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
 	
@@ -340,7 +353,7 @@ void rtw_attrib_read(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem){
 #endif
 }
 
-void rtw_attrib_write(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem){
+void attrib_write(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem){
 #ifdef CONFIG_SDIO_HCI
 	void (*_attrib_write)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
 	
@@ -369,7 +382,6 @@ int init_io_priv(_adapter *padapter)
 	pintf->padapter = padapter;
 	pintf->pintf_dev = &padapter->dvobjpriv;
 	
-	_rtw_mutex_init(&pintf->io_mutex ); 
 	
 #ifdef CONFIG_SDIO_HCI	
 	set_intf_ops = &sdio_set_intf_ops;	
@@ -380,7 +392,7 @@ int init_io_priv(_adapter *padapter)
 
 	if(padapter->chip_type == RTL8188C_8192C)
 	{
-#ifdef CONFIG_RTL8192C		
+#ifdef CONFIG_RTL8192C
 		set_intf_ops = &rtl8192cu_set_intf_ops;
 #endif
 	}

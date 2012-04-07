@@ -312,18 +312,35 @@ obj-y	+= multituner/
 else ifdef CUBEREVO_MINI_FTA
 obj-y	+= multituner/
 else  ifdef ADB_BOX
+# Single ----------------------------------
+
+# stb0899
+
 fe-core-objs +=        adb/stb0899_algo.o
 fe-core-objs +=        adb/stb0899_drv.o
 fe-core-objs +=        adb/stb6100.o
 fe-core-objs +=        adb/core.o
 obj-m += fe-core.o
 
-#Adb_Dual
+# Dual -------------------------------------
+
+# stb0899
+
 #fe-core-objs +=        adb_dual/stb0899_algo.o
 #fe-core-objs +=        adb_dual/stb0899_drv.o
 #fe-core-objs +=        adb_dual/stb6100.o
 #fe-core-objs +=        adb_dual/core.o
+#obj-m += fe-core.o 
+
+# stv0900
+
+#fe-core-objs +=	adb_stv900/stv090x.o
+#fe-core-objs +=	adb_stv900/stb6100.o
+#fe-core-objs +=	adb_stv900/core.o
 #obj-m += fe-core.o
+
+#------------------------------------------------- 
+
 endif
 
 # other drivers already in kernel

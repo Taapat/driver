@@ -1,22 +1,20 @@
 /******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
+* rtl8192c_recv.c                                                                                                                                 *
+*                                                                                                                                          *
+* Description :                                                                                                                       *
+*                                                                                                                                           *
+* Author :                                                                                                                       *
+*                                                                                                                                         *
+* History :
+*
+*
+*                                                                                                                                       *
+* Copyright 2008, Realtek Corp.                                                                                                  *
+*                                                                                                                                        *
+* The contents of this file is the sole property of Realtek Corp.  It can not be                                     *
+* be used, copied or modified without written permission from Realtek Corp.                                         *
+*                                                                                                                                          *
+*******************************************************************************/
 #define _RTL8192C_RECV_C_
 #include <drv_conf.h>
 #include <osdep_service.h>
@@ -103,36 +101,6 @@ static s32  translate2dbm(_adapter *padapter,u8 signal_strength_idx	)
 	return signal_power;
 }
 
-typedef struct _Phy_OFDM_Rx_Status_Report_8192cd
-{
-	unsigned char	trsw_gain_X[4];
-	unsigned char	pwdb_all;
-	unsigned char	cfosho_X[4];
-	unsigned char	cfotail_X[4];
-	unsigned char	rxevm_X[2];
-	unsigned char	rxsnr_X[4];
-	unsigned char	pdsnr_X[2];
-	unsigned char	csi_current_X[2];
-	unsigned char	csi_target_X[2];
-	unsigned char	sigevm;
-	unsigned char	max_ex_pwr;
-//#ifdef RTL8192SE
-#ifdef	_LITTLE_ENDIAN_
-	unsigned char ex_intf_flg:1;
-	unsigned char sgi_en:1;
-	unsigned char rxsc:2;
-	unsigned char rsvd:4;
-#else	// _BIG_ENDIAN_
-	unsigned char rsvd:4;
-	unsigned char rxsc:2;
-	unsigned char sgi_en:1;
-	unsigned char ex_intf_flg:1;
-#endif
-//#else	// RTL8190, RTL8192E
-//	unsigned char	sgi_en;
-//	unsigned char	rxsc_sgien_exflg;
-//#endif
-} PHY_STS_OFDM_8192CD_T;
 
 void rtl8192c_query_rx_phy_status(union recv_frame *prframe, struct recv_stat *prxstat)
 {
@@ -148,8 +116,8 @@ void rtl8192c_query_rx_phy_status(union recv_frame *prframe, struct recv_stat *p
 	struct eeprom_priv	*peeprompriv = &(padapter->eeprompriv);
 	struct phy_stat		*pphy_stat = (struct phy_stat *)(prxstat+1);
 	u8	*pphy_head=(u8 *)(prxstat+1);
-	u8 tmp_rxsnr;
-	s8 rx_snrX;
+
+		
 
 	// Record it for next packet processing
 	bcck_rate=(pattrib->mcs_rate<=3? 1:0);
@@ -290,7 +258,7 @@ void rtl8192c_query_rx_phy_status(union recv_frame *prframe, struct recv_stat *p
 	}
 	else //OFDM/HT
 	{
-		PHY_STS_OFDM_8192CD_T	*pOfdm_buf = (PHY_STS_OFDM_8192CD_T *)pphy_head;;
+		//Adapter->RxStats.NumQryPhyStatusHT++;
 		//
 		// (1)Get RSSI per-path
 		//
@@ -298,17 +266,6 @@ void rtl8192c_query_rx_phy_status(union recv_frame *prframe, struct recv_stat *p
 		{
 			rf_rx_num++;
 			rx_pwr[i] = ((pphy_head[PHY_STAT_GAIN_TRSW_SHT+i]&0x3F)*2) - 110;
-
-
-			//if (priv->pshare->rf_ft_var.rssi_dump) 
-			{
-				tmp_rxsnr =	pOfdm_buf->rxsnr_X[i];
-				rx_snrX = (s8)(tmp_rxsnr);
-				rx_snrX >>= 1;
-				pattrib->RxSNRdB[i] = (int)rx_snrX;
-			}
-			
-
 
 			/* Translate DBM to percentage. */
 			rssi=query_rx_pwr_percentage(rx_pwr[i]);
@@ -421,7 +378,6 @@ void rtl8192c_query_rx_phy_status(union recv_frame *prframe, struct recv_stat *p
 			pattrib->signal_strength= (u8)(signal_scale_mapping(total_rssi/=rf_rx_num));
 		}
 	}
-	//printk("%s,rx_pwr_all(%d),RxPWDBAll(%d)\n",__FUNCTION__,rx_pwr_all,pattrib->RxPWDBAll);
 
 }
 
@@ -431,11 +387,8 @@ static void process_rssi(_adapter *padapter,union recv_frame *prframe)
 	u32	last_rssi, tmp_val;
 	struct rx_pkt_attrib *pattrib = &prframe->u.hdr.attrib;
 
-	padapter->recvpriv.RxSNRdB[0] =  pattrib->RxSNRdB[0];
-	padapter->recvpriv.RxSNRdB[1] =  pattrib->RxSNRdB[1];
-
 	//printk("process_rssi=> pattrib->rssil(%d) signal_strength(%d)\n ",pattrib->RecvSignalPower,pattrib->signal_strength);
-	//if(pRfd->Status.bPacketToSelf || pRfd->Status.bPacketBeacon)
+	
 	{
 		//Adapter->RxStats.RssiCalculateCnt++;	//For antenna Test
 		if(padapter->recvpriv.signal_strength_data.total_num++ >= PHY_RSSI_SLID_WIN_MAX)
@@ -452,14 +405,12 @@ static void process_rssi(_adapter *padapter,union recv_frame *prframe)
 
 
 		tmp_val = padapter->recvpriv.signal_strength_data.total_val/padapter->recvpriv.signal_strength_data.total_num;
-		padapter->recvpriv.signal_strength= tmp_val;
-		padapter->recvpriv.rssi=(s8)translate2dbm( padapter,(u8)tmp_val);		
+		padapter->recvpriv.signal_strength=(s8)translate2dbm( padapter,(u8)tmp_val);
 
 		RT_TRACE(_module_rtl871x_recv_c_,_drv_info_,("UI RSSI = %d, ui_rssi.TotalVal = %d, ui_rssi.TotalNum = %d\n", tmp_val, padapter->recvpriv.signal_strength_data.total_val,padapter->recvpriv.signal_strength_data.total_num));
 	}
 
-}// Process_UI_RSSI_8192C
-
+}
 
 static void process_PWDB(_adapter *padapter, union recv_frame *prframe)
 {
@@ -516,7 +467,7 @@ static void process_PWDB(_adapter *padapter, union recv_frame *prframe)
 
 static void process_link_qual(_adapter *padapter,union recv_frame *prframe)
 {
-	u32	last_evm=0, tmpVal;
+	u32	last_evm=0, nSpatialStream, tmpVal;
  	struct rx_pkt_attrib *pattrib;
 
 	if(prframe == NULL || padapter==NULL){
@@ -562,8 +513,11 @@ static void process_link_qual(_adapter *padapter,union recv_frame *prframe)
 void rtl8192c_process_phy_info(_adapter *padapter, void *prframe)
 {
 	union recv_frame *precvframe = (union recv_frame *)prframe;
-	
+
 #ifdef CONFIG_ANTENNA_DIVERSITY
+	// If we switch to the antenna for testing, the signal strength 
+	// of the packets in this time shall not be counted into total receiving power. 
+	// This prevents error counting Rx signal strength and affecting other dynamic mechanism.
 	if(GET_HAL_DATA(padapter)->RSSI_test == _TRUE)
 		return;
 #endif
@@ -578,6 +532,7 @@ void rtl8192c_process_phy_info(_adapter *padapter, void *prframe)
 	//
 	// Check EVM
 	//
-	process_link_qual(padapter,  precvframe);	
+	process_link_qual(padapter,  precvframe);		
+
 
 }

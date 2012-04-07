@@ -1,22 +1,3 @@
-/******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
 #ifndef _RTL8192C_RECV_H_
 #define _RTL8192C_RECV_H_
 
@@ -197,8 +178,6 @@ struct recv_buf{
 	u8 reuse;
 #endif
 
-	struct rtw_transfer_buffer *rx_transfer_buf;
-
 	uint  len;
 	u8 *phead;
 	u8 *pdata;
@@ -272,13 +251,13 @@ union recv_frame{
 };
 
 
-int rtw_init_recvbuf(_adapter *padapter, struct recv_buf *precvbuf);
+int init_recvbuf(_adapter *padapter, struct recv_buf *precvbuf);
 
-void rtl8192cu_update_recvframe_attrib_from_recvstat(union recv_frame *precvframe, struct recv_stat *prxstat);
+void rtl8192cu_update_recvframe_attrib_from_recvstat(_adapter *padapter,union recv_frame *precvframe, struct recv_stat *prxstat);
 
-void rtw_reordering_ctrl_timeout_handler(void *pcontext);
+void reordering_ctrl_timeout_handler(void *pcontext);
 
-void rtl8192c_query_rx_phy_status(union recv_frame *prframe, struct recv_stat *prxstat );
+void rtl8192c_query_rx_phy_status(union recv_frame *prframe, struct recv_stat *prxstat);
 
 //void rtl8192c_process_phy_info(_adapter *padapter, union recv_frame *prframe);
 void rtl8192c_process_phy_info(_adapter *padapter, void *prframe);

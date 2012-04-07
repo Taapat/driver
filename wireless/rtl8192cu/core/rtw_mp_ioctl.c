@@ -1,22 +1,20 @@
 /******************************************************************************
- *
- * Copyright(c) 2007 - 2010 Realtek Corporation. All rights reserved.
- *                                        
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- *
- ******************************************************************************/
+* rtl871x_mp_ioctl.c                                                                                                                                 *
+*                                                                                                                                          *
+* Description :                                                                                                                       *
+*                                                                                                                                           *
+* Author :                                                                                                                       *
+*                                                                                                                                         *
+* History :
+*
+*
+*                                                                                                                                       *
+* Copyright 2007, Realtek Corp.                                                                                                  *
+*                                                                                                                                        *
+* The contents of this file is the sole property of Realtek Corp.  It can not be                                     *
+* be used, copied or modified without written permission from Realtek Corp.                                         *
+*                                                                                                                                          *
+*******************************************************************************/
 #define _RTL871X_MP_IOCTL_C_
 
 #include <drv_conf.h>
@@ -253,11 +251,11 @@ int mp_start_test(_adapter *padapter)
 
 
 	//3 1. initialize a new WLAN_BSSID_EX
-//	_rtw_memset(&bssid, 0, sizeof(WLAN_BSSID_EX));
+//	_memset(&bssid, 0, sizeof(WLAN_BSSID_EX));
 
-	_rtw_memcpy(bssid.MacAddress, pmppriv->network_macaddr, ETH_ALEN);
+	_memcpy(bssid.MacAddress, pmppriv->network_macaddr, ETH_ALEN);
 	bssid.Ssid.SsidLength = 16;
-	_rtw_memcpy(bssid.Ssid.Ssid, (unsigned char*)"mp_pseudo_adhoc", bssid.Ssid.SsidLength);
+	_memcpy(bssid.Ssid.Ssid, (unsigned char*)"mp_pseudo_adhoc", bssid.Ssid.SsidLength);
 	bssid.InfrastructureMode = Ndis802_11IBSS;
 	bssid.NetworkTypeInUse = Ndis802_11DS;
 	bssid.IELength = 0;
@@ -288,10 +286,10 @@ int mp_start_test(_adapter *padapter)
 
 	//3 2. create a new psta for mp driver
 	//clear psta in the cur_network, if any
-	psta = rtw_get_stainfo(&padapter->stapriv, tgt_network->network.MacAddress);
-	if (psta) rtw_free_stainfo(padapter, psta);
+	psta = get_stainfo(&padapter->stapriv, tgt_network->network.MacAddress);
+	if (psta) free_stainfo(padapter, psta);
 
-	psta = rtw_alloc_stainfo(&padapter->stapriv, bssid.MacAddress);
+	psta = alloc_stainfo(&padapter->stapriv, bssid.MacAddress);
 	if (psta == NULL) {
 		RT_TRACE(_module_rtl871x_mp_ioctl_c_, _drv_err_, ("mp_start_test: Can't alloc sta_info!\n"));
 		res = _FAIL;
@@ -301,10 +299,10 @@ int mp_start_test(_adapter *padapter)
 	//3 3. join psudo AdHoc
 	tgt_network->join_res = 1;
 	tgt_network->aid = psta->aid = 1;
-	_rtw_memcpy(&tgt_network->network, &bssid, length);
+	_memcpy(&tgt_network->network, &bssid, length);
 
 	_clr_fwstate_(pmlmepriv, _FW_UNDER_LINKING);
-	rtw_os_indicate_connect(padapter);
+	os_indicate_connect(padapter);
 	set_fwstate(pmlmepriv, _FW_LINKED); // Set to LINKED STATE for MP TRX Testing
 
 end_of_mp_start_test:
@@ -331,19 +329,19 @@ int mp_stop_test(_adapter *padapter)
 		goto end_of_mp_stop_test;
 
 	//3 1. disconnect psudo AdHoc
-	rtw_indicate_disconnect(padapter);
-//	rtw_os_indicate_disconnect(padapter);
+	indicate_disconnect(padapter);
+//	os_indicate_disconnect(padapter);
 
 	//3 2. clear psta used in mp test mode.
-//	rtw_free_assoc_resources(padapter);
-	psta = rtw_get_stainfo(&padapter->stapriv, tgt_network->network.MacAddress);
-	if (psta) rtw_free_stainfo(padapter, psta);
+//	free_assoc_resources(padapter);
+	psta = get_stainfo(&padapter->stapriv, tgt_network->network.MacAddress);
+	if (psta) free_stainfo(padapter, psta);
 
 	//3 3. return to normal state (default:station mode)
 	pmlmepriv->fw_state = pmppriv->prev_fw_state; // WIFI_STATION_STATE;
 
 	//flush the cur_network
-	_rtw_memset(tgt_network, 0, sizeof(struct wlan_network));
+	_memset(tgt_network, 0, sizeof(struct wlan_network));
 
 end_of_mp_stop_test:
 
@@ -374,7 +372,7 @@ int mp_start_joinbss(_adapter *padapter, NDIS_802_11_SSID *pssid)
 	else
 		return _FAIL;
 #endif
-	res = rtw_setassocsta_cmd(padapter, pmppriv->network_macaddr);
+	res = setassocsta_cmd(padapter, pmppriv->network_macaddr);
 
 	set_fwstate(pmlmepriv, _FW_UNDER_LINKING);
 
@@ -391,18 +389,18 @@ int mp_start_joinbss(_adapter *padapter, NDIS_802_11_SSID *pssid)
 	else
 		return _FAIL;
 
-	_rtw_memcpy(&padapter->MgntInfo.ssid, pssid, sizeof(NDIS_802_11_SSID));
-	_rtw_memcpy(&pmlmepriv->assoc_ssid, pssid, sizeof(NDIS_802_11_SSID));
+	_memcpy(&padapter->MgntInfo.ssid, pssid, sizeof(NDIS_802_11_SSID));
+	_memcpy(&pmlmepriv->assoc_ssid, pssid, sizeof(NDIS_802_11_SSID));
 
 	pmlmepriv->cur_network.join_res = -2;
 	pmlmepriv->fw_state |= _FW_UNDER_LINKING;
 
 	dst_ssid = pnetwork->network.Ssid.Ssid;
 	src_ssid = pmlmepriv->assoc_ssid.Ssid;
-	if (_rtw_memcmp(dst_ssid, src_ssid, pmlmepriv->assoc_ssid.SsidLength) == _FALSE)
+	if (_memcmp(dst_ssid, src_ssid, pmlmepriv->assoc_ssid.SsidLength) == _FALSE)
 		return _FAIL;
 
-	res = rtw_joinbss_cmd((unsigned char*)padapter, pnetwork);
+	res = joinbss_cmd((unsigned char*)padapter, pnetwork);
 
 	NdisMSetTimer(&pmlmepriv->assoc_timer, MAX_JOIN_TIMEOUT);
 #endif
@@ -451,7 +449,7 @@ _func_enter_;
 		RT_TRACE(_module_rtl871x_mp_ioctl_c_, _drv_alert_, ("datarate_inx=%d\n", datarates[i]));
 	}
 
-	if (rtw_setdatarate_cmd(Adapter, datarates) != _SUCCESS)
+	if (setdatarate_cmd(Adapter, datarates) != _SUCCESS)
 		status = NDIS_STATUS_NOT_ACCEPTED;
 #else
 	Adapter->mppriv.curr_rateidx = ratevalue;
@@ -491,24 +489,24 @@ _func_enter_;
 	if (mp_start_test(Adapter) == _FAIL)
 		status = NDIS_STATUS_NOT_ACCEPTED;
 
-	rtw_write8(Adapter, MSR, 1); // Link in ad hoc network, 0x1025004C
-	rtw_write8(Adapter, RCR, 0); // RCR : disable all pkt, 0x10250048
-	rtw_write8(Adapter, RCR+2, 0x57); // RCR disable Check BSSID, 0x1025004a
+	write8(Adapter, MSR, 1); // Link in ad hoc network, 0x1025004C
+	write8(Adapter, RCR, 0); // RCR : disable all pkt, 0x10250048
+	write8(Adapter, RCR+2, 0x57); // RCR disable Check BSSID, 0x1025004a
 
 	//disable RX filter map , mgt frames will put in RX FIFO 0
-	rtw_write16(Adapter, RXFLTMAP0, 0x0); // 0x10250116
+	write16(Adapter, RXFLTMAP0, 0x0); // 0x10250116
 
-	val8 = rtw_read8(Adapter, EE_9346CR); // 0x1025000A
+	val8 = read8(Adapter, EE_9346CR); // 0x1025000A
 	if (!(val8 & _9356SEL))//boot from EFUSE
 	{
-		rtw_efuse_reg_init(Adapter);
-		rtw_efuse_get_max_size(Adapter);
-		rtw_efuse_reg_uninit(Adapter);
+		efuse_reg_init(Adapter);
+		efuse_change_max_size(Adapter);
+		efuse_reg_uninit(Adapter);
 	}
 
 	_irqlevel_changed_(&oldirql, RAISE);
 
-	RT_TRACE(_module_rtl871x_mp_ioctl_c_, _drv_notice_, ("-oid_rt_pro_start_test_hdl: rtw_mp_mode=%d\n", Adapter->mppriv.mode));
+	RT_TRACE(_module_rtl871x_mp_ioctl_c_, _drv_notice_, ("-oid_rt_pro_start_test_hdl: mp_mode=%d\n", Adapter->mppriv.mode));
 
 _func_exit_;
 
@@ -570,7 +568,7 @@ _func_enter_;
 	Adapter->mppriv.curr_ch = Channel;
 
 #if 0
-	if (rtw_setphy_cmd(Adapter, (unsigned char)Adapter->mppriv.curr_modem, (unsigned char)Channel) == _FAIL)
+	if (setphy_cmd(Adapter, (unsigned char)Adapter->mppriv.curr_modem, (unsigned char)Channel) == _FAIL)
 		status = NDIS_STATUS_NOT_ACCEPTED;
 #else
 	_irqlevel_changed_(&oldirql, LOWER);
@@ -1085,13 +1083,13 @@ _func_enter_;
 		switch (RegRWStruct->width)
 		{
 			case 1:
-				RegRWStruct->value = rtw_read8(Adapter, RegRWStruct->offset);
+				RegRWStruct->value = read8(Adapter, RegRWStruct->offset);
 				break;
 			case 2:
-				RegRWStruct->value = rtw_read16(Adapter, RegRWStruct->offset);
+				RegRWStruct->value = read16(Adapter, RegRWStruct->offset);
 				break;
 			case 4:
-				RegRWStruct->value = rtw_read32(Adapter, RegRWStruct->offset);
+				RegRWStruct->value = read32(Adapter, RegRWStruct->offset);
 				break;
 			default:
 				status = NDIS_STATUS_NOT_ACCEPTED;
@@ -1194,13 +1192,13 @@ _func_enter_;
 		switch (RegRWStruct->width)
 		{
 			case 1:
-				rtw_write8(Adapter, RegRWStruct->offset, (unsigned char)RegRWStruct->value);
+				write8(Adapter, RegRWStruct->offset, (unsigned char)RegRWStruct->value);
 				break;
 			case 2:
-				rtw_write16(Adapter, RegRWStruct->offset, (unsigned short)RegRWStruct->value);
+				write16(Adapter, RegRWStruct->offset, (unsigned short)RegRWStruct->value);
 				break;
 			case 4:
-				rtw_write32(Adapter, RegRWStruct->offset, (unsigned int)RegRWStruct->value);
+				write32(Adapter, RegRWStruct->offset, (unsigned int)RegRWStruct->value);
 				break;
 			default:
 				status = NDIS_STATUS_NOT_ACCEPTED;
@@ -1243,7 +1241,7 @@ _func_enter_;
 	pBstRwReg = (pBurst_RW_Reg)poid_par_priv->information_buf;
 
 	_irqlevel_changed_(&oldirql, LOWER);
-	rtw_read_mem(Adapter, pBstRwReg->offset, (u32)pBstRwReg->len, pBstRwReg->Data);
+	read_mem(Adapter, pBstRwReg->offset, (u32)pBstRwReg->len, pBstRwReg->Data);
 	_irqlevel_changed_(&oldirql,RAISE);
 
 	*poid_par_priv->bytes_rw = poid_par_priv->information_buf_len;
@@ -1274,7 +1272,7 @@ _func_enter_;
 	pBstRwReg = (pBurst_RW_Reg)poid_par_priv->information_buf;
 
 	_irqlevel_changed_(&oldirql, LOWER);
-	rtw_write_mem(Adapter, pBstRwReg->offset, (u32)pBstRwReg->len, pBstRwReg->Data);
+	write_mem(Adapter, pBstRwReg->offset, (u32)pBstRwReg->len, pBstRwReg->Data);
 	_irqlevel_changed_(&oldirql, RAISE);
 
 	RT_TRACE(_module_rtl871x_mp_ioctl_c_, _drv_info_, ("-oid_rt_pro_burst_write_register_hdl\n"));
@@ -1311,8 +1309,8 @@ _func_enter_;
 
 	_irqlevel_changed_(&oldirql, LOWER);
 
-	rtw_write32(Adapter, TxCmd_Info->offset + 0, (unsigned int)TxCmd_Info->TxCMD.value[0]);
-	rtw_write32(Adapter, TxCmd_Info->offset + 4, (unsigned int)TxCmd_Info->TxCMD.value[1]);
+	write32(Adapter, TxCmd_Info->offset + 0, (unsigned int)TxCmd_Info->TxCMD.value[0]);
+	write32(Adapter, TxCmd_Info->offset + 4, (unsigned int)TxCmd_Info->TxCMD.value[1]);
 
 	_irqlevel_changed_(&oldirql, RAISE);
 */
@@ -1410,7 +1408,7 @@ _func_enter_;
 
 	pwi_param = (struct mp_wiparam *)poid_par_priv->information_buf;
 
-	_rtw_memcpy(pwi_param, &Adapter->mppriv.workparam, sizeof(struct mp_wiparam));
+	_memcpy(pwi_param, &Adapter->mppriv.workparam, sizeof(struct mp_wiparam));
 	Adapter->mppriv.act_in_progress = _FALSE;
 //	RT_TRACE(_module_rtl871x_mp_ioctl_c_, _drv_info_, ("rf:%x\n", pwiparam->IoValue));
 	*poid_par_priv->bytes_rw = poid_par_priv->information_buf_len;
@@ -1536,7 +1534,7 @@ _func_enter_;
 
 	_irqlevel_changed_(&oldirql, LOWER);
 
-	if (rtw_setrfintfs_cmd(Adapter, *(unsigned char*)poid_par_priv->information_buf) == _FAIL)
+	if (setrfintfs_cmd(Adapter, *(unsigned char*)poid_par_priv->information_buf) == _FAIL)
 		status = NDIS_STATUS_NOT_ACCEPTED;
 
 	_irqlevel_changed_(&oldirql, RAISE);
@@ -1557,7 +1555,7 @@ _func_enter_;
 	if (poid_par_priv->type_of_oid != QUERY_OID)
 		return NDIS_STATUS_NOT_ACCEPTED;
 
-	_rtw_memcpy(poid_par_priv->information_buf, (unsigned char*)&Adapter->mppriv.rxstat, sizeof(struct recv_stat));
+	_memcpy(poid_par_priv->information_buf, (unsigned char*)&Adapter->mppriv.rxstat, sizeof(struct recv_stat));
 	*poid_par_priv->bytes_rw = poid_par_priv->information_buf_len;
 
 _func_exit_;
@@ -1625,7 +1623,7 @@ _func_enter_;
 
 	_irqlevel_changed_(&oldirql, LOWER);
 
-	if (rtw_setdatarate_cmd(Adapter, poid_par_priv->information_buf) !=_SUCCESS)
+	if (setdatarate_cmd(Adapter, poid_par_priv->information_buf) !=_SUCCESS)
 		status = NDIS_STATUS_NOT_ACCEPTED;
 
 	_irqlevel_changed_(&oldirql, RAISE);
@@ -1706,7 +1704,7 @@ _func_enter_;
 
 	_irqlevel_changed_(&oldirql, LOWER);
 
-	if (!rtw_gettssi_cmd(Adapter,0, (u8*)&Adapter->mppriv.workparam.io_value))
+	if (!gettssi_cmd(Adapter,0, (u8*)&Adapter->mppriv.workparam.io_value))
 		status = NDIS_STATUS_NOT_ACCEPTED;
 
 	_irqlevel_changed_(&oldirql, RAISE);
@@ -1737,7 +1735,7 @@ _func_enter_;
 
 	_irqlevel_changed_(&oldirql, LOWER);
 
-	if (!rtw_setptm_cmd(Adapter,*((u8*)poid_par_priv->information_buf )))
+	if (!setptm_cmd(Adapter,*((u8*)poid_par_priv->information_buf )))
 		status = NDIS_STATUS_NOT_ACCEPTED;
 
 	_irqlevel_changed_(&oldirql, RAISE);
@@ -1777,7 +1775,7 @@ _func_enter_;
 
 	_irqlevel_changed_(&oldirql, LOWER);
 
-	if (rtw_setbasicrate_cmd(Adapter, datarates) != _SUCCESS)
+	if (setbasicrate_cmd(Adapter, datarates) != _SUCCESS)
 		status = NDIS_STATUS_NOT_ACCEPTED;
 
 	_irqlevel_changed_(&oldirql, RAISE);
@@ -1848,7 +1846,7 @@ _func_enter_;
 	prate_table = (struct setratable_parm*)poid_par_priv->information_buf;
 
 	_irqlevel_changed_(&oldirql, LOWER);
-	res = rtw_setrttbl_cmd(Adapter, prate_table);
+	res = setrttbl_cmd(Adapter, prate_table);
 	_irqlevel_changed_(&oldirql, RAISE);
 
 	if (res == _FAIL)
@@ -1888,7 +1886,7 @@ _func_enter_;
 				pmp_wi_cntx->param.bytes_cnt=sizeof(struct getratable_rsp);
 				pmp_wi_cntx->param.io_value=0xffffffff;
 
-				res=rtw_getrttbl_cmd(Adapter,(struct getratable_rsp *)pmp_wi_cntx->param.data);
+				res=getrttbl_cmd(Adapter,(struct getratable_rsp *)pmp_wi_cntx->param.data);
 				*poid_par_priv->bytes_rw = poid_par_priv->information_buf_len;
 				if(res != _SUCCESS)
 				{
@@ -2029,10 +2027,10 @@ NDIS_STATUS oid_rt_pro_add_sta_info_hdl(struct oid_par_priv *poid_par_priv)
 
 	_irqlevel_changed_(&oldirql, LOWER);
 
-	psta = rtw_get_stainfo(&Adapter->stapriv, macaddr);
+	psta = get_stainfo(&Adapter->stapriv, macaddr);
 
 	if (psta == NULL) { // the sta have been in sta_info_queue => do nothing
-		psta = rtw_alloc_stainfo(&Adapter->stapriv, macaddr);
+		psta = alloc_stainfo(&Adapter->stapriv, macaddr);
 
 		if (psta == NULL) {
 			RT_TRACE(_module_rtl871x_ioctl_c_,_drv_err_,("Can't alloc sta_info when OID_RT_PRO_ADD_STA_INFO\n"));
@@ -2071,11 +2069,11 @@ NDIS_STATUS oid_rt_pro_dele_sta_info_hdl(struct oid_par_priv *poid_par_priv)
 		 ("+OID_RT_PRO_ADD_STA_INFO: addr=%02x:%02x:%02x:%02x:%02x:%02x\n",
 		  macaddr[0], macaddr[1], macaddr[2], macaddr[3], macaddr[4], macaddr[5]));
 
-	psta = rtw_get_stainfo(&Adapter->stapriv, macaddr);
+	psta = get_stainfo(&Adapter->stapriv, macaddr);
 	if (psta != NULL) {
-		_enter_critical_bh(&(Adapter->stapriv.sta_hash_lock), &irqL);
-		rtw_free_stainfo(Adapter, psta);
-		_exit_critical_bh(&(Adapter->stapriv.sta_hash_lock), &irqL);
+		_enter_critical(&(Adapter->stapriv.sta_hash_lock), &irqL);
+		free_stainfo(Adapter, psta);
+		_exit_critical(&(Adapter->stapriv.sta_hash_lock), &irqL);
 	}
 
 	return status;
@@ -2088,7 +2086,7 @@ u32 mp_query_drv_var(_adapter *padapter, u8 offset, u32 var)
 
 	if (offset == 1) {
 		u16 tmp_blk_num;
-		tmp_blk_num = rtw_read16(padapter, SDIO_RX0_RDYBLK_NUM);
+		tmp_blk_num = read16(padapter, SDIO_RX0_RDYBLK_NUM);
 		RT_TRACE(_module_rtl871x_mp_ioctl_c_, _drv_err_, ("Query Information, mp_query_drv_var  SDIO_RX0_RDYBLK_NUM=0x%x   padapter->dvobjpriv.rxblknum=0x%x\n", tmp_blk_num, padapter->dvobjpriv.rxblknum));
 		if (padapter->dvobjpriv.rxblknum != tmp_blk_num) {
 			RT_TRACE(_module_rtl871x_mp_ioctl_c_,_drv_err_, ("Query Information, mp_query_drv_var  call recv rx\n"));
@@ -2311,8 +2309,8 @@ NDIS_STATUS oid_rt_pro_rx_packet_type_hdl(struct oid_par_priv *poid_par_priv)
 		RT_TRACE(_module_rtl871x_ioctl_c_,_drv_err_, ("Query Information, OID_RT_PRO_RX_PACKET_TYPE:%d \n",\
 												Adapter->mppriv.rx_with_status));
 
-		//*(u32 *)&Adapter->eeprompriv.mac_addr[0]=rtw_read32(Adapter, 0x10250050);
-		//*(u16 *)&Adapter->eeprompriv.mac_addr[4]=rtw_read16(Adapter, 0x10250054);
+		//*(u32 *)&Adapter->eeprompriv.mac_addr[0]=read32(Adapter, 0x10250050);
+		//*(u16 *)&Adapter->eeprompriv.mac_addr[4]=read16(Adapter, 0x10250054);
 		RT_TRACE(_module_rtl871x_ioctl_c_,_drv_err_,("MAC addr=0x%x:0x%x:0x%x:0x%x:0x%x:0x%x  \n",
 			Adapter->eeprompriv.mac_addr[0],Adapter->eeprompriv.mac_addr[1],Adapter->eeprompriv.mac_addr[2],\
 			Adapter->eeprompriv.mac_addr[3],Adapter->eeprompriv.mac_addr[4],Adapter->eeprompriv.mac_addr[5]));
@@ -2325,8 +2323,8 @@ NDIS_STATUS oid_rt_pro_rx_packet_type_hdl(struct oid_par_priv *poid_par_priv)
 		RT_TRACE(_module_rtl871x_ioctl_c_,_drv_err_, ("Query Information, OID_RT_PRO_RX_PACKET_TYPE:%d \n", \
 												Adapter->mppriv.rx_with_status));
 
-		//*(u32 *)&Adapter->eeprompriv.mac_addr[0]=rtw_read32(Adapter, 0x10250050);
-		//*(u16 *)&Adapter->eeprompriv.mac_addr[4]=rtw_read16(Adapter, 0x10250054);
+		//*(u32 *)&Adapter->eeprompriv.mac_addr[0]=read32(Adapter, 0x10250050);
+		//*(u16 *)&Adapter->eeprompriv.mac_addr[4]=read16(Adapter, 0x10250054);
 		RT_TRACE(_module_rtl871x_ioctl_c_,_drv_err_,("MAC addr=0x%x:0x%x:0x%x:0x%x:0x%x:0x%x  \n",
 			Adapter->eeprompriv.mac_addr[0],Adapter->eeprompriv.mac_addr[1],Adapter->eeprompriv.mac_addr[2],\
 			Adapter->eeprompriv.mac_addr[3],Adapter->eeprompriv.mac_addr[4],Adapter->eeprompriv.mac_addr[5]));
@@ -2363,19 +2361,19 @@ _func_enter_;
 	cnts = pefuse->cnts;
 	data = pefuse->data;
 
-	_rtw_memset(data, 0xFF, cnts);
+	_memset(data, 0xFF, cnts);
 
 	RT_TRACE(_module_rtl871x_mp_ioctl_c_, _drv_notice_,
 		("+oid_rt_pro_read_efuse_hd: buf_len=%ld addr=0x%04x cnts=%d\n",
 		 poid_par_priv->information_buf_len, addr, cnts));
 
-	if ((addr>511) || (cnts<1) || (cnts>512) || (addr+cnts)>EFUSE_MAX_PHYSICAL_SIZE) {
+	if ((addr>511) || (cnts<1) || (cnts>512) || (addr+cnts)>EFUSE_MAX_SIZE) {
 		RT_TRACE(_module_rtl871x_mp_ioctl_c_, _drv_err_, ("!oid_rt_pro_read_efuse_hdl: parameter error\n"));
 		return NDIS_STATUS_NOT_ACCEPTED;
 	}
 
 	_irqlevel_changed_(&oldirql, LOWER);
-	if (rtw_efuse_access(Adapter, _TRUE, addr, cnts, data) == _FALSE)
+	if (efuse_access(Adapter, _TRUE, addr, cnts, data) == _FALSE)
 		status = NDIS_STATUS_FAILURE;
 	_irqlevel_changed_(&oldirql, RAISE);
 
@@ -2417,13 +2415,13 @@ _func_enter_;
 		 ("+oid_rt_pro_write_efuse_hdl: buf_len=%ld addr=0x%04x cnts=%d\n",
 		  poid_par_priv->information_buf_len, addr, cnts));
 
-	if ((addr>511) || (cnts<1) || (cnts>512) || (addr+cnts)>rtw_efuse_get_max_size(Adapter)) {
+	if ((addr>511) || (cnts<1) || (cnts>512) || (addr+cnts)>efuse_get_max_size(Adapter)) {
 		RT_TRACE(_module_rtl871x_mp_ioctl_c_, _drv_err_, ("!oid_rt_pro_write_efuse_hdl: parameter error"));
 		return NDIS_STATUS_NOT_ACCEPTED;
 	}
 
 	_irqlevel_changed_(&oldirql, LOWER);
-	if (rtw_efuse_access(Adapter, _FALSE, addr, cnts, data) == _FALSE)
+	if (efuse_access(Adapter, _FALSE, addr, cnts, data) == _FALSE)
 		status = NDIS_STATUS_FAILURE;
 	_irqlevel_changed_(&oldirql, RAISE);
 
@@ -2461,7 +2459,7 @@ _func_enter_;
 			("oid_rt_pro_rw_efuse_pgpkt_hdl: Read offset=0x%x\n",\
 			ppgpkt->offset));
 
-		if (rtw_efuse_pg_packet_read(Adapter, ppgpkt->offset, ppgpkt->data) == _TRUE)
+		if (efuse_pg_packet_read(Adapter, ppgpkt->offset, ppgpkt->data) == _TRUE)
 			*poid_par_priv->bytes_rw = poid_par_priv->information_buf_len;
 		else
 			status = NDIS_STATUS_FAILURE;
@@ -2470,12 +2468,12 @@ _func_enter_;
 			("oid_rt_pro_rw_efuse_pgpkt_hdl: Write offset=0x%x word_en=0x%x\n",\
 			ppgpkt->offset, ppgpkt->word_en));
 
-		if (rtw_efuse_reg_init(Adapter) == _TRUE) {
-			if (rtw_efuse_pg_packet_write(Adapter, ppgpkt->offset, ppgpkt->word_en, ppgpkt->data) == _TRUE)
+		if (efuse_reg_init(Adapter) == _TRUE) {
+			if (efuse_pg_packet_write(Adapter, ppgpkt->offset, ppgpkt->word_en, ppgpkt->data) == _TRUE)
 				*poid_par_priv->bytes_rw = poid_par_priv->information_buf_len;
 			else
 				status = NDIS_STATUS_FAILURE;
-			rtw_efuse_reg_uninit(Adapter);
+			efuse_reg_uninit(Adapter);
 		} else
 			status = NDIS_STATUS_FAILURE;
 	}
@@ -2506,9 +2504,9 @@ _func_enter_;
 		return NDIS_STATUS_INVALID_LENGTH;
 
 	_irqlevel_changed_(&oldirql, LOWER);
-	rtw_efuse_reg_init(Adapter);
-	*(int*)poid_par_priv->information_buf = rtw_efuse_get_current_phy_size(Adapter);
-	rtw_efuse_reg_uninit(Adapter);
+	efuse_reg_init(Adapter);
+	*(int*)poid_par_priv->information_buf = efuse_get_current_size(Adapter);
+	efuse_reg_uninit(Adapter);
 	_irqlevel_changed_(&oldirql, RAISE);
 
 	*poid_par_priv->bytes_rw = poid_par_priv->information_buf_len;
@@ -2532,7 +2530,7 @@ _func_enter_;
 	if (poid_par_priv->information_buf_len < sizeof(u32))
 		return NDIS_STATUS_INVALID_LENGTH;
 
-	*(int*)poid_par_priv->information_buf = rtw_efuse_get_max_size(Adapter);
+	*(int*)poid_par_priv->information_buf = efuse_get_max_size(Adapter);
 	*poid_par_priv->bytes_rw = poid_par_priv->information_buf_len;
 
 	RT_TRACE(_module_rtl871x_mp_ioctl_c_, _drv_info_,
@@ -2577,7 +2575,7 @@ _func_enter_;
 
 	*poid_par_priv->bytes_rw = 0;
 
-	if (poid_par_priv->information_buf_len < EFUSE_MAX_LOGICAL_SIZE)
+	if (poid_par_priv->information_buf_len < EFUSE_MAP_MAX_SIZE)
 		return NDIS_STATUS_INVALID_LENGTH;
 
 	data = (u8*)poid_par_priv->information_buf;
@@ -2589,8 +2587,8 @@ _func_enter_;
 		RT_TRACE(_module_rtl871x_mp_ioctl_c_, _drv_info_,
 			("oid_rt_pro_efuse_map_hdl: READ\n"));
 
-		if (rtw_efuse_map_read(Adapter, 0, EFUSE_MAX_LOGICAL_SIZE, data) == _TRUE)
-			*poid_par_priv->bytes_rw = EFUSE_MAX_LOGICAL_SIZE;
+		if (efuse_map_read(Adapter, 0, EFUSE_MAP_MAX_SIZE, data) == _TRUE)
+			*poid_par_priv->bytes_rw = EFUSE_MAP_MAX_SIZE;
 		else {
 			RT_TRACE(_module_rtl871x_mp_ioctl_c_, _drv_err_,
 				("oid_rt_pro_efuse_map_hdl: READ fail\n"));
@@ -2601,15 +2599,15 @@ _func_enter_;
 		RT_TRACE(_module_rtl871x_mp_ioctl_c_, _drv_info_,
 			("oid_rt_pro_efuse_map_hdl: WRITE\n"));
 
-		if (rtw_efuse_reg_init(Adapter) == _TRUE) {
-			if (rtw_efuse_map_write(Adapter, 0, EFUSE_MAX_LOGICAL_SIZE, data) == _TRUE)
-				*poid_par_priv->bytes_rw = EFUSE_MAX_LOGICAL_SIZE;
+		if (efuse_reg_init(Adapter) == _TRUE) {
+			if (efuse_map_write(Adapter, 0, EFUSE_MAP_MAX_SIZE, data) == _TRUE)
+				*poid_par_priv->bytes_rw = EFUSE_MAP_MAX_SIZE;
 			else {
 				RT_TRACE(_module_rtl871x_mp_ioctl_c_, _drv_err_,
 					("oid_rt_pro_efuse_map_hdl: WRITE fail\n"));
 				status = NDIS_STATUS_FAILURE;
 			}
-			rtw_efuse_reg_uninit(Adapter);
+			efuse_reg_uninit(Adapter);
 		} else {
 			RT_TRACE(_module_rtl871x_mp_ioctl_c_, _drv_emerg_,
 				("oid_rt_pro_efuse_map_hdl: WRITE enable clock fail!\n"));
@@ -2721,7 +2719,7 @@ _func_enter_;
 
 	_irqlevel_changed_(&oldirql, LOWER);
 #if 0
-	rcr_val8 = rtw_read8(Adapter, 0x10250048);//RCR
+	rcr_val8 = read8(Adapter, 0x10250048);//RCR
 	rcr_val8 &= ~(RCR_AB|RCR_AM|RCR_APM|RCR_AAP);
 
 	if(rx_pkt_type == RX_PKT_BROADCAST){
@@ -2736,9 +2734,9 @@ _func_enter_;
 	else{
 		rcr_val8 &= ~(RCR_AAP|RCR_APM|RCR_AM|RCR_AB|RCR_ACRC32);
 	}
-	rtw_write8(Adapter, 0x10250048,rcr_val8);
+	write8(Adapter, 0x10250048,rcr_val8);
 #else
-	rcr_val32 = rtw_read32(Adapter, RCR);//RCR = 0x10250048
+	rcr_val32 = read32(Adapter, RCR);//RCR = 0x10250048
 	rcr_val32 &= ~(RCR_CBSSID|RCR_AB|RCR_AM|RCR_APM|RCR_AAP);
 #if 0
 	if(rx_pkt_type == RX_PKT_BROADCAST){
@@ -2778,7 +2776,7 @@ _func_enter_;
 		Adapter->mppriv.check_mp_pkt = 0;
 	}
 #endif
-	rtw_write32(Adapter, RCR, rcr_val32);
+	write32(Adapter, RCR, rcr_val32);
 
 #endif
 	_irqlevel_changed_(&oldirql, RAISE);
@@ -2866,9 +2864,9 @@ struct mp_xmit_frame *alloc_mp_xmitframe(struct mp_priv *pmp_priv)
 
 _func_enter_;
 
-	_enter_critical_bh(&pfree_xmit_queue->lock, &irqL);
+	_enter_critical(&pfree_xmit_queue->lock, &irqL);
 
-	if (_rtw_queue_empty(pfree_xmit_queue) == _TRUE) {
+	if (_queue_empty(pfree_xmit_queue) == _TRUE) {
 		//DEBUG_ERR(("free_mp_xmitframe_cnt:%d\n", pmp_priv->free_mp_xmitframe_cnt));
 		pxframe =  NULL;
 	} else {
@@ -2883,7 +2881,7 @@ _func_enter_;
 	if (pxframe !=  NULL)
 		pmp_priv->free_mp_xmitframe_cnt--;
 
-	_exit_critical_bh(&pfree_xmit_queue->lock, &irqL);
+	_exit_critical(&pfree_xmit_queue->lock, &irqL);
 
 _func_exit_;
 
@@ -2905,13 +2903,13 @@ int free_mp_xmitframe(struct xmit_priv *pxmitpriv, struct mp_xmit_frame *pmp_xmi
 
 	list_delete(&pmp_xmitframe->list);
 
-	_enter_critical_bh(&pfree_xmit_queue->lock, &irqL);
+	_enter_critical(&pfree_xmit_queue->lock, &irqL);
 
-	rtw_list_insert_tail(&(pmp_xmitframe->list), get_list_head(pfree_xmit_queue));
+	list_insert_tail(&(pmp_xmitframe->list), get_list_head(pfree_xmit_queue));
 
 	pmp_priv->free_mp_xmitframe_cnt++;
 
-	_exit_critical_bh(&pfree_xmit_queue->lock, &irqL);
+	_exit_critical(&pfree_xmit_queue->lock, &irqL);
 
 exit:
 
@@ -2952,7 +2950,7 @@ unsigned int mp_ioctl_xmit_packet_hdl(struct oid_par_priv *poid_par_priv)
 
 	//update attribute
 	pattrib = &pxframe->attrib;
-	_rtw_memset((u8 *)(pattrib), 0, sizeof (struct pkt_attrib));
+	memset((u8 *)(pattrib), 0, sizeof (struct pkt_attrib));
 	pattrib->pktlen = pmp_xmitpkt->len;
 	pattrib->ether_type = ntohs(pethhdr->h_proto);
 	pattrib->hdrlen = 24;
@@ -2968,7 +2966,7 @@ unsigned int mp_ioctl_xmit_packet_hdl(struct oid_par_priv *poid_par_priv)
 #endif
 
 	//
-	_rtw_memset(pxframe->mem, 0 , WLANHDR_OFFSET);
+	memset(pxframe->mem, 0 , WLANHDR_OFFSET);
 	pframe = (u8 *)(pxframe->mem) + WLANHDR_OFFSET;
 
 	pwlanhdr = (struct ieee80211_hdr *)pframe;
@@ -2977,10 +2975,10 @@ unsigned int mp_ioctl_xmit_packet_hdl(struct oid_par_priv *poid_par_priv)
 	*(fctrl) = 0;
 	SetFrameSubType(pframe, WIFI_DATA);
 
-	_rtw_memcpy(pwlanhdr->addr1, pethhdr->h_dest, ETH_ALEN);
-	_rtw_memcpy(pwlanhdr->addr2, pethhdr->h_source, ETH_ALEN);
+	_memcpy(pwlanhdr->addr1, pethhdr->h_dest, ETH_ALEN);
+	_memcpy(pwlanhdr->addr2, pethhdr->h_source, ETH_ALEN);
 
-	_rtw_memcpy(pwlanhdr->addr3, addr3, ETH_ALEN);
+	_memcpy(pwlanhdr->addr3, addr3, ETH_ALEN);
 
 	pwlanhdr->seq_ctl = 0;
 	pframe += pattrib->hdrlen;
@@ -2988,7 +2986,7 @@ unsigned int mp_ioctl_xmit_packet_hdl(struct oid_par_priv *poid_par_priv)
 	llc_sz= rtw_put_snap(pframe, pattrib->ether_type);
 	pframe += llc_sz;
 
-	_rtw_memcpy(pframe, (void*)(pmp_pkt+14),  payload_len);
+	_memcpy(pframe, (void*)(pmp_pkt+14),  payload_len);
 
 	pattrib->last_txcmdsz = pattrib->hdrlen + llc_sz + payload_len;
 
