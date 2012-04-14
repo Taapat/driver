@@ -354,7 +354,8 @@ struct e2_procs
 
   {"bus/nim_sockets",                   proc_bus_nim_sockets_read,              NULL, 0},
   {"stb/audio/ac3",                     proc_audio_ac3_read,                    proc_audio_ac3_write, 0},
-  {"stb/audio/audio_delay_pcm",         proc_audio_delay_pcm_read,              proc_audio_delay_pcm_write, 0},
+  //{"stb/audio/audio_delay_pcm",         proc_audio_delay_pcm_read,              proc_audio_delay_pcm_write, 0},
+  {"stb/audio/audio_delay_pcm",         proc_audio_delay_bitstream_read,        proc_audio_delay_bitstream_write, 0},
   {"stb/audio/audio_delay_bitstream",   proc_audio_delay_bitstream_read,        proc_audio_delay_bitstream_write, 0},
   {"stb/audio/j1_mute",                 proc_audio_j1_mute_read,                proc_audio_j1_mute_write, 0},
   {"stb/audio/ac3_choices",             proc_audio_ac3_choices_read,            NULL, 0},

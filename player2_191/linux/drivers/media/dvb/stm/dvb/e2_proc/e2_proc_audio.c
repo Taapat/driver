@@ -44,166 +44,174 @@ extern int VideoIoctlClearBuffer (struct DeviceContext_s* Context);
 
 extern struct snd_kcontrol ** pseudoGetControls(int* numbers);
 extern int snd_pseudo_integer_get(struct snd_kcontrol *kcontrol,
-				struct snd_ctl_elem_value *ucontrol);
+                                  struct snd_ctl_elem_value *ucontrol);
 extern int snd_pseudo_integer_put(struct snd_kcontrol *kcontrol,
-				struct snd_ctl_elem_value *ucontrol);
+                                  struct snd_ctl_elem_value *ucontrol);
 int avs_command_kernel(unsigned int cmd, void *arg);
 
-int proc_audio_delay_pcm_write(struct file *file, const char __user *buf,
-                           unsigned long count, void *data)
-{
-	char 		*page;
-	char		*myString;
-	ssize_t 	ret = -ENOMEM;
-
-	printk("%s %d - ", __FUNCTION__, (int) count);
-
-	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page)
-	{
-		ret = -EFAULT;
-		if (copy_from_user(page, buf, count))
-			goto out;
-
-		myString = (char *) kmalloc(count + 1, GFP_KERNEL);
-		strncpy(myString, page, count);
-		myString[count] = '\0';
-
-		printk("%s\n", myString);
-		kfree(myString);
-		//result = sscanf(page, "%3s %3s %3s %3s %3s", s1, s2, s3, s4, s5);
-	}
-
-	ret = count;
-out:
-
-	free_page((unsigned long)page);
-	return ret;
-}
-
-
-int proc_audio_delay_pcm_read (char *page, char **start, off_t off, int count,
-			  int *eof, void *data_unused)
-{
-	int len = 0;
-	printk("%s %d\n", __FUNCTION__, count);
-
-        return len;
-}
-
 int proc_audio_delay_bitstream_write(struct file *file, const char __user *buf,
-                           unsigned long count, void *data)
+                                     unsigned long count, void *data)
 {
-	char 		*page;
-	char		*myString;
-	ssize_t 	ret = -ENOMEM;
+    char    *page;
+    char    *myString;
+    ssize_t  ret = -ENOMEM;
 
-	printk("%s %d - ", __FUNCTION__, (int) count);
+    printk("%s %ld - ", __FUNCTION__, count);
 
-	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page)
-	{
-		ret = -EFAULT;
-		if (copy_from_user(page, buf, count))
-			goto out;
+    page = (char *)__get_free_page(GFP_KERNEL);
+    if (page)
+    {
+        int number = 0;
+        struct snd_kcontrol **kcontrol       = pseudoGetControls(&number);
+        struct snd_kcontrol  *single_control = NULL;
+        int vLoop;
+        int delay = 0;
 
-		myString = (char *) kmalloc(count + 1, GFP_KERNEL);
-		strncpy(myString, page, count);
-		myString[count] = '\0';
+        ret = -EFAULT;
+        if(file == NULL && data == NULL)
+            strncpy(page, buf, count);
+        else
+        {
+            if (copy_from_user(page, buf, count))
+                goto out;
+        }
 
-		printk("%s\n", myString);
-		kfree(myString);
-		//result = sscanf(page, "%3s %3s %3s %3s %3s", s1, s2, s3, s4, s5);
-	}
+        myString = (char *) kmalloc(count + 1, GFP_KERNEL);
+        strncpy(myString, page, count);
+        myString[count] = '\0';
 
-	ret = count;
+        printk("%s\n", myString);
+        sscanf(myString, "%x", &delay);
+
+        if (delay != 0)
+            delay /= 90;
+
+        for (vLoop = 0; vLoop < number; vLoop++)
+        {
+            if (kcontrol[vLoop]->private_value == PSEUDO_ADDR(master_latency))
+            {
+                single_control = kcontrol[vLoop];
+                //printk("Find master_latency control at %p\n", single_control);
+                break;
+            }
+        }
+
+        if ((kcontrol != NULL) && (single_control != NULL))
+        {
+            struct snd_ctl_elem_value ucontrol;
+
+            //printk("Pseudo Mixer controls = %p\n", kcontrol);
+            ucontrol.value.integer.value[0] = delay;
+            snd_pseudo_integer_put(single_control, &ucontrol);
+        } else
+        {
+            printk("Pseudo Mixer does not deliver controls\n");
+        }
+
+        kfree(myString);
+    }
+
+    ret = count;
 out:
 
-	free_page((unsigned long)page);
-	return ret;
+    free_page((unsigned long)page);
+    return ret;
 }
 
 
 int proc_audio_delay_bitstream_read (char *page, char **start, off_t off, int count,
-			  int *eof, void *data_unused)
+                                     int *eof, void *data_unused)
 {
-	int len = 0;
-	printk("%s %d\n", __FUNCTION__, ProcDeviceContext->AudioState.mute_state);
-	len = sprintf(page, "%d\n", ProcDeviceContext->AudioState.mute_state);
-        return len;
+    int len = 0;
+
+    int number = 0;
+    struct snd_kcontrol  *single_control = NULL;
+    struct snd_kcontrol ** kcontrol      = pseudoGetControls(&number);
+    int vLoop;
+
+    for (vLoop = 0; vLoop < number; vLoop++)
+    {
+        if (kcontrol[vLoop]->private_value == PSEUDO_ADDR(master_latency))
+        {
+            single_control = kcontrol[vLoop];
+            break;
+        }
+    }
+    if ((kcontrol != NULL) && (single_control != NULL))
+    {
+        struct snd_ctl_elem_value ucontrol;
+        snd_pseudo_integer_get(single_control, &ucontrol);
+        len = sprintf(page, "%08d\n", ucontrol.value.integer.value[0] * 90);
+    } else
+    {
+        printk("Pseudo Mixer does not deliver controls\n");
+    }
+
+    return len;
 }
 
 int volume = 0;
 
 static unsigned long ReadRegister(volatile unsigned long *reg)
 {
-  return readl((unsigned long)reg);
+    return readl((unsigned long)reg);
 }
 
 static void WriteRegister(volatile unsigned long *reg,unsigned long val)
 {
-  writel(val, (unsigned long)reg);
+    writel(val, (unsigned long)reg);
 }
 
 #if defined(UFS912) || defined(SPARK) || defined (SPARK7162) || defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110)
+#define SPDIF_EN            (1L<<3)
+#define PCM_EN              (1L<<5)
+#define SPDIF_PCM_DIS       0xFFFFFFD7
+#define SPDIF_DIS           0xFFFFFFF7
+#define STb7105_AUDIO_BASE  0xfe210200
 
-#define SPDIF_EN		(1L<<3)
-#define PCM_EN   		(1L<<5)
-#define SPDIF_PCM_DIS	0xFFFFFFD7
-#define SPDIF_DIS 		0xFFFFFFF7
-#define STb7105_AUDIO_BASE	0xfe210200
-
-void spdif_out_mute(int mute)
-{
-	unsigned long val;
-	unsigned long *RegMap;
-
-	RegMap = (unsigned long*)ioremap(STb7105_AUDIO_BASE,0x10);
-
-	if (mute == AVS_MUTE)
-	{
-		val = ReadRegister( RegMap );
-		WriteRegister(RegMap, val & SPDIF_DIS);
-	}
-	else
-	{
-		val = ReadRegister( RegMap );
-		WriteRegister(RegMap ,val | SPDIF_EN);
-	}
-	iounmap(RegMap);
-}
 #else
-
-#define AUD_IO_CTRL		0x200
-#define SPDIF_EN		(1L<<3)
-#define SPDIF_DIS		0xFFFFFFF7
-#define STb7100_REGISTER_BASE	0x18000000
-#define STb7100_AUDIO_BASE	0x01210000
-#define STb7100_REG_ADDR_SIZE	0x02000000
-
-
-void spdif_out_mute(int mute)
-{
-	unsigned long val;
-	unsigned long *RegMap;
-	RegMap = (unsigned long*)ioremap(STb7100_REGISTER_BASE,STb7100_REG_ADDR_SIZE);
-	if(mute==AVS_MUTE)
-	{
-		val = ReadRegister( RegMap + ( (STb7100_AUDIO_BASE+AUD_IO_CTRL) >>2) );
-		WriteRegister(RegMap + ((STb7100_AUDIO_BASE+AUD_IO_CTRL)>>2),val & SPDIF_DIS);
-	}
-	else
-	{
-		val = ReadRegister( RegMap + ( (STb7100_AUDIO_BASE+AUD_IO_CTRL) >>2) );
-		WriteRegister(RegMap + ((STb7100_AUDIO_BASE+AUD_IO_CTRL)>>2),val|SPDIF_EN);
-	}
-	iounmap(RegMap);
-}
+#define AUD_IO_CTRL           0x200
+#define SPDIF_EN               (1L<<3)
+#define SPDIF_DIS              0xFFFFFFF7
+#define STb7100_REGISTER_BASE  0x18000000
+#define STb7100_AUDIO_BASE     0x01210000
+#define STb7100_REG_ADDR_SIZE  0x02000000
 
 #endif
 
+void spdif_out_mute(int mute)
+{
+    unsigned long  val;
+    unsigned long *RegMap;
+
+#if defined(UFS912) || defined(SPARK) || defined (SPARK7162) || defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110)
+    RegMap = (unsigned long*)ioremap(STb7105_AUDIO_BASE,0x10);
+#else
+    RegMap = (unsigned long*)ioremap(STb7100_REGISTER_BASE,STb7100_REG_ADDR_SIZE);
+#endif
+    if (mute == AVS_MUTE) {
+#if defined(UFS912) || defined(SPARK) || defined (SPARK7162) || defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110)
+        val = ReadRegister( RegMap );
+        WriteRegister(RegMap, val & SPDIF_DIS);
+#else
+        val = ReadRegister( RegMap + ( (STb7100_AUDIO_BASE+AUD_IO_CTRL) >>2) );
+        WriteRegister(RegMap + ((STb7100_AUDIO_BASE+AUD_IO_CTRL)>>2), val & SPDIF_DIS);
+#endif
+    }
+    else {
+#if defined(UFS912) || defined(SPARK) || defined (SPARK7162) || defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110)
+        val = ReadRegister( RegMap );
+        WriteRegister(RegMap ,val | SPDIF_EN);
+#else
+        val = ReadRegister( RegMap + ( (STb7100_AUDIO_BASE+AUD_IO_CTRL) >>2) );
+        WriteRegister(RegMap + ((STb7100_AUDIO_BASE+AUD_IO_CTRL)>>2), val | SPDIF_EN);
+#endif
+    }
+    iounmap(RegMap);
+}
+
 int proc_audio_j1_mute_write(struct file *file, const char __user *buf,
-                           unsigned long count, void *data)
+                             unsigned long count, void *data)
 {
 	char 		*page;
 	char		*myString;
@@ -319,37 +327,37 @@ out:
 
 
 int proc_audio_j1_mute_read (char *page, char **start, off_t off, int count,
-			  int *eof, void *data_unused)
+                             int *eof, void *data_unused)
 {
-	int len = 0;
+    int len = 0;
 
-	int number = 0;
-	struct snd_kcontrol *single_control = NULL;
-	struct snd_kcontrol ** kcontrol = pseudoGetControls(&number);
-	int vLoop;
+    int number = 0;
+    struct snd_kcontrol *single_control = NULL;
+    struct snd_kcontrol ** kcontrol = pseudoGetControls(&number);
+    int vLoop;
 
-	for (vLoop = 0; vLoop < number; vLoop++)
-	{
-		if (kcontrol[vLoop]->private_value == PSEUDO_ADDR(master_volume))
-		{
-			single_control = kcontrol[vLoop];
-			break;
-		}
-	}
-	if ((kcontrol != NULL) && (single_control != NULL))
-	{
-		struct snd_ctl_elem_value ucontrol;
-		snd_pseudo_integer_get(single_control, &ucontrol);
-		if (ucontrol.value.integer.value[0] > -63)
-			len = sprintf(page, "0\n");
-		else
-			len = sprintf(page, "1\n");
-	} else
-	{
-		printk("Pseudo Mixer does not deliver controls\n");
-	}
+    for (vLoop = 0; vLoop < number; vLoop++)
+    {
+        if (kcontrol[vLoop]->private_value == PSEUDO_ADDR(master_volume))
+        {
+            single_control = kcontrol[vLoop];
+            break;
+        }
+    }
+    if ((kcontrol != NULL) && (single_control != NULL))
+    {
+        struct snd_ctl_elem_value ucontrol;
+        snd_pseudo_integer_get(single_control, &ucontrol);
+        if (ucontrol.value.integer.value[0] > -63)
+            len = sprintf(page, "0\n");
+        else
+            len = sprintf(page, "1\n");
+    } else
+    {
+        printk("Pseudo Mixer does not deliver controls\n");
+    }
 
-        return len;
+    return len;
 }
 
 /* konfetti: the defaul in pseudo_mixer.c is currently
