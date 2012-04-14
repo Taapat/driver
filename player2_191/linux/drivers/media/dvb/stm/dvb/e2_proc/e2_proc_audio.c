@@ -141,7 +141,7 @@ int proc_audio_delay_bitstream_read (char *page, char **start, off_t off, int co
     {
         struct snd_ctl_elem_value ucontrol;
         snd_pseudo_integer_get(single_control, &ucontrol);
-        len = sprintf(page, "%08d\n", ucontrol.value.integer.value[0] * 90);
+        len = sprintf(page, "%08x\n", ucontrol.value.integer.value[0] * 90);
     } else
     {
         printk("Pseudo Mixer does not deliver controls\n");
