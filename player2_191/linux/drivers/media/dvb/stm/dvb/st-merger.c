@@ -794,7 +794,7 @@ void stm_tsm_init (int use_cimax)
       ctrl_outl(0x1300, tsm_io + TSM_STREAM4_CFG);  	//256kb (4*64)
       ctrl_outl(0x1700, tsm_io + TSM_STREAM5_CFG);  	//192kb (3*64)
       ctrl_outl(0x1a00, tsm_io + TSM_STREAM6_CFG);  	//384kb (5*64)
-#elif defined (UFS912) || defined(HS7810A) || defined(HS7110)
+#elif defined (UFS912) || defined(HS7810A)
       /* RAM partitioning of streams */
       ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);   //448kb (8*64)
       ctrl_outl(0x500,  tsm_io + TSM_STREAM1_CFG);   //448kb (6*64)
@@ -807,6 +807,30 @@ void stm_tsm_init (int use_cimax)
 /* I think this is a fault value !!! 0x1f00 is maximum but
 * this is the lower address. nevertheless, stream7 not needed
 */
+      ctrl_outl(0x1f00, tsm_io + TSM_STREAM7_CFG);
+
+      ctrl_outl(0x0, tsm_io + TSM_STREAM0_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM1_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM2_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM3_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM4_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM5_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM6_CFG2);
+      ctrl_outl(0x0, tsm_io + TSM_STREAM7_CFG2);
+      
+#elif defined(HS7110)
+      /* RAM partitioning of streams */
+      ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);   //448kb (8*64)
+      ctrl_outl(0x800,  tsm_io + TSM_STREAM1_CFG);   //448kb (6*64)
+      ctrl_outl(0xe00,  tsm_io + TSM_STREAM2_CFG);   //384kb (8*64)
+      ctrl_outl(0x1400, tsm_io + TSM_STREAM3_CFG);   //384kb (6*64)
+      ctrl_outl(0x1a00, tsm_io + TSM_STREAM4_CFG);   //320kb (5*64)
+      ctrl_outl(0x1d00, tsm_io + TSM_STREAM5_CFG);
+      ctrl_outl(0x1e00, tsm_io + TSM_STREAM6_CFG);
+
+/* I think this is a fault value !!! 0x1f00 is maximum but
+ * this is the lower address. nevertheless, stream7 not needed
+ */
       ctrl_outl(0x1f00, tsm_io + TSM_STREAM7_CFG);
 
       ctrl_outl(0x0, tsm_io + TSM_STREAM0_CFG2);
@@ -1241,7 +1265,7 @@ Dies sind die Options (also wohl auch view channel):
        STM_TSM_CHANNEL_3       = 0x030000,
 
 */
-#if defined(SPARK) || defined(HS7110)
+#if defined(SPARK)
       /* RAM partitioning of streams */
       ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);   //448kb (8*64)
       ctrl_outl(0x500,  tsm_io + TSM_STREAM1_CFG);   //448kb (6*64)
@@ -1251,6 +1275,16 @@ Dies sind die Options (also wohl auch view channel):
       ctrl_outl(0x1d00, tsm_io + TSM_STREAM5_CFG);
       ctrl_outl(0x1e00, tsm_io + TSM_STREAM6_CFG);
       ctrl_outl(0x1f00, tsm_io + TSM_STREAM7_CFG);
+#elif defined(HS7110)
+      /* RAM partitioning of streams */
+      ctrl_outl(0x0,    tsm_io + TSM_STREAM0_CFG);   //448kb (8*64)
+      ctrl_outl(0x800,  tsm_io + TSM_STREAM1_CFG);   //448kb (6*64)
+      ctrl_outl(0xe00,  tsm_io + TSM_STREAM2_CFG);   //384kb (8*64)
+      ctrl_outl(0x1400, tsm_io + TSM_STREAM3_CFG);   //384kb (6*64)
+      ctrl_outl(0x1a00, tsm_io + TSM_STREAM4_CFG);   //320kb (5*64)
+      ctrl_outl(0x1d00, tsm_io + TSM_STREAM5_CFG);
+      ctrl_outl(0x1e00, tsm_io + TSM_STREAM6_CFG);
+      ctrl_outl(0x1f00, tsm_io + TSM_STREAM7_CFG);  
 #else // !defined(SPARK) && !defined(HS7110)
       for (n=0;n<5;n++) {
          writel( TSM_RAM_ALLOC_START( 0x3 *n ), tsm_io + TSM_STREAM_CONF(n));
