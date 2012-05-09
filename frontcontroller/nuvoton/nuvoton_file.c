@@ -1300,6 +1300,7 @@ static int NUVOTONdev_ioctl(struct inode *Inode, struct file *File, unsigned int
         printk("VFDDISPLAYWRITEONOFF ->not yet implemented\n");
         break;
     case 0x5401:
+	mode = 0;
 	break;
     default:
         printk("VFD/Nuvoton: unknown IOCTL 0x%x\n", cmd);
