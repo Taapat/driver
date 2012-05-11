@@ -1138,7 +1138,7 @@ static int SCI_SetClockSource(SCI_CONTROL_BLOCK *sci)
 	U32 reg_address = 0;
 	U32 val = 0;
 
-#if defined(CONFIG_CPU_SUBTYPE_STB7100) || defined(CONFIG_CPU_SUBTYPE_STX7100) || defined(CONFIG_SH_ST_MB442) || defined(CONFIG_SH_ST_MB411) || defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(HS7810A) || defined(HS7110) || defined(UFS912) || defined(SPARK) 
+#if defined(CONFIG_CPU_SUBTYPE_STB7100) || defined(CONFIG_CPU_SUBTYPE_STX7100) || defined(CONFIG_SH_ST_MB442) || defined(CONFIG_SH_ST_MB411) || defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(HS7810A) || defined(HS7110) || defined(WHITEBOX) || defined(UFS912) || defined(SPARK) 
 	reg_address = (U32)checked_ioremap(SYS_CFG_BASE_ADDRESS+SYS_CFG7, 4);
 	if(!reg_address)
 		return 0;
@@ -1158,7 +1158,7 @@ static int SCI_SetClockSource(SCI_CONTROL_BLOCK *sci)
 
 	iounmap((void *)reg_address);
 
-#if defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(UFS912) || defined(SPARK) || defined(HS7810A) || defined(HS7110)
+#if defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(UFS912) || defined(SPARK) || defined(HS7810A) || defined(HS7110) || defined(WHITEBOX)
 	reg_address = (U32)checked_ioremap(SYS_CFG_BASE_ADDRESS+SYS_CFG5, 4);
 	if(!reg_address)
 		return 0;

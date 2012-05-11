@@ -59,6 +59,9 @@ starci-objs:= starci2win/starci2win.o
 else ifdef HS7110
 obj-m += hs7110.o
 hs7110-objs:= hs7110/hs7110_cic.o
+else ifdef WHITEBOX
+dummy_cic-objs += dummy_cic/dummy_cic.o
+obj-m += dummy_cic.o
 else ifdef SPARK
 dummy_cic-objs += dummy_cic/dummy_cic.o
 obj-m += dummy_cic.o

@@ -81,6 +81,10 @@ ifdef HS7110
 obj-y	+= nuvoton/
 endif
 
+ifdef WHITEBOX
+#obj-y	+= nuvoton/
+endif
+
 ifdef IPBOX9900
 obj-y	+= ipbox99xx/
 endif

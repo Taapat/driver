@@ -17,7 +17,7 @@
 
 extern struct DeviceContext_s* DeviceContext;
 
-#if defined(HS7110)
+#if defined(HS7110) || defined(WHITEBOX)
 extern int setMuxSource(int source);
 #endif
 int setCiSource(int slot, int source);
@@ -46,7 +46,7 @@ int proc_tsmux_input0_write(struct file *file, const char __user *buf,
 #endif
 
 /* ciN for source ciN, e.g. A for TUNER */
-#if defined(HS7110)
+#if defined(HS7110) || defined(WHITEBOX)
 		if(strcmp(page, "A") == 0)
 			setMuxSource(0);
         else
