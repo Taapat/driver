@@ -34,6 +34,8 @@ extern void ufs922_setup_clks(void);
 extern void hs7810a_setup_clks(void);
 #elif defined(HS7110)
 extern void hs7110_setup_clks(void);
+#elif defined(WHITEBOX)
+extern void whitebox_setup_clks(void);
 #endif
 
 int my_init_module(void)
@@ -46,6 +48,8 @@ int my_init_module(void)
    hs7810a_setup_clks();
 #elif defined(HS7110)
    hs7110_setup_clks();
+#elif defined(WHITEBOX)
+   whitebox_setup_clks();
 #elif defined(UFS922)
    ufs922_setup_clks();
 #else
