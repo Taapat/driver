@@ -310,7 +310,7 @@ struct iconToInternal {
 
 #if defined(OCTAGON1008)
 #define cCommandSetVFD           0xc4
-#elif defined(HS7810A) || defined(HS7110)
+#elif defined(HS7810A) || defined(HS7110) || defined(WHITEBOX)
 #define cCommandSetVFD           0x24
 #else
 #define cCommandSetVFD           0xce /* 0xc0 */
@@ -319,7 +319,7 @@ struct iconToInternal {
 
 #define cCommandSetVFDBrightness 0xd2
 
-#if defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110)
+#if defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110) || defined(WHITEBOX)
 #define cCommandGetFrontInfo     0xd0
 #else
 #define cCommandGetFrontInfo     0xe0
@@ -524,7 +524,7 @@ int nuvotonSetBrightness(int level)
 
     dprintk(100, "%s > %d\n", __func__, level);
 
-#if !defined(HS7810A) && !defined(HS7110)
+#if !defined(HS7810A) && !defined(HS7110) && !defined(WHITEBOX)
     if (level < 0 || level > 7)
     {
         printk("VFD/Nuvoton brightness out of range %d\n", level);
@@ -557,7 +557,7 @@ int nuvotonSetPwrLed(int level)
 
     dprintk(100, "%s > %d\n", __func__, level);
 
-#if !defined(HS7810A) && !defined(HS7110)
+#if !defined(HS7810A) && !defined(HS7110) && !defined(WHITEBOX)
     if (level < 0 || level > 15)
     {
         printk("VFD/Nuvoton PwrLed out of range %d\n", level);
@@ -948,7 +948,7 @@ int nuvoton_init_func(void)
     res |= nuvotonWriteCommand(init4, sizeof(init4), 0);
     res |= nuvotonWriteCommand(init5, sizeof(init5), 0);
 
-#if !defined(HS7810A) && !defined(HS7110)
+#if !defined(HS7810A) && !defined(HS7110) && !defined(WHITEBOX)
     res |= nuvotonSetBrightness(1);
 
     res |= nuvotonWriteString("T.-Ducktales", strlen("T.-Ducktales"));
@@ -958,7 +958,7 @@ int nuvoton_init_func(void)
 
     for (vLoop = ICON_MIN + 1; vLoop < ICON_MAX; vLoop++)
         res |= nuvotonSetIcon(vLoop, 0);
-#elif !defined(HS7110)
+#elif !defined(HS7110) && !defined(WHITEBOX)
     res |= nuvotonWriteString("----", 4);
 #endif
 

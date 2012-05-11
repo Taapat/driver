@@ -82,7 +82,7 @@ obj-y	+= nuvoton/
 endif
 
 ifdef WHITEBOX
-#obj-y	+= nuvoton/
+obj-y	+= nuvoton/
 endif
 
 ifdef IPBOX9900
