@@ -43,10 +43,10 @@
 
 //-------------------------------------
 
-#if defined(ATEVIO7500)
+#if defined(ATEVIO7500) || defined(WHITEBOX)
 unsigned int InterruptLine = 120;
 unsigned int ASCXBaseAddress = ASC3BaseAddress;
-#elif defined(HS7810A) || defined(HS7110) || defined(WHITEBOX)
+#elif defined(HS7810A) || defined(HS7110)
 unsigned int InterruptLine = 274;
 unsigned int ASCXBaseAddress = ASC3BaseAddress;
 #else
