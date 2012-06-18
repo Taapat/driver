@@ -1174,8 +1174,15 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
                {
                    // Picture is taller than display surface so must shrink width
                    Rational_t   NewWidth        = (DestWidth * PictureAspectRatio) / WindowAspectRatio;
-// if NewWidth = 0 then crash minitv on Dr. Dish TV
-//                   DestWidth                    = NewWidth.IntegerPart();
+
+                   int checksize 				= (DestWidth * PictureAspectRatio) / WindowAspectRatio;
+				   report(severity_info,"checksize(int) %d\n",checksize);
+				   report(severity_info,"NewWidth(double) %f\n",NewWidth);
+				   if(checksize != 0)
+				   {
+				   	   report(severity_info,"change DestWith %d\n",NewWidth.IntegerPart());
+				   	   DestWidth = NewWidth.IntegerPart();
+				   }
                    DestX                        = DestX + ((SurfaceWindow.Width - DestWidth) >> 1);
                }
             }
