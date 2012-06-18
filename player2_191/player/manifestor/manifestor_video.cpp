@@ -1175,12 +1175,7 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
                    // Picture is taller than display surface so must shrink width
                    Rational_t   NewWidth        = (DestWidth * PictureAspectRatio) / WindowAspectRatio;
 
-				   report(severity_info,"NewWidth(double) %f\n",NewWidth);
-				   if(NewWidth > 0.0)
-				   {
-				   	   report(severity_info,"change DestWith %d\n",NewWidth.IntegerPart());
-				   	   DestWidth = NewWidth.IntegerPart();
-				   }
+			   	   DestWidth                    = NewWidth.IntegerPart();
                    DestX                        = DestX + ((SurfaceWindow.Width - DestWidth) >> 1);
                }
             }
