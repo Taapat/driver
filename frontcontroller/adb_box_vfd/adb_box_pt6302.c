@@ -358,7 +358,7 @@ static void pt6302_setup( struct pt6302_driver *pfd ) {
   	for( i=0; i < 150; i++ )
     		udelay( 4000 ); 
 
-  	pt6302_write_dcram( pfd, 0x0, "[   v. 05.03   ]", 16 ); // powitanie
+  	pt6302_write_dcram( pfd, 0x0, "[ *= B4Team =* ]", 16 ); // powitanie
 	pt6958_display("05.03");
 
 /*

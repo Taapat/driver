@@ -92,13 +92,13 @@ module_param(swts, int, 0444);
 MODULE_PARM_DESC(swts, "Do not route injected data through the tsm/pti.\n");
 #endif
 
-#if defined(UFS910)
+#if defined(UFS910) || defined(ADB_BOX)
 int reset_tsm = 0;
 #else
 int reset_tsm = 1;
 #endif
 module_param(reset_tsm, int, S_IRUGO | S_IWUSR);
-#if defined(UFS910)
+#if defined(UFS910) || defined(ADB_BOX)
 MODULE_PARM_DESC(reset_tsm, "Reset the tsm when pti is idle? (default=0)\n");
 #else
 MODULE_PARM_DESC(reset_tsm, "Reset the tsm when pti is idle? (default=1)\n");
