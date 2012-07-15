@@ -1,0 +1,21 @@
+---- ->priv Matches (20 in 3 files) ----
+Rtmp.h:#define RTMP_OS_NETDEV_SET_PRIV(_pNetDev, _pPriv)	((_pNetDev)->priv = (_pPriv))
+Rtmp.h:#define RTMP_OS_NETDEV_GET_PRIV(_pNetDev)		((_pNetDev)->priv)
+Rtmp_main.c:        PRTMP_ADAPTER   pAd = net_dev->priv;
+Rtmp_main.c:	PRTMP_ADAPTER   pAd = net_dev->priv;
+Rtmp_main.c:	pAd = (PRTMP_ADAPTER) dev->priv;
+Rtmp_main.c:        PRTMP_ADAPTER   pAd = net_dev->priv;
+Rtmp_main.c:	PRTMP_ADAPTER pAd = (PRTMP_ADAPTER) net_dev->priv;
+Rtmp_main.c:	PRTMP_ADAPTER pAd = (PRTMP_ADAPTER) net_dev->priv;
+Rtmp_main.c:	PRTMP_ADAPTER   pAd = (PRTMP_ADAPTER) net_dev->priv;
+Rtmp_main.c:	PRTMP_ADAPTER   pAd = (PRTMP_ADAPTER) net_dev->priv;
+Rtmp_main.c:	PRTMP_ADAPTER   pAd = (PRTMP_ADAPTER) net_dev->priv;
+Rtmp_main.c:	netdev->priv = (PVOID)vmalloc(sizeof(RTMP_ADAPTER));
+Rtmp_main.c:	pAd = netdev->priv;
+Rtmp_main.c:	netdev->priv_flags = INT_MAIN;
+Rtmp_main.c:	netdev->priv = pAd;
+Rtmp_main.c:	netdev->priv = (PVOID)vmalloc(sizeof(RTMP_ADAPTER));
+Rtmp_main.c:	pAd = netdev->priv;
+Rtmp_main.c:	netdev->priv_flags = INT_MAIN;
+Rtmp_main.c:	netdev->priv = pAd;
+Rtusb_data.c:	PRTMP_ADAPTER	pAd = net_dev->priv;

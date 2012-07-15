@@ -1,0 +1,2 @@
+/sbin/insmod rt73.ko
+/sbin/ifconfig rausb0 inet 192.168.5.222 up

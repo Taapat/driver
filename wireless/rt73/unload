@@ -1,0 +1,3 @@
+/sbin/ifconfig rausb0 down
+#ifconfig mesh0 down
+/sbin/rmmod rt73
