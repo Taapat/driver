@@ -436,8 +436,8 @@ ManifestorStatus_t      Manifestor_Video_c::GetNextQueuedManifestationTime   (un
         MANIFESTOR_TRACE ("0 - Estimate %llu, Time from now %u, Time since Vsync %u, FrameRate %d.%06d\n", *Time,
                           (unsigned int)(*Time - Now), (unsigned int)(Now - Vsync),
                           SurfaceDescriptor.FrameRate.IntegerPart(), SurfaceDescriptor.FrameRate.RemainderDecimal());
-	Behind.Print();
-	Period.Print();
+        Behind.Print();
+        Period.Print();
         return ManifestorNoError;
     }
 
@@ -446,7 +446,7 @@ ManifestorStatus_t      Manifestor_Video_c::GetNextQueuedManifestationTime   (un
     {
         *Time           = NextTimeSlot;
         MANIFESTOR_TRACE ("1 - Estimate %llu, Time from now %u\n", *Time, (unsigned int)(*Time - Now));
-	Period.Print();
+        Period.Print();
         return ManifestorNoError;
     }
 
@@ -1101,18 +1101,18 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
         // on occasion this has effected our AV sync calculations on startup.
       
         report(severity_info,"Incoming Source %dx%d @ %d,%d\n",
-	    VideoParameters->Width, VideoParameters->Height,
-	     SourceX, SourceY);
+             VideoParameters->Width, VideoParameters->Height,
+             SourceX, SourceY);
 
-	report(severity_info,"Display Size %dx%d @ %d,%d\n",
-	     DestWidth, DestHeight,
-	     DestX, DestY);
+        report(severity_info,"Display Size %dx%d @ %d,%d\n",
+             DestWidth, DestHeight,
+             DestX, DestY);
 
         report(severity_info,"%s Content, FrameRate %d.%02d, PixelAspectRatio %d.%02d\n",
             VideoParameters->Progressive ? "Progressive" : "Interlaced",
             VideoParameters->FrameRate.IntegerPart(), VideoParameters->FrameRate.RemainderDecimal(),
-	    VideoParameters->PixelAspectRatio.IntegerPart(), VideoParameters->PixelAspectRatio.RemainderDecimal());
-	/*
+            VideoParameters->PixelAspectRatio.IntegerPart(), VideoParameters->PixelAspectRatio.RemainderDecimal());
+        /*
         MANIFESTOR_DEBUG("Incoming Source %dx%d (%dx%d), at %d,%d, Dest %dx%d at %d,%d\n",
             VideoParameters->Width, VideoParameters->Height,
             VideoParameters->DisplayWidth, VideoParameters->DisplayHeight,
@@ -1123,7 +1123,7 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
             VideoParameters->FrameRate.IntegerPart(), VideoParameters->FrameRate.RemainderDecimal(),
             VideoParameters->PixelAspectRatio.IntegerPart(), VideoParameters->PixelAspectRatio.RemainderDecimal(),
             VideoParameters->VideoFullRange, VideoParameters->ColourMatrixCoefficients );
-	*/
+        */
     }
     if ((SourceWidth > MAX_SUPPORTED_VIDEO_CONTENT_WIDTH)  | (SourceHeight > MAX_SUPPORTED_VIDEO_CONTENT_HEIGHT))
     {
@@ -1161,47 +1161,46 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
     {
         if (PictureAspectRatio != WindowAspectRatio)
         {
-
-			if (DisplayFormatPolicyValue == PolicyValueLetterBox)
+            if (DisplayFormatPolicyValue == PolicyValueLetterBox)
             {
-               if (PictureAspectRatio > WindowAspectRatio)
-               {
-                   // Picture is wider than display surface so must shrink height
-                   Rational_t   NewHeight       = (DestHeight * WindowAspectRatio) / PictureAspectRatio;
+                if (PictureAspectRatio > WindowAspectRatio)
+                {
+                    // Picture is wider than display surface so must shrink height
+                    Rational_t   NewHeight       = (DestHeight * WindowAspectRatio) / PictureAspectRatio;
 #ifdef __TDT__
-                   //player crash if icoming source width/height not standard (Kernel panic - not syncing: Need true 64-bit/64-bit division)
-                   if( (VideoParameters->Width == 720 && VideoParameters->Height == 576) || (VideoParameters->Width == 1280 && VideoParameters->Height == 720) || (VideoParameters->Width == 1920 && VideoParameters->Height == 1080) )
-				   {
-						DestHeight                   = NewHeight.IntegerPart();
-				   }
-                   else
-                   {
-						DestHeight = (DestHeight * 4 / 3) * 9 / 16;
-				   }
+                    //player crash if icoming source width/height not standard (Kernel panic - not syncing: Need true 64-bit/64-bit division)
+                    if( (VideoParameters->Width == 720 && VideoParameters->Height == 576) || (VideoParameters->Width == 1280 && VideoParameters->Height == 720) || (VideoParameters->Width == 1920 && VideoParameters->Height == 1080) )
+                    {
+                        DestHeight                   = NewHeight.IntegerPart();
+                    }
+                    else
+                    {
+                        DestHeight = (DestHeight * 4 / 3) * 9 / 16;
+                    }
 #else
-                   DestHeight                   = NewHeight.IntegerPart();
+                    DestHeight                   = NewHeight.IntegerPart();
 #endif
-                   DestY                        = DestY + ((SurfaceWindow.Height - DestHeight) >> 1);
-               }
-               else
-               {
-                   // Picture is taller than display surface so must shrink width
-                   Rational_t   NewWidth        = (DestWidth * PictureAspectRatio) / WindowAspectRatio;
+                    DestY                        = DestY + ((SurfaceWindow.Height - DestHeight) >> 1);
+                }
+                else
+                {
+                    // Picture is taller than display surface so must shrink width
+                    Rational_t   NewWidth        = (DestWidth * PictureAspectRatio) / WindowAspectRatio;
 #ifdef __TDT__
-                   //player crash if icoming source width/height not standard (Kernel panic - not syncing: Need true 64-bit/64-bit division)
-                   if( (VideoParameters->Width == 720 && VideoParameters->Height == 576) || (VideoParameters->Width == 1280 && VideoParameters->Height == 720) || (VideoParameters->Width == 1920 && VideoParameters->Height == 1080) )
-				   {
-						DestWidth                    = NewWidth.IntegerPart();
-				   }
-                   else
-                   {
-						DestWidth = (DestWidth * 4 / 3) * 9 / 16;
-                   }
+                    //player crash if icoming source width/height not standard (Kernel panic - not syncing: Need true 64-bit/64-bit division)
+                    if( (VideoParameters->Width == 720 && VideoParameters->Height == 576) || (VideoParameters->Width == 1280 && VideoParameters->Height == 720) || (VideoParameters->Width == 1920 && VideoParameters->Height == 1080) )
+                    {
+                        DestWidth                    = NewWidth.IntegerPart();
+                    }
+                    else
+                    {
+                        DestWidth = (DestWidth * 4 / 3) * 9 / 16;
+                    }
 #else
-                   DestWidth                    = NewWidth.IntegerPart();
+                    DestWidth                    = NewWidth.IntegerPart();
 #endif
-                   DestX                        = DestX + ((SurfaceWindow.Width - DestWidth) >> 1);
-               }
+                    DestX                        = DestX + ((SurfaceWindow.Width - DestWidth) >> 1);
+                }
             }
             else
             {
@@ -1213,17 +1212,17 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
 #ifdef __TDT__
                    //player crash if icoming source width/height not standard (Kernel panic - not syncing: Need true 64-bit/64-bit division)
                    if( (VideoParameters->Width == 720 && VideoParameters->Height == 576) || (VideoParameters->Width == 1280 && VideoParameters->Height == 720) || (VideoParameters->Width == 1920 && VideoParameters->Height == 1080) )
-				   {
-				        SourceWidth                  = NewWidth.IntegerPart();
-				   }
-				   else
-				   {
-						SourceWidth -= ((SourceWidth * 3 / 4) * 16 / 9) - SourceWidth;
-				   }
+                   {
+                       SourceWidth                  = NewWidth.IntegerPart();
+                   }
+                   else
+                   {
+                       SourceWidth -= ((SourceWidth * 3 / 4) * 16 / 9) - SourceWidth;
+                   }
 #else
-				   SourceWidth                  = NewWidth.IntegerPart();
+                   SourceWidth                  = NewWidth.IntegerPart();
 #endif
-				   SourceX                      = SourceX + ((OldWidth - SourceWidth) >> 1);
+                   SourceX                      = SourceX + ((OldWidth - SourceWidth) >> 1);
                }
                else
                {
@@ -1233,17 +1232,17 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
 #ifdef __TDT__
                    //player crash if icoming source width/height not standard (Kernel panic - not syncing: Need true 64-bit/64-bit division)
                    if( (VideoParameters->Width == 720 && VideoParameters->Height == 576) || (VideoParameters->Width == 1280 && VideoParameters->Height == 720) || (VideoParameters->Width == 1920 && VideoParameters->Height == 1080) )
-				   {
-					    SourceHeight                 = NewHeight.IntegerPart();
-				   }
-				   else
-				   {
-						SourceHeight -= ((SourceHeight * 3 / 4) * 16 / 9) - SourceHeight;
-				   }
+                   {
+                       SourceHeight                 = NewHeight.IntegerPart();
+                   }
+                   else
+                   {
+                       SourceHeight -= ((SourceHeight * 3 / 4) * 16 / 9) - SourceHeight;
+                   }
 #else
                    SourceHeight                 = NewHeight.IntegerPart();
 #endif
-				   SourceY                      = SourceY + ((OldHeight - SourceHeight) >> 1);
+                   SourceY                      = SourceY + ((OldHeight - SourceHeight) >> 1);
                }
             }
         }
@@ -1323,13 +1322,15 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
     
     // Hm why is here not the decimate value used from havana_stream ?
     // Lets set it depending on the value from havana_stream
-   if(OutputWindow.Height > 576 || OutputWindow.Height < 425)
+    if(OutputWindow.Height > 576 || OutputWindow.Height < 425)
     {
-   int decimate = Player->PolicyValue (Playback, Stream, PolicyDecimateDecoderOutput);
-   if (decimate == PolicyValueDecimateDecoderOutputDisabled) DecimateIfAvailable = false;
-   else DecimateIfAvailable = true;
-	}
-    
+        int decimate = Player->PolicyValue (Playback, Stream, PolicyDecimateDecoderOutput);
+        if (decimate == PolicyValueDecimateDecoderOutputDisabled)
+            DecimateIfAvailable = false;
+        else
+            DecimateIfAvailable = true;
+    }
+
 #if defined (CROP_INPUT_WHEN_DECIMATION_NEEDED_BUT_NOT_AVAILABLE)
     if ((Player->PolicyValue (Playback, Stream, PolicyDecimateDecoderOutput) != PolicyValueDecimateDecoderOutputDisabled) &&
        ((SourceWidth > (DestWidth * MAX_SCALING_FACTOR)) || (SourceHeight > (DestHeight * MAX_SCALING_FACTOR))))
