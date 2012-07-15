@@ -9,6 +9,7 @@ CHIPSET                   = 2870
 OSABL                     = NO
 
 HAS_WPA_SUPPLICANT        = y
+HAS_NATIVE_WPA_SUPPLICANT_SUPPORT=y
 HAS_DOT11_N_SUPPORT       = y
 HAS_DOT11N_DRAFT3_SUPPORT = y
 HAS_STATS_COUNT           = y
