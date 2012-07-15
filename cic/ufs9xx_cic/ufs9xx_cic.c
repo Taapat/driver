@@ -64,8 +64,8 @@ if ((debug) && (debug >= level)) printk(TAGDEBUG x); \
 } while (0)
 
 
-/* ***** emi for 7111 */
-#if defined(UFS912)
+/* ***** emi for 7111&7105 */
+#if defined(UFS912) || defined(UFS913)
 #define EMIConfigBaseAddress 0xfe700000
 #elif defined(UFS922)
 #define EMIConfigBaseAddress 0x1A100000
@@ -107,7 +107,7 @@ unsigned long reg_config = 0;
 #define  TUNER_2_CAM_A_B 		6
 #define  TUNER_2_VIEW                   7
 
-#if defined(UFS912)
+#if defined(UFS912) || defined(UFS913)
 volatile unsigned long slot_a_r_mem  =	0x03028000; /* read */
 volatile unsigned long slot_a_w_mem  =	0x03008000; /* write */
 volatile unsigned long slot_a_w_stat =	0x03000000;
@@ -772,7 +772,7 @@ void set_ts_path(int route)
 }
 #endif
 
-#if defined(UFS912)
+#if defined(UFS912) || defined(UFS913)
 int cic_init_hw_ufs912(void)
 {
 	struct ufs9xx_cic_state *state = &ci_state;
@@ -911,7 +911,7 @@ int cic_init_hw_ufs922(void)
 
 int cic_init_hw(void)
 {
-#if defined(UFS912)
+#if defined(UFS912) || defined(UFS913)
      return cic_init_hw_ufs912();
 #elif defined(UFS922)
      return cic_init_hw_ufs922();

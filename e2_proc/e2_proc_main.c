@@ -259,6 +259,8 @@ static int info_model_read(char *page, char **start, off_t off, int count,
   int len = sprintf(page, "ufs922\n");
 #elif defined(UFS912)
   int len = sprintf(page, "ufs912\n");
+#elif defined(UFS913)
+  int len = sprintf(page, "ufs913\n");
 #elif defined(SPARK)
   int len = sprintf(page, "spark\n");
 #elif defined(SPARK7162)
@@ -620,7 +622,7 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/video/plane/psi_contrast"    , NULL, NULL, NULL, NULL, "psi_contrast"},
 	{cProcEntry, "stb/video/plane/psi_tint"        , NULL, NULL, NULL, NULL, "psi_tint"},
 	{cProcEntry, "stb/video/plane/psi_apply"        , NULL, NULL, NULL, NULL, "psi_apply"},
-#ifdef UFS912
+#if defined(UFS912) || defined(UFS913) || defined(ATEVIO7500)
 	{cProcDir  , "stb/cec"   	                   , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/cec/state_activesource"   	               , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/cec/state_standby"   	               , NULL, NULL, NULL, NULL, ""},
