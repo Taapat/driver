@@ -52,7 +52,7 @@ unsigned int ASCXBaseAddress = ASC2BaseAddress;
 #else
 #ifdef UFS913
 unsigned int InterruptLine = 120;
-unsigned int ASCXBaseAddress = ASC2BaseAddress;
+unsigned int ASCXBaseAddress = ASC3BaseAddress;
 #else
 #error Not supported!
 #endif
