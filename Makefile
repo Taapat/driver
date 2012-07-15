@@ -74,6 +74,9 @@ endif
 ifdef UFS912
 CCFLAGSY+=-DUFS912
 endif
+ifdef UFS913
+CCFLAGSY+=-DUFS912
+endif
 ifdef SPARK
 CCFLAGSY+=-DSPARK
 endif
@@ -182,6 +185,11 @@ obj-y	+= player2/linux/drivers/media/dvb/stm/dvb
 endif
 
 ifdef UFS912
+obj-y	+= cec/
+obj-y	+= cpu_frequ/
+endif
+
+ifdef UFS913
 obj-y	+= cec/
 obj-y	+= cpu_frequ/
 endif

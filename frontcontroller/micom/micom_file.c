@@ -140,7 +140,7 @@ int micomSetLED(int which, int on)
 
     dprintk(100, "%s > %d, %d\n", __func__, which, on);
 
-#ifndef UFS912
+#ifdef UFS922
     if (which < 1 || which > 6)
     {
         printk("VFD/MICOM led number out of range %d\n", which);
@@ -550,7 +550,7 @@ int micom_init_func(void)
     printk("Kathrein UFS922 VFD/MICOM module initializing\n");
     micomSetModel();
 #else
-    printk("Kathrein UFS912 VFD/MICOM module initializing\n");
+    printk("Kathrein UFS912/913 VFD/MICOM module initializing\n");
     micomInitialize();
 #endif
     micomSetBrightness(1);
@@ -559,7 +559,7 @@ int micom_init_func(void)
 
     micomWriteString(" Team Ducktales ", strlen(" Team Ducktales "));
 
-#ifndef UFS912
+#ifdef UFS922
     for (vLoop = ICON_MIN + 1; vLoop < ICON_MAX; vLoop++)
         micomSetIcon(vLoop, 0);
 #endif
@@ -869,7 +869,7 @@ static int MICOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
     case VFDDISPLAYWRITEONOFF:
         /* ->alles abschalten ? VFD_Display_Write_On_Off */
         printk("VFDDISPLAYWRITEONOFF ->not yet implemented\n");
-#ifdef UFS912
+#if defined(UFS912) || defined(UFS913)
         micomInitialize();
 #endif
         break;

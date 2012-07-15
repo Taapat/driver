@@ -17,6 +17,9 @@ obj-m += ufs922_cic.o
 else ifdef UFS912
 ufs912_cic-objs += ufs9xx_cic/ufs9xx_cic.o
 obj-m += ufs912_cic.o
+else ifdef UFS913
+ufs913_cic-objs += ufs9xx_cic/ufs9xx_cic.o
+obj-m += ufs913_cic.o
 else ifdef FORTIS_HDBOX
 obj-m += starci.o
 starci-objs:= starci2win/starci2win.o

@@ -42,19 +42,28 @@
 #include "micom_asc.h"
 
 //-------------------------------------
-#ifndef UFS912 // UFS922
+#ifdef UFS922
 unsigned int InterruptLine = 120;
 unsigned int ASCXBaseAddress = ASC3BaseAddress;
-#else // UFS912
+#else
+#ifdef UFS912
 unsigned int InterruptLine = 121;
 unsigned int ASCXBaseAddress = ASC2BaseAddress;
+#else
+#ifdef UFS913
+unsigned int InterruptLine = 120;
+unsigned int ASCXBaseAddress = ASC2BaseAddress;
+#else
+#error Not supported!
+#endif
+#endif
 #endif
 
 //-------------------------------------
 
 void serial_init (void)
 {
-#ifndef UFS912 // UFS922
+#ifdef UFS922
     // Configure the PIO pins
     stpio_request_pin(5, 0,  "ASC_TX", STPIO_ALT_OUT); /* Tx */
     stpio_request_pin(5, 1,  "ASC_RX", STPIO_IN);      /* Rx */
@@ -76,13 +85,8 @@ void serial_init (void)
 
 int serial_putc (char Data)
 {
-#ifdef UFS912
-    char                  *ASC_3_TX_BUFF = (char*)(ASC2BaseAddress + ASC_TX_BUFF);
-    unsigned int          *ASC_3_INT_STA = (unsigned int*)(ASC2BaseAddress + ASC_INT_STA);
-#else
-    char                  *ASC_3_TX_BUFF = (char*)(ASC3BaseAddress + ASC_TX_BUFF);
-    unsigned int          *ASC_3_INT_STA = (unsigned int*)(ASC3BaseAddress + ASC_INT_STA);
-#endif
+    char                  *ASC_3_TX_BUFF = (char*)(ASCXBaseAddress + ASC_TX_BUFF);
+    unsigned int          *ASC_3_INT_STA = (unsigned int*)(ASCXBaseAddress + ASC_INT_STA);
     unsigned long         Counter = 200000;
 
     while (((*ASC_3_INT_STA & ASC_INT_STA_THE) == 0) && --Counter)
