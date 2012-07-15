@@ -8,10 +8,11 @@ RT28xx_MODE               = STA
 CHIPSET                   = 5370
 OSABL                     = NO
 
-HAS_ATE                   = y
-HAS_QA_SUPPORT            = y
+HAS_WPA_SUPPLICANT	  = y
+HAS_NATIVE_WPA_SUPPLICANT_SUPPORT=y
 HAS_DOT11_N_SUPPORT       = y
-HAS_LED_CONTROL_SUPPORT   = y
+HAS_DOT11N_DRAFT3_SUPPORT = y
+HAS_KTHREAD_SUPPORT       = y
 
 EXTRA_CFLAGS += -I$(src)/include
 EXTRA_CFLAGS += -Wall -O2 -Wundef -Wstrict-prototypes
@@ -20,7 +21,8 @@ EXTRA_CFLAGS += -Wno-pointer-sign -fno-strict-aliasing -fno-common
 EXTRA_CFLAGS += -fomit-frame-pointer -ffreestanding -m4-nofpu
 
 WFLAGS := -DAGGREGATION_SUPPORT -DPIGGYBACK_SUPPORT -DWMM_SUPPORT  -DLINUX -Wall -Wstrict-prototypes -Wno-trigraphs 
-WFLAGS += -DSYSTEM_LOG_SUPPORT  -DRT28xx_MODE=$(RT28xx_MODE) -DCHIPSET=$(CHIPSET) -DRESOURCE_PRE_ALLOC -DST -D__KERNEL__
+WFLAGS += -DSYSTEM_LOG_SUPPORT  -DRT28xx_MODE=$(RT28xx_MODE) -DCHIPSET=$(CHIPSET) -DRESOURCE_PRE_ALLOC
+WFLAGS += -DST
 
 ifeq ($(RT28xx_MODE),STA)
 WFLAGS += -DCONFIG_STA_SUPPORT -DDBG
@@ -156,6 +158,75 @@ WFLAGS += -DRTMP_MAC_PCI -DRTMP_RBUS_SUPPORT -DRT5350 -DRT305x -DRT3050 -DRT3350
 CHIPSET_DAT = 2860
 ifeq ($(HAS_WIFI_LED_SHARE), y)
 WFLAGS += -DCONFIG_WIFI_LED_SHARE
+endif
+endif
+ifeq ($(HAS_XLINK),y)
+WFLAGS += -DXLINK_SUPPORT
+endif
+
+
+ifeq ($(HAS_WPA_SUPPLICANT),y)
+WFLAGS += -DWPA_SUPPLICANT_SUPPORT
+ifeq ($(HAS_NATIVE_WPA_SUPPLICANT_SUPPORT),y)
+WFLAGS += -DNATIVE_WPA_SUPPLICANT_SUPPORT -DCREDENTIAL_STORE -DPROFILE_STORE
+endif
+endif
+
+ifeq ($(OSABL),YES)
+HAS_OSABL_FUNC_SUPPORT=y
+HAS_OSABL_OS_PCI_SUPPORT=y
+HAS_OSABL_OS_USB_SUPPORT=y
+HAS_OSABL_OS_RBUS_SUPPORT=n
+HAS_OSABL_OS_AP_SUPPORT=y
+HAS_OSABL_OS_STA_SUPPORT=y
+endif
+
+
+ifeq ($(HAS_ATE),y)
+WFLAGS += -DRALINK_ATE
+WFLAGS += -DCONFIG_RT2880_ATE_CMD_NEW
+ifeq ($(HAS_NEW_TXCONT),y)
+WFLAGS += -DNEW_TXCONT
+endif
+ifeq ($(HAS_QA_SUPPORT),y)
+WFLAGS += -DRALINK_QA
+endif
+endif
+
+
+ifeq ($(HAS_SNMP_SUPPORT),y)
+WFLAGS += -DSNMP_SUPPORT
+endif
+
+ifeq ($(HAS_QOS_DLS_SUPPORT),y)
+WFLAGS += -DQOS_DLS_SUPPORT
+endif
+
+ifeq ($(HAS_DOT11_N_SUPPORT),y)
+WFLAGS += -DDOT11_N_SUPPORT
+ifeq ($(HAS_DOT11N_DRAFT3_SUPPORT),y)
+WFLAGS += -DDOT11N_DRAFT3
+endif
+endif
+
+
+ifeq ($(HAS_CS_SUPPORT),y)
+WFLAGS += -DCARRIER_DETECTION_SUPPORT
+endif
+
+ifeq ($(HAS_STATS_COUNT),y)
+WFLAGS += -DSTATS_COUNT_SUPPORT
+endif
+
+ifeq ($(HAS_USB_SUPPORT_SELECTIVE_SUSPEND),y)
+WFLAGS += -DUSB_SUPPORT_SELECTIVE_SUSPEND -DCONFIG_PM
+endif
+
+
+ifeq ($(HAS_CFG80211_SUPPORT),y)
+WFLAGS += -DRT_CFG80211_SUPPORT
+ifeq ($(HAS_RFKILL_HW_SUPPORT),y)
+WFLAGS += -DRFKILL_HW_SUPPORT
 endif
 endif
 
@@ -412,6 +483,26 @@ endif
 ifeq ($(HAS_ATE),y)
 rt$(CHIPSET)sta-objs += common/rt_ate.o
 endif
+
+#ifdef CRDA_SUPPORT
+ifeq ($(OSABL),NO)
+ifeq ($(HAS_CFG80211_SUPPORT),y)
+rt$(CHIPSET)sta-objs += \
+	os/linux/cfg80211.o \
+	os/linux/cfg80211drv.o
+endif
+endif
+
+ifeq ($(OSABL),YES)
+ifeq ($(HAS_CFG80211_SUPPORT),y)
+rt$(CHIPSET)sta-objs += \
+	os/linux/cfg80211drv.o
+endif
+endif
+#endif // CRDA_SUPPORT //
+
+
+#endif // CONFIG_STA_SUPPORT //
 
 obj-m := $(MOD_NAME).o
 
