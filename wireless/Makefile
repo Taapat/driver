@@ -10,6 +10,5 @@ obj-y	+= rt3070sta/
 obj-y	+= rt5370sta/
 obj-y	+= rtl8192cu/
 obj-y	+= rtl871x/
-obj-y	+= rt73/
 endif
 
