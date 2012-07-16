@@ -1169,7 +1169,7 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
                     Rational_t   NewHeight       = (DestHeight * WindowAspectRatio) / PictureAspectRatio;
 #ifdef __TDT__
                     //player crash if incoming source width/height not standard (Kernel panic - not syncing: Need true 64-bit/64-bit division)
-                    if( (VideoParameters->Width == 720 && VideoParameters->Height == 576) || (VideoParameters->Width == 1280 && VideoParameters->Height == 720) || (VideoParameters->Width == 1440 && (VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) || (VideoParameters->Width == 1920 && (VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) )
+                    if( (VideoParameters->Width == 720 && VideoParameters->Height == 576) || (VideoParameters->Width == 1280 && (VideoParameters->Height == 720 || VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) || (VideoParameters->Width == 1440 && (VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) || (VideoParameters->Width == 1920 && (VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) )
                     {
                         DestHeight                   = NewHeight.IntegerPart();
                     }
@@ -1188,7 +1188,7 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
                     Rational_t   NewWidth        = (DestWidth * PictureAspectRatio) / WindowAspectRatio;
 #ifdef __TDT__
                     //player crash if incoming source width/height not standard (Kernel panic - not syncing: Need true 64-bit/64-bit division)
-                    if( (VideoParameters->Width == 720 && VideoParameters->Height == 576) || (VideoParameters->Width == 1280 && VideoParameters->Height == 720) || (VideoParameters->Width == 1440 && (VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) || (VideoParameters->Width == 1920 && (VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) )
+                    if( (VideoParameters->Width == 720 && VideoParameters->Height == 576) || (VideoParameters->Width == 1280 && (VideoParameters->Height == 720 || VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) || (VideoParameters->Width == 1440 && (VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) || (VideoParameters->Width == 1920 && (VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) )
                     {
                         DestWidth                    = NewWidth.IntegerPart();
                     }
@@ -1211,7 +1211,7 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
                    Rational_t   NewWidth        = (SourceWidth * WindowAspectRatio) / PictureAspectRatio;
 #ifdef __TDT__
                    //player crash if incoming source width/height not standard (Kernel panic - not syncing: Need true 64-bit/64-bit division)
-                   if( (VideoParameters->Width == 720 && VideoParameters->Height == 576) || (VideoParameters->Width == 1280 && VideoParameters->Height == 720) || (VideoParameters->Width == 1440 && (VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) || (VideoParameters->Width == 1920 && (VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) )
+                   if( (VideoParameters->Width == 720 && VideoParameters->Height == 576) || (VideoParameters->Width == 1280 && (VideoParameters->Height == 720 || VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) || (VideoParameters->Width == 1440 && (VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) || (VideoParameters->Width == 1920 && (VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) )
                    {
                        SourceWidth                  = NewWidth.IntegerPart();
                    }
@@ -1231,7 +1231,7 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
                    Rational_t   NewHeight       = (SourceHeight * PictureAspectRatio) / WindowAspectRatio;
 #ifdef __TDT__
                    //player crash if incoming source width/height not standard (Kernel panic - not syncing: Need true 64-bit/64-bit division)
-                   if( (VideoParameters->Width == 720 && VideoParameters->Height == 576) || (VideoParameters->Width == 1280 && VideoParameters->Height == 720) || (VideoParameters->Width == 1440 && (VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) || (VideoParameters->Width == 1920 && (VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) )
+                   if( (VideoParameters->Width == 720 && VideoParameters->Height == 576) || (VideoParameters->Width == 1280 && (VideoParameters->Height == 720 || VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) || (VideoParameters->Width == 1440 && (VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) || (VideoParameters->Width == 1920 && (VideoParameters->Height == 1080 || VideoParameters->Height == 1088)) )
                    {
                        SourceHeight                 = NewHeight.IntegerPart();
                    }
