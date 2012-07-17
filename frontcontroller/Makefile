@@ -57,6 +57,10 @@ ifdef UFS912
 obj-y	+= micom/
 endif
 
+ifdef UFS913
+obj-y	+= micom/
+endif
+
 ifdef SPARK
 obj-y   += aotom/
 endif

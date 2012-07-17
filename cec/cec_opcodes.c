@@ -408,7 +408,7 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
       responseBuffer[0] = (getLogicalDeviceType() << 4) + (BROADCAST & 0xF);
       responseBuffer[1] = DEVICE_VENDOR_ID;
       // http://standards.ieee.org/develop/regauth/oui/oui.txt
-#ifdef UFS912
+#if defined(UFS912) || defined(UFS913) // Kathrein
       responseBuffer[2] = 0x00;
       responseBuffer[3] = 0xD0;
       responseBuffer[4] = 0x55;
