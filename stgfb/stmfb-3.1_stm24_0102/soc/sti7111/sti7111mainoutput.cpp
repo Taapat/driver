@@ -56,7 +56,7 @@ CSTi7111MainOutput::~CSTi7111MainOutput() {}
 
 void CSTi7111MainOutput::StartSDInterlacedClocks(const stm_mode_line_t *mode)
 {
-#if defined(__TDT__) && !defined(ATEVIO7500)
+#if defined(__TDT__) && !defined(ATEVIO7500) && !defined(SPARK7162)
 /* from old stmfb; h264 problem appears with new version */
   ULONG val;
 
