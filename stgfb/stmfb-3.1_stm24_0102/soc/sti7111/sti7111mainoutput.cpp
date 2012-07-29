@@ -56,7 +56,7 @@ CSTi7111MainOutput::~CSTi7111MainOutput() {}
 
 void CSTi7111MainOutput::StartSDInterlacedClocks(const stm_mode_line_t *mode)
 {
-#if defined(__TDT__) && !defined(ATEVIO7500)
+#if defined(__TDT__) && defined(CONFIG_CPU_SUBTYPE_STX7111)
 /* from old stmfb; h264 problem appears with new version */
   ULONG val;
 
@@ -147,7 +147,7 @@ void CSTi7111MainOutput::StartSDProgressiveClocks(const stm_mode_line_t *mode)
   val |= CKGB_CFG_TMDS_HDMI(CKGB_CFG_DIV4);
   val |= CKGB_CFG_DISP_HD(CKGB_CFG_DIV4);
   val |= CKGB_CFG_656(CKGB_CFG_DIV2);
-#if defined(__TDT__) && defined(USE_FS1_FOR_SD)
+#if defined(__TDT__) && defined(CONFIG_CPU_SUBTYPE_STX7111) && defined(USE_FS1_FOR_SD)
   val &= ~CKGB_CFG_PIX_SD_FS1(3); // Clear
   val |= CKGB_CFG_PIX_SD_FS1(CKGB_CFG_BYPASS); // CLK_PIX_SD_SEL_WHEN_FS1 (<<12)
   val &= ~CKGB_CFG_DISP_ID(3); // Clear
@@ -179,7 +179,7 @@ void CSTi7111MainOutput::StartHDClocks(const stm_mode_line_t *mode)
           CKGB_CFG_DISP_ID(CKGB_CFG_MASK)    |
           CKGB_CFG_PIX_HD_FS1_N_FS0);
 
-#if defined(__TDT__) && defined(USE_FS1_FOR_SD)
+#if defined(__TDT__) && defined(CONFIG_CPU_SUBTYPE_STX7111) && defined(USE_FS1_FOR_SD)
   val &= ~CKGB_CFG_PIX_SD_FS1(3); // Clear
   val |= CKGB_CFG_PIX_SD_FS1(CKGB_CFG_BYPASS); // CLK_PIX_SD_SEL_WHEN_FS1 (<<12)
   val &= ~CKGB_CFG_DISP_ID(3); // Clear
