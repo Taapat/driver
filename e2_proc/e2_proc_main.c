@@ -645,7 +645,8 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/player/version"              , NULL, get_player_version, NULL, NULL, ""},
 
 #ifdef ADB_BOX
-	{cProcDir  , "stb/fan"   	                    , NULL, NULL, NULL, NULL, ""}, 
+	{cProcDir  , "stb/fan"   	                    , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/hdmi/cec"                         , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/fan/fan_ctrl"   	           , NULL, NULL, NULL, NULL, ""}, 
 #endif
 };
