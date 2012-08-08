@@ -353,6 +353,7 @@ int spark_dvb_register_tc_by_type(struct dvb_adapter *dvb_adap,
 											int iTunerType)
 {
 	int iRet = -1;
+	printk("spark7162 type == %d", iTunerType);
 	struct spark_dvb_adapter_adddata *pDvbAddData;
 
 	pDvbAddData = (struct spark_dvb_adapter_adddata *)dvb_adap->priv;
@@ -602,10 +603,17 @@ static void spark_cleanup(void)
     printk("%s <\n", __func__);
 }
 
+int __init spark_get_tuner_type(void)
+{
+	eUnionTunerType = UnionTunerConfig(UnionTunerType);
+}
+
 //#define D3501_SINGLE
 #ifdef D3501_SINGLE
 module_init(spark_init);
 module_exit(spark_cleanup);
+#else
+module_init(spark_get_tuner_type);
 #endif
 
 module_param(UnionTunerType, charp, 0);
