@@ -6,6 +6,15 @@ CCFLAGSY += -I$(KERNEL_LOCATION)/drivers/media/dvb/dvb-core
 CCFLAGSY += -I$(CONFIG_STGFB_PATH)/include
 CCFLAGSY += -DDEBUG_DVB
 CCFLAGSY += -I$(TREE_ROOT)/include
+
+ifdef SPARK7162
+CCFLAGSY += -I$(TREE_ROOT)/frontends/spark7162
+CCFLAGSY += -I$(TREE_ROOT)/frontends/spark7162/stv0367
+CCFLAGSY += -I$(TREE_ROOT)/frontends/spark7162/stv0367/stv0367qam
+CCFLAGSY += -I$(TREE_ROOT)/frontends/spark7162/stv0367/stv0367ter
+CCFLAGSY += -Wall #-Werror
+endif
+
 ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
 ccflags-y += $(CCFLAGSY)
 else
@@ -214,6 +223,29 @@ stv090x-objs +=	spark_dvbapi5/ix7306.o
 stv090x-objs +=	spark_dvbapi5/core.o
 obj-m += stv090x.o
 obj-y += lnb/
+else ifdef SPARK7162
+spark7162-objs +=        spark7162/spark7162.o
+
+spark7162-objs +=        spark7162/D3501.o
+
+spark7162-objs +=        base/ix7306.o
+spark7162-objs +=        base/sharp7803.o
+spark7162-objs +=        base/sharp6465.o
+spark7162-objs +=        base/sharp5469c.o
+
+spark7162-objs +=        spark7162/stv0367/D0367.o
+spark7162-objs +=        spark7162/stv0367/D0367ter.o
+spark7162-objs +=        spark7162/stv0367/D0367cab.o
+
+spark7162-objs +=        spark7162/stv0367/stv0367ter/chip_0367ter.o
+spark7162-objs +=        spark7162/stv0367/stv0367ter/stv0367ofdm_drv.o
+spark7162-objs +=        spark7162/stv0367/stv0367ter/d0367_ter.o
+
+spark7162-objs +=        spark7162/stv0367/stv0367qam/chip_0367qam.o
+spark7162-objs +=        spark7162/stv0367/stv0367qam/stv0367qam_drv.o
+spark7162-objs +=        spark7162/stv0367/stv0367qam/d0367_qam.o
+
+obj-m += spark7162.o
 else ifdef UFS912
 stv090x-objs +=	stv090x/stv090x.o
 stv090x-objs +=	stv090x/stv6110x.o
