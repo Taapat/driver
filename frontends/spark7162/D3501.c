@@ -5278,7 +5278,7 @@ static int d3501_get_property(struct dvb_frontend *fe, struct dtv_property* tvp)
 	/* get delivery system info */
 	if(tvp->cmd==DTV_DELIVERY_SYSTEM){
 		switch (tvp->u.data) {
-		case SYS_DVBS:
+		case SYS_DVBS2:
 			break;
 		default:
 			return -EINVAL;
