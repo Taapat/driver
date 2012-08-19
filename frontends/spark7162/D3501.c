@@ -4478,6 +4478,7 @@ static int d3501_read_snr(struct dvb_frontend* fe, u16* snr)
         *snr = *snr / 3 + 60;
 	if(*snr > 90)
 		*snr = 90;
+	*snr = *snr * 0xffff / 100;
 	return iRet;
 }
 
@@ -4501,6 +4502,7 @@ static int d3501_read_signal_strength(struct dvb_frontend* fe,
 	printk("*Intensity = %d\n", *Intensity);
 	*strength = *Intensity;
 	printk("*strength = %d\n", *strength);
+	*strength = *strength * 0xffff / 100;
     //lwj add end
 	return iRet;
 }
