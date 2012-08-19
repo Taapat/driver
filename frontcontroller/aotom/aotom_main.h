@@ -642,6 +642,9 @@ int YWPANEL_VFD_DETECT(void);
 int	YWPANEL_VFD_Init(void);
 int	YWPANEL_VFD_Term(void);
 
+int utf8_count(unsigned char *utfstr, int strlength, int length);
+int utf8_len(unsigned char *utfstr, int strlength);
+
 int YWPANEL_VFD_GetRevision(char * version);
 int YWPANEL_VFD_ShowIco(LogNum_T log_num,int log_stat);
 int YWPANEL_VFD_ShowString(char* str);

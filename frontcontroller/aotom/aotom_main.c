@@ -46,7 +46,6 @@
 #include <linux/workqueue.h>
 
 #include "aotom_main.h"
-#include "utf.h"
 
 static short paramDebug = 0;
 #define TAGDEBUG "[aotom] "
@@ -213,7 +212,7 @@ void draw_thread(void *arg)
 {
   struct vfd_ioctl_data *data;
   struct vfd_ioctl_data draw_data;
-  unsigned char buf[9];
+  unsigned char buf[17];
   int count = 0;
   int pos = 0;
 
@@ -226,14 +225,15 @@ void draw_thread(void *arg)
 
   thread_stop = 0;
 
-  count = draw_data.length;
+  count = utf8_len(&draw_data.data[0], draw_data.length);
+
 #if defined(SPARK)
   if(count > 4)
 #else
   if(count > 8)
 #endif
   {
-    while(pos < count)
+    while(pos < draw_data.length)
     {
        if(kthread_should_stop())
        {
@@ -243,16 +243,22 @@ void draw_thread(void *arg)
 
        clear_display();
        memset(buf,0, sizeof(buf));
-       memcpy(buf, &draw_data.data[pos], 8);
+       int countb = utf8_count(&draw_data.data[pos], draw_data.length - pos, 8);
+       memcpy(buf, &draw_data.data[pos], countb);
        YWPANEL_VFD_ShowString(buf);
        msleep(200);
-       pos++;
-#if defined(SPARK)
-       if((count - pos) < 4)
-#else
-       if((count - pos) < 8)
-#endif
-    	   break;
+       if (draw_data.data[pos] > 128)
+       {
+           pos += 2;
+       } else {
+           pos += 1;
+       }
+// #if defined(SPARK)
+//        if((count - pos) < 4)
+// #else
+//        if((count - pos) < 8)
+// #endif
+//     	   break;
     }
   }
 
@@ -260,7 +266,8 @@ void draw_thread(void *arg)
   {
       clear_display();
       memset(buf,0, sizeof(buf));
-      memcpy(buf, draw_data.data, 8);
+      int countb = utf8_count(&draw_data.data[0], draw_data.length, 8);
+      memcpy(buf, draw_data.data, countb);
       YWPANEL_VFD_ShowString(buf);
   }
 

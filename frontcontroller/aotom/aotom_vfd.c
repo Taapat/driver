@@ -38,6 +38,8 @@
 #include "aotom_trace.h"
 #include "aotom_main.h"
 
+#include "utf.h"
+
 
 YWVFD_INFO_t YWVFD_INFO;
 
@@ -1953,6 +1955,71 @@ void YWPANEL_VFD_ClearAll(void)
 	}
 }
 
+void utf8_symbol(u8 *c1, u8 *c2, u8 *v1, u8 *v2)
+{
+	switch(*c1)
+	{
+		case 0xc2:
+			*v1 = UTF_C2[*c2 & 0x3f][0];
+			*v2 = UTF_C2[*c2 & 0x3f][1];
+		break;
+		case 0xc3:
+			*v1 = UTF_C3[*c2 & 0x3f][0];
+			*v2 = UTF_C3[*c2 & 0x3f][1];
+		break;
+		case 0xc4:
+			*v1 = UTF_C4[*c2 & 0x3f][0];
+			*v2 = UTF_C4[*c2 & 0x3f][1];
+		break;
+		case 0xc5:
+			*v1 = UTF_C5[*c2 & 0x3f][0];
+			*v2 = UTF_C5[*c2 & 0x3f][1];
+		break;
+		case 0xd0:
+			*v1 = UTF_D0[*c2 & 0x3f][0];
+			*v2 = UTF_D0[*c2 & 0x3f][1];
+		break;
+		case 0xd1:
+			*v1 = UTF_D1[*c2 & 0x3f][0];
+			*v2 = UTF_D1[*c2 & 0x3f][1];
+	}
+}
+
+
+//count of bytes in utf8 substring with specified length
+int utf8_count(unsigned char *utfstr, int strlength, int length)
+{
+	int len = 0, i = 0;
+	for(i = 0; i < strlength && len < length; i++)
+	{
+		if(utfstr[i] >= 128)
+		{
+			i++;
+		}
+		len++;
+	}
+	ywtrace_print(TRACE_INFO, "%s %d\n", __func__, i);
+	return i;
+}
+
+//utf8 string length
+int utf8_len(unsigned char *utfstr, int strlength)
+{
+	int len = 0, i = 0;
+	for(i = 0; i < strlength; i++)
+	{
+		if(utfstr[i] >= 128)
+		{
+			i++;
+			if (i == strlength)
+				break;
+		}
+		len++;
+	}
+	ywtrace_print(TRACE_INFO, "%s %d\n", __func__, len);
+	return len;
+}
+
 void YWPANEL_VFD_DrawChar(char c, u8 position)
 {
 	if(position < 1 || position > 8)
@@ -2515,7 +2582,7 @@ int YWPANEL_VFD_ShowString_StandBy(char* str)
 	   ST_ErrCode =-EBUSY;
 	   return ST_ErrCode;
 	}
-	lenth = strlen(str);
+	lenth = utf8_len(str, strlen(str));
 	if(lenth > 8)
 	{
 		ST_ErrCode = -EINVAL ;
@@ -2525,13 +2592,15 @@ int YWPANEL_VFD_ShowString_StandBy(char* str)
 		return ST_ErrCode;
 	}
 	data.dataType = YWPANEL_DATATYPE_VFD;
+	int pos = 0;
 	for(i = 0; i < 8; i++)
 	{
 		data.data.vfdData.type = YWPANEL_VFD_DISPLAYSTRING;
-		if(i <lenth)
+		if(i < lenth)
 		{
-			c = str[i] ;
-
+			c = str[pos] ;
+			//single char
+			if (c < 128) {
 			if(c >= 65 && c <= 95)
 				c = c - 65;
 			else if(c >= 97 && c <= 122)
@@ -2546,6 +2615,16 @@ int YWPANEL_VFD_ShowString_StandBy(char* str)
 			}
 			VfdSegAddr[i+1].CurrValue1 = CharLib[c][0] ;
 			VfdSegAddr[i+1].CurrValue2 = CharLib[c][1] ;
+			pos += 1;
+
+			//double char
+			} else {
+				u8 val1, val2;
+				utf8_symbol(&str[pos], &str[pos+1], &val1, &val2);
+				VfdSegAddr[i+1].CurrValue1 = val1;
+				VfdSegAddr[i+1].CurrValue2 = val2;
+				pos += 2;
+			}
 		}
 		else
 		{
