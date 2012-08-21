@@ -243,18 +243,17 @@ STI7106SRCS += $(addprefix $(SRC_TOPDIR)/soc/sti7106/,                         \
 sti7105-display-objs := $(patsubst %.cpp,%.o,$(ALLSRCS) $(STI7105SRCS))
 sti7105-display-objs := $(patsubst %.c,%.o,$(sti7105-display-objs))
 
-sti7106-display-objs := $(patsubst %.cpp,%.o,$(ALLSRCS) $(STI7106SRCS))
-sti7106-display-objs := $(patsubst %.c,%.o,$(sti7106-display-objs))
-
 
 obj-m += stmcore-display-sti7105.o
-obj-m += stmcore-display-sti7106.o
 
 stmcore-display-sti7105-objs := $(sti7105-display-objs) $(SRC_TOPDIR)/linux/drivers/stm/coredisplay/sti7105.o
-stmcore-display-sti7106-objs := $(sti7106-display-objs) $(SRC_TOPDIR)/linux/drivers/stm/coredisplay/sti7106.o
-
 endif
-
+ifeq ($(CONFIG_CPU_SUBTYPE_STX7106),y)
+sti7106-display-objs := $(patsubst %.cpp,%.o,$(ALLSRCS) $(STI7106SRCS))
+sti7106-display-objs := $(patsubst %.c,%.o,$(sti7106-display-objs))
+obj-m += stmcore-display-sti7106.o
+stmcore-display-sti7106-objs := $(sti7106-display-objs) $(SRC_TOPDIR)/linux/drivers/stm/coredisplay/sti7106.o
+endif
 ifeq ($(CONFIG_CPU_SUBTYPE_STX7108),y)
 
 STI7108SRCS = $(STM_HDF_TVOUT) $(STM_HDMI_COMMON) $(STM_HDMI_V2_9) $(STM_BDISP) $(STM_DEI)
