@@ -622,7 +622,7 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/video/plane/psi_contrast"    , NULL, NULL, NULL, NULL, "psi_contrast"},
 	{cProcEntry, "stb/video/plane/psi_tint"        , NULL, NULL, NULL, NULL, "psi_tint"},
 	{cProcEntry, "stb/video/plane/psi_apply"        , NULL, NULL, NULL, NULL, "psi_apply"},
-#if defined(UFS912) || defined(UFS913) || defined(ATEVIO7500)
+#if defined(UFS912) || defined(UFS913) || defined(ATEVIO7500) || defined(SPARK)
 	{cProcDir  , "stb/cec"   	                   , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/cec/state_activesource"   	               , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/cec/state_standby"   	               , NULL, NULL, NULL, NULL, ""},
