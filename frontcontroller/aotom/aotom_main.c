@@ -774,8 +774,10 @@ static struct file_operations vfd_fops =
 static char *button_driver_name = "fulan front panel buttons";
 static struct input_dev *button_dev;
 static int button_value = -1;
-static int bad_polling = 1;
+static int bad_polling = 0;
 static struct workqueue_struct *fpwq;
+
+struct semaphore button_sem;
 
 void button_bad_polling(void)
 {
@@ -861,6 +863,8 @@ void button_bad_polling(void)
 			}
 		}
 	}
+	up(&button_sem);
+
 }
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 static DECLARE_WORK(button_obj, button_bad_polling);
@@ -869,7 +873,15 @@ static DECLARE_WORK(button_obj, button_bad_polling, NULL);
 #endif
 static int button_input_open(struct input_dev *dev)
 {
+	if (down_interruptible(&button_sem))
+	{
+		printk("[BTN] ERROR workqueue already running\n");
+		return 1;
+	}
+
+	bad_polling = 1;
 	fpwq = create_workqueue("button");
+
 	if(queue_work(fpwq, &button_obj))
 	{
 		dprintk(5, "[BTN] queue_work successful ...\n");
@@ -885,15 +897,16 @@ static int button_input_open(struct input_dev *dev)
 
 static void button_input_close(struct input_dev *dev)
 {
+
 	bad_polling = 0;
-	msleep(55);
-	bad_polling = 1;
+	down(&button_sem);
 
 	if (fpwq)
 	{
 		destroy_workqueue(fpwq);
 		dprintk(5, "[BTN] workqueue destroyed\n");
 	}
+	up(&button_sem);
 }
 
 int button_dev_init(void)
@@ -945,6 +958,7 @@ static int __init aotom_init_module(void)
 	printk("Fulan front panel driver\n");
 
 	sema_init(&display_sem,1);
+	sema_init(&button_sem, 1);
 
 	if(YWPANEL_VFD_Init()) {
 		printk("unable to init module\n");
