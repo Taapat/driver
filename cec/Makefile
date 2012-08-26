@@ -15,6 +15,10 @@ ifdef SPARK
 EXTRA_CFLAGS   += -DSTx7111
 endif
 
+ifdef SPARK7162
+EXTRA_CFLAGS	+= -DSTx7105
+endif
+
 ifdef UFS913
 EXTRA_CFLAGS	+= -DSTx7105
 endif
