@@ -58,13 +58,7 @@ if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
 #define LOG_OFF     	0
 #define LOG_ON      	1
 
-#define NO_KEY_PRESS    -1
-#define KEY_PRESS_DOWN 	1
-#define KEY_PRESS_UP   	0
 
-#define REC_NEW_KEY 	34
-#define REC_NO_KEY  	0
-#define REC_REPEAT_KEY  2
 
 static char *gmt = "+0000";
 
@@ -117,61 +111,6 @@ static struct saved_data_s lastdata;
  * the answer has been received or a timeout occurs.
  */
 
-unsigned char ASCII[48][2] =
-{
-	{0xF1, 0x38},	//A
-	{0x74, 0x72},	//B
-	{0x01, 0x68},	//C
-	{0x54, 0x72},	//D
-	{0xE1, 0x68},	//E
-	{0xE1, 0x28},	//F
-	{0x71, 0x68},	//G
-	{0xF1, 0x18},	//H
-	{0x44, 0x62},	//I
-	{0x45, 0x22},	//J
-	{0xC3, 0x0C},	//K
-	{0x01, 0x48},	//L
-	{0x51, 0x1D},	//M
-	{0x53, 0x19},	//N
-	{0x11, 0x78},	//O
-	{0xE1, 0x38},	//P
-	{0x13, 0x78},	//Q
-	{0xE3, 0x38},	//R
-	{0xF0, 0x68},	//S
-	{0x44, 0x22},	//T
-	{0x11, 0x58},	//U
-	{0x49, 0x0C},	//V
-	{0x5B, 0x18},	//W
-	{0x4A, 0x05},	//X
-	{0x44, 0x05},	//Y
-	{0x48, 0x64},	//Z
-	/* A--Z  */
-
-	{0x01, 0x68},
-	{0x42, 0x01},
-	{0x10, 0x70},	//
-	{0x43, 0x09},	//
-	{0xE0, 0x00},	//
-	{0xEE, 0x07},	//
-	{0xE4, 0x02},	//
-	{0x50, 0x00},	//
-	{0xE0, 0x00},	//
-	{0x05, 0x00},	//
-	{0x48, 0x04},	//
-
-	{0x11, 0x78},	//
-	{0x44, 0x02},	//
-	{0xE1, 0x70},	//
-	{0xF0, 0x70},	//
-	{0xF0, 0x18},	//
-	{0xF0, 0x68},	//
-	{0xF1, 0x68},	//
-	{0x10, 0x30},	//
-	{0xF1, 0x78},	//
-	{0xF0, 0x78},	//
-	/* 0--9  */
-	{0x0, 0x0}
-};
 
 static int VFD_Show_Time(u8 hh, u8 mm)
 {
@@ -303,50 +242,32 @@ static int AOTOMfp_Get_Key_Value(void)
 	switch(ret)
 	{
         case 105:
-        {
             key_val = KEY_LEFT;
             break;
-        }
         case 103:
-        {
             key_val = KEY_UP;
             break;
-        }
         case 28:
-        {
             key_val = KEY_OK;
             break;
-        }
         case 106:
-        {
             key_val = KEY_RIGHT;
             break;
-        }
         case 108:
-        {
             key_val = KEY_DOWN;
             break;
-        }
         case 88:
-        {
             key_val = KEY_POWER;
             break;
-        }
         case 102:
-        {
             key_val = KEY_MENU;
             break;
-        }
         case 48:
-        {
             key_val = KEY_EXIT;
             break;
-        }
-        default :
-        {
+        default:
             key_val = INVALID_KEY;
             break;
-        }
     }
 
 	return key_val;
@@ -357,15 +278,12 @@ int aotomSetTime(char* time)
    int res = 0;
 
 	dprintk(5, "%s >\n", __func__);
-
 	dprintk(5, "%s time: %02d:%02d\n", __func__, time[2], time[3]);
-	res= VFD_Show_Time(time[2], time[3]);
-	dprintk(5, "%s <\n", __func__);
+	res = VFD_Show_Time(time[2], time[3]);
 #if defined(SPARK) || defined(SPARK7162)
-	{
-		YWPANEL_FP_ControlTimer(true);
-	}
+   YWPANEL_FP_ControlTimer(true);
 #endif
+   dprintk(5, "%s <\n", __func__);
    return res;
 }
 
@@ -808,46 +726,17 @@ void button_bad_polling(void)
 			report_key = button_value;
 	        btn_pressed = 1;
 			switch(button_value) {
-				case KEY_LEFT: {
-					input_report_key(button_dev, KEY_LEFT, 1);
+				case KEY_LEFT:
+				case KEY_RIGHT:
+				case KEY_UP:
+				case KEY_DOWN:
+				case KEY_OK:
+				case KEY_MENU:
+				case KEY_EXIT:
+				case KEY_POWER:
+					input_report_key(button_dev, button_value, 1);
 					input_sync(button_dev);
 					break;
-				}
-				case KEY_RIGHT: {
-					input_report_key(button_dev, KEY_RIGHT, 1);
-					input_sync(button_dev);
-					break;
-				}
-				case KEY_UP: {
-					input_report_key(button_dev, KEY_UP, 1);
-					input_sync(button_dev);
-					break;
-				}
-				case KEY_DOWN: {
-					input_report_key(button_dev, KEY_DOWN, 1);
-					input_sync(button_dev);
-					break;
-				}
-				case KEY_OK: {
-					input_report_key(button_dev, KEY_OK, 1);
-					input_sync(button_dev);
-					break;
-				}
-				case KEY_MENU: {
-					input_report_key(button_dev, KEY_MENU, 1);
-					input_sync(button_dev);
-					break;
-				}
-				case KEY_EXIT: {
-					input_report_key(button_dev, KEY_EXIT, 1);
-					input_sync(button_dev);
-					break;
-				}
-				case KEY_POWER: {
-					input_report_key(button_dev, KEY_POWER, 1);
-					input_sync(button_dev);
-					break;
-				}
 				default:
 					dprintk(5, "[BTN] unknown button_value?\n");
 			}
@@ -866,6 +755,7 @@ void button_bad_polling(void)
 	up(&button_sem);
 
 }
+
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 static DECLARE_WORK(button_obj, button_bad_polling);
 #else

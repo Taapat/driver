@@ -2416,56 +2416,34 @@ int YWPANEL_VFD_GetKeyValue(void)
 	switch(byte)
 	{
 		case 0x01:
-		{
 			key_val = EXIT_KEY;
 			break;
-		}
 		case 0x02:
-		{
 			key_val = LEFT_KEY;
 			break;
-		}
 		case 0x04:
-		{
 			key_val = UP_KEY;
 			break;
-		}
 		case 0x08:
-		{
 			key_val = SELECT_KEY;
 			break;
-		}
 		case 0x10:
-		{
 			key_val = RIGHT_KEY;
 			break;
-		}
 		case 0x20:
-		{
 			key_val = DOWN_KEY;
 			break;
-		}
 		case 0x40:
-		{
 			key_val = POWER_KEY;
 			break;
-		}
 		case 0x80:
-		{
 			key_val = MENU_KEY;
 			break;
-		}
+		default:
+			PANEL_PRINT((TRACE_ERROR,"Key 0x%s is INVALID\n",byte));
 		case 0x00:
-		{
 			key_val = INVALID_KEY;
 			break;
-		}
-		default :
-		{
-			PANEL_PRINT((TRACE_ERROR,"The key is INVALID or somekeys [0x%x]\n",byte));
-			key_val = INVALID_KEY;
-			break;
-		}
 	}
 	up(&vfd_sem);
 	return key_val;
