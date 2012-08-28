@@ -37,6 +37,8 @@ typedef unsigned int	YWOS_ClockMsec;
 #define LOG_ON      1
 #define YWPANEL_KEYBOARD
 
+#define VFD_DATA_LEN 64
+
 struct set_brightness_s {
 	int level;
 };
@@ -85,9 +87,10 @@ struct aotom_ioctl_data {
 	} u;
 };
 
+
+
 struct vfd_ioctl_data {
-	unsigned char start_address;
-	unsigned char data[64];
+	unsigned char data[VFD_DATA_LEN];
 	unsigned char length;
 };
 

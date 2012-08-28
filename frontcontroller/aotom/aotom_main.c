@@ -357,21 +357,24 @@ static ssize_t AOTOMdev_write(struct file *filp, const char *buff, size_t len, l
 	if(down_interruptible (&write_sem))
       return -ERESTARTSYS;
 
-      	data.length = len;
+	data.length = len;
+	if (data.length > VFD_DATA_LEN)
+		data.length = VFD_DATA_LEN;
+
 	if (kernel_buf[len-1] == '\n')
 	{
 	  kernel_buf[len-1] = 0;
 	  data.length--;
 	}
 
-	if(len <0)
+	if(data.length <0)
 	{
 	  res = -1;
 	  dprintk(2, "empty string\n");
 	}
 	else
 	{
-	  memcpy(data.data,kernel_buf,len);
+	  memcpy(data.data,kernel_buf,data.length);
 	  res=run_draw_thread(&data);
 	}
 
@@ -379,7 +382,7 @@ static ssize_t AOTOMdev_write(struct file *filp, const char *buff, size_t len, l
 
 	up(&write_sem);
 
-	dprintk(10, "%s < res %d len %d\n", __func__, res, len);
+	dprintk(10, "%s < res %d len %d\n", __func__, res, data.length);
 
 	if (res < 0)
 	   return res;
