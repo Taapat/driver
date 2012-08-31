@@ -361,11 +361,8 @@ static ssize_t AOTOMdev_write(struct file *filp, const char *buff, size_t len, l
 	if (data.length > VFD_DATA_LEN)
 		data.length = VFD_DATA_LEN;
 
-	if (kernel_buf[len-1] == '\n')
-	{
-	  kernel_buf[len-1] = 0;
+	while ((data.length > 0) && (kernel_buf[data.length - 1 ] == '\n'))
 	  data.length--;
-	}
 
 	if(data.length <0)
 	{
