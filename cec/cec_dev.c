@@ -36,13 +36,13 @@ static unsigned int GetMessageBufferSize (void)
 	else // WRAP AROUND
 		availableBytes = ((OUTBUFFERSIZE - outputBufferStart) + outputBufferEnd);
 
-	printk("[CEC] GetMessageBufferSize <- START=%d END=%d AVAILABLE=%d\n", outputBufferStart, outputBufferEnd, availableBytes);
+	// printk("[CEC] GetMessageBufferSize <- START=%d END=%d AVAILABLE=%d\n", outputBufferStart, outputBufferEnd, availableBytes);
 	return availableBytes;
 }
 
 static void GetMessageFromBuffer (unsigned char * msg, unsigned int len)
 {
-	printk("[CEC] GetMessageFromBuffer -> START=%d END=%d LEN=%d\n", outputBufferStart, outputBufferEnd, len);
+	// printk("[CEC] GetMessageFromBuffer -> START=%d END=%d LEN=%d\n", outputBufferStart, outputBufferEnd, len);
 	if (outputBufferStart <= outputBufferEnd)
 	{
 		memcpy(msg, outputBuffer + outputBufferStart, len);
@@ -56,7 +56,7 @@ static void GetMessageFromBuffer (unsigned char * msg, unsigned int len)
 		outputBufferStart += len - dataAtTheEnd;
 	}
 
-	printk("[CEC] GetMessageFromBuffer <- START=%d END=%d\n", outputBufferStart, outputBufferEnd);
+	// printk("[CEC] GetMessageFromBuffer <- START=%d END=%d\n", outputBufferStart, outputBufferEnd);
 }
 
 inline void AddMessageBuffer (tCECMessage msg)
@@ -77,7 +77,7 @@ inline void AddMessageBuffer (tCECMessage msg)
 		outputBufferEnd = messageSize - spaceAtTheEnd;
 	}
 	
-	printk("[CEC] AddMessageBuffer START=%d END=%d\n", outputBufferStart, outputBufferEnd);
+	// printk("[CEC] AddMessageBuffer START=%d END=%d\n", outputBufferStart, outputBufferEnd);
 }
 
 void AddMessageToBuffer (unsigned char *rawmsg, unsigned int len)
@@ -99,7 +99,7 @@ static ssize_t CECdev_write(struct file *filp, const char *buff, size_t len, lof
 {
 	unsigned char* kernel_buf = kmalloc(len, GFP_KERNEL);
 
-	printk("[CEC] %s > (len %d, offs %lld)\n", __func__, len, *off);
+	// printk("[CEC] %s > (len %d, offs %lld)\n", __func__, len, *off);
 	if (kernel_buf == NULL)
 	{
 		printk("[CEC] %s return no mem<\n", __func__);
@@ -121,7 +121,7 @@ static ssize_t CECdev_write(struct file *filp, const char *buff, size_t len, lof
 	
 	kfree(kernel_buf);
 	
-	printk("[CEC] %s <\n", __func__);
+	// printk("[CEC] %s <\n", __func__);
 	return len;
 }
 
@@ -129,7 +129,7 @@ static ssize_t CECdev_read(struct file *filp, char __user *buff, size_t len, lof
 {
 	unsigned int availableBytes = GetMessageBufferSize();
 
-	printk("[CEC] %s > (len %d, offs %lld)\n", __func__, len, *off);
+	// printk("[CEC] %s > (len %d, offs %lld)\n", __func__, len, *off);
 	if (vOpen.fp != filp)
 	{
 		printk("[CEC] %s return eusers<\n", __func__);
@@ -162,7 +162,7 @@ static ssize_t CECdev_read(struct file *filp, char __user *buff, size_t len, lof
 	}
 	// RELEASE THE EXCLUSIVE WRITE LOCK SEMAPHORE
 	up (&vOpen.sem);
-	printk("[CEC] %s < (len %d)\n", __func__, len);
+	// printk("[CEC] %s < (len %d)\n", __func__, len);
 	return len;
 }
 
@@ -181,7 +181,7 @@ static unsigned int CECdev_poll(struct file *filp, poll_table *wait)
 
 static int CECdev_open(struct inode *inode, struct file *filp)
 {
-	printk("[CEC] %s >\n", __func__);
+	// printk("[CEC] %s >\n", __func__);
 
 	if (vOpen.fp != NULL)
 	{
@@ -190,26 +190,26 @@ static int CECdev_open(struct inode *inode, struct file *filp)
 	}
 	vOpen.fp = filp;
 
-	printk("[CEC] %s <\n", __func__);
+	// printk("[CEC] %s <\n", __func__);
 	return 0;
 }
 
 static int CECdev_close(struct inode *inode, struct file *filp)
 {
-	printk("[CEC] %s >\n", __func__);
+	// printk("[CEC] %s >\n", __func__);
 
 	if (vOpen.fp == filp)
 	{
 		vOpen.fp = NULL;
 	}
 
-	printk("[CEC] %s <\n", __func__);
+	// printk("[CEC] %s <\n", __func__);
 	return 0;
 }
 
 static int CECdev_ioctl(struct inode *Inode, struct file *File, unsigned int cmd, unsigned long arg)
 {
-	printk("[CEC] %s > 0x%.8x\n", __func__, cmd);
+	// printk("[CEC] %s > 0x%.8x\n", __func__, cmd);
 
 	switch(cmd) {
 	case CEC_GET_ADDRESS:
@@ -232,7 +232,7 @@ static int CECdev_ioctl(struct inode *Inode, struct file *File, unsigned int cmd
 		printk("[CEC]: unknown IOCTL 0x%x\n", cmd);
 		break;
 	}
-	printk("[CEC] %s <\n", __func__);
+	// printk("[CEC] %s <\n", __func__);
 	return 0;
 }
 

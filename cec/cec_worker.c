@@ -110,9 +110,9 @@ int sendMessageWithRetry(unsigned int len, unsigned char buf[], unsigned int ret
 
   indexOfSendBuf++;
 
-  printk("[CEC] sendCommand - up ->\n");
+  // printk("[CEC] sendCommand - up ->\n");
   up(&sendCommand);
-  printk("[CEC] sendCommand - up <-\n");
+  // printk("[CEC] sendCommand - up <-\n");
 
   /*if(sizeOfSendBuf == 1) // PING
   {
@@ -182,14 +182,14 @@ int cec_task(void* dummy)
 
   while(notEndTask)
   {
-  printk("[CEC] sendCommand - down ->\n");
+  // printk("[CEC] sendCommand - down ->\n");
     down(&sendCommand);
-  printk("[CEC] sendCommand - down <-\n");
+  // printk("[CEC] sendCommand - down <-\n");
     if(!notEndTask)
       break;
     //if(sendCommand || sendCommandWithDelay)
     {
-      printk("[CEC] task - sendCommand || sendCommandWithDelay\n");
+      // printk("[CEC] task - sendCommand || sendCommandWithDelay\n");
       if(sendCommandWithDelay--)
         udelay(10000);
 
@@ -230,7 +230,7 @@ irqreturn_t cec_interrupt(int irq, void *dev_id)
 
   if (status & CEC_STATUS_RECV_ERR) // Error while receiving
   {
-    printk("[CEC] ++++ CEC ERROR (RECV) ++++\n");
+    // printk("[CEC] ++++ CEC ERROR (RECV) ++++\n");
     str_error(error);
     str_status(status);
     cec_acknowledge();
@@ -238,7 +238,7 @@ irqreturn_t cec_interrupt(int irq, void *dev_id)
 
   else if (status & CEC_STATUS_SEND_ERR) // Error while sending
   {
-    printk("[CEC] ++++ CEC ERROR (SEND) ++++\n");
+    // printk("[CEC] ++++ CEC ERROR (SEND) ++++\n");
     str_error(error);
     str_status(status);
     if (status & CEC_STATUS_SEND_EOMSG) // End of Message
@@ -248,8 +248,8 @@ irqreturn_t cec_interrupt(int irq, void *dev_id)
 
     isSending = 0;
 
-    printk("[CEC] Retries: %d\n", retries);
-    printk("[CEC] ---- CEC ERROR ----\n");
+    // printk("[CEC] Retries: %d\n", retries);
+    // printk("[CEC] ---- CEC ERROR ----\n");
 
     if(getIsFirstKiss() == 1)
     {
@@ -294,9 +294,9 @@ irqreturn_t cec_interrupt(int irq, void *dev_id)
     if (status & CEC_STATUS_RECV_EOMSG) // End of Message
     {
       isReceiving = 0;
-      printk("[CEC] ++++ CEC MESSAGE RECEIVED ++++\n");
+      // printk("[CEC] ++++ CEC MESSAGE RECEIVED ++++\n");
       parseRawMessage(indexOfRecvBuf, recvBuf);
-      printk("[CEC] ---- CEC MESSAGE RECEIVED ----\n");
+      // printk("[CEC] ---- CEC MESSAGE RECEIVED ----\n");
     }
   }
 
@@ -307,9 +307,9 @@ irqreturn_t cec_interrupt(int irq, void *dev_id)
       isSending = 0;
       cec_acknowledge();
 
-      printk("[CEC] ++++ CEC MESSAGE SENT ++++\n");
+      // printk("[CEC] ++++ CEC MESSAGE SENT ++++\n");
       parseRawMessage(indexOfSendBuf, sendBuf);
-      printk("[CEC] ---- CEC MESSAGE SENT ----\n");
+      // printk("[CEC] ---- CEC MESSAGE SENT ----\n");
     }
     else
     {

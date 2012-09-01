@@ -105,7 +105,7 @@ unsigned short getActiveSource(void) {
 }
 
 void setActiveSource(unsigned short addr) {
-  printk("[CEC] FROM: %04x TO: %04x\n", ActiveSource, addr);
+  // printk("[CEC] FROM: %04x TO: %04x\n", ActiveSource, addr);
   //if(ActiveSource != addr) {
     ActiveSource = addr;
     setUpdatedActiveSource();
@@ -540,7 +540,7 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
       break;
   }
 
-  printk("[CEC]\tis %s\n", name);
+  // printk("[CEC]\tis %s\n", name);
 }
 
 
@@ -559,10 +559,10 @@ void parseRawMessage(unsigned int len, unsigned char buf[])
     return;
   }
 
-  printk("[CEC]\tFROM 0x%02x TO 0x%02x : %3u : ", src, dst, dataLen);
+  /* printk("[CEC]\tFROM 0x%02x TO 0x%02x : %3u : ", src, dst, dataLen);
   for(ic = 0; ic < dataLen; ic++)
     printk("%02x ", buf[ic+1]);
-  printk("\n");
+  printk("\n");*/
 
   if (dataLen > 0)
   {

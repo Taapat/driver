@@ -117,7 +117,7 @@ u32 cec_read_data(void)
 
 void cec_start_sending(unsigned char isPing)
 {
-   printk("[CEC] start_sending %d\n", isPing);
+   // printk("[CEC] start_sending %d\n", isPing);
    if (isPing == 1)
    {
        cec_write_register_u32(CECBaseAddress + CEC_CONTROL, CEC_TRANSM_EOM | CEC_TRANSM_SOM);
@@ -129,7 +129,7 @@ void cec_start_sending(unsigned char isPing)
 
 void cec_end_sending(void)
 {
-   printk("[CEC] end_sending\n");
+   // printk("[CEC] end_sending\n");
    cec_write_register_u32(CECBaseAddress + CEC_CONTROL, CEC_TRANSM_EOM);
 }
 
@@ -168,7 +168,7 @@ void cec_set_own_address(u32 own_address)
 
 void str_status(unsigned char status)
 {
-printk("[CEC] Control Status:\n");
+/*printk("[CEC] Control Status:\n");
 if(status & CEC_STATUS_RECV_BTF)
 printk("[CEC] \tRECV_BTF\n");
 if(status & CEC_STATUS_RECV_ERR)
@@ -184,7 +184,7 @@ printk("[CEC] \tSEND_ERR\n");
 if(status & CEC_STATUS_SEND_EOMSG)
 printk("[CEC] \tSEND_EOMSG\n");
 if(status & CEC_STATUS_SEND_SOMSG)
-printk("[CEC] \tSEND_SOMSG\n");
+printk("[CEC] \tSEND_SOMSG\n");*/
 }
 
 
@@ -198,7 +198,7 @@ printk("[CEC] \tSEND_SOMSG\n");
 
 void str_error(unsigned char error)
 {
-printk("[CEC] Error Status:\n");
+/*printk("[CEC] Error Status:\n");
 if(error & CEC_ERROR_SEND_BTF)
 printk("[CEC] \tSEND_BTF\n");
 if(error & CEC_ERROR_ON_LINE)
@@ -212,7 +212,7 @@ printk("[CEC] \tRECV_BTF\n");
 if(error & CEC_ERROR_PERIOD)
 printk("[CEC] \tPERIOD\n");
 if(error & CEC_ERROR_TIMING)
-printk("[CEC] \tTIMING\n");
+printk("[CEC] \tTIMING\n");*/
 }
 
 int cec_internal_init(void)
