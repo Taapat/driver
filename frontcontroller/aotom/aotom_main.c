@@ -51,7 +51,7 @@ static short paramDebug = 0;
 #define TAGDEBUG "[aotom] "
 
 #define dprintk(level, x...) do { \
-if ((paramDebug) && (paramDebug > level)) printk(TAGDEBUG x); \
+if ((paramDebug) && (paramDebug >= level)) printk(TAGDEBUG x); \
 } while (0)
 
 #define INVALID_KEY    	-1
@@ -336,8 +336,8 @@ static ssize_t AOTOMdev_write(struct file *filp, const char *buff, size_t len, l
 
 	if (minor == -1)
 	{
-		printk("Error Bad Minor\n");
-		return -1; //FIXME
+		dprintk(0, "Error Bad Minor\n");
+		return -ENODEV;
 	}
 
 	dprintk(1, "minor = %d\n", minor);
@@ -349,7 +349,7 @@ static ssize_t AOTOMdev_write(struct file *filp, const char *buff, size_t len, l
 
 	if (kernel_buf == NULL)
 	{
-	   printk("%s return no mem<\n", __func__);
+	   drintk(0, "%s return no mem<\n", __func__);
 	   return -ENOMEM;
 	}
 	copy_from_user(kernel_buf, buff, len);
@@ -479,8 +479,8 @@ int AOTOMdev_open(struct inode *inode, struct file *filp)
 
   	if (FrontPanelOpen[minor].fp != NULL)
   	{
-		printk("EUSER\n");
-    		return -EUSERS;
+		dprintk(0, "EUSER\n");
+		return -EUSERS;
   	}
   	FrontPanelOpen[minor].fp = filp;
   	FrontPanelOpen[minor].read = 0;
@@ -501,7 +501,7 @@ int AOTOMdev_close(struct inode *inode, struct file *filp)
 
   	if (FrontPanelOpen[minor].fp == NULL)
 	{
-		printk("EUSER\n");
+		dprintk(0, "EUSER\n");
 		return -EUSERS;
   	}
 	FrontPanelOpen[minor].fp = NULL;
@@ -651,7 +651,7 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 	case 0x5401:
 		break;
 	default:
-		printk("VFD/AOTOM: unknown IOCTL 0x%x\n", cmd);
+		dprintk(0, "unknown IOCTL 0x%x\n", cmd);
 		mode = 0;
 		break;
 	}
@@ -765,7 +765,7 @@ static int button_input_open(struct input_dev *dev)
 {
 	if (down_interruptible(&button_sem))
 	{
-		printk("[BTN] ERROR workqueue already running\n");
+		dprintk(0, "[BTN] ERROR workqueue already running\n");
 		return 1;
 	}
 
