@@ -345,24 +345,16 @@ static ssize_t AOTOMdev_write(struct file *filp, const char *buff, size_t len, l
 	if (minor == FRONTPANEL_MINOR_RC)
 		return -EOPNOTSUPP;
 
-	kernel_buf = kmalloc(len, GFP_KERNEL);
-
-	if (kernel_buf == NULL)
-	{
-	   drintk(0, "%s return no mem<\n", __func__);
-	   return -ENOMEM;
-	}
-	copy_from_user(kernel_buf, buff, len);
-
 	if(down_interruptible (&write_sem))
-      return -ERESTARTSYS;
+		return -ERESTARTSYS;
 
 	data.length = len;
 	if (data.length > VFD_DATA_LEN)
 		data.length = VFD_DATA_LEN;
 
-	while ((data.length > 0) && (kernel_buf[data.length - 1 ] == '\n'))
-	  data.length--;
+	// get rid of trailing endline. could be if echo command used
+	if ((data.length > 0) && (buff[data.length - 1] == '\n'))
+		data.length--;
 
 	if(data.length <0)
 	{
@@ -371,11 +363,10 @@ static ssize_t AOTOMdev_write(struct file *filp, const char *buff, size_t len, l
 	}
 	else
 	{
-	  memcpy(data.data,kernel_buf,data.length);
+	  if (copy_from_user(data.data,buff,data.length))
+		return -EFAULT;
 	  res=run_draw_thread(&data);
 	}
-
-	kfree(kernel_buf);
 
 	up(&write_sem);
 
