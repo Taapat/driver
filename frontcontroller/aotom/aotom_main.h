@@ -90,6 +90,7 @@ struct aotom_ioctl_data {
 
 
 struct vfd_ioctl_data {
+	unsigned char start;
 	unsigned char data[VFD_DATA_LEN];
 	unsigned char length;
 };
