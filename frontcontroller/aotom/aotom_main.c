@@ -364,8 +364,9 @@ static ssize_t AOTOMdev_write(struct file *filp, const char *buff, size_t len, l
 	else
 	{
 	  if (copy_from_user(data.data,buff,data.length))
-		return -EFAULT;
-	  res=run_draw_thread(&data);
+		res = -EFAULT;
+	  else
+		res=run_draw_thread(&data);
 	}
 
 	up(&write_sem);
@@ -502,6 +503,8 @@ int AOTOMdev_close(struct inode *inode, struct file *filp)
 	return 0;
 }
 
+static struct vfd_ioctl_data vfd_data;
+
 static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int cmd, unsigned long arg)
 {
    static int mode = 0;
@@ -611,14 +614,13 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 	case VFDDISPLAYCHARS:
 		if (mode == 0)
 		{
-	 	  struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;
-		  if(data->length <0)
-	            {
-	              res = -1;
-	              dprintk(2, "empty string\n");
-	            }
-		    else
-		     res = run_draw_thread(data);
+			if (copy_from_user(&vfd_data, (void *) arg, sizeof(vfd_data)))
+				return -EFAULT;
+			if (vfd_data.length > sizeof(vfd_data.data))
+				vfd_data.length = sizeof(vfd_data.data);
+			while ((vfd_data.length > 0) && (vfd_data.data[vfd_data.length - 1 ] == '\n'))
+				vfd_data.length--;
+				res = run_draw_thread(&vfd_data);
 		} else
 		{
 			//not supported
@@ -628,12 +630,8 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 	case VFDDISPLAYWRITEONOFF:
 		break;
 	case VFDDISPLAYCLR:
-		if(!thread_stop)
-		  kthread_stop(thread);
-		//wait thread stop
-		while(!thread_stop)
-		  {msleep(1);}
-		VFD_clr();
+		vfd_data.length = 0;
+		res = run_draw_thread(&vfd_data);
 		break;
 #if defined(SPARK)
 	case 0x5305:
