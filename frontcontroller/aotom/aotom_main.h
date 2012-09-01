@@ -165,53 +165,53 @@ enum
 typedef enum LogNum_e
 {
 /*----------------------------------11G-------------------------------------*/
-	PLAY_FASTBACKWARD = 11*16+1,
-	PLAY_HEAD,
-	PLAY_LOG,
-	PLAY_TAIL,
-	PLAY_FASTFORWARD,
-	PLAY_PAUSE,
-    REC1,
-    MUTE,
-    CYCLE,
-    DUBI,
-    CA,
-    CI,
-    USB,
-    DOUBLESCREEN,
-    REC2,
+    PLAY_FASTBACKWARD = 11*16+1,//  1
+    PLAY_HEAD,			// 2
+    PLAY_LOG,			// 3
+    PLAY_TAIL,			// 4
+    PLAY_FASTFORWARD,		// 5
+    PLAY_PAUSE,			// 6
+    REC1,			// 7
+    MUTE,			// 8
+    CYCLE,			// 9
+    DUBI,			// 10
+    CA,				// 11
+    CI,				// 12
+    USB,			// 13
+    DOUBLESCREEN,		// 14
+    REC2,			// 15
 /*----------------------------------12G-------------------------------------*/
-    HDD_A8 = 12*16+1,
-    HDD_A7,
-    HDD_A6,
-    HDD_A5,
-    HDD_A4,
-    HDD_A3,
-    HDD_FULL,
-    HDD_A2,
-    HDD_A1,
-    MP3,
-    AC3,
-    TVMODE_LOG,
-    AUDIO,
-    ALERT,
-    HDD_A9,
+    HDD_A8 = 12*16+1,		// 16
+    HDD_A7,			// 17
+    HDD_A6,			// 18
+    HDD_A5,			// 19
+    HDD_A4,			// 20
+    HDD_A3,			// 21
+    HDD_FULL,			// 22
+    HDD_A2,			// 23
+    HDD_A1,			// 24
+    MP3,			// 25
+    AC3,			// 26
+    TVMODE_LOG,			// 27
+    AUDIO,			// 28
+    ALERT,			// 29
+    HDD_A9,			// 30
 /*----------------------------------13G-------------------------------------*/
-    CLOCK_PM = 13*16+1,
-    CLOCK_AM,
-    CLOCK,
-    TIME_SECOND,
-    DOT2,
-    STANDBY,
-    TER,
-    DISK_S3,
-    DISK_S2,
-    DISK_S1,
-    DISK_S0,
-    SAT,
-    TIMESHIFT,
-    DOT1,
-    CAB,
+    CLOCK_PM = 13*16+1,		// 31
+    CLOCK_AM,			// 32
+    CLOCK,			// 33
+    TIME_SECOND,		// 34
+    DOT2,			// 35
+    STANDBY,			// 36
+    TER,			// 37
+    DISK_S3,			// 38
+    DISK_S2,			// 39
+    DISK_S1,			// 40
+    DISK_S0,			// 41
+    SAT,			// 42
+    TIMESHIFT,			// 43
+    DOT1,			// 44
+    CAB,			// 45
   /*----------------------------------end-------------------------------------*/
     LogNum_Max
 } LogNum_T;
