@@ -106,7 +106,7 @@ int stpti_start_feed ( struct dvb_demux_feed *dvbdmxfeed,
      unnecessarily waste a buffer (might lead to loss of a second
      recording). */
   if (!(((pSession->source >= DMX_SOURCE_FRONT0) &&
-         (pSession->source < DMX_SOURCE_FRONT2)) ||
+         (pSession->source <= DMX_SOURCE_FRONT2)) ||
          ((pSession->source == DMX_SOURCE_DVR0) && swts)))
     return -1;
 
@@ -285,7 +285,7 @@ int stpti_stop_feed ( struct dvb_demux_feed *dvbdmxfeed,
   /* PTI was only started if the source is one of two frontends or
      if playback via SWTS was activated. */
   if (!(((pSession->source >= DMX_SOURCE_FRONT0) &&
-         (pSession->source < DMX_SOURCE_FRONT2)) ||
+         (pSession->source <= DMX_SOURCE_FRONT2)) ||
          ((pSession->source == DMX_SOURCE_DVR0) && swts)))
     return -1;
 
@@ -461,8 +461,10 @@ void ptiInit ( struct DeviceContext_s *pContext )
      */
     stm_tsm_init (  /*config */ 1 );
 
-#if defined(TF7700) || defined(UFS922) || defined(FORTIS_HDBOX) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA) || defined(ATEVIO7500) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55) || defined(ADB_BOX) || defined(UFS913) || defined(SPARK7162) || defined(SPARK)
+#if defined(TF7700) || defined(UFS922) || defined(FORTIS_HDBOX) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA) || defined(ATEVIO7500) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55) || defined(ADB_BOX) || defined(UFS913)
     pti_hal_init ( &pti, &pContext->DvbDemux, demultiplexDvbPackets, 2);
+#elif defined(SPARK7162)	
+    pti_hal_init ( &pti, &pContext->DvbDemux, demultiplexDvbPackets, 3);
 #else
     pti_hal_init ( &pti, &pContext->DvbDemux, demultiplexDvbPackets, 1);
 #endif
