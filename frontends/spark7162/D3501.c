@@ -338,8 +338,8 @@ static const UINT8 snr_tab[177] =
 ////static INT32 nim_s3501_get_freq(struct nim_device *dev, UINT32 *freq);
 //static INT32 nim_s3501_get_symbol_rate(struct nim_device *dev, UINT32 *sym_rate);
 //static INT32 nim_s3501_get_code_rate(struct nim_device *dev, UINT8 *code_rate);
-static INT32 nim_s3501_get_AGC(struct nim_device *dev, UINT8 *agc);
-static INT32 nim_s3501_get_SNR(struct nim_device *dev, UINT8 *snr);
+static INT32 nim_s3501_get_AGC(struct nim_device *dev, UINT16 *agc);
+static INT32 nim_s3501_get_SNR(struct nim_device *dev, UINT16 *snr);
 static INT32 nim_s3501_get_BER(struct nim_device *dev, UINT32 *RsUbc);
 ////static INT32 nim_s3501_get_PER(struct nim_device *dev, UINT32 *RsUbc);//question
 static INT32 nim_s3501_get_LDPC(struct nim_device *dev, UINT32 *RsUbc);
@@ -1846,7 +1846,8 @@ static INT32 nim_s3501_get_phase_error(struct nim_device *dev, INT32 *phase_erro
 static INT32 nim_s3501_set_phase_noise(struct nim_device *dev)
 {
 	UINT32 debug_time, debug_time_thre, i;
-	UINT8 snr, data, verdata, sdat;
+	UINT8 data, verdata, sdat;
+	UINT16 snr;
 	UINT32 ber, per;
 	UINT32 min_per, max_per;
 	UINT32 per_buf[4] =
@@ -2671,7 +2672,7 @@ static INT32 nim_s3501_get_code_rate(struct nim_device *dev, UINT8 *code_rate)
 *****************************************************************************/
 // get signal intensity
 
-static INT32 nim_s3501_get_AGC(struct nim_device *dev, UINT8 *agc)
+static INT32 nim_s3501_get_AGC(struct nim_device *dev, UINT16 *agc)
 {
 	UINT8 data;//, temp;
 	//INT16  idata;
@@ -2698,6 +2699,7 @@ static INT32 nim_s3501_get_AGC(struct nim_device *dev, UINT8 *agc)
 	{
 		//CR0B
 		nim_reg_read(dev, R07_AGC1_CTRL + 0x04, &data, 1);
+#if 0 // ????
 		data = 255 - data;
 
 		if (0x40 <= data)
@@ -2709,6 +2711,7 @@ static INT32 nim_s3501_get_AGC(struct nim_device *dev, UINT8 *agc)
 
 		data /= 2;
 		data += 16;
+#endif // 0
 		*agc = (UINT8) data;
 	}
 
@@ -2790,7 +2793,7 @@ static INT32 nim_get_symbol(struct nim_device *dev)
 *
 * Return Value: INT32
 *****************************************************************************/
-static INT32 nim_s3501_get_SNR(struct nim_device *dev, UINT8 *snr)
+static INT32 nim_s3501_get_SNR(struct nim_device *dev, UINT16 *snr)
 {
 	//UINT8 work_mode;//, map_type;
 	UINT8 lock; //coderate,
@@ -4471,14 +4474,15 @@ static int d3501_read_snr(struct dvb_frontend* fe, u16* snr)
 	int 	iRet;
 	struct dvb_d3501_fe_state *state = fe->demodulator_priv;
 
-    iRet = nim_s3501_get_SNR(&state->spark_nimdev, (UINT8*)snr); //quality
+    iRet = nim_s3501_get_SNR(&state->spark_nimdev, (UINT16*)snr); //quality
     if (*snr < 30)
         *snr = *snr * 7 / 3;
     else
         *snr = *snr / 3 + 60;
 	if(*snr > 90)
 		*snr = 90;
-	*snr = *snr * 0xffff / 100;
+	*snr = *snr * 255 * 255 / 100;
+	printk("*snr = %d\n", *snr);
 	return iRet;
 }
 
@@ -4486,10 +4490,11 @@ static int d3501_read_signal_strength(struct dvb_frontend* fe,
 											u16 *strength)
 {
 	int 	iRet;
-	UINT8 	*Intensity = (UINT8*)strength;
+	UINT16 	*Intensity = (UINT16*)strength;
 	struct dvb_d3501_fe_state *state = fe->demodulator_priv;
 
-    iRet = nim_s3501_get_AGC(&state->spark_nimdev, (UINT8*)Intensity);  //level
+    iRet = nim_s3501_get_AGC(&state->spark_nimdev, (UINT16*)Intensity);  //level
+#if 0
     //lwj add begin
 	if(*Intensity>90)
         *Intensity = 90;
@@ -4504,6 +4509,10 @@ static int d3501_read_signal_strength(struct dvb_frontend* fe,
 	printk("*strength = %d\n", *strength);
 	*strength = *strength * 0xffff / 100;
     //lwj add end
+#endif // 0
+	*Intensity = *Intensity * 255 * 255 / 100;
+	*strength = *Intensity;
+	printk("*strength = %d\n", *strength);
 	return iRet;
 }
 
