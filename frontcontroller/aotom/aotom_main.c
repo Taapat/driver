@@ -201,9 +201,9 @@ void draw_thread(void *arg)
     }
   }
 
+  clear_display();
   if(count > 0)
   {
-      clear_display();
       memset(buf,0, sizeof(buf));
       int countb = utf8_count(&draw_data.data[0], draw_data.length, 8);
       memcpy(buf, draw_data.data, countb);
