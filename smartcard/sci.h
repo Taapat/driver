@@ -24,7 +24,7 @@
 #include "sci_7100.h"
 #elif defined(CONFIG_CPU_SUBTYPE_STX7111) || defined(UFS912) || defined(SPARK) || defined(HS7810A) || defined(HS7110) || defined(WHITEBOX)
 #include "sci_7111.h"
-#elif defined(CONFIG_CPU_SUBTYPE_STX7105) || defined(ATEVIO7500)
+#elif defined(CONFIG_CPU_SUBTYPE_STX7105) || defined(ATEVIO7500) || defined(SPARK7162)
 #include "sci_7105.h"
 #endif
 
@@ -54,7 +54,7 @@
 
 /******* SC generic *******/
 
-#if defined(HL101) || defined(ATEVIO7500) || defined(FORTIS_HDBOX) || defined(CUBEREVO) || defined(ADB_BOX)
+#if defined(HL101) || defined(ATEVIO7500) || defined(FORTIS_HDBOX) || defined(CUBEREVO) || defined(ADB_BOX) || defined(SPARK7162)
 #define SCI_NUMBER_OF_CONTROLLERS   2           /* Num of SC controllers */
 #else
 #define SCI_NUMBER_OF_CONTROLLERS   1           /* Num of SC controllers */
