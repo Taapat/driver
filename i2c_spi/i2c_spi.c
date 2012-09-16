@@ -9,7 +9,7 @@
 #include <linux/tm1668.h>
 #include <linux/stm/platform.h>
 #include <linux/stm/stx7105.h>
-#include <linux/stm/pci-synopsys.h>
+// #include <linux/stm/pci-synopsys.h>
 #include <linux/stm/emi.h>
 #include <linux/mtd/mtd.h>
 #include <linux/mtd/physmap.h>
