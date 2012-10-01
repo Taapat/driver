@@ -10,10 +10,11 @@
 #include <linux/version.h>
 #endif
 
+#include <asm/div64.h>
+
 extern u64 __xdiv64_32(u64 n, u32 d);
 
-s64 __divdi3(s64 n, s64 d)
-{
+s64 __divdi3(s64 n, s64 d) {
 	int c = 0;
 	s64 res;
 
@@ -26,8 +27,21 @@ s64 __divdi3(s64 n, s64 d)
 		d = -d;
 	}
 
-	if (unlikely(d & 0xffffffff00000000LL))
-		panic("Need true 64-bit/64-bit division");
+	if (unlikely(d & 0xffffffff00000000LL)) {
+		printk(KERN_WARNING "Workaround for 64-bit/64-bit division.");
+		uint32_t di = d;
+		/* Scale divisor to 32 bits */
+		if (d > 0xffffffffULL) {
+			unsigned int shift = fls(d >> 32);
+			di = d >> shift;
+			n >>= shift;
+		}
+		/* avoid 64 bit division if possible */
+		if (n >> 32) {
+			do_div(n, di);
+			return d;
+		}
+	}
 
 	res = __xdiv64_32(n, (u32)d);
 	if (c) {
