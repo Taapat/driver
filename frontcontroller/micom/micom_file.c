@@ -84,7 +84,11 @@ int micomWriteCommand(char command, char* buffer, int len, int needAck)
 
     dprintk(100, "%s >\n", __func__);
 
+#ifdef DIRECT_ASC
     serial_putc(command);
+#else
+    micom_putc(command);
+#endif
 
     for (i = 0; i < len; i++)
     {
