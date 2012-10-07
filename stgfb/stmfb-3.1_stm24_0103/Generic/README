@@ -1,3 +1,0 @@
-This directory contains the base classes and interfaces for the main
-driver components. It also contains the implementation of the public 'C' API
-defined in the include/stmdisplay*.h header files.
