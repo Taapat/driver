@@ -2484,7 +2484,7 @@ S32 FE_STV0367qam_GetSnr(TUNER_IOREG_DeviceMap_t *DemodDeviceMap,
 	FE_CAB_Modulation_t QAMSize;
 	QAMSize = ChipGetField_0367qam(DemodDeviceMap, DemodIOHandle,
 									F367qam_QAM_MODE);
-	return FE_367qam_GetCarrierToNoiseRatio_u32(DemodDeviceMap,
+	return 255 * 255 / 100 * FE_367qam_GetCarrierToNoiseRatio_u32(DemodDeviceMap,
 												DemodIOHandle,
 												QAMSize);
 }
@@ -2492,7 +2492,7 @@ S32 FE_STV0367qam_GetSnr(TUNER_IOREG_DeviceMap_t *DemodDeviceMap,
 S32 FE_STV0367qam_GetPower(TUNER_IOREG_DeviceMap_t *DemodDeviceMap,
                                             IOARCH_Handle_t DemodIOHandle)
 {
-	return FE_367qam_GetRFLevel(DemodDeviceMap, DemodIOHandle);
+	return 255 * 255 / 100 * FE_367qam_GetRFLevel(DemodDeviceMap, DemodIOHandle);
 }
 
 S32 FE_STV0367qam_GetErrors(TUNER_IOREG_DeviceMap_t *DemodDeviceMap,
@@ -2534,7 +2534,7 @@ S32 FE_STV0367qam_GetErrors(TUNER_IOREG_DeviceMap_t *DemodDeviceMap,
         *FirstTimeBER = 0;
     }
     FE_367qam_GetErrorCount(DeviceMap, IOHandle, Modulation,SymbolRate,&(Monitor_results));
-    Ber = Monitor_results.FE_367qam_BER_U32;
+    Ber = Monitor_results.FE_367qam_BER_U32 * 255 * 255 / 100 ;
 #endif
     return Ber;
 }
