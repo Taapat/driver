@@ -1198,7 +1198,7 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
                     {
                         int WRatio = (DestWidth * 1000) / DestHeight;
                         int PRatio = (SourceWidth * 1000) / SourceHeight;
-                        DestHeight = (DestWidth * PRatio) / WRatio;
+                        DestWidth = (DestWidth * PRatio) / WRatio;
                     }
 #else
                     DestWidth                    = NewWidth.IntegerPart();
