@@ -132,11 +132,19 @@ inline int avs_pio_set_mute(int type)
 
 	if (type==AVS_MUTE)
 	{
+		#if defined(SPARK7162)
+		t_mute = 0;
+		#else
 		t_mute = 1;
+		#endif
 	}
 	else
 	{
+		#if defined(SPARK7162)
+		t_mute = 1;
+		#else
 		t_mute = 0;
+		#endif
 	}
 
 
