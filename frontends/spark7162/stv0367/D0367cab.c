@@ -414,7 +414,7 @@ void D0367qam_TunerSetFreq(TUNER_IOREG_DeviceMap_t *DeviceMap,
 static struct dvb_frontend_ops dvb_d0367_fe_qam_ops = {
 
 	.info = {
-		.name			= "d0367 DVB-C",
+		.name			= "Tuner3-T/C",
 		.type			= FE_QAM,
 		.frequency_stepsize	= 62500,
 		.frequency_min		= 51000000,
@@ -633,7 +633,7 @@ static FE_367qam_SIGNALTYPE_t
         //lwj add end
 		//if (FE_TunerGetIF_Freq(pIntParams->hTuner) != 0)
 		#if 0 //lwj remove
-		if (0) //IF Îª£°
+		if (0) //IF Îªï¿½ï¿½
 		{
 			if(FE_TunerGetIF_Freq(pIntParams->hTuner)>pIntParams->AdcClock_Hz/1000)
 			{
@@ -725,7 +725,7 @@ YW_ErrorType_T D0367qam_ScanFreq(TUNER_IOREG_DeviceMap_t *DemodDeviceMap,
     pParams.State = FE_367qam_NOTUNER;
 
 	pParams.Modulation = D0367qam_GeModulation(DeviceMap, IOHandle);
-    pParams.Crystal_Hz = DeviceMap->RegExtClk; //30M »¹ÊÇ27M£¬ÓÉÓ²¼þ¾ö¶¨
+    pParams.Crystal_Hz = DeviceMap->RegExtClk; //30M ï¿½ï¿½ï¿½ï¿½27Mï¿½ï¿½ï¿½ï¿½Ó²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     pParams.SearchRange_Hz = 280000;/*280 kHz*/ //question
     pParams.SymbolRate_Bds = D0367qam_GeSymbolRate(DeviceMap, IOHandle);////
     pParams.Frequency_kHz  = D0367qam_GeFrequencyKhz(DeviceMap, IOHandle);////

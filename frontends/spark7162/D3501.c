@@ -5271,7 +5271,7 @@ static int d3501_get_info(struct dvb_frontend *fe,
 {
 	//struct dvb_d0367_fe_ofdm_state* state = fe->demodulator_priv;
 	/* get delivery system info */
-	if(fe_info->delivery == DVBFE_DELSYS_DVBS)
+	if(fe_info->delivery == DVBFE_DELSYS_DVBS2)
 	{
 		return 0;
 	}

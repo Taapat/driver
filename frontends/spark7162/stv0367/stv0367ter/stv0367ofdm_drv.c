@@ -1,18 +1,18 @@
-/**********************************ÎÄ¼þÍ·²¿×¢ÊÍ************************************/
+/**********************************ï¿½Ä¼ï¿½Í·ï¿½ï¿½×¢ï¿½ï¿½************************************/
 //
 //
 //  					Copyright (C), 2005-2010, AV Frontier Tech. Co., Ltd.
 //
 //
-// ÎÄ¼þÃû£º		stv0367ofdm_drv.c
+// ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½		stv0367ofdm_drv.c
 //
-// ´´½¨Õß£º		lwj
+// ï¿½ï¿½ï¿½ï¿½ï¿½ß£ï¿½		lwj
 //
-// ´´½¨Ê±¼ä£º	2010-11-12
+// ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ä£º	2010-11-12
 //
-// ÎÄ¼þÃèÊö£º
+// ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //
-// ÐÞ¸Ä¼ÇÂ¼£º   ÈÕ       ÆÚ      ×÷      Õß       °æ±¾      ÐÞ¶¨
+// ï¿½Þ¸Ä¼ï¿½Â¼ï¿½ï¿½   ï¿½ï¿½       ï¿½ï¿½      ï¿½ï¿½      ï¿½ï¿½       ï¿½æ±¾      ï¿½Þ¶ï¿½
 //				       ---------         ---------        -----        -----
 //
 /**********************************************************************************/
@@ -1773,7 +1773,7 @@ int	FE_STV0367TER_GetPower(TUNER_IOREG_DeviceMap_t *DeviceMap,
     {
         power = 0;
     }
-	return power;
+	return power * 255 * 255 /100;
 }
 
 int	FE_STV0367TER_GetSnr(TUNER_IOREG_DeviceMap_t *DeviceMap,
@@ -1793,7 +1793,7 @@ int	FE_STV0367TER_GetSnr(TUNER_IOREG_DeviceMap_t *DeviceMap,
     {
         snr = 100;
     }
-	return snr;
+	return snr * 255 * 255 /100;
 }
 
 #if 1
@@ -2554,7 +2554,7 @@ U32 FE_367ofdm_GetErrors(TUNER_IOREG_DeviceMap_t *DemodDeviceMap,IOARCH_Handle_t
 		while ( (( ChipGetField_0367ter(DemodDeviceMap, DemodIOHandle,F367ofdm_ERRCNT1_OLDVALUE) ==1)&& (cpt<400)) ||
 			    ((Errors==0)&& (cpt<400)) )
 		{
-			//ChipGetRegisters_0367ter(DemodDeviceMap, DemodIOHandle,R367ofdm_ERRCTRL1,4); //lwj change ·ñÔòÈÝÒ×³¬Ê±£¬µ±CPU¸ºµ£ÖØµÄÊ±ºò
+			//ChipGetRegisters_0367ter(DemodDeviceMap, DemodIOHandle,R367ofdm_ERRCTRL1,4); //lwj change ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×³ï¿½Ê±ï¿½ï¿½ï¿½ï¿½CPUï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½Ê±ï¿½ï¿½
 			ChipGetRegisters_0367ter(DemodDeviceMap, DemodIOHandle,R367ofdm_ERRCTRL1,1);
             ChipGetRegisters_0367ter(DemodDeviceMap, DemodIOHandle,R367ofdm_ERRCNT1H,1);
 			ChipGetRegisters_0367ter(DemodDeviceMap, DemodIOHandle,R367ofdm_ERRCNT1M,1);
