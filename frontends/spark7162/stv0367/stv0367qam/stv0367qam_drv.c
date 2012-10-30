@@ -2023,7 +2023,7 @@ FE_CAB_Modulation_t D367qam_SetQamSize(TUNER_TunerType_T TunerType,
 			ChipSetOneRegister_0367qam(DemodDeviceMap,DemodIOHandle,R367qam_FSM_STATE,0xa0);
 			if(SymbolRate>4500000)
 			{
-				ChipSetOneRegister_0367qam(DemodDeviceMap,DemodIOHandle,R367qam_EQU_CTR_LPF_GAIN,0xc1);
+				ChipSetOneRegister_0367qam(DemodDeviceMap,DemodIOHandle,R367qam_EQU_CTR_LPF_GAIN,0xd1);
 			}
 			else if(SymbolRate>2500000)
 			{
