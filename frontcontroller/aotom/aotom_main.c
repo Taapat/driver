@@ -532,7 +532,7 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		break;
 	case VFDICONDISPLAYONOFF:
 	{
-#if defined(SPARK7162)
+#if defined(SPARK) || defined(SPARK7162)
 	 struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;
 	 res = aotomSetIcon(aotom->u.icon.icon_nr, aotom->u.icon.on);
 #endif
