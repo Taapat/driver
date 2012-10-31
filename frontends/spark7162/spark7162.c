@@ -1,16 +1,16 @@
 /*$Source$*/
-/*****************************ÎÄ¼þÍ·²¿×¢ÊÍ*************************************/
+/*****************************ï¿½Ä¼ï¿½Í·ï¿½ï¿½×¢ï¿½ï¿½*************************************/
 //
 //			Copyright (C), 2011-2016, AV Frontier Tech. Co., Ltd.
 //
 //
-// ÎÄ ¼þ Ãû£º	$RCSfile$
+// ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½	$RCSfile$
 //
-// ´´ ½¨ Õß£º	Administrator
+// ï¿½ï¿½ ï¿½ï¿½ ï¿½ß£ï¿½	Administrator
 //
-// ´´½¨Ê±¼ä£º	2011.05.05
+// ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ä£º	2011.05.05
 //
-// ×îºó¸üÐÂ£º	$Date$
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â£ï¿½	$Date$
 //
 //				$Author$
 //
@@ -18,11 +18,11 @@
 //
 //				$State$
 //
-// ÎÄ¼þÃèÊö£º	7162tunerÇý¶¯
+// ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½	7162tunerï¿½ï¿½ï¿½ï¿½
 //
 /******************************************************************************/
 
-/********************************  ÎÄ¼þ°üº¬************************************/
+/********************************  ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½************************************/
 
 #include <linux/bitops.h>
 #include <linux/module.h>
@@ -48,7 +48,7 @@
 #include "../base/sharp5469c.h"
 #include "../base/sharp7803.h"
 
-/********************************  ³£Á¿¶¨Òå************************************/
+/********************************  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½************************************/
 
 #define I2C_ADDR_IX7306		(0xc0 >> 1)
 #define I2C_ADDR_SHARP7803  (0xc0 >> 1)
@@ -65,7 +65,7 @@ enum
 static int eUnionTunerType = UNION_TUNER_T;
 static char *UnionTunerType = "t";
 
-/*******************************  Êý¾Ý½á¹¹*********************************/
+/*******************************  ï¿½ï¿½ï¿½Ý½á¹¹*********************************/
 
 struct spark_tuner_config
 {
@@ -86,12 +86,12 @@ struct spark_dvb_adapter_adddata {
 	struct i2c_adapter	*cab_i2c_adap;
 };
 
-/********************************  ºê ¶¨ Òå**********************************/
+/********************************  ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½**********************************/
 
 #define IS_UNION_TUNER_T(type) (UNION_TUNER_T == (type))
 #define IS_UNION_TUNER_C(type) (UNION_TUNER_C == (type))
 
-/********************************  ±äÁ¿¶¨Òå********************************/
+/********************************  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½********************************/
 
 struct dvb_adapter 	spark_dvb_adapter;
 struct device 		spark_device;
@@ -143,11 +143,13 @@ struct spark_tuner_config tuner_resources[] = {
         },
 };
 
-/********************************  ±äÁ¿ÒýÓÃ********************************/
+/********************************  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½********************************/
 
-/********************************  º¯ÊýÉùÃ÷********************************/
+/********************************  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½********************************/
 
-/********************************  º¯Êý¶¨Òå********************************/
+int UnionTunerConfig(char *pcTunerType);
+
+/********************************  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½********************************/
 
 int spark_dvb_attach_s(struct dvb_adapter *dvb_adap,
 								const struct d3501_config *config,
@@ -194,7 +196,14 @@ int spark_dvb_register_s(struct dvb_adapter *dvb_adap,
 
 	d3501config.pI2c = pI2c;
 	d3501config.i = tuner_resource;
-	snprintf (d3501config.name, sizeof(d3501config.name), "d3501-%d", tuner_resource);
+	if (0 == tuner_resource)
+	{
+		snprintf (d3501config.name, sizeof(d3501config.name), "Tuner2-Sat");
+	}
+	else
+	{
+		snprintf (d3501config.name, sizeof(d3501config.name), "Tuner1-Sat");
+	}
 
 	if (spark_dvb_attach_s(dvb_adap, &d3501config, &pFrontend))
 	{
@@ -353,7 +362,6 @@ int spark_dvb_register_tc_by_type(struct dvb_adapter *dvb_adap,
 											int iTunerType)
 {
 	int iRet = -1;
-	printk("spark7162 type == %d", iTunerType);
 	struct spark_dvb_adapter_adddata *pDvbAddData;
 
 	pDvbAddData = (struct spark_dvb_adapter_adddata *)dvb_adap->priv;
@@ -499,6 +507,8 @@ int spark7162_register_frontend(struct dvb_adapter *dvb_adap)
 
 	dvb_adap->priv = (void *)pDvbAddData;
 
+	eUnionTunerType = UnionTunerConfig(UnionTunerType);
+
 	spark_dvb_register_tc_by_type(dvb_adap, eUnionTunerType);
 
 	#if 1
@@ -573,8 +583,6 @@ int __init spark_init(void)
 
     printk("%s >\n", __func__);
 
-	eUnionTunerType = UnionTunerConfig(UnionTunerType);
-
 #if (DVB_API_VERSION > 3)
 	ret = dvb_register_adapter(&spark_dvb_adapter, "spark",
 				  				THIS_MODULE, &spark_device, AdapterNumbers);
@@ -595,7 +603,7 @@ int __init spark_init(void)
     return ret;
 }
 
-static void spark_cleanup(void)
+void __exit spark_cleanup(void)
 {
     printk("%s >\n", __func__);
 	spark7162_unregister_frontend(&spark_dvb_adapter);
@@ -603,17 +611,10 @@ static void spark_cleanup(void)
     printk("%s <\n", __func__);
 }
 
-int __init spark_get_tuner_type(void)
-{
-	eUnionTunerType = UnionTunerConfig(UnionTunerType);
-}
-
 //#define D3501_SINGLE
 #ifdef D3501_SINGLE
 module_init(spark_init);
 module_exit(spark_cleanup);
-#else
-module_init(spark_get_tuner_type);
 #endif
 
 module_param(UnionTunerType, charp, 0);

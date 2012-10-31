@@ -404,7 +404,7 @@ static int dvb_d0367_fe_ofdm_get_property(struct dvb_frontend *fe, struct dtv_pr
 static struct dvb_frontend_ops dvb_d0367_fe_ofdm_ops = {
 
 	.info = {
-		.name			= "d0367 DVB-T",
+		.name			= "Tuner3-T/C",
 		.type			= FE_OFDM,
 		.frequency_min		= 0,
 		.frequency_max		= 863250000,
@@ -750,7 +750,7 @@ YW_ErrorType_T D0367ter_ScanFreq(TUNER_IOREG_DeviceMap_t *DeviceMap,
 	U8 SenseTrialsAuto[2];
 	FE_367ofdm_InternalParams_t pParams;
 	FE_TER_SearchResult_t pResult;
-	 //question pParams->Inv ¶àÉÙ
+	 //question pParams->Inv ï¿½ï¿½ï¿½ï¿½
 
 	YWLIB_Memset(&pParams, 0, sizeof(FE_367ofdm_InternalParams_t));
 	YWLIB_Memset(&pResult, 0, sizeof(FE_TER_SearchResult_t));

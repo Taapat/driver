@@ -286,7 +286,7 @@ static int info_model_read(char *page, char **start, off_t off, int count,
 #elif defined(IPBOX55)
   int len = sprintf(page, "ipbox55\n");
 #elif defined(ADB_BOX)
-  int len = sprintf(page, "adb_box\n"); 
+  int len = sprintf(page, "adb_box\n");
 #else
   int len = sprintf(page, "ufs910\n");
 #endif
@@ -305,7 +305,7 @@ static int three_d_mode_read(char *page, char **start, off_t off, int count,
   }else{
      len = sprintf(page, three_d_mode);
   }
-  
+
   return len;
 }
 
@@ -320,7 +320,7 @@ static int three_d_mode_write(struct file *file, const char __user *buf,
 	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
@@ -330,12 +330,12 @@ static int three_d_mode_write(struct file *file, const char __user *buf,
 		myString[count] = '\0';
 
 		printk("%s\n", myString);
-		
+
 		if (strncmp("sbs", myString, 3) == 0 || strncmp("sidebyside", myString, 10) == 0)
 		{
 			if(three_d_mode != NULL) kfree(three_d_mode);
 			three_d_mode = myString;
-		}		
+		}
 		else if (strncmp("tab", myString, 3) == 0 || strncmp("topandbottom", myString, 12) == 0)
 		{
 			if(three_d_mode != NULL) kfree(three_d_mode);
@@ -345,12 +345,12 @@ static int three_d_mode_write(struct file *file, const char __user *buf,
 		{
 			if(three_d_mode != NULL) kfree(three_d_mode);
 			three_d_mode = myString;
-		}	
-		
+		}
+
 		/* always return count to avoid endless loop */
-		ret = count;	
+		ret = count;
 	}
-	
+
 out:
 	free_page((unsigned long)page);
 	if(three_d_mode != myString) kfree(myString);
@@ -367,7 +367,7 @@ static int wakeup_time_read(char *page, char **start, off_t off, int count,
     len = sprintf(page, "%ld", LONG_MAX);
   else
     len = sprintf(page, wakeup_time);
-  
+
   return len;
 }
 
@@ -382,7 +382,7 @@ static int wakeup_time_write(struct file *file, const char __user *buf,
 	printk("%s %ld - ", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
@@ -392,14 +392,14 @@ static int wakeup_time_write(struct file *file, const char __user *buf,
 		myString[count] = '\0';
 
 		printk("%s\n", myString);
-		
+
 		if(wakeup_time != NULL) kfree(wakeup_time);
 		wakeup_time = myString;
-		
+
 		/* always return count to avoid endless loop */
 		ret = count;
 	}
-	
+
 out:
 	free_page((unsigned long)page);
 	if(wakeup_time != myString) kfree(myString);
@@ -416,11 +416,11 @@ int proc_misc_12V_output_write(struct file *file, const char __user *buf,
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
     char        *myString;
-	
+
 	printk("%s %ld\n", __FUNCTION__, count);
 
 	page = (char *)__get_free_page(GFP_KERNEL);
-	if (page) 
+	if (page)
 	{
 		ret = -EFAULT;
 		if (copy_from_user(page, buf, count))
@@ -435,7 +435,7 @@ int proc_misc_12V_output_write(struct file *file, const char __user *buf,
 
 	    if(!strncmp("on", myString, count))
 		   _12v_isON=1;
-	    
+
         if(!strncmp("off", myString, count))
 		   _12v_isON=0;
 
@@ -443,7 +443,7 @@ int proc_misc_12V_output_write(struct file *file, const char __user *buf,
 
         ret = count;
 	}
-	
+
 	ret = count;
 out:
 	free_page((unsigned long)page);
@@ -462,7 +462,7 @@ int proc_misc_12V_output_read (char *page, char **start, off_t off, int count,
 		len = sprintf(page, "on\n");
 	else
 		len = sprintf(page, "off\n");
-    
+
     return len;
 }
 #endif
@@ -539,7 +539,7 @@ struct ProcStructure_s e2Proc[] =
 	{cProcDir  , "stb/fb"                                                           , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/fb/3dmode"                                                    , NULL, three_d_mode_read, three_d_mode_write, NULL, ""},
 	{cProcEntry, "stb/fb/znorm"                                                     , NULL, NULL, default_write_proc, NULL, ""},
-	
+
 	{cProcDir  , "stb/fp"                                                           , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/fp/lnb_sense1"                                                , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/fp/lnb_sense2"                                                , NULL, NULL, NULL, NULL, ""},
@@ -661,8 +661,9 @@ static int cpp_read_proc(char *page, char **start, off_t off, int count,
   {
     if (e2Proc[i].identifier != NULL)
     	if (strlen(e2Proc[i].identifier) > 0)
-	  if (strcmp(e2Proc[i].identifier, data) == 0)
-        	return e2Proc[i].read_proc(page, start, off, count, eof, e2Proc[i].instance);
+        if (strcmp(e2Proc[i].identifier, data) == 0)
+					 if (e2Proc[i].read_proc != NULL)
+        	   return e2Proc[i].read_proc(page, start, off, count, eof, e2Proc[i].instance);
   }
 
   return 0;
@@ -685,19 +686,20 @@ static int cpp_write_proc(struct file *file, const char __user *buf,
   page = (char *)__get_free_page(GFP_KERNEL);
   if (page)
   {
-	ret = -EFAULT;
+    ret = -EFAULT;
 
-	if (copy_from_user(page, buf, count))
-		goto out;
+    if (copy_from_user(page, buf, count))
+    goto out;
 
-	/* find the entry */
-	for(i = 0; i < sizeof(e2Proc) / sizeof(e2Proc[0]); i++)
-	{
-    	  if (e2Proc[i].identifier != NULL)
-    	     if (strlen(e2Proc[i].identifier) > 0)
-    	        if (strcmp(e2Proc[i].identifier, data) == 0)
-        	   ret = e2Proc[i].write_proc(file, (const char __user *) page, count, e2Proc[i].instance);
-	}
+    /* find the entry */
+    for(i = 0; i < sizeof(e2Proc) / sizeof(e2Proc[0]); i++)
+    {
+      if (e2Proc[i].identifier != NULL)
+        if (strlen(e2Proc[i].identifier) > 0)
+          if (strcmp(e2Proc[i].identifier, data) == 0)
+						if (e2Proc[i].write_proc != NULL)
+        	    ret = e2Proc[i].write_proc(file, (const char __user *) page, count, e2Proc[i].instance);
+    }
 
   }
 
@@ -911,20 +913,21 @@ int cpp_remove_e2_procs(const char *path, read_proc_t *read_func, write_proc_t *
       }
       else
       {
-	if(e2Proc[i].read_proc == read_func)
-	{
-	  e2Proc[i].read_proc = NULL;
-	  printk("%s(): removed '%s, %s' (%p, %p)\n",
+				e2Proc[i].instance = NULL;
+        if(e2Proc[i].read_proc == read_func)
+        {
+          e2Proc[i].read_proc = NULL;
+          printk("%s(): removed '%s, %s' (%p, %p)\n",
                  __func__, path, e2Proc[i].name, e2Proc[i].read_proc, read_func);
         }
-	else
-	  printk("%s(): different read_procs '%s, %s' (%p, %p)\n",
+        else
+          printk("%s(): different read_procs '%s, %s' (%p, %p)\n",
                  __func__, path, e2Proc[i].name, e2Proc[i].read_proc, read_func);
 
-	if(e2Proc[i].write_proc == write_func)
-	  e2Proc[i].write_proc = NULL;
+        if(e2Proc[i].write_proc == write_func)
+          e2Proc[i].write_proc = NULL;
         else
-	  printk("%s(): different write_procs '%s' (%p, %p)\n",
+          printk("%s(): different write_procs '%s' (%p, %p)\n",
                  __func__, path, e2Proc[i].write_proc, write_func);
       }
       break;
@@ -1010,4 +1013,3 @@ module_exit(e2_proc_cleanup_module);
 MODULE_DESCRIPTION("procfs module with enigma2 support");
 MODULE_AUTHOR("Team Ducktales");
 MODULE_LICENSE("GPL");
-
