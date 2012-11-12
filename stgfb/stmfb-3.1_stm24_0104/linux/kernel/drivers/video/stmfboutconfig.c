@@ -66,6 +66,10 @@ stmfb_initialise_output_config (stm_display_output_t                * const out,
     config->mixer_background = tmp;
   }
 
+#ifdef __TDT__
+  config->mixer_background = 0xFF000000; 
+#endif
+
   if(ctrlcaps & STM_CTRL_CAPS_BRIGHTNESS)
   {
     config->caps |= STMFBIO_OUTPUT_CAPS_BRIGHTNESS;
@@ -101,6 +105,10 @@ stmfb_initialise_output_config (stm_display_output_t                * const out,
   stm_display_output_set_control(out, STM_CTRL_SIGNAL_RANGE, STM_SIGNAL_VIDEO_RANGE);
 }
 
+
+#ifdef __TDT__
+EXPORT_SYMBOL(stmfb_get_output_configuration); 
+#endif
 
 int
 stmfb_get_output_configuration (struct stmfbio_output_configuration * const c,
@@ -597,6 +605,9 @@ static void stmfbio_set_psi(stm_display_output_t *o,
 }
 
 
+#ifdef __TDT__
+EXPORT_SYMBOL(stmfb_set_output_configuration); 
+#endif
 int
 stmfb_set_output_configuration (struct stmfbio_output_configuration * const c,
                                 struct stmfb_info                   * const i)

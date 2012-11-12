@@ -31,6 +31,7 @@ static const unsigned long whitelist[] = {
     STb7100_REGISTER_BASE + STb7100_DENC_BASE,
 };
 
+#ifndef __TDT__
 
 static struct stmcore_display_pipeline_data platform_data[] = {
   {
@@ -98,7 +99,80 @@ static struct stmcore_display_pipeline_data platform_data[] = {
     .io_offset                = 0,
   }
 };
+#else
+static struct stmcore_display_pipeline_data platform_data[] = {
+  {
+    .owner                    = THIS_MODULE,
+    .name                     = "STx7100-main",
+    .device                   = 0,
+    .vtg_irq                  = 154,
+    .blitter_irq              = 156,
+    .hdmi_irq                 = 158, 
+//#if defined(CONFIG_SH_STB7100_REF) || defined(CONFIG_SH_ST_MB442)
+//    .hdmi_i2c_adapter_id      = 1,
+//#elif defined(CONFIG_SH_STB7100_MBOARD) || defined(CONFIG_SH_ST_MB411)
+//#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
+#if defined(ADB_BOX)
+    .hdmi_i2c_adapter_id = 1,
+#else
+    .hdmi_i2c_adapter_id = 2,
+#endif 
+//#else
+//    .hdmi_i2c_adapter_id      = 1,
+//#endif
+//#elif defined(CONFIG_SH_HMS1) || defined(CONFIG_SH_ST_HMS1)
+//    .hdmi_i2c_adapter_id      = 2,
+//#else
+//    .hdmi_i2c_adapter_id      = 0, /* Add your board definition here */
+//#endif
+    .main_output_id           = 0,
+    .aux_output_id            = -1,
+    .hdmi_output_id           = 3,
+    .dvo_output_id            = 2,
 
+    .blitter_id               = 0,
+    .blitter_type             = STMCORE_BLITTER_GAMMA,
+
+    .preferred_graphics_plane = OUTPUT_GDP1,
+    .preferred_video_plane    = OUTPUT_VID1,
+    .planes                   = {
+    	{ OUTPUT_GDP1, STMCORE_PLANE_GFX | STMCORE_PLANE_PREFERRED | STMCORE_PLANE_MEM_SYS},
+    	{ OUTPUT_GDP2, STMCORE_PLANE_GFX | STMCORE_PLANE_SHARED | STMCORE_PLANE_MEM_SYS},
+    	{ OUTPUT_VID1, STMCORE_PLANE_VIDEO | STMCORE_PLANE_PREFERRED | STMCORE_PLANE_MEM_VIDEO},
+    	{ OUTPUT_CUR , STMCORE_PLANE_GFX | STMCORE_PLANE_MEM_SYS}
+    },
+    .whitelist                = whitelist,
+    .whitelist_size           = ARRAY_SIZE(whitelist),
+    .io_offset                = 0
+  },
+  {
+    .owner                    = THIS_MODULE,
+    .name                     = "STx7100-aux",
+    .device                   = 0,
+    .vtg_irq                  = 155,
+    .blitter_irq              = -1, // Handled by the main pipeline instance
+    .hdmi_irq                 = -1, 
+    .hdmi_i2c_adapter_id      = -1,
+    .main_output_id           = 1,
+    .aux_output_id            = -1,
+    .hdmi_output_id           = -1,
+    .dvo_output_id            = -1,
+
+    .blitter_id               = 0,
+    .blitter_type             = STMCORE_BLITTER_GAMMA,
+
+    .preferred_graphics_plane = OUTPUT_GDP2,
+    .preferred_video_plane    = OUTPUT_VID2,
+    .planes                   = {
+    	{ OUTPUT_GDP2, STMCORE_PLANE_GFX | STMCORE_PLANE_SHARED | STMCORE_PLANE_PREFERRED | STMCORE_PLANE_MEM_SYS},
+    	{ OUTPUT_VID2, STMCORE_PLANE_VIDEO | STMCORE_PLANE_PREFERRED | STMCORE_PLANE_MEM_SYS} /* Note, MEM_SYS _not_ MEM_VIDEO */
+    },
+    .whitelist                = whitelist,
+    .whitelist_size           = ARRAY_SIZE(whitelist),
+    .io_offset                = 0
+  }
+};
+#endif
 
 #if defined(CONFIG_SH_ST_MB411)
 static const int refClockError = 359; /* ppm */
@@ -118,7 +192,11 @@ static const int DAC456SaturationPoint;
 
 /* For HDMI hotplug to work, the kernel's board support must have set the pin
  * to STPIO_BIDIR_Z1 sometime before we run. */
+#if defined(ADB_BOX) 
+#define GPIO_PIN_HOTPLUG stm_gpio(3,7)
+#else
 #define GPIO_PIN_HOTPLUG stm_gpio(2,2)
+#endif
 static bool claimed_gpio_hotplug;
 
 #if defined(CONFIG_SH_ST_MB411) || \
@@ -247,7 +325,15 @@ int __init stmcore_display_postinit(struct stmcore_display *p)
   if(DAC456SaturationPoint != 0)
     stm_display_output_set_control(p->main_output, STM_CTRL_DAC456_SATURATION_POINT, DAC456SaturationPoint);
 
+#ifdef __TDT__
+#ifdef USE_EXT_CLK 
+  stm_display_output_setup_clock_reference(p->main_output, STM_CLOCK_REF_27MHZ, refClockError); 
+#else 
   stm_display_output_setup_clock_reference(p->main_output, STM_CLOCK_REF_30MHZ, refClockError);
+#endif
+#else 
+  stm_display_output_setup_clock_reference(p->main_output, STM_CLOCK_REF_30MHZ, refClockError);
+#endif
 
 /*
  * Uncomment this if you want to change the default DENC luma filter

@@ -26,7 +26,15 @@ CSTmFSynth::CSTmFSynth(CDisplayDevice *pDev, ULONG ulRegOffset)
   m_pDevRegs = (ULONG*)pDev->GetCtrlRegisterBase();
   m_ulFSynthOffset = ulRegOffset;
 
+#if  defined(__TDT__) && !defined(SPARK) && !defined(SPARK7162)
+#ifdef USE_EXT_CLK
+  m_refClock    = STM_CLOCK_REF_27MHZ;
+#else
   m_refClock    = STM_CLOCK_REF_30MHZ;
+#endif
+#else
+  m_refClock    = STM_CLOCK_REF_30MHZ;
+#endif
   m_refError    = 0;
   m_adjustment  = 0;
   m_divider     = 1;
@@ -203,6 +211,25 @@ bool CSTmFSynth::SolveFsynthEqn(ULONG Fout,stm_clock_fsynth_timing_t *timing) co
   timing->sdiv = sdiv;
   timing->md   = md;
   timing->pe   = pe;
+
+#ifdef __TDT__
+#ifdef USE_EXT_CLK
+   /* fixing wrong freq calc formula. hard coded.*/
+   switch(Fout)
+   {
+   	case 8192000:
+   		timing->sdiv = 4;
+   		timing->md=-6;
+   		timing->pe=20736;
+   		break;
+   	case 4096000:
+   		timing->sdiv = 5;
+   		timing->md=-6;
+   		timing->pe=20736;
+   		break;
+   }
+#endif
+#endif
 
   DEBUGF2(2,("%s: Fout == %lu SDIV == %u, MD == %02x, PE == 0x%x\n", __PRETTY_FUNCTION__, Fout, sdiv, md, pe));
 

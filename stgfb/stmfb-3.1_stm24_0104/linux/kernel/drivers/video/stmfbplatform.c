@@ -74,6 +74,17 @@ MODULE_PARM_DESC(display3, "mode:memory:auxmem:default TV encoding:analogue colo
 static int stmfb_probe_get_blitter(struct stmfb_info *i,
                                    const struct stmcore_display_pipeline_data * const pd);
 
+#ifdef __TDT__
+/* Dagobert big Hacking School :-D */  
+struct stmfb_info* stmfb_get_fbinfo_ptr(void)  
+{  
+    /* we only deal with fb0 */  
+    return &stmfb_info[0];  
+}  
+
+EXPORT_SYMBOL(stmfb_get_fbinfo_ptr);  
+#endif
+
 /************************************************************************
  *  Initialization and cleanup code
  */
@@ -890,6 +901,11 @@ restart:
       goto failed_register;
     }
   }
+
+#ifdef __TDT__
+  // WORKAROUND: Clear the framebuffer 
+  memset(i->info.screen_base, 0x00, i->ulFBSize);
+#endif
 
   stmfb_init_class_device(i);
 

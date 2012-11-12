@@ -76,7 +76,18 @@ bool CSTb7100DENC::Start(COutput *parent, const stm_mode_line_t *pModeLine, ULON
    * the correct reference signal polarities instead of using the polarity
    * in the modeline.
    */
+#ifndef __TDT__
   return CSTmDENC::Start(parent, pModeLine, tvStandard, DENC_CFG0_ODHS_SLV, STVTG_SYNC_POSITIVE, STVTG_SYNC_NEGATIVE);
+#else
+  bool b = CSTmDENC::Start(parent, pModeLine, tvStandard, DENC_CFG0_ODHS_SLV, STVTG_SYNC_POSITIVE, STVTG_SYNC_NEGATIVE);
+
+  #if defined (CONFIG_SH_STB7100_REF)  
+  // Scart line shift fix   
+  WriteDENCReg(0x02D, 0);  
+  #endif  
+
+  return b;
+#endif
 }
 
 

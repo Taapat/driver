@@ -56,6 +56,43 @@ CSTi7111MainOutput::~CSTi7111MainOutput() {}
 
 void CSTi7111MainOutput::StartSDInterlacedClocks(const stm_mode_line_t *mode)
 {
+#if defined(__TDT__) && defined(CONFIG_CPU_SUBTYPE_STX7111)
+/* from old stmfb; h264 problem appears with new version */
+  ULONG val;
+
+  DENTRY();
+
+  val = ReadClkReg(CKGB_DISPLAY_CFG);
+  /*
+   * Save the SD divider configuration, zero everything else including
+   * PIX_HD source mux, which will put it back to FS0.
+   *
+   * TODO: support SD on HDMI/DVO without using DENC/Aux pipeline?
+   */
+  val &= (CKGB_CFG_PIX_SD_FS1(CKGB_CFG_MASK) | CKGB_CFG_DISP_ID(CKGB_CFG_MASK));
+
+#if defined(__TDT__) && defined(USE_FS1_FOR_SD)
+// It seems that FS1 does not work if 576i
+  val &= ~CKGB_CFG_PIX_SD_FS1(3); // Clear
+  val |= CKGB_CFG_PIX_SD_FS1(CKGB_CFG_DIV4); // CLK_PIX_SD_SEL_WHEN_FS1 (<<12)
+  val &= ~CKGB_CFG_DISP_ID(3); // Clear
+  val |= CKGB_CFG_DISP_ID(CKGB_CFG_DIV8); // CLK_DISP_ID_SEL (<<8)
+#endif
+  val |= CKGB_CFG_TMDS_HDMI(CKGB_CFG_DIV4);
+  val |= CKGB_CFG_DISP_HD(CKGB_CFG_DIV8);
+  val |= CKGB_CFG_656(CKGB_CFG_DIV4);
+  val |= CKGB_CFG_PIX_SD_FS0(CKGB_CFG_DIV4);
+
+  WriteClkReg(CKGB_DISPLAY_CFG, val);
+
+  val = ReadClkReg(CKGB_CLK_SRC) & ~CKGB_SRC_PIXSD_FS1_NOT_FS0;
+  WriteClkReg(CKGB_CLK_SRC,val);
+
+  // Ensure Aux pipeline clock is at the correct frequency for shared GDP.
+  m_pFSynthAux->Start(mode->TimingParams.ulPixelClock);
+
+  DEXIT();
+#else
   ULONG val = 0;
 
   DENTRY();
@@ -87,6 +124,7 @@ void CSTi7111MainOutput::StartSDInterlacedClocks(const stm_mode_line_t *mode)
   m_pFSynthAux->Start(mode->TimingParams.ulPixelClock);
 
   DEXIT();
+#endif
 }
 
 
@@ -109,7 +147,14 @@ void CSTi7111MainOutput::StartSDProgressiveClocks(const stm_mode_line_t *mode)
   val |= CKGB_CFG_TMDS_HDMI(CKGB_CFG_DIV4);
   val |= CKGB_CFG_DISP_HD(CKGB_CFG_DIV4);
   val |= CKGB_CFG_656(CKGB_CFG_DIV2);
+#if defined(__TDT__) && defined(CONFIG_CPU_SUBTYPE_STX7111) && defined(USE_FS1_FOR_SD)
+  val &= ~CKGB_CFG_PIX_SD_FS1(3); // Clear
+  val |= CKGB_CFG_PIX_SD_FS1(CKGB_CFG_BYPASS); // CLK_PIX_SD_SEL_WHEN_FS1 (<<12)
+  val &= ~CKGB_CFG_DISP_ID(3); // Clear
+  val |= CKGB_CFG_DISP_ID(CKGB_CFG_DIV2); // CLK_DISP_ID_SEL (<<8)
+#else
   val |= CKGB_CFG_PIX_SD_FS0(CKGB_CFG_DIV4);
+#endif
   WriteClkReg(CKGB_DISPLAY_CFG, val);
 
   DEXIT();
@@ -134,6 +179,13 @@ void CSTi7111MainOutput::StartHDClocks(const stm_mode_line_t *mode)
   val &= (CKGB_CFG_PIX_SD_FS1(CKGB_CFG_MASK) |
           CKGB_CFG_DISP_ID(CKGB_CFG_MASK)    |
           CKGB_CFG_PIX_HD_FS1_N_FS0);
+
+#if defined(__TDT__) && defined(CONFIG_CPU_SUBTYPE_STX7111) && defined(USE_FS1_FOR_SD)
+  val &= ~CKGB_CFG_PIX_SD_FS1(3); // Clear
+  val |= CKGB_CFG_PIX_SD_FS1(CKGB_CFG_BYPASS); // CLK_PIX_SD_SEL_WHEN_FS1 (<<12)
+  val &= ~CKGB_CFG_DISP_ID(3); // Clear
+  val |= CKGB_CFG_DISP_ID(CKGB_CFG_DIV2); // CLK_DISP_ID_SEL (<<8)
+#endif
 
   if(mode->TimingParams.ulPixelClock == 148500000 ||
      mode->TimingParams.ulPixelClock == 148351648)

@@ -298,9 +298,19 @@ static int stmhdmi_read_edid_block0(struct stm_hdmi *hdmi, edid_block_t rawedid)
 
   if((header1 != 0xffffff00) && (header2 != 0x00ffffff))
   {
-    DPRINTK("Invalid EDID header 0x%08lx 0x%08lx\n",header1,header2);
-    stmhdmi_invalidate_edid_info(hdmi);
-    return -EINVAL;
+    printk(KERN_WARNING "stmfb: Invalid EDID header 0x%08lx 0x%08lx\n", header1, header2);
+#ifdef __TDT__
+    printk(KERN_INFO "stmfb: Checking for defect header\n");
+    if((header1 != 0xffffffff) && (header2 != 0x00ffffff))
+    {
+      printk(KERN_WARNING "stmfb: Edid failed!\n");
+#endif
+      stmhdmi_invalidate_edid_info(hdmi);
+      return -EINVAL;
+#ifdef __TDT__
+    }
+    printk(KERN_INFO "stmfb: Found\n");
+#endif
   }
 
   manufacturer_id = rawedid[STM_EDID_MANUFACTURER] |
@@ -392,6 +402,14 @@ static int stmhdmi_cea_process_blocks(struct stm_hdmi *hdmi, edid_block_t rawedi
   int block_end = rawedid[STM_EXT_TIMING_OFFSET];
   int block_pos = 4;
   int offset;
+
+#ifdef __TDT__
+  //HACK
+  //stmhdmi_cea_process_video_short_codes(hdmi, 60);
+  //stmhdmi_cea_process_video_short_codes(hdmi, 33);
+  //stmhdmi_cea_process_video_short_codes(hdmi, 34);
+  stmhdmi_cea_process_video_short_codes(hdmi, 21);
+#endif
 
   while(block_pos < block_end)
   {
@@ -635,6 +653,12 @@ static int stmhdmi_read_extension_blocks(struct stm_hdmi *hdmi)
   msgs[2].flags = (hdmi->edid_client->flags & I2C_M_TEN) | I2C_M_RD;
   msgs[2].len   = sizeof(edid_block_t)*2;
 
+#ifdef FORTIS_HDBOX
+  /* without this the reading from i2c is not able */
+  ctrl_outb(0x00, 0xa2800000);
+  ctrl_outb(0x40, 0xa2800000);
+#endif
+
   for(segment=1;segment<=blockpairs;segment++)
   {
     int blockmapaddress;
@@ -782,7 +806,7 @@ int stmhdmi_read_edid(struct stm_hdmi *hdmi)
 
   if(!hdmi->edid_client)
   {
-    DPRINTK("No EDID client found\n");
+    printk(KERN_WARNING "stmfb: No EDID client found\n");
     return -ENODEV;
   }
 
@@ -794,6 +818,12 @@ int stmhdmi_read_edid(struct stm_hdmi *hdmi)
   msgs[1].flags = (hdmi->edid_client->flags & I2C_M_TEN) | I2C_M_RD;
   msgs[1].len   = sizeof(edid_block_t)*2;
   msgs[1].buf = &(hdmi->edid_info.raw[0][0]);
+
+#ifdef FORTIS_HDBOX
+  /* without this the reading from i2c is not able */
+  ctrl_outb(0x00, 0xa2800000);
+  ctrl_outb(0x40, 0xa2800000);
+#endif
 
   for(retry=0;retry<5;retry++)
   {
@@ -809,21 +839,25 @@ int stmhdmi_read_edid(struct stm_hdmi *hdmi)
       schedule_timeout(HZ/10);
     }
 
-    if(i2c_transfer(hdmi->edid_client->adapter, &msgs[0], 2) != 2)
     {
+    int result = i2c_transfer(hdmi->edid_client->adapter, &msgs[0], 2);
+    if(result != 2)
+    {
+      printk(KERN_WARNING "stmfb: i2c_transfer failed with %d!!!\n", result);
       res = -EIO;
       continue;
+    }
     }
 
     if(hdmi->edid_info.raw[0][0] != 0)
     {
-      printk(KERN_WARNING "first EDID byte (%d) is corrupt, attempting to fix..\n",hdmi->edid_info.raw[0][0]);
+      printk(KERN_WARNING "stmfb: first EDID byte (%d) is corrupt, attempting to fix..\n",hdmi->edid_info.raw[0][0]);
       hdmi->edid_info.raw[0][0] = 0;
     }
 
     if(stmhdmi_edid_checksum(hdmi->edid_info.raw[0]) < 0)
     {
-      DPRINTK("Invalid extension header checksum block0\n");
+      printk(KERN_WARNING "stmfb: Invalid extension header checksum block0\n");
 #if defined(DEBUG)
       print_hex_dump_bytes("",DUMP_PREFIX_OFFSET,&(hdmi->edid_info.raw[0][0]),128);
 #endif
@@ -834,7 +868,7 @@ int stmhdmi_read_edid(struct stm_hdmi *hdmi)
     if((hdmi->edid_info.raw[0][STM_EDID_EXTENSION] > 0) &&
        (stmhdmi_edid_checksum(hdmi->edid_info.raw[1]) < 0))
     {
-      DPRINTK("Invalid extension header checksum block1\n");
+      printk(KERN_WARNING "stmfb: Invalid extension header checksum block1\n");
 #if defined(DEBUG)
       print_hex_dump_bytes("",DUMP_PREFIX_OFFSET,&(hdmi->edid_info.raw[1][0]),128);
 #endif
@@ -881,6 +915,18 @@ int stmhdmi_read_edid(struct stm_hdmi *hdmi)
 
 int stmhdmi_safe_edid(struct stm_hdmi *hdmi)
 {
+  
+#if defined(__TDT__) //YWDRIVER_MODI d26lf 2011-01-04 hdmi audio out for board 1.4
+  printk(KERN_WARNING "stmfb: Setting Safe EDID\n");
+  hdmi->edid_info.display_type = STM_DISPLAY_HDMI;
+  strcpy(hdmi->edid_info.monitor_name, "SAFEMODE");
+  hdmi->edid_info.tv_aspect        = STM_WSS_4_3;
+  hdmi->edid_info.cea_capabilities = STM_CEA_CAPS_SRGB | STM_CEA_CAPS_BASIC_AUDIO | STM_CEA_CAPS_UNDERSCAN;
+  hdmi->edid_info.max_clock        = 26;
+  hdmi->edid_info.max_tmds_clock   = 25200000;
+  stmhdmi_cea_process_video_short_codes(hdmi, 1);
+  hdmi->edid_info.cea_codes[1]     = STM_CEA_VIDEO_CODE_NON_NATIVE;
+#else
   DPRINTK("Setting Safe EDID\n");
   hdmi->edid_info.display_type     = hdmi->hdmi_safe_mode?STM_DISPLAY_HDMI:STM_DISPLAY_DVI;
   strcpy(hdmi->edid_info.monitor_name,"SAFEMODE");
@@ -890,6 +936,7 @@ int stmhdmi_safe_edid(struct stm_hdmi *hdmi)
   hdmi->edid_info.max_tmds_clock   = 25200000;
   stmhdmi_cea_process_video_short_codes(hdmi, 1);
   hdmi->edid_info.cea_codes[1]     = STM_CEA_VIDEO_CODE_NON_NATIVE;
+#endif
 
   return 0;
 }

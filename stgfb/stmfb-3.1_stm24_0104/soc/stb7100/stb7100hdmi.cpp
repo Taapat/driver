@@ -63,9 +63,21 @@
 #define AUD_FSYN_CFG_FS2_NSB (1L<<12)
 #define AUD_FSYN_CFG_NPDA    (1L<<14)
 
+#ifdef __TDT__ 
+#ifdef USE_EXT_CLK
+#define MD_48KHZ_256FS   0x11
+#define PE_48KHZ_256FS   0x3600
+#define SDIV_48KHZ_256FS 0x5
+#else
 #define MD_48KHZ_256FS   0xF3
 #define PE_48KHZ_256FS   0x3C00
 #define SDIV_48KHZ_256FS 0x4
+#endif
+#else
+#define MD_48KHZ_256FS   0xF3
+#define PE_48KHZ_256FS   0x3C00
+#define SDIV_48KHZ_256FS 0x4
+#endif
 
 #define AUD_SPDIF_CTRL   0x1C
 #define AUD_PRCONV_CTRL  0x200
@@ -378,7 +390,15 @@ int CSTb710xHDMI::GetAudioFrequency(void)
    * The 710x uses a 30MHz reference clock to the audio FSynths,
    * the same clock as for video.
    */
+#ifdef __TDT__ 
+#ifdef USE_EXT_CLK
+  return stm_fsynth_frequency(STM_CLOCK_REF_27MHZ, sdiv, md, pe);
+#else
   return stm_fsynth_frequency(STM_CLOCK_REF_30MHZ, sdiv, md, pe);
+#endif
+#else
+  return stm_fsynth_frequency(STM_CLOCK_REF_30MHZ, sdiv, md, pe);
+#endif
 }
 
 

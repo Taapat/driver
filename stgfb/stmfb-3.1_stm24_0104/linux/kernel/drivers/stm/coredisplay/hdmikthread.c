@@ -537,7 +537,7 @@ static void stmhdmi_handle_wait_queue_timeout(struct stm_hdmi *hdmi)
 
 static void stmhdmi_restart_display(struct stm_hdmi *hdmi)
 {
-  DPRINTK("Starting HDMI Output hdmi = %p\n",hdmi);
+  printk(KERN_INFO "stmfb: Starting HDMI Output hdmi = %p\n",hdmi);
 
   /*
    * We always re-read the EDID, as we might have received a hotplug
@@ -546,7 +546,7 @@ static void stmhdmi_restart_display(struct stm_hdmi *hdmi)
    */
   if(stmhdmi_read_edid(hdmi) != 0)
   {
-    DPRINTK("EDID Read Error, setup safe EDID\n");
+    printk(KERN_WARNING "stmfb: EDID Read Error, setup safe EDID\n");
     stmhdmi_safe_edid(hdmi);
   }
 

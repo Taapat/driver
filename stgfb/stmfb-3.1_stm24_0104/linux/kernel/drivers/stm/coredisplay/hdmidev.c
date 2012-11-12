@@ -45,6 +45,9 @@ MODULE_PARM_DESC(hdmi0, "[enable|disable]");
 
 extern int stmhdmi_manager(void *data);
 
+#ifdef __TDT__
+static struct stm_hdmi *HACK_dev;
+#endif
 
 static int stmhdmi_open(struct inode *inode,struct file *filp)
 {
@@ -352,6 +355,170 @@ static int stmhdmi_set_spd_data(struct stm_hdmi *dev, unsigned long arg)
   return 0;
 }
 
+#ifdef __TDT__
+//HACK->
+
+long stmhdmiio_set_audio_source(unsigned int arg)
+{
+  unsigned long audio = STM_AV_SOURCE_MAIN_INPUT;
+  unsigned long val;
+  long retval=0;
+
+  printk("%s - %p\n", __func__, HACK_dev);
+
+  if(mutex_lock_interruptible(&HACK_dev->lock))
+    return -ERESTARTSYS;
+
+  switch(arg)
+  {
+    case STMHDMIIO_AUDIO_SOURCE_2CH_I2S:
+      audio |= STM_AV_SOURCE_2CH_I2S_INPUT;
+      break;
+    case STMHDMIIO_AUDIO_SOURCE_SPDIF:
+      audio |= STM_AV_SOURCE_SPDIF_INPUT;
+      break;
+    case STMHDMIIO_AUDIO_SOURCE_8CH_I2S:
+      audio |= STM_AV_SOURCE_8CH_I2S_INPUT;
+      break;
+    case STMHDMIIO_AUDIO_SOURCE_NONE:
+      break;
+    default:
+      retval = -EINVAL;
+      goto exit;
+  }
+
+  if(stm_display_output_set_control(HACK_dev->hdmi_output, STM_CTRL_AV_SOURCE_SELECT, audio)<0)
+  {
+    if(signal_pending(current))
+      retval = -ERESTARTSYS;
+    else
+     retval = -EIO;
+
+    goto exit;
+  }
+
+  if(stm_display_output_get_control(HACK_dev->hdmi_output, STM_CTRL_AV_SOURCE_SELECT, &val)<0)
+  {
+    if(signal_pending(current))
+      retval = -EINTR;
+    else
+      retval = -EIO;
+
+    goto exit;
+  }
+
+  if(val != audio)
+    retval = -EINVAL;
+
+
+exit:
+  mutex_unlock(&HACK_dev->lock);
+  return retval;
+
+}
+EXPORT_SYMBOL(stmhdmiio_set_audio_source);
+
+
+long stmhdmiio_get_audio_source(unsigned int * arg)
+{
+  unsigned long audio;
+  long retval=0;
+  struct stm_hdmi *dev = HACK_dev;
+
+  printk("%s - %p\n", __func__, dev);
+
+  if(mutex_lock_interruptible(&dev->lock))
+    return -ERESTARTSYS;
+
+  if(stm_display_output_get_control(dev->hdmi_output, STM_CTRL_AV_SOURCE_SELECT, &audio)<0)
+  {
+    if(signal_pending(current))
+      retval = -EINTR;
+    else
+      retval = -EIO;
+
+    goto exit;
+  }
+
+  if (audio & STM_AV_SOURCE_2CH_I2S_INPUT)
+    *arg =  STMHDMIIO_AUDIO_SOURCE_2CH_I2S;
+  else if (audio & STM_AV_SOURCE_SPDIF_INPUT)
+    *arg =  STMHDMIIO_AUDIO_SOURCE_SPDIF;
+  else if (audio & STM_AV_SOURCE_8CH_I2S_INPUT)
+    *arg =  STMHDMIIO_AUDIO_SOURCE_8CH_I2S;
+  else
+    *arg =  STMHDMIIO_AUDIO_SOURCE_NONE;
+
+
+exit:
+  mutex_unlock(&dev->lock);
+  return retval;
+
+}
+EXPORT_SYMBOL(stmhdmiio_get_audio_source);
+
+
+long stmhdmiio_set_edid_handling(unsigned int arg)
+{
+  long retval=0;
+  struct stm_hdmi *dev = HACK_dev;
+
+  printk("%s - %p\n", __func__, HACK_dev);
+
+  if(mutex_lock_interruptible(&HACK_dev->lock))
+    return -ERESTARTSYS;
+
+  dev->non_strict_edid_semantics = arg ;
+
+  mutex_unlock(&HACK_dev->lock);
+  return retval;
+
+}
+EXPORT_SYMBOL(stmhdmiio_set_edid_handling);
+
+
+long stmhdmiio_get_edid_handling(unsigned int * arg)
+{
+  long retval=0;
+  struct stm_hdmi *dev = HACK_dev;
+
+  printk("%s - %p\n", __func__, dev);
+
+  if(mutex_lock_interruptible(&dev->lock))
+    return -ERESTARTSYS;
+
+  *arg =  dev->non_strict_edid_semantics;
+
+  mutex_unlock(&dev->lock);
+  return retval;
+
+}
+EXPORT_SYMBOL(stmhdmiio_get_edid_handling);
+
+long stmhdmiio_get_cec_address(unsigned int * arg)
+{
+  long retval=0;
+  struct stm_hdmi *dev = HACK_dev;
+
+  printk("%s - %p\n", __func__, dev);
+
+  if(mutex_lock_interruptible(&dev->lock))
+    return -ERESTARTSYS;
+
+  *arg = (dev->edid_info.cec_address[0] << 12) +
+         (dev->edid_info.cec_address[1] << 8) +
+         (dev->edid_info.cec_address[2] << 4) +
+         (dev->edid_info.cec_address[3]);
+
+  mutex_unlock(&dev->lock);
+  return retval;
+
+}
+EXPORT_SYMBOL(stmhdmiio_get_cec_address);
+
+//HACK <-
+#endif
+
 
 static long stmhdmi_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
@@ -644,6 +811,33 @@ static void stmhdmi_vsync_cb(stm_vsync_context_handle_t context, stm_field_t fie
   if(hdmi_data->display_runtime->hotplug_poll_pio >= 0)
   {
     unsigned hotplugstate = gpio_get_value(hdmi_data->display_runtime->hotplug_poll_pio);
+#if defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(SPARK) || defined(SPARK7162) || defined(ADB_BOX) 
+    if(hdmi_status == STM_DISPLAY_DISCONNECTED)
+    {
+      /*
+       * If the device has just been plugged in, flag that we now need to
+       * start the output.
+       */
+      if(hotplugstate == 0)
+      {
+        hdmi_status = STM_DISPLAY_NEEDS_RESTART;
+        stm_display_output_set_status(hdmi_data->hdmi_output, hdmi_status);
+      }
+    }
+    else
+    {
+      /*
+       * We may either be waiting for the output to be started, or already
+       * started, so only change the state if the device has now been
+       * disconnected.
+       */
+      if(hotplugstate != 0)
+      {
+        hdmi_status = STM_DISPLAY_DISCONNECTED;
+        stm_display_output_set_status(hdmi_data->hdmi_output, hdmi_status);
+      }
+    }
+#else
     if(hdmi_status == STM_DISPLAY_DISCONNECTED)
     {
       /*
@@ -669,6 +863,7 @@ static void stmhdmi_vsync_cb(stm_vsync_context_handle_t context, stm_field_t fie
         stm_display_output_set_status(hdmi_data->hdmi_output, hdmi_status);
       }
     }
+#endif
   }
 
   if(hdmi_status != hdmi_data->status)
@@ -835,6 +1030,11 @@ int __init stmhdmi_create(int id,
 
   DPRINTK("new hdmi structure = %p\n",hdmi);
 
+#ifdef __TDT__
+  //Dagobert
+  HACK_dev = hdmi;
+#endif
+
   /*
    * Note that we reuse the device handle from the platform data.
    */
@@ -866,6 +1066,9 @@ int __init stmhdmi_create(int id,
    * Set the default CEA selection behaviour to use the aspect ratio in the EDID
    */
   hdmi->cea_mode_from_edid = 1;
+#ifdef __TDT__
+  hdmi->non_strict_edid_semantics = STMHDMIIO_EDID_NON_STRICT_MODE_HANDLING;
+#endif
 
   /*
    * Copy the display runtime pointer for the vsync callback handling.

@@ -80,6 +80,9 @@ typedef enum
   SURF_A1,
   SURF_A8,
   SURF_BGRA8888, /* Bigendian ARGB                                     */
+//#ifdef __TDT__ // Not defined in enigma2... define?
+  SURF_BGR888, 
+//#endif
   SURF_YUYV,     /* 422R with luma and chroma byteswapped              */
   SURF_YUV420,   /* Planar YUV with 1/2 horizontal and vertical chroma */
                  /* in three separate buffers Y,Cb then Cr             */

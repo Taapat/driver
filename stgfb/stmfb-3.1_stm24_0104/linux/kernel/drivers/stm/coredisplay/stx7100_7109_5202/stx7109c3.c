@@ -17,6 +17,10 @@
 #include <linux/gpio.h>
 #include <linux/stm/gpio.h>
 
+#ifdef __TDT__
+#include <linux/stm/pio.h>
+#endif
+
 #include <stmdisplay.h>
 #include <linux/stm/stmcoredisplay.h>
 
@@ -32,6 +36,7 @@ static const unsigned long whitelist[] = {
 };
 
 
+#ifndef __TDT__
 static struct stmcore_display_pipeline_data platform_data[] = {
   {
     .owner                    = THIS_MODULE,
@@ -103,7 +108,91 @@ static struct stmcore_display_pipeline_data platform_data[] = {
     .io_offset                = 0,
   }
 };
+#else
+static struct stmcore_display_pipeline_data platform_data[] = {
+  {
+    .owner                    = THIS_MODULE,
+    .name                     = "STx7109c3-main",
+    .device                   = 0,
+    .vtg_irq                  = 154,
+    .blitter_irq              = 156,
+    .hdmi_irq                 = 158,
+#if defined(UFS922)
+/* Dagobert: for stlinux23 this is mb422 but i2c is on bus 2 instead! */
+    .hdmi_i2c_adapter_id      = 2,
+#elif defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1)
+/*nassar: spider-box hl-101 uses id 1  */
+    .hdmi_i2c_adapter_id      = 1,
+#elif defined(CONFIG_SH_STB7100_REF) || defined(CONFIG_SH_ST_MB442) || defined(CONFIG_SH_RELOOK511) || \
+    defined(CUBEREVO) || defined(CUBEREVO_MINI) || \
+    defined(CUBEREVO_MINI2) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || \
+    defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA) || \
+    defined(CONFIG_SH_IPBOX9900) || defined(CONFIG_SH_IPBOX99) || defined(CONFIG_SH_IPBOX55)
+    .hdmi_i2c_adapter_id      = 1,
+#elif defined(CONFIG_SH_STB7109E_REF) || defined(CONFIG_SH_ST_MB448)
+    .hdmi_i2c_adapter_id      = 2,
+#elif defined(CONFIG_SH_STB7100_MBOARD) || defined(CONFIG_SH_ST_MB411)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
+    .hdmi_i2c_adapter_id      = 2,
+#else
+    .hdmi_i2c_adapter_id      = 1,
+#endif
+#endif
+#if defined(FORTIS_HDBOX) || defined(OCTAGON1008)
+    .hdmi_i2c_adapter_id      = 2,
+#endif
+    .main_output_id           = 0,
+    .aux_output_id            = -1,
+    .hdmi_output_id           = 3,
+    .dvo_output_id            = 2,
 
+    .blitter_id               = 0,
+    .blitter_type             = STMCORE_BLITTER_BDISPII,
+
+    .preferred_graphics_plane = OUTPUT_GDP1,
+    .preferred_video_plane    = OUTPUT_VID1,
+    .planes                   = {
+    	{ OUTPUT_GDP1, STMCORE_PLANE_GFX | STMCORE_PLANE_PREFERRED | STMCORE_PLANE_MEM_SYS},
+    	{ OUTPUT_GDP2, STMCORE_PLANE_GFX | STMCORE_PLANE_MEM_SYS},
+    	{ OUTPUT_GDP3, STMCORE_PLANE_GFX | STMCORE_PLANE_SHARED | STMCORE_PLANE_MEM_SYS},
+    	{ OUTPUT_VID1, STMCORE_PLANE_VIDEO | STMCORE_PLANE_PREFERRED | STMCORE_PLANE_MEM_VIDEO},
+    	{ OUTPUT_VID2, STMCORE_PLANE_VIDEO | STMCORE_PLANE_SHARED | STMCORE_PLANE_MEM_VIDEO},
+    	{ OUTPUT_CUR , STMCORE_PLANE_GFX | STMCORE_PLANE_MEM_SYS}
+    },
+    .whitelist                = whitelist,
+    .whitelist_size           = ARRAY_SIZE(whitelist),
+    .io_offset                = 0
+  },
+  {
+    .owner                    = THIS_MODULE,
+    .name                     = "STx7109c3-aux",
+    .device                   = 0,
+    .vtg_irq                  = 155,
+    .blitter_irq              = -1,
+    .hdmi_irq                 = -1,
+    .hdmi_i2c_adapter_id      = -1,
+    .main_output_id           = 1,
+    .aux_output_id            = -1,
+    .hdmi_output_id           = -1,
+    .dvo_output_id            = -1,
+
+    .blitter_id               = 0,
+    .blitter_type             = STMCORE_BLITTER_BDISPII,
+
+    .preferred_graphics_plane = OUTPUT_GDP3,
+    .preferred_video_plane    = OUTPUT_VID2,
+    .planes                   = {
+    	{ OUTPUT_GDP3, STMCORE_PLANE_GFX | STMCORE_PLANE_SHARED | STMCORE_PLANE_PREFERRED | STMCORE_PLANE_MEM_SYS},
+    	/* Note on STx7109c3 VID2 requires memory from LMI_VID not LMI_SYS */
+    	{ OUTPUT_VID2, STMCORE_PLANE_VIDEO | STMCORE_PLANE_SHARED | STMCORE_PLANE_PREFERRED | STMCORE_PLANE_MEM_VIDEO}
+    },
+    .whitelist                = whitelist,
+    .whitelist_size           = ARRAY_SIZE(whitelist),
+    .io_offset                = 0
+  }
+};
+
+#endif
 
 #if defined(CONFIG_SH_ST_MB411)
 static const int refClockError = 359; /* ppm */
@@ -131,14 +220,29 @@ static const int chromaScale = 112500; // 112.500%, from DENC validation report
  * sometime before we run.
  */
 #undef STx7109c3_USE_HDMI_HOTPLUG
+
+#ifndef __TDT__
 #if !defined(STx7109c3_USE_HDMI_HOTPLUG)
 #define GPIO_PIN_HOTPLUG stm_gpio(2,2)
 #else /* STx7109c3_USE_HDMI_HOTPLUG */
 /* The pin must have been set to STPIO_ALT_BIDIR by some code. */
 #define GPIO_PIN_HOTPLUG stm_gpio(4,7)
 #endif /* STx7109c3_USE_HDMI_HOTPLUG */
+#else
+
+#if defined(UFS922)
+#define GPIO_PIN_HOTPLUG stm_gpio(2,3)
+#elif defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || defined(FORTIS_HDBOX) || defined(OCTAGON1008)
+#define GPIO_PIN_HOTPLUG stm_gpio(4,7)
+#else
+#define GPIO_PIN_HOTPLUG stm_gpio(2,2)
+#endif
+
+#endif //TDT
+
 static bool claimed_gpio_hotplug;
 
+#ifndef __TDT__
 #if defined(CONFIG_SH_ST_MB411)   || \
     defined(CONFIG_SH_ST_MB442)   || \
     defined(CONFIG_SH_ST_MB448)   || \
@@ -149,6 +253,25 @@ static bool claimed_gpio_hotplug;
 #define SYSCONF_DEVICEID 0
 #endif
 
+#else /* __TDT__ */
+
+#if defined(CONFIG_SH_ST_MB411)   || \
+    defined(CONFIG_SH_ST_MB442)   || \
+    defined(CONFIG_SH_ST_MB448)   || \
+    defined(CONFIG_SH_ST_HMP7100) || \
+    defined(CONFIG_SH_ST_HMS1)    || \
+    defined(CONFIG_SH_RELOOK511)        || defined(CONFIG_SH_CUBEREVO_MINI)|| \
+    defined(CONFIG_SH_CUBEREVO)         || defined(CONFIG_SH_CUBEREVO_MINI2)|| \
+    defined(CONFIG_SH_CUBEREVO_MINI_FTA)|| \
+    defined(CONFIG_SH_CUBEREVO_250HD)   || defined(CONFIG_SH_CUBEREVO_2000HD) || \
+    defined(CONFIG_SH_IPBOX9900)  ||  defined(CONFIG_SH_IPBOX99) || defined(CONFIG_SH_IPBOX55)
+#define SYSCONF_DEVICEID 0x19001000
+#else
+#define SYSCONF_DEVICEID 0
+#endif
+#endif
+
+#if defined(__TDT__) // downgraded from 103 to fix hdmi hotplug
 enum _clocks { CLOCK_PCM0, CLOCK_PCM1, CLOCK_SPDIF };
 struct coredisplay_clk {
   struct clk *clk;
@@ -159,7 +282,7 @@ static struct coredisplay_clk coredisplay_clks[] = {
   [CLOCK_PCM1]  = { .name = "CLKC_FS0_CH2" },
   [CLOCK_SPDIF] = { .name = "CLKC_FS0_CH3" }
 };
-
+#endif
 
 int __init stmcore_probe_device(struct stmcore_display_pipeline_data **pd,
                                 int *nr_platform_devices)
@@ -182,6 +305,13 @@ int __init stmcore_probe_device(struct stmcore_display_pipeline_data **pd,
 
       if(gpio_request(GPIO_PIN_HOTPLUG, "HDMI Hotplug") >= 0)
         claimed_gpio_hotplug = true;
+
+#ifdef __TDT__
+#if defined(UFS922) || defined(HL101) || defined(VIP1_V2) || defined(VIP2_V1) || \
+    defined(FORTIS_HDBOX) || defined(OCTAGON1008)
+      gpio_direction_input(GPIO_PIN_HOTPLUG);
+#endif
+#endif
       /* We expect the gpio pin function to have been set up correctly by the
          kernel already, see comment above. */
       if(!claimed_gpio_hotplug)
@@ -254,7 +384,15 @@ static stm_display_filter_setup_t luma_filter_FIR2F = {
 int __init stmcore_display_postinit(struct stmcore_display *p)
 {
 
+#ifdef __TDT__
+#ifdef USE_EXT_CLK
+  stm_display_output_setup_clock_reference(p->main_output, STM_CLOCK_REF_27MHZ, refClockError);
+#else
   stm_display_output_setup_clock_reference(p->main_output, STM_CLOCK_REF_30MHZ, refClockError);
+#endif
+#else
+  stm_display_output_setup_clock_reference(p->main_output, STM_CLOCK_REF_30MHZ, refClockError);
+#endif
 
   /*
    * Setup internal configuration controls
