@@ -1166,16 +1166,40 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
                 if (PictureAspectRatio > WindowAspectRatio)
                 {
                     // Picture is wider than display surface so must shrink height
+#ifdef __TDT__
+                    Rational_t pRatioR = PictureAspectRatio * 1000;
+                    int pRatio = pRatioR.IntegerPart();
+
+                    Rational_t wRatioR = WindowAspectRatio * 1000;
+                    int wRatio = wRatioR.IntegerPart();
+
+                    DestHeight = (DestHeight * wRatio) / pRatio;
+#else
                     Rational_t   NewHeight       = (DestHeight * WindowAspectRatio) / PictureAspectRatio;
                     DestHeight                   = NewHeight.IntegerPart();
+#endif
                     DestY                        = DestY + ((SurfaceWindow.Height - DestHeight) >> 1);
+
+                    MANIFESTOR_ERROR("check1: DestHeight=%d DestY=%d\n", DestHeight, DestY);
                 }
                 else
                 {
                     // Picture is taller than display surface so must shrink width
-                    Rational_t   NewWidth        = (DestWidth * PictureAspectRatio) / WindowAspectRatio;
+#ifdef __TDT__
+                    Rational_t pRatioR = PictureAspectRatio * 1000;
+                    int pRatio = pRatioR.IntegerPart();
+
+                    Rational_t wRatioR = WindowAspectRatio * 1000;
+                    int wRatio = wRatioR.IntegerPart();
+
+                    DestWidth = (DestWidth * pRatio) / wRatio;
+#else
+										Rational_t   NewWidth        = (DestWidth * PictureAspectRatio) / WindowAspectRatio;
                     DestWidth                    = NewWidth.IntegerPart();
+#endif
                     DestX                        = DestX + ((SurfaceWindow.Width - DestWidth) >> 1);
+
+                    MANIFESTOR_ERROR("check2: DestWidth=%d DestX=%d\n", DestWidth, DestX);
                 }
             }
             else
@@ -1184,17 +1208,41 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
                {
                    // Picture is wider than display surface so must chop off edges
                    int          OldWidth        = SourceWidth;
+#ifdef __TDT__
+                   Rational_t pRatioR = PictureAspectRatio * 1000;
+                   int pRatio = pRatioR.IntegerPart();
+
+                   Rational_t wRatioR = WindowAspectRatio * 1000;
+                   int wRatio = wRatioR.IntegerPart();
+
+                   SourceWidth = (SourceWidth * wRatio) / pRatio;
+#else
                    Rational_t   NewWidth        = (SourceWidth * WindowAspectRatio) / PictureAspectRatio;
                    SourceWidth                  = NewWidth.IntegerPart();
+#endif
                    SourceX                      = SourceX + ((OldWidth - SourceWidth) >> 1);
+
+                   MANIFESTOR_ERROR("check3: SourceWidth=%d SourceX=%d\n", SourceWidth, SourceX);
                }
                else
                {
                    // Picture is taller than display surface so must chop off top and bottom
                    int          OldHeight       = SourceHeight;
+#ifdef __TDT__
+                   Rational_t pRatioR = PictureAspectRatio * 1000;
+                   int pRatio = pRatioR.IntegerPart();
+
+                   Rational_t wRatioR = WindowAspectRatio * 1000;
+                   int wRatio = wRatioR.IntegerPart();
+
+                   SourceHeight = (SourceHeight * pRatio) / wRatio;
+#else
                    Rational_t   NewHeight       = (SourceHeight * PictureAspectRatio) / WindowAspectRatio;
                    SourceHeight                 = NewHeight.IntegerPart();
+#endif
                    SourceY                      = SourceY + ((OldHeight - SourceHeight) >> 1);
+
+                   MANIFESTOR_ERROR("check4: SourceHeight=%d SourceY=%d\n", SourceHeight, SourceY);
                }
             }
         }
