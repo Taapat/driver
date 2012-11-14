@@ -23,7 +23,7 @@
 #include <linux/kernel.h>
 #include <linux/string.h>
 #include <linux/types.h>
-#include <asm/string.h>
+//#include <asm/string.h>
 
 #include "aotom_trace.h"
 
