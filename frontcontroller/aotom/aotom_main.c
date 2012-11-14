@@ -58,8 +58,7 @@ if ((paramDebug) && (paramDebug >= level)) printk(TAGDEBUG x); \
 #define LOG_OFF     	0
 #define LOG_ON      	1
 
-
-
+static ushort mode_digit = DIGITNO;
 static char *gmt = "+0000";
 
 typedef struct
@@ -143,8 +142,11 @@ static void VFD_clr(void)
 
 	YWPANEL_VFD_ShowTimeOff();
 	clear_display();
+	if (mode_digit == DIGIT8)
+	{
 	for(i=1; i < 45; i++)
 		aotomSetIcon(i, 0);
+	}
 }
 
 void draw_thread(void *arg)
@@ -166,11 +168,7 @@ void draw_thread(void *arg)
 
   count = utf8_len(&draw_data.data[0], draw_data.length);
 
-#if defined(SPARK)
-  if(count > 4)
-#else
-  if(count > 8)
-#endif
+  if(count > mode_digit)
   {
     while(pos < draw_data.length)
     {
@@ -277,12 +275,12 @@ int aotomSetTime(char* time)
 {
    int res = 0;
 
-	dprintk(5, "%s >\n", __func__);
-	dprintk(5, "%s time: %02d:%02d\n", __func__, time[2], time[3]);
-	res = VFD_Show_Time(time[2], time[3]);
-#if defined(SPARK) || defined(SPARK7162)
-   YWPANEL_FP_ControlTimer(true);
-#endif
+   dprintk(5, "%s >\n", __func__);
+   dprintk(5, "%s time: %02d:%02d\n", __func__, time[2], time[3]);
+   res = VFD_Show_Time(time[2], time[3]);
+
+   if (mode_digit != DIGITNO)  YWPANEL_FP_ControlTimer(true);
+
    dprintk(5, "%s <\n", __func__);
    return res;
 }
@@ -522,21 +520,21 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		break;
 	case VFDSETLED:
 	{
-#if defined(SPARK) || defined(SPARK7162)
+	    if (mode_digit != DIGITNO) {
 		res = YWPANEL_VFD_SetLed(aotom->u.led.led_nr, aotom->u.led.on);
 		//printk("res = %d\n", res);
-#endif
+	    }
 		break;
 	}
 	case VFDBRIGHTNESS:
 		break;
 	case VFDICONDISPLAYONOFF:
 	{
-#if defined(SPARK) || defined(SPARK7162)
-	 struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;
-	 res = aotomSetIcon(aotom->u.icon.icon_nr, aotom->u.icon.on);
-#endif
-#if defined(SPARK) || defined(SPARK7162)
+	    if(mode_digit == DIGIT8) {
+		 struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;
+		 res = aotomSetIcon(aotom->u.icon.icon_nr, aotom->u.icon.on);
+	    }
+	    if (mode_digit != DIGITNO) {
 		switch (aotom->u.icon.icon_nr)
 		{
 			case 0:
@@ -557,13 +555,13 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 			default:
 				break;
 		}
-#endif
+	    }
 		mode = 0;
 		break;
 	}
 	case VFDSTANDBY:
 	{
-#if defined(SPARK) || defined(SPARK7162)
+	    if (mode_digit != DIGITNO) {
 		u32 uTime = 0;
 		u32 uStandByKey = 0;
 		u32 uPowerOnTime = 0;
@@ -591,8 +589,7 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		#endif
 		YWPANEL_FP_ControlTimer(true);
 		YWPANEL_FP_SetCpuStatus(0x02);
-
-#endif
+	    }
 	   break;
 	}
 	case VFDSETTIME:
@@ -601,13 +598,13 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		break;
 	case VFDGETTIME:
 	{
-#if defined(SPARK) || defined(SPARK7162)
+	    if (mode_digit != DIGITNO) {
 		u32 uTime = 0;
 		char cTime[5];
 		uTime = YWPANEL_FP_GetTime();
 		//printk("uTime = %d\n", uTime);
 		put_user(uTime, (int *) arg);
-#endif
+	    }
 		break;
 	}
 	case VFDGETWAKEUPMODE:
@@ -634,10 +631,12 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		vfd_data.length = 0;
 		res = run_draw_thread(&vfd_data);
 		break;
-#if defined(SPARK)
 	case 0x5305:
+	    if (mode_digit == DIGIT4) {
+		dprintk(0, "unknown IOCTL 0x%x\n", cmd);
+		mode = 0;
+	    }
 		break;
-#endif
 	case 0x5401:
 		break;
 	default:
@@ -832,15 +831,14 @@ void button_dev_exit(void)
 static int __init aotom_init_module(void)
 {
 	int i;
-
+	
 	dprintk(5, "%s >\n", __func__);
 
 	printk("Fulan front panel driver\n");
 
 	sema_init(&display_sem,1);
 	sema_init(&button_sem, 1);
-
-	if(YWPANEL_VFD_Init()) {
+	if(YWPANEL_VFD_Init(&mode_digit)) {
 		printk("unable to init module\n");
 		return -1;
 	}
@@ -883,6 +881,9 @@ MODULE_PARM_DESC(paramDebug, "Debug Output 0=disabled >0=enabled(debuglevel)");
 
 module_param(gmt,charp,0);
 MODULE_PARM_DESC(gmt, "gmt offset (default +0000");
+
+module_param(mode_digit, ushort ,0);
+MODULE_PARM_DESC(mode_digit, "mode type (4-digit, 8-digit and icon) (default 4-digit)");
 
 MODULE_DESCRIPTION("VFD module for fulan boxes");
 MODULE_AUTHOR("Spider-Team, oSaoYa");
