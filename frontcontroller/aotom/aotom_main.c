@@ -44,6 +44,7 @@
 #include <linux/time.h>
 #include <linux/poll.h>
 #include <linux/workqueue.h>
+#include <linux/proc_fs.h>
 
 #include "aotom_main.h"
 
@@ -60,6 +61,12 @@ if ((paramDebug) && (paramDebug >= level)) printk(TAGDEBUG x); \
 
 static ushort mode_digit = DIGITNO;
 static char *gmt = "+0000";
+
+#define NAME_NODE "display_type"
+#define NAME_DIR "aotom"
+	
+struct proc_dir_entry *own_proc_dir;
+struct proc_dir_entry *own_proc_node;
 
 typedef struct
 {
@@ -140,12 +147,11 @@ static void VFD_clr(void)
 {
 	int i;
 
-	YWPANEL_VFD_ShowTimeOff();
 	clear_display();
 	if (mode_digit == DIGIT8)
 	{
-	for(i=1; i < 45; i++)
-		aotomSetIcon(i, 0);
+	    YWPANEL_VFD_ShowTimeOff();
+	    for(i=1; i < 45; i++) aotomSetIcon(i, 0);
 	}
 }
 
@@ -828,6 +834,16 @@ void button_dev_exit(void)
 	input_unregister_device(button_dev);
 }
 
+ssize_t proc_node_read(char *buffer, char **start, off_t off, int count, int *eof, void *data)
+{
+    int len;
+   *eof = 1;
+   if (mode_digit != DIGITNO) len=sprintf(buffer, "%d digit\n", mode_digit);
+   else len=sprintf(buffer, "unknown\n");
+   //*(buffer+len)=0;
+   return len;
+}
+
 static int __init aotom_init_module(void)
 {
 	int i;
@@ -856,14 +872,36 @@ static int __init aotom_init_module(void)
 	for (i = 0; i < LASTMINOR; i++)
 	    sema_init(&FrontPanelOpen[i].sem, 1);
 
-
 	dprintk(5, "%s <\n", __func__);
-
+	
+	own_proc_dir = create_proc_entry(NAME_DIR, S_IFDIR | S_IRWXUGO, NULL);
+	if (own_proc_dir == NULL ) {
+	    printk(KERN_ERR "can't create /proc/%s\n", NAME_DIR);
+	    return -ENOMEM;
+	}
+	dprintk(5, "Create /proc/%s\n", NAME_DIR);
+	own_proc_dir->gid =0 ;
+	
+	own_proc_node=create_proc_entry(NAME_NODE, S_IFREG | S_IRUGO | S_IWUGO, own_proc_dir);
+	if (own_proc_node == NULL ) {
+	    printk(KERN_ERR "can't create /proc/%s/%s\n", NAME_DIR, NAME_NODE);
+	    return -ENOMEM;
+	}
+	dprintk(5, "Create /proc/%s/%s\n", NAME_DIR, NAME_NODE);
+	own_proc_node->uid = 0;
+	own_proc_node->gid =0 ;
+	
+	own_proc_node->read_proc=proc_node_read;
 	return 0;
 }
 
 static void __exit aotom_cleanup_module(void)
 {
+	remove_proc_entry(NAME_NODE, own_proc_dir);
+	dprintk(5, "Remove .../proc/%s\n", NAME_DIR);
+	remove_proc_entry(NAME_DIR, NULL);
+	dprintk(5, "Remove .../proc/%s/%s\n", NAME_DIR, NAME_NODE);
+	
 	dprintk(5, "[BTN] unloading ...\n");
 	button_dev_exit();
 
