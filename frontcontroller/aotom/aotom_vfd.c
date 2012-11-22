@@ -380,125 +380,125 @@ enum YWPANL_WRITE_INSTR_e
 
 };
 
-#define YWPANEL_FP_I2C_TIMEOUT			200
+//#define YWPANEL_FP_I2C_TIMEOUT			200
 #define VFD_CS_CLR() {udelay(10);stpio_set_pin(pio_cs, 0);}
 #define VFD_CS_SET() {udelay(10);stpio_set_pin(pio_cs, 1);}
 
-static SegAddrVal_T VfdSegAddr[15];
+//static SegAddrVal_T VfdSegAddr[15];
 static struct i2c_adapter*	panel_i2c_adapter;
 static REMOTE_TYPE		Remote_type_use = REMOTE_NEW;
 
-const u16 cnCRC_16 = 0x8005;
+//const u16 cnCRC_16 = 0x8005;
 // CRC-16 = X16 + X15 + X2 + X0
 const u16 cnCRC_CCITT = 0x1021;
 // CRC-CCITT = X16 + X12 + X5 + X0
 
 u32 Table_CRC[256]; // CRC
 
-int  YWPANEL_TranslateKeyCode(u8  KeyPress)
-{
-	int 					iUSIF_Key = INVALID_KEY;
-	int i;
+//int  YWPANEL_TranslateKeyCode(u8  KeyPress)
+//{
+//	int 					iUSIF_Key = INVALID_KEY;
+//	int i;
+//
+//	if((Remote_type_use == REMOTE_NEW) || (Remote_type_use == REMOTE_GOLDEN))
+//	{
+//		for(i=0; i<KEN_NUM_NEW; ++i)
+//		{
+//			if(KeyPress== key_table_new[i][1])
+//			{
+//				iUSIF_Key = key_table_new[i][0];
+//				break;
+//			}
+//		}
+//	}
+//	else if(Remote_type_use == REMOTE_TOPFIELD)
+//	{
+//		for(i=0; i<KEY_NUM_TOP; ++i)
+//		{
+//			if(KeyPress== key_table_top[i][1])
+//			{
+//				iUSIF_Key = key_table_top[i][0];
+//				break;
+//			}
+//		}
+//	}
+//	else if((Remote_type_use == REMOTE_EDISION1) || (Remote_type_use == REMOTE_EDISION2))
+//	{
+//		for(i=0; i<KEY_NUM_EDI; ++i)
+//		{
+//			if(KeyPress== key_table_edi[i][1])
+//			{
+//				iUSIF_Key = key_table_edi[i][0];
+//				break;
+//			}
+//		}
+//	}
+//	if(iUSIF_Key == INVALID_KEY)
+//		PANEL_DEBUG("YWPANEL_TranslateKeyCode invalid key!!\n");
+//
+//	return iUSIF_Key;
+//}
 
-	if((Remote_type_use == REMOTE_NEW) || (Remote_type_use == REMOTE_GOLDEN))
-	{
-		for(i=0; i<KEN_NUM_NEW; ++i)
-		{
-			if(KeyPress== key_table_new[i][1])
-			{
-				iUSIF_Key = key_table_new[i][0];
-				break;
-			}
-		}
-	}
-	else if(Remote_type_use == REMOTE_TOPFIELD)
-	{
-		for(i=0; i<KEY_NUM_TOP; ++i)
-		{
-			if(KeyPress== key_table_top[i][1])
-			{
-				iUSIF_Key = key_table_top[i][0];
-				break;
-			}
-		}
-	}
-	else if((Remote_type_use == REMOTE_EDISION1) || (Remote_type_use == REMOTE_EDISION2))
-	{
-		for(i=0; i<KEY_NUM_EDI; ++i)
-		{
-			if(KeyPress== key_table_edi[i][1])
-			{
-				iUSIF_Key = key_table_edi[i][0];
-				break;
-			}
-		}
-	}
-	if(iUSIF_Key == INVALID_KEY)
-		PANEL_DEBUG("YWPANEL_TranslateKeyCode invalid key!!\n");
-
-	return iUSIF_Key;
-}
-
-bool to_primitive_key(u8 key,	u32 *prim_key_p)
-{
-	bool ret = false;
-	int i;
-	u32 tmp = 0;
-
-	if((Remote_type_use == REMOTE_NEW) || (Remote_type_use == REMOTE_GOLDEN))
-	{
-		for(i=0; i<KEN_NUM_NEW; ++i)
-		{
-			if(key== key_table_new[i][0])
-			{
-				tmp = key_table_new[i][1];
-				tmp <<= 8;
-				tmp |= (~key_table_new[i][1])&0x000000FF;
-				if(Remote_type_use == REMOTE_GOLDEN)
-					tmp |= REMOTE_SLAVE_ADDRESS_GOLDEN;
-				else
-					tmp |= REMOTE_SLAVE_ADDRESS_NEW;
-				*prim_key_p = tmp;
-				ret = true;
-			}
-		}
-	}
-	else if(Remote_type_use == REMOTE_TOPFIELD)
-	{
-		for(i=0; i<KEY_NUM_TOP; ++i)
-		{
-			if(key== key_table_top[i][0])
-			{
-				tmp = key_table_top[i][1];
-				tmp <<= 8;
-				tmp |= (~key_table_top[i][1])&0x000000FF;
-				tmp |= REMOTE_TOPFIELD_MASK;
-				*prim_key_p = tmp;
-				ret = true;
-			}
-		}
-	}
-	else if((Remote_type_use == REMOTE_EDISION1) || (Remote_type_use == REMOTE_EDISION2))
-	{
-		for(i=0; i<KEY_NUM_EDI; ++i)
-		{
-			if(key== key_table_edi[i][0])
-			{
-				tmp = key_table_edi[i][1];
-				tmp <<= 8;
-				tmp |= (~key_table_new[i][1])&0x000000FF;
-				if(Remote_type_use == REMOTE_EDISION1)
-					tmp |= REMOTE_SLAVE_ADDRESS_EDISION1;
-				else
-					tmp |= REMOTE_SLAVE_ADDRESS_EDISION2;
-				*prim_key_p = tmp;
-				ret = true;
-			}
-		}
-	}
-
-	return ret;
-}
+//bool to_primitive_key(u8 key,	u32 *prim_key_p)
+//{
+//	bool ret = false;
+//	int i;
+//	u32 tmp = 0;
+//
+//	if((Remote_type_use == REMOTE_NEW) || (Remote_type_use == REMOTE_GOLDEN))
+//	{
+//		for(i=0; i<KEN_NUM_NEW; ++i)
+//		{
+//			if(key== key_table_new[i][0])
+//			{
+//				tmp = key_table_new[i][1];
+//				tmp <<= 8;
+//				tmp |= (~key_table_new[i][1])&0x000000FF;
+//				if(Remote_type_use == REMOTE_GOLDEN)
+//					tmp |= REMOTE_SLAVE_ADDRESS_GOLDEN;
+//				else
+//					tmp |= REMOTE_SLAVE_ADDRESS_NEW;
+//				*prim_key_p = tmp;
+//				ret = true;
+//			}
+//		}
+//	}
+//	else if(Remote_type_use == REMOTE_TOPFIELD)
+//	{
+//		for(i=0; i<KEY_NUM_TOP; ++i)
+//		{
+//			if(key== key_table_top[i][0])
+//			{
+//				tmp = key_table_top[i][1];
+//				tmp <<= 8;
+//				tmp |= (~key_table_top[i][1])&0x000000FF;
+//				tmp |= REMOTE_TOPFIELD_MASK;
+//				*prim_key_p = tmp;
+//				ret = true;
+//			}
+//		}
+//	}
+//	else if((Remote_type_use == REMOTE_EDISION1) || (Remote_type_use == REMOTE_EDISION2))
+//	{
+//		for(i=0; i<KEY_NUM_EDI; ++i)
+//		{
+//			if(key== key_table_edi[i][0])
+//			{
+//				tmp = key_table_edi[i][1];
+//				tmp <<= 8;
+//				tmp |= (~key_table_new[i][1])&0x000000FF;
+//				if(Remote_type_use == REMOTE_EDISION1)
+//					tmp |= REMOTE_SLAVE_ADDRESS_EDISION1;
+//				else
+//					tmp |= REMOTE_SLAVE_ADDRESS_EDISION2;
+//				*prim_key_p = tmp;
+//				ret = true;
+//			}
+//		}
+//	}
+//
+//	return ret;
+//}
 
 void YWPANEL_BuildTable16( u16 aPoly )
 {
@@ -1410,42 +1410,42 @@ bool YWPANEL_FP_SendData(YWPANEL_FPData_t  *data)
 	return ret;
 }
 
-YWPANEL_VFDSTATE_t YWPANEL_FP_GetVFDStatus(void)
-{
-	YWPANEL_FPData_t   data;
+//YWPANEL_VFDSTATE_t YWPANEL_FP_GetVFDStatus(void)
+//{
+//	YWPANEL_FPData_t   data;
+//
+//	memset(&data, 0, sizeof(YWPANEL_FPData_t));
+//	data.dataType = YWPANEL_DATATYPE_GETVFDSTATE;
+//
+//	if(YWPANEL_FP_SendData(&data) != true)
+//	{
+//		ywtrace_print(TRACE_ERROR,"YWPANEL_FP_SendData not seccussfully!![%d] \n",__LINE__);
+//		return false;
+//	}
+//	if((data.data.CpuState.state < YWPANEL_VFDSTATE_STANDBYOFF) ||(data.data.CpuState.state > YWPANEL_VFDSTATE_STANDBYON) )
+//	{
+//		return YWPANEL_VFDSTATE_UNKNOW;
+//	}
+//
+//	return data.data.CpuState.state;
+//}
 
-	memset(&data, 0, sizeof(YWPANEL_FPData_t));
-	data.dataType = YWPANEL_DATATYPE_GETVFDSTATE;
-
-	if(YWPANEL_FP_SendData(&data) != true)
-	{
-		ywtrace_print(TRACE_ERROR,"YWPANEL_FP_SendData not seccussfully!![%d] \n",__LINE__);
-		return false;
-	}
-	if((data.data.CpuState.state < YWPANEL_VFDSTATE_STANDBYOFF) ||(data.data.CpuState.state > YWPANEL_VFDSTATE_STANDBYON) )
-	{
-		return YWPANEL_VFDSTATE_UNKNOW;
-	}
-
-	return data.data.CpuState.state;
-}
-
-bool  YWPANEL_FP_SetVFDStatus(YWPANEL_VFDSTATE_t state)
-{
-	YWPANEL_FPData_t   data;
-
-
-	memset(&data, 0, sizeof(YWPANEL_FPData_t));
-	data.dataType = YWPANEL_DATATYPE_SETVFDSTATE;
-	data.data.CpuState.state = state;
-
-	if(YWPANEL_FP_SendData(&data) != true)
-	{
-		ywtrace_print(TRACE_ERROR,"YWPANEL_FP_SendData not seccussfully!![%d]\n",__LINE__);
-		return false;
-	}
-	return true;
-}
+//bool  YWPANEL_FP_SetVFDStatus(YWPANEL_VFDSTATE_t state)
+//{
+//	YWPANEL_FPData_t   data;
+//
+//
+//	memset(&data, 0, sizeof(YWPANEL_FPData_t));
+//	data.dataType = YWPANEL_DATATYPE_SETVFDSTATE;
+//	data.data.CpuState.state = state;
+//
+//	if(YWPANEL_FP_SendData(&data) != true)
+//	{
+//		ywtrace_print(TRACE_ERROR,"YWPANEL_FP_SendData not seccussfully!![%d]\n",__LINE__);
+//		return false;
+//	}
+//	return true;
+//}
 
 YWPANEL_POWERONSTATE_t YWPANEL_FP_GetPowerOnStatus(void)
 {
@@ -1574,88 +1574,88 @@ u32  YWPANEL_FP_GetIRKey(void)
 }
 #endif
 
-u32  YWPANEL_FP_GetStandByKey(u8 index)
-{
-	YWPANEL_FPData_t   data;
-	u8 key;
+//u32  YWPANEL_FP_GetStandByKey(u8 index)
+//{
+//	YWPANEL_FPData_t   data;
+//	u8 key;
+//
+//	memset(&data, 0, sizeof(YWPANEL_FPData_t));
+//	data.dataType = YWPANEL_DATATYPE_GETSTBYKEY1+index;
+//
+//	if(YWPANEL_FP_SendData(&data) != true)
+//	{
+//		ywtrace_print(TRACE_ERROR,"YWPANEL_FP_SendData not seccussfully!![%d]\n",__LINE__);
+//		return false;
+//	}
+//	key = (u8)(data.data.stbyKey.key>>8);
+//
+//	return YWPANEL_TranslateKeyCode(key);
+//}
 
-	memset(&data, 0, sizeof(YWPANEL_FPData_t));
-	data.dataType = YWPANEL_DATATYPE_GETSTBYKEY1+index;
+//bool  YWPANEL_FP_SetStandByKey(u8 index,u8 key)
+//{
+//	YWPANEL_FPData_t   data;
+//	u32 value;
+//
+//	if(!to_primitive_key(key, &value))
+//	{
+//		ywtrace_print(TRACE_INFO,"to_primitive_key is failed!![%d]\n",__LINE__);
+//		return false;
+//	}
+//
+//	memset(&data, 0, sizeof(YWPANEL_FPData_t));
+//
+//	data.dataType = YWPANEL_DATATYPE_SETSTBYKEY1+index;
+//	data.data.stbyKey.key = value;
+//
+//	if(YWPANEL_FP_SendData(&data) != true)
+//	{
+//		ywtrace_print(TRACE_ERROR,"YWPANEL_FP_SendData not seccussfully!![%d]\n",__LINE__);
+//		return false;
+//	}
+//	return true;
+//}
 
-	if(YWPANEL_FP_SendData(&data) != true)
-	{
-		ywtrace_print(TRACE_ERROR,"YWPANEL_FP_SendData not seccussfully!![%d]\n",__LINE__);
-		return false;
-	}
-	key = (u8)(data.data.stbyKey.key>>8);
+//u32  YWPANEL_FP_GetBlueKey(u8 index)
+//{
+//	YWPANEL_FPData_t   data;
+//	u8 key;
+//
+//	memset(&data, 0, sizeof(YWPANEL_FPData_t));
+//	data.dataType = YWPANEL_DATATYPE_GETBLUEKEY1+index;
+//
+//	if(YWPANEL_FP_SendData(&data) != true)
+//	{
+//		ywtrace_print(TRACE_ERROR,"YWPANEL_FP_SendData not seccussfully!![%d]\n",__LINE__);
+//		return false;
+//	}
+//	key = (u8)(data.data.stbyKey.key>>8);
+//	return YWPANEL_TranslateKeyCode(key);
+//}
 
-	return YWPANEL_TranslateKeyCode(key);
-}
-
-bool  YWPANEL_FP_SetStandByKey(u8 index,u8 key)
-{
-	YWPANEL_FPData_t   data;
-	u32 value;
-
-	if(!to_primitive_key(key, &value))
-	{
-		ywtrace_print(TRACE_INFO,"to_primitive_key is failed!![%d]\n",__LINE__);
-		return false;
-	}
-
-	memset(&data, 0, sizeof(YWPANEL_FPData_t));
-
-	data.dataType = YWPANEL_DATATYPE_SETSTBYKEY1+index;
-	data.data.stbyKey.key = value;
-
-	if(YWPANEL_FP_SendData(&data) != true)
-	{
-		ywtrace_print(TRACE_ERROR,"YWPANEL_FP_SendData not seccussfully!![%d]\n",__LINE__);
-		return false;
-	}
-	return true;
-}
-
-u32  YWPANEL_FP_GetBlueKey(u8 index)
-{
-	YWPANEL_FPData_t   data;
-	u8 key;
-
-	memset(&data, 0, sizeof(YWPANEL_FPData_t));
-	data.dataType = YWPANEL_DATATYPE_GETBLUEKEY1+index;
-
-	if(YWPANEL_FP_SendData(&data) != true)
-	{
-		ywtrace_print(TRACE_ERROR,"YWPANEL_FP_SendData not seccussfully!![%d]\n",__LINE__);
-		return false;
-	}
-	key = (u8)(data.data.stbyKey.key>>8);
-	return YWPANEL_TranslateKeyCode(key);
-}
-
-bool  YWPANEL_FP_SetBlueKey(u8 index,u8 key)
-{
-	YWPANEL_FPData_t   data;
-	u32 value;
-
-	if(!to_primitive_key(key, &value))
-	{
-		ywtrace_print(TRACE_INFO,"to_primitive_key is failed!![%d]\n",__LINE__);
-		return false;
-	}
-
-	memset(&data, 0, sizeof(YWPANEL_FPData_t));
-
-	data.dataType = YWPANEL_DATATYPE_SETBLUEKEY1+index;
-	data.data.stbyKey.key = value;
-
-	if(YWPANEL_FP_SendData(&data) != true)
-	{
-		ywtrace_print(TRACE_ERROR,"YWPANEL_FP_SendData not seccussfully!![%d]\n",__LINE__);
-		return false;
-	}
-	return true;
-}
+//bool  YWPANEL_FP_SetBlueKey(u8 index,u8 key)
+//{
+//	YWPANEL_FPData_t   data;
+//	u32 value;
+//
+//	if(!to_primitive_key(key, &value))
+//	{
+//		ywtrace_print(TRACE_INFO,"to_primitive_key is failed!![%d]\n",__LINE__);
+//		return false;
+//	}
+//
+//	memset(&data, 0, sizeof(YWPANEL_FPData_t));
+//
+//	data.dataType = YWPANEL_DATATYPE_SETBLUEKEY1+index;
+//	data.data.stbyKey.key = value;
+//
+//	if(YWPANEL_FP_SendData(&data) != true)
+//	{
+//		ywtrace_print(TRACE_ERROR,"YWPANEL_FP_SendData not seccussfully!![%d]\n",__LINE__);
+//		return false;
+//	}
+//	return true;
+//}
 
 u32  YWPANEL_FP_GetTime(void)
 {
@@ -1734,31 +1734,31 @@ bool  YWPANEL_FP_ControlTimer(bool on)
 	return true;
 }
 
-int YWPANEL_LBD_SetStatus(YWPANEL_LBDStatus_T  LBDStatus )
-{
-	YWPANEL_FPData_t	data;
-	int 		ErrorCode = 0;
-
-	memset(&data, 0, sizeof(YWPANEL_FPData_t));
-	data.dataType = YWPANEL_DATATYPE_LBD;
-	if(LBDStatus == YWPANEL_LBD_STATUS_ON)
-	{
-		lbdValue |= YWPANEL_LBD_TYPE_POWER;
-	}
-	else
-	{
-		lbdValue &= ~(YWPANEL_LBD_TYPE_POWER);
-	}
-
-	data.data.lbdData.value = lbdValue;
-
-	if(YWPANEL_FP_SendData(&data) != true)
-	{
-		ywtrace_print(TRACE_ERROR,"YWPANEL_FP_SendData not seccussfully!![%d]\n",__LINE__);
-		ErrorCode = -ETIME;
-	}
-	return ErrorCode;
-}
+//int YWPANEL_LBD_SetStatus(YWPANEL_LBDStatus_T  LBDStatus )
+//{
+//	YWPANEL_FPData_t	data;
+//	int 		ErrorCode = 0;
+//
+//	memset(&data, 0, sizeof(YWPANEL_FPData_t));
+//	data.dataType = YWPANEL_DATATYPE_LBD;
+//	if(LBDStatus == YWPANEL_LBD_STATUS_ON)
+//	{
+//		lbdValue |= YWPANEL_LBD_TYPE_POWER;
+//	}
+//	else
+//	{
+//		lbdValue &= ~(YWPANEL_LBD_TYPE_POWER);
+//	}
+//
+//	data.data.lbdData.value = lbdValue;
+//
+//	if(YWPANEL_FP_SendData(&data) != true)
+//	{
+//		ywtrace_print(TRACE_ERROR,"YWPANEL_FP_SendData not seccussfully!![%d]\n",__LINE__);
+//		ErrorCode = -ETIME;
+//	}
+//	return ErrorCode;
+//}
 
 int YWPANEL_VFD_SetLed(int which, int on)
 {
@@ -2332,13 +2332,11 @@ u8 YWPANEL_VFD_ScanKeyboard_StandBy(void)
 		data.dataType = YWPANEL_DATATYPE_VFD;
 		data.data.vfdData.type = YWPANEL_VFD_READKEY;
 		break;
-	case YWPANEL_FP_DISPTYPE_LCD:
-		break;
 	case YWPANEL_FP_DISPTYPE_LED:
 		data.dataType = YWPANEL_DATATYPE_SCANKEY;
 		break;
+	case YWPANEL_FP_DISPTYPE_LCD:
 	case YWPANEL_FP_DISPTYPE_LBD:
-		break;
 	default:
 		break;
 	}
@@ -2350,12 +2348,10 @@ u8 YWPANEL_VFD_ScanKeyboard_StandBy(void)
 		{
 		case YWPANEL_FP_DISPTYPE_VFD:
 			return data.data.vfdData.key;
-		case YWPANEL_FP_DISPTYPE_LCD:
-			break;
 		case YWPANEL_FP_DISPTYPE_LED:
 			return data.data.ScanKeyData.keyValue;
+		case YWPANEL_FP_DISPTYPE_LCD:
 		case YWPANEL_FP_DISPTYPE_LBD:
-			break;
 		default:
 			break;
 		}
@@ -2417,9 +2413,9 @@ int YWPANEL_VFD_GetKeyValue(void)
 	}
 	switch(byte)
 	{
-		case 0x01:
-			key_val = EXIT_KEY;
-			break;
+//		case 0x01:
+//			key_val = EXIT_KEY;
+//			break;
 		case 0x02:
 			key_val = LEFT_KEY;
 			break;
@@ -2960,8 +2956,6 @@ int YWPANEL_VFD_Init_StandBy(void)
 	init_MUTEX(&vfd_sem_rw);
 
 	YWPANEL_Seg_Addr_Init();
-	//YWPANEL_VFD_ShowString("welcome");
-	//YWPANEL_VFD_ShowString("bbbb");
 	return ErrorCode;
  }
 
@@ -3059,35 +3053,35 @@ int YWPANEL_VFD_Init(ushort *mode_digit)
 	return ErrorCode;
 }
 
-int  YWPANEL_VFD_Term_StandBy(void)
-{
-	return 0;
-}
-int  YWPANEL_VFD_Term_Common(void)
-{
-	return 0;
-}
-
-int YWPANEL_VFD_Term(void)
-{
-	int ErrorCode = 0 ;
-	switch (YWVFD_INFO.vfd_type)
-	{
-		case YWVFD_STAND_BY:
-			ErrorCode = YWPANEL_VFD_Term_StandBy();
-			break;
-
-		case YWVFD_COMMON:
-			ErrorCode = YWPANEL_VFD_Term_Common();
-			break;
-		default:
-			ErrorCode = -ENODEV;
-			break;
-	}
-#ifdef CONFIG_CPU_SUBTYPE_STX7105
-	softi2c_cleanup();
-#else
-	i2c_put_adapter(panel_i2c_adapter);
-#endif
-	return ErrorCode;
-}
+//int  YWPANEL_VFD_Term_StandBy(void)
+//{
+//	return 0;
+//}
+//int  YWPANEL_VFD_Term_Common(void)
+//{
+//	return 0;
+//}
+//
+//int YWPANEL_VFD_Term(void)
+//{
+//	int ErrorCode = 0 ;
+//	switch (YWVFD_INFO.vfd_type)
+//	{
+//		case YWVFD_STAND_BY:
+//			ErrorCode = YWPANEL_VFD_Term_StandBy();
+//			break;
+//
+//		case YWVFD_COMMON:
+//			ErrorCode = YWPANEL_VFD_Term_Common();
+//			break;
+//		default:
+//			ErrorCode = -ENODEV;
+//			break;
+//	}
+//#ifdef CONFIG_CPU_SUBTYPE_STX7105
+//	softi2c_cleanup();
+//#else
+//	i2c_put_adapter(panel_i2c_adapter);
+//#endif
+//	return ErrorCode;
+//}

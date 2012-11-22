@@ -99,9 +99,9 @@ struct semaphore 	   write_sem;
 struct semaphore 	   rx_int_sem; /* unused until the irq works */
 struct semaphore 	   transmit_sem;
 struct semaphore 	   receive_sem;
-struct semaphore 	   key_mutex;
+//struct semaphore 	   key_mutex;
 
-static struct semaphore  display_sem;
+//static struct semaphore  display_sem;
 
 struct saved_data_s
 {
@@ -151,7 +151,7 @@ static void VFD_clr(void)
 	if (mode_digit == DIGIT8)
 	{
 	    YWPANEL_VFD_ShowTimeOff();
-	    for(i=1; i < 45; i++) aotomSetIcon(i, 0);
+	    for(i=1; i < 46; i++) aotomSetIcon(i, 0);
 	}
 }
 
@@ -196,23 +196,18 @@ void draw_thread(void *arg)
        } else {
            pos += 1;
        }
-// #if defined(SPARK)
-//        if((count - pos) < 4)
-// #else
-//        if((count - pos) < 8)
-// #endif
-//     	   break;
     }
   }
 
-  clear_display();
   if(count > 0)
   {
+      clear_display();
       memset(buf,0, sizeof(buf));
       int countb = utf8_count(&draw_data.data[0], draw_data.length, 8);
       memcpy(buf, draw_data.data, countb);
       YWPANEL_VFD_ShowString(buf);
   }
+  else VFD_clr();
 
   thread_stop = 1;
 }
@@ -225,7 +220,6 @@ int run_draw_thread(struct vfd_ioctl_data *draw_data)
     //wait thread stop
     while(!thread_stop)
     {msleep(1);}
-
 
     thread_stop = 2;
     thread=kthread_run(draw_thread,draw_data,"draw thread",NULL,true);
@@ -266,9 +260,9 @@ static int AOTOMfp_Get_Key_Value(void)
         case 102:
             key_val = KEY_MENU;
             break;
-        case 48:
-            key_val = KEY_EXIT;
-            break;
+//        case 48:
+//            key_val = KEY_EXIT;
+//            break;
         default:
             key_val = INVALID_KEY;
             break;
@@ -291,12 +285,12 @@ int aotomSetTime(char* time)
    return res;
 }
 
-int vfd_init_func(void)
-{
-	dprintk(5, "%s >\n", __func__);
-	printk("Fulan VFD module initializing\n");
-	return 0;
-}
+//int vfd_init_func(void)
+//{
+//	dprintk(5, "%s >\n", __func__);
+//	printk("Fulan VFD module initializing\n");
+//	return 0;
+//}
 
 int aotomSetIcon(int which, int on)
 {
@@ -322,65 +316,60 @@ EXPORT_SYMBOL(aotomSetIcon);
 
 static ssize_t AOTOMdev_write(struct file *filp, const char *buff, size_t len, loff_t *off)
 {
-	char* kernel_buf;
-	int minor, vLoop, res = 0;
+    char* kernel_buf;
+    int minor, vLoop, res = 0;
 
-	struct vfd_ioctl_data data;
+    struct vfd_ioctl_data data;
 
-	dprintk(5, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
+    dprintk(5, "%s > (len %d, offs %d)\n", __func__, len, (int) *off);
 
-	minor = -1;
-  	for (vLoop = 0; vLoop < LASTMINOR; vLoop++)
-  	{
-    	if (FrontPanelOpen[vLoop].fp == filp)
-    	{
-			minor = vLoop;
-		}
+    minor = -1;
+    for (vLoop = 0; vLoop < LASTMINOR; vLoop++) {
+	if (FrontPanelOpen[vLoop].fp == filp) {
+	    minor = vLoop;
 	}
+    }
 
-	if (minor == -1)
-	{
-		dprintk(0, "Error Bad Minor\n");
-		return -ENODEV;
-	}
+    if (minor == -1) {
+	dprintk(0, "Error Bad Minor\n");
+	return -ENODEV;
+    }
 
-	dprintk(1, "minor = %d\n", minor);
+    dprintk(1, "minor = %d\n", minor);
 
-	if (minor == FRONTPANEL_MINOR_RC)
-		return -EOPNOTSUPP;
+    if (minor == FRONTPANEL_MINOR_RC)
+	return -EOPNOTSUPP;
 
-	if(down_interruptible (&write_sem))
-		return -ERESTARTSYS;
+    if (down_interruptible(&write_sem))
+	return -ERESTARTSYS;
 
-	data.length = len;
-	if (data.length > VFD_DATA_LEN)
-		data.length = VFD_DATA_LEN;
+    data.length = len;
+    if (data.length > VFD_DATA_LEN)
+	data.length = VFD_DATA_LEN;
 
-	// get rid of trailing endline. could be if echo command used
-	if ((data.length > 0) && (buff[data.length - 1] == '\n'))
-		data.length--;
+    // get rid of trailing endline. could be if echo command used
+    if ((data.length > 0) && (buff[data.length - 1] == '\n'))
+	data.length--;
 
-	if(data.length <0)
-	{
-	  res = -1;
-	  dprintk(2, "empty string\n");
-	}
+    if (data.length < 0) {
+	res = -1;
+	dprintk(2, "empty string\n");
+    }
+    else {
+	if (copy_from_user(data.data, buff, data.length))
+	    res = -EFAULT;
 	else
-	{
-	  if (copy_from_user(data.data,buff,data.length))
-		res = -EFAULT;
-	  else
-		res=run_draw_thread(&data);
-	}
+	    res = run_draw_thread(&data);
+    }
 
-	up(&write_sem);
+    up(&write_sem);
 
-	dprintk(10, "%s < res %d len %d\n", __func__, res, data.length);
+    dprintk(10, "%s < res %d len %d\n", __func__, res, data.length);
 
-	if (res < 0)
-	   return res;
-	else
-	   return len;
+    if (res < 0)
+	return res;
+    else
+	return len;
 }
 
 static ssize_t AOTOMdev_read(struct file *filp, char __user *buff, size_t len, loff_t *off)
@@ -409,7 +398,7 @@ static ssize_t AOTOMdev_read(struct file *filp, char __user *buff, size_t len, l
 	if (minor == FRONTPANEL_MINOR_RC)
 	{
 
-     while (receiveCount == 0)
+	  while (receiveCount == 0)
 	  {
 	    if (wait_event_interruptible(wq, receiveCount > 0))
 		    return -ERESTARTSYS;
@@ -419,7 +408,7 @@ static ssize_t AOTOMdev_read(struct file *filp, char __user *buff, size_t len, l
 	  down_interruptible(&receive_sem);
 
 	  /* 1. copy data to user */
-     copy_to_user(buff, receive[0].buffer, receive[0].len);
+          copy_to_user(buff, receive[0].buffer, receive[0].len);
 
 	  /* 2. copy all entries to start and decreas receiveCount */
 	  receiveCount--;
@@ -428,14 +417,14 @@ static ssize_t AOTOMdev_read(struct file *filp, char __user *buff, size_t len, l
 	  /* 3. free semaphore */
 	  up(&receive_sem);
 
-     return 8;
+	  return 8;
 	}
 
 	/* copy the current display string to the user */
  	if (down_interruptible(&FrontPanelOpen[minor].sem))
 	{
 	   printk("%s return erestartsys<\n", __func__);
-   	return -ERESTARTSYS;
+	   return -ERESTARTSYS;
 	}
 
 	if (FrontPanelOpen[minor].read == lastdata.length)
@@ -469,7 +458,7 @@ int AOTOMdev_open(struct inode *inode, struct file *filp)
 
 	dprintk(5, "%s >\n", __func__);
 
-    minor = MINOR(inode->i_rdev);
+	minor = MINOR(inode->i_rdev);
 
 	dprintk(1, "open minor %d\n", minor);
 
@@ -511,59 +500,51 @@ static struct vfd_ioctl_data vfd_data;
 
 static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int cmd, unsigned long arg)
 {
-   static int mode = 0;
-   struct aotom_ioctl_data * aotom = (struct aotom_ioctl_data *)arg;
-   int res = 0;
+    static int mode = 0;
+    struct aotom_ioctl_data * aotom = (struct aotom_ioctl_data *) arg;
+    int res = 0;
 
-   dprintk(5, "%s > 0x%.8x\n", __func__, cmd);
+    dprintk(5, "%s > 0x%.8x\n", __func__, cmd);
 
-   if(down_interruptible (&write_sem))
-      return -ERESTARTSYS;
+    if (down_interruptible(&write_sem))
+	return -ERESTARTSYS;
 
-	switch(cmd) {
+    switch (cmd) {
 	case VFDSETMODE:
-		mode = aotom->u.mode.compat;
-		break;
+	    mode = aotom->u.mode.compat;
+	    break;
 	case VFDSETLED:
 	{
-	    if (mode_digit != DIGITNO) {
-		res = YWPANEL_VFD_SetLed(aotom->u.led.led_nr, aotom->u.led.on);
-		//printk("res = %d\n", res);
-	    }
-		break;
+	    if (mode_digit != DIGITNO) res = YWPANEL_VFD_SetLed(aotom->u.led.led_nr, aotom->u.led.on);
+	    break;
 	}
-	case VFDBRIGHTNESS:
-		break;
 	case VFDICONDISPLAYONOFF:
 	{
-	    if(mode_digit == DIGIT8) {
-		 struct vfd_ioctl_data *data = (struct vfd_ioctl_data *) arg;
-		 res = aotomSetIcon(aotom->u.icon.icon_nr, aotom->u.icon.on);
+//	    printk("aotom -->> %d = %d\n", aotom->u.icon.icon_nr, aotom->u.icon.on);
+	    if (mode_digit == DIGIT8) {
+		res = aotomSetIcon(aotom->u.icon.icon_nr, aotom->u.icon.on);
 	    }
-	    if (mode_digit != DIGITNO) {
-		switch (aotom->u.icon.icon_nr)
-		{
-			case 0:
-			{
-   				struct vfd_ioctl_data * vfd = (struct vfd_ioctl_data *)arg;
-				if (5 == vfd->length)
-				{
-					if ((0x1e & 0xf) == vfd->data[0])
-					{
-						res = YWPANEL_VFD_SetLed(0, vfd->data[4]);
-					}
-				}
-				break;
-			}
-			case 35:
-				res = YWPANEL_VFD_SetLed(1, aotom->u.led.on);
-				break;
-			default:
-				break;
+	    if (mode_digit == DIGIT4) {
+		switch (aotom->u.icon.icon_nr) {
+//		    case 0:
+//		    {
+//			struct vfd_ioctl_data * vfd = (struct vfd_ioctl_data *) arg;
+//			if (5 == vfd->length) {
+//			    if ((0x1e & 0xf) == vfd->data[0]) {
+//				res = YWPANEL_VFD_SetLed(0, vfd->data[4]);
+//			    }
+//			}
+//			break;
+//		    }
+		    case 35:
+			res = YWPANEL_VFD_SetLed(1, aotom->u.led.on);
+			break;
+		    default:
+			break;
 		}
 	    }
-		mode = 0;
-		break;
+	    mode = 0;
+	    break;
 	}
 	case VFDSTANDBY:
 	{
@@ -581,7 +562,7 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 
 		uPowerOnTime = YWPANEL_FP_GetPowerOnTime();
 		//printk("2uPowerOnTime = %d\n", uPowerOnTime);
-		#if 0
+#if 0
 		uStandByKey = YWPANEL_FP_GetStandByKey(0);
 		printk("uStandByKey = %d\n", uStandByKey);
 		uStandByKey = YWPANEL_FP_GetStandByKey(1);
@@ -592,16 +573,15 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		printk("uStandByKey = %d\n", uStandByKey);
 		uStandByKey = YWPANEL_FP_GetStandByKey(4);
 		printk("uStandByKey = %d\n", uStandByKey);
-		#endif
+#endif
 		YWPANEL_FP_ControlTimer(true);
 		YWPANEL_FP_SetCpuStatus(0x02);
 	    }
-	   break;
+	    break;
 	}
 	case VFDSETTIME:
-		//struct set_time_s *data2 = (struct set_time_s *) arg;
-		res = aotomSetTime((char *)arg);
-		break;
+	    res = aotomSetTime((char *) arg);
+	    break;
 	case VFDGETTIME:
 	{
 	    if (mode_digit != DIGITNO) {
@@ -611,50 +591,47 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 		//printk("uTime = %d\n", uTime);
 		put_user(uTime, (int *) arg);
 	    }
-		break;
+	    break;
 	}
-	case VFDGETWAKEUPMODE:
-		break;
 	case VFDDISPLAYCHARS:
-		if (mode == 0)
-		{
-			if (copy_from_user(&vfd_data, (void *) arg, sizeof(vfd_data)))
-				return -EFAULT;
-			if (vfd_data.length > sizeof(vfd_data.data))
-				vfd_data.length = sizeof(vfd_data.data);
-			while ((vfd_data.length > 0) && (vfd_data.data[vfd_data.length - 1 ] == '\n'))
-				vfd_data.length--;
-				res = run_draw_thread(&vfd_data);
-		} else
-		{
-			//not supported
-		}
-		mode = 0;
-		break;
-	case VFDDISPLAYWRITEONOFF:
-		break;
-	case VFDDISPLAYCLR:
-		vfd_data.length = 0;
+	    if (mode == 0) {
+		if (copy_from_user(&vfd_data, (void *) arg, sizeof (vfd_data)))
+		    return -EFAULT;
+		if (vfd_data.length > sizeof (vfd_data.data))
+		    vfd_data.length = sizeof (vfd_data.data);
+		while ((vfd_data.length > 0) && (vfd_data.data[vfd_data.length - 1 ] == '\n'))
+		    vfd_data.length--;
 		res = run_draw_thread(&vfd_data);
-		break;
+	    }
+	    mode = 0;
+	    break;
+	case VFDDISPLAYCLR:
+	    vfd_data.length = 0;
+	    res = run_draw_thread(&vfd_data);
+	    break;
 	case 0x5305:
 	    if (mode_digit == DIGIT4) {
 		dprintk(0, "unknown IOCTL 0x%x\n", cmd);
 		mode = 0;
 	    }
-		break;
+	    break;
+	case VFDBRIGHTNESS:
+	    if (mode_digit == DIGIT8) YWPANEL_VFD_SetBrightness(aotom->u.brightness.level);
+	    break;
+	case VFDGETWAKEUPMODE:
+	case VFDDISPLAYWRITEONOFF:
 	case 0x5401:
-		break;
+	    break;
 	default:
-		dprintk(0, "unknown IOCTL 0x%x\n", cmd);
-		mode = 0;
-		break;
-	}
+	    dprintk(0, "unknown IOCTL 0x%x\n", cmd);
+	    mode = 0;
+	    break;
+    }
 
-	up(&write_sem);
+    up(&write_sem);
 
-   dprintk(5, "%s <\n", __func__);
-   return res;
+    dprintk(5, "%s <\n", __func__);
+    return res;
 }
 
 static unsigned int AOTOMdev_poll(struct file *filp, poll_table *wait)
@@ -695,7 +672,6 @@ struct semaphore button_sem;
 void button_bad_polling(void)
 {
 	int btn_pressed = 0;
-
 	int report_key = 0;
 
 	while(bad_polling == 1)
@@ -704,8 +680,8 @@ void button_bad_polling(void)
 		button_value = AOTOMfp_Get_Key_Value();
 		if (button_value != INVALID_KEY) {
 			dprintk(5, "got button: %X\n", button_value);
-	        VFD_Show_Ico(DOT2,LOG_ON);
-			YWPANEL_VFD_SetLed(1, LOG_ON);
+			if (mode_digit == DIGIT8 ) VFD_Show_Ico(DOT2,LOG_ON);
+			else YWPANEL_VFD_SetLed(1, LOG_ON);
 			if (1 == btn_pressed)
 			{
 				if (report_key != button_value)
@@ -719,7 +695,7 @@ void button_bad_polling(void)
 				}
 			}
 			report_key = button_value;
-	        btn_pressed = 1;
+			btn_pressed = 1;
 			switch(button_value) {
 				case KEY_LEFT:
 				case KEY_RIGHT:
@@ -727,7 +703,7 @@ void button_bad_polling(void)
 				case KEY_DOWN:
 				case KEY_OK:
 				case KEY_MENU:
-				case KEY_EXIT:
+				//case KEY_EXIT:
 				case KEY_POWER:
 					input_report_key(button_dev, button_value, 1);
 					input_sync(button_dev);
@@ -740,10 +716,10 @@ void button_bad_polling(void)
 			if(btn_pressed) {
 				btn_pressed = 0;
 				msleep(80);
-				VFD_Show_Ico(DOT2,LOG_OFF);
-				YWPANEL_VFD_SetLed(1, LOG_OFF);
+				if (mode_digit == DIGIT8 ) VFD_Show_Ico(DOT2,LOG_OFF);
+				else YWPANEL_VFD_SetLed(1, LOG_OFF);
 				input_report_key(button_dev, report_key, 0);
-			input_sync(button_dev);
+				input_sync(button_dev);
 			}
 		}
 	}
@@ -817,7 +793,7 @@ int button_dev_init(void)
 	set_bit(KEY_POWER	, button_dev->keybit);
 	set_bit(KEY_MENU	, button_dev->keybit);
 	set_bit(KEY_OK		, button_dev->keybit);
-	set_bit(KEY_EXIT	, button_dev->keybit);
+	//set_bit(KEY_EXIT	, button_dev->keybit);
 
 	error = input_register_device(button_dev);
 	if (error) {
@@ -840,7 +816,6 @@ ssize_t proc_node_read(char *buffer, char **start, off_t off, int count, int *eo
    *eof = 1;
    if (mode_digit != DIGITNO) len=sprintf(buffer, "%d digit\n", mode_digit);
    else len=sprintf(buffer, "unknown\n");
-   //*(buffer+len)=0;
    return len;
 }
 
@@ -852,7 +827,7 @@ static int __init aotom_init_module(void)
 
 	printk("Fulan front panel driver\n");
 
-	sema_init(&display_sem,1);
+//	sema_init(&display_sem,1);
 	sema_init(&button_sem, 1);
 	if(YWPANEL_VFD_Init(&mode_digit)) {
 		printk("unable to init module\n");
@@ -867,13 +842,11 @@ static int __init aotom_init_module(void)
 		printk("unable to get major %d for VFD\n",VFD_MAJOR);
 
 	sema_init(&write_sem, 1);
-	sema_init(&key_mutex, 1);
+//	sema_init(&key_mutex, 1);
 
 	for (i = 0; i < LASTMINOR; i++)
 	    sema_init(&FrontPanelOpen[i].sem, 1);
 
-	dprintk(5, "%s <\n", __func__);
-	
 	own_proc_dir = create_proc_entry(NAME_DIR, S_IFDIR | S_IRWXUGO, NULL);
 	if (own_proc_dir == NULL ) {
 	    printk(KERN_ERR "can't create /proc/%s\n", NAME_DIR);
@@ -892,6 +865,8 @@ static int __init aotom_init_module(void)
 	own_proc_node->gid =0 ;
 	
 	own_proc_node->read_proc=proc_node_read;
+	
+	dprintk(5, "%s <\n", __func__);
 	return 0;
 }
 
@@ -908,6 +883,7 @@ static void __exit aotom_cleanup_module(void)
 	//kthread_stop(time_thread);
 
 	unregister_chrdev(VFD_MAJOR,"VFD");
+	
 	printk("Fulan front panel module unloading\n");
 }
 
