@@ -243,15 +243,10 @@ STI7106SRCS += $(addprefix $(SRC_TOPDIR)/soc/sti7106/,                         \
 sti7105-display-objs := $(patsubst %.cpp,%.o,$(ALLSRCS) $(STI7105SRCS))
 sti7105-display-objs := $(patsubst %.c,%.o,$(sti7105-display-objs))
 
-sti7106-display-objs := $(patsubst %.cpp,%.o,$(ALLSRCS) $(STI7106SRCS))
-sti7106-display-objs := $(patsubst %.c,%.o,$(sti7106-display-objs))
-
 
 obj-m += stmcore-display-sti7105.o
-obj-m += stmcore-display-sti7106.o
 
 stmcore-display-sti7105-objs := $(sti7105-display-objs) $(SRC_TOPDIR)/linux/kernel/drivers/stm/coredisplay/sti7105_7106/sti7105.o
-stmcore-display-sti7106-objs := $(sti7106-display-objs) $(SRC_TOPDIR)/linux/kernel/drivers/stm/coredisplay/sti7105_7106/sti7106.o
 
 endif
 
