@@ -2,6 +2,8 @@
 #define VFD_MAJOR				147
 
 #define VFDBRIGHTNESS         0xc0425a03
+#define VFDONOFF              0xc04259fe
+#define VFDGMT                0xc04259ff
 #define VFDDRIVERINIT         0xc0425a08
 #define VFDICONDISPLAYONOFF   0xc0425a0a
 #define VFDDISPLAYWRITEONOFF  0xc0425a05
@@ -16,7 +18,17 @@
 #define VFDSETMODE            0xc0425aff
 #define VFDDISPLAYCLR		  0xc0425b00
 
+#define VFD_DATA_LEN 64
+
 struct set_brightness_s {
+	int level;
+};
+
+struct set_onoff_s {
+	int level;
+};
+
+struct set_gmt_s {
 	int level;
 };
 
@@ -58,6 +70,8 @@ struct proton_ioctl_data {
 		struct set_icon_s icon;
 		struct set_led_s led;
 		struct set_brightness_s brightness;
+		struct set_onoff_s onoff;
+		struct set_gmt_s gmt;
 		struct set_mode_s mode;
 		struct set_standby_s standby;
 		struct set_time_s time;
@@ -66,7 +80,7 @@ struct proton_ioctl_data {
 
 struct vfd_ioctl_data {
 	unsigned char start_address;
-	unsigned char data[64];
+	unsigned char data[VFD_DATA_LEN];
 	unsigned char length;
 };
 
@@ -161,56 +175,58 @@ enum
 typedef enum LogNum_e
 {
 /*----------------------------------11G-------------------------------------*/
-	PLAY_FASTBACKWARD = 11*16+1,
-	PLAY_HEAD,
-	PLAY_LOG,
-	PLAY_TAIL,
-	PLAY_FASTFORWARD,
-	PLAY_PAUSE,
-    REC1,
-    MUTE,
-    CYCLE,
-    DUBI,
-    CA,
-    CI,
-    USB,
-    DOUBLESCREEN,
-    REC2,
+    PLAY_FASTBACKWARD = 11*16+1,//  1
+    PLAY_HEAD,                  // 2
+    PLAY_LOG,                   // 3
+    PLAY_TAIL,                  // 4
+    PLAY_FASTFORWARD,           // 5
+    PLAY_PAUSE,                 // 6
+    REC1,                       // 7
+    MUTE,                       // 8
+    CYCLE,                      // 9
+    DUBI,                       // a
+    CA,                         // b
+    CI,                         // c
+    USB,                        // d
+    DOUBLESCREEN,               // e
+    REC2,                       // f
 /*----------------------------------12G-------------------------------------*/
-    HDD_A8 = 12*16+1,
-    HDD_A7,
-    HDD_A6,
-    HDD_A5,
-    HDD_A4,
-    HDD_A3,
-    HDD_FULL,
-    HDD_A2,
-    HDD_A1,
-    MP3,
-    AC3,
-    TVMODE_LOG,
-    AUDIO,
-    ALERT,
-    HDD_A9,
+    HDD_A8 = 12*16+1,           // 10
+    HDD_A7,                     // 11
+    HDD_A6,                     // 12
+    HDD_A5,                     // 13
+    HDD_A4,                     // 14
+    HDD_A3,                     // 15
+    HDD_FULL,                   // 16
+    HDD_A2,                     // 17
+    HDD_A1,                     // 18
+    MP3,                        // 19
+    AC3,                        // 1a
+    TVMODE_LOG,                 // 1b
+    AUDIO,                      // 1c
+    ALERT,                      // 1d
+    HDD_A9,                     // 1e
 /*----------------------------------13G-------------------------------------*/
-    CLOCK_PM = 13*16+1,
-    CLOCK_AM,
-    CLOCK,
-    TIME_SECOND,
-    DOT2,
-    STANDBY,
-    TER,
-    DISK_S3,
-    DISK_S2,
-    DISK_S1,
-    DISK_S0,
-    SAT,
-    TIMESHIFT,
-    DOT1,
-    CAB,
+    CLOCK_PM = 13*16+1,         // 1f
+    CLOCK_AM,                   // 20
+    CLOCK,                      // 21
+    TIME_SECOND,                // 22
+    DOT2,                       // 23
+    STANDBY,                    // 24
+    TER,                        // 25
+    DISK_S3,                    // 26
+    DISK_S2,                    // 27
+    DISK_S1,                    // 28
+    DISK_S0,                    // 29
+    SAT,                        // 2a
+    TIMESHIFT,                  // 2b
+    DOT1,                       // 2c
+    CAB,                        // 2d
   /*----------------------------------end-------------------------------------*/
     LogNum_Max
 }LogNum_T;
+
+int PROTON_VFD_ShowIco_Common(LogNum_T log_num,int log_stat);
 
 #define BASE_VFD_PRIVATE 0x00
 
