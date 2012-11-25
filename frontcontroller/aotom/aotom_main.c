@@ -814,8 +814,7 @@ ssize_t proc_node_read(char *buffer, char **start, off_t off, int count, int *eo
 {
     int len;
    *eof = 1;
-   if (mode_digit != DIGITNO) len=sprintf(buffer, "%d digit\n", mode_digit);
-   else len=sprintf(buffer, "unknown\n");
+   len=sprintf(buffer, "%d\n", mode_digit);
    return len;
 }
 
