@@ -116,7 +116,7 @@ static void report_output( void )
 /* -----------------------------------------------------------
 	The actual report function
 ----------------------------------------------------------- */
-
+#if (!defined(__KERNEL__) || defined(CONFIG_PRINTK)) && defined(REPORT)
 void report( report_severity_t   report_severity,
 	     const char         *format, ... )
 #ifdef REPORT
@@ -167,7 +167,7 @@ va_list      list;
 	return;
 }
 #endif
-
+#endif
 #ifdef REPORT
 /* -----------------------------------------------------------
 	A useful reporting hex function

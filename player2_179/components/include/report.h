@@ -41,9 +41,12 @@ void report_init( void );
 
 void report_restricted_severity_levels( int lower_restriction,
 					int upper_restriction );
-
+#if (defined(__KERNEL__) && !defined(CONFIG_PRINTK)) || !defined(REPORT)
+static void report(report_severity_t report_severity,const char *format,...) { }
+#else
 void report( report_severity_t   report_severity,
 	     const char         *format, ... );
+#endif
 
 #ifdef REPORT
 void report_dump_hex( report_severity_t level,
