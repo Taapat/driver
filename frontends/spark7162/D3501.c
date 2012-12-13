@@ -1585,7 +1585,7 @@ static INT32 nim_s3501_set_ts_mode(struct nim_device *dev, UINT8 work_mode, UINT
 			{
 				//   If >98, M3602 need configure DMX clock phase:
 				//    0xb8012000  ==  0x......AB -> 0x......AA
-				if (((bit_rate >= 98) || (bit_rate >= ssi_clock_tab[8])) && channel_change_flag)
+				if (((bit_rate <= 98) || (bit_rate >= ssi_clock_tab[8])) && channel_change_flag)
 				{
 					// USE normal SPI
 					//#ifdef USE_188_MODE
