@@ -21,15 +21,12 @@
 #ifndef CEC_DEBUG_H_
 #define CEC_DEBUG_H_
 
-int debug = 10;
+extern int debug;
 
 #define TAGDEBUG "[CEC] "
 
 #define dprintk(level, x...) do { \
-if ((debug) && (debug > level)) printk(TAGDEBUG x); \
+if (debug >= level) printk(TAGDEBUG x); \
 } while (0)
-
-//void cec_debug_init(void);
-//void cec_debug_exit(void);
 
 #endif

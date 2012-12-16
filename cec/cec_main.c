@@ -49,12 +49,12 @@
 
 static unsigned char cancelStart = 0;
 int activemode = 0;
+extern int debug=0;
 
 //----------------------------
 
-int __init cec_init(void)
-{
-    printk("[CEC] init - starting\n");
+int __init cec_init(void) {
+    dprintk(0,"init - starting\n");
 
     cec_internal_init();
 
@@ -65,30 +65,25 @@ int __init cec_init(void)
     /* ********* */
     /* irq setup */
 
-   printk("[CEC] init - starting intterrupt (%d)\n", CEC_IRQ);
+    dprintk(2, "init - starting intterrupt (%d)\n", CEC_IRQ);
 
 #if defined (CONFIG_KERNELVERSION) || LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
-    if (!request_irq(CEC_IRQ, (void*)cec_interrupt, IRQF_DISABLED, "cec", NULL))
+    if (!request_irq(CEC_IRQ, (void*) cec_interrupt, IRQF_DISABLED, "cec", NULL))
 #else
-    if (!request_irq(CEC_IRQ, (void*)cec_interrupt, SA_INTERRUPT, "cec", NULL))
+    if (!request_irq(CEC_IRQ, (void*) cec_interrupt, SA_INTERRUPT, "cec", NULL))
 #endif
     {
 
-    }
-    else 
-    {
-       printk("[CEC] Can't get irq\n");
+    } else {
+	dprintk(0,"Can't get irq\n");
     }
 
-    if(activemode)
-    {
-        init_e2_proc();
+    if (activemode) {
+	init_e2_proc();
 
-        input_init();
-    }
-    else
-    {
-        init_dev();
+	input_init();
+    } else {
+	init_dev();
     }
 
     // TODO: how can we implement hotplug support?
@@ -100,24 +95,20 @@ int __init cec_init(void)
     return 0;
 }
 
-static void __exit cec_exit(void)
-{  
-    printk("[CEC] unloaded\n");
+static void __exit cec_exit(void) {
+    dprintk(0,"unloaded\n");
 
     cancelStart = 1;
     udelay(20000);
 
     endTask();
 
-    if(activemode)
-    {
-        cleanup_e2_proc();
+    if (activemode) {
+	cleanup_e2_proc();
 
-        input_cleanup();
-    }
-    else
-    {
-        cleanup_dev();
+	input_cleanup();
+    } else {
+	cleanup_dev();
     }
 
     free_irq(CEC_IRQ, NULL);
@@ -125,12 +116,12 @@ static void __exit cec_exit(void)
     cec_internal_exit();
 }
 
-module_init             (cec_init);
-module_exit             (cec_exit);
+module_init(cec_init);
+module_exit(cec_exit);
 
-MODULE_DESCRIPTION      ("CEC Driver");
-MODULE_AUTHOR           ("konfetti & schischu");
-MODULE_LICENSE          ("GPL");
+MODULE_DESCRIPTION("CEC Driver");
+MODULE_AUTHOR("konfetti & schischu");
+MODULE_LICENSE("GPL");
 
 module_param(debug, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 module_param(activemode, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
