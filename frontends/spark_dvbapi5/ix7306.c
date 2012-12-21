@@ -61,9 +61,10 @@ static int ix7306_write(struct ix7306_state *state, u8 *buf, u8 len)
 	{
 		printk("msg.addr = %d\n", msg.addr);
 		printk("%s: write error, err=%d\n", __func__, err);
+		return -1;
 	}
 
-	return err;
+	return 0;
 }
 
 static int ix7306_read(struct ix7306_state *state, u8 *buf)
@@ -81,9 +82,12 @@ static int ix7306_read(struct ix7306_state *state, u8 *buf)
 	state->fe->ops.i2c_gate_ctrl(state->fe, 1);
 	err = i2c_transfer(state->i2c, &msg[1], 1);
 	if (err != 1)
+	{
 		printk("%s: read error, err=%d\n", __func__, err);
+		return -1;
+	}
 
-	return err;
+	return 0;
 }
 
 /*-------------------------------------------------------------*
@@ -556,4 +560,61 @@ exit:
 	kfree(state);
 	return NULL;
 }
+
+int tuner_Sharp7306_Identify(struct dvb_frontend *fe,
+								const struct ix7306_config *config,
+								struct i2c_adapter *i2c)//lwj change
+{
+	int Err = 0;
+    unsigned char  ucIOBuffer[4+1];
+    unsigned char  ucData = 0;
+	struct ix7306_state state;
+	memset(&state,0,sizeof(struct ix7306_state));
+	state.config = config;
+	state.i2c = i2c;
+	state.fe = fe;
+    ucIOBuffer[0] = 0x44;
+    ucIOBuffer[1] = 0x7e;
+    ucIOBuffer[2] = 0xe1;
+    ucIOBuffer[3] = 0x42;
+
+	if (fe->ops.i2c_gate_ctrl(fe,1) < 0)
+		return -1;
+
+	ix7306_write(&state, ucIOBuffer,1);
+	msleep(12);
+	if (fe->ops.i2c_gate_ctrl(fe,0) < 0)
+		return -1;
+    memset(ucIOBuffer,0,sizeof(ucIOBuffer));
+    ucIOBuffer[0] = 0xfd;
+    ucIOBuffer[1] = 0x0d;
+    if (fe->ops.i2c_gate_ctrl(fe,1) < 0)
+		return -1;
+
+	ix7306_write(&state, ucIOBuffer,2);
+	if (fe->ops.i2c_gate_ctrl(fe,0) < 0)
+		return -1;
+    if(Err == 0)
+    {
+		msleep(50);
+		if (fe->ops.i2c_gate_ctrl(fe,1) < 0)
+			return -1;
+
+		ix7306_read(&state,&ucData);
+		if(Err == 0)
+        {
+            if((ucData&0x3f) == 0x18)
+            {
+                printk("========tuner_sharp7306_identify =====\n");
+                Err = 0;
+            }
+            else
+                Err = -1;
+        }
+		fe->ops.i2c_gate_ctrl(fe,1);
+    }
+    return Err;
+}
+
+
 EXPORT_SYMBOL(ix7306_attach);

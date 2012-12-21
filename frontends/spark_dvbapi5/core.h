@@ -25,6 +25,8 @@ enum tuner_type{
 	STB6100,
 	STV6110X,
 	SHARP7306,
+	VZ7903,
+	TunerUnknown,
 };
 
 struct core_config
@@ -97,6 +99,7 @@ struct core {
 	int fe_synced;
 
 	void *priv;
+	struct core_config*   pCfgCore;
 };
 extern void st90x_register_frontend(struct dvb_adapter *dvb_adap);
 #endif
