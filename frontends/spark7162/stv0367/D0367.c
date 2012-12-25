@@ -206,6 +206,44 @@ void D0367_read(TUNER_IOREG_DeviceMap_t *DeviceMap,
 	}
 }
 
+/*------------------------------------------------------------------------------*/
+/***********************************************************************
+	函数名称:	demod_d0367ter_Identify
+
+	函数说明:	检测硬件是否0367ter
+
+       修改记录:	日       期      作      者       修定
+ 				       ---------         ---------         -----
+               		2010-11-12		lwj			创建
+************************************************************************/
+int  demod_d0367ter_Identify(struct i2c_adapter* i2c, U8  ucID)
+{
+	int ret;
+	U8 pucActualID = 0;
+	u8 b0[] = { R367_ID };
+	struct i2c_msg msg[] = {
+		{ .addr = 0x38 >> 1, .flags = 0, .buf = b0, .len = 1 },
+		{ .addr = 0x38 >> 1, .flags = I2C_M_RD, .buf = &pucActualID, .len = 1 }
+	};
+	ret = i2c_transfer(i2c, msg, 2);
+	if (ret == 2)
+	{
+    	if (pucActualID == ucID)
+    	{
+        	printk("demod_d0367ter_Identify pucActualID = 0x%x\n",pucActualID);//question
+    		return YW_NO_ERROR;
+    	}
+   	 	else
+    	{
+        	printk("demod_d0367ter_Identify YWHAL_ERROR_UNKNOWN_DEVICE \n");//question
+    		return YWHAL_ERROR_UNKNOWN_DEVICE;
+    	}
+	}
+	return YWHAL_ERROR_UNKNOWN_DEVICE;
+
+}
+
+
 /* EOF------------------------------------------------------------------------*/
 
 /* BOL-------------------------------------------------------------------*/

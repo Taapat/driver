@@ -251,7 +251,7 @@ static int dvb_d0367_fe_qam_get_info(struct dvb_frontend *fe,
 #else
 static int dvb_d0367_fe_qam_get_property(struct dvb_frontend *fe, struct dtv_property* tvp)
 {
-	struct dvb_d0367_fe_qam_state* state = fe->demodulator_priv;
+	//struct dvb_d0367_fe_qam_state* state = fe->demodulator_priv;
 
 	/* get delivery system info */
 	if(tvp->cmd==DTV_DELIVERY_SYSTEM){

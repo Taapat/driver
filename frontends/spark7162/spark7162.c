@@ -34,26 +34,64 @@
 #include <linux/i2c.h>
 #include <linux/dvb/version.h>
 
+#include "nim_dev.h"
+
 #include "dvbdev.h"
 #include "dmxdev.h"
 #include "dvb_frontend.h"
+#include "dvb_demux.h"
 
+
+
+#include "git_version.h"
 
 #include "spark7162.h"
 #include "D3501_ext.h"
 #include "D0367.h"
+#include "d6158_ext.h"
+#include "vz7903.h"
+#include "ix7306.h"
 
-#include "../base/ix7306.h"
+//#include "../base/ix7306.h"
 #include "../base/sharp6465.h"
 #include "../base/sharp5469c.h"
 #include "../base/sharp7803.h"
+#include "../base/mxl301.h"
+
+
+
+
 
 /********************************  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½************************************/
+
+#ifdef YW_GIT_VER
+#define YWDVB_VERSION YW_GIT_VER
+#else
+#define YWDVB_VERSION "Unknow"
+#endif
 
 #define I2C_ADDR_IX7306		(0xc0 >> 1)
 #define I2C_ADDR_SHARP7803  (0xc0 >> 1)
 #define I2C_ADDR_SHARP6465	(0xc2 >> 1)
 #define I2C_ADDR_SHARP5469C	(0xc2 >> 1)
+#define I2C_ADDR_MXL301     (0x38 >> 1)
+
+#define  MAX_TER_DEMOD_TYPES		2
+
+typedef struct DemodIdentifyDbase_s
+{
+
+    U8           DemodID;            /*demod Ð¾Æ¬ID*/
+    /*¼ì²â¹¦ÄÜº¯Êý*/
+	int  (*Demod_identify)(struct i2c_adapter *i2c,U8 ucID);
+	int  (*Demod_Register_T)(struct dvb_adapter *dvb_adap,
+								struct dvb_frontend **ppFrontend,
+								struct i2c_adapter **ppI2c);
+	int  (*Demod_Register_C)(struct dvb_adapter *dvb_adap,
+								struct dvb_frontend **ppFrontend,
+								struct i2c_adapter **ppI2c);
+}DemodIdentifyDbase_T;
+
 
 enum
 {
@@ -124,6 +162,23 @@ static const struct sharp5469c_config s5469c_config = {
 	.addr		= I2C_ADDR_SHARP5469C,
 };
 
+//T2
+static const struct MXL301_config mxl301_config = {
+	.name		= "mxl301",
+	.addr		= I2C_ADDR_MXL301,
+	.bandwidth		= BANDWIDTH_8_MHZ,
+
+	.Frequency	= 500000,
+	.IF			= 36167,
+	.TunerStep	= 16667,
+};
+
+static struct vz7903_config vz7903_i2cConfig =
+{
+	.I2cAddr	= 0x60,
+	.DemodI2cAddr = 0x33,
+};
+
 struct spark_tuner_config tuner_resources[] = {
         [0] = {
                 .adapter = 0,
@@ -151,11 +206,44 @@ int UnionTunerConfig(char *pcTunerType);
 
 /********************************  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½********************************/
 
+enum tuner_type{
+	STB6100,
+	STV6110X,
+	SHARP7306,
+	VZ7903,
+	TunerUnknown,
+};
+
+void frontend_find_TunerDevice(enum tuner_type *ptunerType,struct i2c_adapter *i2c,
+											struct dvb_frontend *frontend)
+{
+	int identify = 0;
+
+	identify = tuner_Sharp7903_Identify(frontend, &vz7903_i2cConfig, (void*)i2c);
+	if(identify == 0)
+	{
+		printk("tuner_Sharp7903 is Identified\n");
+		*ptunerType = VZ7903;
+		return;
+	}
+	identify =  tuner_Sharp7306_Identify(frontend, &bs2s7hz7306a_config, i2c);
+	if(identify == 0)
+	{
+		printk("tuner_Sharp7306 is Identified\n");
+		*ptunerType = SHARP7306;
+		return;
+	}
+	//add new tuner identify here
+	*ptunerType = TunerUnknown;
+	printk("device unknown\n");
+}
+
 int spark_dvb_attach_s(struct dvb_adapter *dvb_adap,
 								const struct d3501_config *config,
 								struct dvb_frontend **ppFrontend)
 {
 	struct dvb_frontend	*pFrontend = NULL;
+	enum tuner_type	tunerType = TunerUnknown;
 
 	pFrontend = dvb_d3501_fe_qpsk_attach(config, config->pI2c);
 	if(!pFrontend)
@@ -164,14 +252,30 @@ int spark_dvb_attach_s(struct dvb_adapter *dvb_adap,
 		return -1;
 	}
 	printk("%s: d3501 attached\n", __FUNCTION__);
+	frontend_find_TunerDevice(&tunerType, config->pI2c, pFrontend);
 
-	if(!dvb_attach(ix7306_attach, pFrontend, &bs2s7hz7306a_config, config->pI2c))
+	switch (tunerType)
 	{
-		printk (KERN_INFO "%s: error attaching IX7306\n", __FUNCTION__);
-		dvb_frontend_detach(pFrontend);
-		return -1;
+	    case VZ7903:
+			if(!dvb_attach(vz7903_attach, pFrontend, &vz7903_i2cConfig,config->pI2c))
+			{
+				printk (KERN_INFO "%s: error attaching VZ7903\n", __FUNCTION__);
+				dvb_frontend_detach(pFrontend);
+				return -1;
+			}
+			printk("%s: VZ7903 attached\n", __FUNCTION__);
+	        break;
+	    case SHARP7306:
+	    default:
+			if(!dvb_attach(ix7306_attach, pFrontend, &bs2s7hz7306a_config, config->pI2c))
+			{
+				printk (KERN_INFO "%s: error attaching IX7306\n", __FUNCTION__);
+				dvb_frontend_detach(pFrontend);
+				return -1;
+			}
+			printk("%s: IX7306 attached\n", __FUNCTION__);
+	        break;
 	}
-	printk("%s: IX7306 attached\n", __FUNCTION__);
 
 	(*ppFrontend) = pFrontend;
 	return 0;
@@ -267,39 +371,127 @@ int spark_dvb_attach_t(struct dvb_adapter *dvb_adap,
 	return 0;
 }
 
+//T2 add by yanbinL
+int spark_dvb_attach_T2(struct dvb_adapter *dvb_adap,
+							struct i2c_adapter 	*pI2c,
+							struct dvb_frontend **ppFrontend,
+							UINT8   	system)
+{
+	struct dvb_frontend	*pFrontend = NULL;
+
+	pFrontend = dvb_d6158_attach(pI2c,system);
+	if(!pFrontend)
+	{
+		printk (KERN_INFO "%s: error attaching d0367\n", __FUNCTION__);
+		return -1;
+	}
+	printk("%s: d0367 fe ofdm attached\n", __FUNCTION__);
+
+	if(!dvb_attach(mxl301_attach, pFrontend, &mxl301_config, pI2c))
+
+	{
+		printk (KERN_INFO "%s: error attaching SHARP6465\n", __FUNCTION__);
+		dvb_frontend_detach(pFrontend);
+		return -1;
+	}
+
+	printk("%s: SHARP6465 attached\n", __FUNCTION__);
+
+	(*ppFrontend) = pFrontend;
+	return 0;
+
+}
+
+
 int spark_dvb_register_t(struct dvb_adapter *dvb_adap,
 								struct dvb_frontend **ppFrontend,
 								struct i2c_adapter **ppI2c)
 {
 	struct dvb_frontend *pFrontend;
-	struct i2c_adapter	*pI2c;
 
-  	pI2c = i2c_get_adapter(2);
-	printk("pI2c = 0x%0x\n", (int)pI2c);
-	if (!pI2c)
-	{
-	    return -1;
-	}
 
-	if (spark_dvb_attach_t(dvb_adap, pI2c, &pFrontend))
+	if (spark_dvb_attach_t(dvb_adap, *ppI2c, &pFrontend))
 	{
-		i2c_put_adapter(pI2c);
+		i2c_put_adapter(*ppI2c);
 		return -1;
 	}
+
+	pFrontend->id = 3;
 
 	if (dvb_register_frontend(dvb_adap, pFrontend))
 	{
 		printk("dvb-d0367 t: Frontend registration failed!\n");
 		dvb_frontend_detach(pFrontend);
-		i2c_put_adapter(pI2c);
+		i2c_put_adapter(*ppI2c);
 		return -1;
 	}
 
 	(*ppFrontend) 	= pFrontend;
-	(*ppI2c)  		= pI2c;
 
 	return 0;
 }
+
+//T2 add by yanbin
+int spark_dvb_register_T2(struct dvb_adapter *dvb_adap,
+								struct dvb_frontend **ppFrontend,
+								struct i2c_adapter **ppI2c)
+{
+	struct dvb_frontend *pFrontend;
+
+	if (spark_dvb_attach_T2(dvb_adap, *ppI2c, &pFrontend,DEMO_BANK_T2))
+	{
+		i2c_put_adapter(*ppI2c);
+		return -1;
+	}
+
+
+	pFrontend->id = 3;
+
+	if (dvb_register_frontend(dvb_adap, pFrontend))
+	{
+		printk("dvb-06158 t: Frontend registration failed!\n");
+		dvb_frontend_detach(pFrontend);
+		i2c_put_adapter(*ppI2c);
+		return -1;
+	}
+	//struct dvb_frontend_private *fepriv = pFrontend->frontend_priv;
+
+
+	(*ppFrontend) 	= pFrontend;
+
+	return 0;
+}
+
+
+int spark_dvb_register_c_T2(struct dvb_adapter *dvb_adap,
+								struct dvb_frontend **ppFrontend,
+								struct i2c_adapter **ppI2c)
+{
+	struct dvb_frontend *pFrontend;
+
+	if (spark_dvb_attach_T2(dvb_adap, *ppI2c, &pFrontend,DEMO_BANK_C))
+	{
+		i2c_put_adapter(*ppI2c);
+		return -1;
+	}
+
+
+	pFrontend->id = 3;
+
+	if (dvb_register_frontend(dvb_adap, pFrontend))
+	{
+		printk("dvb-06158 t: Frontend registration failed!\n");
+		dvb_frontend_detach(pFrontend);
+		i2c_put_adapter(*ppI2c);
+		return -1;
+	}
+	//struct dvb_frontend_private *fepriv = pFrontend->frontend_priv;
+
+	(*ppFrontend) 	= pFrontend;
+
+	return 0;
+}
+
 
 int spark_dvb_attach_c(struct dvb_adapter *dvb_adap,
 							struct i2c_adapter 	*pI2c,
@@ -358,7 +550,83 @@ int spark_dvb_register_c(struct dvb_adapter *dvb_adap,
 	return 0;
 }
 
-int spark_dvb_register_tc_by_type(struct dvb_adapter *dvb_adap,
+
+static DemodIdentifyDbase_T  DemodIdentifyTable[MAX_TER_DEMOD_TYPES] =
+{
+	{  //d6158
+		.DemodID = 0x02 ,
+		.Demod_identify = demod_d6158_Identify,
+		.Demod_Register_T = spark_dvb_register_T2,
+		.Demod_Register_C = spark_dvb_register_c_T2
+	},
+	{  //d0367
+		.DemodID = 0x60,
+		.Demod_identify = demod_d0367ter_Identify,
+		.Demod_Register_T = spark_dvb_register_t,
+		.Demod_Register_C = spark_dvb_register_c
+	},
+};
+
+
+int spark_dvb_AutoRegister_TER(struct dvb_adapter *dvb_adap,
+								struct dvb_frontend **ppFrontend,
+								struct i2c_adapter **ppI2c)
+{
+	int ret = -1;
+	struct i2c_adapter	*pI2c;
+	int i;
+	pI2c = i2c_get_adapter(2);
+	//printk("pI2c = 0x%0x\n", (int)pI2c);
+	if (!pI2c)
+	{
+	    return -1;
+	}
+	for(i=0;i<MAX_TER_DEMOD_TYPES;i++)
+	{
+		if(0 == (DemodIdentifyTable[i].Demod_identify)(pI2c,DemodIdentifyTable[i].DemodID))
+		{
+
+			*ppI2c = pI2c;
+			ret = DemodIdentifyTable[i].Demod_Register_T(dvb_adap,ppFrontend,ppI2c);
+			break;
+		}
+
+	}
+	return ret;
+
+}
+
+
+int spark_dvb_AutoRegister_Cab(struct dvb_adapter *dvb_adap,
+								struct dvb_frontend **ppFrontend,
+								struct i2c_adapter **ppI2c)
+{
+	int ret = -1;
+	struct i2c_adapter	*pI2c;
+	int i;
+	pI2c = i2c_get_adapter(2);
+	//printk("pI2c = 0x%0x\n", (int)pI2c);
+	if (!pI2c)
+	{
+	    return -1;
+	}
+	printk("spark_dvb_AutoRegister_Cab\n");
+	for(i=0;i<2;i++)
+	{
+		if(0 == (DemodIdentifyTable[i].Demod_identify)(pI2c,DemodIdentifyTable[i].DemodID))
+		{
+
+			*ppI2c = pI2c;
+			ret = DemodIdentifyTable[i].Demod_Register_C(dvb_adap,ppFrontend,ppI2c);
+			break;
+		}
+
+	}
+	return ret;
+
+}
+
+int  spark_dvb_register_tc_by_type(struct dvb_adapter *dvb_adap,
 											int iTunerType)
 {
 	int iRet = -1;
@@ -367,12 +635,13 @@ int spark_dvb_register_tc_by_type(struct dvb_adapter *dvb_adap,
 	pDvbAddData = (struct spark_dvb_adapter_adddata *)dvb_adap->priv;
 	if (IS_UNION_TUNER_T(iTunerType))
 	{
-		iRet = spark_dvb_register_t(dvb_adap, &pDvbAddData->pD0367_frontend,
-								&pDvbAddData->ter_i2c_adap);
+		iRet = spark_dvb_AutoRegister_TER(dvb_adap, &pDvbAddData->pD0367_frontend,
+							&pDvbAddData->ter_i2c_adap);
+
 	}
 	else if (IS_UNION_TUNER_C(iTunerType))
 	{
-		iRet = spark_dvb_register_c(dvb_adap, &pDvbAddData->pD0367_frontend_2,
+		iRet = spark_dvb_AutoRegister_Cab(dvb_adap, &pDvbAddData->pD0367_frontend_2,
 								&pDvbAddData->cab_i2c_adap);
 	}
 	else

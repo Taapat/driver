@@ -513,36 +513,6 @@ S32 PowOf2(S32 number)
 }
 
 
-/*------------------------------------------------------------------------------*/
-/***********************************************************************
-	函数名称:	demod_d0367ter_Identify
-
-	函数说明:	检测硬件是否0367ter
-
-       修改记录:	日       期      作      者       修定
- 				       ---------         ---------         -----
-               		2010-11-12		lwj			创建
-************************************************************************/
-YW_ErrorType_T  demod_d0367ter_Identify(IOARCH_Handle_t   IOHandle, U8  ucID, U8  *pucActualID)
-{
-#ifdef TUNER_USE_TER_STI7167TER
-    //if (TUNER_IOARCH_ReadWrite(IOHandle, TUNER_IO_SA_READ, R367_ID, pucActualID, 1, 50) == YW_NO_ERROR)
-    if (YW_NO_ERROR == YW_NO_ERROR)
-    {
-        printk("demod_d0367ter_Identify pucActualID = 0x%x\n", *pucActualID);//question
-    	return YW_NO_ERROR;
-    }
-    else
-    {
-        printk("demod_d0367ter_Identify YWHAL_ERROR_UNKNOWN_DEVICE \n");//question
-    	return YWHAL_ERROR_UNKNOWN_DEVICE;
-    }
-    return YW_NO_ERROR;
-#else
-	return YWHAL_ERROR_UNKNOWN_DEVICE;
-#endif
-
-}
 
 /***********************************************************************
 	函数名称:	demod_d0367ter_Repeat

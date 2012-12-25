@@ -365,6 +365,8 @@ struct nim_device
 	/* Hardware privative structure */
 	void	*priv;					/* pointer to private data */
 	/* Functions of this dem device */
+	UINT32 	i2c_type_id;					//dmq modify
+	UINT16 	nim_idx;						//dmq add  tuner1/tuner2
 };
 struct QPSK_TUNER_CONFIG_EXT
 {

@@ -23,7 +23,6 @@
 #include "dvb_frontend.h"
 #include "D0367.h"
 
-
 struct dvb_d0367_fe_ofdm_state {
 	struct i2c_adapter			*i2c;
 	struct dvb_frontend 		frontend;
@@ -385,7 +384,7 @@ static int dvb_d0367_fe_ofdm_get_info(struct dvb_frontend *fe,
 #else
 static int dvb_d0367_fe_ofdm_get_property(struct dvb_frontend *fe, struct dtv_property* tvp)
 {
-	struct dvb_d0367_fe_ofdm_state* state = fe->demodulator_priv;
+	//struct dvb_d0367_fe_ofdm_state* state = fe->demodulator_priv;
 
 	/* get delivery system info */
 	if(tvp->cmd==DTV_DELIVERY_SYSTEM){

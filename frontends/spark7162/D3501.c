@@ -523,7 +523,6 @@ INT32 nim_reg_write(struct nim_device *dev, UINT8 bMemAdr, UINT8 *pData, UINT8 b
 #else
 INT32 nim_reg_write(struct nim_device *dev, UINT8 bMemAdr, UINT8 *pData, UINT8 bLen)
 {
-	int i;
 	int ret;
 	u8 buf[1 + bLen];
 
@@ -531,11 +530,14 @@ INT32 nim_reg_write(struct nim_device *dev, UINT8 bMemAdr, UINT8 *pData, UINT8 b
 
 	struct i2c_msg i2c_msg = { .addr = dev->base_addr, .flags = 0, .buf = buf, .len = 1 + bLen };
 
+	#if defined(NIM_S3501_DEBUG)
+	int i;
 	for (i = 0; i < bLen; i++)
 	{
 		printk("%02x ", pData[i]);
 	}
 	printk("\n");
+	#endif  /* NIM_S3501_DEBUG */
 
 	priv_mem = (struct nim_s3501_private *)dev->priv;
 
@@ -3642,7 +3644,9 @@ static INT32 nim_s3501_i2c_open(struct nim_device *dev)
 	struct nim_s3501_private *priv = (struct nim_s3501_private *) dev->priv;
 	nim_s3501_clear_err(dev);
 
+	#if defined(NIM_S3501_DEBUG)
 	printk("nim_s3501_i2c_open priv->Tuner_Config_Data.QPSK_Config = 0x%x\n",priv->Tuner_Config_Data.QPSK_Config);
+	#endif
 	if (priv->Tuner_Config_Data.QPSK_Config & M3501_I2C_THROUGH)
 	{
 		UINT8 data, ver_data;
@@ -4525,7 +4529,11 @@ static int d3501_read_status(struct dvb_frontend *fe, enum fe_status *status)
 	struct dvb_d3501_fe_state *state = fe->demodulator_priv;
 
     iRet = nim_s3501_get_lock(&state->spark_nimdev, &lock);
+
+	#if defined(NIM_S3501_DEBUG)
 	printk("lock = %d\n", lock);
+	#endif
+
 	if (lock)
 	{
 		*status = FE_HAS_SIGNAL |
@@ -4551,9 +4559,15 @@ static int d3501_read_status(struct dvb_frontend *fe, enum fe_status *status)
 	}
 
 	if (iTunerLock)
+	{
+		#if defined(NIM_S3501_DEBUG)
 		printk("1. Tuner phase locked\n");
+		#endif
+	}
 	else
+	{
 		printk("1. Tuner unlocked\n");
+	}
 
 
 	if (nim_s3501_i2c_close(&state->spark_nimdev))
@@ -5290,6 +5304,8 @@ static int d3501_get_property(struct dvb_frontend *fe, struct dtv_property* tvp)
 	if(tvp->cmd==DTV_DELIVERY_SYSTEM){
 		switch (tvp->u.data) {
 		case SYS_DVBS2:
+		case SYS_DVBS:
+		case SYS_DSS:
 			break;
 		default:
 			return -EINVAL;
@@ -5559,6 +5575,7 @@ static int d3501_initition(struct nim_device *dev, struct i2c_adapter	*i2c)
 	priv_mem->bLock = FALSE;
 
 	priv_mem->Tuner_Config_Data.QPSK_Config = 0xe9;  //lwj
+	//priv_mem->Tuner_Config_Data.QPSK_Config = 0x29;  //lf
 
 	nim_s3501_get_type(dev);
     if (priv_mem->ul_status.m_s3501_type == NIM_CHIP_ID_M3501A && 			// Chip 3501A
@@ -5594,6 +5611,7 @@ struct dvb_frontend* dvb_d3501_fe_qpsk_attach(
 	/* allocate memory for the internal state */
 	state = kmalloc(sizeof(struct dvb_d3501_fe_state), GFP_KERNEL);
 	if (state == NULL) goto error;
+	memset(state, 0, sizeof(struct dvb_d3501_fe_state));
 
 	/* create dvb_frontend */
 	memcpy(&state->frontend.ops, &spark_d3501_ops, sizeof(struct dvb_frontend_ops));

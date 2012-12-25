@@ -239,13 +239,13 @@ static int stv6110x_set_frequency(struct dvb_frontend *fe, u32 frequency)
 	stv6110x_regs[STV6110x_TNG0] = (divider & 0xff);
 
 	/* CALVCOSTRT = 1 VCO Auto Calibration */
-	
+
 	stv6110x_regs[STV6110x_STAT1] |= 0x04;
 
 	stv6110x_write_reg(stv6110x, STV6110x_CTRL2, stv6110x_regs[STV6110x_CTRL2]);
 	stv6110x_write_reg(stv6110x, STV6110x_CTRL1, stv6110x_regs[STV6110x_CTRL1]);
 
-// TDT from app 
+// TDT from app
 
 	stv6110x_write_reg(stv6110x, STV6110x_TNG1, stv6110x_regs[STV6110x_TNG1]);
 
@@ -254,7 +254,7 @@ static int stv6110x_set_frequency(struct dvb_frontend *fe, u32 frequency)
 
 	for (i = 0; i < TRIALS; i++) {
 		u8 reg;
-		
+
 		stv6110x_read_reg(stv6110x, STV6110x_TNG1, &reg);
 		if (reg == stv6110x_regs[STV6110x_TNG1])
 			break;
@@ -328,7 +328,7 @@ static int stv6110x_set_bandwidth(struct dvb_frontend *fe, u32 bandwidth)
 	stv6110x_regs[STV6110x_CTRL3] &= ~((1 << 6) | 0x1f);
 	stv6110x_regs[STV6110x_CTRL3] |= (r8 & 0x1f);
 	stv6110x_write_reg(stv6110x, STV6110x_CTRL3, stv6110x_regs[STV6110x_CTRL3]);
-	
+
 	/* stat1, CALRCSTRT = 1 Start LPF auto calibration*/
 	stv6110x_regs[STV6110x_STAT1] |= 0x02;
 	stv6110x_write_reg(stv6110x, STV6110x_STAT1, stv6110x_regs[STV6110x_STAT1]);
@@ -336,7 +336,7 @@ static int stv6110x_set_bandwidth(struct dvb_frontend *fe, u32 bandwidth)
 	i = 0;
 	/* Wait for CALRCSTRT == 0 */
 	while ((i < 10) && (ret != 0)) {
-		stv6110x_read_reg(stv6110x, STV6110x_STAT1, &ret);	
+		stv6110x_read_reg(stv6110x, STV6110x_STAT1, &ret);
 		ret &= 0x02;
 		mdelay(1);	/* wait for LPF auto calibration */
 		i++;

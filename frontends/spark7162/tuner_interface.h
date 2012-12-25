@@ -567,6 +567,7 @@ typedef struct TUNER_TerParam_s
     YWTUNER_TERBandwidth_T    ChannelBW;
     S32                        EchoPos;
     BOOL                    bAntenna;
+	U8                    TuneMode;//jhy add for panosonic 6158 ,0=unkown,1=c;2=T;3=T2
 }TUNER_TerParam_T;
 
 /*ter demod 的功能函数*/

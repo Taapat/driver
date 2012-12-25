@@ -31,7 +31,6 @@ void D0367ter_Init(TUNER_IOREG_DeviceMap_t *DeviceMap,
 										IOARCH_Handle_t IOHandle,
 										TUNER_TunerType_T TunerType);
 
-YW_ErrorType_T demod_d0367ter_Identify(IOARCH_Handle_t   IOHandle, U8  ucID, U8 *pucActualID);
 YW_ErrorType_T demod_d0367ter_Repeat(IOARCH_Handle_t     DemodIOHandle,
 										IOARCH_Handle_t   TunerIOHandle,
 										TUNER_IOARCH_Operation_t Operation,

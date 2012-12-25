@@ -46,6 +46,15 @@ typedef unsigned short	U16;
 typedef int			    S32;
 typedef unsigned int	U32;
 
+typedef char			INT8;
+typedef unsigned char	UINT8;
+
+typedef short			INT16;
+typedef unsigned short	UINT16;
+
+typedef int			    INT32;
+typedef unsigned int	UINT32;
+
 //typedef unsigned int	IOARCH_Handle_t;
 typedef unsigned int	YW_ErrorType_T;
 
@@ -82,6 +91,10 @@ typedef const char * ST_Revision_t;
 #define YWHAL_ERROR_BAD_PARAMETER 			-3
 #define YWHAL_ERROR_FEATURE_NOT_SUPPORTED 	-4
 #define YWHAL_ERROR_UNKNOWN_DEVICE			-5
+
+#define SUCCESS         0       /* Success return */
+#define RET_SUCCESS		((INT32)0)
+#define ERR_FAILUE		-9
 
 /********************************  数据结构************************************/
 

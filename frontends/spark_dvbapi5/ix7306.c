@@ -55,11 +55,21 @@ static int ix7306_write(struct ix7306_state *state, u8 *buf, u8 len)
 	const struct ix7306_config *config = state->config;
 	int err = 0;
 	struct i2c_msg msg = { .addr = config->addr, .flags = 0, .buf = buf, .len = len };
+	#if defined(IX7306_DEBUG)
+	int i;
+	for (i = 0; i < len; i++)
+	{
+		printk("%02x ", buf[i]);
+	}
+	printk("\n");
+	#endif
 
 	err = i2c_transfer(state->i2c, &msg, 1);
+	//printk("err = %d\n", err);
 	if (err != 1)
 	{
 		printk("msg.addr = %d\n", msg.addr);
+		printk("config->addr = %d\n", config->addr);
 		printk("%s: write error, err=%d\n", __func__, err);
 		return -1;
 	}
@@ -78,7 +88,9 @@ static int ix7306_read(struct ix7306_state *state, u8 *buf)
 		{ .addr = config->addr, .flags = I2C_M_RD, .buf = buf,  .len = 1 }
 	};
 
-	err = i2c_transfer(state->i2c, &msg[0], 1);
+	//err = i2c_transfer(state->i2c, &msg[0], 1);
+	state->fe->ops.i2c_gate_ctrl(state->fe, 0);
+	//msleep(12);
 	state->fe->ops.i2c_gate_ctrl(state->fe, 1);
 	err = i2c_transfer(state->i2c, &msg[1], 1);
 	if (err != 1)
@@ -103,17 +115,17 @@ static int ix7306_read(struct ix7306_state *state, u8 *buf)
 *--------------------------------------------------------------*/
 
 
-static void tun_setfreq_QM1D1B0004(struct dvb_frontend *fe, long freq, long baud, int *byte_) 
+static void tun_setfreq_QM1D1B0004(struct dvb_frontend *fe, long freq, long baud, int *byte_)
 {
-	
+
 	/*set byte5  BA2 BA1 BA0 PSC  DIV/TS1*/
-	calculate_pll_vco_QM1D1B0004(freq,byte_);	
-	
-	calculate_pll_divider_byte_QM1D1B0004(freq,byte_);	
+	calculate_pll_vco_QM1D1B0004(freq,byte_);
+
+	calculate_pll_divider_byte_QM1D1B0004(freq,byte_);
 
 	calculate_pll_lpf_bw_from_baud_QM1D1B0004(baud,byte_);
 
-	pll_setdata_QM1D1B0004(fe, byte_);	
+	pll_setdata_QM1D1B0004(fe, byte_);
 
 }
 
@@ -272,7 +284,7 @@ static void pll_setdata_QM1D1B0004(struct dvb_frontend *fe, int *byte_)
 	ucOperData[2] = *(byte_+3);
 	ucOperData[3] = *(byte_+4);
 
-	
+
 	byte1=ucOperData[0];	//byte2
 	byte3=ucOperData[2];	//byte4
 	byte4=ucOperData[3];	//byte5
@@ -349,12 +361,19 @@ static int ix7306_set_freq(struct dvb_frontend *fe, u32 freq_KHz, u32 tuner_BW)
 {
 	u32			tuner_bw_K = tuner_BW/1000;
 
+	#if defined(IX7306_DEBUG)
+	printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+	#endif
+
 	memset(reg_data,0,sizeof(reg_data));
 	reg_data[1] = 0x44;
 	reg_data[2] = 0x7e;
 	reg_data[3] = 0xe1;
 	reg_data[4] = 0x42;
-	
+
+	#if defined(IX7306_DEBUG)
+	printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+	#endif
 	tun_setfreq_QM1D1B0004(fe,freq_KHz,tuner_bw_K, &reg_data[0]);
 
 	return 0;
@@ -366,9 +385,16 @@ static int ix7306_set_state(struct dvb_frontend *fe,
 {
 	struct ix7306_state *state = fe->tuner_priv;
 
+	#if defined(IX7306_DEBUG)
+	printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+	#endif
+
 	if (param & DVBFE_TUNER_FREQUENCY) {
 		state->frequency = tstate->frequency;
 		state->bandwidth = tstate->bandwidth;
+		#if defined(IX7306_DEBUG)
+		printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+		#endif
 		ix7306_set_freq (fe, state->frequency, state->bandwidth);
 	} else {
 		printk("%s: Unknown parameter (param=%d)\n", __func__, param);
@@ -416,12 +442,14 @@ static int ix7306_get_status(struct dvb_frontend *fe, u32 *status)
 	}
 
 	if (result[0] & 0x40) {
+		#if defined(IX7306_DEBUG)
 		printk("%s: Tuner Phase Locked\n", __func__);
+		#endif
 		*status = 1;
 	}
 	else
 	{
-		printk("%s: Tuner Phase Not Locked result - 0x%x, 0x%x,\n", __func__, result[0], result[1]); 
+		printk("%s: Tuner Phase Not Locked result - 0x%x, 0x%x,\n", __func__, result[0], result[1]);
 	}
 
 	return err;
@@ -436,6 +464,181 @@ static int ix7306_release(struct dvb_frontend *fe)
 	return 0;
 }
 
+#define REF_OSC_FREQ	4000 /* 4MHZ */
+static int ix7306_set_params(struct dvb_frontend *fe,
+									struct dvb_frontend_parameters *p)
+{
+	struct ix7306_state *state = fe->tuner_priv;
+	int err = 0;
+	u32 freq, sym;
+
+	u8 data[4];
+	u16 Npro,tmp;
+	u32 Rs, BW;
+	u8 Nswa;
+	u8 LPF = 15;
+	u8 BA = 1;
+	u8 DIV = 0;
+	int result = 0;
+
+	freq = p->frequency;
+	sym = p->u.qpsk.symbol_rate;
+
+#if 0
+	u32 ratio = 135;
+#endif
+
+	Rs = sym;
+	if (Rs == 0)
+		Rs = 45000;
+#if 1
+	BW = Rs*135/200;
+	BW = BW*130/100;
+	if (Rs < 6500)
+		BW = BW + 3000;
+	BW = BW + 2000;
+	BW = BW*108/100;
+#else
+	if (ratio == 0)
+		BW = 34000;
+	else
+		BW = Rs * ratio / 100;
+#endif
+	if (BW < 10000)
+		BW = 10000;
+	if (BW > 34000)
+		BW = 34000;
+
+	if (BW <= 10000)
+		LPF = 3;
+	else if (BW <= 12000)
+		LPF = 4;
+	else if (BW <= 14000)
+		LPF = 5;
+	else if (BW <= 16000)
+		LPF = 6;
+	else if (BW <= 18000)
+		LPF = 7;
+	else if (BW <= 20000)
+		LPF = 8;
+	else if (BW <= 22000)
+		LPF = 9;
+	else if (BW <= 24000)
+		LPF = 10;
+	else if (BW <= 26000)
+		LPF = 11;
+	else if (BW <= 28000)
+		LPF = 12;
+	else if (BW <= 30000)
+		LPF = 13;
+	else if (BW <= 32000)
+		LPF = 14;
+	else
+		LPF = 15;
+
+
+	if (freq <= 1154)
+		DIV = 1;
+	else
+		DIV = 0;
+
+	if (freq <= 986)
+		BA = 5;
+	else if (freq <= 1073)
+		BA = 6;
+	else if (freq <= 1154)
+		BA = 7;
+	else if (freq <= 1291)
+		BA = 1;
+	else if (freq <= 1447)
+		BA = 2;
+	else if (freq <= 1615)
+		BA = 3;
+	else if (freq <= 1791)
+		BA= 4;
+	else if (freq <= 1972)
+		BA= 5;
+	else //if (freq <= 2150)
+		BA = 6;
+
+
+	tmp = freq * 1000 * 8 / REF_OSC_FREQ;
+	Nswa = tmp % 32;
+	Npro = tmp / 32;
+
+
+	data[0] = (u8) ((Npro >> 3) & 0x1F);
+
+	data[0] = data[0] | 0x40;
+	data[1] = Nswa | (((u8)Npro & 0x07) << 5);
+	data[2] = 0xE1;
+	data[3] = (BA<<5) | (DIV<<1);
+	if(ix7306_write(state, data, 4) < 0)
+	{
+		printk("nim_vz7306_control: I2C write error\n");
+		return result;
+	}
+
+
+	data[2] = 0xE5;
+	if(ix7306_write(state, data + 2, 1) < 0)
+	{
+		printk("nim_vz7306_control: I2C write error\n");
+		return result;
+	}
+
+	mdelay(10);
+
+	data[2] |= ((LPF & 0x01) << 4) | ((LPF & 0x02) << 2);
+	data[3] |= ((LPF & 0x04) << 1) | ((LPF & 0x08) >> 1);
+	if(ix7306_write(state, data + 2, 2) < 0)
+	{
+		printk("nim_vz7306_control: I2C write error\n");
+		return result;
+	}
+
+	return err;
+}
+
+static unsigned char init_data1[] = { 0x44, 0x7e, 0xe1, 0x42 };
+static unsigned char init_data2[] = { 0xe5 };
+static unsigned char init_data3[] = { 0xfd, 0x0d };
+
+static int ix7306_init(struct dvb_frontend *fe)
+{
+	int result = 0;
+	struct ix7306_state *state = fe->tuner_priv;
+
+	if (fe->ops.i2c_gate_ctrl(fe,1) < 0)
+	{
+		printk("ix7306_init i2c_gate_ctrl 1 error\n");
+		return -1;
+	}
+
+    /*D¡ä tuner*/
+    if(ix7306_write(state, init_data1, sizeof(init_data1)) < 0)
+	{
+		printk("nim_vz7306_control: I2C write error init_data1\n");
+		return result;
+	}
+    if(ix7306_write(state, init_data2, sizeof(init_data2)) < 0)
+	{
+		printk("nim_vz7306_control: I2C write error init_data2\n");
+		return result;
+	}
+	//osal_delay(10000);
+    mdelay(10);
+
+    if(ix7306_write(state, init_data3, sizeof(init_data3)) < 0)
+	{
+		printk("nim_vz7306_control: I2C write error init_data3\n");
+		return result;
+	}
+
+	return result;
+
+}
+
 static struct dvb_tuner_ops ix7306_ops = {
 
 	.info = {
@@ -448,7 +651,9 @@ static struct dvb_tuner_ops ix7306_ops = {
 	.set_state	= ix7306_set_state,
 	.get_state	= ix7306_get_state,
 	.get_status	= ix7306_get_status,
-	.release	= ix7306_release
+	.set_params	= ix7306_set_params,
+	.release	= ix7306_release,
+	.init		= ix7306_init
 };
 
 int ix7306_get_frequency(struct dvb_frontend *fe, u32 *frequency)
@@ -461,8 +666,16 @@ int ix7306_get_frequency(struct dvb_frontend *fe, u32 *frequency)
 	if (&fe->ops)
 		frontend_ops = &fe->ops;
 
+	#if defined(IX7306_DEBUG)
+	printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+	#endif
+
 	if (&frontend_ops->tuner_ops)
 		tuner_ops = &frontend_ops->tuner_ops;
+
+	#if defined(IX7306_DEBUG)
+	printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+	#endif
 
 	if (tuner_ops->get_state) {
 		if ((err = tuner_ops->get_state(fe, DVBFE_TUNER_FREQUENCY, &t_state)) < 0) {
@@ -470,7 +683,9 @@ int ix7306_get_frequency(struct dvb_frontend *fe, u32 *frequency)
 			return err;
 		}
 		*frequency = t_state.frequency;
+		#if defined(IX7306_DEBUG)
 		printk("%s: Frequency=%d\n", __func__, t_state.frequency);
+		#endif
 	}
 	return 0;
 }
@@ -497,7 +712,9 @@ int ix7306_set_frequency(struct dvb_frontend *fe, u32 frequency)
 			return err;
 		}
 	}
+	#if defined(IX7306_DEBUG)
 	printk("%s: Frequency=%d\n", __func__, t_state.frequency);
+	#endif
 	return 0;
 }
 
@@ -530,7 +747,9 @@ int ix7306_get_bandwidth(struct dvb_frontend *fe, u32 *bandwidth)
 		}
 		*bandwidth = t_state.bandwidth;
 	}
+	#if defined(IX7306_DEBUG)
 	printk("%s: Bandwidth=%d\n", __func__, t_state.bandwidth);
+	#endif
 	return 0;
 }
 
@@ -579,28 +798,56 @@ int tuner_Sharp7306_Identify(struct dvb_frontend *fe,
     ucIOBuffer[3] = 0x42;
 
 	if (fe->ops.i2c_gate_ctrl(fe,1) < 0)
+	{
+		printk("i2c_gate_ctrl 1 error\n");
 		return -1;
+	}
+	Err = ix7306_write(&state, ucIOBuffer, 4);
+	printk("ix7306_write ucIOBuffer 4 Err = %d\n", Err);
+	if (fe->ops.i2c_gate_ctrl(fe,0) < 0)
+	{
+		printk("i2c_gate_ctrl 1 error\n");
+		return -1;
+	}
 
-	ix7306_write(&state, ucIOBuffer,1);
+	if (fe->ops.i2c_gate_ctrl(fe,1) < 0)
+	{
+		printk("i2c_gate_ctrl 0 error\n");
+		return -1;
+	}
+	Err = ix7306_write(&state, ucIOBuffer,1);
+	printk("ix7306_write ucIOBuffer 1 Err = %d\n", Err);
 	msleep(12);
 	if (fe->ops.i2c_gate_ctrl(fe,0) < 0)
+	{
+		printk("i2c_gate_ctrl 0 error\n");
 		return -1;
+	}
     memset(ucIOBuffer,0,sizeof(ucIOBuffer));
     ucIOBuffer[0] = 0xfd;
     ucIOBuffer[1] = 0x0d;
     if (fe->ops.i2c_gate_ctrl(fe,1) < 0)
+	{
+		printk("i2c_gate_ctrl 1 error\n");
 		return -1;
-
-	ix7306_write(&state, ucIOBuffer,2);
+	}
+	Err = ix7306_write(&state, ucIOBuffer, 2);
+	printk("ix7306_write ucIOBuffer Err 2 = %d\n", Err);
 	if (fe->ops.i2c_gate_ctrl(fe,0) < 0)
+	{
+		printk("i2c_gate_ctrl 0 error\n");
 		return -1;
+	}
     if(Err == 0)
     {
 		msleep(50);
 		if (fe->ops.i2c_gate_ctrl(fe,1) < 0)
+		{
+			printk("i2c_gate_ctrl 1 error\n");
 			return -1;
-
-		ix7306_read(&state,&ucData);
+		}
+		Err =ix7306_read(&state,&ucData);
+		printk("ix7306_read Err = %d ucData = 0x%x\n", Err, ucData);
 		if(Err == 0)
         {
             if((ucData&0x3f) == 0x18)
@@ -609,9 +856,15 @@ int tuner_Sharp7306_Identify(struct dvb_frontend *fe,
                 Err = 0;
             }
             else
+            {
                 Err = -1;
+            }
         }
-		fe->ops.i2c_gate_ctrl(fe,1);
+		if (fe->ops.i2c_gate_ctrl(fe,0) < 0)
+		{
+			printk("i2c_gate_ctrl 0 error\n");
+			return -1;
+		}
     }
     return Err;
 }

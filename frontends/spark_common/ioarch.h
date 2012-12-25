@@ -11,11 +11,11 @@
 //
 // 创建时间：    12-Oct-2005
 //
-// 文件描述：    
+// 文件描述：
 //
 // 修改记录：   日       期      作      者       版本      修定
 //                       ---------         ---------        -----        -----
-//                                                 
+//
 /*********************************************************************************/
 
 /* define to prevent recursive inclusion */
@@ -94,7 +94,7 @@ typedef struct
     U32                      Address;     /* and final destination        */
 
     IOARCH_ExtHandle_t      *hInstance;        /* pointer to instance of driver being called */
-    TUNER_IOARCH_RedirFn_t  TargetFunction;   /* if IODriver is TUNER_IO_REPEATER or  TUNER_IO_PASSTHRU 
+    TUNER_IOARCH_RedirFn_t  TargetFunction;   /* if IODriver is TUNER_IO_REPEATER or  TUNER_IO_PASSTHRU
                                                  then specify function to call instead of TUNER_IOARCH_ReadWrite */
 } TUNER_IOARCH_OpenParams_t;
 
@@ -135,7 +135,7 @@ YW_ErrorType_T TUNER_IOARCH_ChangeRoute(IOARCH_Handle_t Handle, TUNER_IORoute_t 
 YW_ErrorType_T TUNER_IOARCH_GetAddr(IOARCH_Handle_t Handle, U32 *Address);
 YW_ErrorType_T TUNER_IOARCH_ReadWrite(IOARCH_Handle_t Handle, TUNER_IOARCH_Operation_t Operation, unsigned short SubAddr, U8 *Data, U32 TransferSize, U32 Timeout);
 YW_ErrorType_T TUNER_IOARCH_ReadWriteNoRep(IOARCH_Handle_t Handle, TUNER_IOARCH_Operation_t Operation, unsigned short SubAddr, U8 *Data, U32 TransferSize, U32 Timeout);
-YW_ErrorType_T I2C_ReadWrite(void *I2CHandle, TUNER_IOARCH_Operation_t Operation, unsigned short SubAddr, U8 *Data, U32 TransferSize, U32 Timeout);//lwj add
+int I2C_ReadWrite(void *I2CHandle, TUNER_IOARCH_Operation_t Operation, unsigned short SubAddr, U8 *Data, U32 TransferSize, U32 Timeout);//lwj add
 
 
 /* ------------------------------------------------------------------------- */

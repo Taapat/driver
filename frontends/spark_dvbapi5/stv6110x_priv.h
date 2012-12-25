@@ -54,7 +54,7 @@ struct stv6110x_state {
 
 	struct stv6110x_devctl		*devctl;
 	struct dvb_frontend *fe;
-    
+
     u32 gain;
 };
 

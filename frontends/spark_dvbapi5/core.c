@@ -67,15 +67,17 @@ void frontend_find_TunerDevice(enum tuner_type *ptunerType,struct i2c_adapter *i
 {
 	int identify = 0;
 
-	identify = tuner_Sharp7903_Identify((void*)i2c,&vz7903_i2cConfig);
+	identify = tuner_Sharp7903_Identify(frontend, &vz7903_i2cConfig, (void*)i2c);
 	if(identify == 0)
 	{
 		printk("tuner_Sharp7903 is Identified\n");
 		*ptunerType = VZ7903;
 		return;
 	}
-	identify =  tuner_Sharp7306_Identify(frontend,&bs2s7hz7306a_config,i2c);
+	identify =  tuner_Sharp7306_Identify(frontend, &bs2s7hz7306a_config, i2c);
+	if(identify == 0)
 	{
+		printk("tuner_Sharp7306 is Identified\n");
 		*ptunerType = SHARP7306;
 		return;
 	}
@@ -91,12 +93,12 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 	enum tuner_type	tunerType = TunerUnknown;
 
 	printk (KERN_INFO "%s >\n", __FUNCTION__);
-	
+
 	frontend = stv090x_attach(&tt1600_stv090x_config, cfg->i2c_adap, STV090x_DEMODULATOR_0, STV090x_TUNER1);
-	frontend_find_TunerDevice(&tunerType,cfg->i2c_adap,frontend);
+	frontend_find_TunerDevice(&tunerType, cfg->i2c_adap, frontend);
 	if (frontend) {
 		printk("%s: attached\n", __FUNCTION__);
-		
+
 		switch (tunerType) {
 		case SHARP7306:
 			if(dvb_attach(ix7306_attach, frontend, &bs2s7hz7306a_config, cfg->i2c_adap))
@@ -158,7 +160,7 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 
 error_out:
 	printk("core: Frontend registration failed!\n");
-	if (frontend) 
+	if (frontend)
 		dvb_frontend_detach(frontend);
 	return NULL;
 }
@@ -275,7 +277,7 @@ int stv090x_register_frontend(struct dvb_adapter *dvb_adap)
 
 	core[i] = (struct core*) kmalloc(sizeof(struct core),GFP_KERNEL);
 	if (!core[i])
-		return;
+		return 0;
 
 	memset(core[i], 0, sizeof(struct core));
 
@@ -283,13 +285,13 @@ int stv090x_register_frontend(struct dvb_adapter *dvb_adap)
 	dvb_adap->priv = core[i];
 
 	printk("tuner = %d\n", ARRAY_SIZE(tuner_resources));
-	
+
 	for (vLoop = 0; vLoop < ARRAY_SIZE(tuner_resources); vLoop++)
 	{
 	  if (core[i]->frontend[vLoop] == NULL)
 	  {
       	     printk("%s: init tuner %d\n", __FUNCTION__, vLoop);
-	     core[i]->frontend[vLoop] = 
+	     core[i]->frontend[vLoop] =
 				   init_stv090x_device (core[i]->dvb_adapter, &tuner_resources[vLoop], vLoop);
 	  }
 	}
