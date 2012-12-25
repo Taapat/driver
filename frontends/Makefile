@@ -265,6 +265,11 @@ spark7162-objs +=        spark7162/6158/MN88472_autoctrl.o
 spark7162-objs +=        spark7162/6158/MN88472_register.o
 spark7162-objs +=        spark7162/6158/MN88472_variable.o
 
+spark7162-objs +=        spark7162/tuner/mxl301rf.o
+spark7162-objs +=        spark7162/tuner/mxl_common.o
+spark7162-objs +=        spark7162/tuner/mxl_spur_table.o
+spark7162-objs +=        spark7162/tuner/mxL_user_define.o
+
 obj-m += spark7162.o
 else ifdef UFS912
 stv090x-objs +=	stv090x/stv090x.o
