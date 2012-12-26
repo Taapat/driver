@@ -43,7 +43,7 @@
 
 
 
-#include "git_version.h"
+//#include "git_version.h" // file is missing
 
 #include "spark7162.h"
 #include "D3501_ext.h"
