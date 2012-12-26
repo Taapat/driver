@@ -81,6 +81,18 @@ stv090x-objs +=	spark/ix7306.o
 stv090x-objs +=	spark/core.o
 obj-m += stv090x.o
 obj-y += lnb/
+
+spark7162-objs +=        spark7162/6158/d6158.o
+spark7162-objs +=        spark7162/6158/MN88472_autoctrl.o
+spark7162-objs +=        spark7162/6158/MN88472_register.o
+spark7162-objs +=        spark7162/6158/MN88472_variable.o
+
+spark7162-objs +=        spark7162/tuner/mxl301rf.o
+spark7162-objs +=        spark7162/tuner/mxl_common.o
+spark7162-objs +=        spark7162/tuner/mxl_spur_table.o
+spark7162-objs +=        spark7162/tuner/mxL_user_define.o
+
+
 else ifdef FORTIS_HDBOX
 stv090x-objs +=	stv090x/stv090x.o
 stv090x-objs +=	stv090x/stv6110x.o

@@ -1056,6 +1056,7 @@ static INT32 nim_panic6158_get_bandwidth(struct nim_device *dev, INT32 *bandwidt
 static INT32 nim_panic6158_tune_action(struct nim_device *dev, UINT8 system, UINT32 frq, UINT8 bw, UINT8 qam, UINT32 wait_time)
 {
 	INT32 ret = !SUCCESS;
+	INT32 retTuner = !SUCCESS;
 	UINT16 i, j;
 	UINT8 data, lock = 0;
 	struct nim_panic6158_private *priv;
@@ -1066,6 +1067,7 @@ static INT32 nim_panic6158_tune_action(struct nim_device *dev, UINT8 system, UIN
 	if (DEMO_BANK_T == system || DEMO_BANK_C == system)
 	{
 		NIM_PANIC6158_PRINTF("tune T\n");
+        NIM_PANIC6158_PRINTF("[%s]%d,T frq =%d, bw= %d,system =%d\n",__FUNCTION__,__LINE__,frq, bw, system);
 		if (DEMO_BANK_C == system)
 		{
 			for (i = 0; i < ARRAY_SIZE(qam_array); i++)
@@ -1092,7 +1094,7 @@ static INT32 nim_panic6158_tune_action(struct nim_device *dev, UINT8 system, UIN
 		//tune tuner
 		tun_mxl301_set_addr(priv->tuner_id, priv->i2c_addr[DEMO_BANK_T2], priv->i2c_mutex_id);
 		if (NULL != priv->tc.nim_Tuner_Control)
-			ret = priv->tc.nim_Tuner_Control(priv->tuner_id, frq, bw, 0, NULL, 0);
+			retTuner = priv->tc.nim_Tuner_Control(priv->tuner_id, frq, bw, 0, NULL, 0);
 
 		//osal_task_sleep(10);
 		YWOS_TaskSleep(10);
@@ -1117,7 +1119,7 @@ static INT32 nim_panic6158_tune_action(struct nim_device *dev, UINT8 system, UIN
 		//reset demo
 		data = 0x9F;
 		nim_reg_write(dev, DEMO_BANK_T2, DMD_RSTSET1, &data, 1);
-
+		NIM_PANIC6158_PRINTF("dev->get_lock = 0x%x\n", (int)dev->get_lock);
 		for (i = 0; i < (wait_time / 50); i++)
 		{
 			if (NULL != dev->get_lock)
@@ -1129,7 +1131,7 @@ static INT32 nim_panic6158_tune_action(struct nim_device *dev, UINT8 system, UIN
 				YWOS_TaskSleep(50);
 
 				dev->get_lock(dev, &lock);
-				//printf("[%s]%d,T/C demod lock =%d\n",__FUNCTION__,__LINE__,lock);
+				NIM_PANIC6158_PRINTF("[%s]%d,T/C demod lock =%d\n",__FUNCTION__,__LINE__,lock);
 				if (1 == lock)
 				{
 					ret = SUCCESS;
@@ -1143,8 +1145,8 @@ static INT32 nim_panic6158_tune_action(struct nim_device *dev, UINT8 system, UIN
 		data = 0x43;
 		nim_reg_write(dev, DEMO_BANK_T2, DMD_SSEQSET, &data, 1);
 
-        printk("[%s]%d,frq =%d, bw= %d,system =%d\n",__FUNCTION__,__LINE__,frq, bw, system);
 		NIM_PANIC6158_PRINTF("tune T2\n");
+        NIM_PANIC6158_PRINTF("[%s]%d,T2 frq =%d, bw= %d,system =%d\n",__FUNCTION__,__LINE__,frq, bw, system);
 		for (i = 0; i < PANIC6158_PLP_TUNE_NUM; i++)
 		{
 			data = 0x80;
@@ -1217,6 +1219,7 @@ static INT32 nim_panic6158_tune_action(struct nim_device *dev, UINT8 system, UIN
 		}
 	}
 
+	NIM_PANIC6158_PRINTF("ret = %d\n", ret);
 	return ret;
 }
 
@@ -1224,7 +1227,7 @@ static INT32 nim_panic6158_channel_change(struct nim_device *dev, struct NIM_Cha
 {
 	UINT32 frq;
 	INT32 i;//, j;
-	INT32 tune_num = 1;
+	INT32 tune_num = 2;
 	UINT32 wait_time;
 	UINT8 bw, mode[2], qam;
 	struct nim_panic6158_private *priv;
@@ -1787,16 +1790,21 @@ static YW_ErrorType_T demod_d6158_ScanFreq(struct dvb_frontend_parameters *p,
     INT32 ret = 0;
     struct NIM_Channel_Change param;
 
+	memset(&param, 0, sizeof(struct NIM_Channel_Change));
+
 	if(dev == NULL)
 	{
 		return YWHAL_ERROR_BAD_PARAMETER;
 	}
-	if(DEMO_BANK_T2 == System)
+	if((DEMO_BANK_T2 == System) || (DEMO_BANK_T == System))
 	{
 
 		//printf("TuneMode=%d\n", Inst->DriverParam.Ter.Param.TuneMode);
-		param.priv_param = DEMO_DVBT2;//T2  T
+		param.priv_param = DEMO_UNKNOWN;//T2  T
+		//param.priv_param = DEMO_DVBT2;//T2  T
 
+		//printk("p->frequency:%dKHz, bw:%dMHz\n",
+		//		p->frequency, p->u.ofdm.bandwidth);
 		param.freq = p->frequency;
 		switch(p->u.ofdm.bandwidth)
 		{
@@ -2868,7 +2876,7 @@ exit:
  static struct dvb_frontend_ops dvb_d6158_fe_ofdm_ops = {
 
 	 .info = {
-		 .name			 = "d6158 DVB-T2",
+		 .name			 = "Tuner3-T/T2/C",
 		 .type			 = FE_OFDM,
 		 .frequency_min 	 = 0,
 		 .frequency_max 	 = 863250000,
@@ -2908,7 +2916,7 @@ exit:
 static struct dvb_frontend_ops dvb_d6158_fe_qam_ops = {
 
 	.info = {
-		.name			= "d6158 DVB-C",
+		.name			= "Tuner3-T/T2/C",
 		.type			= FE_QAM,
 		.frequency_stepsize	= 62500,
 		.frequency_min		= 51000000,
@@ -3030,6 +3038,8 @@ struct dvb_frontend* dvb_d6158_attach(struct i2c_adapter* i2c,UINT8 system)
 		 }
 
 	 }
+
+	state->spark_nimdev.get_lock = nim_panic6158_get_lock;
 
 	 ret = nim_panic6158_open(&state->spark_nimdev);
 	 printk("[%s]%d,open result=%d \n",__FUNCTION__,__LINE__,ret);
