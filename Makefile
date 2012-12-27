@@ -19,11 +19,8 @@ CONFIGFILE := $(DRIVER_TOPDIR)/.config
 
 include $(CONFIGFILE)
 
-ifdef HAVANA_P0207_5
-CCFLAGSY+=-DHAVANA_P0207_5
-endif
 
-ifdef HL101
+HL101
 CCFLAGSY += -DHL101
 endif
 ifdef SPARK
@@ -32,11 +29,7 @@ endif
 ifdef SPARK7162
 CCFLAGSY+=-DSPARK7162
 endif
-ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
-ccflags-y += $(CCFLAGSY)
-else
 CFLAGS += $(CCFLAGSY)
-endif
 
 export CCFLAGSY
 
