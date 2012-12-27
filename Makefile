@@ -19,8 +19,7 @@ CONFIGFILE := $(DRIVER_TOPDIR)/.config
 
 include $(CONFIGFILE)
 
-
-HL101
+ifdef HL101
 CCFLAGSY += -DHL101
 endif
 ifdef SPARK
@@ -29,7 +28,8 @@ endif
 ifdef SPARK7162
 CCFLAGSY+=-DSPARK7162
 endif
-CFLAGS += $(CCFLAGSY)
+
+ccflags-y += $(CCFLAGSY)
 
 export CCFLAGSY
 

@@ -7,7 +7,8 @@ CCFLAGSY += -I$(CONFIG_STGFB_PATH)/include
 CCFLAGSY += -DDEBUG_DVB
 CCFLAGSY += -I$(TREE_ROOT)/include
 CCFLAGSY += -I$(TREE_ROOT)/frontcontroller/include
-CFLAGS += $(CCFLAGSY)
+ccflags-y += $(CCFLAGSY)
+
 
 
 ifdef HL101

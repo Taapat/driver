@@ -26,7 +26,7 @@ CCFLAGSY += -I$(TREE_ROOT)/frontends/spark_common
 CCFLAGSY += -Wall #-Werror
 endif
 
-CFLAGS += $(CCFLAGSY)
+ccflags-y += $(CCFLAGSY)
 
 # >= 2.6.30
 ifdef HL101
