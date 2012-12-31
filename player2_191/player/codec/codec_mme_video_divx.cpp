@@ -280,14 +280,14 @@ CodecStatus_t  Codec_MmeVideoDivx_c::FillOutSetStreamParametersCommand( void )
 		// It seems there is still a bug somewhere, we get 0xe4000 for some strange reason to be investiagted....
 		if ( !(DivxTransformCapability.supports_311 == 0 || DivxTransformCapability.supports_311 == 1))
 				report(severity_error,"*** CAP *** = %d\n",DivxTransformCapability.supports_311);
-
+#ifndef ENABLE_LIBEPLAYER3
 		if ( (Parsed->VolHeader.version < 500) && (Parsed->VolHeader.version > 100) && !DivxFirmware)
 		{
 				report(severity_error,"DivX version 3.11 / 4.12 not available with transformer %s\n", Configuration.TransformName[SelectedTransformer]);
 				Player->MarkStreamUnPlayable( Stream );
 				return CodecError;
 		}
-
+#endif
 		if ( (Parsed->VolHeader.width   != CurrentWidth ) ||
 			 (Parsed->VolHeader.height  != CurrentHeight) ||
 			 (Parsed->VolHeader.version != CurrentVersion) )
