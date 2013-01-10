@@ -5669,7 +5669,7 @@ struct dvb_frontend* dvb_d3501_fe_qpsk_attach(
     }
     #endif  /* 0 */
 
-	state->frontend->id = config->i;
+	state->frontend.id = config->i;
 	return &state->frontend;
 
 error:
