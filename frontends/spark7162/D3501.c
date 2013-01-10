@@ -1479,11 +1479,7 @@ static INT32 nim_s3501_get_bit_rate(struct nim_device *dev, UINT8 work_mode, UIN
            YWOSTRACE(( YWOS_TRACE_ERROR, "Map type error: %02x \n", map_type));
 		}
 
-		if ((priv->Tuner_Config_Data.QPSK_Config & M3501_USE_188_MODE) == M3501_USE_188_MODE)
-		{
-			temp = temp;
-		}
-		else
+		if ((priv->Tuner_Config_Data.QPSK_Config & M3501_USE_188_MODE) != M3501_USE_188_MODE)
 		{
 			temp = (temp * 204 + 94) / 188;
 		}
@@ -2002,7 +1998,7 @@ static INT32 nim_s3501_waiting_channel_lock(/*TUNER_ScanTaskParam_T *Inst,*/
 
 	if (priv->ul_status.m_s3501_type == NIM_CHIP_ID_M3501B)
 		locktimes *= 2; //lwj change *3 to *2
-	else
+	else 
 		locktimes *= 2;
 
     //TuneStartTime = YWOS_TimeNow();
@@ -2159,7 +2155,7 @@ static INT32 nim_s3501_waiting_channel_lock(/*TUNER_ScanTaskParam_T *Inst,*/
 						priv->t_Param.t_snr_thre1 = 55;
 						priv->t_Param.t_snr_thre2 = 65;
 					}
-					else if (code_rate == 8)
+					else if (code_rate == 9)
 					{
 						// coderate8/9
 						priv->t_Param.t_snr_thre1 = 75;
@@ -3585,8 +3581,8 @@ INT32 nim_s3501_get_bitmode(struct nim_device *dev, UINT8 *bitMode)
 		*bitMode = 0x00;
 	else if ((priv->Tuner_Config_Data.QPSK_Config & 0xc0) == M3501_4BIT_MODE)
 		*bitMode = 0x20;
-	else if ((priv->Tuner_Config_Data.QPSK_Config & 0xc0) == M3501_8BIT_MODE)
-		*bitMode = 0x40;
+//	else if ((priv->Tuner_Config_Data.QPSK_Config & 0xc0) == M3501_8BIT_MODE)
+//		*bitMode = 0x40;
 	else
 		*bitMode = 0x40;
 	return SUCCESS;
@@ -3889,9 +3885,9 @@ static INT32 nim_s3501_cr_setting(struct nim_device *dev, UINT8 s_Case)
 		data = 0x87;
 		nim_reg_write(dev, R33_CR_CTRL + 0x05, &data, 1);
 
-		if (priv->ul_status.m_s3501_type == NIM_CHIP_ID_M3501B)
-			data = 0xaa;
-		else
+//		if (priv->ul_status.m_s3501_type == NIM_CHIP_ID_M3501B)
+//			data = 0xaa;
+//		else
 			data = 0xaa; // S2 CR parameter
 
 		nim_reg_write(dev, RB5_CR_PRS_TRA, &data, 1);
@@ -5673,6 +5669,7 @@ struct dvb_frontend* dvb_d3501_fe_qpsk_attach(
     }
     #endif  /* 0 */
 
+	state->frontend->id = config->i;
 	return &state->frontend;
 
 error:
