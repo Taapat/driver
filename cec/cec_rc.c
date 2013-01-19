@@ -103,6 +103,14 @@ int input_inject(unsigned int key, unsigned int type)
 	case USER_CONTROL_CODE_RECORD: code = KEY_RECORD; break;
 	case USER_CONTROL_CODE_REWIND: code = KEY_REWIND; break;
 	case USER_CONTROL_CODE_FASTFORWARD: code = KEY_FASTFORWARD; break;
+	case USER_CONTROL_CODE_ROOT_MENU: code = KEY_MENU; break;
+	case USER_CONTROL_CODE_CONTENTS_MENU: code = KEY_FAVORITES; break;
+	case USER_CONTROL_CODE_SETUP_MENU: code = KEY_MENU; break;
+	case USER_CONTROL_CODE_NEXT: code = KEY_NEXT; break;
+	case USER_CONTROL_CODE_LAST: code = KEY_LAST; break;
+	case USER_CONTROL_CODE_PAGEUP: code = KEY_PAGEUP; break;
+	case USER_CONTROL_CODE_PAGEDOWN: code = KEY_PAGEDOWN; break;
+	case USER_CONTROL_CODE_INFO: code = KEY_INFO; break;
 	default: break;
 	}
 
