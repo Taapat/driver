@@ -1213,6 +1213,7 @@ typedef struct nim_panic6158_private
 }NIM_PANIC6158_PRIVATE, *PNIM_PANIC6158_PRIVATE;
 
 #define NIM_PANIC6158_PRINTF(...) do{}while(0)
+//#define NIM_PANIC6158_PRINTF printk
 //#define NIM_PANIC6158_PRINTF libc_printf
 
 /* **************************************************** */
