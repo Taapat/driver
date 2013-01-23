@@ -102,14 +102,14 @@ static int current_e2_volume = 31;
 int proc_avs_0_volume_write(struct file *file, const char __user *buf,
                            unsigned long count, void *data)
 {
-#define cMaxAttenuationE2			63
+#define cMaxAttenuationE2			64
 
    int logarithmicAttenuation[cMaxAttenuationE2] =
 	{
-		 0,  0,  1,  1,  1,  1,  2,  2,  2,  3,  3,  3,  4,  4,  4,  5,
-		 5,  5,  6,  6,  6,  7,  7,  8,  8,  9,  9,  9, 10, 10, 11, 11,
-		12, 13, 13, 14, 14, 15, 16, 16, 17, 18, 19, 19, 20, 21, 22, 23,
-		24, 25, 27, 28, 29, 31, 33, 35, 37, 40, 43, 47, 51, 58, 70
+		 0,  0,  0,  1,  1,  1,  1,  2,  2,  2,  3,  3,  3,  4,  4,  4,
+		 5,  5,  5,  6,  6,  6,  7,  7,  8,  8,  9,  9,  9, 10, 10, 11,
+		11, 12, 13, 13, 14, 14, 15, 16, 16, 17, 18, 19, 19, 20, 21, 22,
+		23, 24, 25, 27, 28, 29, 31, 33, 35, 37, 40, 43, 47, 51, 58, 70
 	};
 
 	char 		*page;
@@ -177,6 +177,11 @@ int proc_avs_0_volume_write(struct file *file, const char __user *buf,
 		if ((kcontrol != NULL) && (single_control != NULL))
 		{
 			struct snd_ctl_elem_value ucontrol;
+
+			if (volume > cMaxAttenuationE2 - 1)
+				volume = cMaxAttenuationE2 - 1;
+			else if (volume < 0)
+				volume = 0;
 
 			current_e2_volume = volume;
 

@@ -765,7 +765,7 @@ static INT32 nim_panic6158_get_lock(struct nim_device *dev, UINT8 *lock)
 	if (DEMO_BANK_T2 == priv->system)
 	{
 		nim_reg_read(dev, priv->system, DMD_SSEQFLG, &data, 1);
-		printk("T2[%s]%d,data =0x%x\n",__FUNCTION__,__LINE__,data);
+		//printk("T2[%s]%d,data =0x%x\n",__FUNCTION__,__LINE__,data);
 		if (13 <= (0x0F & data))
 			*lock = 1;
 	}
@@ -1223,11 +1223,13 @@ static INT32 nim_panic6158_tune_action(struct nim_device *dev, UINT8 system, UIN
 	return ret;
 }
 
+INT32 nim_panic6158_open(struct nim_device *dev);
+
 static INT32 nim_panic6158_channel_change(struct nim_device *dev, struct NIM_Channel_Change *param)
 {
 	UINT32 frq;
 	INT32 i;//, j;
-	INT32 tune_num = 2;
+	INT32 tune_num = 1;
 	UINT32 wait_time;
 	UINT8 bw, mode[2], qam;
 	struct nim_panic6158_private *priv;
@@ -1570,6 +1572,7 @@ int d6158_read_snr(struct dvb_frontend* fe, u16* snr)
 	int 	iRet;
 	struct dvb_d6158_fe_ofdm_state *state = fe->demodulator_priv;
     iRet = nim_panic6158_get_SNR(&(state->spark_nimdev),(UINT8*)snr);
+	*snr = *snr * 255 * 255 /100;
 	return iRet;
 }
 
@@ -1584,7 +1587,8 @@ int d6158_read_ber(struct dvb_frontend* fe, UINT32 *ber)
 int d6158_read_signal_strength(struct dvb_frontend* fe, u16 *strength)
 {
 	int 	iRet;
-	UINT8 	*Intensity = (UINT8*)strength;
+	u32 	Strength;
+	u32 	*Intensity = &Strength;
 	struct dvb_d6158_fe_ofdm_state *state = fe->demodulator_priv;
     iRet = nim_panic6158_get_AGC(&state->spark_nimdev, (UINT8*)Intensity);
 	if(*Intensity>90)
@@ -1596,6 +1600,9 @@ int d6158_read_signal_strength(struct dvb_frontend* fe, u16 *strength)
     if(*Intensity>90)
         *Intensity = 90;
 
+	*Intensity = *Intensity * 255 * 255 /100;
+	printk("*Intensity = %d\n", *Intensity);
+	*strength = (*Intensity);
 	YWOS_TaskSleep(100);
 
 	return iRet;
@@ -1817,6 +1824,7 @@ static YW_ErrorType_T demod_d6158_ScanFreq(struct dvb_frontend_parameters *p,
 	{
 
 		//printf("TuneMode=%d\n", Inst->DriverParam.Ter.Param.TuneMode);
+		//param.priv_param = DEMO_DVBT;//T2  T
 		param.priv_param = DEMO_UNKNOWN;//T2  T
 		//param.priv_param = DEMO_DVBT2;//T2  T
 
