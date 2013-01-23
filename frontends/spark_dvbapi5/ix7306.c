@@ -181,6 +181,16 @@ static void calculate_pll_divider_byte_QM1D1B0004(long freq, int *byte_)
 {
 	long data;
 	int P,N,A;
+	if (freq<1024000) byte_[3]|=0x01;
+	else byte_[3]&=0xfe;
+	if (freq<1450000) {
+		if (freq < 1300000) byte_[3]&=0xbf;
+		else if (freq < 1375000) byte_[3]&=0xdf;
+	}
+	else {
+		if (freq < 1850000) byte_[3]&=0xbf;
+		else if (freq < 2045000) byte_[3]&=0xdf;
+	}
 	data=(long)((freq*10LL)/calculate_pll_step_QM1D1B0004(*(byte_+3)) +5)/10 ;
 	P=calculate_dividing_factor_of_prescaler(byte_);
 	N=data/P;
