@@ -625,7 +625,7 @@ static int ix7306_init(struct dvb_frontend *fe)
 		return -1;
 	}
 
-    /*D¡ä tuner*/
+    /*Dï¿½ï¿½ tuner*/
     if(ix7306_write(state, init_data1, sizeof(init_data1)) < 0)
 	{
 		printk("nim_vz7306_control: I2C write error init_data1\n");
@@ -791,90 +791,89 @@ exit:
 }
 
 int tuner_Sharp7306_Identify(struct dvb_frontend *fe,
-								const struct ix7306_config *config,
-								struct i2c_adapter *i2c)//lwj change
+	const struct ix7306_config *config,
+	struct i2c_adapter *i2c)//lwj change
 {
-	int Err = 0;
-    unsigned char  ucIOBuffer[4+1];
-    unsigned char  ucData = 0;
-	struct ix7306_state state;
-	memset(&state,0,sizeof(struct ix7306_state));
-	state.config = config;
-	state.i2c = i2c;
-	state.fe = fe;
+    int Err = 0;
+    unsigned char ucIOBuffer[4 + 1];
+    unsigned char ucData = 0;
+    struct ix7306_state state;
+    memset(&state, 0, sizeof (struct ix7306_state));
+    state.config = config;
+    state.i2c = i2c;
+    state.fe = fe;
     ucIOBuffer[0] = 0x44;
     ucIOBuffer[1] = 0x7e;
     ucIOBuffer[2] = 0xe1;
     ucIOBuffer[3] = 0x42;
 
-	if (fe->ops.i2c_gate_ctrl(fe,1) < 0)
-	{
-		printk("i2c_gate_ctrl 1 error\n");
-		return -1;
-	}
-	Err = ix7306_write(&state, ucIOBuffer, 4);
-	printk("ix7306_write ucIOBuffer 4 Err = %d\n", Err);
-	if (fe->ops.i2c_gate_ctrl(fe,0) < 0)
-	{
-		printk("i2c_gate_ctrl 1 error\n");
-		return -1;
-	}
+    if (fe->ops.i2c_gate_ctrl(fe, 1) < 0)
+    {
+	printk("i2c_gate_ctrl 1 error\n");
+	return -1;
+    }
+    Err = ix7306_write(&state, ucIOBuffer, 4);
+    printk("ix7306_write ucIOBuffer 4 Err = %d\n", Err);
+    if (fe->ops.i2c_gate_ctrl(fe, 0) < 0)
+    {
+	printk("i2c_gate_ctrl 1 error\n");
+	return -1;
+    }
 
-	if (fe->ops.i2c_gate_ctrl(fe,1) < 0)
-	{
-		printk("i2c_gate_ctrl 0 error\n");
-		return -1;
-	}
-	Err = ix7306_write(&state, ucIOBuffer,1);
-	printk("ix7306_write ucIOBuffer 1 Err = %d\n", Err);
-	msleep(12);
-	if (fe->ops.i2c_gate_ctrl(fe,0) < 0)
-	{
-		printk("i2c_gate_ctrl 0 error\n");
-		return -1;
-	}
-    memset(ucIOBuffer,0,sizeof(ucIOBuffer));
+    if (fe->ops.i2c_gate_ctrl(fe, 1) < 0)
+    {
+	printk("i2c_gate_ctrl 0 error\n");
+	return -1;
+    }
+    Err = ix7306_write(&state, ucIOBuffer, 1);
+    printk("ix7306_write ucIOBuffer 1 Err = %d\n", Err);
+    msleep(12);
+    if (fe->ops.i2c_gate_ctrl(fe, 0) < 0)
+    {
+	printk("i2c_gate_ctrl 0 error\n");
+	return -1;
+    }
+    memset(ucIOBuffer, 0, sizeof (ucIOBuffer));
     ucIOBuffer[0] = 0xfd;
     ucIOBuffer[1] = 0x0d;
-    if (fe->ops.i2c_gate_ctrl(fe,1) < 0)
-	{
-		printk("i2c_gate_ctrl 1 error\n");
-		return -1;
-	}
-	Err = ix7306_write(&state, ucIOBuffer, 2);
-	printk("ix7306_write ucIOBuffer Err 2 = %d\n", Err);
-	if (fe->ops.i2c_gate_ctrl(fe,0) < 0)
-	{
-		printk("i2c_gate_ctrl 0 error\n");
-		return -1;
-	}
-    if(Err == 0)
+    if (fe->ops.i2c_gate_ctrl(fe, 1) < 0)
     {
-		msleep(50);
-		if (fe->ops.i2c_gate_ctrl(fe,1) < 0)
-		{
-			printk("i2c_gate_ctrl 1 error\n");
-			return -1;
-		}
-		Err =ix7306_read(&state,&ucData);
-		printk("ix7306_read Err = %d ucData = 0x%x\n", Err, ucData);
-		if(Err == 0)
-        {
-            if((ucData&0x3f) == 0x18)
-            {
-                printk("========tuner_sharp7306_identify =====\n");
-                Err = 0;
-            }
-            else
-            {
-                Err = -1;
-            }
-        }
-		if (fe->ops.i2c_gate_ctrl(fe,0) < 0)
-		{
-			printk("i2c_gate_ctrl 0 error\n");
-			return -1;
-		}
+	printk("i2c_gate_ctrl 1 error\n");
+	return -1;
+    }
+    Err = ix7306_write(&state, ucIOBuffer, 2);
+    printk("ix7306_write ucIOBuffer Err 2 = %d\n", Err);
+    if (fe->ops.i2c_gate_ctrl(fe, 0) < 0)
+    {
+	printk("i2c_gate_ctrl 0 error\n");
+	return -1;
+    }
+    if (Err == 0)
+    {
+	msleep(50);
+	if (fe->ops.i2c_gate_ctrl(fe, 1) < 0)
+	{
+	    printk("i2c_gate_ctrl 1 error\n");
+	    return -1;
+	}
+	Err = ix7306_read(&state, &ucData);
+	printk("ix7306_read Err = %d ucData = 0x%x\n", Err, ucData);
+	if (Err == 0)
+	{
+	    if ((ucData & 0x3f) == 0x18)
+	    {
+		printk("========tuner_sharp7306_identify =====\n");
+		Err = 0;
+	    } else
+	    {
+		Err = -1;
+	    }
+	}
+	if (fe->ops.i2c_gate_ctrl(fe, 0) < 0)
+	{
+	    printk("i2c_gate_ctrl 0 error\n");
+	    return -1;
+	}
     }
     return Err;
 }

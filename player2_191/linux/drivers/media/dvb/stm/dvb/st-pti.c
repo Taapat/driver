@@ -371,15 +371,17 @@ static int convert_source ( const dmx_source_t source)
   switch ( source )
   {
   case DMX_SOURCE_FRONT0:
-#if defined(UFS910) || defined(OCTAGON1008) || defined(UFS912) || defined(ADB_BOX) || defined(SPARK) || defined(SPARK7162)
+#if defined(UFS910) || defined(OCTAGON1008) || defined(UFS912) || defined(ADB_BOX) || defined(SPARK)
     tag = TSIN2;
+#elif  defined(SPARK7162)
+    tag = TSIN1;
 #else
     tag = TSIN0;
 #endif
     break;
 
   case DMX_SOURCE_FRONT1:
-#if defined(ADB_BOX)
+#if defined(ADB_BOX) || defined(SPARK7162)
     tag = TSIN0;
 #else
     tag = TSIN1;
@@ -388,7 +390,7 @@ static int convert_source ( const dmx_source_t source)
 
 #if defined(SPARK7162)
   case DMX_SOURCE_FRONT2:
-    tag = TSIN0;
+    tag = TSIN2; 
     break;
 
   case (dmx_source_t)3: /* for ptiInit() which passes 0,1,2,3 instead of DVR0 */

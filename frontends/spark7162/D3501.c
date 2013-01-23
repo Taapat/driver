@@ -2024,7 +2024,7 @@ static INT32 nim_s3501_waiting_channel_lock(/*TUNER_ScanTaskParam_T *Inst,*/
 		}
 
 		nim_reg_read(dev, R02_IERR, &intdata, 1);
-        printk("###########R02_IERR intdata = 0x%x\n", intdata);
+//my commit        printk("###########R02_IERR intdata = 0x%x\n", intdata);
 		//intdata |= 0x02;
 		data = 0x02;
 		if (0 != (intdata & data))

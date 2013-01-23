@@ -82,7 +82,7 @@ typedef struct DemodIdentifyDbase_s
 {
 
     U8           DemodID;            /*demod Ð¾Æ¬ID*/
-    /*¼ì²â¹¦ÄÜº¯Êý*/
+    /*ï¿½ï¿½â¹¦ï¿½Üºï¿½ï¿½ï¿½*/
 	int  (*Demod_identify)(struct i2c_adapter *i2c,U8 ucID);
 	int  (*Demod_Register_T)(struct dvb_adapter *dvb_adap,
 								struct dvb_frontend **ppFrontend,
@@ -581,7 +581,7 @@ int spark_dvb_AutoRegister_TER(struct dvb_adapter *dvb_adap,
 	//printk("pI2c = 0x%0x\n", (int)pI2c);
 	if (!pI2c)
 	{
-	    return -1;
+		return -1;
 	}
 	for(i=0;i<MAX_TER_DEMOD_TYPES;i++)
 	{
@@ -772,24 +772,16 @@ int spark7162_register_frontend(struct dvb_adapter *dvb_adap)
 {
 	struct spark_dvb_adapter_adddata *pDvbAddData;
 
-	pDvbAddData = kmalloc(sizeof(struct spark_dvb_adapter_adddata), GFP_KERNEL);
-
-	memset(pDvbAddData, 0, sizeof(struct spark_dvb_adapter_adddata));
+	pDvbAddData = kzalloc(sizeof(struct spark_dvb_adapter_adddata), GFP_KERNEL);
 
 	dvb_adap->priv = (void *)pDvbAddData;
+	
+	spark_dvb_register_s1(dvb_adap, &pDvbAddData->pD3501_frontend_2, &pDvbAddData->qpsk_i2c_adap_2);	
+	spark_dvb_register_s0(dvb_adap, &pDvbAddData->pD3501_frontend, &pDvbAddData->qpsk_i2c_adap);		
 
 	eUnionTunerType = UnionTunerConfig(UnionTunerType);
-
 	spark_dvb_register_tc_by_type(dvb_adap, eUnionTunerType);
-
-	#if 1
-	spark_dvb_register_s1(dvb_adap,
-							&pDvbAddData->pD3501_frontend_2,
-							&pDvbAddData->qpsk_i2c_adap_2);
-	spark_dvb_register_s0(dvb_adap,
-							&pDvbAddData->pD3501_frontend,
-							&pDvbAddData->qpsk_i2c_adap);
-	#endif  /* 0 */
+	
 	return 0;
 }
 
