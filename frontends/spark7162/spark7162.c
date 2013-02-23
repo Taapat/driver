@@ -583,7 +583,7 @@ int spark_dvb_AutoRegister_TER(struct dvb_adapter *dvb_adap,
 	{
 		return -1;
 	}
-	for(i = 0;i<MAX_TER_DEMOD_TYPES;i++)
+	for(i=0;i<MAX_TER_DEMOD_TYPES;i++)
 	{
 		if(0 == (DemodIdentifyTable[i].Demod_identify)(pI2c,DemodIdentifyTable[i].DemodID))
 		{
@@ -594,13 +594,6 @@ int spark_dvb_AutoRegister_TER(struct dvb_adapter *dvb_adap,
 		}
 
 	}
-
-	if (MAX_TER_DEMOD_TYPES == i)
-	{
-		*ppI2c = pI2c;
-		ret =  DemodIdentifyTable[1].Demod_Register_T(dvb_adap,ppFrontend,ppI2c);
-	}
-
 	return ret;
 
 }
@@ -631,14 +624,6 @@ int spark_dvb_AutoRegister_Cab(struct dvb_adapter *dvb_adap,
 		}
 
 	}
-
-
-	if (MAX_TER_DEMOD_TYPES == i)
-	{
-		*ppI2c = pI2c;
-		ret =  DemodIdentifyTable[1].Demod_Register_C(dvb_adap,ppFrontend,ppI2c);
-	}
-
 	return ret;
 
 }
