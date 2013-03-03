@@ -61,4 +61,4 @@ typedef struct {
 	U32 Discarded;
 } EVENT_LOG_CommandStatus_t;
 
-#endif 
+#endif
