@@ -1451,7 +1451,8 @@ INT32 nim_panic6158_attach(UINT8 Handle, PCOFDM_TUNER_CONFIG_API pConfig,TUNER_O
 
 	//jhy add start
 	if(YWTUNER_DELIVER_TER == Inst->Device)
-    {
+    {
+
 	    dev->DemodIOHandle[0] = Inst->DriverParam.Ter.DemodIOHandle;
 	    dev->DemodIOHandle[1] = Inst->DriverParam.Ter.TunerIOHandle;
 	}
@@ -1817,7 +1818,8 @@ static YW_ErrorType_T demod_d6158_ScanFreq(struct dvb_frontend_parameters *p,
 	memset(&param, 0, sizeof(struct NIM_Channel_Change));
 
 	if(dev == NULL)
-	{
+	{
+
 		return YWHAL_ERROR_BAD_PARAMETER;
 	}
 	if((DEMO_BANK_T2 == System) || (DEMO_BANK_T == System))

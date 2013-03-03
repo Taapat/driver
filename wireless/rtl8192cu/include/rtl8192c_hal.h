@@ -137,7 +137,8 @@ enum RTL871X_HCI_TYPE {
 	RTL8192C_PCIE
 };
 
-#define PageNum_128(_Len)		(u32)(((_Len)>>7) + ((_Len)&0x7F ? 1:0))
+#define PageNum_128(_Len)		(u32)(((_Len)>>7) + ((_Len)&0x7F ? 1:0))
+
 
 #define FW_8192C_SIZE					13540
 #define FW_8192C_START_ADDRESS		0x1000

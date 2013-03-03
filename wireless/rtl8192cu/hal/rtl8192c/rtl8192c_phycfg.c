@@ -1212,7 +1212,8 @@ phy_ConfigBBWithHeaderFile(
 				udelay_os(1);
 			PHY_SetBBReg(Adapter, Rtl819XPHY_REGArray_Table[i], bMaskDWord, Rtl819XPHY_REGArray_Table[i+1]);		
 
-			// Add 1us delay between BB/RF register setting.
+			// Add 1us delay between BB/RF register setting.
+
 			udelay_os(1);
 
 			//RT_TRACE(COMP_INIT, DBG_TRACE, ("The Rtl819XPHY_REGArray_Table[0] is %lx Rtl819XPHY_REGArray[1] is %lx \n",Rtl819XPHY_REGArray_Table[i], Rtl819XPHY_REGArray_Table[i+1]));
