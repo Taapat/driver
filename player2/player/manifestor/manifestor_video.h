@@ -86,7 +86,7 @@ struct StreamBuffer_s
 };
 
 /* Generic window structure - in pixels */
-typedef struct Window_s
+struct Window_s
 {
     unsigned int     X;         /* X coordinate of top left corner */
     unsigned int     Y;         /* Y coordinate of top left corner */

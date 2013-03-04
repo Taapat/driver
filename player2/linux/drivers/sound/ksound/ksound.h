@@ -127,7 +127,7 @@ typedef int (snd_kcontrol_get_t) (struct snd_kcontrol * kcontrol, struct snd_ctl
 typedef int (snd_kcontrol_put_t) (struct snd_kcontrol * kcontrol, struct snd_ctl_elem_value * ucontrol);
 
 
-typedef struct snd_ctl_file { int dummy; };
+struct snd_ctl_file { int dummy; };
 typedef int pid_t;
 
 struct snd_kcontrol_volatile {
