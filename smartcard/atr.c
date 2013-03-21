@@ -43,8 +43,10 @@ static unsigned atr_num_ib_table[16] = {0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3
  * Exported variables definition
  */
 
-unsigned atr_f_table[16] = {372, 372, 625, 744, 1116, 1488, 1860, 0, 0, 512, 768, 1024, 1536, 2048, 0, 0};
-unsigned atr_d_table[16] = {0, 1000000, 2000000, 4000000, 8000000, 16000000, 0, 0, 12000000, 0, 500000, 250000, 125000, 62500, 31250, 15625};
+//unsigned atr_f_table[16] = {372, 372, 625, 744, 1116, 1488, 1860, 0, 0, 512, 768, 1024, 1536, 2048, 0, 0};
+unsigned atr_f_table[16] = {372, 372, 558, 744, 1116, 1488, 1860, 0, 0, 512, 768, 1024, 1536, 2048, 0, 0};
+//unsigned atr_d_table[16] = {0, 1000000, 2000000, 4000000, 8000000, 16000000, 0, 0, 12000000, 0, 500000, 250000, 125000, 62500, 31250, 15625};
+unsigned atr_d_table[16] = {0, 1000000, 2000000, 4000000, 8000000, 16000000, 32000000, 64000000, 12000000, 20000000, 500000, 250000, 125000, 62500, 31250, 15625};
 unsigned atr_i_table[4] = {25, 50, 100, 0};
 
 unsigned long GetClockRate (U32 mhz)
@@ -178,6 +180,23 @@ int ATR_InitFromArray (ATR * atr, UCHAR atr_buffer[ATR_MAX_SIZE], unsigned lengt
 	}
 	
 	atr->length = pointer + 1;
+  
+  // check that TA1, if pn==1 , has a valid value for FI
+  if ( atr->pn == 1 && atr->ib[pn][ATR_INTERFACE_BYTE_TA].present == 1 ) {
+    unsigned char FI;
+    FI=(atr->ib[pn][ATR_INTERFACE_BYTE_TA].value & 0xF0)>>4;
+    if(atr_fs_table[FI]==0) {
+      return (ATR_MALFORMED);
+    }
+  }
+    
+  // check that TB1 < 0x80
+  if ( atr->pn == 1 && atr->ib[pn][ATR_INTERFACE_BYTE_TB].present == 1 ) {
+    if(atr->ib[pn][ATR_INTERFACE_BYTE_TB].value > 0x80) {
+      return (ATR_MALFORMED);
+    }
+  }
+  
 	return (ATR_OK);
 }
 

@@ -325,33 +325,64 @@ void set_reg_writeonly16(SCI_CONTROL_BLOCK *sci, BASE_ADDR base_address, ULONG r
 /*******************************/
 static void set_serial_irq(SCI_CONTROL_BLOCK *sci, unsigned char type)
 {
-	if(type==RX_FULL_IRQ)
-	{
-		sci->irq_mode=RX_FULL_IRQ;
-		set_reg(sci, BASE_ADDRESS_ASC0, ASC0_INT_EN, RX_FULL_IRQ , 0x1FF);
-		PDEBUG(" ### Set RX_FULL_IRQ interrupt\n");
-	}
-	else if(type==TX_EMPTY_IRQ)
-	{
-		sci->irq_mode=TX_EMPTY_IRQ;
-		set_reg(sci, BASE_ADDRESS_ASC0, ASC0_INT_EN,TX_EMPTY_IRQ , 0x1FF);
-		PDEBUG(" ### Set TX_EMPTY_IRQ interrupt\n");
-	}
-	else if(type==RX_FULL_TX_EMPTY_IRQ)
-	{
-		sci->irq_mode=RX_FULL_TX_EMPTY_IRQ;
-		set_reg(sci, BASE_ADDRESS_ASC0, ASC0_INT_EN, RX_FULL_TX_EMPTY_IRQ , 0x1FF);
-		PDEBUG(" ### Set RX_FULL_TX_EMPTY_IRQ interrupt\n");
-	}
-	else if(type==(TX_HALF_EMPTY_IRQ|RX_FULL_TX_EMPTY_IRQ))
-	{
-		sci->irq_mode=(TX_HALF_EMPTY_IRQ|RX_FULL_TX_EMPTY_IRQ);
-		set_reg(sci, BASE_ADDRESS_ASC0, ASC0_INT_EN, (TX_HALF_EMPTY_IRQ|RX_FULL_TX_EMPTY_IRQ) , 0x1FF);
-		PDEBUG(" ### Set RX_FULL_TX_EMPTY_IRQ and TX_HALF_EMPTY_IRQ interrupt\n");
-	}
-	
-	else
-		PDEBUG("Type of interrupt is not implemented\n");
+  if(sci->id==0)
+  {
+  	if(type==RX_FULL_IRQ)
+  	{
+  		sci->irq_mode=RX_FULL_IRQ;
+  		set_reg(sci, BASE_ADDRESS_ASC0, ASC0_INT_EN, RX_FULL_IRQ , 0x1FF);
+  		PDEBUG(" ### Set RX_FULL_IRQ interrupt\n");
+  	}
+  	else if(type==TX_EMPTY_IRQ)
+  	{
+  		sci->irq_mode=TX_EMPTY_IRQ;
+  		set_reg(sci, BASE_ADDRESS_ASC0, ASC0_INT_EN,TX_EMPTY_IRQ , 0x1FF);
+  		PDEBUG(" ### Set TX_EMPTY_IRQ interrupt\n");
+  	}
+  	else if(type==RX_FULL_TX_EMPTY_IRQ)
+  	{
+  		sci->irq_mode=RX_FULL_TX_EMPTY_IRQ;
+  		set_reg(sci, BASE_ADDRESS_ASC0, ASC0_INT_EN, RX_FULL_TX_EMPTY_IRQ , 0x1FF);
+  		PDEBUG(" ### Set RX_FULL_TX_EMPTY_IRQ interrupt\n");
+  	}
+  	else if(type==(TX_HALF_EMPTY_IRQ|RX_FULL_TX_EMPTY_IRQ))
+  	{
+  		sci->irq_mode=(TX_HALF_EMPTY_IRQ|RX_FULL_TX_EMPTY_IRQ);
+  		set_reg(sci, BASE_ADDRESS_ASC0, ASC0_INT_EN, (TX_HALF_EMPTY_IRQ|RX_FULL_TX_EMPTY_IRQ) , 0x1FF);
+  		PDEBUG(" ### Set RX_FULL_TX_EMPTY_IRQ and TX_HALF_EMPTY_IRQ interrupt\n");
+  	}
+  	else
+  		PDEBUG("Type of interrupt is not implemented\n");
+  }
+  else if(sci->id==1)
+  {
+  	if(type==RX_FULL_IRQ)
+  	{
+  		sci->irq_mode=RX_FULL_IRQ;
+  		set_reg(sci, BASE_ADDRESS_ASC1, ASC1_INT_EN, RX_FULL_IRQ , 0x1FF);
+  		PDEBUG(" ### Set RX_FULL_IRQ interrupt\n");
+  	}
+  	else if(type==TX_EMPTY_IRQ)
+  	{
+  		sci->irq_mode=TX_EMPTY_IRQ;
+  		set_reg(sci, BASE_ADDRESS_ASC1, ASC1_INT_EN,TX_EMPTY_IRQ , 0x1FF);
+  		PDEBUG(" ### Set TX_EMPTY_IRQ interrupt\n");
+  	}
+  	else if(type==RX_FULL_TX_EMPTY_IRQ)
+  	{
+  		sci->irq_mode=RX_FULL_TX_EMPTY_IRQ;
+  		set_reg(sci, BASE_ADDRESS_ASC1, ASC1_INT_EN, RX_FULL_TX_EMPTY_IRQ , 0x1FF);
+  		PDEBUG(" ### Set RX_FULL_TX_EMPTY_IRQ interrupt\n");
+  	}
+  	else if(type==(TX_HALF_EMPTY_IRQ|RX_FULL_TX_EMPTY_IRQ))
+  	{
+  		sci->irq_mode=(TX_HALF_EMPTY_IRQ|RX_FULL_TX_EMPTY_IRQ);
+  		set_reg(sci, BASE_ADDRESS_ASC1, ASC1_INT_EN, (TX_HALF_EMPTY_IRQ|RX_FULL_TX_EMPTY_IRQ) , 0x1FF);
+  		PDEBUG(" ### Set RX_FULL_TX_EMPTY_IRQ and TX_HALF_EMPTY_IRQ interrupt\n");
+  	}
+  	else
+  		PDEBUG("Type of interrupt is not implemented\n");
+  }
 }
 
 /**
@@ -376,7 +407,9 @@ void smartcard_reset(SCI_CONTROL_BLOCK *sci, unsigned char wait)
 
         /* Reset low */
          stpio_set_pin(sci->reset, 0); 
-         mdelay(500); 
+         //mdelay(500);
+				 //change to non Busy-Waiting
+				 msleep(500);
 
 #if defined(ADB_BOX)
         /* VCC cmd low */
@@ -398,8 +431,10 @@ void smartcard_reset(SCI_CONTROL_BLOCK *sci, unsigned char wait)
 #endif
 
         /* Reset low */
-         stpio_set_pin(sci->reset, 0); 
-         mdelay(500); 
+         stpio_set_pin(sci->reset, 0);
+         //mdelay(500);
+				 //change to non Busy-Waiting
+				 msleep(500);
 
 #if defined(ADB_BOX)
         /* VCC cmd low */
@@ -414,13 +449,17 @@ void smartcard_reset(SCI_CONTROL_BLOCK *sci, unsigned char wait)
 		return;
 	}
 
-    mdelay(6);
+    //mdelay(6);
+		//change to non Busy-Waiting
+		msleep(6);
     sci->rx_rptr = 0;
 	sci->rx_wptr = 0;
 	sci->tx_rptr = 0;
 	sci->tx_wptr = 0;
     /* Wait 100 ms */
-    mdelay(100);
+		//mdelay(100);
+		//change to non Busy-Waiting
+		msleep(100);
 
     if (sci->id == 0)
     {
@@ -429,7 +468,9 @@ void smartcard_reset(SCI_CONTROL_BLOCK *sci, unsigned char wait)
         set_reg_writeonly(sci, BASE_ADDRESS_ASC0, ASC0_RX_RST, 0xFF);
         set_serial_irq(sci, RX_FULL_IRQ);
         enable_irq(SCI0_INT_RX_TX);
-        mdelay(20);
+				//mdelay(20);
+				//change to non Busy-Waiting
+				msleep(20);
         /* Reset high */
         stpio_set_pin(sci->reset, 1);
     }
@@ -466,7 +507,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
         {
             sci->sci_atr_class=SCI_CLASS_B;
 #if !defined(SUPPORT_NO_VOLTAGE)
-#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX) && !defined(SPARK7162) // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO4, PIO_CLR_P4OUT, 0x40);
 #endif
 #endif
@@ -475,7 +516,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
         {
             sci->sci_atr_class=SCI_CLASS_A;
 #if !defined(SUPPORT_NO_VOLTAGE)
-#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX) && !defined(SPARK7162)  // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO4, PIO_SET_P4OUT, 0x40);
 #endif
 #endif
@@ -485,7 +526,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
             PERROR("Invalid Vcc value '%d', set Vcc 5V", vcc);
             sci->sci_atr_class=SCI_CLASS_A;
 #if !defined(SUPPORT_NO_VOLTAGE)
-#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX) && !defined(SPARK7162) // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX) // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO4, PIO_SET_P4OUT, 0x40);
 #endif
 #endif
@@ -498,7 +539,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
         {
 			sci->sci_atr_class=SCI_CLASS_B;
 #if !defined(SUPPORT_NO_VOLTAGE)
-#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX) && !defined(SPARK7162) // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO3, PIO_CLR_P3OUT, 0x40);
 #endif
 #endif
@@ -508,7 +549,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
         {
 			sci->sci_atr_class=SCI_CLASS_A;
 #if !defined(SUPPORT_NO_VOLTAGE)
-#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX) && !defined(SPARK7162) // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO3, PIO_SET_P3OUT, 0x40);
 #endif
 #endif
@@ -518,7 +559,7 @@ INT smartcard_voltage_config(SCI_CONTROL_BLOCK *sci, UINT vcc)
             PERROR("Invalid Vcc value '%d', set Vcc 5V", vcc);
             sci->sci_atr_class=SCI_CLASS_A;
 #if !defined(SUPPORT_NO_VOLTAGE)
-#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX) && !defined(SPARK7162) // no votage control
+#if !defined(SPARK) && !defined(HL101) && !defined(ATEVIO7500) && !defined(ADB_BOX)  // no votage control
             set_reg_writeonly(sci, BASE_ADDRESS_PIO3, PIO_CLR_P3OUT, 0x40);
 #endif
 #endif
@@ -550,7 +591,9 @@ static INT smartcard_clock_config(SCI_CONTROL_BLOCK *sci, UINT clock)
     if(!SCI_Set_Clock(sci))
     	return SCI_ERROR_VCC_INVALID;
 
-    mdelay(3);
+    //mdelay(3);
+		//change to non Busy-Waiting
+		msleep(3);
     
     return SCI_ERROR_OK;
 }
@@ -623,6 +666,8 @@ irqreturn_t sci_irq1_rx_tx_handler (int irq, void *dev_id)
  * we should use the ctrl regs to disable it.
  */
     disable_irq(SCI1_INT_RX_TX);
+#else
+		set_reg(sci, BASE_ADDRESS_ASC1, ASC1_INT_EN, 0x00 , 0x1FF);
 #endif
 	res = get_reg(sci, BASE_ADDRESS_ASC1, ASC1_STA);
 
@@ -645,6 +690,8 @@ irqreturn_t sci_irq1_rx_tx_handler (int irq, void *dev_id)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
 /* se below */
 	                enable_irq(SCI1_INT_RX_TX);
+#else
+		              set_reg(sci, BASE_ADDRESS_ASC1, ASC1_INT_EN, sci->irq_mode , 0x1FF);
 #endif
 	                return IRQ_HANDLED;
 	            }
@@ -689,11 +736,11 @@ irqreturn_t sci_irq1_rx_tx_handler (int irq, void *dev_id)
 			{
 				if(sci->byte_invert==INVERT)
 		        {
-		           	set_reg_writeonly(sci, BASE_ADDRESS_ASC0, ASC0_TX_BUF, (UCHAR)byte_invert[sci->write_buf[sci->tx_wptr]]);
+		           	set_reg_writeonly(sci, BASE_ADDRESS_ASC1, ASC1_TX_BUF, (UCHAR)byte_invert[sci->write_buf[sci->tx_wptr]]);
 				}
 				else
 				{
-					set_reg_writeonly(sci, BASE_ADDRESS_ASC0, ASC0_TX_BUF, (UCHAR)sci->write_buf[sci->tx_wptr]);
+					set_reg_writeonly(sci, BASE_ADDRESS_ASC1, ASC1_TX_BUF, (UCHAR)sci->write_buf[sci->tx_wptr]);
 		        }
 		        sci->tx_wptr++;
 		        sci->rx_wptr++;
@@ -716,11 +763,11 @@ irqreturn_t sci_irq1_rx_tx_handler (int irq, void *dev_id)
 			{
 				if(sci->byte_invert==INVERT)
 		        {
-		           	set_reg_writeonly(sci, BASE_ADDRESS_ASC0, ASC0_TX_BUF, (UCHAR)byte_invert[sci->write_buf[sci->tx_wptr]]);
+		           	set_reg_writeonly(sci, BASE_ADDRESS_ASC1, ASC1_TX_BUF, (UCHAR)byte_invert[sci->write_buf[sci->tx_wptr]]);
 				}
 				else
 				{
-					set_reg_writeonly(sci, BASE_ADDRESS_ASC0, ASC0_TX_BUF, (UCHAR)sci->write_buf[sci->tx_wptr]);
+					set_reg_writeonly(sci, BASE_ADDRESS_ASC1, ASC1_TX_BUF, (UCHAR)sci->write_buf[sci->tx_wptr]);
 		        }
 		        sci->tx_wptr++;
 		        sci->rx_wptr++;
@@ -733,6 +780,8 @@ irqreturn_t sci_irq1_rx_tx_handler (int irq, void *dev_id)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
 /* se below */
     enable_irq(SCI1_INT_RX_TX);
+#else
+		set_reg(sci, BASE_ADDRESS_ASC1, ASC1_INT_EN, sci->irq_mode , 0x1FF);
 #endif
 
     return IRQ_HANDLED;
@@ -759,6 +808,8 @@ irqreturn_t sci_irq0_rx_tx_handler (int irq, void *dev_id)
  * we should use the ctrl regs to disable it.
  */
     disable_irq(SCI0_INT_RX_TX);
+#else
+		set_reg(sci, BASE_ADDRESS_ASC0, ASC0_INT_EN, 0x00, 0x1FF);
 #endif
 	res = get_reg(sci, BASE_ADDRESS_ASC0, ASC0_STA);
 
@@ -781,6 +832,8 @@ irqreturn_t sci_irq0_rx_tx_handler (int irq, void *dev_id)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
 /* se below */
 	                enable_irq(SCI0_INT_RX_TX);
+#else
+									set_reg(sci, BASE_ADDRESS_ASC0, ASC0_INT_EN, sci->irq_mode , 0x1FF);
 #endif
 	                return IRQ_HANDLED;
 	            }
@@ -871,6 +924,8 @@ irqreturn_t sci_irq0_rx_tx_handler (int irq, void *dev_id)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
 /* se below */
     enable_irq(SCI0_INT_RX_TX);
+#else
+		set_reg(sci, BASE_ADDRESS_ASC0, ASC0_INT_EN, sci->irq_mode , 0x1FF);
 #endif
 	dprintk(8," OK\n");
 
@@ -880,7 +935,9 @@ irqreturn_t sci_irq0_rx_tx_handler (int irq, void *dev_id)
 static void sci_detect_change(SCI_CONTROL_BLOCK *sci)
 {
     /* Debounce time for the OFF pin in the TDA8024 */
-    mdelay(8);
+		//mdelay(8);
+		//change to non Busy-Waiting
+		msleep(8);
 
     if (sci->card_detect == SCI_CARD_NOT_PRESENT)
     {
@@ -1080,7 +1137,7 @@ void sci_exit (void)
 
 	    //wait thread stop
 	    while(!sci->polling)
-	    {mdelay(1);}
+	    {/*mdelay(1); change to non Busy-Waiting*/ msleep(1);}
 
 		PDEBUG("[SCI %d] thread stopped\n", sci->id);
 
@@ -1090,7 +1147,9 @@ void sci_exit (void)
 			free_irq(SCI1_INT_RX_TX, NULL);
 
 		SCI_ClockDisable(sci);
-		mdelay(10);
+		//mdelay(10);
+		//change to non Busy-Waiting
+		msleep(10);
 
 	    if(sci->cmdvcc!= NULL) {
 #if defined(ADB_BOX)
@@ -1146,7 +1205,7 @@ static int SCI_SetClockSource(SCI_CONTROL_BLOCK *sci)
 	val = ctrl_inl(reg_address);
 	val|=0x1B0;
 
-#ifdef CUBEBOX
+#if defined(CUBEBOX) || defined(IPBOX)
 	/* configure SC0_nSETVCC: derived from SC0_DETECT input */
 	val |= (1 << 7);
 #else
@@ -1169,7 +1228,7 @@ static int SCI_SetClockSource(SCI_CONTROL_BLOCK *sci)
 	iounmap((void *)reg_address);
 #endif
 
-#if defined(CONFIG_CPU_SUBTYPE_STX7105) || defined(ATEVIO7500) || defined(SPARK7162)
+#if defined(CONFIG_CPU_SUBTYPE_STX7105) || defined(ATEVIO7500)
 	reg_address = (U32)checked_ioremap(EPLD_BASE_ADDRESS/+EPLD_SCREG, 4);
 	if(reg_address) {
 		val = ctrl_inl(reg_address);
@@ -1393,6 +1452,10 @@ SCI_ERROR sci_init(void)
             sci->base_address_sci     = (ULONG)SCI1_BASE_ADDRESS;
             sci->base_address_pio4    = (ULONG)PIO3_BASE_ADDRESS;
             sci->pio_port = 1;
+            
+            set_reg(sci, BASE_ADDRESS_ASC1, ASC1_CTRL, 0x2787, 0x3FFF);
+            set_reg(sci, BASE_ADDRESS_ASC1, ASC1_BAUDRATE, 0x28B, 0xFFFF);
+            set_reg(sci, BASE_ADDRESS_ASC1, ASC1_GUARDTIME, GT_DEFAULT, 0x1FF);
         }
     
         sci->base_address_syscfg = (ULONG)SYS_CFG_BASE_ADDRESS;
@@ -1588,7 +1651,7 @@ SCI_ERROR sci_reset(SCI_CONTROL_BLOCK *sci)
     SCI_CHECK_INIT_COND(sci->id, rc);
     if (rc != SCI_ERROR_OK)
     {
-        PDEBUG("sc[%d] error=%d\n", sci->id, rc);
+		    PDEBUG("sc[%d] error=%d\n", sci->id, rc);
         return rc;
     }
     /* FIXME: Add wake_up_interruptible() */
@@ -1994,7 +2057,9 @@ static ssize_t sci_read(struct file *file, char *buffer, size_t length, loff_t *
 		{
 			return -EWOULDBLOCK;
 		}
-		mdelay(57);
+		//mdelay(57);
+		//change to non Busy-Waiting
+		msleep(57);
 	}
 
 	if(sci->card_detect!=SCI_CARD_PRESENT)
@@ -2007,8 +2072,10 @@ static ssize_t sci_read(struct file *file, char *buffer, size_t length, loff_t *
 		if(real_num_bytes<length)
 		{
 			unsigned char cnt_tmp=0;
-			do{	
-				mdelay(10);
+			do{
+				//mdelay(10);
+				//change to non Busy-Waiting
+				msleep(10);
 				cnt_tmp++;
 				real_num_bytes=sci->rx_rptr - sci->rx_wptr;
 			}while ( (real_num_bytes<length) && (cnt_tmp<100) );	/* Wait a second */
@@ -2028,7 +2095,9 @@ static ssize_t sci_read(struct file *file, char *buffer, size_t length, loff_t *
 	{
 		sci->rx_wptr=0;
 		sci->rx_rptr=0;
-		mdelay(3);   /*Hellmaster1024: on Atevio we seem to have some timing probs without that delay */
+		//mdelay(3);   /*Hellmaster1024: on Atevio we seem to have some timing probs without that delay */
+		//change to non Busy-Waiting
+		msleep(3);
 
 	}
 	return (ssize_t) real_num_bytes;
@@ -2058,7 +2127,9 @@ static ssize_t sci_write(struct file *file, const char *buffer, size_t length, l
 		{
 			return -EWOULDBLOCK;
 		}
-		mdelay(57);
+		//mdelay(57);
+		//change to non Busy-Waiting
+		msleep(57);
 	}
 	
 	if(sci->card_detect!=SCI_CARD_PRESENT)
@@ -2162,14 +2233,16 @@ static int detect_ATR(SCI_CONTROL_BLOCK *sci)
 	{
 		return -1;
 	}
-	
+
 	if ( sci_reset(sci) == SCI_ERROR_OK )
 		rc = 0;
 	else
 		rc = -1;
-	mdelay(1100);
+	//mdelay(1100);
+	//change to non Busy-Waiting
+	msleep(1100);
 
-	/* Change the clock */
+	// Change the clock
 	if( (sci->read_buf[sci->rx_wptr]!=0x3B) && (sci->read_buf[sci->rx_wptr]!=0x3F) )
 	{
 		memset(sci->read_buf, 0, SCI_BUFFER_SIZE);
@@ -2186,8 +2259,11 @@ static int detect_ATR(SCI_CONTROL_BLOCK *sci)
 			rc = 0;
 		else
 			rc = -1;
-		mdelay(750);
+		//mdelay(750);
+		//change to non Busy-Waiting
+		msleep(750);
 	}
+
 	return (rc);
 }
 /*****************************************************/
@@ -2238,10 +2314,10 @@ int sci_ioctl(struct inode *inode,
 				return -1;
 
 			rc=detect_ATR(sci);
-			
-			/* Check the ATR and change the voltage for hw security */
+
+			// Check the ATR and change the voltage for hw security
 			check_atr(sci);
-			/* Set the parity */
+			// Set the parity
 			if (sci->byte_invert==INVERT)
 			{
 				if(sci_id==0)
