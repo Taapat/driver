@@ -505,10 +505,11 @@ long stmhdmiio_get_cec_address(unsigned int * arg)
   if(mutex_lock_interruptible(&dev->lock))
     return -ERESTARTSYS;
 
-  *arg = (dev->edid_info.cec_address[0] << 12) +
+  /**arg = (dev->edid_info.cec_address[0] << 12) +
          (dev->edid_info.cec_address[1] << 8) +
          (dev->edid_info.cec_address[2] << 4) +
-         (dev->edid_info.cec_address[3]);
+         (dev->edid_info.cec_address[3]);*/
+  *arg = (1 << 12) + (0 << 8) + (0 << 4) + (0);
 
   mutex_unlock(&dev->lock);
   return retval;
