@@ -402,7 +402,7 @@ static int InsertPesHeader (unsigned char *data, int size, unsigned char stream_
     BitPacker_t ld2 = {data, 0, 32};
 
     if (size>MAX_PES_PACKET_SIZE)
-        DVB_DEBUG("Packet bigger than 63.9K eeeekkkkk\n");
+        DVB_DEBUG("Packet size %d is bigger than %d eeeekkkkk\n", size, MAX_PES_PACKET_SIZE);
 
     PutBits(&ld2,0x0  ,8);
     PutBits(&ld2,0x0  ,8);
