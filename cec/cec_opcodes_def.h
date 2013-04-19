@@ -187,6 +187,21 @@
 #define USER_CONTROL_CODE_FUNCTION_POWER_OFF          0x6C
 #define USER_CONTROL_CODE_FUNCTION_POWER_ON           0x6D
 
+// LG Vendor Specific
+
+#define LG_DEVICE_TYPE_DVD               0x02
+#define LG_DEVICE_TYPE_STB               0x03
+#define LG_DEVICE_TYPE_HDD               0x04
+#define LG_DEVICE_TYPE_BR                0x05
+#define LG_DEVICE_TYPE_HOME_THEATRE      0x06
+
+#define LG_REQUEST_DEVICE_TYPE           0x01
+#define LG_REQUEST_REMOTE_CONTROL_LEVEL  0x0B
+#define LG_REQUEST_VENDOR_COMMAND1       0x04
+#define LG_REQUEST_VENDOR_COMMAND2       0xA0
+
+// end LG Vendor Specific
+
 typedef unsigned char  tAudioRate;
 typedef unsigned char  tAbortReason;
 typedef unsigned char  tDeviceType;
@@ -320,6 +335,7 @@ struct sSET_STREAM_PATH {
 
 //SONY BRAVIA: 08 00 46
 //PANASONIC:   00 80 45
+//LG:          00 E0 91
 
 struct sDEVICE_VENDOR_ID {
   unsigned char  VendorId[3];

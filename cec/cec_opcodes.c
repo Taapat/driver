@@ -50,7 +50,7 @@ extern long stmhdmiio_get_cec_address(unsigned int * arg);
 
 static unsigned char isFirstKiss = 0;
 
-static unsigned char logicalDeviceTypeChoicesIndex = 0;
+static unsigned char logicalDeviceTypeChoicesIndex = 6;
 
 unsigned char responseBuffer[SEND_BUF_SIZE];
 
@@ -66,8 +66,8 @@ static const unsigned char logicalDeviceTypeChoices[] = {
     DEVICE_TYPE_UNREG
 };
 
-static unsigned char logicalDeviceType = DEVICE_TYPE_DVD1;
-static unsigned char deviceType = DEVICE_TYPE_DVD;
+static unsigned char logicalDeviceType = DEVICE_TYPE_REC1;
+static unsigned char deviceType = DEVICE_TYPE_REC;
 
 static unsigned short ActiveSource = 0x0000;
 
@@ -115,7 +115,7 @@ unsigned short getActiveSource(void)
 
 void setActiveSource(unsigned short addr)
 {
-    // printk("[CEC] FROM: %04x TO: %04x\n", ActiveSource, addr);
+    printk("[CEC] FROM: %04x TO: %04x\n", ActiveSource, addr);
     if (ActiveSource != addr)
     {
 	ActiveSource = addr;
@@ -401,14 +401,15 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
 	    {
 		responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0xF);
 		responseBuffer[1] = SET_OSD_NAME;
-		responseBuffer[2] = 'D';
-		responseBuffer[3] = 'U';
-		responseBuffer[4] = 'C';
-		responseBuffer[5] = 'K';
-		responseBuffer[6] = 'B';
-		responseBuffer[7] = 'O';
-		responseBuffer[8] = 'X';
-		sendMessage(9, responseBuffer);
+		responseBuffer[2] = 'E';
+		responseBuffer[3] = 'n';
+		responseBuffer[4] = 'i';
+		responseBuffer[5] = 'g';
+		responseBuffer[6] = 'm';
+		responseBuffer[7] = 'a';
+		responseBuffer[8] = ' ';
+		responseBuffer[9] = '2';
+		sendMessage(0x0A, responseBuffer);
 	    }
 	    break;
 
@@ -483,13 +484,50 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
 
 	case VENDOR_COMMAND:
 	    strcpy(name, "VENDOR_COMMAND");
+	    strcat(name, ": ");
+	    switch (buf[1])
 	    if (activemode)
 	    {
-		responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0xF);
+/*		responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0xF);
 		responseBuffer[1] = FEATURE_ABORT;
 		responseBuffer[2] = VENDOR_COMMAND;
 		responseBuffer[3] = ABORT_REASON_UNRECOGNIZED_OPCODE;
-		sendMessage(4, responseBuffer);
+		sendMessage(4, responseBuffer);*/
+
+	    	//FIXME
+	    	// LG Vendor Command HACK
+
+
+	    case LG_REQUEST_DEVICE_TYPE: strcat(name, "DEVICE_TYPE");
+    		responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
+    		responseBuffer[1] =	VENDOR_COMMAND;
+	    	responseBuffer[2] =	0x02;
+	    	responseBuffer[3] = LG_DEVICE_TYPE_HDD;
+	    	sendMessage(4, responseBuffer);
+	    	break;
+	    case LG_REQUEST_REMOTE_CONTROL_LEVEL: (name, "REMOTE_LEVEL");
+			responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
+			responseBuffer[1] =	VENDOR_COMMAND;
+	    	responseBuffer[2] =	0x0C;
+	    	responseBuffer[3] = 0x05; // maximum control level
+	    	sendMessage(4, responseBuffer);
+	    	break;
+	    case LG_REQUEST_VENDOR_COMMAND1: (name, "ID_1");
+			responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
+			responseBuffer[1] =	VENDOR_COMMAND;
+	    	responseBuffer[2] =	0x05;
+	    	responseBuffer[3] = 0x04;
+	    	sendMessage(4, responseBuffer);
+	    	break;
+	    case LG_REQUEST_VENDOR_COMMAND2: (name, "ID_2");
+			responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
+			responseBuffer[1] =	VENDOR_COMMAND;
+	    	responseBuffer[2] =	0xA1;
+	    	responseBuffer[3] = 0x04;
+	    	sendMessage(4, responseBuffer);
+	    	break;
+
+	    	// End HACK
 	    }
 	    break;
 
@@ -514,9 +552,9 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
 		responseBuffer[3] = 0x1E;
 		responseBuffer[4] = 0xB8;
 #else
-		responseBuffer[2] = 'D';
-		responseBuffer[3] = 'B';
-		responseBuffer[4] = 'X';
+		responseBuffer[2] = 0x00; //LG
+		responseBuffer[3] = 0xE0;
+		responseBuffer[4] = 0x91;
 #endif
 #endif
 		sendMessage(5, responseBuffer);
@@ -672,10 +710,10 @@ void parseRawMessage(unsigned int len, unsigned char buf[])
 	return;
     }
 
-    /* printk("[CEC]\tFROM 0x%02x TO 0x%02x : %3u : ", src, dst, dataLen);
+    printk("[CEC]\tFROM 0x%02x TO 0x%02x : %3u : ", src, dst, dataLen);
     for(ic = 0; ic < dataLen; ic++)
       printk("%02x ", buf[ic+1]);
-    printk("\n");*/
+    printk("\n");
 
     if (dataLen > 0)
     {
