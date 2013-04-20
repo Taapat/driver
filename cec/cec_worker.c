@@ -227,7 +227,7 @@ irqreturn_t cec_interrupt(int irq, void *dev_id)
 	isSending = 0;
 
 	dprintk(4,"Retries: %d\n", retries);
-	// printk("[CEC] ---- CEC ERROR ----\n");
+	dprintk(3,"---- CEC ERROR ----\n");
 
 	if (getIsFirstKiss() == 1) {
 	    if (error & CEC_ERROR_ACK)

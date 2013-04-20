@@ -115,7 +115,7 @@ unsigned short getActiveSource(void)
 
 void setActiveSource(unsigned short addr)
 {
-    printk("[CEC] FROM: %04x TO: %04x\n", ActiveSource, addr);
+    dprintk(2, "FROM: %04x TO: %04x\n", ActiveSource, addr);
     if (ActiveSource != addr)
     {
 	ActiveSource = addr;
@@ -706,14 +706,14 @@ void parseRawMessage(unsigned int len, unsigned char buf[])
 
     if (dataLen > CEC_MAX_DATA_LEN)
     {
-	printk("[CEC] Incoming Message was too long! (%u)\n", dataLen);
+	dprintk(0, "Incoming Message was too long! (%u)\n", dataLen);
 	return;
     }
 
-    printk("[CEC]\tFROM 0x%02x TO 0x%02x : %3u : ", src, dst, dataLen);
+    dprintk(2, "\tFROM 0x%02x TO 0x%02x : %3u : ", src, dst, dataLen);
     for(ic = 0; ic < dataLen; ic++)
-      printk("%02x ", buf[ic+1]);
-    printk("\n");
+      dprintk(2, "%02x ", buf[ic+1]);
+    dprintk(2, "\n");
 
     if (dataLen > 0)
     {
@@ -793,23 +793,23 @@ void sendOneTouchPlay(void)
 {
     unsigned short physicalAddress = getPhysicalAddress();
 
-    printk("[CEC] sendOneTouchPlay - 1\n");
+    dprintk(2, "sendOneTouchPlay - 1\n");
     responseBuffer[0] = (getLogicalDeviceType() << 4) + (DEVICE_TYPE_TV & 0xF);
     responseBuffer[1] = IMAGE_VIEW_ON;
-    printk("[CEC] sendOneTouchPlay - 2\n");
+    dprintk(2, "sendOneTouchPlay - 2\n");
     sendMessage(2, responseBuffer);
-    printk("[CEC] sendOneTouchPlay - 3\n");
+    dprintk(2, "sendOneTouchPlay - 3\n");
     udelay(10000);
-    printk("[CEC] sendOneTouchPlay - 4\n");
+    dprintk(2, "sendOneTouchPlay - 4\n");
     memset(responseBuffer, 0, SEND_BUF_SIZE);
 
     responseBuffer[0] = (getLogicalDeviceType() << 4) + (BROADCAST & 0xF);
     responseBuffer[1] = ACTIVE_SOURCE;
     responseBuffer[2] = (((physicalAddress >> 12)&0xf) << 4) + ((physicalAddress >> 8)&0xf);
     responseBuffer[3] = (((physicalAddress >> 4)&0xf) << 4) + ((physicalAddress >> 0)&0xf);
-    printk("[CEC] sendOneTouchPlay - 5\n");
+    dprintk(2, "sendOneTouchPlay - 5\n");
     sendMessage(4, responseBuffer);
-    printk("[CEC] sendOneTouchPlay - 6\n");
+    dprintk(2, "sendOneTouchPlay - 6\n");
 }
 
 void sendSystemStandby(int deviceId)
