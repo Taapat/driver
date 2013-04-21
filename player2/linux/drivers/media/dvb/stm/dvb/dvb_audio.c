@@ -421,9 +421,9 @@ static int AudioIoctlSetBypassMode (struct DeviceContext_s* Context, unsigned in
     //libdreamdvd : 5=dts 6=lpcm
     DVB_DEBUG("Set BypassMode to %d\n", Mode);
 
-    if (Mode == 0)
-                        Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_AC3;
-    else if (Mode == 5 || Mode == 2)
+    if (Mode == 0 || Mode == 34)
+      Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_AC3;
+    else if (Mode == 2 || Mode == 5 || Mode == 16)
       Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_DTS;
     else if (Mode == 6)
       Context->AudioEncoding      = (audio_encoding_t) AUDIO_ENCODING_LPCM;
