@@ -1,0 +1,87 @@
+/*
+This file was automatically generated on Tue 20 Apr 10 at 14:43:47 by user hazellp, host dingly using romgen R1.5.0 with the ST TargetPack hdk7108stx7108
+
+TargetPack files used:
+/group/mdt/products/stmc2/stmc2-1.5.0-linux/targetpack/cores/jtag_core.xml
+/group/mdt/products/stmc2/stmc2-1.5.0-linux/targetpack/cores/st231.xml
+/group/mdt/products/stmc2/stmc2-1.5.0-linux/targetpack/cores/st40_300.xml
+/group/mdt/products/stmc2/stmc2-1.5.0-linux/targetpack/cores/st40_300_design.xml
+/group/mdt/products/stmc2/stmc2-1.5.0-linux/targetpack/cores/st40_ccn_regs.xml
+/group/mdt/products/stmc2/stmc2-1.5.0-linux/targetpack/cores/st40_pmb_addr_array_regs.xml
+/group/mdt/products/stmc2/stmc2-1.5.0-linux/targetpack/cores/st40_pmb_data_array_regs.xml
+/group/mdt/products/stmc2/stmc2-1.5.0-linux/targetpack/cores/st40_pmb_regs.py
+/group/mdt/products/stmc2/stmc2-1.5.0-linux/targetpack/debug/tapmux.xml
+/group/mdt/products/stmc2/stmc2-1.5.0-linux/targetpack/socs/peripherals/convertor.py
+/group/mdt/products/stmc2/stmc2-1.5.0-linux/targetpack/socs/peripherals/st40_emi_regs.xml
+/group/mdt/products/stmc2/stmc2-1.5.0-linux/targetpack/socs/peripherals/tapmux.py
+/group/mdt/products/stmc2/stmc2-1.5.0-linux/targetpack/utilities/tap/__init__.py
+/group/mdt/products/stmc2/stmc2-1.5.0-linux/targetpack/utilities/tap/jtag.py
+/group/mdt/products/stmc2/stmc2-1.5.0-linux/targetpack/utilities/utilities.py
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/boards/hdk7108stx7108/hdk7108stx7108.py
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/boards/hdk7108stx7108/hdk7108stx7108.xml
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/boards/hdk7108stx7108/hdk7108stx7108_design.xml
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/boards/hdk7108stx7108/tm1668_fp.pyc
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/boards/hdk7108stx7108/tm1668_fp.xml
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/socs/stx7108/clk_common.pyc
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/socs/stx7108/l2_cache_regs.xml
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/socs/stx7108/st40_ddr3mixer_regs.xml
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/socs/stx7108/st40_ddr3pctl_regs.xml
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/socs/stx7108/st40_ddr3phy_regs.xml
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/socs/stx7108/stx7108.pyc
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/socs/stx7108/stx7108.xml
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/socs/stx7108/stx7108_clockgena_regs.xml
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/socs/stx7108/stx7108_clockgenb_regs.xml
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/socs/stx7108/stx7108_ddrdbg.pyc
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/socs/stx7108/stx7108_design.xml
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/socs/stx7108/stx7108_sysconf_0_regs.xml
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/socs/stx7108/stx7108_sysconf_1_regs.xml
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/socs/stx7108/stx7108_sysconf_2_regs.xml
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/socs/stx7108/stx7108_sysconf_3_regs.xml
+/home/afra/users/hazellp/stmc2/st40_dual_core/7108/hdk7108-targetpack-v4/socs/stx7108/stx7108_sysconf_4_regs.xml
+*/
+POKE32(0xf7100000, 0x00000000)
+POKE32(0xf6100000, 0x80000000)
+POKE32(0xf7100100, 0x00000000)
+POKE32(0xf6100100, 0x80000000)
+POKE32(0xf7100200, 0x00000000)
+POKE32(0xf6100200, 0x80000000)
+POKE32(0xf7100300, 0x00000000)
+POKE32(0xf6100300, 0x80000000)
+POKE32(0xf7100400, 0x00000000)
+POKE32(0xf6100400, 0x80000000)
+POKE32(0xf7100500, 0x00000000)
+POKE32(0xf6100500, 0x80000000)
+POKE32(0xf7100600, 0x00000000)
+POKE32(0xf6100600, 0x80000000)
+POKE32(0xf7100700, 0x00000000)
+POKE32(0xf6100700, 0x80000000)
+POKE32(0xf7100800, 0x00000000)
+POKE32(0xf6100800, 0x80000000)
+POKE32(0xf7100900, 0x00000000)
+POKE32(0xf6100900, 0x80000000)
+POKE32(0xf7100a00, 0x00000000)
+POKE32(0xf6100a00, 0x80000000)
+POKE32(0xf7100b00, 0x00000000)
+POKE32(0xf6100b00, 0x80000000)
+POKE32(0xf7100c00, 0x00000000)
+POKE32(0xf6100c00, 0x80000000)
+POKE32(0xf7100d00, 0x00000000)
+POKE32(0xf6100d00, 0x80000000)
+POKE32(0xf7100e00, 0x00000000)
+POKE32(0xf6100e00, 0x80000000)
+POKE32(0xf7100f00, 0x00000000)
+POKE32(0xf6100f00, 0x80000000)
+POKE32(0xf6100000, 0x80000000)
+POKE32(0xf7100000, 0x40000188)
+POKE32(0xf6100100, 0x88000000)
+POKE32(0xf7100100, 0x48000188)
+POKE32(0xf6100200, 0xa0000000)
+POKE32(0xf7100200, 0x80000188)
+POKE32(0xf6100300, 0xa8000000)
+POKE32(0xf7100300, 0x88000188)
+OR32(0xff000010, 0x00000010)
+IF_EQ32(1, 0xff000010, 0x00000010, 0x00000010)
+  UPDATE32(0xff000010, 0xffffffef, 0x00000010)
+ELSE(1)
+  UPDATE32(0xff000070, 0x7fffffff, 0x80000000)
+ENDIF(1)
