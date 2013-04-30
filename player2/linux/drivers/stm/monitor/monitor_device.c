@@ -468,7 +468,7 @@ void MonitorRecordEvent        (struct DeviceContext_s*         Context,
     StoredEvent                 = &(Context->StoredEventValues[EventCode & MONITOR_EVENT_INDEX_MASK]);
 
     if (Parameters)
-        memcpy (StoredEvent->Parameters, Parameters, sizeof(Parameters));
+        memcpy (StoredEvent->Parameters, Parameters, MONITOR_PARAMETER_COUNT);
     StoredEvent->Count++;
 
     if ((EventCode & MONITOR_EVENT_REPORT_ON_REQUEST) != 0)
