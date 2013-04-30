@@ -2710,7 +2710,7 @@ static int SetGlobalTransformParameters( avr_v4l2_audio_handle_t *AudioContext,
         MME_LowLatencyIO_t *IoCfg = GlobalParams->IOCfg;
         struct snd_pseudo_mixer_downstream_topology * Topology = &mixer_settings->downstream_topology;
         unsigned int inp_idx, out_idx;
-	bool         mch_enable;
+	bool         mch_enable = true;
         
 	// Use the user settings if the user has requested custom DRC
 	if (mixer_settings->drc_enable) {
