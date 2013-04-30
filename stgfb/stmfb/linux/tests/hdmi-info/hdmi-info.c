@@ -71,6 +71,7 @@ char *get_attribute(int attr)
 
 	char *p = malloc(page_size + 1);
 	if (!p) {
+		close(fd);
 		return NULL;
 	}
 
