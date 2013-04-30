@@ -331,7 +331,7 @@ FrameParserStatus_t FrameParser_AudioEAc3_c::ParseSingleFrameHeader( unsigned ch
 	  FrameSize = 2 * ((FsCode == 1) ? ((320 * BitRate / 147 + (RateCode & 1))): (EAC3FsCodeToFrameSize[FsCode] * BitRate));
       NbSamples =  1536;
   }
-  else if ((Bsid > 10) || (Bsid <= 16))                              // bsid >10 and bsid <= 16
+  else if ((Bsid > 10) && (Bsid <= 16))                              // bsid >10 and bsid <= 16
   {			
 	  Bits.SetPointer(&FrameHeaderBytes[2]);
       char StrmType = Bits.Get(2);
