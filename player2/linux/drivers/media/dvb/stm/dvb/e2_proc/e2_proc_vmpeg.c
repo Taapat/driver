@@ -23,7 +23,7 @@ int proc_vmpeg_0_dst_left_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int 		value, err, x, y;
+	int 		value, err, x=720, y=576;
         void*           fb;
         struct fb_info  *info;
 	struct fb_var_screeninfo screen_info;
@@ -36,17 +36,12 @@ int proc_vmpeg_0_dst_left_write(struct file *file, const char __user *buf,
 			
 	info = (struct fb_info*) fb;
 
-	memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
-		
 	if (fb != NULL)
 	{
+		memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
 		y=screen_info.yres;
 		x=screen_info.xres;
-	} else
-	{
-		y=576;
-		x=720;
-        }
+	}
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -98,8 +93,8 @@ int proc_vmpeg_0_dst_left_read (char *page, char **start, off_t off, int count,
 			  int *eof, void *data)
 {
 	int    len = 0;
-	int    l,t,w,h;
-	int    err, x, y;
+	int    l=0,t=0,w,h;
+	int    err, x=720, y=576;
         void   *fb;
         struct fb_info *info;
 	struct fb_var_screeninfo screen_info;
@@ -111,31 +106,25 @@ int proc_vmpeg_0_dst_left_read (char *page, char **start, off_t off, int count,
 			
 	info = (struct fb_info*) fb;
 
-	memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
-		
 	if (fb != NULL)
 	{
+		memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
 		y=screen_info.yres;
 		x=screen_info.xres;
-	} else
-	{
-		y=576;
-		x=720;
-        }
+	}
 
 	if (pContext != NULL)
 	{
 		mutex_lock (&(pContext->DvbContext->Lock));
-
 		err = StreamGetOutputWindow(pContext->VideoStream, &l,&t,&w,&h);
+		mutex_unlock (&(pContext->DvbContext->Lock));
 		if (err != 0)
 			printk("failed to get output window %d\n", err);
 		else	
 			printk("get output window to %d %d %d, %d ok\n",  l,  t, w, h);
 
-		mutex_unlock (&(pContext->DvbContext->Lock));
+		len = sprintf(page, "%x\n", 720*l/x);
 	}
-	len = sprintf(page, "%x\n", 720*l/x);
 
         return len;
 }
@@ -145,7 +134,7 @@ int proc_vmpeg_0_dst_top_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int 		value, err, x, y;
+	int 		value, err, x=720, y=576;
         void*           fb;
         struct fb_info  *info;
 	struct fb_var_screeninfo screen_info;
@@ -158,17 +147,13 @@ int proc_vmpeg_0_dst_top_write(struct file *file, const char __user *buf,
 			
 	info = (struct fb_info*) fb;
 
-	memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
 		
 	if (fb != NULL)
 	{
+		memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
 		y=screen_info.yres;
 		x=screen_info.xres;
-	} else
-	{
-		y=576;
-		x=720;
-        }
+	}
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -220,8 +205,8 @@ int proc_vmpeg_0_dst_top_read (char *page, char **start, off_t off, int count,
 			  int *eof, void *data)
 {
 	int len = 0;
-	int l,t,w,h;
-	int err, x, y;
+	int l=0,t=0,w,h;
+	int err, x=720, y=576;
         void*           fb;
         struct fb_info  *info;
 	struct fb_var_screeninfo screen_info;
@@ -233,31 +218,25 @@ int proc_vmpeg_0_dst_top_read (char *page, char **start, off_t off, int count,
 			
 	info = (struct fb_info*) fb;
 
-	memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
-		
 	if (fb != NULL)
 	{
+		memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
 		y=screen_info.yres;
 		x=screen_info.xres;
-	} else
-	{
-		y=576;
-		x=720;
-        }
+	}
 
 	if (pContext != NULL)
 	{
 		mutex_lock (&(pContext->DvbContext->Lock));
-
 		err = StreamGetOutputWindow(pContext->VideoStream, &l,&t,&w,&h);
+		mutex_unlock (&(pContext->DvbContext->Lock));
 		if (err != 0)
 			printk("failed to get output window %d\n", err);
 		else	
 			printk("get output window to %d %d %d, %d ok\n",  l,  t, w, h);
 
-		mutex_unlock (&(pContext->DvbContext->Lock));
+		len = sprintf(page, "%x\n", 576*t/y);
 	}
-	len = sprintf(page, "%x\n", 576*t/y);
 
         return len;
 }
@@ -268,7 +247,7 @@ int proc_vmpeg_0_dst_width_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int 		value, err, x, y;
+	int 		value, err, x=720, y=576;
         void*           fb;
         struct fb_info  *info;
 	struct fb_var_screeninfo screen_info;
@@ -282,17 +261,12 @@ int proc_vmpeg_0_dst_width_write(struct file *file, const char __user *buf,
 			
 	info = (struct fb_info*) fb;
 
-	memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
-		
 	if (fb != NULL)
 	{
+		memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
 		y=screen_info.yres;
 		x=screen_info.xres;
-	} else
-	{
-		y=576;
-		x=720;
-        }
+	}
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -345,7 +319,7 @@ int proc_vmpeg_0_dst_width_read (char *page, char **start, off_t off, int count,
 {
 	int len = 0;
 	int l,t,w,h;
-	int err, x, y;
+	int err, x=720, y=576;
         void*           fb;
         struct fb_info  *info;
 	struct fb_var_screeninfo screen_info;
@@ -357,31 +331,25 @@ int proc_vmpeg_0_dst_width_read (char *page, char **start, off_t off, int count,
 			
 	info = (struct fb_info*) fb;
 
-	memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
-		
 	if (fb != NULL)
 	{
+		memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
 		y=screen_info.yres;
 		x=screen_info.xres;
-	} else
-	{
-		y=576;
-		x=720;
-        }
+	}
 
 	if (pContext != NULL)
 	{
 		mutex_lock (&(pContext->DvbContext->Lock));
 		err = StreamGetOutputWindow(pContext->VideoStream, &l,&t,&w,&h);
+		mutex_unlock (&(pContext->DvbContext->Lock));
 		if (err != 0)
 			printk("failed to get output window %d\n", err);
 		else	
 			printk("get output window to %d %d %d, %d ok\n",  l,  t, w, h);
 
-		mutex_unlock (&(pContext->DvbContext->Lock));
+		len = sprintf(page, "%x\n", 720*w/x);
 	}
-
-	len = sprintf(page, "%x\n", 720*w/x);
 
         return len;
 }
@@ -391,7 +359,7 @@ int proc_vmpeg_0_dst_height_write(struct file *file, const char __user *buf,
 {
 	char 		*page;
 	ssize_t 	ret = -ENOMEM;
-	int 		value, err, x, y;
+	int 		value, err, x=720, y=576;
         void*           fb;
         struct fb_info  *info;
 	struct fb_var_screeninfo screen_info;
@@ -405,17 +373,12 @@ int proc_vmpeg_0_dst_height_write(struct file *file, const char __user *buf,
 			
 	info = (struct fb_info*) fb;
 
-	memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
-		
 	if (fb != NULL)
 	{
+		memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
 		y=screen_info.yres;
 		x=screen_info.xres;
-	} else
-	{
-		y=576;
-		x=720;
-        }
+	}
 
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (page) 
@@ -468,7 +431,7 @@ int proc_vmpeg_0_dst_height_read (char *page, char **start, off_t off, int count
 {
 	int len = 0;
 	int l,t,w,h;
-	int err, x, y;
+	int err, x=720, y=576;
         void*           fb;
         struct fb_info  *info;
 	struct fb_var_screeninfo screen_info;
@@ -480,31 +443,25 @@ int proc_vmpeg_0_dst_height_read (char *page, char **start, off_t off, int count
 			
 	info = (struct fb_info*) fb;
 
-	memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
-		
 	if (fb != NULL)
 	{
+		memcpy(&screen_info, &info->var, sizeof(struct fb_var_screeninfo));
 		y=screen_info.yres;
 		x=screen_info.xres;
-	} else
-	{
-		y=576;
-		x=720;
-        }
+	}
 
 	if (pContext != NULL)
 	{
 		mutex_lock (&(pContext->DvbContext->Lock));
-
 		err = StreamGetOutputWindow(pContext->VideoStream, &l,&t,&w,&h);
+		mutex_unlock (&(pContext->DvbContext->Lock));
 		if (err != 0)
 			printk("failed to get output window %d\n", err);
 		else	
 			printk("get output window to %d %d %d, %d ok\n",  l,  t, w, h);
 
-		mutex_unlock (&(pContext->DvbContext->Lock));
+		len = sprintf(page, "%x\n", 576*h/y);
 	}
-	len = sprintf(page, "%x\n", 576*h/y);
 
         return len;
 }
