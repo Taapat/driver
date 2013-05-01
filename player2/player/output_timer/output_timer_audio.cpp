@@ -151,7 +151,7 @@ OutputTimerStatus_t   OutputTimer_Audio_c::InitializeConfiguration(  void )
     //
 
     AudioConfiguration.MinimumManifestorLatencyInSamples        = 2 * 1536; // we really ought to ask the manifestor for this number
-    AudioConfiguration.MinimumManifestorSamplingFrequency       = 25000; // manifestor deploys resampler to assure this
+    AudioConfiguration.MinimumManifestorSamplingFrequency       = 32000; // manifestor deploys resampler to assure this
     
     Configuration.FrameDecodeTime				= 0;
     Configuration.MinimumManifestorLatency                      = LookupMinimumManifestorLatency(AudioConfiguration.MinimumManifestorSamplingFrequency);
