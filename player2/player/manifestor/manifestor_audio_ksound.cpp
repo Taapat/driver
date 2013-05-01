@@ -2176,7 +2176,7 @@ ManifestorStatus_t Manifestor_AudioKsound_c::UpdateCodedDataBuffer( MME_DataBuff
 
         if( SamplesUntilNextCodedDataRepetitionPeriod > CurrentCodedDataRepetitionPeriod )
         {
-            MANIFESTOR_ERROR( "Firmware is talking nonsense about remaining repetition period (%d of %d)\n",
+            MANIFESTOR_ERROR( "Firmware is talking nonsense about remaining repetition period (%u of %u)\n",
                               SamplesUntilNextCodedDataRepetitionPeriod, CurrentCodedDataRepetitionPeriod );
             SamplesUntilNextCodedDataRepetitionPeriod = 0; // firmware value cannot be trusted
         }
