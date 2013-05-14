@@ -69,30 +69,70 @@ static struct usb_device_id rtw_usb_id_tbl[] ={
 
 	/****** 8188CU ********/		
          {USB_DEVICE(0x07B8, 0x8189)},//Funai - Abocom	
-         {USB_DEVICE(0x2019, 0xED17)},//PCI - Edimax        
-         {USB_DEVICE(0x0DF6, 0x0052)}, //Sitecom - Edimax         
-         {USB_DEVICE(0x7392, 0x7811)},//Edimax - Edimax         
-         {USB_DEVICE(0x07B8, 0x8188)},//Abocom - Abocom         
-         {USB_DEVICE(0x0EB0, 0x9071)},//NO Brand - Etop         
-         {USB_DEVICE(0x06F8, 0xE033)},//Hercules - Edimax 
-         {USB_DEVICE(0x103C, 0x1629)},//HP - Lite-On
-         //{USB_DEVICE(0x0DF6, 0x0052)},//Sitecom - Edimax V18
-        // {USB_DEVICE(0x0EB0, 0x9071)},//NO Brand - Etop   V18
-        // {USB_DEVICE(0x06F8, 0xE033)},//Hercules - Edimax  V18
-        {USB_DEVICE(0x2001, 0x3308)},//D-Link - Alpha
-          
-	/****** 8192CU ********/	
-         {USB_DEVICE(0x07b8, 0x8178)},//Funai -Abocom
-         {USB_DEVICE(0x2001, 0x3307)},//D-Link-Cameo         
-         {USB_DEVICE(0x2001, 0x330A)},//D-Link-Alpha         
-         {USB_DEVICE(0x2001, 0x3309)},//D-Link-Alpha         
-         {USB_DEVICE(0x0586, 0x341F)},//Zyxel -Abocom
-	{}
+	/*=== Customer ID ===*/	
+	/****** 8188CUS Dongle ********/
+	{USB_DEVICE(0x2019, 0xED17)},//PCI - Edimax
+	{USB_DEVICE(0x0DF6, 0x0052)},//Sitecom - Edimax
+	{USB_DEVICE(0x7392, 0x7811)},//Edimax - Edimax
+	{USB_DEVICE(0x07B8, 0x8189)},//Abocom - Abocom
+	{USB_DEVICE(0x0EB0, 0x9071)},//NO Brand - Etop
+	{USB_DEVICE(0x06F8, 0xE033)},//Hercules - Edimax
+	{USB_DEVICE(0x103C, 0x1629)},//HP - Lite-On ,8188CUS Slim Combo
+	{USB_DEVICE(0x2001, 0x3308)},//D-Link - Alpha
+	{USB_DEVICE(0x050D, 0x1102)},//Belkin - Edimax
+	{USB_DEVICE(0x2019, 0xAB2A)},//Planex - Abocom
+	{USB_DEVICE(0x20F4, 0x648B)},//TRENDnet - Cameo
+	{USB_DEVICE(0x4855, 0x0090)},// - Feixun
+	{USB_DEVICE(0x13D3, 0x3357)},// - AzureWave
+	{USB_DEVICE(0x0DF6, 0x005C)},//Sitecom - Edimax
+	{USB_DEVICE(0x0BDA, 0x5088)},//Thinkware - CC&C
+	{USB_DEVICE(0x4856, 0x0091)},//NetweeN - Feixun
+	{USB_DEVICE(0x2019, 0x4902)},//Planex - Etop
+	{USB_DEVICE(0x2019, 0xAB2E)},//SW-WF02-AD15 -Abocom
+
+	/****** 8188 RU ********/
+	{USB_DEVICE(0x0BDA, 0x317F)},//Netcore,Netcore
+	
+	/****** 8188CE-VAU ********/
+	{USB_DEVICE(0x13D3, 0x3359)},// - Azwave
+	{USB_DEVICE(0x13D3, 0x3358)},// - Azwave
+
+	/****** 8188CUS Slim Solo********/
+	{USB_DEVICE(0x04F2, 0xAFF7)},//XAVI - XAVI
+	{USB_DEVICE(0x04F2, 0xAFF9)},//XAVI - XAVI
+	{USB_DEVICE(0x04F2, 0xAFFA)},//XAVI - XAVI
+
+	/****** 8188CUS Slim Combo ********/
+	{USB_DEVICE(0x04F2, 0xAFF8)},//XAVI - XAVI
+	{USB_DEVICE(0x04F2, 0xAFFB)},//XAVI - XAVI
+	{USB_DEVICE(0x04F2, 0xAFFC)},//XAVI - XAVI
+	{USB_DEVICE(0x2019, 0x1201)},//Planex - Vencer
+	
+	/****** 8192CUS Dongle ********/
+	{USB_DEVICE(0x2001, 0x3307)},//D-Link - Cameo
+	{USB_DEVICE(0x2001, 0x330A)},//D-Link - Alpha
+	{USB_DEVICE(0x2001, 0x3309)},//D-Link - Alpha
+	{USB_DEVICE(0x0586, 0x341F)},//Zyxel - Abocom
+	{USB_DEVICE(0x7392, 0x7822)},//Edimax - Edimax
+	{USB_DEVICE(0x2019, 0xAB2B)},//Planex - Abocom
+	{USB_DEVICE(0x07B8, 0x8178)},//Abocom - Abocom
+	{USB_DEVICE(0x07AA, 0x0056)},//ATKK - Gemtek
+	{USB_DEVICE(0x4855, 0x0091)},// - Feixun
+	{USB_DEVICE(0x2001, 0x3307)},//D-Link-Cameo
+	{USB_DEVICE(0x050D, 0x2102)},//Belkin - Sercomm
+	{USB_DEVICE(0x050D, 0x2103)},//Belkin - Edimax
+	{USB_DEVICE(0x20F4, 0x624D)},//TRENDnet
+	{USB_DEVICE(0x0DF6, 0x0061)},//Sitecom - Edimax
+	{USB_DEVICE(0x0B05, 0x17AB)},//ASUS - Edimax
+	{USB_DEVICE(0x0846, 0x9021)},//Netgear - Sercomm
+	{USB_DEVICE(0x0E66, 0x0019)},//Hawking,Edimax 
+	{}	/* Terminating entry */
 };
 
 static struct specific_device_id specific_device_id_tbl[] = {
-		{.idVendor=0x0b05, .idProduct=0x1791, .flags=SPEC_DEV_ID_DISABLE_HT},
-		{.idVendor=0x13D3, .idProduct=0x3311, .flags=SPEC_DEV_ID_DISABLE_HT},
+	{.idVendor=0x0b05, .idProduct=0x1791, .flags=SPEC_DEV_ID_DISABLE_HT},
+	{.idVendor=0x13D3, .idProduct=0x3311, .flags=SPEC_DEV_ID_DISABLE_HT},
+	{.idVendor=0x13D3, .idProduct=0x3359, .flags=SPEC_DEV_ID_DISABLE_HT},//Russian customer -Azwave (8188CE-VAU  g mode)	
 	{}
 };
 
