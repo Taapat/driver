@@ -37,7 +37,11 @@
 
 #include "stmhdmi.h"
 
-
+#ifdef SPARK
+int hdmiin = 1;
+module_param(hdmiin, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(hdmiin, "HDMI port number");
+#endif
 static char *hdmi0;
 
 module_param(hdmi0, charp, 0444);
@@ -506,7 +510,7 @@ long stmhdmiio_get_cec_address(unsigned int * arg)
     return -ERESTARTSYS;
 
 #if defined(SPARK)
-    *arg = (1 << 12) + (0 << 8) + (0 << 4) + (0);
+    *arg = (hdmiin << 12) + (0 << 8) + (0 << 4) + (0);
 #else
   *arg = (dev->edid_info.cec_address[0] << 12) +
          (dev->edid_info.cec_address[1] << 8) +
