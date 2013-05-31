@@ -26,9 +26,10 @@
 
 typedef struct
 {
-	int used;
+	int               used;
 	struct bpa2_part *part;
-	unsigned long phys_addr, size;
+	unsigned long     phys_addr;
+	unsigned long     size;
 } bpamem_dev_private;
 
 bpamem_dev_private bpamem_dev[MAX_BPA_ALLOCS];
@@ -105,11 +106,67 @@ int bpamemio_allocmem(BPAMemAllocMemData *in_data)
 	return 0;
 }
 
+int bpamemio_mapmem(BPAMemMapMemData *in_data)
+{
+	BPAMemMapMemData data;
+	unsigned int dev;
+	
+	// reserve a device
+	dev = find_next_device();
+	if(dev == -1)	// nothing left
+	{
+		DEBUG_PRINTK("memory already allocated\n");
+		return -1;
+	}
+	
+	if(copy_from_user(&data, in_data, sizeof(BPAMemMapMemData)))
+	{
+		bpamem_dev[dev].used = 0;
+		return -1;
+	}
+		
+	DEBUG_PRINTK("data.bpa_part = %s\n", data.bpa_part);
+	
+	data.device_num = dev;
+	
+	bpamem_dev[dev].part = bpa2_find_part(data.bpa_part);
+	if(!bpamem_dev[dev].part)
+	{
+		DEBUG_PRINTK("bpa part %s not found\n", data.bpa_part);
+		bpamem_dev[dev].used = 0;
+		return -1;
+	}
+	
+	bpamem_dev[dev].size      = data.mem_size;
+	bpamem_dev[dev].phys_addr = data.phys_addr;
+	
+	if(copy_to_user(in_data, &data, sizeof(BPAMemMapMemData)))
+	{
+		bpa2_free_pages(bpamem_dev[dev].part, bpamem_dev[dev].phys_addr);
+		bpamem_dev[dev].phys_addr = 0;
+		bpamem_dev[dev].used = 0;
+		return -1;
+	}
+	
+	return 0;
+}
+
 int bpamemio_deallocmem(unsigned int dev)
 {
 	if(bpamem_dev[dev].used)
 	{
 		bpa2_free_pages(bpamem_dev[dev].part, bpamem_dev[dev].phys_addr);
+		bpamem_dev[dev].phys_addr = 0;
+		bpamem_dev[dev].used = 0;
+	}
+	
+	return 0;
+}
+
+int bpamemio_unmapmem(unsigned int dev)
+{
+	if(bpamem_dev[dev].used)
+	{
 		bpamem_dev[dev].phys_addr = 0;
 		bpamem_dev[dev].used = 0;
 	}
@@ -124,8 +181,10 @@ static int bpamem_ioctl(struct inode *inode, struct file *filp, unsigned int ioc
 	switch (ioctl_num) 
 	{
 		case BPAMEMIO_ALLOCMEM:   return bpamemio_allocmem((BPAMemAllocMemData *)ioctl_param);
+		case BPAMEMIO_MAPMEM:     return bpamemio_mapmem((BPAMemMapMemData *)ioctl_param);
 
 		case BPAMEMIO_FREEMEM:    return bpamemio_deallocmem(dev);
+		case BPAMEMIO_UNMAPMEM:   return bpamemio_unmapmem(dev);
 	};
 	return -1;
 }
