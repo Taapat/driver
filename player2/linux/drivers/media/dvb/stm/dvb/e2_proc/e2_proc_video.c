@@ -1225,13 +1225,24 @@ int proc_video_videomode_choices_read (char *page, char **start, off_t off, int 
 {
 	int len = 0;
 	printk("%s %d\n", __FUNCTION__, count);
+/*
 #if defined(UFS912) || defined(SPARK) || defined (SPARK7162) || defined(ATEVIO7500) || defined(HS7810A) || defined(HS7110) || defined(WHITEBOX)
 	len = sprintf(page, "pal 1080i50 720p50 576p50 576i50 1080i60 720p60 1080p24 1080p25 1080p30 1080p50 1080p59 1080p60 PC\n");
 #else
 	len = sprintf(page, "pal 1080i50 720p50 576p50 576i50 1080i60 720p60 1080p24 1080p25 1080p30 PC\n");
 #endif
+*/
+/* BPanther: shows real resolution support by player (receiver independent) */
+	char fullstr[1024] = "";
+	int vLoop = 0;
+	for (vLoop = 0; vLoop < (sizeof(Options) / sizeof(struct Modes)) - 1; vLoop++) {
+		strcat(fullstr, Options[vLoop].name);
+		strcat(fullstr, " ");
+	}
+	strcat(fullstr, "\n");
+	len = sprintf(page, fullstr);
 
-        return len;
+	return len;
 }
 
 int proc_video_videomode_preferred_write(struct file *file, const char __user *buf,
