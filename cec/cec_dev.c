@@ -182,6 +182,7 @@ static unsigned int CECdev_poll(struct file *filp, poll_table *wait)
 {
 	unsigned int mask = 0;
 
+	poll_wait(filp, &wq, wait);
 	if(outputBufferStart != outputBufferEnd)
 	{
 		mask = POLLIN | POLLRDNORM;
