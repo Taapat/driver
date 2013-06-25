@@ -5265,7 +5265,6 @@ static int stv090x_read_cnr(struct dvb_frontend *fe, u16 *cnr)
 	s32 val_0, val_1, val = 0;
 	u8 lock_f;
 	s32 snr;
-	s32 div;
 
 	switch (state->delsys)
 	{
@@ -5286,9 +5285,9 @@ static int stv090x_read_cnr(struct dvb_frontend *fe, u16 *cnr)
 			}
 			val /= 16;
 			snr = stv090x_table_lookup(stv090x_s2cn_tab, ARRAY_SIZE(stv090x_s2cn_tab) - 1, val);
-			div = stv090x_s2cn_tab[0].read - stv090x_s2cn_tab[ARRAY_SIZE(stv090x_s2cn_tab) - 1].read;
-			*cnr = 0xFFFF - ((val * 0xFFFF) / div);
-			/* *cnr = snr * 0xFFFF / stv090x_s2cn_tab[ARRAY_SIZE(stv090x_s2cn_tab) - 1].real; */
+			if (snr < 0) snr = 0;
+			if (snr > 200) snr = 200;
+			*cnr = snr * 0xFFFF / 200;
 		}
 		break;
 
@@ -5310,8 +5309,9 @@ static int stv090x_read_cnr(struct dvb_frontend *fe, u16 *cnr)
 			}
 			val /= 16;
 			snr = stv090x_table_lookup(stv090x_s1cn_tab, ARRAY_SIZE(stv090x_s1cn_tab) - 1, val);
-			div = stv090x_s1cn_tab[0].read - stv090x_s1cn_tab[ARRAY_SIZE(stv090x_s1cn_tab) - 1].read;
-			*cnr = 0xFFFF - ((val * 0xFFFF) / div);
+			if (snr < 0) snr = 0;
+			if (snr > 200) snr = 200;
+			*cnr = snr * 0xFFFF / 200;
 		}
 		break;
 	default:
