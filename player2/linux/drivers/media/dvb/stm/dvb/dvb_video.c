@@ -177,14 +177,14 @@ struct dvb_device* VideoInit (struct DeviceContext_s* Context)
     Context->VideoState.video_blank             = 0;
     Context->VideoState.play_state              = VIDEO_STOPPED;
     Context->VideoState.stream_source           = VIDEO_SOURCE_DEMUX;
-#ifdef __TDT__
+//#ifdef __TDT__
  /* Set 16:9 as standard */
     Context->VideoState.video_format            = VIDEO_FORMAT_16_9;
     Context->VideoState.display_format          = VIDEO_LETTER_BOX;
-#else
+/*#else
     Context->VideoState.video_format            = VIDEO_FORMAT_4_3;
     Context->VideoState.display_format          = VIDEO_CENTER_CUT_OUT;
-#endif
+#endif*/
     Context->VideoSize.w                        = 0;
     Context->VideoSize.h                        = 0;
     Context->VideoSize.aspect_ratio             = 0;

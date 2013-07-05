@@ -1141,7 +1141,7 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
     }
 
     //if ((EventMask & EventSourceSizeChangeManifest) != 0)       // Create an event record indicating that size/shape has changed
-#warning "Not checking EventMask in SetDisplayWindows"
+/* #warning "Not checking EventMask in SetDisplayWindows" */
     if ((VideoParameters->Width != StreamDisplayParameters.Width) || (VideoParameters->Height != StreamDisplayParameters.Height) ||
         (VideoParameters->DisplayWidth != StreamDisplayParameters.DisplayWidth) || (VideoParameters->DisplayHeight != StreamDisplayParameters.DisplayHeight) ||
         (VideoParameters->PixelAspectRatio != StreamDisplayParameters.PixelAspectRatio))

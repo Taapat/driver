@@ -701,11 +701,13 @@ static void* Mixer1AudioFactory (void)
 }
 //}}}
 
+#if 0
 static void* DefaultFactory (void)
 {
     PLAYER_DEBUG("No factory available\n");
     return NULL;
 }
+#endif
 
 //{{{  RegisterBuiltInFactories
 HavanaStatus_t RegisterBuiltInFactories (class  HavanaPlayer_c* HavanaPlayer)

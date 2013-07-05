@@ -2065,7 +2065,7 @@ FrameParserStatus_t   FrameParser_VideoVc1_c::CommitFrameForDecode (void)
     }
     else
     {
-#warning "Need to calculate frame rates from PTS values"
+/* #warning "Need to calculate frame rates from PTS values" */
 #if 0
         if (PtsPresent)
         {

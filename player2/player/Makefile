@@ -5,12 +5,12 @@ LDFLAGS+=-g
 
 NDIR?=.
 
-CFLAGS+=-I$(NDIR)/user_mode_non_player_bits/includes
+CCFLAGSY+=-I$(NDIR)/user_mode_non_player_bits/includes
 ##CFLAGS+=-I/opt/STM/STLinux-2.2/devkit/sh4/target/usr/include/
 ##CFLAGS+=-I/usr/include
-CFLAGS+=-I$(NDIR)/../components/include
+CCFLAGSY+=-I$(NDIR)/../components/include
 
-CFLAGS+=-I$(NDIR)/class_definitions        \
+CCFLAGSY+=-I$(NDIR)/class_definitions        \
 	-I$(NDIR)/buffer                   \
 	-I$(NDIR)/demultiplexor            \
 	-I$(NDIR)/collator                 \
@@ -22,16 +22,21 @@ CFLAGS+=-I$(NDIR)/class_definitions        \
 	-I$(NDIR)/output_timer             \
 	-I$(NDIR)/output_coordinator
 
-CFLAGS+=-I$(ROOT_DIR)/linux/drivers/media/dvb/stm/h264_preprocessor/
-CFLAGS+=-I$(ROOT_DIR)/linux/drivers/sound/ksound
-CFLAGS+=-I$(ROOT_DIR)/linux/drivers/media/dvb/stm/dvb
-CFLAGS+=-I$(ROOT_DIR)/linux/include
+CCFLAGSY+=-I$(ROOT_DIR)/linux/drivers/media/dvb/stm/h264_preprocessor/
+CCFLAGSY+=-I$(ROOT_DIR)/linux/drivers/sound/ksound
+CCFLAGSY+=-I$(ROOT_DIR)/linux/drivers/media/dvb/stm/dvb
+CCFLAGSY+=-I$(ROOT_DIR)/linux/include
 
-CFLAGS+=-I$(ROOT_DIR)/virtualisation
-CFLAGS+=-I$(ROOT_DIR)/virtualisation/linux
-CFLAGS+=-I$(ROOT_DIR)/virtualisation/linux/linuxdvb
+CCFLAGSY+=-I$(ROOT_DIR)/virtualisation
+CCFLAGSY+=-I$(ROOT_DIR)/virtualisation/linux
+CCFLAGSY+=-I$(ROOT_DIR)/virtualisation/linux/linuxdvb
 
-CFLAGS+=-I$(ROOT_DIR)/virtualisation/mpeg2/
+CCFLAGSY+=-I$(ROOT_DIR)/virtualisation/mpeg2/
+
+# workaround for stlinux24
+ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
+ccflags-y += $(CCFLAGSY)
+endif
 
 player-libs += buffer/
 player-libs += demultiplexor/

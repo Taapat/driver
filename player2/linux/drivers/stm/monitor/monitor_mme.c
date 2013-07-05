@@ -30,10 +30,7 @@ Date        Modification                                    Name
 
 ************************************************************************/
 
-#ifdef __TDT__
 #include <linux/version.h>
-#endif
-
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/ioport.h>
@@ -74,14 +71,10 @@ int MonitorMMEInit                     (struct DeviceContext_s*         DeviceCo
     struct sched_param          Param;
     struct task_struct*         Taskp;
     int                         Status;
-#ifdef __TDT__
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
     struct clk*                 Tmu1Clock       = clk_get(NULL, "tmu1_clk");
 #else
     struct clk*                 Tmu1Clock       = clk_get("tmu1_clk");
-#endif
-#else
-    struct clk*                 Tmu1Clock       = clk_get(NULL, "tmu1_clk");
 #endif
     unsigned long long          TimeStamp;
     unsigned int                TimeValue;

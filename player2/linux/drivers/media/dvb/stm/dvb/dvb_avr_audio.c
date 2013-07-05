@@ -21,7 +21,9 @@ license from ST.
  * V4L2 dvp output device driver for ST SoC display subsystems.
 ************************************************************************/
 
+#if !defined(__TDT__)
 #include <asm/semaphore.h>
+#endif
 #include <asm/page.h>
 #include <asm/io.h>
 #include <asm/page.h>
@@ -38,6 +40,11 @@ license from ST.
 #include <linux/poll.h>
 #include <linux/mm.h>
 #include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
+#include <asm/semaphore.h>
+#else
+#include <linux/semaphore.h>
+#endif
 #include <linux/videodev.h>
 #include <linux/interrupt.h>
 #include <linux/kthread.h>

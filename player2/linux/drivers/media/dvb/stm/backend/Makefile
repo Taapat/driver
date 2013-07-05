@@ -1,6 +1,6 @@
 TREE_ROOT?=$(DRIVER_TOPDIR)/player2
 
-CCFLAGSY+=-I$(DRIVER_TOPDIR)/stgfb/stmfb/Linux/include
+CCFLAGSY+=-I$(DRIVER_TOPDIR)/stgfb/stmfb/linux/include
 CCFLAGSY+=-I$(DRIVER_TOPDIR)/include/player2/
 CCFLAGSY+=-I$(TREE_ROOT)/linux/include/linux/stm/
 CCFLAGSY+=-I$(TREE_ROOT)/linux/drivers/media/dvb/stm/dvb/
@@ -56,10 +56,9 @@ CCFLAGSY+=-DPlayerRegisterEventSignalCallback=DEF033
 CCFLAGSY+=-DComponentGetAttribute=DEF034
 endif
 
+# workaround for stlinux24
 ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
 ccflags-y += $(CCFLAGSY)
-else
-CFLAGS += $(CCFLAGSY)
 endif
 
 infrastructure-objs := \

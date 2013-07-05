@@ -32,9 +32,7 @@ Date        Modification                                    Name
 #define H_MONITOR_MME
 
 #include <linux/sched.h>
-#ifdef __TDT__
 #include <linux/version.h>
-#endif
 #if defined(__TDT__) && (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30))
 #include <asm/semaphore.h>
 #else

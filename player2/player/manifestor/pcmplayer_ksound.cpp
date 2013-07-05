@@ -33,6 +33,7 @@ Date        Modification                                    Name
 
 #include "pcmplayer_ksound.h"
 #include "st_relay.h"
+#include <linux/version.h>
 
 extern "C" int sprintf(char * buf, const char * fmt, ...);
 

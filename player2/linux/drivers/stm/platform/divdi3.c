@@ -2,14 +2,10 @@
  * Simple __divdi3 function which doesn't use FPU.
  */
 
+#include <linux/version.h>
 #include <linux/types.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
-
-#ifdef __TDT__
-#include <linux/version.h>
-#endif
-
 #include <asm/div64.h>
 
 extern u64 __xdiv64_32(u64 n, u32 d);

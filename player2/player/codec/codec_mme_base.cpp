@@ -1305,12 +1305,12 @@ CodecStatus_t     Status;
 	    }
 
 //----patch start
-if( ( BufferIndex == INVALID_INDEX ) || ( BufferIndex >= CODEC_MAX_DECODE_BUFFERS) ) 
-{
-    report( severity_error, "Codec_MmeBase_c::TranslateReferenceFrameLists(%s) - Reference frame buffer index is INVALID (curr=%d/0x%x, max=%d/0x%x) - skipping frame.\n",
-        Configuration.CodecName, BufferIndex, CODEC_MAX_DECODE_BUFFERS); 
-    return CodecError;
-}
+	    if( ( BufferIndex == INVALID_INDEX ) || ( BufferIndex >= CODEC_MAX_DECODE_BUFFERS) ) 
+	    {
+	        report( severity_error, "Codec_MmeBase_c::TranslateReferenceFrameLists(%s) - Reference frame buffer index is INVALID (curr=%d/0x%x, max=%d/0x%x) - skipping frame.\n",
+	            Configuration.CodecName, BufferIndex, CODEC_MAX_DECODE_BUFFERS); 
+	        return CodecError;
+	    }
 //----patch end
 
 	    DecodeContext->ReferenceFrameList[i].EntryIndicies[j]   = BufferIndex;

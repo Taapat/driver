@@ -105,9 +105,9 @@ Date        Modification                                    Name
                                              MIXER_AUDIO_MAX_OUTPUT_BUFFERS)
 
 #if defined(__TDT__)
-#define MIXER_AUDIO_PAGES_PER_BUFFER   32 
+#define MIXER_AUDIO_PAGES_PER_BUFFER   32
 #else
-#define MIXER_AUDIO_PAGES_PER_BUFFER   16
+#define MIXER_AUDIO_PAGES_PER_BUFFER   8
 #endif
 #define MIXER_AUDIO_MAX_PAGES          (MIXER_AUDIO_PAGES_PER_BUFFER * MIXER_AUDIO_MAX_BUFFERS)
 

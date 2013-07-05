@@ -201,7 +201,7 @@ int DvbStreamGetDecodeBufferPoolStatus     (struct StreamContext_s*         Stre
                                             unsigned int*                   BuffersInPool,
                                             unsigned int*                   BuffersWithNonZeroReferenceCount);
 #ifdef __TDT__
-int StreamGetOutputWindow                  (struct StreamContext_s*         Stream,
+int DvbStreamGetOutputWindow               (struct StreamContext_s*         Stream,
                                             unsigned int*                    X,
                                             unsigned int*                    Y,
                                             unsigned int*                    Width,

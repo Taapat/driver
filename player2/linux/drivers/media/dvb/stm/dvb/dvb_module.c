@@ -118,14 +118,14 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
     short int                   AdapterNumbers[] = { -1 };
 
     DvbContext  = kzalloc (sizeof (struct DvbContext_s),  GFP_KERNEL);
+#ifdef __TDT__
+    memset(DvbContext, 0, sizeof*DvbContext);
+#endif
     if (DvbContext == NULL)
     {
         DVB_ERROR("Unable to allocate device memory\n");
         return -ENOMEM;
     }
-#ifdef __TDT__
-    memset(DvbContext, 0, sizeof*DvbContext);
-#endif
 
 #ifdef __TDT__
     if (swts)

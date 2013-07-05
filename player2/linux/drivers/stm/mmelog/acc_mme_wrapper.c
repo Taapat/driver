@@ -11,9 +11,7 @@
 
 #include <linux/module.h>
 #include <linux/init.h>
-#ifdef __TDT__
 #include <linux/version.h>
-#endif
 #if defined(__TDT__) && (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30))
 #include <asm/semaphore.h>
 #else

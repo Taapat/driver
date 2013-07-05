@@ -83,7 +83,7 @@ const static char FirstAccessUnitOffset[] =
 
 #define NB_SAMPLES_SPDIFIN 1024
 
-#warning "FIXME:update NB_SAMPLES_192_KHZ to 3840 when Dan improves the AVSync"
+/* #warning "FIXME:update NB_SAMPLES_192_KHZ to 3840 when Dan improves the AVSync" */
 
 const static char NbAudioFramesToGlob[TypeLpcmSPDIFIN + 1][LpcmSamplingFreqLast] =
 { 

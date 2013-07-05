@@ -86,13 +86,13 @@ struct StreamBuffer_s
 };
 
 /* Generic window structure - in pixels */
-struct Window_s
+typedef struct Window_s
 {
     unsigned int     X;         /* X coordinate of top left corner */
     unsigned int     Y;         /* Y coordinate of top left corner */
     unsigned int     Width;     /* Width of window in pixels */
     unsigned int     Height;    /* Height of window in pixels */
-};
+} Window_s;
 
 /// Framework for implementing video manifestors.
 class Manifestor_Video_c : public Manifestor_Base_c

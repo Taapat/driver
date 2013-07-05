@@ -40,13 +40,6 @@ Date        Modification                                    Name
 #include "backend.h"
 #include "backend_ops.h"
 
-#if defined(__TDT__) 
-#include <linux/version.h>
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
-#include <linux/mm.h>
-#endif
-#endif
-
 /*{{{  static data*/
 static unsigned char            ASFHeaderObjectGuid[]   = {0x30, 0x26, 0xb2, 0x75,
                                                            0x8e, 0x66, 0xcf, 0x11,
@@ -748,12 +741,12 @@ int DvbStreamGetDecodeBufferPoolStatus     (struct StreamContext_s*         Stre
 
 /*}}}*/
 #ifdef __TDT__
-/*{{{  StreamGetOutputWindow*/
-int StreamGetOutputWindow      (struct StreamContext_s*         Stream,
-                                unsigned int*                   X,
-                                unsigned int*                   Y,
-                                unsigned int*                   Width,
-                                unsigned int*                   Height)
+/*{{{  DvbStreamGetOutputWindow*/
+int DvbStreamGetOutputWindow      (struct StreamContext_s*         Stream,
+                                   unsigned int*                   X,
+                                   unsigned int*                   Y,
+                                   unsigned int*                   Width,
+                                   unsigned int*                   Height)
 {
     int         Result;
 

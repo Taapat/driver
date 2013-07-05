@@ -1,9 +1,10 @@
 #ifndef PLATFORM_7105_H
 #define PLATFORM_7105_H
 
+#include <linux/version.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
 #include <linux/irq.h>
-#endif 
+#endif
 
 static struct resource h264pp_resource_7105[] = {
         [0] = { .start = 0xFE540000,

@@ -224,11 +224,6 @@ struct snd_pcm_hw_params {
 #else
 //#warning KSOUND.H AS C INCLUDE
 
-#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
-// sound/driver.h does not exist in stlinux24
-#else
-#include <sound/driver.h>
-#endif
 #include <sound/core.h>
 #include <sound/minors.h>
 #include <sound/pcm.h>

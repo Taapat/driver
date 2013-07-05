@@ -19,13 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#if defined(__TDT__)
 #include <linux/version.h>
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
-// sound/driver.h does not exist in stlinux24
-#else
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 #include <sound/driver.h>
-#endif
 #endif
 #include <sound/core.h>
 #include <sound/pcm.h>
