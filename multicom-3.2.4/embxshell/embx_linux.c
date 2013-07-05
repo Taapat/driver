@@ -19,10 +19,10 @@
 #endif
 #endif
 
-#if !defined(__KERNEL__)
 /*
  * This header is needed to collect the prototype for memalign.
  */
+#ifndef __TDT__
 #include <malloc.h>
 #endif
 
