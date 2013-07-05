@@ -115,7 +115,7 @@ static struct dvb_backend_operations            DvbBackendOps        =
 #ifdef __TDT__
         ,
 /*Dagobert*/
-    , .is_display_created                         = isDisplayCreated
+    .is_display_created                         = isDisplayCreated
 #endif
 
 };
