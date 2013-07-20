@@ -37,7 +37,6 @@ obj-y	:= avs/
 obj-y	+= multicom/
 obj-y	+= stgfb/
 obj-y	+= player2/
-obj-y	+= boxtype/
 obj-y	+= simu_button/
 obj-y	+= e2_proc/
 obj-y	+= frontends/

@@ -6,6 +6,10 @@
 #include <linux/kernel.h>
 #include <linux/mm.h>
 #include <linux/poll.h>
+#include <linux/version.h>
+
+#include <linux/device.h> /* class_creatre */ 
+#include <linux/cdev.h> /* cdev_init */
 
 #include "cec_opcodes.h"
 #include "cec_worker.h"
@@ -254,12 +258,40 @@ static struct file_operations cec_fops =
 	.release  = CECdev_close
 };
 
+#define DEVICE_NAME "hdmi_cec" 
+
+static        dev_t  cec_dev_num; 
+static struct cdev   cec_cdev; 
+static struct class *cec_class = 0;
 int init_dev(void)
 {
+	int result;
 	outputBufferStart = outputBufferEnd = 0;
 
-	if (register_chrdev(CEC_MAJOR,"CEC",&cec_fops))
-		dprintk(0,"unable to get major %d for CEC\n", CEC_MAJOR);
+	//if (register_chrdev(CEC_MAJOR,"CEC",&cec_fops))
+	//	dprintk(0,"unable to get major %d for CEC\n", CEC_MAJOR);
+  cec_dev_num = MKDEV(CEC_MAJOR, 0);
+  result = register_chrdev_region(cec_dev_num, 0, DEVICE_NAME);
+  if (result < 0) {
+    printk( KERN_ALERT "CEC cannot register device (%d)\n", result);
+    return result;
+  }
+
+  cdev_init(&cec_cdev, &cec_fops);
+  cec_cdev.owner = THIS_MODULE;
+  cec_cdev.ops   = &cec_fops;
+  if (cdev_add(&cec_cdev, cec_dev_num, 0) < 0)
+  {
+    printk("CEC couldn't register '%s' driver\n", DEVICE_NAME);
+    return -1;
+  }
+
+  cec_class = class_create(THIS_MODULE, DEVICE_NAME);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
+  device_create(cec_class, NULL, MKDEV(CEC_MAJOR, 0), NULL, "hdmi_cec", 0);
+#else
+  class_device_create(cecclass, NULL, MKDEV(CEC_MAJOR, 0), NULL, "hdmi_cec", 0);
+#endif
 
 	vOpen.fp = NULL;
 	sema_init(&vOpen.sem, 1);
