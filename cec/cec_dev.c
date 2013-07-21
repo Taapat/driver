@@ -258,7 +258,7 @@ static struct file_operations cec_fops =
 	.release  = CECdev_close
 };
 
-#define DEVICE_NAME "hdmi_cec" 
+#define DEVICE_NAME "CEC" 
 
 static        dev_t  cec_dev_num; 
 static struct cdev   cec_cdev; 
@@ -271,18 +271,18 @@ int init_dev(void)
 	//if (register_chrdev(CEC_MAJOR,"CEC",&cec_fops))
 	//	dprintk(0,"unable to get major %d for CEC\n", CEC_MAJOR);
   cec_dev_num = MKDEV(CEC_MAJOR, 0);
-  result = register_chrdev_region(cec_dev_num, 0, DEVICE_NAME);
+  result = register_chrdev_region(cec_dev_num, 1, DEVICE_NAME);
   if (result < 0) {
-    printk( KERN_ALERT "CEC cannot register device (%d)\n", result);
+    dprintk(0, KERN_ALERT "CEC cannot register device (%d)\n", result);
     return result;
   }
 
   cdev_init(&cec_cdev, &cec_fops);
   cec_cdev.owner = THIS_MODULE;
   cec_cdev.ops   = &cec_fops;
-  if (cdev_add(&cec_cdev, cec_dev_num, 0) < 0)
+  if (cdev_add(&cec_cdev, cec_dev_num, 1) < 0)
   {
-    printk("CEC couldn't register '%s' driver\n", DEVICE_NAME);
+    dprintk(0,"CEC couldn't register '%s' driver\n", DEVICE_NAME);
     return -1;
   }
 
@@ -290,7 +290,7 @@ int init_dev(void)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
   device_create(cec_class, NULL, MKDEV(CEC_MAJOR, 0), NULL, "hdmi_cec", 0);
 #else
-  class_device_create(cecclass, NULL, MKDEV(CEC_MAJOR, 0), NULL, "hdmi_cec", 0);
+  class_device_create(cec_class, NULL, MKDEV(CEC_MAJOR, 0), NULL, "hdmi_cec", 0);
 #endif
 
 	vOpen.fp = NULL;
@@ -303,5 +303,13 @@ int init_dev(void)
 
 int cleanup_dev(void)
 {
-	unregister_chrdev(CEC_MAJOR,"CEC");
+	//unregister_chrdev(CEC_MAJOR,"CEC");
+	cdev_del(&cec_cdev);
+	unregister_chrdev_region(cec_dev_num, 1);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
+  device_destroy(cec_class, MKDEV(CEC_MAJOR, 0));
+#else
+  class_device_destroy(cecclass, MKDEV(CEC_MAJOR, 0));
+#endif
+  class_destroy(cec_class);
 }
