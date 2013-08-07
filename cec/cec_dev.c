@@ -310,7 +310,7 @@ int cleanup_dev(void)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
   device_destroy(cec_class, MKDEV(CEC_MAJOR, 0));
 #else
-  class_device_destroy(cecclass, MKDEV(CEC_MAJOR, 0));
+  class_device_destroy(cec_class, MKDEV(CEC_MAJOR, 0));
 #endif
   class_destroy(cec_class);
 }
