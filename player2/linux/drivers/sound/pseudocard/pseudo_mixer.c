@@ -573,6 +573,8 @@ static int snd_card_pseudo_alloc_pages(
 	return 0;
 }
 
+static int snd_card_pseudo_hw_free(struct snd_pcm_substream *substream);
+
 static int snd_card_pseudo_hw_params(struct snd_pcm_substream *substream,
 				     struct snd_pcm_hw_params *hw_params)
 {
@@ -584,6 +586,9 @@ static int snd_card_pseudo_hw_params(struct snd_pcm_substream *substream,
                 .user_data = substream,
         };
         int err;
+
+        /* might have been called before ...  --martii */
+        snd_card_pseudo_hw_free(substream);
 
         /* allocate the hardware buffer and map it appropriately */
         err = snd_card_pseudo_alloc_pages(substream, params_buffer_bytes(hw_params));
