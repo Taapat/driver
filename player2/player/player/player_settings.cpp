@@ -320,7 +320,7 @@ PlayerStatus_t   Player_Generic_c::SetPolicy(	PlayerPlayback_t	  Playback,
 {
 PlayerPolicyState_t	*SpecificPolicyRecord;
 
-report( severity_info, "SetPolicy - %08x %08x %-45s %d\n", Playback, Stream, LookupPlayerPolicy(Policy), PolicyValue );
+// report( severity_info, "SetPolicy - %08x %08x %-45s %d\n", Playback, Stream, LookupPlayerPolicy(Policy), PolicyValue );
 //
 
     if( (Playback		!= PlayerAllPlaybacks) &&
