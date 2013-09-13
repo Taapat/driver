@@ -2005,7 +2005,7 @@ int d6158_set_frontend(struct dvb_frontend* fe,
 	struct nim_device *dev = &state->spark_nimdev;
 	struct nim_panic6158_private *priv = dev->priv;
 	UINT8 lock, plp_id;
-	plp_id = props->isdbs_ts_id != NO_STREAM_ID_FILTER ? props->isdbs_ts_id : 0;
+	plp_id = props->stream_id != NO_STREAM_ID_FILTER ? props->stream_id : 0;
 	state->p = p;
 	printk("-----------------------d6158_set_frontend\n");
 	nim_panic6158_get_lock(dev,&lock);
