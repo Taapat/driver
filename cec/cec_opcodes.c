@@ -763,6 +763,7 @@ void wakeTV(void)
 {
     responseBuffer[0] = (getLogicalDeviceType() << 4) + (DEVICE_TYPE_TV & 0xF);
     responseBuffer[1] = IMAGE_VIEW_ON;
+    dprintk(2, "wakeTV\n");
     sendMessage(2, responseBuffer);
 }
 

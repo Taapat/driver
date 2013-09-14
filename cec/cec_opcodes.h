@@ -47,6 +47,7 @@ void sendInitMessage(void);
 void sendPingWithAutoIncrement(void);
 void sendOneTouchPlay(void);
 void sendSystemStandby(int deviceId);
+void wakeTV(void);
 //================
 
 #endif
