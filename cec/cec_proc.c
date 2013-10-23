@@ -26,7 +26,6 @@
 #include "cec_worker.h"
 #include "cec_opcodes.h"
 #include "cec_opcodes_def.h"
-#include "cec_debug.h"
 
 /* external functions provided by the module e2_procfs */
 extern int install_e2_procs(char *name, read_proc_t *read_proc, write_proc_t *write_proc, void *data);
@@ -43,7 +42,7 @@ static unsigned int sizeOfInputBuffer = 0;
     int     pageLen = 0; \
     ssize_t ret     = -ENOMEM; \
 \
-    dprintk(2, "%s %ld\n", __FUNCTION__, count); \
+    printk (KERN_INFO "[CEC] %s %ld\n", __FUNCTION__, count); \
 \
     page = (char *)__get_free_page(GFP_KERNEL); \
     if (page) \
@@ -63,11 +62,11 @@ out: \
 
 #define PR_INIT() \
     int len = 0; \
-    dprintk(2, "%s\n", __FUNCTION__);
+    printk (KERN_INFO "[CEC] %s\n", __FUNCTION__);
 
 #define PR_INIT_SILENT() \
     int len = 0; \
-    dprintk(2, "%s\n", __FUNCTION__);
+    printk (KERN_INFO "[CEC] %s\n", __FUNCTION__);
 
 #define PR_EXIT(len) \
     return len;
@@ -77,7 +76,7 @@ out: \
 #define INC(counter) \
   if(counter != 0xf) \
     counter++; \
-  dprintk(2, "Incremented Value: %d\n", counter);
+  printk (KERN_INFO "[CEC] Incremented Value: %d\n", counter);
 
 #define RESET(event) \
   event = 0;
@@ -135,7 +134,7 @@ int proc_cec_send_write(struct file *filefile, const char __user *buf, unsigned 
         ctmp[2] = '\0';
         sscanf(ctmp, "%02hhx", &inputBuffer[sizeOfInputBuffer++]);
     }
-    dprintk(2, "%s read %d bytes\n", __FUNCTION__, sizeOfInputBuffer);
+    printk (KERN_INFO "[CEC] %s read %d bytes\n", __FUNCTION__, sizeOfInputBuffer);
     sendMessage(sizeOfInputBuffer, inputBuffer);
 
     PW_EXIT(count, ret, page);

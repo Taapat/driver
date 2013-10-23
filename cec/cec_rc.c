@@ -20,7 +20,6 @@
 
 #include <linux/input.h>
 #include "cec_opcodes_def.h"
-#include "cec_debug.h"
 
 static char *button_driver_name = "TDT RC event driver";
 static struct input_dev *button_dev;
@@ -31,7 +30,7 @@ int input_init(void)
 	int error;
 	int vLoop = 0;
 
-	dprintk(0,"allocating and registering button device\n");
+	printk (KERN_ALERT "[CEC] allocating and registering button device\n");
 
 	button_dev = input_allocate_device();
 	if (!button_dev)
@@ -62,7 +61,7 @@ int input_init(void)
 
 int input_cleanup(void)
 {
-	dprintk(0,"unregistering button device\n");
+	printk (KERN_ALERT "[CEC] unregistering button device\n");
 	input_unregister_device(button_dev);
 
 	return 0;

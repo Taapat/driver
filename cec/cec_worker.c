@@ -48,7 +48,6 @@
 
 #include "cec_internal.h"
 #include "cec_opcodes.h"
-#include "cec_debug.h"
 
 static unsigned char isReceiving = 0;
 static unsigned int indexOfRecvBuf = 0;
@@ -81,7 +80,7 @@ int sendMessageWithRetry(unsigned int len, unsigned char buf[], unsigned int ret
     }
 
     if (Counter == 0) {
-	dprintk(0, "%s - failed (Timeout!!!)\n", __func__);
+	printk (KERN_ALERT "[CEC] %s - failed (Timeout!!!)\n", __func__);
 	return -1;
     }
 
@@ -96,7 +95,7 @@ int sendMessageWithRetry(unsigned int len, unsigned char buf[], unsigned int ret
     src = getLogicalDeviceType(); //buf[0] >> 4;
     dst = buf[0] & 0x0F;
     
-    dprintk(1, "src_dst=%x", buf[0]);
+    printk (KERN_WARNING "[CEC] src_dst=%x\n", buf[0]);
     
     // Correct address of the message
     buf[0] = (src << 4) + (dst & 0xF);
@@ -110,9 +109,9 @@ int sendMessageWithRetry(unsigned int len, unsigned char buf[], unsigned int ret
 
     indexOfSendBuf++;
 
-    dprintk(4, "sendCommand - up ->\n");
+    printk (KERN_DEBUG "[CEC] sendCommand - up ->\n");
     up(&sendCommand);
-    dprintk(4, "sendCommand - up <-\n");
+    printk (KERN_DEBUG "[CEC] sendCommand - up <-\n");
     
     return 0;
 }
@@ -126,10 +125,10 @@ void cec_worker_init(void)
 {
     cec_set_own_address(/*DEVICE_TYPE_UNREG*/ 0x0F);
 
-    dprintk(1, "*** CEC INIT ***\n");
+    printk (KERN_ALERT "[CEC] *** CEC INIT ***\n");
     str_status(cec_get_status());
     str_error(cec_get_error());
-    dprintk(1, "~~~ CEC INIT ~~~\n");
+    printk (KERN_ALERT "[CEC] ~~~ CEC INIT ~~~\n");
 
     wakeTV();
     sendPingWithAutoIncrement();
@@ -161,7 +160,7 @@ void endTask(void)
 
 int cec_task(void* dummy) 
 {
-    dprintk(2, "cec_task started\n");
+    printk (KERN_INFO "[CEC] cec_task started\n");
 
     daemonize("cec_repeater");
 
@@ -171,9 +170,9 @@ int cec_task(void* dummy)
     notEndTask = 1;
 
     while (notEndTask) {
-	dprintk(4, "sendCommand - down ->\n");
+	printk (KERN_DEBUG "[CEC] sendCommand - down ->\n");
 	down(&sendCommand);
-	dprintk(4, "sendCommand - down <-\n");
+	printk (KERN_DEBUG "[CEC] sendCommand - down <-\n");
 	if (!notEndTask) break;
 	
 	if (sendCommandWithDelay--)
@@ -191,7 +190,7 @@ int cec_task(void* dummy)
     }
 
     notEndTask = 1;
-    dprintk(2, "task died\n");
+    printk (KERN_INFO "[CEC] task died\n");
     return 0;
 }
 
@@ -203,21 +202,21 @@ irqreturn_t cec_interrupt(int irq, void *dev_id)
 {
     u8 status, error;
 
-    dprintk(4, "#### CEC INTERUPT  START####\n");
+    printk (KERN_INFO "[CEC] #### CEC INTERUPT  START####\n");
 
     status = cec_get_status();
     error = cec_get_error();
 
     if (status & CEC_STATUS_RECV_ERR) // Error while receiving
     {
-	dprintk(3,"++++ CEC ERROR (RECV) ++++\n");
+	printk (KERN_INFO "[CEC] ++++ CEC ERROR (RECV) ++++\n");
 	str_error(error);
 	str_status(status);
 	cec_acknowledge();
     }
     else if (status & CEC_STATUS_SEND_ERR) // Error while sending
     {
-	dprintk(3,"++++ CEC ERROR (SEND) ++++\n");
+	printk (KERN_INFO "[CEC] ++++ CEC ERROR (SEND) ++++\n");
 	str_error(error);
 	str_status(status);
 	if (status & CEC_STATUS_SEND_EOMSG) // End of Message
@@ -227,13 +226,13 @@ irqreturn_t cec_interrupt(int irq, void *dev_id)
 
 	isSending = 0;
 
-	dprintk(4,"Retries: %d\n", retries);
-	dprintk(3,"---- CEC ERROR ----\n");
+	printk (KERN_DEBUG "[CEC] Retries: %d\n", retries);
+	printk (KERN_INFO "[CEC] ---- CEC ERROR ----\n");
 
 	if (getIsFirstKiss() == 1) {
 	    if (error & CEC_ERROR_ACK)
 	    {
-		dprintk(0, "The above error is a wanted behaviour as this was a ping!\n");
+		printk (KERN_ALERT "[CEC] The above error is a wanted behaviour as this was a ping!\n");
 		setIsFirstKiss(0);
 	    }
 	    else if (retries > 0)
@@ -256,16 +255,16 @@ irqreturn_t cec_interrupt(int irq, void *dev_id)
 	}
 
 	recvBuf[indexOfRecvBuf] = cec_read_data();
-	dprintk(3,"RECV 0x%0x\n", recvBuf[indexOfRecvBuf]);
+	printk (KERN_DEBUG "[CEC] RECV 0x%0x\n", recvBuf[indexOfRecvBuf]);
 	cec_acknowledge();
 	indexOfRecvBuf++;
 
 	if (status & CEC_STATUS_RECV_EOMSG) // End of Message
 	{
 	    isReceiving = 0;
-	    dprintk(3,"++++ CEC MESSAGE RECEIVED ++++\n");
+	    printk (KERN_DEBUG "[CEC] ++++ CEC MESSAGE RECEIVED ++++\n");
 	    parseRawMessage(indexOfRecvBuf, recvBuf);
-	    dprintk(3,"---- CEC MESSAGE RECEIVED ----\n");
+	    printk (KERN_DEBUG "[CEC] ---- CEC MESSAGE RECEIVED ----\n");
 	}
     }
     else if (status & CEC_STATUS_SEND_BTF) // Transmitting
@@ -275,9 +274,9 @@ irqreturn_t cec_interrupt(int irq, void *dev_id)
 	    isSending = 0;
 	    cec_acknowledge();
 
-	    dprintk(3,"++++ CEC MESSAGE SENT ++++\n");
+	    printk (KERN_DEBUG "[CEC] ++++ CEC MESSAGE SENT ++++\n");
 	    parseRawMessage(indexOfSendBuf, sendBuf);
-	    dprintk(3,"---- CEC MESSAGE SENT ----\n");
+	    printk (KERN_DEBUG "[CEC] ---- CEC MESSAGE SENT ----\n");
 	}
 	else
 	{
@@ -295,7 +294,7 @@ irqreturn_t cec_interrupt(int irq, void *dev_id)
 	}
     }
 
-    dprintk(4, "#### CEC INTERUPT  END####\n");
+    printk (KERN_DEBUG "[CEC] #### CEC INTERUPT  END####\n");
 
     return IRQ_HANDLED;
 }

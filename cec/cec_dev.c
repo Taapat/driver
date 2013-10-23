@@ -14,7 +14,6 @@
 #include "cec_opcodes.h"
 #include "cec_worker.h"
 #include "cec_dev.h"
-#include "cec_debug.h"
 
 typedef struct
 {
@@ -41,13 +40,13 @@ static unsigned int GetMessageBufferSize (void)
 	else // WRAP AROUND
 		availableBytes = ((OUTBUFFERSIZE - outputBufferStart) + outputBufferEnd);
 
-	dprintk(3,"%s <- START=%d END=%d AVAILABLE=%d\n", __func__, outputBufferStart, outputBufferEnd, availableBytes);
+	printk (KERN_INFO "[CEC] %s <- START=%d END=%d AVAILABLE=%d\n", __func__, outputBufferStart, outputBufferEnd, availableBytes);
 	return availableBytes;
 }
 
 static void GetMessageFromBuffer (unsigned char * msg, unsigned int len)
 {
-	dprintk(3,"%s -> START=%d END=%d LEN=%d\n", __func__, outputBufferStart, outputBufferEnd, len);
+	printk (KERN_INFO "[CEC] %s -> START=%d END=%d LEN=%d\n", __func__, outputBufferStart, outputBufferEnd, len);
 	if (outputBufferStart <= outputBufferEnd)
 	{
 		memcpy(msg, outputBuffer + outputBufferStart, len);
@@ -68,7 +67,7 @@ static void GetMessageFromBuffer (unsigned char * msg, unsigned int len)
 		}
 	}
 
-	dprintk(3,"%s <- START=%d END=%d\n", __func__,  outputBufferStart, outputBufferEnd);
+	printk (KERN_INFO "[CEC] %s <- START=%d END=%d\n", __func__,  outputBufferStart, outputBufferEnd);
 }
 
 inline void AddMessageBuffer (tCECMessage msg)
@@ -89,7 +88,7 @@ inline void AddMessageBuffer (tCECMessage msg)
 		outputBufferEnd = messageSize - spaceAtTheEnd;
 	}
 	
-	dprintk(2,"%s START=%d END=%d\n", __func__, outputBufferStart, outputBufferEnd);
+	printk (KERN_INFO "[CEC] %s START=%d END=%d\n", __func__, outputBufferStart, outputBufferEnd);
 }
 
 void AddMessageToBuffer (unsigned char *rawmsg, unsigned int len)
@@ -111,10 +110,10 @@ static ssize_t CECdev_write(struct file *filp, const char *buff, size_t len, lof
 {
 	unsigned char* kernel_buf = kmalloc(len, GFP_KERNEL);
 
-	dprintk(2,"%s > (len %d, offs %lld)\n", __func__, len, *off);
+	printk (KERN_INFO "[CEC] %s > (len %d, offs %lld)\n", __func__, len, *off);
 	if (kernel_buf == NULL)
 	{
-		dprintk(0,"%s return no mem<\n", __func__);
+		printk (KERN_ALERT "[CEC] %s return no mem<\n", __func__);
 		return -ENOMEM;
 	}
 
@@ -133,7 +132,7 @@ static ssize_t CECdev_write(struct file *filp, const char *buff, size_t len, lof
 	
 	kfree(kernel_buf);
 	
-	dprintk(2,"%s <\n", __func__);
+	printk (KERN_INFO "[CEC] %s <\n", __func__);
 	return len;
 }
 
@@ -141,10 +140,10 @@ static ssize_t CECdev_read(struct file *filp, char __user *buff, size_t len, lof
 {
 	unsigned int availableBytes = GetMessageBufferSize();
 
-	dprintk(2, "%s > (len %d, offs %lld)\n", __func__, len, *off);
+	printk (KERN_INFO "[CEC] %s > (len %d, offs %lld)\n", __func__, len, *off);
 	if (vOpen.fp != filp)
 	{
-		dprintk(0,"%s return eusers<\n", __func__);
+		printk (KERN_ALERT "%s return eusers<\n", __func__);
 		return -EUSERS;
 	}
 
@@ -158,7 +157,7 @@ static ssize_t CECdev_read(struct file *filp, char __user *buff, size_t len, lof
 	// GET SEMAPHORE FOR EXCLUSIVE WRITE LOCK
 	if (down_interruptible(&vOpen.sem))
 	{
-		dprintk(0,"%s return erestartsys<\n", __func__);
+		printk (KERN_ALERT "[CEC] %s return erestartsys<\n", __func__);
 		return -ERESTARTSYS;
 	}
 
@@ -174,7 +173,7 @@ static ssize_t CECdev_read(struct file *filp, char __user *buff, size_t len, lof
 	}
 	// RELEASE THE EXCLUSIVE WRITE LOCK SEMAPHORE
 	up (&vOpen.sem);
-	dprintk(2,"%s < (len %d)\n", __func__, len);
+	printk (KERN_INFO "[CEC] %s < (len %d)\n", __func__, len);
 	return len;
 }
 
@@ -186,42 +185,42 @@ static unsigned int CECdev_poll(struct file *filp, poll_table *wait)
 	if(outputBufferStart != outputBufferEnd)
 	{
 		mask = POLLIN | POLLRDNORM;
-		dprintk(4,"%s  mask = %d\n", __func__, mask);
+		printk (KERN_INFO "[CEC] %s  mask = %d\n", __func__, mask);
 	}
 	return mask;
 }
 
 static int CECdev_open(struct inode *inode, struct file *filp)
 {
-	dprintk(2,"%s >\n", __func__);
+	printk (KERN_INFO "[CEC] %s >\n", __func__);
 
 	if (vOpen.fp != NULL)
 	{
-		dprintk(0,"%s eusers <\n", __func__);
+		printk (KERN_ALERT "[CEC] %s eusers <\n", __func__);
 			return -EUSERS;
 	}
 	vOpen.fp = filp;
 
-	dprintk(2,"%s <\n", __func__);
+	printk (KERN_INFO "[CEC] %s <\n", __func__);
 	return 0;
 }
 
 static int CECdev_close(struct inode *inode, struct file *filp)
 {
-	dprintk(2,"%s >\n", __func__);
+	printk (KERN_INFO "[CEC] %s >\n", __func__);
 
 	if (vOpen.fp == filp)
 	{
 		vOpen.fp = NULL;
 	}
 
-	dprintk(2,"%s <\n", __func__);
+	printk (KERN_INFO "[CEC] %s <\n", __func__);
 	return 0;
 }
 
 static int CECdev_ioctl(struct inode *Inode, struct file *File, unsigned int cmd, unsigned long arg)
 {
-	dprintk(2,"%s > 0x%.8x\n", __func__, cmd);
+	printk (KERN_INFO "[CEC] %s > 0x%.8x\n", __func__, cmd);
 
 	switch(cmd) {
 	case CEC_GET_ADDRESS:
@@ -241,10 +240,10 @@ static int CECdev_ioctl(struct inode *Inode, struct file *File, unsigned int cmd
 		outputBufferStart = outputBufferEnd = 0;
 		break;
 	default:
-		dprintk(0,"unknown IOCTL 0x%x\n", cmd);
+		printk (KERN_ALERT "[CEC] unknown IOCTL 0x%x\n", cmd);
 		break;
 	}
-	dprintk(2,"%s <\n", __func__);
+	printk (KERN_INFO "[CEC] %s <\n", __func__);
 	return 0;
 }
 
@@ -270,11 +269,11 @@ int init_dev(void)
 	outputBufferStart = outputBufferEnd = 0;
 
 	//if (register_chrdev(CEC_MAJOR,"CEC",&cec_fops))
-	//	dprintk(0,"unable to get major %d for CEC\n", CEC_MAJOR);
+	//	printk (KERN_ALERT "[CEC] unable to get major %d for CEC\n", CEC_MAJOR);
   cec_dev_num = MKDEV(CEC_MAJOR, 0);
   result = register_chrdev_region(cec_dev_num, 1, DEVICE_NAME);
   if (result < 0) {
-    dprintk(0, KERN_ALERT "CEC cannot register device (%d)\n", result);
+    printk (KERN_ALERT "[CEC] CEC cannot register device (%d)\n", result);
     return result;
   }
 
@@ -283,7 +282,7 @@ int init_dev(void)
   cec_cdev.ops   = &cec_fops;
   if (cdev_add(&cec_cdev, cec_dev_num, 1) < 0)
   {
-    dprintk(0,"CEC couldn't register '%s' driver\n", DEVICE_NAME);
+    printk (KERN_ALERT "[CEC] CEC couldn't register '%s' driver\n", DEVICE_NAME);
     return -1;
   }
 

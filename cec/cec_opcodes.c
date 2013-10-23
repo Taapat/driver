@@ -42,7 +42,6 @@
 #include "cec_proc.h"
 #include "cec_rc.h"
 #include "cec_dev.h"
-#include "cec_debug.h"
 
 extern int activemode;
 
@@ -115,7 +114,7 @@ unsigned short getActiveSource(void)
 
 void setActiveSource(unsigned short addr)
 {
-    dprintk(2, "FROM: %04x TO: %04x\n", ActiveSource, addr);
+    printk (KERN_INFO "[CEC] FROM: %04x TO: %04x\n", ActiveSource, addr);
     if (ActiveSource != addr)
     {
 	ActiveSource = addr;
@@ -691,7 +690,7 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
 	    break;
     }
 
-    dprintk(4, "\tis %s\n", name);
+    printk (KERN_DEBUG "[CEC] \tis %s\n", name);
 }
 
 void parseRawMessage(unsigned int len, unsigned char buf[])
@@ -706,14 +705,14 @@ void parseRawMessage(unsigned int len, unsigned char buf[])
 
     if (dataLen > CEC_MAX_DATA_LEN)
     {
-	dprintk(0, "Incoming Message was too long! (%u)\n", dataLen);
+	printk (KERN_ALERT "[CEC] Incoming Message was too long! (%u)\n", dataLen);
 	return;
     }
 
-    dprintk(2, "\tFROM 0x%02x TO 0x%02x : %3u : ", src, dst, dataLen);
+    printk (KERN_INFO "[CEC] \tFROM 0x%02x TO 0x%02x : %3u : ", src, dst, dataLen);
     for(ic = 0; ic < dataLen; ic++)
-      dprintk(2, "%02x ", buf[ic+1]);
-    dprintk(2, "\n");
+      printk (KERN_INFO "[CEC] %02x ", buf[ic+1]);
+    printk (KERN_INFO "\n");
 
     if (dataLen > 0)
     {
@@ -722,7 +721,7 @@ void parseRawMessage(unsigned int len, unsigned char buf[])
 	    AddMessageToBuffer(buf, len);
     } else
     {
-	dprintk(4, "\tis PING\n");
+	printk (KERN_DEBUG "[CEC] \tis PING\n");
 	//Lets check if the ping was send from or id, if so this means that 
 	//the deviceId pinged ist already been taken
 	if (src == dst && src == getLogicalDeviceType())
@@ -763,7 +762,7 @@ void wakeTV(void)
 {
     responseBuffer[0] = (getLogicalDeviceType() << 4) + (DEVICE_TYPE_TV & 0xF);
     responseBuffer[1] = IMAGE_VIEW_ON;
-    dprintk(2, "wakeTV\n");
+    printk (KERN_ALERT "[CEC] wakeTV\n");
     sendMessage(2, responseBuffer);
 }
 
@@ -780,37 +779,37 @@ void sendPingWithAutoIncrement(void)
 {
     unsigned char responseBuffer[1];
 
-    dprintk(1, "sendPingWithAutoIncrement - 1\n");
+    printk (KERN_WARNING "[CEC] sendPingWithAutoIncrement - 1\n");
     setIsFirstKiss(1);
 
     logicalDeviceType = logicalDeviceTypeChoices[logicalDeviceTypeChoicesIndex++];
     responseBuffer[0] = (logicalDeviceType << 4) + (logicalDeviceType & 0xF);
-    dprintk(1, "sendPingWithAutoIncrement - 2\n");
+    printk (KERN_WARNING "[CEC] sendPingWithAutoIncrement - 2\n");
     sendMessage(1, responseBuffer);
-    dprintk(1, "sendPingWithAutoIncrement - 3\n");
+    printk (KERN_WARNING "[CEC] sendPingWithAutoIncrement - 3\n");
 }
 
 void sendOneTouchPlay(void)
 {
     unsigned short physicalAddress = getPhysicalAddress();
 
-    dprintk(2, "sendOneTouchPlay - 1\n");
+    printk (KERN_INFO "[CEC] sendOneTouchPlay - 1\n");
     responseBuffer[0] = (getLogicalDeviceType() << 4) + (DEVICE_TYPE_TV & 0xF);
     responseBuffer[1] = IMAGE_VIEW_ON;
-    dprintk(2, "sendOneTouchPlay - 2\n");
+    printk (KERN_INFO "[CEC] sendOneTouchPlay - 2\n");
     sendMessage(2, responseBuffer);
-    dprintk(2, "sendOneTouchPlay - 3\n");
+    printk (KERN_INFO "[CEC] sendOneTouchPlay - 3\n");
     udelay(10000);
-    dprintk(2, "sendOneTouchPlay - 4\n");
+    printk (KERN_INFO "[CEC] sendOneTouchPlay - 4\n");
     memset(responseBuffer, 0, SEND_BUF_SIZE);
 
     responseBuffer[0] = (getLogicalDeviceType() << 4) + (BROADCAST & 0xF);
     responseBuffer[1] = ACTIVE_SOURCE;
     responseBuffer[2] = (((physicalAddress >> 12)&0xf) << 4) + ((physicalAddress >> 8)&0xf);
     responseBuffer[3] = (((physicalAddress >> 4)&0xf) << 4) + ((physicalAddress >> 0)&0xf);
-    dprintk(2, "sendOneTouchPlay - 5\n");
+    printk (KERN_INFO "[CEC] sendOneTouchPlay - 5\n");
     sendMessage(4, responseBuffer);
-    dprintk(2, "sendOneTouchPlay - 6\n");
+    printk (KERN_INFO "[CEC] sendOneTouchPlay - 6\n");
 }
 
 void sendSystemStandby(int deviceId)

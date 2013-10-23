@@ -43,7 +43,6 @@
 #endif
 
 #include "cec_internal.h"
-#include "cec_debug.h"
 
 //----
 #define PIO1BaseAddress       0xFD021000
@@ -118,7 +117,7 @@ u32 cec_read_data(void)
 
 void cec_start_sending(unsigned char isPing)
 {
-   dprintk(2, "start_sending %d\n", isPing);
+   printk (KERN_INFO "[CEC] start_sending %d\n", isPing);
    if (isPing == 1)
    {
        cec_write_register_u32(CECBaseAddress + CEC_CONTROL, CEC_TRANSM_EOM | CEC_TRANSM_SOM);
@@ -130,7 +129,7 @@ void cec_start_sending(unsigned char isPing)
 
 void cec_end_sending(void)
 {
-   dprintk(2, "end_sending\n");
+   printk (KERN_INFO "[CEC] end_sending\n");
    cec_write_register_u32(CECBaseAddress + CEC_CONTROL, CEC_TRANSM_EOM);
 }
 
@@ -148,13 +147,13 @@ u8 cec_get_error(void)
 
 void cec_acknowledge(void)
 {
-   dprintk(3,"ack\n");
+   printk (KERN_DEBUG "[CEC] ack\n");
    cec_write_register_u32(CECBaseAddress + CEC_CONTROL, 0x00);
 }
 
 void cec_acknowledge_eom(void)
 {
-   dprintk(3, "ack eom\n");
+   printk (KERN_DEBUG "[CEC] ack eom\n");
    cec_write_register_u32(CECBaseAddress + CEC_CONTROL, 0x02);
 }
 
@@ -166,41 +165,41 @@ void cec_set_own_address(u32 own_address)
 //------------------------------
 
 void str_status(unsigned char status) {
-    dprintk(2, "Control Status:\n");
+    printk (KERN_INFO "[CEC] Control Status:\n");
     if (status & CEC_STATUS_RECV_BTF)
-	dprintk(2, "\tRECV_BTF\n");
+	printk (KERN_INFO "[CEC] \tRECV_BTF\n");
     if (status & CEC_STATUS_RECV_ERR)
-	dprintk(2, "\tRECV_ERR\n");
+	printk (KERN_INFO "[CEC] \tRECV_ERR\n");
     if (status & CEC_STATUS_RECV_EOMSG)
-	dprintk(2, "\tRECV_EOMSG\n");
+	printk (KERN_INFO "[CEC] \tRECV_EOMSG\n");
     if (status & CEC_STATUS_RECV_SOMSG)
-	dprintk(2, "\tRECV_SOMSG\n");
+	printk (KERN_INFO "[CEC] \tRECV_SOMSG\n");
     if (status & CEC_STATUS_SEND_BTF)
-	dprintk(2, "\tSEND_BTF\n");
+	printk (KERN_INFO "[CEC] \tSEND_BTF\n");
     if (status & CEC_STATUS_SEND_ERR)
-	dprintk(2, "\tSEND_ERR\n");
+	printk (KERN_INFO "[CEC] \tSEND_ERR\n");
     if (status & CEC_STATUS_SEND_EOMSG)
-	dprintk(2, "\tSEND_EOMSG\n");
+	printk (KERN_INFO "[CEC] \tSEND_EOMSG\n");
     if (status & CEC_STATUS_SEND_SOMSG)
-	dprintk(2, "\tSEND_SOMSG\n");
+	printk (KERN_INFO "[CEC] \tSEND_SOMSG\n");
 }
 
 void str_error(unsigned char error) {
-    dprintk(2,"Error Status:\n");
+    printk (KERN_INFO "[CEC] Error Status:\n");
     if (error & CEC_ERROR_SEND_BTF)
-	dprintk(2,"\tSEND_BTF\n");
+	printk (KERN_INFO "[CEC] \tSEND_BTF\n");
     if (error & CEC_ERROR_ON_LINE)
-	dprintk(2,"\tON_LINE - Collision\n");
+	printk (KERN_INFO "[CEC] \tON_LINE - Collision\n");
     if (error & CEC_ERROR_ACK)
-	dprintk(2,"\tACK - No one answered\n");
+	printk (KERN_INFO "[CEC] \tACK - No one answered\n");
     if (error & CEC_ERROR_START)
-	dprintk(2,"\tSTART\n");
+	printk (KERN_INFO "[CEC] \tSTART\n");
     if (error & CEC_ERROR_RECV_BTF)
-	dprintk(2,"\tRECV_BTF\n");
+	printk (KERN_INFO "[CEC] \tRECV_BTF\n");
     if (error & CEC_ERROR_PERIOD)
-	dprintk(2,"\tPERIOD\n");
+	printk (KERN_INFO "[CEC] \tPERIOD\n");
     if (error & CEC_ERROR_TIMING)
-	dprintk(2,"\tTIMING\n");
+	printk (KERN_INFO "[CEC] \tTIMING\n");
 }
 
 int cec_internal_init(void)
