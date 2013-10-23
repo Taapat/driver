@@ -504,21 +504,21 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
 	    	responseBuffer[3] = LG_DEVICE_TYPE_HDD;
 	    	sendMessage(4, responseBuffer);
 	    	break;
-	    case LG_REQUEST_REMOTE_CONTROL_LEVEL: (name, "REMOTE_LEVEL");
+	    case LG_REQUEST_REMOTE_CONTROL_LEVEL: strcat(name, "REMOTE_LEVEL");
 			responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
 			responseBuffer[1] =	VENDOR_COMMAND;
 	    	responseBuffer[2] =	0x0C;
 	    	responseBuffer[3] = 0x05; // maximum control level
 	    	sendMessage(4, responseBuffer);
 	    	break;
-	    case LG_REQUEST_VENDOR_COMMAND1: (name, "ID_1");
+	    case LG_REQUEST_VENDOR_COMMAND1: strcat(name, "ID_1");
 			responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
 			responseBuffer[1] =	VENDOR_COMMAND;
 	    	responseBuffer[2] =	0x05;
 	    	responseBuffer[3] = 0x04;
 	    	sendMessage(4, responseBuffer);
 	    	break;
-	    case LG_REQUEST_VENDOR_COMMAND2: (name, "ID_2");
+	    case LG_REQUEST_VENDOR_COMMAND2: strcat(name, "ID_2");
 			responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
 			responseBuffer[1] =	VENDOR_COMMAND;
 	    	responseBuffer[2] =	0xA1;
@@ -777,7 +777,7 @@ void sendInitMessage(void)
 
 void sendPingWithAutoIncrement(void)
 {
-    unsigned char responseBuffer[1];
+    //unsigned char responseBuffer[1];
 
     printk (KERN_WARNING "[CEC] sendPingWithAutoIncrement - 1\n");
     setIsFirstKiss(1);
