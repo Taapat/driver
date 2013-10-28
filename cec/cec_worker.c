@@ -130,7 +130,6 @@ void cec_worker_init(void)
     str_error(cec_get_error());
     printk (KERN_ALERT "[CEC] ~~~ CEC INIT ~~~\n");
 
-    wakeTV();
     sendPingWithAutoIncrement();
 }
 

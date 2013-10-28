@@ -80,6 +80,8 @@ int __init cec_init(void) {
 	init_e2_proc();
 
 	input_init();
+
+	wakeTV();
     } else {
 	init_dev();
     }
