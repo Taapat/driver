@@ -37,6 +37,7 @@
 #include <linux/interrupt.h>
 #include <linux/version.h>
 
+#include "cec_debug.h"
 #include "cec_worker.h"
 #include "cec_opcodes.h"
 #include "cec_internal.h"
@@ -48,11 +49,12 @@
 
 static unsigned char cancelStart = 0;
 int activemode = 0;
+extern int debug=0;
 
 //----------------------------
 
 int __init cec_init(void) {
-    printk (KERN_ALERT "[CEC] init - starting\n");
+    dprintk(0,"init - starting\n");
 
     cec_internal_init();
 
@@ -63,7 +65,7 @@ int __init cec_init(void) {
     /* ********* */
     /* irq setup */
 
-    printk (KERN_INFO "[CEC] init - starting intterrupt (%d)\n", CEC_IRQ);
+    dprintk(2, "init - starting intterrupt (%d)\n", CEC_IRQ);
 
 #if defined (CONFIG_KERNELVERSION) || LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
     if (!request_irq(CEC_IRQ, (void*) cec_interrupt, IRQF_DISABLED, "cec", NULL))
@@ -73,7 +75,7 @@ int __init cec_init(void) {
     {
 
     } else {
-	printk (KERN_ALERT "[CEC] Can't get irq\n");
+	dprintk(0,"Can't get irq\n");
     }
 
     if (activemode) {
@@ -96,7 +98,7 @@ int __init cec_init(void) {
 }
 
 static void __exit cec_exit(void) {
-    printk (KERN_ALERT "[CEC] unloaded\n");
+    dprintk(0,"unloaded\n");
 
     cancelStart = 1;
     udelay(20000);
@@ -123,6 +125,8 @@ MODULE_DESCRIPTION("CEC Driver");
 MODULE_AUTHOR("konfetti & schischu");
 MODULE_LICENSE("GPL");
 
+module_param(debug, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 module_param(activemode, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(debug, "Debug Output 0=disabled >0=enabled(debuglevel)");
 MODULE_PARM_DESC(activemode, "Active mode 0=disabled >0=enabled(activemode)");
 
