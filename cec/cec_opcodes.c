@@ -778,7 +778,7 @@ void sendInitMessage(void)
 
 void sendPingWithAutoIncrement(void)
 {
-    //unsigned char responseBuffer[1];
+    unsigned char responseBuffer[1];
 
     dprintk(1, "sendPingWithAutoIncrement - 1\n");
     setIsFirstKiss(1);
