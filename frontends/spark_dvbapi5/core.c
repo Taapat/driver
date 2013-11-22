@@ -49,8 +49,8 @@ static const struct ix7306_config bs2s7hz7306a_config = {
 	.name = "Sharp BS2S7HZ7306A",
 	.addr = (0xc0 >> 1),
 	.step_size = IX7306_STEP_1000,
-	.bb_lpf = IX7306_LPF_12,
-	.bb_gain = IX7306_GAIN_2dB,
+	.bb_lpf = IX7306_LPF_10,
+	.bb_gain = IX7306_GAIN_0dB,
 };
 
 static struct vz7903_config vz7903_i2cConfig = {
