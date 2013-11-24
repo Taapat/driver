@@ -47,7 +47,6 @@
 #include <linux/proc_fs.h>
 
 #include <linux/device.h> /* class_creatre */
-#include <linux/cdev.h> /* cdev_init */
 
 #include "aotom_main.h"
 
@@ -822,9 +821,6 @@ ssize_t proc_node_read(char *buffer, char **start, off_t off, int count, int *eo
 }
 
 #define DEVICE_NAME "vfd"
-
-static        dev_t  vfd_dev_num;
-static struct cdev   vfd_cdev;
 static struct class *vfd_class = 0;
 
 static int __init aotom_init_module(void)
@@ -846,24 +842,9 @@ static int __init aotom_init_module(void)
 	if(button_dev_init() != 0)
 		return -1;
 
-	//if (register_chrdev(VFD_MAJOR,"VFD",&vfd_fops))
-	//	printk("unable to get major %d for VFD\n",VFD_MAJOR);
+	if (register_chrdev(VFD_MAJOR,DEVICE_NAME,&vfd_fops))
+		printk("unable to get major %d for VFD\n",VFD_MAJOR);
 
-	int result;
-	vfd_dev_num = MKDEV(VFD_MAJOR, 0);
-	result = register_chrdev_region(vfd_dev_num, LASTMINOR, DEVICE_NAME);
-	if ( result < 0 ) {
-		printk( KERN_ALERT "VFD cannot register device (%d)\n", result);
-		return result;
-	}
-	cdev_init(&vfd_cdev, &vfd_fops);
-	vfd_cdev.owner = THIS_MODULE;
-	vfd_cdev.ops = &vfd_fops;
-	result = cdev_add(&vfd_cdev, vfd_dev_num, LASTMINOR);
-	if ( result < 0 ) {
-		printk("VFD couldn't register '%s' driver\n", DEVICE_NAME);
-		return result;
-	}
 	vfd_class = class_create(THIS_MODULE, DEVICE_NAME);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
 	device_create(vfd_class, NULL, MKDEV(VFD_MAJOR, 0), NULL, "vfd", 0);
@@ -872,7 +853,6 @@ static int __init aotom_init_module(void)
 	class_device_create(vfd_class, NULL, MKDEV(VFD_MAJOR, 0), NULL, "vfd", 0);
 	class_device_create(vfd_class, NULL, MKDEV(VFD_MAJOR, 1), NULL, "rc", 1);
 #endif
-
 
 	sema_init(&write_sem, 1);
 //	sema_init(&key_mutex, 1);
@@ -915,9 +895,7 @@ static void __exit aotom_cleanup_module(void)
 
 	//kthread_stop(time_thread);
 
-	//unregister_chrdev(VFD_MAJOR,"VFD");
-	cdev_del(&vfd_cdev);
-	unregister_chrdev_region(vfd_dev_num, LASTMINOR);
+	unregister_chrdev(VFD_MAJOR,DEVICE_NAME);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
 	device_destroy(vfd_class, MKDEV(VFD_MAJOR, 0));
 	device_destroy(vfd_class, MKDEV(VFD_MAJOR, 1));
