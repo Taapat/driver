@@ -14,7 +14,7 @@ short paramDebug = 0;
 
 static struct core *core; //[MAX_DVB_ADAPTERS];
 
-static struct stv090x_config tt1600_stv090x_config = {
+static struct stv090x_config stv090x_config = {
 	.device = STX7111,
 	.demod_mode = STV090x_DUAL,
 	.clk_mode = STV090x_CLK_EXT,
@@ -26,7 +26,8 @@ static struct stv090x_config tt1600_stv090x_config = {
 	.ts1_clk = 0,
 	.ts2_clk = 0,
 	.repeater_level = STV090x_RPTLEVEL_64,
-
+	.adc1_range = STV090x_ADC_1Vpp,
+	.agc_rf1_inv = 1,
 	.tuner_init = NULL,
 	.tuner_set_mode = NULL,
 	.tuner_set_frequency = NULL,
@@ -88,7 +89,7 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 
 	printk(KERN_INFO "%s >\n", __FUNCTION__);
 
-	frontend = stv090x_attach(&tt1600_stv090x_config, cfg->i2c_adap, STV090x_DEMODULATOR_0, STV090x_TUNER1);
+	frontend = stv090x_attach(&stv090x_config, cfg->i2c_adap, STV090x_DEMODULATOR_0, STV090x_TUNER1);
 	frontend_find_TunerDevice(&tunerType, cfg->i2c_adap, frontend);
 	if (frontend)
 	{
@@ -100,15 +101,33 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 			if (dvb_attach(ix7306_attach, frontend, &bs2s7hz7306a_config, cfg->i2c_adap))
 			{
 				printk("%s: IX7306 attached\n", __FUNCTION__);
-				//tt1600_stv090x_config.xtal = 4000000;
-				tt1600_stv090x_config.tuner_set_frequency = ix7306_set_frequency;
-				tt1600_stv090x_config.tuner_get_frequency = ix7306_get_frequency;
-				tt1600_stv090x_config.tuner_set_bandwidth = ix7306_set_bandwidth;
-				tt1600_stv090x_config.tuner_get_bandwidth = ix7306_get_bandwidth;
-				tt1600_stv090x_config.tuner_get_status = frontend->ops.tuner_ops.get_status;
+				//stv090x_config.xtal = 4000000;
+				stv090x_config.agc_rf1_inv = 1;
+				stv090x_config.tuner_set_frequency = ix7306_set_frequency;
+				stv090x_config.tuner_get_frequency = ix7306_get_frequency;
+				stv090x_config.tuner_set_bandwidth = ix7306_set_bandwidth;
+				stv090x_config.tuner_get_bandwidth = ix7306_get_bandwidth;
+				stv090x_config.tuner_get_status = frontend->ops.tuner_ops.get_status;
 			} else
 			{
 				printk(KERN_INFO "%s: error attaching IX7306\n", __FUNCTION__);
+				goto error_out;
+			}
+			break;
+		case VZ7903:
+			if (dvb_attach(vz7903_attach, frontend, &vz7903_i2cConfig, cfg->i2c_adap))
+			{
+				printk("%s: vz7903_attach\n", __FUNCTION__);
+				stv090x_config.agc_rf1_inv = 1;
+				//	stv090x_config.tuner_init		= nim_vz7903_init;
+				stv090x_config.tuner_set_frequency = vz7903_set_frequency;
+				stv090x_config.tuner_get_frequency = vz7903_get_frequency;
+				stv090x_config.tuner_set_bandwidth = vz7903_set_bandwidth;
+				stv090x_config.tuner_get_bandwidth = vz7903_get_bandwidth;
+				stv090x_config.tuner_get_status = vz7903_get_status;
+			} else
+			{
+				printk(KERN_INFO "%s: error vz7903_attach\n", __FUNCTION__);
 				goto error_out;
 			}
 			break;
@@ -118,35 +137,20 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 			if (ctl)
 			{
 				printk("%s: stv6110x attached\n", __FUNCTION__);
-				tt1600_stv090x_config.tuner_init = ctl->tuner_init;
-				tt1600_stv090x_config.tuner_set_mode = ctl->tuner_set_mode;
-				tt1600_stv090x_config.tuner_set_frequency = ctl->tuner_set_frequency;
-				tt1600_stv090x_config.tuner_get_frequency = ctl->tuner_get_frequency;
-				tt1600_stv090x_config.tuner_set_bandwidth = ctl->tuner_set_bandwidth;
-				tt1600_stv090x_config.tuner_get_bandwidth = ctl->tuner_get_bandwidth;
-				tt1600_stv090x_config.tuner_set_bbgain = ctl->tuner_set_bbgain;
-				tt1600_stv090x_config.tuner_get_bbgain = ctl->tuner_get_bbgain;
-				tt1600_stv090x_config.tuner_set_refclk = ctl->tuner_set_refclk;
-				tt1600_stv090x_config.tuner_get_status = ctl->tuner_get_status;
+				stv090x_config.agc_rf1_inv = 0;
+				stv090x_config.tuner_init = ctl->tuner_init;
+				stv090x_config.tuner_set_mode = ctl->tuner_set_mode;
+				stv090x_config.tuner_set_frequency = ctl->tuner_set_frequency;
+				stv090x_config.tuner_get_frequency = ctl->tuner_get_frequency;
+				stv090x_config.tuner_set_bandwidth = ctl->tuner_set_bandwidth;
+				stv090x_config.tuner_get_bandwidth = ctl->tuner_get_bandwidth;
+				stv090x_config.tuner_set_bbgain = ctl->tuner_set_bbgain;
+				stv090x_config.tuner_get_bbgain = ctl->tuner_get_bbgain;
+				stv090x_config.tuner_set_refclk = ctl->tuner_set_refclk;
+				stv090x_config.tuner_get_status = ctl->tuner_get_status;
 			} else
 			{
 				printk(KERN_INFO "%s: error attaching stv6110x\n", __FUNCTION__);
-				goto error_out;
-			}
-			break;
-		case VZ7903:
-			if (dvb_attach(vz7903_attach, frontend, &vz7903_i2cConfig, cfg->i2c_adap))
-			{
-				printk("%s: vz7903_attach\n", __FUNCTION__);
-				//	tt1600_stv090x_config.tuner_init		= nim_vz7903_init;
-				tt1600_stv090x_config.tuner_set_frequency = vz7903_set_frequency;
-				tt1600_stv090x_config.tuner_get_frequency = vz7903_get_frequency;
-				tt1600_stv090x_config.tuner_set_bandwidth = vz7903_set_bandwidth;
-				tt1600_stv090x_config.tuner_get_bandwidth = vz7903_get_bandwidth;
-				tt1600_stv090x_config.tuner_get_status = vz7903_get_status;
-			} else
-			{
-				printk(KERN_INFO "%s: error vz7903_attach\n", __FUNCTION__);
 				goto error_out;
 			}
 			break;
@@ -156,6 +160,9 @@ static struct dvb_frontend * frontend_init(struct core_config *cfg, int i)
 		printk(KERN_INFO "%s: error attaching\n", __FUNCTION__);
 		goto error_out;
 	}
+
+	if (frontend->ops.init)
+		frontend->ops.init(frontend);
 
 	return frontend;
 
