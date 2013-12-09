@@ -669,7 +669,7 @@ ManifestorStatus_t Manifestor_AudioKsound_c::FillOutInputBuffer(
     
     while( TimeCurrentlyEnqueuedInSamples < TimeToFillInSamples )
     {
-        int SamplesToInjectIntoThisBuffer; // Number of samples that must be removed from the buffer
+        int SamplesToInjectIntoThisBuffer = 0; // Number of samples that must be removed from the buffer
         
         //
         // Try to exit early without applying output timing to buffers we're not going to play
