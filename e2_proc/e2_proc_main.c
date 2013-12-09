@@ -729,7 +729,7 @@ char * dirname(char * name)
   int i = 0;
   int pos = 0;
 
-  while((name[i] != 0) && (i < sizeof(path)))
+  while((i < sizeof(path)) && (name[i] != 0))
   {
     if(name[i] == '/')
       pos = i;
