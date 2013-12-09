@@ -552,7 +552,7 @@ FrameParserStatus_t FrameParser_AudioDtshd_c::ParseCoreHeader(BitStreamClass_c *
     ParsedFrameHeader->HasCoreExtensions           = Bits->Get(1);
     
     // sanity checks
-    if ( ((NumberOfPcmSampleBlocks < 5) && (NumberOfPcmSampleBlocks > 127)) ||
+    if ( ((NumberOfPcmSampleBlocks < 5) || (NumberOfPcmSampleBlocks > 127)) ||
          (IsNormalFrame && (NumberOfPcmSampleBlocks != 7) && (NumberOfPcmSampleBlocks != 15) && 
           (NumberOfPcmSampleBlocks != 31) && (NumberOfPcmSampleBlocks != 63) && (NumberOfPcmSampleBlocks != 127)) )
     {
