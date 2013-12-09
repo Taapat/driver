@@ -948,6 +948,7 @@ CodecStatus_t Codec_MmeAudioSpdifin_c::GetAttribute (const char *Attribute, Play
 		    return CodecNoError;
 		case SPDIFIN_MP2AAC:
 		    Value->u.Bool = Capability.DecoderCapabilityExtFlags[0] & 0x20; // ACC_SPDIFIN_MPG to be renamed ACC_SPDIFIN_AAC
+                    return CodecNoError;
 		case SPDIFIN_IEC60958:
 		case SPDIFIN_NULL_DATA_BURST:
 		case SPDIFIN_PAUSE_BURST:
