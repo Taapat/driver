@@ -650,7 +650,7 @@ int ix7306_get_frequency(struct dvb_frontend *fe, u32 *frequency)
 
 	printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 
-	if (tuner_ops->get_state) {
+	if (tuner_ops && tuner_ops->get_state) {
 		if ((err = tuner_ops->get_state(fe, DVBFE_TUNER_FREQUENCY, &t_state)) < 0) {
 			printk("%s: Invalid parameter\n", __func__);
 			return err;
@@ -677,7 +677,7 @@ int ix7306_set_frequency(struct dvb_frontend *fe, u32 frequency)
 	if (&frontend_ops->tuner_ops)
 		tuner_ops = &frontend_ops->tuner_ops;
 
-	if (tuner_ops->set_state) {
+	if (tuner_ops && tuner_ops->set_state) {
 		if ((err = tuner_ops->set_state(fe, DVBFE_TUNER_FREQUENCY, &t_state)) < 0) {
 			printk("%s: Invalid parameter\n", __func__);
 			return err;
