@@ -424,6 +424,7 @@ MME_ERROR MME_AllocDataBuffer(  MME_TransformerHandle_t handle,
 		if (0 != driverResult) {
 			MME_Info(MME_INFO_LINUX_USER, (DEBUG_ERROR_STR "ioctl error - driver code %d, status %d \n",
                          driverResult, allocInfo.status));
+			EMBX_OS_MemFree(buf);
 			return MME_NOMEM;
 		}
 
@@ -438,6 +439,7 @@ MME_ERROR MME_AllocDataBuffer(  MME_TransformerHandle_t handle,
 			/* TODO undo allocation */
 			MME_Info( MME_INFO_LINUX_USER, (DEBUG_ERROR_STR "mmap failed - errno  %d\n", errno));
 			*dataBuffer_p = NULL;
+			EMBX_OS_MemFree(buf);
 			return MME_NOMEM;
 		}
 
