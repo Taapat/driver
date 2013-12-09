@@ -4446,7 +4446,6 @@ static int d3501_init(struct dvb_frontend *fe)
 	struct dvb_d3501_fe_state *state = fe->demodulator_priv;
 	//dprintk(10, "%s <\n", __FUNCTION__);
 	return nim_s3501_open(&state->spark_nimdev);
-	return 0;
 }
 
 static void d3501_release(struct dvb_frontend *fe)
