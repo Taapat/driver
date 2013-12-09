@@ -1511,6 +1511,8 @@ static unsigned int 	  HistoryIndex	= 0;
 
 	    // Fallthrough
 	    SynchronizationState			= SyncStateStartAwaitingCorrectionWorkthrough;
+            FrameWorkthroughCount                       = 0;
+            break;
 
 	//
 	// Here we set up to wait for as correction to work through
