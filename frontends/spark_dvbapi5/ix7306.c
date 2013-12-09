@@ -716,7 +716,7 @@ int ix7306_set_frequency(struct dvb_frontend *fe, u32 frequency)
 	if (&frontend_ops->tuner_ops)
 		tuner_ops = &frontend_ops->tuner_ops;
 
-	if (tuner_ops->set_state) {
+	if (tuner_ops && tuner_ops->set_state) {
 		if ((err = tuner_ops->set_state(fe, DVBFE_TUNER_FREQUENCY, &t_state)) < 0) {
 			printk("%s: Invalid parameter\n", __func__);
 			return err;
