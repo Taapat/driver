@@ -870,7 +870,7 @@ static int avr_ioctl(struct stm_v4l2_handles *handle, struct stm_v4l2_driver *dr
 
 	        case V4L2_CID_STM_AVR_AUDIO_EMPHASIS:
 		    FAIL_IF_NULL(handle->v4l2type[STM_V4L2_AUDIO_INPUT].handle);
-		    if ((ctrlvalue != 0) || (ctrlvalue != 1))
+		    if ((ctrlvalue != 0) && (ctrlvalue != 1))
 			return -ERANGE;
 
 		    AvrAudioSetEmphasis(handle->v4l2type[STM_V4L2_AUDIO_INPUT].handle, ctrlvalue);
