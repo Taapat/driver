@@ -1884,7 +1884,7 @@ int YWPANEL_VFD_SegDigSeg(u8 dignum, SegNum_T segnum, u8 val)
 {
 	int  ST_ErrCode = 0;
 	u8	 addr=0;
-	if(segnum < 0 && segnum > 1)
+	if(segnum < 0 || segnum > 1)
 		ST_ErrCode = -EINVAL;
 
 	VFD_CS_CLR();
