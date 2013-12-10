@@ -161,7 +161,7 @@ void draw_thread(void *arg)
 {
   struct vfd_ioctl_data *data;
   struct vfd_ioctl_data draw_data;
-  unsigned char buf[17];
+  unsigned char buf[VFD_DATA_LEN];
   int count = 0;
   int pos = 0;
 
@@ -169,12 +169,11 @@ void draw_thread(void *arg)
   data = (struct vfd_ioctl_data *)arg;
 
   draw_data.length = data->length;
-  memset(draw_data.data, 0, sizeof(draw_data.data));
   memcpy(draw_data.data,data->data,data->length);
 
   thread_stop = 0;
 
-  count = utf8_len(&draw_data.data[0], draw_data.length);
+  count = utf8_len(draw_data.data, draw_data.length);
 
   if(count > mode_digit)
   {
@@ -187,9 +186,9 @@ void draw_thread(void *arg)
        }
 
        clear_display();
-       memset(buf,0, sizeof(buf));
        int countb = utf8_count(&draw_data.data[pos], draw_data.length - pos, 8);
        memcpy(buf, &draw_data.data[pos], countb);
+       buf[countb] = '\0';
        YWPANEL_VFD_ShowString(buf);
        msleep(200);
        if (draw_data.data[pos] > 128)
@@ -204,9 +203,9 @@ void draw_thread(void *arg)
   if(count > 0)
   {
       clear_display();
-      memset(buf,0, sizeof(buf));
       int countb = utf8_count(&draw_data.data[0], draw_data.length, 8);
       memcpy(buf, draw_data.data, countb);
+      buf[countb] = '\0';
       YWPANEL_VFD_ShowString(buf);
   }
   else VFD_clr();
@@ -221,14 +220,23 @@ int run_draw_thread(struct vfd_ioctl_data *draw_data)
 
     //wait thread stop
     while(!thread_stop)
-    {msleep(1);}
+    {msleep(50);}
 
-    thread_stop = 2;
-    thread=kthread_run(draw_thread,draw_data,"draw thread",NULL,true);
+    if (draw_data->length < YWPANEL_width) {
+        char buf[DISPLAYWIDTH_MAX + 1];
+        memset(buf, ' ', sizeof(buf) - 1);
+        buf[sizeof(buf)-1] = '\0';
+        if (draw_data->length)
+            memcpy(buf, draw_data->data, draw_data->length);
+        YWPANEL_VFD_ShowString(buf);
+    } else {
+        thread_stop = 2;
+        thread=kthread_run(draw_thread,draw_data,"draw thread",NULL,true);
 
-    //wait thread run
-    while(thread_stop == 2)
-    {msleep(1);}
+        //wait thread run
+        while(thread_stop == 2)
+        {msleep(50);}
+    }
 
     return 0;
 }
