@@ -56,6 +56,15 @@
     
     
 
+/* ======================== Before include files ============================ */ 
+/* 14 channels @2.4G +  12@UNII(lower/middle) + 16@HiperLAN2 + 11@UNII(upper) + 0 @Japan + 1 as NULL termination */
+#define MAX_NUM_OF_CHS             		54
+
+/* 14 channels @2.4G +  12@UNII + 4 @MMAC + 11 @HiperLAN2 + 7 @Japan + 1 as NULL termination */
+#define MAX_NUM_OF_CHANNELS             MAX_NUM_OF_CHS
+#define MAX_NUM_OF_SUB_CHANNELS			MAX_NUM_OF_CHANNELS/2  /*Assume half size for sub channels*/
+
+
 #include "rtmp_type.h"
 #include "rtmp_os.h"
 #include "link_list.h"
@@ -76,7 +85,10 @@
 #define RT_DEBUG_INFO       4
 #define RT_DEBUG_LOUD       5
     
-
+typedef enum{
+	DBG_FUNC_RA = 0x100,	/* debug flag for rate adaptation */
+	DBG_FUNC_SA = 0x200,	/* debug flag for smart antenna */
+}RT_DEBUG_FUNC;
 
 
 /* ======================== Definition ====================================== */ 
@@ -176,7 +188,6 @@ Ndis802_11InfrastructureMax	/* Not a real value, defined as upper bound */
 
 
 
-
 /* ======================== Memory ========================================== */ 
 #ifdef VENDOR_FEATURE2_SUPPORT
 
@@ -202,8 +213,14 @@ extern ULONG OS_NumOfPktAlloc, OS_NumOfPktFree;
 #define MODE_HTMIX	2
 #define MODE_HTGREENFIELD	3
 #endif	/* DOT11_N_SUPPORT */
-    
 
+#ifdef NO_CONSISTENT_MEM_SUPPORT
+/* current support RXD_SIZE = 16B and cache line = 16 or 32B */
+#define RTMP_DCACHE_FLUSH(__AddrStart, __Size)							\
+		RtmpOsDCacheFlush((ULONG)(__AddrStart), (ULONG)(__Size))
+#else
+#define RTMP_DCACHE_FLUSH(__AddrStart, __Size)
+#endif /* NO_CONSISTENT_MEM_SUPPORT */
 
 
 /* ======================== Interface ======================================= */
@@ -227,6 +244,14 @@ typedef enum _RTMP_INF_TYPE_
 #define RT_CONFIG_IF_OPMODE_ON_AP(__OpMode)
 #define RT_CONFIG_IF_OPMODE_ON_STA(__OpMode)
 #endif
+
+/* associated with device interface */
+typedef struct _DEV_PRIV_INFO {
+	VOID			*pPriv; /* pAd */
+	UINT32			priv_flags;
+} DEV_PRIV_INFO;
+
+
 
     
 /***********************************************************************************
@@ -460,6 +485,7 @@ typedef struct _ETHEREAL_RADIO {
 #define WIRESHARK_11N_FLAG_BW40             0x80
 #endif /* MONITOR_FLAG_11N_SNIFFER_SUPPORT */
     
+
 
 #endif /* __RT_COMM_H__ */
     

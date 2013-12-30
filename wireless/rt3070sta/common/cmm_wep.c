@@ -327,7 +327,11 @@ BOOLEAN	RTMPSoftDecryptWEP(
 	/* Skip the WEP IV header (4-bytes) */
 	ciphertext_ptr = pData + LEN_WEP_IV_HDR;
 	ciphertext_len = *DataByteCnt - LEN_WEP_IV_HDR;
-	
+
+	/* Ignore abnormal packets */
+	if ((*DataByteCnt ) <= LEN_WEP_IV_HDR)
+		return FALSE;
+
 	/* Decrypt the WEP MPDU. It shall include plaintext and ICV.
 	   The result output would overwrite the original WEP IV header position */
 	ARC4_Compute(ARC4_CTX, 

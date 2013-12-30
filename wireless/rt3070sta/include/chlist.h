@@ -62,7 +62,7 @@ typedef struct _CH_DESP {
 typedef struct _CH_REGION {
 	UCHAR CountReg[3];
 	UCHAR DfsType;			/* 0: CE, 1: FCC, 2: JAP, 3:JAP_W53, JAP_W56 */
-	CH_DESP ChDesp[10];
+	CH_DESP *pChDesp;
 } CH_REGION, *PCH_REGION;
 
 extern CH_REGION ChRegion[];
@@ -101,6 +101,11 @@ VOID N_ChannelCheck(
 
 VOID N_SetCenCh(
 	IN PRTMP_ADAPTER pAd);
+
+BOOLEAN N_ChannelGroupCheck(
+	IN PRTMP_ADAPTER pAd,
+	IN UCHAR Channel);
+
 #endif /* DOT11_N_SUPPORT */
 
 UINT8 GetCuntryMaxTxPwr(

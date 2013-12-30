@@ -62,7 +62,7 @@ VOID NICInitRT3070RFRegisters(IN PRTMP_ADAPTER pAd)
 
 		/* set default antenna as main */
 		if (pAd->RfIcType == RFIC_3020 || pAd->RfIcType == RFIC_2020)
-			AsicSetRxAnt(pAd, pAd->RxAnt.Pair1PrimaryRxAnt);	
+			AsicSetRxAnt(pAd, pAd->RxAnt.Pair1PrimaryRxAnt);
 
         /* Initialize RF register to default value */
 		for (i = 0; i < NUM_RF_3020_REG_PARMS; i++)
@@ -84,7 +84,7 @@ VOID NICInitRT3070RFRegisters(IN PRTMP_ADAPTER pAd)
 				/* Update MAC 0x05D4 from 01xxxxxx to 0Dxxxxxx (voltage 1.2V to 1.35V) for RT3070 to improve yield rate */
 				RTUSBReadMACRegister(pAd, LDO_CFG0, &data);
 				data = ((data & 0xF0FFFFFF) | 0x0D000000);
-				RTUSBWriteMACRegister(pAd, LDO_CFG0, data);
+				RTUSBWriteMACRegister(pAd, LDO_CFG0, data, FALSE);
 			}
 		}
 		else if (IS_RT3071(pAd))
@@ -100,7 +100,7 @@ VOID NICInitRT3070RFRegisters(IN PRTMP_ADAPTER pAd)
 				/* patch tx EVM issue temporarily */
 				RTUSBReadMACRegister(pAd, LDO_CFG0, &data);
 				data = ((data & 0xE0FFFFFF) | 0x0D000000);
-				RTUSBWriteMACRegister(pAd, LDO_CFG0, data);
+				RTUSBWriteMACRegister(pAd, LDO_CFG0, data, FALSE);
 			}
 			else
 			{
@@ -112,7 +112,7 @@ VOID NICInitRT3070RFRegisters(IN PRTMP_ADAPTER pAd)
 			/* patch LNA_PE_G1 failed issue */
 			RTUSBReadMACRegister(pAd, GPIO_SWITCH, &data);
 			data &= ~(0x20);
-			RTUSBWriteMACRegister(pAd, GPIO_SWITCH, data);
+			RTUSBWriteMACRegister(pAd, GPIO_SWITCH, data, FALSE);
 		}
 		
         /* For RF filter Calibration */
@@ -135,7 +135,7 @@ VOID NICInitRT3070RFRegisters(IN PRTMP_ADAPTER pAd)
 		/* set led open drain enable */
 		RTUSBReadMACRegister(pAd, OPT_14, &data);
 		data |= 0x01;
-		RTUSBWriteMACRegister(pAd, OPT_14, data);
+		RTUSBWriteMACRegister(pAd, OPT_14, data, FALSE);
 
 		if (IS_RT3071(pAd))
 		{
@@ -180,5 +180,37 @@ VOID NICInitRT3070RFRegisters(IN PRTMP_ADAPTER pAd)
         }	
 
 }
+
+VOID RT3070_PowerTuning(
+	IN PRTMP_ADAPTER 			pAd,
+	IN RSSI_SAMPLE				*pRssi)
+{
+	/* request by Gary, if Rssi0 > -42, BBP 82 need to be changed from 0x62 to 0x42, , bbp 67 need to be changed from 0x20 to 0x18 */
+	if (!pAd->CommonCfg.HighPowerPatchDisabled)
+	{
+
+		if (((IS_RT3070(pAd) && ((pAd->MACVersion & 0xffff) < 0x0201)) || IS_RT2070(pAd))
+				&& !RTMP_TEST_FLAG(pAd, fRTMP_ADAPTER_IDLE_RADIO_OFF))			
+		{
+			UCHAR RFValue;
+
+	   		if ((pRssi->AvgRssi0 != 0) && (pRssi->AvgRssi0 > (pAd->BbpRssiToDbmDelta - 35)))
+            {
+				/*RT30xxWriteRFRegister(pAd, RF_R27, 0x20); */
+				RT30xxReadRFRegister(pAd, RF_R27, (PUCHAR)&RFValue);
+				RFValue &= ~0x3;
+				RT30xxWriteRFRegister(pAd, RF_R27, (UCHAR)RFValue);
+           	}
+            else 
+            {
+				/*RT30xxWriteRFRegister(pAd, RF_R27, 0x23); */
+				RT30xxReadRFRegister(pAd, RF_R27, (PUCHAR)&RFValue);
+				RFValue |= 0x3;
+				RT30xxWriteRFRegister(pAd, RF_R27, (UCHAR)RFValue);
+            }
+		 }
+	}
+}
+
 #endif /* RT3070 */
 

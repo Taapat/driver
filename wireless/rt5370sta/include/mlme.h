@@ -40,7 +40,12 @@
 #define END_OF_ARGS                 -1
 #define LFSR_MASK                   0x80000057
 #define MLME_TASK_EXEC_INTV         100/*200*/       /* */
+#ifdef RT3290
+#define LEAD_TIME                   7
+#else
 #define LEAD_TIME                   5
+#endif /* RT3290 */
+
 #define MLME_TASK_EXEC_MULTIPLE       10  /*5*/       /* MLME_TASK_EXEC_MULTIPLE * MLME_TASK_EXEC_INTV = 1 sec */
 #define REORDER_EXEC_INTV         	100       /* 0.1 sec */
 #ifdef RTMP_MAC_USB
@@ -57,15 +62,19 @@
 #define JAP_W53	3
 #define JAP_W56	4
 #define MAX_RD_REGION 5
-
+#if defined(CONFIG_MULTI_CHANNEL) || defined(DOT11Z_TDLS_SUPPORT)
+#define BEACON_LOST_TIME           12 * OS_HZ    /* 2048 msec = 2 sec */
+#else
 #define BEACON_LOST_TIME            4 * OS_HZ    /* 2048 msec = 2 sec */
-
+#endif /* defined(CONFIG_MULTI_CHANNEL) || defined(DOT11Z_TDLS_SUPPORT) */
 #define DLS_TIMEOUT                 1200      /* unit: msec */
 #define AUTH_TIMEOUT                300       /* unit: msec */
 #define ASSOC_TIMEOUT               300       /* unit: msec */
 #define JOIN_TIMEOUT                2000        /* unit: msec */
-#define SHORT_CHANNEL_TIME          90        /* unit: msec */
+
 #define MIN_CHANNEL_TIME            110        /* unit: msec, for dual band scan */
+#define SHORT_CHANNEL_TIME          90        /* unit: msec */
+
 #define MAX_CHANNEL_TIME            140       /* unit: msec, for single band scan */
 #define	FAST_ACTIVE_SCAN_TIME	    30 		  /* Active scan waiting for probe response time */
 #define CW_MIN_IN_BITS              4         /* actual CwMin = 2^CW_MIN_IN_BITS - 1 */
@@ -77,6 +86,7 @@
 #ifdef CONFIG_STA_SUPPORT
 #define CW_MAX_IN_BITS              10        /* actual CwMax = 2^CW_MAX_IN_BITS - 1 */
 #endif /* CONFIG_STA_SUPPORT */
+
 #ifdef CONFIG_APSTA_MIXED_SUPPORT
 extern UINT32 CW_MAX_IN_BITS;
 #endif /* CONFIG_APSTA_MIXED_SUPPORT */
@@ -198,56 +208,29 @@ extern UINT32 CW_MAX_IN_BITS;
 #define DELBA_REASONCODE_TIMEOUT					39
 
 /* reset all OneSecTx counters */
+#ifdef FIFO_EXT_SUPPORT
 #define RESET_ONE_SEC_TX_CNT(__pEntry) \
 if (((__pEntry)) != NULL) \
 { \
 	(__pEntry)->OneSecTxRetryOkCount = 0; \
 	(__pEntry)->OneSecTxFailCount = 0; \
 	(__pEntry)->OneSecTxNoRetryOkCount = 0; \
+	(__pEntry)->OneSecRxLGICount = 0; \
+	(__pEntry)->OneSecRxSGICount = 0; \
+	(__pEntry)->fifoTxSucCnt = 0;\
+	(__pEntry)->fifoTxRtyCnt = 0;\
 }
-
-#ifdef NEW_RATE_ADAPT_SUPPORT
-/*added ys */
-/*added for rate adaptation by ys */
-/*#define NEW_RATE_ADAPT_SUPPORT//3T3R always use the new rate adaptation algorithm, regardless whether this is defined */
-/*#define CCK_SUPPORT */
-/*#define USE_NEW_THRD//not useful when (NEW_RATE_ADAPT_SUPPORT is not defined) and (2T2R) */
-#define USE_GREATER_UP_MCS /*rate(upMcs)> rate(thisMcs) if this is defined. otherwise, rate(upMcs)>= rate(thisMcs); meaningful when (NEW_RATE_ADAPT_SUPPORT is supported) or 3T3R */
-#define PER_THRD_ADJ			1
-#define RA_PER_LOW_THRD			8
-#define FEW_PKTS_CNT_THRD 1
-/*#define RA_PER_HIGH_THRD_FACTOR 90 //high thrd = 1 - (rate of lower MCS) * factor/100/(rate of this MCS), useful when NEW_RATE_ADAPT_SUPPORT and USE_NEW_THRD are defined */
-
-/*#if !defined(NEW_RATE_ADAPT_SUPPORT) */
-/*	#undef USE_NEW_THRD//actually, whether this is defined doesn't matter when !defined(NEW_RATE_ADAPT_SUPPORT). This is just for clarification. */
-/*	#undef USE_GREATER_UP_MCS //actually, whether this is defined doesn't matter when !defined(NEW_RATE_ADAPT_SUPPORT). This is just for clarification. */
-/*#endif */
-/*#define MAX_STREAMS 2, this information is now determined by pAd->MACVersion >= RALINK_2883_VERSION */
-/*#if MAX_STREAMS==3 */
-/*	#define NEW_RATE_ADAPT_SUPPORT */
-/*#endif */
-#endif /* NEW_RATE_ADAPT_SUPPORT */
-
-#ifdef TXBF_SUPPORT
-/*#define MRQ_FORCE_TX//regardless the capability of the station */
-#define ETXBF_EN_COND		0 /*this value can be set by iwpriv ra0 set ETxBfEnCond=? */
-/* 0:no etxbf, */
-/* 1:etxbf update periodically, */
-/* 2:etxbf updated if mcs changes in RateSwitchingAdapt() or APQuickResponeForRateUpExecAdapt(). */
-/* 3:auto-selection: if mfb changes or timer expires, then send sounding packets <----not finished yet!!! */
-/* note: when = 1 or 3, NO_SNDG_CNT_THRD controls the frequency to update the matrix(ETXBF_EN_COND=1) or activate the whole bf evaluation process(not defined) */
-
-#define MSI_TOGGLE_BF		6
-#define TOGGLE_BF_PKTS		5/* the number of packets with inverted BF status */
-#define READY_FOR_SNDG0		0/*jump to WAIT_SNDG_FB0 when channel change or periodically */
-#define WAIT_SNDG_FB0		1/*jump to WAIT_SNDG_FB1 when bf report0 is received */
-#define WAIT_SNDG_FB1		2
-#define WAIT_MFB			3
-#define WAIT_USELESS_RSP	4
-#define WAIT_BEST_SNDG		5
-#define NO_SNDG_CNT_THRD	0/*send sndg packet if there is no sounding for (NO_SNDG_CNT_THRD+1)*500msec. If this =0, bf matrix is updated at each call of APMlmeDynamicTxRateSwitchingAdapt() */
-/*rate adaptation end */
-#endif /* TXBF_SUPPORT */
+#else
+#define RESET_ONE_SEC_TX_CNT(__pEntry) \
+if (((__pEntry)) != NULL) \
+{ \
+	(__pEntry)->OneSecTxRetryOkCount = 0; \
+	(__pEntry)->OneSecTxFailCount = 0; \
+	(__pEntry)->OneSecTxNoRetryOkCount = 0; \
+	(__pEntry)->OneSecRxLGICount = 0; \
+	(__pEntry)->OneSecRxSGICount = 0; \
+}
+#endif /* FIFO_EXT_SUPPORT */
 
 
 /* */
@@ -301,6 +284,24 @@ typedef struct GNU_PACKED {
 #endif /* !RT_BIG_ENDIAN */
 } HT_CAP_PARM, *PHT_CAP_PARM;
 
+
+typedef struct GNU_PACKED {
+#ifdef RT_BIG_ENDIAN
+	UCHAR	TxMCSSetDefined:1; 
+	UCHAR	TxRxNotEqual:1;
+	UCHAR	TxMaxStream:2;
+	UCHAR	TxUnqualModulation:1;
+	UCHAR	rsv:3;
+#else
+	UCHAR	rsv:3;
+	UCHAR	TxUnqualModulation:1;
+	UCHAR	TxMaxStream:2;
+	UCHAR	TxRxNotEqual:1;
+	UCHAR	TxMCSSetDefined:1;
+#endif /* RT_BIG_ENDIAN */
+}HT_MCS_SET_TX_SUBFIELD, *PHT_MCS_SET_TX_SUBFIELD;
+
+
 /*  HT Capability INFO field in HT Cap IE . */
 typedef struct GNU_PACKED {
 	UCHAR	MCSSet[10];
@@ -342,7 +343,13 @@ typedef struct GNU_PACKED {
 #endif /* RT_BIG_ENDIAN */
 } EXT_HT_CAP_INFO, *PEXT_HT_CAP_INFO;
 
-/*  HT Beamforming field in HT Cap IE . */
+/* HT Explicit Beamforming Feedback Capable */
+#define HT_ExBF_FB_CAP_NONE			0
+#define HT_ExBF_FB_CAP_DELAYED		1
+#define HT_ExBF_FB_CAP_IMMEDIATE		2
+#define HT_ExBF_FB_CAP_BOTH			3
+
+/* HT Beamforming field in HT Cap IE */
 typedef struct GNU_PACKED _HT_BF_CAP{
 #ifdef RT_BIG_ENDIAN
 	ULONG	rsv:3;
@@ -503,6 +510,7 @@ typedef struct GNU_PACKED _EXT_CAP_INFO_ELEMENT{
 	UCHAR	ExtendChannelSwitch:1;
 	UCHAR	rsv2:5;
 #endif /* RT_BIG_ENDIAN */
+
 }EXT_CAP_INFO_ELEMENT, *PEXT_CAP_INFO_ELEMENT;
 
 
@@ -1108,13 +1116,13 @@ typedef struct {
 	/* New for microsoft WPA support */
 	NDIS_802_11_FIXED_IEs	FixIEs;
 	NDIS_802_11_AUTHENTICATION_MODE	AuthModeAux;	/* Addition mode for WPA2 / WPA capable AP */
-	NDIS_802_11_AUTHENTICATION_MODE	AuthMode;	
+	NDIS_802_11_AUTHENTICATION_MODE	AuthMode;
 	NDIS_802_11_WEP_STATUS	WepStatus;				/* Unicast Encryption Algorithm extract from VAR_IE */
 	USHORT					VarIELen;				/* Length of next VIE include EID & Length */
 	UCHAR					VarIEs[MAX_VIE_LEN];
 	USHORT					VarIeFromProbeRspLen;
 	UCHAR					*pVarIeFromProbRsp;
-
+        
 	/* CCX Ckip information */
     UCHAR   CkipFlag;
 
@@ -1141,14 +1149,9 @@ typedef struct {
 #endif /* CONFIG_STA_SUPPORT */
 
 	UCHAR   MacAddr[MAC_ADDR_LEN];
-
-#ifdef LINUX
-#ifdef CONFIG_STA_SUPPORT
-#ifdef RT_CFG80211_SUPPORT
-	VOID *pCfg80211_Chan;
-#endif /* RT_CFG80211_SUPPORT */
-#endif /* CONFIG_STA_SUPPORT */
-#endif /* LINUX */
+	ULONG ClientStatusFlags;
+	SHORT	AvgRssiX8;
+	CHAR	AvgRssi;
 } BSS_ENTRY, *PBSS_ENTRY;
 
 typedef struct {
@@ -1186,11 +1189,11 @@ typedef struct _MLME_QUEUE {
 typedef VOID (*STATE_MACHINE_FUNC)(VOID *Adaptor, MLME_QUEUE_ELEM *Elem);
 
 typedef struct _STATE_MACHINE {
-    ULONG                           Base;
-    ULONG                           NrState;
-    ULONG                           NrMsg;
-    ULONG                           CurrState;
-    STATE_MACHINE_FUNC             *TransFunc;
+    ULONG				Base;
+    ULONG				NrState;
+    ULONG				NrMsg;
+    ULONG				CurrState;
+    STATE_MACHINE_FUNC	*TransFunc;
 } STATE_MACHINE, *PSTATE_MACHINE;
 
 
@@ -1343,56 +1346,6 @@ typedef struct GNU_PACKED {
     UCHAR   Octet[1];
 } EID_STRUCT,*PEID_STRUCT, BEACON_EID_STRUCT, *PBEACON_EID_STRUCT;
 
-typedef struct GNU_PACKED _RTMP_TX_RATE_SWITCH
-{
-	UCHAR   ItemNo;
-#ifdef RT_BIG_ENDIAN
-	UCHAR	Rsv2:2;
-	UCHAR	Mode:2;
-	UCHAR	Rsv1:1;	
-	UCHAR	BW:1;
-	UCHAR	ShortGI:1;
-	UCHAR	STBC:1;
-#else
-	UCHAR	STBC:1;
-	UCHAR	ShortGI:1;
-	UCHAR	BW:1;
-	UCHAR	Rsv1:1;
-	UCHAR	Mode:2;
-	UCHAR	Rsv2:2;
-#endif	
-	UCHAR   CurrMCS;
-	UCHAR   TrainUp;
-	UCHAR   TrainDown;
-} RRTMP_TX_RATE_SWITCH, *PRTMP_TX_RATE_SWITCH;
-
-typedef struct  _RTMP_TX_RATE_SWITCH_3S
-{
-	UCHAR   ItemNo;
-#ifdef RT_BIG_ENDIAN
-	UCHAR	Rsv2:2;
-	UCHAR	Mode:2;
-	UCHAR	Rsv1:1;	
-	UCHAR	BW:1;
-	UCHAR	ShortGI:1;
-	UCHAR	STBC:1;
-#else
-	UCHAR	STBC:1;
-	UCHAR	ShortGI:1;
-	UCHAR	BW:1;
-	UCHAR	Rsv1:1;
-	UCHAR	Mode:2;
-	UCHAR	Rsv2:2;
-#endif	
-	UCHAR   CurrMCS;
-	UCHAR   TrainUp;
-	UCHAR   TrainDown;
-	UCHAR	downMcs;
-	UCHAR	upMcs3;
-	UCHAR	upMcs2;
-	UCHAR	upMcs1;
-	UCHAR	dataRate;
-} RRTMP_TX_RATE_SWITCH_3S, *PRTMP_TX_RATE_SWITCH_3S;
 
 /* ========================== AP mlme.h =============================== */
 #define TBTT_PRELOAD_TIME       384        /* usec. LomgPreamble + 24-byte at 1Mbps */

@@ -413,222 +413,106 @@ VOID PeerDlsReqAction(
 							  SA[3], SA[4], SA[5]));
 
 						if ((HtCapability.HtCapInfo.GF)
-						    && (pAd->CommonCfg.
-							DesiredHtPhy.GF)) {
-							pEntry->MaxHTPhyMode.
-							    field.MODE =
-							    MODE_HTGREENFIELD;
+						    && (pAd->CommonCfg.DesiredHtPhy.GF)) {
+							pEntry->MaxHTPhyMode.field.MODE = MODE_HTGREENFIELD;
 						} else {
-							pEntry->MaxHTPhyMode.
-							    field.MODE =
-							    MODE_HTMIX;
-							pAd->MacTab.
-							    fAnyStationNonGF =
-							    TRUE;
-							pAd->CommonCfg.
-							    AddHTInfo.
-							    AddHtInfo2.
-							    NonGfPresent = 1;
+							pEntry->MaxHTPhyMode.field.MODE = MODE_HTMIX;
+							pAd->MacTab.fAnyStationNonGF = TRUE;
+							pAd->CommonCfg.AddHTInfo.AddHtInfo2.NonGfPresent = 1;
 						}
 
-						if ((HtCapability.HtCapInfo.
-						     ChannelWidth)
-						    && (pAd->CommonCfg.
-							DesiredHtPhy.
-							ChannelWidth)) {
-							pEntry->MaxHTPhyMode.
-							    field.BW = BW_40;
-							pEntry->MaxHTPhyMode.
-							    field.ShortGI =
-							    ((pAd->CommonCfg.
-							      DesiredHtPhy.
-							      ShortGIfor40) &
-							     (HtCapability.
-							      HtCapInfo.
-							      ShortGIfor40));
+						if ((HtCapability.HtCapInfo.ChannelWidth)
+						    && (pAd->CommonCfg.DesiredHtPhy.ChannelWidth)) {
+							pEntry->MaxHTPhyMode.field.BW = BW_40;
+							pEntry->MaxHTPhyMode.field.ShortGI = ((pAd->CommonCfg.DesiredHtPhy.ShortGIfor40) & (HtCapability.HtCapInfo.ShortGIfor40));
 						} else {
-							pEntry->MaxHTPhyMode.
-							    field.BW = BW_20;
-							pEntry->MaxHTPhyMode.
-							    field.ShortGI =
-							    ((pAd->CommonCfg.
-							      DesiredHtPhy.
-							      ShortGIfor20) &
-							     (HtCapability.
-							      HtCapInfo.
-							      ShortGIfor20));
-							pAd->MacTab.
-							    fAnyStation20Only =
-							    TRUE;
+							pEntry->MaxHTPhyMode.field.BW = BW_20;
+							pEntry->MaxHTPhyMode.field.ShortGI = ((pAd->CommonCfg.DesiredHtPhy.ShortGIfor20) & (HtCapability.HtCapInfo.ShortGIfor20));
+							pAd->MacTab.fAnyStation20Only = TRUE;
 						}
 
 						/* find max fixed rate */
 						for (ii = 15; ii >= 0; ii--) {
 							j = ii / 8;
-							bitmask =
-							    (1 <<
-							     (ii - (j * 8)));
-							if ((pAd->StaCfg.
-							     DesiredHtPhyInfo.
-							     MCSSet[j] &
-							     bitmask)
-							    && (HtCapability.
-								MCSSet[j] &
-								bitmask)) {
-								pEntry->
-								    MaxHTPhyMode.
-								    field.MCS =
-								    ii;
+							bitmask = (1 << (ii - (j * 8)));
+							if ((pAd->StaCfg.DesiredHtPhyInfo.MCSSet[j] & bitmask)
+							    && (HtCapability.MCSSet[j] & bitmask)) {
+								pEntry->MaxHTPhyMode.field.MCS = ii;
 								break;
 							}
 							if (ii == 0)
 								break;
 						}
 
-						if (pAd->StaCfg.
-						    DesiredTransmitSetting.
-						    field.MCS != MCS_AUTO) {
+						if (pAd->StaCfg.DesiredTransmitSetting.field.MCS != MCS_AUTO) {
 
 							DBGPRINT(RT_DEBUG_OFF,
 								 ("@@@ pAd->CommonCfg.RegTransmitSetting.field.MCS = %d\n",
-								  pAd->StaCfg.
-								  DesiredTransmitSetting.
-								  field.MCS));
-							if (pAd->StaCfg.
-							    DesiredTransmitSetting.
-							    field.MCS == 32) {
+								  pAd->StaCfg.DesiredTransmitSetting.field.MCS));
+							if (pAd->StaCfg.DesiredTransmitSetting.field.MCS == 32) {
 								/* Fix MCS as HT Duplicated Mode */
-								pEntry->
-								    MaxHTPhyMode.
-								    field.BW =
-								    1;
-								pEntry->
-								    MaxHTPhyMode.
-								    field.MODE =
-								    MODE_HTMIX;
-								pEntry->
-								    MaxHTPhyMode.
-								    field.STBC =
-								    0;
-								pEntry->
-								    MaxHTPhyMode.
-								    field.
-								    ShortGI = 0;
-								pEntry->
-								    MaxHTPhyMode.
-								    field.MCS =
-								    32;
-							} else if (pEntry->
-								   MaxHTPhyMode.
-								   field.MCS >
-								   pAd->StaCfg.
-								   HTPhyMode.
-								   field.MCS) {
+								pEntry->MaxHTPhyMode.field.BW = 1;
+								pEntry->MaxHTPhyMode.field.MODE = MODE_HTMIX;
+								pEntry->MaxHTPhyMode.field.STBC = 0;
+								pEntry->MaxHTPhyMode.field.ShortGI = 0;
+								pEntry->MaxHTPhyMode.field.MCS = 32;
+							} else if (pEntry->MaxHTPhyMode.field.MCS >pAd->StaCfg.HTPhyMode.field.MCS) {
 								/* STA supports fixed MCS */
-								pEntry->
-								    MaxHTPhyMode.
-								    field.MCS =
-								    pAd->StaCfg.
-								    HTPhyMode.
-								    field.MCS;
+								pEntry->MaxHTPhyMode.field.MCS = pAd->StaCfg.HTPhyMode.field.MCS;
 							}
 						}
 
-						pEntry->MaxHTPhyMode.field.
-						    STBC =
-						    (HtCapability.HtCapInfo.
-						     RxSTBC & (pAd->CommonCfg.
-							       DesiredHtPhy.
-							       TxSTBC));
+						pEntry->MaxHTPhyMode.field.STBC =
+							(HtCapability.HtCapInfo.RxSTBC & (pAd->CommonCfg.DesiredHtPhy.TxSTBC));
 						pEntry->MpduDensity =
-						    HtCapability.HtCapParm.
-						    MpduDensity;
+						    HtCapability.HtCapParm.MpduDensity;
 						pEntry->MaxRAmpduFactor =
-						    HtCapability.HtCapParm.
-						    MaxRAmpduFactor;
+						    HtCapability.HtCapParm.MaxRAmpduFactor;
 						pEntry->MmpsMode =
-						    (UCHAR) HtCapability.
-						    HtCapInfo.MimoPs;
+						    (UCHAR) HtCapability.HtCapInfo.MimoPs;
 						pEntry->AMsduSize =
-						    (UCHAR) HtCapability.
-						    HtCapInfo.AMsduSize;
+						    (UCHAR) HtCapability.HtCapInfo.AMsduSize;
 						pEntry->HTPhyMode.word =
 						    pEntry->MaxHTPhyMode.word;
 
-						if (HtCapability.HtCapInfo.
-						    ShortGIfor20)
-							CLIENT_STATUS_SET_FLAG
-							    (pEntry,
-							     fCLIENT_STATUS_SGI20_CAPABLE);
-						if (HtCapability.HtCapInfo.
-						    ShortGIfor40)
-							CLIENT_STATUS_SET_FLAG
-							    (pEntry,
-							     fCLIENT_STATUS_SGI40_CAPABLE);
-						if (HtCapability.HtCapInfo.
-						    TxSTBC)
-							CLIENT_STATUS_SET_FLAG
-							    (pEntry,
-							     fCLIENT_STATUS_TxSTBC_CAPABLE);
-						if (HtCapability.HtCapInfo.
-						    RxSTBC)
-							CLIENT_STATUS_SET_FLAG
-							    (pEntry,
-							     fCLIENT_STATUS_RxSTBC_CAPABLE);
-						if (HtCapability.ExtHtCapInfo.
-						    PlusHTC)
-							CLIENT_STATUS_SET_FLAG
-							    (pEntry,
-							     fCLIENT_STATUS_HTC_CAPABLE);
+						if (HtCapability.HtCapInfo.ShortGIfor20)
+							CLIENT_STATUS_SET_FLAG(pEntry, fCLIENT_STATUS_SGI20_CAPABLE);
+						if (HtCapability.HtCapInfo.ShortGIfor40)
+							CLIENT_STATUS_SET_FLAG(pEntry, fCLIENT_STATUS_SGI40_CAPABLE);
+						if (HtCapability.HtCapInfo.TxSTBC)
+							CLIENT_STATUS_SET_FLAG(pEntry, fCLIENT_STATUS_TxSTBC_CAPABLE);
+						if (HtCapability.HtCapInfo.RxSTBC)
+							CLIENT_STATUS_SET_FLAG(pEntry, fCLIENT_STATUS_RxSTBC_CAPABLE);
+						if (HtCapability.ExtHtCapInfo.PlusHTC)
+							CLIENT_STATUS_SET_FLAG(pEntry, fCLIENT_STATUS_HTC_CAPABLE);
 						if (pAd->CommonCfg.bRdg
-						    && HtCapability.
-						    ExtHtCapInfo.RDGSupport)
-							CLIENT_STATUS_SET_FLAG
-							    (pEntry,
-							     fCLIENT_STATUS_RDG_CAPABLE);
-						if (HtCapability.ExtHtCapInfo.
-						    MCSFeedback == 0x03)
-							CLIENT_STATUS_SET_FLAG
-							    (pEntry,
-							     fCLIENT_STATUS_MCSFEEDBACK_CAPABLE);
+						    && HtCapability.ExtHtCapInfo.RDGSupport)
+							CLIENT_STATUS_SET_FLAG(pEntry, fCLIENT_STATUS_RDG_CAPABLE);
+						if (HtCapability.ExtHtCapInfo.MCSFeedback == 0x03)
+							CLIENT_STATUS_SET_FLAG(pEntry, fCLIENT_STATUS_MCSFEEDBACK_CAPABLE);
 
-						NdisMoveMemory(&pEntry->
-							       HTCapability,
-							       &HtCapability,
-							       sizeof
-							       (HT_CAPABILITY_IE));
+						NdisMoveMemory(&pEntry->HTCapability,
+							       &HtCapability, sizeof(HT_CAPABILITY_IE));
 					}
 #endif /* DOT11_N_SUPPORT */
 
-					pEntry->HTPhyMode.word =
-					    pEntry->MaxHTPhyMode.word;
-					pEntry->CurrTxRate =
-					    pEntry->MaxSupportedRate;
-					CLIENT_STATUS_SET_FLAG(pEntry,
-							       fCLIENT_STATUS_WMM_CAPABLE);
+					pEntry->HTPhyMode.word = pEntry->MaxHTPhyMode.word;
+					pEntry->CurrTxRate = pEntry->MaxSupportedRate;
+					CLIENT_STATUS_SET_FLAG(pEntry, fCLIENT_STATUS_WMM_CAPABLE);
 
-					if (pAd->StaCfg.bAutoTxRateSwitch ==
-					    TRUE) {
-						PUCHAR pTable;
+					if (pAd->StaCfg.bAutoTxRateSwitch == TRUE) {
 						UCHAR TableSize = 0;
 
 						MlmeSelectTxRateTable(pAd,
 								      pEntry,
-								      &pTable,
+								      &pEntry->pTable,
 								      &TableSize,
-								      &pEntry->
-								      CurrTxRateIndex);
-						pEntry->bAutoTxRateSwitch =
-						    TRUE;
+								      &pEntry->CurrTxRateIndex);
+						pEntry->bAutoTxRateSwitch = TRUE;
 					} else {
-						pEntry->HTPhyMode.field.MODE =
-						    pAd->StaCfg.HTPhyMode.field.
-						    MODE;
-						pEntry->HTPhyMode.field.MCS =
-						    pAd->StaCfg.HTPhyMode.field.
-						    MCS;
-						pEntry->bAutoTxRateSwitch =
-						    FALSE;
+						pEntry->HTPhyMode.field.MODE = pAd->StaCfg.HTPhyMode.field.MODE;
+						pEntry->HTPhyMode.field.MCS = pAd->StaCfg.HTPhyMode.field.MCS;
+						pEntry->bAutoTxRateSwitch = FALSE;
 
 						RTMPUpdateLegacyTxSetting((UCHAR) pAd->StaCfg.DesiredTransmitSetting.field.FixedTxMode, pEntry);
 					}
@@ -1026,14 +910,12 @@ VOID PeerDlsRspAction(
 						       fCLIENT_STATUS_WMM_CAPABLE);
 
 				if (pAd->StaCfg.bAutoTxRateSwitch == TRUE) {
-					PUCHAR pTable;
 					UCHAR TableSize = 0;
 
 					MlmeSelectTxRateTable(pAd, pEntry,
-							      &pTable,
+							      &pEntry->pTable,
 							      &TableSize,
-							      &pEntry->
-							      CurrTxRateIndex);
+							      &pEntry->CurrTxRateIndex);
 					pEntry->bAutoTxRateSwitch = TRUE;
 				} else {
 					pEntry->HTPhyMode.field.MODE =
@@ -1042,46 +924,34 @@ VOID PeerDlsRspAction(
 					    pAd->StaCfg.HTPhyMode.field.MCS;
 					pEntry->bAutoTxRateSwitch = FALSE;
 
-					RTMPUpdateLegacyTxSetting((UCHAR) pAd->
-								  StaCfg.
-								  DesiredTransmitSetting.
-								  field.
-								  FixedTxMode,
+					RTMPUpdateLegacyTxSetting((UCHAR) pAd->StaCfg.DesiredTransmitSetting.field.FixedTxMode,
 								  pEntry);
 				}
 				pEntry->RateLen = SupportedRatesLen;
 
-				if (pAd->StaCfg.AuthMode >=
-				    Ndis802_11AuthModeWPA) {
+				if (pAd->StaCfg.AuthMode >= Ndis802_11AuthModeWPA) {
 					/* If support WPA or WPA2, start STAKey hand shake, */
 					/* If failed hand shake, just tear down peer DLS */
 					if (RTMPSendSTAKeyRequest
 					    (pAd,
-					     pAd->StaCfg.DLSEntry[i].MacAddr) !=
-					    NDIS_STATUS_SUCCESS) {
+					     pAd->StaCfg.DLSEntry[i].MacAddr) != NDIS_STATUS_SUCCESS) {
 						MLME_DLS_REQ_STRUCT MlmeDlsReq;
-						USHORT reason =
-						    REASON_QOS_CIPHER_NOT_SUPPORT;
+						USHORT reason = REASON_QOS_CIPHER_NOT_SUPPORT;
 
 						DlsParmFill(pAd, &MlmeDlsReq,
-							    &pAd->StaCfg.
-							    DLSEntry[i],
+							    &pAd->StaCfg.DLSEntry[i],
 							    reason);
 						MlmeEnqueue(pAd,
 							    DLS_STATE_MACHINE,
 							    MT2_MLME_DLS_TEAR_DOWN,
-							    sizeof
-							    (MLME_DLS_REQ_STRUCT),
+							    sizeof(MLME_DLS_REQ_STRUCT),
 							    &MlmeDlsReq, 0);
-						pAd->StaCfg.DLSEntry[i].Status =
-						    DLS_NONE;
-						pAd->StaCfg.DLSEntry[i].Valid =
-						    FALSE;
+						pAd->StaCfg.DLSEntry[i].Status =DLS_NONE;
+						pAd->StaCfg.DLSEntry[i].Valid =FALSE;
 						DBGPRINT(RT_DEBUG_ERROR,
 							 ("DLS - PeerDlsRspAction failed when call RTMPSendSTAKeyRequest \n"));
 					} else {
-						pAd->StaCfg.DLSEntry[i].Status =
-						    DLS_WAIT_KEY;
+						pAd->StaCfg.DLSEntry[i].Status = DLS_WAIT_KEY;
 						DBGPRINT(RT_DEBUG_TRACE,
 							 ("DLS - waiting for STAKey handshake procedure\n"));
 					}
@@ -1423,28 +1293,21 @@ VOID PeerDlsRspAction(
 					CLIENT_STATUS_SET_FLAG(pEntry,
 							       fCLIENT_STATUS_WMM_CAPABLE);
 
-					if (pAd->StaCfg.bAutoTxRateSwitch ==
-					    TRUE) {
-						PUCHAR pTable;
+					if (pAd->StaCfg.bAutoTxRateSwitch == TRUE) {
 						UCHAR TableSize = 0;
 
 						MlmeSelectTxRateTable(pAd,
 								      pEntry,
-								      &pTable,
+								      &pEntry->pTable,
 								      &TableSize,
-								      &pEntry->
-								      CurrTxRateIndex);
-						pEntry->bAutoTxRateSwitch =
-						    TRUE;
+								      &pEntry->CurrTxRateIndex);
+						pEntry->bAutoTxRateSwitch = TRUE;
 					} else {
 						pEntry->HTPhyMode.field.MODE =
-						    pAd->StaCfg.HTPhyMode.field.
-						    MODE;
+						    pAd->StaCfg.HTPhyMode.field.MODE;
 						pEntry->HTPhyMode.field.MCS =
-						    pAd->StaCfg.HTPhyMode.field.
-						    MCS;
-						pEntry->bAutoTxRateSwitch =
-						    FALSE;
+						    pAd->StaCfg.HTPhyMode.field.MCS;
+						pEntry->bAutoTxRateSwitch = FALSE;
 
 						RTMPUpdateLegacyTxSetting((UCHAR) pAd->StaCfg.DesiredTransmitSetting.field.FixedTxMode, pEntry);
 					}

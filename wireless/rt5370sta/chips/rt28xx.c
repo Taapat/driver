@@ -236,6 +236,8 @@ VOID RT28xx_ChipSwitchChannel(
 		}
 
 		RTMP_IO_WRITE32(pAd, TX_PIN_CFG, TxPinCfg);
+
+		RtmpUpdateFilterCoefficientControl(pAd, Channel);
 	}
 	else
 	{

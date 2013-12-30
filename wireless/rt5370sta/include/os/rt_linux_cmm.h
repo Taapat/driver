@@ -59,20 +59,12 @@ void Rtmp_Drv_Ops_##_func(VOID *__pDrvOps, VOID *__pNetOps, 	\
 #define def_to_str(s)    #s
 
 
-
-
-
-
-#ifdef RT3070
-#define RTMP_DRV_NAME	"rt3070" xdef_to_str(RT28xx_MODE)
-#define RT_CHIPSET		3070
-RTMP_DECLARE_DRV_OPS_FUNCTION(3070);
-#define RTMP_DRV_OPS_FUNCTION				RTMP_DRV_OPS_FUNCTION_BODY(3070)
-#define RTMP_BUILD_DRV_OPS_FUNCTION_BODY	RTMP_BUILD_DRV_OPS_FUNCTION(3070)
-#endif /* RT3070 */
-
-
-
+#ifdef RTMP_MAC_USB
+#define RTMP_DRV_NAME	"rtusb" xdef_to_str(RT28xx_MODE)
+RTMP_DECLARE_DRV_OPS_FUNCTION(usb);
+#define RTMP_DRV_OPS_FUNCTION				RTMP_DRV_OPS_FUNCTION_BODY(usb)
+#define RTMP_BUILD_DRV_OPS_FUNCTION_BODY	RTMP_BUILD_DRV_OPS_FUNCTION(usb)
+#endif /* RTMP_MAC_USB */
 
 #else
 
@@ -166,24 +158,12 @@ RTMP_DECLARE_DRV_OPS_FUNCTION(3070);
 #define NDIS_MINIPORT_TIMER			OS_RSTRUC
 #define RTMP_OS_TIMER				OS_RSTRUC
 
-#define RTMP_OS_FREE_TIMER(__pAd)											\
-	DBGPRINT(RT_DEBUG_ERROR, ("%s: free timer resources!\n", __FUNCTION__));\
-	RTMP_OS_Free_Rscs(&((__pAd)->RscTimerMemList))
-#define RTMP_OS_FREE_TASK(__pAd)											\
-	DBGPRINT(RT_DEBUG_ERROR, ("%s: free task resources!\n", __FUNCTION__));	\
-	RTMP_OS_Free_Rscs(&((__pAd)->RscTaskMemList))
-#define RTMP_OS_FREE_LOCK(__pAd)											\
-	DBGPRINT(RT_DEBUG_ERROR, ("%s: free lock resources!\n", __FUNCTION__));	\
-	RTMP_OS_Free_Rscs(&((__pAd)->RscLockMemList))
-#define RTMP_OS_FREE_TASKLET(__pAd)											\
-	DBGPRINT(RT_DEBUG_ERROR, ("%s: free tasklet resources!\n", __FUNCTION__));\
-	RTMP_OS_Free_Rscs(&((__pAd)->RscTaskletMemList))
-#define RTMP_OS_FREE_SEM(__pAd)												\
-	DBGPRINT(RT_DEBUG_ERROR, ("%s: free semaphore resources!\n", __FUNCTION__));\
-	RTMP_OS_Free_Rscs(&((__pAd)->RscSemMemList))
-#define RTMP_OS_FREE_ATOMIC(__pAd)												\
-	DBGPRINT(RT_DEBUG_ERROR, ("%s: free atomic resources!\n", __FUNCTION__));\
-	RTMP_OS_Free_Rscs(&((__pAd)->RscAtomicMemList))
+#define RTMP_OS_FREE_TIMER(__pAd)
+#define RTMP_OS_FREE_LOCK(__pAd)
+#define RTMP_OS_FREE_TASKLET(__pAd)
+#define RTMP_OS_FREE_TASK(__pAd)
+#define RTMP_OS_FREE_SEM(__pAd)
+#define RTMP_OS_FREE_ATOMIC(__pAd)
 
 #endif /* OS_ABL_FUNC_SUPPORT */
 
@@ -240,6 +220,7 @@ RTMP_DECLARE_DRV_OPS_FUNCTION(3070);
 #define RTUSBMlmeUp								OS_RTUSBMlmeUp
 
 #define RTMP_OS_ATMOIC_INIT(__pAtomic, __pAtomicList)
+#define RTMP_OS_ATMOIC_DESTROY(__pAtomic)
 #define RTMP_THREAD_PID_KILL(__PID)				KILL_THREAD_PID(__PID, SIGTERM, 1)
 
 #else
@@ -257,6 +238,7 @@ RTMP_DECLARE_DRV_OPS_FUNCTION(3070);
 #define RTUSBMlmeUp								RtmpOsMlmeUp
 
 #define RTMP_OS_ATMOIC_INIT						RtmpOsAtomicInit
+#define RTMP_OS_ATMOIC_DESTROY					RtmpOsAtomicDestroy
 #define RTMP_THREAD_PID_KILL					RtmpThreadPidKill
 
 /* */
@@ -391,6 +373,12 @@ extern RTMP_USB_CONFIG *pRtmpUsbConfig;
 	will be 64-bit, but in UTIL/NET modules, it maybe 32-bit.
 	This will cause size mismatch problem when OS_ABL = yes.
 */
+/*
+	In big-endian & 32-bit DMA address platform, if you use long long to
+	record DMA address, when you call kernel function to set DMA address,
+	the address will be 0 because you need to do swap I think.
+	So if you sure your DMA address is 32-bit, do not use RTMP_DMA_ADDR_64.
+*/
 #define ra_dma_addr_t					unsigned long long
 
 #else
@@ -414,6 +402,11 @@ extern RTMP_USB_CONFIG *pRtmpUsbConfig;
  ***********************************************************************************/
 #define APCLI_IF_UP_CHECK(pAd, ifidx) (RtmpOSNetDevIsUp((pAd)->ApCfg.ApCliTab[(ifidx)].dev) == TRUE)
 
+
+#define RTMP_OS_NETDEV_SET_PRIV		RtmpOsSetNetDevPriv
+#define RTMP_OS_NETDEV_GET_PRIV		RtmpOsGetNetDevPriv
+#define RT_DEV_PRIV_FLAGS_GET		RtmpDevPrivFlagsGet
+#define RT_DEV_PRIV_FLAGS_SET		RtmpDevPrivFlagsSet
 
 #endif /* __RT_LINUX_CMM_H__ */
 

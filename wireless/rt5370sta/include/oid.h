@@ -63,8 +63,9 @@
 #define NDIS_802_11_LENGTH_RATES        8
 #define NDIS_802_11_LENGTH_RATES_EX     16
 #define MAC_ADDR_LENGTH                 6
-/*#define MAX_NUM_OF_CHS					49 // 14 channels @2.4G +  12@UNII + 4 @MMAC + 11 @HiperLAN2 + 7 @Japan + 1 as NULL terminationc */
-#define MAX_NUM_OF_CHS             		54	/* 14 channels @2.4G +  12@UNII(lower/middle) + 16@HiperLAN2 + 11@UNII(upper) + 0 @Japan + 1 as NULL termination */
+#define OID_P2P_DEVICE_NAME_LEN	32
+/*#define MAX_NUM_OF_CHS					49 */ /* 14 channels @2.4G +  12@UNII + 4 @MMAC + 11 @HiperLAN2 + 7 @Japan + 1 as NULL terminationc */
+/*#define MAX_NUM_OF_CHS             		54 */ /* 14 channels @2.4G +  12@UNII(lower/middle) + 16@HiperLAN2 + 11@UNII(upper) + 0 @Japan + 1 as NULL termination */
 #define MAX_NUMBER_OF_EVENT				10	/* entry # in EVENT table */
 #define MAX_NUMBER_OF_MAC				32	/* if MAX_MBSSID_NUM is 8, this value can't be larger than 211 */
 #define MAX_NUMBER_OF_ACL				64
@@ -120,6 +121,8 @@
 #define	OID_802_11_TX_POWER_LEVEL					0x0517
 #define	RT_OID_802_11_ADD_WPA						0x0518
 #define	OID_802_11_REMOVE_KEY						0x0519
+#define	RT_OID_802_11_QUERY_PID						0x051A
+#define	RT_OID_802_11_QUERY_VID						0x051B
 #define	OID_802_11_ADD_KEY							0x0520
 #define	OID_802_11_CONFIGURATION					0x0521
 #define	OID_802_11_TX_PACKET_BURST					0x0522
@@ -131,6 +134,7 @@
 #define OID_802_11_DROP_UNENCRYPTED                 0x0527
 #define OID_802_11_MIC_FAILURE_REPORT_FRAME         0x0528
 #define OID_802_11_EAP_METHOD						0x0529
+#define OID_802_11_ACL_LIST							0x052A
 
 /* For 802.1x daemin using */
 #ifdef DOT1X_SUPPORT
@@ -199,6 +203,8 @@
 #define RT_OID_802_11_QUERY_MAP_REAL_TX_RATE                          0x0678
 #define RT_OID_802_11_QUERY_MAP_REAL_RX_RATE                          0x0679
 #define	RT_OID_802_11_SNR_2							0x067A
+#define RT_OID_802_11_PER_BSS_STATISTICS			0x067D
+
 
 
 #ifdef HOSTAPD_SUPPORT
@@ -299,6 +305,8 @@ struct hostapd_wpa_psk {
 
 #define RT_OID_802_11_QUERY_TDLS_PARAM			0x0676
 #define	RT_OID_802_11_QUERY_TDLS				0x0677
+#define RT_OID_802_11_QUERY_WFD_TDLS_CONNECT_STATUS	0x0868
+#define RT_OID_802_11_QUERY_WFD_TDLS_PEER_IP_ADDR	0x0869
 
 /* Ralink defined OIDs */
 /* Dennis Lee move to platform specific */
@@ -341,6 +349,7 @@ struct hostapd_wpa_psk {
 
 #define RT_OID_802_11_SET_TDLS_PARAM			(OID_GET_SET_TOGGLE | RT_OID_802_11_QUERY_TDLS_PARAM)
 #define RT_OID_802_11_SET_TDLS				(OID_GET_SET_TOGGLE | RT_OID_802_11_QUERY_TDLS)
+
 
 
 typedef enum _NDIS_802_11_STATUS_TYPE {
@@ -446,6 +455,8 @@ typedef struct _NDIS_802_11_STATISTICS {
 	LARGE_INTEGER ReceivedFragmentCount;
 	LARGE_INTEGER MulticastReceivedFrameCount;
 	LARGE_INTEGER FCSErrorCount;
+	LARGE_INTEGER TransmittedFrameCount;
+	LARGE_INTEGER WEPUndecryptableCount;
 	LARGE_INTEGER TKIPLocalMICFailures;
 	LARGE_INTEGER TKIPRemoteMICErrors;
 	LARGE_INTEGER TKIPICVErrors;
@@ -456,6 +467,23 @@ typedef struct _NDIS_802_11_STATISTICS {
 	LARGE_INTEGER CCMPDecryptErrors;
 	LARGE_INTEGER FourWayHandshakeFailures;
 } NDIS_802_11_STATISTICS, *PNDIS_802_11_STATISTICS;
+
+typedef struct _MBSS_STATISTICS {
+	LONG TxCount;
+	ULONG RxCount;
+	ULONG ReceivedByteCount;
+	ULONG TransmittedByteCount;
+	ULONG RxErrorCount;
+	ULONG RxDropCount;
+	ULONG TxErrorCount;
+	ULONG TxDropCount;
+	ULONG ucPktsTx;
+	ULONG ucPktsRx;
+	ULONG mcPktsTx;
+	ULONG mcPktsRx;
+	ULONG bcPktsTx;
+	ULONG bcPktsRx;
+} MBSS_STATISTICS, *PMBSS_STATISTICS;
 
 typedef ULONG NDIS_802_11_KEY_INDEX;
 typedef ULONGLONG NDIS_802_11_KEY_RSC;
@@ -503,6 +531,20 @@ typedef struct GNU_PACKED _DOT1X_IDLE_TIMEOUT {
 } DOT1X_IDLE_TIMEOUT, *PDOT1X_IDLE_TIMEOUT;
 #endif /* DOT1X_SUPPORT */
 
+
+#ifdef APCLI_SUPPORT
+#ifdef APCLI_WPA_SUPPLICANT_SUPPORT
+typedef struct _NDIS_APCLI_802_11_KEY
+{
+    UINT           Length;             
+    UINT           KeyIndex;           
+    UINT           KeyLength;         
+    NDIS_802_11_MAC_ADDRESS BSSID;
+    NDIS_802_11_KEY_RSC KeyRSC;
+    UCHAR           KeyMaterial[1];     
+} NDIS_APCLI_802_11_KEY, *PNDIS_APCLI_802_11_KEY;
+#endif/* APCLI_WPA_SUPPLICANT_SUPPORT */
+#endif /* APCLI_SUPPORT */
 
 #ifdef CONFIG_STA_SUPPORT
 /* Key mapping keys require a BSSID */
@@ -717,7 +759,7 @@ typedef enum _NDIS_802_11_MEDIA_STREAM_MODE {
 /* PMKID Structures */
 typedef UCHAR NDIS_802_11_PMKID_VALUE[16];
 
-#ifdef CONFIG_STA_SUPPORT
+#if defined(CONFIG_STA_SUPPORT) || defined(APCLI_WPA_SUPPLICANT_SUPPORT)
 typedef struct _BSSID_INFO {
 	NDIS_802_11_MAC_ADDRESS BSSID;
 	NDIS_802_11_PMKID_VALUE PMKID;
@@ -728,7 +770,7 @@ typedef struct _NDIS_802_11_PMKID {
 	UINT BSSIDInfoCount;
 	BSSID_INFO BSSIDInfo[1];
 } NDIS_802_11_PMKID, *PNDIS_802_11_PMKID;
-#endif /* CONFIG_STA_SUPPORT */
+#endif /* defined(CONFIG_STA_SUPPORT) || defined(APCLI_WPA_SUPPLICANT_SUPPORT) */
 
 
 typedef struct _NDIS_802_11_AUTHENTICATION_ENCRYPTION {
@@ -775,10 +817,10 @@ typedef struct _NDIS_802_11_CAPABILITY {
 #define RT_OID_802_11_PRODUCTID					0x0710
 #define RT_OID_802_11_MANUFACTUREID				0x0711
 
+#endif /* SNMP_SUPPORT */
+
 /* //dot11Phy(4) */
 #define OID_802_11_CURRENTCHANNEL				0x0712
-
-#endif /* SNMP_SUPPORT */
 
 /*dot11mac */
 #define RT_OID_802_11_MAC_ADDRESS				0x0713
@@ -788,6 +830,7 @@ typedef struct _NDIS_802_11_CAPABILITY {
 #define OID_802_11_GET_CHANNEL_GEOGRAPHY		0x0717
 
 /*#define RT_OID_802_11_STATISTICS              (OID_GET_SET_TOGGLE | OID_802_11_STATISTICS) */
+
 
 
 #ifdef CONFIG_STA_SUPPORT
@@ -846,17 +889,17 @@ typedef union _HTTRANSMIT_SETTING {
 		USHORT iTxBF:1;
 		USHORT rsv:1;
 		USHORT eTxBF:1;
-		USHORT STBC:2;	/*SPACE */
+		USHORT STBC:2;	/* SPACE */
 		USHORT ShortGI:1;
-		USHORT BW:1;	/*channel bandwidth 20MHz or 40 MHz */
+		USHORT BW:1;	/* channel bandwidth 20MHz or 40 MHz */
 		USHORT MCS:7;	/* MCS */
 	} field;
 #else
 	struct {
 		USHORT MCS:7;	/* MCS */
-		USHORT BW:1;	/*channel bandwidth 20MHz or 40 MHz */
+		USHORT BW:1;	/* channel bandwidth 20MHz or 40 MHz */
 		USHORT ShortGI:1;
-		USHORT STBC:2;	/*SPACE */
+		USHORT STBC:2;	/* SPACE */
 		USHORT eTxBF:1;
 		USHORT rsv:1;
 		USHORT iTxBF:1;
@@ -959,26 +1002,6 @@ typedef struct _RT_802_11_MAC_TABLE {
 } RT_802_11_MAC_TABLE, *PRT_802_11_MAC_TABLE;
 
 #ifdef DOT11_N_SUPPORT
-#ifdef TXBF_SUPPORT
-typedef
-    struct {
-	ULONG TxSuccessCount;
-	ULONG TxRetryCount;
-	ULONG TxFailCount;
-	ULONG ETxSuccessCount;
-	ULONG ETxRetryCount;
-	ULONG ETxFailCount;
-	ULONG ITxSuccessCount;
-	ULONG ITxRetryCount;
-	ULONG ITxFailCount;
-} RT_COUNTER_TXBF;
-
-typedef
-    struct {
-	ULONG Num;
-	RT_COUNTER_TXBF Entry[MAX_NUMBER_OF_MAC];
-} RT_802_11_TXBF_TABLE;
-#endif /* TXBF_SUPPORT */
 #endif /* DOT11_N_SUPPORT */
 
 /* structure for query/set hardware register - MAC, BBP, RF register */
@@ -1099,8 +1122,7 @@ typedef struct _NINTENDO_SSID {
 	UCHAR ID;
 	UCHAR zero2;
 	UCHAR NICKname[NINTENDO_SSID_NICKNAME_LN];
-} RT_NINTENDO_SSID,
-*PRT_NINTENDO_SSID;
+} RT_NINTENDO_SSID, *PRT_NINTENDO_SSID;
 
 typedef struct _NINTENDO_ENTRY {
 	UCHAR NICKname[NINTENDO_SSID_NICKNAME_LN];
@@ -1181,6 +1203,7 @@ typedef struct _RT_CHANNEL_LIST_INFO {
 	UCHAR ChannelListNum;	/* number of channel in ChannelList[] */
 } RT_CHANNEL_LIST_INFO, *PRT_CHANNEL_LIST_INFO;
 
+
 /* WSC configured credential */
 typedef struct _WSC_CREDENTIAL {
 	NDIS_802_11_SSID SSID;	/* mandatory */
@@ -1204,10 +1227,20 @@ typedef struct _WSC_PROFILE {
 
 
 
-#define RT_P2P_DEVICE_FIND                                0x0109
-#define RT_P2P_CONNECTED                                  0x010A
-#define RT_P2P_DISCONNECTED                               0x010B
-#define RT_P2P_CONNECTED_TIMEOUT	                  0x010C
+#ifdef APCLI_SUPPORT
+#ifdef APCLI_WPA_SUPPLICANT_SUPPORT
+#define	RT_ASSOC_EVENT_FLAG                         0x0101
+#define	RT_DISASSOC_EVENT_FLAG                      0x0102
+#define	RT_REQIE_EVENT_FLAG                         0x0103
+#define	RT_RESPIE_EVENT_FLAG                        0x0104
+#define	RT_ASSOCINFO_EVENT_FLAG                     0x0105
+#define RT_PMKIDCAND_FLAG                           0x0106
+#define RT_INTERFACE_DOWN                           0x0107
+#define RT_INTERFACE_UP                             0x0108
+#endif /* APCLI_WPA_SUPPLICANT_SUPPORT */
+#endif /* APCLI_SUPPORT */
+
+
 
 
 

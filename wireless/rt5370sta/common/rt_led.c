@@ -61,17 +61,6 @@ VOID RTMPSetLEDStatus(
 	UCHAR			MCUCmd = 0;
 	BOOLEAN 		bIgnored = FALSE;
 
-#ifdef RALINK_ATE
-	/*
-		In ATE mode of RT2860 AP/STA, we have erased 8051 firmware.
-		So LED mode is not supported when ATE is running.
-	*/
-	if (!IS_RT3572(pAd))
-	{
-		if (ATE_ON(pAd))
-			return;
-	}
-#endif /* RALINK_ATE */
 
 #ifdef RTMP_MAC_USB
 #ifdef STATS_COUNT_SUPPORT
@@ -119,8 +108,6 @@ VOID RTMPSetLEDStatus(
 			LinkStatus = LINK_STATUS_POWER_UP;
 			MCUCmd = MCU_SET_LED_MODE;
 			break;
-#ifdef RALINK_ATE
-#endif /* RALINK_ATE */
 		default:
 			DBGPRINT(RT_DEBUG_WARN, ("RTMPSetLED::Unknown Status 0x%x\n", Status));
 			break;
@@ -128,7 +115,7 @@ VOID RTMPSetLEDStatus(
 
 	if (MCUCmd)
 	{
-		AsicSendCommandToMcu(pAd, MCUCmd, 0xff, LedMode, LinkStatus);
+		AsicSendCommandToMcu(pAd, MCUCmd, 0xff, LedMode, LinkStatus, FALSE);
 		DBGPRINT(RT_DEBUG_TRACE, ("%s: MCUCmd:0x%x, LED Mode:0x%x, LinkStatus:0x%x\n", __FUNCTION__, MCUCmd, LedMode, LinkStatus)); 
 	}
 	
@@ -204,7 +191,7 @@ VOID RTMPSetSignalLED(
 		/* */
 		if (pAd->LedCntl.LedIndicatorStrength != nLed)
 		{
-			AsicSendCommandToMcu(pAd, MCU_SET_LED_GPIO_SIGNAL_CFG, 0xff, nLed, pAd->LedCntl.MCULedCntl.field.Polarity);
+			AsicSendCommandToMcu(pAd, MCU_SET_LED_GPIO_SIGNAL_CFG, 0xff, nLed, pAd->LedCntl.MCULedCntl.field.Polarity, FALSE);
 			pAd->LedCntl.LedIndicatorStrength = nLed;
 		}
 	}
@@ -217,6 +204,13 @@ void RTMPGetLEDSetting(IN RTMP_ADAPTER *pAd)
 {
 	USHORT Value;
 	PLED_CONTROL pLedCntl = &pAd->LedCntl;
+#ifdef RT3593
+	if (IS_RT3593(pAd))
+	{
+		RT3593_LED_CONFIG_GET(pAd, pLedCntl);
+	}
+	else
+#endif /* RT3593 */
 	{
 		RT28xx_EEPROM_READ16(pAd, EEPROM_FREQ_OFFSET, Value);
 		pLedCntl->MCULedCntl.word = (Value >> 8);
@@ -250,10 +244,10 @@ void RTMPInitLEDMode(IN RTMP_ADAPTER *pAd)
 #endif /* RTMP_MAC_USB */
 	}
 	
-	AsicSendCommandToMcu(pAd, MCU_SET_LED_AG_CFG, 0xff, (UCHAR)pLedCntl->LedAGCfg, (UCHAR)(pLedCntl->LedAGCfg >> 8));
-	AsicSendCommandToMcu(pAd, MCU_SET_LED_ACT_CFG, 0xff, (UCHAR)pLedCntl->LedACTCfg, (UCHAR)(pLedCntl->LedACTCfg >> 8));
-	AsicSendCommandToMcu(pAd, MCU_SET_LED_POLARITY, 0xff, (UCHAR)pLedCntl->LedPolarity, (UCHAR)(pLedCntl->LedPolarity >> 8));
-	AsicSendCommandToMcu(pAd, MCU_SET_LED_GPIO_SIGNAL_CFG, 0xff, 0, pLedCntl->MCULedCntl.field.Polarity);
+	AsicSendCommandToMcu(pAd, MCU_SET_LED_AG_CFG, 0xff, (UCHAR)pLedCntl->LedAGCfg, (UCHAR)(pLedCntl->LedAGCfg >> 8), FALSE);
+	AsicSendCommandToMcu(pAd, MCU_SET_LED_ACT_CFG, 0xff, (UCHAR)pLedCntl->LedACTCfg, (UCHAR)(pLedCntl->LedACTCfg >> 8), FALSE);
+	AsicSendCommandToMcu(pAd, MCU_SET_LED_POLARITY, 0xff, (UCHAR)pLedCntl->LedPolarity, (UCHAR)(pLedCntl->LedPolarity >> 8), FALSE);
+	AsicSendCommandToMcu(pAd, MCU_SET_LED_GPIO_SIGNAL_CFG, 0xff, 0, pLedCntl->MCULedCntl.field.Polarity, FALSE);
 
 	pAd->LedCntl.LedIndicatorStrength = 0xFF;
 	RTMPSetSignalLED(pAd, -100);	/* Force signal strength Led to be turned off, before link up */
@@ -265,7 +259,7 @@ void RTMPInitLEDMode(IN RTMP_ADAPTER *pAd)
 inline void RTMPExitLEDMode(IN RTMP_ADAPTER *pAd)
 {
 
-	RTMPSetLED(pAd, LED_LINK_DOWN);
+	RTMPSetLED(pAd, LED_RADIO_OFF);
 
 	return;
 }

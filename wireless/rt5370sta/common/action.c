@@ -30,6 +30,7 @@
 
 extern UCHAR  ZeroSsid[32];
 
+
 static VOID ReservedAction(
 	IN PRTMP_ADAPTER pAd, 
 	IN MLME_QUEUE_ELEM *Elem);
@@ -109,13 +110,13 @@ VOID MlmeADDBAAction(
 	if(MlmeAddBAReqSanity(pAd, Elem->Msg, Elem->MsgLen, Addr) &&
 		VALID_WCID(pInfo->Wcid)) 
 	{
-		NStatus = MlmeAllocateMemory(pAd, &pOutBuffer);  /*Get an unused nonpaged memory*/
+		NStatus = MlmeAllocateMemory(pAd, &pOutBuffer);  /* Get an unused nonpaged memory*/
 		if(NStatus != NDIS_STATUS_SUCCESS) 
 		{
 			DBGPRINT(RT_DEBUG_TRACE,("BA - MlmeADDBAAction() allocate memory failed \n"));
 			return;
 		}
-		/* 1. find entry*/
+		/* 1. find entry */
 		Idx = pAd->MacTab.Content[pInfo->Wcid].BAOriWcidArray[pInfo->TID];
 		if (Idx == 0)
 		{
@@ -153,7 +154,18 @@ VOID MlmeADDBAAction(
 		Frame.BaStartSeq.field.FragNum = 0;
 		Frame.BaStartSeq.field.StartSeq = pAd->MacTab.Content[pInfo->Wcid].TxSeq[pInfo->TID];
 
+#ifdef UNALIGNMENT_SUPPORT
+		{
+			BA_PARM		tmpBaParm;
+
+			NdisMoveMemory((PUCHAR)(&tmpBaParm), (PUCHAR)(&Frame.BaParm), sizeof(BA_PARM));
+			*(USHORT *)(&tmpBaParm) = cpu2le16(*(USHORT *)(&tmpBaParm));
+			NdisMoveMemory((PUCHAR)(&Frame.BaParm), (PUCHAR)(&tmpBaParm), sizeof(BA_PARM));
+		}
+#else
 		*(USHORT *)(&(Frame.BaParm)) = cpu2le16((*(USHORT *)(&(Frame.BaParm))));
+#endif /* UNALIGNMENT_SUPPORT */
+
 		Frame.TimeOutValue = cpu2le16(Frame.TimeOutValue);
 		Frame.BaStartSeq.word = cpu2le16(Frame.BaStartSeq.word);
 
@@ -199,24 +211,24 @@ VOID MlmeDELBAAction(
 	DBGPRINT(RT_DEBUG_TRACE, ("==> MlmeDELBAAction(), Initiator(%d) \n", pInfo->Initiator));
 	
 	if(MlmeDelBAReqSanity(pAd, Elem->Msg, Elem->MsgLen) &&
-		VALID_WCID(pInfo->Wcid)) 
+		VALID_WCID(pInfo->Wcid))
 	{
 		NStatus = MlmeAllocateMemory(pAd, &pOutBuffer);  /*Get an unused nonpaged memory*/
-		if(NStatus != NDIS_STATUS_SUCCESS) 
+		if(NStatus != NDIS_STATUS_SUCCESS)
 		{
 			DBGPRINT(RT_DEBUG_ERROR,("BA - MlmeDELBAAction() allocate memory failed 1. \n"));
 			return;
 		}
 
 		NStatus = MlmeAllocateMemory(pAd, &pOutBuffer2);  /*Get an unused nonpaged memory*/
-		if(NStatus != NDIS_STATUS_SUCCESS) 
+		if(NStatus != NDIS_STATUS_SUCCESS)
 		{
 			MlmeFreeMemory(pAd, pOutBuffer);
 			DBGPRINT(RT_DEBUG_ERROR, ("BA - MlmeDELBAAction() allocate memory failed 2. \n"));
 			return;
 		}
 
-		/* SEND BAR (Send BAR to refresh peer reordering buffer.)*/
+		/* SEND BAR (Send BAR to refresh peer reordering buffer.) */
 		Idx = pAd->MacTab.Content[pInfo->Wcid].BAOriWcidArray[pInfo->TID];
 
 #ifdef CONFIG_STA_SUPPORT
@@ -670,7 +682,7 @@ VOID ChannelSwitchAction(
 		AsicLockChannel(pAd, pAd->CommonCfg.Channel);
 		pAd->MacTab.Content[Wcid].HTPhyMode.field.BW = 0;
 		pAd->CommonCfg.AddHTInfo.AddHtInfo.RecomWidth = 0;
-                pAd->CommonCfg.AddHTInfo.AddHtInfo.ExtChanOffset = 0;		
+		pAd->CommonCfg.AddHTInfo.AddHtInfo.ExtChanOffset = 0;		
 		DBGPRINT(RT_DEBUG_TRACE, ("!!!20MHz   !!! \n" ));
 	}
 	/* 1.  Switches to BW = 40 And Station supports BW = 40.*/
@@ -728,7 +740,8 @@ VOID PeerPublicAction(
 	IN MLME_QUEUE_ELEM *Elem) 
 {
 	UCHAR	Action = Elem->Msg[LENGTH_802_11+1];
-	if (Elem->Wcid >= MAX_LEN_OF_MAC_TABLE)
+	if ((Elem->Wcid >= MAX_LEN_OF_MAC_TABLE)
+		)
 		return;
 
 
@@ -779,14 +792,19 @@ VOID PeerPublicAction(
 					}
 				}
 #endif /* CONFIG_STA_SUPPORT */
-
 			}
 			break;
 #endif /* DOT11N_DRAFT3 */
 #endif /* DOT11_N_SUPPORT */
 
-	}
+		case ACTION_WIFI_DIRECT:
 
+			break;
+
+
+		default:
+			break;
+	}
 
 }	
 
@@ -836,7 +854,7 @@ static VOID respond_ht_information_exchange_action(
 		return;
 	}
 
-	/* get RA*/
+	/* get RA */
 	pFrame = (FRAME_HT_INFO *) &Elem->Msg[0];
 	pAddr = pFrame->Hdr.Addr2;
 
@@ -973,10 +991,6 @@ VOID ORIBATimerTimeout(
 /*	USHORT			Sequence;*/
 	UCHAR			TID;
 
-#ifdef RALINK_ATE
-	if (ATE_ON(pAd))
-		return;
-#endif /* RALINK_ATE */
 
 	total = pAd->MacTab.Size * NUM_OF_TID;
 

@@ -37,6 +37,7 @@
 #ifdef OS_ABL_FUNC_SUPPORT
 
 EXPORT_SYMBOL(RTDebugLevel);
+EXPORT_SYMBOL(RTDebugFunc);
 
 /* utility */
 EXPORT_SYMBOL(RtmpUtilInit);
@@ -93,6 +94,7 @@ EXPORT_SYMBOL(RtmpOSNetDevCreate);
 EXPORT_SYMBOL(RtmpOSNetDevClose);
 EXPORT_SYMBOL(RtmpOSNetDevAttach);
 EXPORT_SYMBOL(RtmpOSNetDevDetach);
+EXPORT_SYMBOL(RtmpOSNetDevProtect);
 EXPORT_SYMBOL(RtmpOSNetDevFree);
 EXPORT_SYMBOL(RtmpOSNetDevIsUp);
 EXPORT_SYMBOL(RtmpOsNetDevGetPhyAddr);
@@ -104,6 +106,7 @@ EXPORT_SYMBOL(RtmpOsPktNetDevGet);
 EXPORT_SYMBOL(RtmpOsGetNetDevName);
 EXPORT_SYMBOL(RtmpOsSetNetDevPriv);
 EXPORT_SYMBOL(RtmpOsGetNetDevPriv);
+EXPORT_SYMBOL(RtmpDevPrivFlagsGet);
 EXPORT_SYMBOL(RtmpOsSetNetDevType);
 EXPORT_SYMBOL(RtmpOsSetNetDevTypeMonitor);
 EXPORT_SYMBOL(RtmpOSNetDevAddrSet);
@@ -156,6 +159,8 @@ EXPORT_SYMBOL(RtmpOsTimerAfter);
 EXPORT_SYMBOL(RtmpOsTimerBefore);
 EXPORT_SYMBOL(RtmpOsGetSystemUpTime);
 
+EXPORT_SYMBOL(RtmpOsDCacheFlush);
+
 
 EXPORT_SYMBOL(RtmpOsNtohs);
 EXPORT_SYMBOL(RtmpOsHtons);
@@ -192,6 +197,7 @@ EXPORT_SYMBOL(RtmpOsSimpleStrtol);
 EXPORT_SYMBOL(RtmpOsStatsAlloc);
 
 EXPORT_SYMBOL(RtmpOsAtomicInit);
+EXPORT_SYMBOL(RtmpOsAtomicDestroy);
 EXPORT_SYMBOL(RtmpOsAtomicRead);
 EXPORT_SYMBOL(RtmpOsAtomicDec);
 EXPORT_SYMBOL(RtmpOsAtomicInterlockedExchange);
@@ -214,10 +220,15 @@ EXPORT_SYMBOL(CFG80211OS_RegHint11D);
 EXPORT_SYMBOL(CFG80211OS_BandInfoGet);
 EXPORT_SYMBOL(CFG80211OS_ChanNumGet);
 EXPORT_SYMBOL(CFG80211OS_ChanInfoGet);
+EXPORT_SYMBOL(CFG80211OS_ChanInfoInit);
 EXPORT_SYMBOL(CFG80211OS_Scaning);
 EXPORT_SYMBOL(CFG80211OS_ScanEnd);
 EXPORT_SYMBOL(CFG80211OS_ConnectResultInform);
 EXPORT_SYMBOL(CFG80211OS_SupBandReInit);
+EXPORT_SYMBOL(CFG80211OS_RxMgmt);
+EXPORT_SYMBOL(CFG80211OS_TxStatus);
+EXPORT_SYMBOL(CFG80211OS_NewSta);
+EXPORT_SYMBOL(CFG80211OS_DelSta);
 #endif /* RT_CFG80211_SUPPORT */
 
 /* global variables */
@@ -276,8 +287,17 @@ EXPORT_SYMBOL(RtmpOsGetUsbDevVendorID);
 EXPORT_SYMBOL(RtmpOsGetUsbDevProductID);
 #endif /* RTMP_MAC_USB */
 
-/* only for RBUS */
+/* only for RBUS or flash-capable concurrent devices */
+#if defined(RTMP_RBUS_SUPPORT) || defined (RTMP_FLASH_SUPPORT) 
+EXPORT_SYMBOL(RtmpFlashRead);
+EXPORT_SYMBOL(RtmpFlashWrite);
+#endif /* defined(RTMP_RBUS_SUPPORT) || defined (RTMP_FLASH_SUPPORT)  */
 
+#ifdef CONFIG_STA_SUPPORT
+EXPORT_SYMBOL(RtmpOSNotifyRawData);
+#endif /* CONFIG_STA_SUPPORT */
+
+EXPORT_SYMBOL(RtPrivIoctlSetVal);
 
 #endif /* OS_ABL_SUPPORT */
 

@@ -30,6 +30,8 @@
 
 #ifdef VIDEO_TURBINE_SUPPORT
 
+
+
 BOOLEAN UpdateFromGlobal = FALSE;
 
 void VideoTurbineUpdate(
@@ -50,6 +52,38 @@ void VideoTurbineUpdate(
 	}
 }
 
+
+VOID TxSwQDepthAdjust(IN RTMP_ADAPTER *pAd, IN UINT32 qLen)
+{
+	ULONG IrqFlags;
+	INT qIdx;
+	QUEUE_HEADER *pTxQ, *pEntry;
+	PNDIS_PACKET pPacket;
+	
+	RTMP_IRQ_LOCK(&pAd->irq_lock, IrqFlags);
+	pAd->TxSwQMaxLen = qLen;
+	for (qIdx = 0; qIdx < NUM_OF_TX_RING; qIdx++)
+	{
+		pTxQ = &pAd->TxSwQueue[qIdx];
+		while(pTxQ->Number >= pAd->TxSwQMaxLen)
+		{
+			pEntry = RemoveHeadQueue(pTxQ);
+			if (pEntry)
+			{
+				pPacket = QUEUE_ENTRY_TO_PACKET(pEntry);
+				RELEASE_NDIS_PACKET(pAd, pPacket, NDIS_STATUS_FAILURE);
+			}
+			else
+				break;
+		}
+	}
+	RTMP_IRQ_UNLOCK(&pAd->irq_lock, IrqFlags);
+	
+	DBGPRINT(RT_DEBUG_OFF, ("%s():Set TxSwQMaxLen as %d\n", 
+			__FUNCTION__, pAd->TxSwQMaxLen));
+}
+
+
 VOID VideoTurbineDynamicTune(
 	IN PRTMP_ADAPTER pAd)
 {
@@ -57,17 +91,24 @@ VOID VideoTurbineDynamicTune(
 	{
 			UINT32 MacReg = 0;
 
-		/* Tx retry limit = 2F,1F */
-		RTMP_IO_READ32(pAd, TX_RTY_CFG, &MacReg);
-		MacReg &= 0xFFFF0000;
+		{
+			/* Tx retry limit = 2F,1F */
+			RTMP_IO_READ32(pAd, TX_RTY_CFG, &MacReg);
+			MacReg &= 0xFFFF0000;
 			MacReg |= GetAsicVideoRetry(pAd);
-		RTMP_IO_WRITE32(pAd, TX_RTY_CFG, MacReg);
+			RTMP_IO_WRITE32(pAd, TX_RTY_CFG, MacReg);
+		}
 
 		pAd->VideoTurbine.TxBASize = GetAsicVideoTxBA(pAd);
+
+		Set_RateAdaptInterval(pAd, "100:50");
+		TxSwQDepthAdjust(pAd, 1024);
+			
 	}
 	else 
 	{
 			UINT32 MacReg = 0;
+
 
 		/* Default Tx retry limit = 1F,0F */
 		RTMP_IO_READ32(pAd, TX_RTY_CFG, &MacReg);
@@ -76,6 +117,13 @@ VOID VideoTurbineDynamicTune(
 		RTMP_IO_WRITE32(pAd, TX_RTY_CFG, MacReg);
 
 		pAd->VideoTurbine.TxBASize = GetAsicDefaultTxBA(pAd);
+
+		/* reset to default rate adaptation simping interval */
+		if ((pAd->ra_interval != DEF_RA_TIME_INTRVAL) || 
+			(pAd->ra_interval != DEF_QUICK_RA_TIME_INTERVAL))
+			Set_RateAdaptInterval(pAd, "500:100");
+
+		TxSwQDepthAdjust(pAd, MAX_PACKETS_IN_QUEUE);
 	}
 }
 

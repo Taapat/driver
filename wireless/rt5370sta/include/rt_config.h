@@ -61,7 +61,6 @@
 #include "rtmp.h"
 #include "ap.h"
 #include "wpa.h"
-#include "dfs.h"
 #include "chlist.h"
 #include "spectrum.h"
 #include "rt_os_util.h"
@@ -77,6 +76,10 @@
 
 #include "rt_os_net.h"
 
+#ifdef UAPSD_SUPPORT
+#include "uapsd.h"
+#endif /* UAPSD_SUPPORT */
+
 
 
 
@@ -91,14 +94,13 @@
 #include "igmp_snoop.h"
 #endif /* IGMP_SNOOP_SUPPORT */
 
-#ifdef RALINK_ATE
-#include "rt_ate.h"
-#endif /* RALINK_ATE */
 
 #ifdef RALINK_QA
-#ifndef RALINK_ATE
+#include "rt_qa.h"
+#endif /* RALINK_QA */
+
+#ifdef RALINK_QA
 #error "For supporting QA GUI, please set HAS_ATE=y and HAS_QA_SUPPORT=y."
-#endif /* RALINK_ATE */
 #endif /* RALINK_QA */
 
 
@@ -110,6 +112,13 @@
 #define WSC_INCLUDED
 #endif
 
+
+
+#ifdef APCLI_WPA_SUPPLICANT_SUPPORT
+#ifndef APCLI_SUPPORT
+#error "Build Apcli for being controlled by NetworkManager or wext, please set HAS_APCLI_SUPPORT=y and HAS_APCLI_WPA_SUPPLICANT=y"
+#endif /* APCLI_SUPPORT */
+#endif /* APCLI_WPA_SUPPLICANT_SUPPORT */
 
 
 #ifdef CONFIG_STA_SUPPORT
@@ -133,6 +142,7 @@
 
 
 
+
 #ifdef CONFIG_STA_SUPPORT
 #include "sta_cfg.h"
 #endif /* CONFIG_STA_SUPPORT */
@@ -143,5 +153,8 @@
 #ifdef RTMP_FREQ_CALIBRATION_SUPPORT
 #include "frq_cal.h"
 #endif /* RTMP_FREQ_CALIBRATION_SUPPORT */
+
+
+
 #endif	/* __RT_CONFIG_H__ */
 

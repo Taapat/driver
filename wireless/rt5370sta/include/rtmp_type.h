@@ -113,6 +113,19 @@ typedef struct _REG_PAIR {
 	UCHAR Value;
 } REG_PAIR, *PREG_PAIR;
 
+typedef struct _REG_PAIR_CHANNEL {
+	UCHAR Register;
+	UCHAR FirstChannel;
+	UCHAR LastChannel;
+	UCHAR Value;
+} REG_PAIR_CHANNEL, *PREG_PAIR_CHANNEL;
+
+typedef struct _REG_PAIR_BW {
+	UCHAR Register;
+	UCHAR BW;
+	UCHAR Value;
+} REG_PAIR_BW, *PREG_PAIR_BW;
+
 /* */
 /* Register set pair for initialzation register set definition */
 /* */

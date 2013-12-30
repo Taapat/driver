@@ -72,7 +72,7 @@
 #ifdef RTMP_MAC_USB
 #define TX_RING_SIZE            8	/* 1 */
 #define PRIO_RING_SIZE          8
-#define MGMT_RING_SIZE       32	/* PRIO_RING_SIZE */
+#define MGMT_RING_SIZE       	32	/* PRIO_RING_SIZE */
 #ifdef INF_AMAZON_SE
 #define RX_RING_SIZE            1
 #else
@@ -94,9 +94,8 @@
 #endif
 #define NUM_OF_LOCAL_TXBUF      2
 #define TXD_SIZE                16
-#define TXWI_SIZE               16
 #define RXD_SIZE               	16
-#define RXWI_SIZE             	16
+
 /* TXINFO_SIZE + TXWI_SIZE + 802.11 Header Size + AMSDU sub frame header */
 #define TX_DMA_1ST_BUFFER_SIZE  96	/* only the 1st physical buffer is pre-allocated */
 
@@ -145,13 +144,6 @@
 #define WMM_NUM_OF_AC                       4	/* AC0, AC1, AC2, and AC3 */
 
 
-#ifdef RTMP_EFUSE_SUPPORT
-/*2008/09/11:KH add to support efuse<-- */
-#define MAX_EEPROM_BIN_FILE_SIZE				1024
-#define EFUSE_BUFFER_PATH						"/tmp/RT30xxEEPROM.bin"
-/*2008/09/11:KH add to support efuse--> */
-#endif /* RTMP_EFUSE_SUPPORT */
-
 #define MAX_AGG_3SS_BALIMIT		31
 
 /* RxFilter */
@@ -163,44 +155,51 @@
 #endif /* XLINK_SUPPORT */
 #endif /* CONFIG_STA_SUPPORT */
 
+#ifdef EXT_BUILD_CHANNEL_LIST
+#define MAX_PRECONFIG_DESP_ENTRY_SIZE  11
+#endif /* EXT_BUILD_CHANNEL_LIST */
+
 
 /* */
 /*  RTMP_ADAPTER flags */
 /* */
-#define fRTMP_ADAPTER_MAP_REGISTER          0x00000001
-#define fRTMP_ADAPTER_INTERRUPT_IN_USE      0x00000002
-#define fRTMP_ADAPTER_HARDWARE_ERROR        0x00000004
-#define fRTMP_ADAPTER_SCATTER_GATHER        0x00000008
-#define fRTMP_ADAPTER_SEND_PACKET_ERROR     0x00000010
+#define fRTMP_ADAPTER_MAP_REGISTER           0x00000001
+#define fRTMP_ADAPTER_INTERRUPT_IN_USE       0x00000002
+#define fRTMP_ADAPTER_HARDWARE_ERROR         0x00000004
+#define fRTMP_ADAPTER_SCATTER_GATHER         0x00000008
+#define fRTMP_ADAPTER_SEND_PACKET_ERROR      0x00000010
 #define fRTMP_ADAPTER_MLME_RESET_IN_PROGRESS 0x00000020
-#define fRTMP_ADAPTER_HALT_IN_PROGRESS      0x00000040
-#define fRTMP_ADAPTER_RESET_IN_PROGRESS     0x00000080
-#define fRTMP_ADAPTER_NIC_NOT_EXIST         0x00000100
-#define fRTMP_ADAPTER_TX_RING_ALLOCATED     0x00000200
-#define fRTMP_ADAPTER_REMOVE_IN_PROGRESS    0x00000400
-#define fRTMP_ADAPTER_MIMORATE_INUSED       0x00000800
-#define fRTMP_ADAPTER_RX_RING_ALLOCATED     0x00001000
-#define fRTMP_ADAPTER_INTERRUPT_ACTIVE      0x00002000
-#define fRTMP_ADAPTER_BSS_SCAN_IN_PROGRESS  0x00004000
-#define	fRTMP_ADAPTER_REASSOC_IN_PROGRESS	0x00008000
-#define	fRTMP_ADAPTER_MEDIA_STATE_PENDING	0x00010000
-#define	fRTMP_ADAPTER_RADIO_OFF				0x00020000
-#define fRTMP_ADAPTER_BULKOUT_RESET			0x00040000
-#define	fRTMP_ADAPTER_BULKIN_RESET			0x00080000
-#define fRTMP_ADAPTER_RDG_ACTIVE			0x00100000
+#define fRTMP_ADAPTER_HALT_IN_PROGRESS       0x00000040
+#define fRTMP_ADAPTER_RESET_IN_PROGRESS      0x00000080
+#define fRTMP_ADAPTER_NIC_NOT_EXIST          0x00000100
+#define fRTMP_ADAPTER_TX_RING_ALLOCATED      0x00000200
+#define fRTMP_ADAPTER_REMOVE_IN_PROGRESS     0x00000400
+#define fRTMP_ADAPTER_MIMORATE_INUSED        0x00000800
+#define fRTMP_ADAPTER_RX_RING_ALLOCATED      0x00001000
+#define fRTMP_ADAPTER_INTERRUPT_ACTIVE       0x00002000
+#define fRTMP_ADAPTER_BSS_SCAN_IN_PROGRESS   0x00004000
+#define	fRTMP_ADAPTER_REASSOC_IN_PROGRESS	 0x00008000
+#define	fRTMP_ADAPTER_MEDIA_STATE_PENDING	 0x00010000
+#define	fRTMP_ADAPTER_RADIO_OFF				 0x00020000
+#define fRTMP_ADAPTER_BULKOUT_RESET			 0x00040000
+#define	fRTMP_ADAPTER_BULKIN_RESET			 0x00080000
+#define fRTMP_ADAPTER_RDG_ACTIVE			 0x00100000
 #define fRTMP_ADAPTER_DYNAMIC_BE_TXOP_ACTIVE 0x00200000
-#define fRTMP_ADAPTER_SCAN_2040 			0x04000000
-#define	fRTMP_ADAPTER_RADIO_MEASUREMENT		0x08000000
+#define fRTMP_ADAPTER_RALINK_BURST_MODE		 0x00400000
+#define fRTMP_ADAPTER_SCAN_2040 			 0x04000000
+#define	fRTMP_ADAPTER_RADIO_MEASUREMENT		 0x08000000
 
-#define fRTMP_ADAPTER_START_UP         		0x10000000	/*Devive already initialized and enabled Tx/Rx. */
-#define fRTMP_ADAPTER_MEDIA_STATE_CHANGE    0x20000000
-#define fRTMP_ADAPTER_IDLE_RADIO_OFF        0x40000000
+#define fRTMP_ADAPTER_START_UP         		 0x10000000	/*Devive already initialized and enabled Tx/Rx. */
+#define fRTMP_ADAPTER_MEDIA_STATE_CHANGE     0x20000000
+#define fRTMP_ADAPTER_IDLE_RADIO_OFF         0x40000000
 
-#define fRTMP_ADAPTER_DISABLE_DOT_11N		0x00000001
-#define fRTMP_ADAPTER_WSC_PBC_PIN0	        0x00000002
+#define fRTMP_ADAPTER_DISABLE_DOT_11N		 0x00000001
+#define fRTMP_ADAPTER_WSC_PBC_PIN0	         0x00000002
+#define fRTMP_ADAPTER_TSO_SUPPORT		     0x00000004
+#define fRTMP_ADAPTER_DISABLE_DEQUEUE		 0x00000008
+
 #ifdef CONFIG_PM
 #ifdef USB_SUPPORT_SELECTIVE_SUSPEND
-#define fRTMP_ADAPTER_CPU_SUSPEND        0x80000000
 #define fRTMP_ADAPTER_SUSPEND 0x00800000
 #endif /* USB_SUPPORT_SELECTIVE_SUSPEND */
 #endif /* CONFIG_PM */
@@ -253,11 +252,9 @@
 #define fRTMP_PS_GO_TO_SLEEP_NOW         0x00000008
 #define fRTMP_PS_TOGGLE_L1		0x00000010	/* Use Toggle L1 mechanism for rt28xx PCIe */
 
-/*#if defined(RT3090) || defined(RT3592) || defined(RT3390) || defined(RT3593) */
 #define WAKE_MCU_CMD				0x31
 #define SLEEP_MCU_CMD				0x30
 #define RFOFF_MCU_CMD				0x35
-/*#endif // defined(RT3090) || defined(RT3592) || defined(RT3390) || defined(RT3593) */
 
 #ifdef DOT11N_DRAFT3
 #define fOP_STATUS_SCAN_2040               	    0x00040000
@@ -445,7 +442,7 @@
 #define MAX_LEN_OF_SUPPORTED_RATES      MAX_LENGTH_OF_SUPPORT_RATES	/* 1, 2, 5.5, 11, 6, 9, 12, 18, 24, 36, 48, 54 */
 #define MAX_NUM_OF_REGULATORY_CLASS		16
 #define MAX_LEN_OF_KEY                  32	/* 32 octets == 256 bits, Redefine for WPA */
-#define MAX_NUM_OF_CHANNELS             MAX_NUM_OF_CHS	/* 14 channels @2.4G +  12@UNII + 4 @MMAC + 11 @HiperLAN2 + 7 @Japan + 1 as NULL termination */
+/* #define MAX_NUM_OF_CHANNELS             MAX_NUM_OF_CHS */	/* 14 channels @2.4G +  12@UNII + 4 @MMAC + 11 @HiperLAN2 + 7 @Japan + 1 as NULL termination */
 #define MAX_NUM_OF_11JCHANNELS             20	/* 14 channels @2.4G +  12@UNII + 4 @MMAC + 11 @HiperLAN2 + 7 @Japan + 1 as NULL termination */
 #define MAX_LEN_OF_SSID                 32
 #define CIPHER_TEXT_LEN                 128
@@ -455,6 +452,13 @@
 #define MAX_NUM_OF_BBP_LATCH             256
 #undef MAX_NUM_OF_BBP_LATCH
 #define MAX_NUM_OF_BBP_LATCH             255
+
+#define MAX_LEN_OF_CCK_RATES	4
+#define MAX_LEN_OF_OFDM_RATES	8
+#define MAX_LEN_OF_HT_RATES		24
+#define SUPPORT_CCK_MODE	1
+#define SUPPORT_OFDM_MODE	2
+#define SUPPORT_HT_MODE		4
 /*============================================================ */
 /* ASIC WCID Table definition. */
 /*============================================================ */
@@ -566,6 +570,7 @@
 /* Status code definitions */
 #define MLME_SUCCESS                    0
 #define MLME_UNSPECIFY_FAIL             1
+#define MLME_SECURITY_WEAK              5
 #define MLME_CANNOT_SUPPORT_CAP         10
 #define MLME_REASSOC_DENY_ASSOC_EXIST   11
 #define MLME_ASSOC_DENY_OUT_SCOPE       12
@@ -590,6 +595,7 @@
 #define MLME_INVALID_AKMP   			  43
 #define MLME_NOT_SUPPORT_RSN_VERSION	  44
 #define	MLME_INVALID_RSN_CAPABILITIES	  45
+#define MLME_INVALID_SECURITY_POLICY      46 /* Cipher suite rejected because of security policy */
 #define MLME_DLS_NOT_ALLOW_IN_QBSS        48
 #define MLME_DEST_STA_NOT_IN_QBSS         49
 #define MLME_DEST_STA_IS_NOT_A_QSTA       50
@@ -635,6 +641,7 @@
 #define IE_RSN                          48	/* 802.11i d3.0 */
 #define IE_WPA2                         48	/* WPA2 */
 #define IE_EXT_SUPP_RATES               50	/* 802.11g */
+#define IE_TIMEOUT_INTERVAL             56      /* 802.11w */
 #define IE_SUPP_REG_CLASS               59	/* 802.11y. Supported regulatory classes. */
 #define IE_EXT_CHANNEL_SWITCH_ANNOUNCEMENT	60	/* 802.11n */
 #define IE_ADD_HT                         61	/* 802.11n d1. ADDITIONAL HT CAPABILITY. ELEMENT ID TBD */
@@ -648,6 +655,11 @@
 #define IE_2040_BSS_INTOLERANT_REPORT     73	/* 802.11n D3.03 */
 #define IE_OVERLAPBSS_SCAN_PARM           74	/* 802.11n D3.03 */
 #define IE_CHANNEL_USAGE					97	/* Cisco advertises suggested channel using this IE. */
+#define IE_TIME_ZONE			98	/* 802.11V */
+#define IE_INTERWORKING			107 /* 802.11u */
+#define IE_ADVERTISEMENT_PROTO	108 /* 802.11u */
+#define IE_QOS_MAP_SET			110 /* 802.11u */
+#define IE_ROAMING_CONSORTIUM	111 /* 802.11u */
 #define IE_EXT_CAPABILITY                127	/* 802.11n D3.03 */
 
 #define IE_WPA                          221	/* WPA */
@@ -706,6 +718,7 @@
 
 
 
+
 /* */
 /* STA's CONTROL/CONNECT state machine: states, events, total function # */
 /* */
@@ -719,9 +732,7 @@
 #define CNTL_WAIT_AUTH2                 7
 #define CNTL_WAIT_OID_LIST_SCAN         8
 #define CNTL_WAIT_OID_DISASSOC          9
-#ifdef RTMP_MAC_USB
 #define CNTL_WAIT_SCAN_FOR_CONNECT      10
-#endif /* RTMP_MAC_USB */
 
 #define MT2_ASSOC_CONF                  34
 #define MT2_AUTH_CONF                   35
@@ -784,7 +795,7 @@
 #define MT2_PEER_RM_CATE             5
 /* "FT_CATEGORY_BSS_TRANSITION equal to 6" is defined file of "dot11r_ft.h" */
 #define MT2_PEER_HT_CATE             7	/*      7.4.7 */
-#define MT2_PEER_PMF_CATE				8	/* defined in IEEE 802.11w-D8.0 7.3.1.11 */
+#define MT2_PEER_PMF_CATE				8	/* defined in IEEE 802.11w */
 #define MT2_PEER_RESV_9					9
 #define MT2_PEER_RESV_10				10
 #define MT2_PEER_RESV_11				11
@@ -818,11 +829,11 @@
 #define CATEGORY_QOS			1
 #define CATEGORY_DLS			2
 #define CATEGORY_BA			3
-#define CATEGORY_PUBLIC		4
+#define CATEGORY_PUBLIC		        4
 #define CATEGORY_RM			5
 #define CATEGORY_FT			6
 #define CATEGORY_HT			7
-#define CATEGORY_PMF			8	/* defined in IEEE 802.11w-D8.0 7.3.1.11 */
+
 
 /* DLS Action frame definition */
 #define ACTION_DLS_REQUEST			0
@@ -852,6 +863,11 @@
 #define ACTION_MEASUREMENT_PILOT_ACTION		7	/* 11y D9.0 */
 #define ACTION_DSE_POWER_CONSTRAINT			8	/* 11y D9.0 */
 #define ACTION_WIFI_DIRECT						9 	/* 11y */
+#define ACTION_GAS_INITIAL_REQ					10 	/* 11U */
+#define ACTION_GAS_INITIAL_RSP					11 	/* 11U */
+#define ACTION_GAS_COMEBACK_REQ				12 	/* 11U */
+#define ACTION_GAS_COMEBACK_RSP				13 	/* 11U */
+#define ACTION_TDLS_DISCOVERY_RSP				14	/* 11z D13.0 */
 #define ACTION_VENDOR_USAGE					221
 
 /*HT  Action field value */
@@ -860,8 +876,8 @@
 #define PSMP_ACTION   					2
 #define SETPCO_ACTION					3
 #define MIMO_CHA_MEASURE_ACTION			4
-#define MIMO_N_BEACONFORM				5
-#define MIMO_BEACONFORM					6
+#define MIMO_N_BEACONFORM				5	/* non-compressed beamforming report */
+#define MIMO_BEACONFORM					6	/* compressed beamforming report */
 #define ANTENNA_SELECT					7
 #define HT_INFO_EXCHANGE				8
 
@@ -917,7 +933,9 @@
 #define MT2_BEACON_TIMEOUT              7
 #define MT2_ATIM_TIMEOUT                8
 #define MT2_PEER_PROBE_REQ              9
-#define MAX_SYNC_MSG                    10
+#define MT2_MLME_FORCE_JOIN_REQ 	10
+#define MT2_MLME_FORCE_SCAN_REQ 	11
+#define MAX_SYNC_MSG                    	12
 
 #define SYNC_FUNC_SIZE                  (MAX_SYNC_STATE * MAX_SYNC_MSG)
 
@@ -980,6 +998,17 @@
 /* */
 /* AP's SYNC state machine: states, events, total function # */
 /* */
+#ifdef CONFIG_MULTI_CHANNEL
+#define AP_SYNC_IDLE                    0
+#ifdef AP_SCAN_SUPPORT
+#define AP_SCAN_LISTEN					1
+#define AP_SCAN_PENDING               2
+#define AP_MAX_SYNC_STATE               3
+#else
+#define AP_SCAN_PENDING               1
+#define AP_MAX_SYNC_STATE               2
+#endif
+#else
 #define AP_SYNC_IDLE                    0
 #ifdef AP_SCAN_SUPPORT
 #define AP_SCAN_LISTEN					1
@@ -987,6 +1016,8 @@
 #else
 #define AP_MAX_SYNC_STATE               1
 #endif
+#endif /*CONFIG_MULTI_CHANNEL*/
+
 
 #define AP_SYNC_MACHINE_BASE		0
 #define APMT2_PEER_PROBE_REQ		0
@@ -1134,7 +1165,10 @@
 #define BLOCK_ACK                   0x60	/* b6:5 = 11 */
 
 #ifdef USB_BULK_BUF_ALIGMENT
+#ifndef BUF_ALIGMENT_RINGSIZE
+#undef BUF_ALIGMENT_RINGSIZE
 #define BUF_ALIGMENT_RINGSIZE         6	/*BUF_ALIGMENT_RINGSIZE must  >= 3 */
+#endif
 #endif /* USB_BULK_BUF_ALIGMENT */
 
 
@@ -1349,8 +1383,19 @@
 #define PAIRWISE_KEY                1
 #define GROUP_KEY                   2
 
+
+
+/* Rate Adaptation timing */
+#define RA_RATE		5					/* RA every fifth 100msec period */
+#define RA_INTERVAL		(RA_RATE*100)	/* RA Interval in msec */
+
+/* Rate Adaptation simpling interval setting */
+#define DEF_QUICK_RA_TIME_INTERVAL	100
+
+#define DEF_RA_TIME_INTRVAL			500
+
 /*definition of DRS */
-#define MAX_STEP_OF_TX_RATE_SWITCH	32
+#define MAX_TX_RATE_INDEX			33		/* Maximum Tx Rate Table Index value */
 
 /* pre-allocated free NDIS PACKET/BUFFER poll for internal usage */
 #define MAX_NUM_OF_FREE_NDIS_PACKET 128
@@ -1360,10 +1405,6 @@
 #define MAX_RX_REORDERBUF   64
 #define DEFAULT_TX_TIMEOUT   30
 #define DEFAULT_RX_TIMEOUT   30
-
-#ifdef VCORECAL_SUPPORT
-#define DEFAULT_VCO_RECALIBRATION_THRESHOLD	1
-#endif /* VCORECAL_SUPPORT */
 
 /* definition of Recipient or Originator */
 #define I_RECIPIENT                  TRUE
@@ -1473,57 +1514,18 @@
 #define IS_OPMODE_AP(_x)		((_x)->OpMode == OPMODE_AP)
 #define IS_OPMODE_STA(_x)		((_x)->OpMode == OPMODE_STA)
 
+#ifdef ANDROID_SUPPORT
 #define INF_MAIN_DEV_NAME		"wlan"
 #define INF_MBSSID_DEV_NAME		"wlan"
+#else
+#define INF_MAIN_DEV_NAME		"ra"
+#define INF_MBSSID_DEV_NAME		"ra"
+#endif /* ANDROID_SUPPORT */
+
 #define INF_WDS_DEV_NAME		"wds"
 #define INF_APCLI_DEV_NAME		"apcli"
 #define INF_MESH_DEV_NAME		"mesh"
 #define INF_P2P_DEV_NAME		"p2p"
-
-#ifdef RALINK_ATE
-/* 
-	Use bitmap to allow coexist of ATE_TXFRAME 
-	and ATE_RXFRAME(i.e.,to support LoopBack mode).
-*/
-#define fATE_IDLE					0x00
-#define fATE_TX_ENABLE				0x01
-#define fATE_RX_ENABLE				0x02
-#define fATE_TXCONT_ENABLE			0x04
-#define fATE_TXCARR_ENABLE			0x08
-#define fATE_TXCARRSUPP_ENABLE		0x10
-#define fATE_RESERVED_1				0x20
-#define fATE_RESERVED_2				0x40
-#define fATE_EXIT					0x80
-
-/* Enter/Reset ATE */
-#define	ATE_START                   (fATE_IDLE)
-/* Stop/Exit ATE */
-#define	ATE_STOP                    (fATE_EXIT)
-/* Continuous Transmit */
-#define	ATE_TXCONT                  ((fATE_TX_ENABLE)|(fATE_TXCONT_ENABLE))
-/* Transmit Carrier */
-#define	ATE_TXCARR                  ((fATE_TX_ENABLE)|(fATE_TXCARR_ENABLE))
-/* Transmit Carrier Suppression (information without carrier) */
-#define	ATE_TXCARRSUPP              ((fATE_TX_ENABLE)|(fATE_TXCARRSUPP_ENABLE))
-/* Transmit Frames */
-#define	ATE_TXFRAME                 (fATE_TX_ENABLE)
-/* Receive Frames */
-#define	ATE_RXFRAME                 (fATE_RX_ENABLE)
-#ifdef RALINK_QA
-/* Stop Transmition */
-#define ATE_TXSTOP                  ((~(fATE_TX_ENABLE))&(~(fATE_TXCONT_ENABLE))&(~(fATE_TXCARR_ENABLE))&(~(fATE_TXCARRSUPP_ENABLE)))
-/* Stop receiving Frames */
-#define ATE_RXSTOP					(~(fATE_RX_ENABLE))
-
-/* NOTE : may be different with chipset in the future ++ */
-#define	BBP22_TXFRAME     			0x00	/* Transmit Frames */
-#define	BBP22_TXCONT_OR_CARRSUPP    0x80	/* Continuous Transmit or Carrier Suppression */
-#define	BBP22_TXCARR                0xc1	/* Transmit Carrier */
-#define	BBP24_TXCONT                0x00	/* Continuous Transmit */
-#define	BBP24_CARRSUPP              0x01	/* Carrier Suppression */
-/* NOTE : may be different with chipset in the future -- */
-#endif /* RALINK_QA */
-#endif /* RALINK_ATE */
 
 /* WEP Key TYPE */
 #define WEP_HEXADECIMAL_TYPE    0
@@ -1604,6 +1606,7 @@
 /* End - WIRELESS EVENTS definition */
 
 #ifdef CONFIG_STA_SUPPORT
+
 /* definition for DLS, kathy */
 #define	MAX_NUM_OF_INIT_DLS_ENTRY   1
 #define	MAX_NUM_OF_DLS_ENTRY        MAX_NUMBER_OF_DLS_ENTRY
@@ -1633,6 +1636,9 @@
 #define GUIRADIO_OFF		1
 #define RTMP_HALT		    2
 #define GUI_IDLE_POWER_SAVE		3
+#ifdef RT3290
+#define FROM_TX		4
+#endif /* RT3290 */
 /* -- */
 
 /* definition for WpaSupport flag */
@@ -1652,7 +1658,47 @@ typedef enum {
 	ANT_DIVERSITY_DEFAULT
 }ANT_DIVERSITY_TYPE;
 
+enum IEEE80211_BAND {
+  IEEE80211_BAND_2G,
+  IEEE80211_BAND_5G,
+  IEEE80211_BAND_NUMS
+};
 
+#ifdef CONFIG_SWITCH_CHANNEL_OFFLOAD
+#define CHANNEL_SWITCH_OFFLOAD 0x68 
+#define CHANNEL_MCU_READY 0x7064
+#endif /* CONFIG_SWITCH_CHANNEL_OFFLOAD */
+
+#if defined(CONFIG_MULTI_CHANNEL) || defined(DOT11Z_TDLS_SUPPORT)
+#define HW_NULL_FRAME_1_OFFSET 0x7700
+#define HW_NULL_FRAME_2_OFFSET 0x7780
+
+enum {
+	EDCA_AC0_DEQUEUE_DISABLE = (1 << 0),
+	EDCA_AC1_DEQUEUE_DISABLE = (1 << 1),
+	EDCA_AC2_DEQUEUE_DISABLE = (1 << 2),
+	EDCA_AC3_DEQUEUE_DISBALE = (1 << 3),
+	HCCA_DEQUEUE_DISABLE = (1 << 4)
+};
+
+enum {
+	HCCA_TO_EDCA,
+	EDCA_TO_HCCA = 0x55
+};
+
+#define MUL_CHANNEL_ENABLE 0x77
+#define HCCA_TIMEOUT	400
+#define EDCA_TIMEOUT	400
+#endif /* defined(CONFIG_MULTI_CHANNEL) || defined(DOT11Z_TDLS_SUPPORT) */
+
+/* Advertismenet Protocol ID definitions */
+enum DOT11U_ADVERTISMENT_PROTOCOL_ID {
+	ACCESS_NETWORK_QUERY_PROTOCOL = 0,
+	MIH_INFORMATION_SERVICE = 1,
+	MIH_COMMAND_AND_EVENT_SERVICES_CAPBILITY_DISCOVERY = 2,
+	EMERGENCY_ALERT_SYSTEM = 3,
+	VENDOR_SPECIFIC = 221
+};
 
 
 #define ABS(_x, _y) ((_x) > (_y)) ? ((_x) -(_y)) : ((_y) -(_x))

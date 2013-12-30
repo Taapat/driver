@@ -31,73 +31,70 @@
 #include	"rt_config.h"
 
 /*
-	Sometimes frequency will be shift for RT3593 we need to adjust it when
+	Sometimes frequency will be shift we need to adjust it when
 	the frequencey shift.
 */
-
-/* Initialize the frequency calibration*/
-
-/* Parameters*/
-/*	pAd: The adapter data structure*/
-
-/* Return Value:*/
-/*	None*/
-
-VOID InitFrequencyCalibration(
-	IN PRTMP_ADAPTER pAd)
+VOID InitFrequencyCalibrationMode(
+	PRTMP_ADAPTER pAd,
+	UINT8 Mode)
 {
 	BBP_R179_STRUC BbpR179 = {{0}};
 	BBP_R180_STRUC BbpR180 = {{0}};
 	BBP_R182_STRUC BbpR182 = {{0}};
-
-	if (pAd->FreqCalibrationCtrl.bEnableFrequencyCalibration == TRUE)
-	{	
-		DBGPRINT(RT_DEBUG_TRACE, ("---> %s\n", __FUNCTION__));
-		
-		
+	
+	if (Mode == FREQ_CAL_INIT_MODE0)
+	{
+		/* Initialize the RX_END_STATUS (1, 5) for "Rx OFDM/CCK frequency offset report"*/
+		BbpR179.field.DataIndex1 = 1;
+		RTMP_BBP_IO_WRITE8_BY_REG_ID(pAd, BBP_R179, BbpR179.byte);
+		BbpR180.field.DataIndex2 = 5;
+		RTMP_BBP_IO_WRITE8_BY_REG_ID(pAd, BBP_R180, BbpR180.byte);
+		BbpR182.field.DataArray = BBP_R57; /* Rx OFDM/CCK frequency offset report*/
+		RTMP_BBP_IO_WRITE8_BY_REG_ID(pAd, BBP_R182, BbpR182.byte);
+	}
+	else if (Mode == FREQ_CAL_INIT_MODE1)
+	{
+		/* Initialize the RX_END_STATUS (1, 3) for "Rx OFDM/CCK frequency offset report"*/
+		BbpR179.field.DataIndex1 = 1;
+		RTMP_BBP_IO_WRITE8_BY_REG_ID(pAd, BBP_R179, BbpR179.byte);
+		BbpR180.field.DataIndex2 = 3;
+		RTMP_BBP_IO_WRITE8_BY_REG_ID(pAd, BBP_R180, BbpR180.byte);
+		BbpR182.field.DataArray = BBP_R57; /* Rx OFDM/CCK frequency offset report*/
+		RTMP_BBP_IO_WRITE8_BY_REG_ID(pAd, BBP_R182, BbpR182.byte);
+	}
+	else if (Mode == FREQ_CAL_INIT_MODE2)
+	{
 		/* Initialize the RX_END_STATUS (1) for "Rx OFDM/CCK frequency offset report"*/
+		RTMP_BBP_IO_WRITE8_BY_REG_ID(pAd, BBP_R142, 1);
+		RTMP_BBP_IO_WRITE8_BY_REG_ID(pAd, BBP_R143, BBP_R57); /* Rx OFDM/CCK frequency offset report*/
+	}
+	else
+		DBGPRINT(RT_DEBUG_ERROR, ("%s:Unknow mode = %d\n", __FUNCTION__, Mode));
+}
+
+
+/* Initialize the frequency calibration*/
+VOID InitFrequencyCalibration(
+	IN PRTMP_ADAPTER pAd)
+{
+	if (pAd->FreqCalibrationCtrl.bEnableFrequencyCalibration == TRUE)
+	{
+		DBGPRINT(RT_DEBUG_ERROR, ("---> %s\n", __FUNCTION__));
 		
-		if (IS_RT5390(pAd))
-		{
-			RTMP_BBP_IO_WRITE8_BY_REG_ID(pAd, BBP_R142, 1);
-			RTMP_BBP_IO_WRITE8_BY_REG_ID(pAd, BBP_R143, BBP_R57); /* Rx OFDM/CCK frequency offset report*/
-		}
-		else if (IS_RT3390(pAd))
-		{
-			
-			/* Initialize the RX_END_STATUS (1, 5) for "Rx OFDM/CCK frequency offset report"*/
-			
-			BbpR179.field.DataIndex1 = 1;
-			RTMP_BBP_IO_WRITE8_BY_REG_ID(pAd, BBP_R179, BbpR179.byte);
-			BbpR180.field.DataIndex2 = 5;
-			RTMP_BBP_IO_WRITE8_BY_REG_ID(pAd, BBP_R180, BbpR180.byte);
-			BbpR182.field.DataArray = BBP_R57; /* Rx OFDM/CCK frequency offset report*/
-			RTMP_BBP_IO_WRITE8_BY_REG_ID(pAd, BBP_R182, BbpR182.byte);
-		}
-		else
-		{
-			DBGPRINT(RT_DEBUG_ERROR, ("%s: Not support IC type (MACVersion = 0x%X)\n", __FUNCTION__, pAd->MACVersion));
-		}
+		InitFrequencyCalibrationMode(pAd, pAd->chipCap.FreqCalInitMode);
 		
 		StopFrequencyCalibration(pAd);
 
-		DBGPRINT(RT_DEBUG_TRACE, ("%s: frequency offset in the EEPROM = %ld\n", 
+		DBGPRINT(RT_DEBUG_ERROR, ("%s: frequency offset in the EEPROM = %ld\n", 
 			__FUNCTION__, 
 			pAd->RfFreqOffset));
 
-		DBGPRINT(RT_DEBUG_TRACE, ("<--- %s\n", __FUNCTION__));
+		DBGPRINT(RT_DEBUG_ERROR, ("<--- %s\n", __FUNCTION__));
 	}
 }
 
 
 /* To stop the frequency calibration algorithm*/
-
-/* Parameters*/
-/*	pAd: The adapter data structure*/
-
-/* Return Value:*/
-/*	None*/
-
 VOID StopFrequencyCalibration(
 	IN PRTMP_ADAPTER pAd)
 {
@@ -109,7 +106,6 @@ VOID StopFrequencyCalibration(
 		pAd->FreqCalibrationCtrl.AdaptiveFreqOffset = (0x7F & ((CHAR)(pAd->RfFreqOffset))); /* C1 value control - Crystal calibration*/
 
 		pAd->FreqCalibrationCtrl.LatestFreqOffsetOverBeacon = INVALID_FREQUENCY_OFFSET;
-
 		pAd->FreqCalibrationCtrl.bSkipFirstFrequencyCalibration = TRUE;
 
 		DBGPRINT(RT_DEBUG_TRACE, ("%s: pAd->FreqCalibrationCtrl.AdaptiveFreqOffset = 0x%X\n", 
@@ -121,28 +117,48 @@ VOID StopFrequencyCalibration(
 }
 
 
+VOID FrequencyCalibrationMode(
+	PRTMP_ADAPTER pAd,
+	UINT8 Mode)
+{
+	UCHAR RFValue = 0;
+	UCHAR PreRFValue = 0; 
+	
+	if (Mode == FREQ_CAL_MODE0)
+	{
+		RT30xxReadRFRegister(pAd, RF_R23, (PUCHAR)(&RFValue));
+		RFValue = ((RFValue & ~0x7F) | (pAd->FreqCalibrationCtrl.AdaptiveFreqOffset & 0x7F));
+		RFValue = min(RFValue, 0x5F);
+		pAd->FreqCalibrationCtrl.AdaptiveFreqOffset = RFValue; /* Keep modified RF R23 value */
+		RT30xxWriteRFRegister(pAd, RF_R23, (UCHAR)RFValue);
+		RT30xxReadRFRegister(pAd, RF_R07, (PUCHAR)(&RFValue));
+		RFValue = ((RFValue & ~0x01) | 0x01); /* Tune_en (initiate VCO calibration (reset after completion)) */
+		RT30xxWriteRFRegister(pAd, RF_R07, (UCHAR)RFValue);
+	}
+	else if (Mode == FREQ_CAL_MODE1)
+	{
+		/* Adjust the frequency offset and keep the modified value in AdaptiveFreqOffset */
+		RTMPAdjustFrequencyOffset(pAd, &pAd->FreqCalibrationCtrl.AdaptiveFreqOffset);
+
+		/* vcocal_en (initiate VCO calibration (reset after completion)) - It should be at the end of RF configuration. */
+		RTMP_WriteRF(pAd, RF_R03, 0x80, 0x80);		
+	}
+	else
+		DBGPRINT(RT_DEBUG_ERROR, ("Unknown FrqCalibration Mode\n")); 
+}
+
 
 /* The frequency calibration algorithm*/
-
-/* Parameters*/
-/*	pAd: The adapter data structure*/
-
-/* Return Value:*/
-/*	None*/
-
 VOID FrequencyCalibration(
 	IN PRTMP_ADAPTER pAd)
 {
-	BOOLEAN bUpdateRFR = FALSE;
-	UCHAR RFValue = 0;
-	UCHAR PreRFValue = 0;
+	/*BOOLEAN bUpdateRFR = FALSE;*/
 	CHAR HighFreqTriggerPoint = 0, LowFreqTriggerPoint = 0;
 	CHAR DecreaseFreqOffset = 0, IncreaseFreqOffset = 0;
 	
 	/* Frequency calibration period: */
 	/* a) 10 seconds: Check the reported frequency offset*/
 	/* b) 500 ms: Update the RF frequency if possible*/
-	
 	if ((pAd->FreqCalibrationCtrl.bEnableFrequencyCalibration == TRUE) && 
 	     (((pAd->FreqCalibrationCtrl.bApproachFrequency == FALSE) && ((pAd->Mlme.PeriodicRound % FREQUENCY_CALIBRATION_PERIOD) == 0)) || 
 	       ((pAd->FreqCalibrationCtrl.bApproachFrequency == TRUE) && ((pAd->Mlme.PeriodicRound % (FREQUENCY_CALIBRATION_PERIOD / 20)) == 0))))
@@ -157,11 +173,8 @@ VOID FrequencyCalibration(
 		}
 		else
 		{
-
 			if (pAd->FreqCalibrationCtrl.LatestFreqOffsetOverBeacon != INVALID_FREQUENCY_OFFSET)
 			{	
-				/* Sync the thresholds*/
-				
 				if (pAd->FreqCalibrationCtrl.BeaconPhyMode == MODE_CCK) /* CCK*/
 				{
 					HighFreqTriggerPoint = HIGH_FREQUENCY_TRIGGER_POINT_CCK;
@@ -195,101 +208,14 @@ VOID FrequencyCalibration(
 					else if (pAd->FreqCalibrationCtrl.LatestFreqOffsetOverBeacon > DecreaseFreqOffset)
 					{
 						pAd->FreqCalibrationCtrl.AdaptiveFreqOffset--;
-						if (IS_RT3390(pAd))
-						{
-							RT30xxReadRFRegister(pAd, RF_R23, (PUCHAR)(&RFValue));
-							RFValue = ((RFValue & ~0x7F) | (pAd->FreqCalibrationCtrl.AdaptiveFreqOffset & 0x7F));
-							RFValue = min(RFValue, 0x5F);
-							pAd->FreqCalibrationCtrl.AdaptiveFreqOffset = RFValue; /* Keep modified RF R23 value */
-							RT30xxWriteRFRegister(pAd, RF_R23, (UCHAR)RFValue);
-
-							RT30xxReadRFRegister(pAd, RF_R07, (PUCHAR)(&RFValue));
-							RFValue = ((RFValue & ~0x01) | 0x01); /* Tune_en (initiate VCO calibration (reset after completion)) */
-							RT30xxWriteRFRegister(pAd, RF_R07, (UCHAR)RFValue);
-						}
-						else if (IS_RT5390(pAd))
-						{
-							RT30xxReadRFRegister(pAd, RF_R17, (PUCHAR)(&RFValue));
-							PreRFValue = RFValue;
-							RFValue = ((RFValue & ~0x7F) | (pAd->FreqCalibrationCtrl.AdaptiveFreqOffset & 0x7F));
-							RFValue = min(RFValue, 0x5F);
-							pAd->FreqCalibrationCtrl.AdaptiveFreqOffset = RFValue; /* Keep modified RF R17 value */
-							if (PreRFValue != RFValue)
-							{
-								AsicSendCommandToMcu(pAd, 0x74, 0xff, RFValue, PreRFValue);
-							}
-
-							RT30xxReadRFRegister(pAd, RF_R03, (PUCHAR)&RFValue);
-							RFValue = ((RFValue & ~0x80) | 0x80); /* vcocal_en (initiate VCO calibration (reset after completion)) - It should be at the end of RF configuration. */
-							RT30xxWriteRFRegister(pAd, RF_R03, (UCHAR)RFValue);
-						}
-						else if (IS_RT3593(pAd))
-						{
-							RT30xxReadRFRegister(pAd, RF_R17, (PUCHAR)(&RFValue));
-							RFValue = ((RFValue & ~0x7F) | (pAd->FreqCalibrationCtrl.AdaptiveFreqOffset & 0x7F));
-							RFValue = min(RFValue, 0x5F);
-							pAd->FreqCalibrationCtrl.AdaptiveFreqOffset = RFValue; // Keep modified RF R17 value
-							RT30xxWriteRFRegister(pAd, RF_R17, (UCHAR)RFValue);
-
-							RT30xxReadRFRegister(pAd, RF_R03, (PUCHAR)&RFValue);
-							RFValue = ((RFValue & ~0x80) | 0x80); /* vcocal_en (initiate VCO calibration (reset after completion)) - It should be at the end of RF configuration. */
-							RT30xxWriteRFRegister(pAd, RF_R03, (UCHAR)RFValue);
-						}
-						else
-						{
-							DBGPRINT(RT_DEBUG_ERROR, ("%s: Not support IC type (MACVersion = 0x%X)\n", __FUNCTION__, pAd->MACVersion));
-						}
-
 						DBGPRINT(RT_DEBUG_TRACE, ("%s: -- frequency offset = 0x%X\n", __FUNCTION__, pAd->FreqCalibrationCtrl.AdaptiveFreqOffset));
+						FrequencyCalibrationMode(pAd, pAd->chipCap.FreqCalMode);
 					}
 					else if (pAd->FreqCalibrationCtrl.LatestFreqOffsetOverBeacon < IncreaseFreqOffset)
 					{
 						pAd->FreqCalibrationCtrl.AdaptiveFreqOffset++;
-						if (IS_RT3390(pAd))
-						{
-							RT30xxReadRFRegister(pAd, RF_R23, (PUCHAR)(&RFValue));
-							RFValue = ((RFValue & ~0x7F) | (pAd->FreqCalibrationCtrl.AdaptiveFreqOffset & 0x7F));
-							RFValue = min(RFValue, 0x5F);
-							pAd->FreqCalibrationCtrl.AdaptiveFreqOffset = RFValue; /* Keep modified RF R23 value */
-							RT30xxWriteRFRegister(pAd, RF_R23, (UCHAR)RFValue);
-
-							RT30xxReadRFRegister(pAd, RF_R07, (PUCHAR)(&RFValue));
-							RFValue = ((RFValue & ~0x01) | 0x01); /* Tune_en (initiate VCO calibration (reset after completion)) */
-							RT30xxWriteRFRegister(pAd, RF_R07, (UCHAR)RFValue);
-						}
-						else if (IS_RT5390(pAd))
-						{
-							RT30xxReadRFRegister(pAd, RF_R17, (PUCHAR)(&RFValue));
-							PreRFValue = RFValue;
-							RFValue = ((RFValue & ~0x7F) | (pAd->FreqCalibrationCtrl.AdaptiveFreqOffset & 0x7F));
-							RFValue = min(RFValue, 0x5F);
-							pAd->FreqCalibrationCtrl.AdaptiveFreqOffset = RFValue; /* Keep modified RF R17 value */
-							if (PreRFValue != RFValue)
-							{
-								AsicSendCommandToMcu(pAd, 0x74, 0xff, RFValue, PreRFValue);
-							}
-
-							RT30xxReadRFRegister(pAd, RF_R03, (PUCHAR)&RFValue);
-						RFValue = ((RFValue & ~0x80) | 0x80); /* vcocal_en (initiate VCO calibration (reset after completion)) - It should be at the end of RF configuration.*/
-						RT30xxWriteRFRegister(pAd, RF_R03, (UCHAR)RFValue);
-						}
-						else if (IS_RT3593(pAd))
-						{
-							RT30xxReadRFRegister(pAd, RF_R17, (PUCHAR)(&RFValue));
-							RFValue = ((RFValue & ~0x7F) | (pAd->FreqCalibrationCtrl.AdaptiveFreqOffset & 0x7F));
-							RFValue = min(RFValue, 0x5F);
-							pAd->FreqCalibrationCtrl.AdaptiveFreqOffset = RFValue; /* Keep modified RF R17 value */
-							RT30xxWriteRFRegister(pAd, RF_R17, (UCHAR)RFValue);
-
-							RT30xxReadRFRegister(pAd, RF_R03, (PUCHAR)&RFValue);
-							RFValue = ((RFValue & ~0x80) | 0x80); /* vcocal_en (initiate VCO calibration (reset after completion)) - It should be at the end of RF configuration. */
-							RT30xxWriteRFRegister(pAd, RF_R03, (UCHAR)RFValue);
-						}
-						else
-						{
-							DBGPRINT(RT_DEBUG_ERROR, ("%s: Not support IC type (MACVersion = 0x%X)\n", __FUNCTION__, pAd->MACVersion));
-						}
 						DBGPRINT(RT_DEBUG_TRACE, ("%s: ++ frequency offset = 0x%X\n", __FUNCTION__, pAd->FreqCalibrationCtrl.AdaptiveFreqOffset));
+						FrequencyCalibrationMode(pAd, pAd->chipCap.FreqCalMode);
 					}
 				}
 
@@ -298,7 +224,6 @@ VOID FrequencyCalibration(
 					pAd->FreqCalibrationCtrl.AdaptiveFreqOffset, 
 					pAd->FreqCalibrationCtrl.LatestFreqOffsetOverBeacon, 
 					pAd->FreqCalibrationCtrl.bApproachFrequency));
-
 			}
 		}
 		
@@ -307,27 +232,40 @@ VOID FrequencyCalibration(
 }
 
 
+inline CHAR GetFrequencyOffsetField(
+	PRTMP_ADAPTER pAd,
+	PRXWI_STRUC pRxWI,
+	UINT8 RxWIFrqOffsetField)
+{
+	CHAR FreqOffset = 0;
+
+	if (RxWIFrqOffsetField == RXWI_FRQ_OFFSET_FIELD0)
+	{
+		FreqOffset = (CHAR)(pRxWI->SNR1);
+	}
+	else if (RxWIFrqOffsetField == RXWI_FRQ_OFFSET_FIELD1)
+	{
+		FreqOffset = (CHAR)(pRxWI->FOFFSET);
+	}
+	else
+		DBGPRINT(RT_DEBUG_ERROR, ("%s:Unknow Frequency Offset location(%d)\n", __FUNCTION__, RxWIFrqOffsetField));
+
+	return FreqOffset;		
+}
+
 
 /* Get the frequency offset*/
-
-/* Parameters*/
-/*	pAd: The adapter data structure*/
-/*	pRxWI: Point to the RxWI structure*/
-
-/* Return Value:*/
-/*	Frequency offset*/
-
 CHAR GetFrequencyOffset(
 	IN PRTMP_ADAPTER pAd, 
 	IN PRXWI_STRUC pRxWI)
 {
 	CHAR FreqOffset = 0;
 	
-	if (pAd->FreqCalibrationCtrl.bEnableFrequencyCalibration == TRUE)
-	{	
+	if (pAd->FreqCalibrationCtrl.bEnableFrequencyCalibration)
+	{
 		DBGPRINT(RT_DEBUG_INFO, ("---> %s\n", __FUNCTION__));
 
-		FreqOffset = (CHAR)(pRxWI->FOFFSET);
+		FreqOffset = GetFrequencyOffsetField(pAd, pRxWI, pAd->chipCap.RxWIFrqOffset);
 
 		if ((FreqOffset < LOWERBOUND_OF_FREQUENCY_OFFSET) || 
 		     (FreqOffset > UPPERBOUND_OF_FREQUENCY_OFFSET))
@@ -348,7 +286,5 @@ CHAR GetFrequencyOffset(
 
 	return FreqOffset;
 }
-
 #endif /* CONFIG_STA_SUPPORT */
 #endif /* RTMP_FREQ_CALIBRATION_SUPPORT */
-

@@ -57,26 +57,17 @@ VOID STARxEAPOLFrameIndicate(
 					     ("Receive EAP-SUCCESS Packet\n"));
 				STA_PORT_SECURED(pAd);
 
-				if (pAd->StaCfg.IEEE8021x_required_keys ==
-				    FALSE) {
+				if (pAd->StaCfg.IEEE8021x_required_keys == FALSE) {
 					idx = pAd->StaCfg.DesireSharedKeyId;
-					CipherAlg =
-					    pAd->StaCfg.DesireSharedKey[idx].
-					    CipherAlg;
-					Key =
-					    pAd->StaCfg.DesireSharedKey[idx].
-					    Key;
+					CipherAlg = pAd->StaCfg.DesireSharedKey[idx].CipherAlg;
+					Key = pAd->StaCfg.DesireSharedKey[idx].Key;
 
-					if (pAd->StaCfg.DesireSharedKey[idx].
-					    KeyLen > 0) {
+					if (pAd->StaCfg.DesireSharedKey[idx].KeyLen > 0) {
 						/* Set key material and cipherAlg to Asic */
 						RTMP_ASIC_SHARED_KEY_TABLE(pAd,
 									   BSS0,
 									   idx,
-									   &pAd->
-									   StaCfg.
-									   DesireSharedKey
-									   [idx]);
+									   &pAd->StaCfg.DesireSharedKey[idx]);
 
 						/* STA doesn't need to set WCID attribute for group key */
 
@@ -90,25 +81,15 @@ VOID STARxEAPOLFrameIndicate(
 
 						RTMP_IndicateMediaState(pAd,
 									NdisMediaStateConnected);
-						pAd->ExtraInfo =
-						    GENERAL_LINK_UP;
+						pAd->ExtraInfo = GENERAL_LINK_UP;
 
 						/* For Preventing ShardKey Table is cleared by remove key procedure. */
-						pAd->SharedKey[BSS0][idx].
-						    CipherAlg = CipherAlg;
-						pAd->SharedKey[BSS0][idx].
-						    KeyLen =
-						    pAd->StaCfg.
-						    DesireSharedKey[idx].KeyLen;
-						NdisMoveMemory(pAd->
-							       SharedKey[BSS0]
-							       [idx].Key,
-							       pAd->StaCfg.
-							       DesireSharedKey
-							       [idx].Key,
-							       pAd->StaCfg.
-							       DesireSharedKey
-							       [idx].KeyLen);
+						pAd->SharedKey[BSS0][idx].CipherAlg = CipherAlg;
+						pAd->SharedKey[BSS0][idx].KeyLen =
+						    pAd->StaCfg.DesireSharedKey[idx].KeyLen;
+						NdisMoveMemory(pAd->SharedKey[BSS0][idx].Key,
+							       pAd->StaCfg.DesireSharedKey[idx].Key,
+							       pAd->StaCfg.DesireSharedKey[idx].KeyLen);
 					}
 				}
 			}
@@ -161,6 +142,7 @@ VOID STARxDataFrameAnnounce(
 					    NDIS_STATUS_FAILURE);
 			return;
 		}
+
 
 
 		{
@@ -275,6 +257,9 @@ BOOLEAN STACheckTkipMICValue(
 }
 
 
+#ifdef PRE_ANT_SWITCH
+#endif /* PRE_ANT_SWITCH */
+
 /*
  All Rx routines use RX_BLK structure to hande rx events
  It is very important to build pRxBlk attributes
@@ -295,13 +280,15 @@ VOID STAHandleRxDataFrame(
 	MAC_TABLE_ENTRY *pEntry = NULL;
 	UCHAR FromWhichBSSID = BSS0;
 	UCHAR UserPriority = 0;
+	UCHAR OldPwrMgmt = PWR_ACTIVE;
+	FRAME_CONTROL *pFmeCtrl = &pHeader->FC;
 
 	if ((pHeader->FC.FrDs == 1) && (pHeader->FC.ToDs == 1)) {
 #ifdef CLIENT_WDS
 			if ((pRxWI->WirelessCliID < MAX_LEN_OF_MAC_TABLE)
-			    && IS_ENTRY_CLIENT(&pAd->MacTab.
-					       Content[pRxWI->WirelessCliID])) {
+			    && IS_ENTRY_CLIENT(&pAd->MacTab.Content[pRxWI->WirelessCliID])) {
 			RX_BLK_SET_FLAG(pRxBlk, fRX_WDS);
+			pEntry = &pAd->MacTab.Content[pRxWI->WirelessCliID];
 		} else
 #endif /* CLIENT_WDS */
 		{		/* release packet */
@@ -320,6 +307,9 @@ VOID STAHandleRxDataFrame(
 #endif /* QOS_DLS_SUPPORT */
 
 		/* Drop not my BSS frames */
+		if (pRxWI->WirelessCliID < MAX_LEN_OF_MAC_TABLE)
+			pEntry = &pAd->MacTab.Content[pRxWI->WirelessCliID];
+
 		if (pRxD->MyBss == 0) {
 			{
 				/* release packet */
@@ -329,22 +319,36 @@ VOID STAHandleRxDataFrame(
 			}
 		}
 
+#ifdef RT3290
+		// TODO: shiang, find out what's this??
+		if (pRxD->MyBss)
+		{
+			// TODO: shiang, I makr this line due to I still didn't know what's this yet
+			//pAd->Rssi[pAd->WlanFunCtrl.field.INV_TR_SW0] = pAd->StaCfg.RssiSample.AvgRssi0;
+		}
+#endif /* RT3290 */
 		pAd->RalinkCounters.RxCountSinceLastNULL++;
-		if (pAd->CommonCfg.bAPSDCapable
+
+#ifdef UAPSD_SUPPORT
+		if (pAd->StaCfg.UapsdInfo.bAPSDCapable
 		    && pAd->CommonCfg.APEdcaParm.bAPSDCapable
-		    && (pHeader->FC.SubType & 0x08)) {
+			&& (pHeader->FC.SubType & 0x08))
+		{
 			UCHAR *pData;
 			DBGPRINT(RT_DEBUG_INFO, ("bAPSDCapable\n"));
 
 			/* Qos bit 4 */
 			pData = (PUCHAR) pHeader + LENGTH_802_11;
-			if ((*pData >> 4) & 0x01) {
-				DBGPRINT(RT_DEBUG_INFO,
-					 ("RxDone- Rcv EOSP frame, driver may fall into sleep\n"));
+			if ((*pData >> 4) & 0x01)
+			{
+				{
+					DBGPRINT(RT_DEBUG_INFO, ("RxDone- Rcv EOSP frame, driver may fall into sleep\n"));
 				pAd->CommonCfg.bInServicePeriod = FALSE;
 
 				/* Force driver to fall into sleep mode when rcv EOSP frame */
-				if (!OPSTATUS_TEST_FLAG(pAd, fOP_STATUS_DOZE)) {
+					if (!OPSTATUS_TEST_FLAG(pAd, fOP_STATUS_DOZE))
+					{
+						{
 
 #ifdef RTMP_MAC_USB
 					RTEnqueueInternalCmd(pAd,
@@ -353,6 +357,8 @@ VOID STAHandleRxDataFrame(
 #endif /* RTMP_MAC_USB */
 				}
 			}
+			}
+			}
 
 			if ((pHeader->FC.MoreData)
 			    && (pAd->CommonCfg.bInServicePeriod)) {
@@ -360,6 +366,8 @@ VOID STAHandleRxDataFrame(
 					 ("Sending another trigger frame when More Data bit is set to 1\n"));
 			}
 		}
+#endif /* UAPSD_SUPPORT */
+
 
 		/* Drop NULL, CF-ACK(no data), CF-POLL(no data), and CF-ACK+CF-POLL(no data) data frame */
 		if ((pHeader->FC.SubType & 0x04)) {	/* bit 2 : no DATA */
@@ -376,24 +384,21 @@ VOID STAHandleRxDataFrame(
 			    && (!pAd->CommonCfg.bDLSCapable)
 #endif /* QOS_DLS_SUPPORT */
 			    ) {
-				if (!RTMPEqualMemory
-				    (&pHeader->Addr2, &pAd->MlmeAux.Bssid, 6)) {
+				if (!RTMPEqualMemory(&pHeader->Addr2, &pAd->MlmeAux.Bssid, 6))
+				{
 					/* Receive frame not my BSSID */
 					/* release packet */
-					RELEASE_NDIS_PACKET(pAd, pRxPacket,
-							    NDIS_STATUS_FAILURE);
+					RELEASE_NDIS_PACKET(pAd, pRxPacket, NDIS_STATUS_FAILURE);
 					return;
 				}
 			}
 		} else {	/* Ad-Hoc mode or Not associated */
 
 			/* Ad-Hoc mode, check address 3 for BSSID */
-			if (!RTMPEqualMemory
-			    (&pHeader->Addr3, &pAd->CommonCfg.Bssid, 6)) {
+			if (!RTMPEqualMemory(&pHeader->Addr3, &pAd->CommonCfg.Bssid, 6)) {
 				/* Receive frame not my BSSID */
 				/* release packet */
-				RELEASE_NDIS_PACKET(pAd, pRxPacket,
-						    NDIS_STATUS_FAILURE);
+				RELEASE_NDIS_PACKET(pAd, pRxPacket, NDIS_STATUS_FAILURE);
 				return;
 			}
 		}
@@ -415,7 +420,7 @@ VOID STAHandleRxDataFrame(
 			if ((pHeader->FC.FrDs == 0) && (pHeader->FC.ToDs == 0))
 				RX_BLK_SET_FLAG(pRxBlk, fRX_DLS);
 			else
-#endif
+#endif /* defined(DOT11Z_TDLS_SUPPORT) || defined(QOS_DLS_SUPPORT) */
 				ASSERT(pRxWI->WirelessCliID == BSSID_WCID);
 		}
 
@@ -425,12 +430,20 @@ VOID STAHandleRxDataFrame(
 			pEntry->bIAmBadAtheros = TRUE;
 			pAd->CommonCfg.IOTestParm.bCurrentAtheros = TRUE;
 			pAd->CommonCfg.IOTestParm.bLastAtheros = TRUE;
-			if (!STA_AES_ON(pAd)) {
-				AsicUpdateProtect(pAd, 8, ALLN_SETPROTECT, TRUE,
-						  FALSE);
-			}
+			if (!STA_AES_ON(pAd))
+				RTMP_UPDATE_PROTECT(pAd, 8 , ALLN_SETPROTECT, TRUE, FALSE);
 		}
 	}
+
+#ifdef RTMP_MAC_USB
+#ifdef CONFIG_TSO_SUPPORT
+	if (RTMP_TEST_MORE_FLAG(pAd, fRTMP_ADAPTER_TSO_SUPPORT))
+	{
+		if (pRxD->TCPCHKERR)
+			RTMP_SET_TCP_CHKSUM_FAIL(pRxPacket, TRUE);
+	}
+#endif /* CONFIG_TSO_SUPPORT */
+#endif /* RTMP_MAC_USB */
 
 	pRxBlk->pData = (UCHAR *) pHeader;
 
@@ -466,19 +479,17 @@ VOID STAHandleRxDataFrame(
 	pRxBlk->UserPriority = UserPriority;
 
 	/* check if need to resend PS Poll when received packet with MoreData = 1 */
-	if ((pAd->StaCfg.Psm == PWR_SAVE) && (pHeader->FC.MoreData == 1)) {
-		if ((((UserPriority == 0) || (UserPriority == 3)) &&
-		     pAd->CommonCfg.bAPSDAC_BE == 0) ||
-		    (((UserPriority == 1) || (UserPriority == 2)) &&
-		     pAd->CommonCfg.bAPSDAC_BK == 0) ||
-		    (((UserPriority == 4) || (UserPriority == 5)) &&
-		     pAd->CommonCfg.bAPSDAC_VI == 0) ||
-		    (((UserPriority == 6) || (UserPriority == 7)) &&
-		     pAd->CommonCfg.bAPSDAC_VO == 0)) {
+		{
+			if ((RtmpPktPmBitCheck(pAd) == TRUE) && (pHeader->FC.MoreData == 1)) {
+				if ((((UserPriority == 0) || (UserPriority == 3)) && pAd->CommonCfg.bAPSDAC_BE == 0) ||
+		    			(((UserPriority == 1) || (UserPriority == 2)) && pAd->CommonCfg.bAPSDAC_BK == 0) ||
+					(((UserPriority == 4) || (UserPriority == 5)) && pAd->CommonCfg.bAPSDAC_VI == 0) ||
+					(((UserPriority == 6) || (UserPriority == 7)) && pAd->CommonCfg.bAPSDAC_VO == 0)) {
 			/* non-UAPSD delivery-enabled AC */
 			RTMP_PS_POLL_ENQUEUE(pAd);
 		}
 	}
+		}
 
 	/* 3. Order bit: A-Ralink or HTC+ */
 	if (pHeader->FC.Order) {
@@ -550,6 +561,8 @@ VOID STAHandleRxDataFrame(
 	}
 #endif /* SOFT_ENCRYPT || ADHOC_WPA2PSK_SUPPORT */
 
+
+
 	/* Case I  Process Broadcast & Multicast data frame */
 	if (pRxD->Bcast || pRxD->Mcast) {
 #ifdef STATS_COUNT_SUPPORT
@@ -582,12 +595,15 @@ VOID STAHandleRxDataFrame(
 						   pRxWI);
 		}
 
+
 		Indicate_Legacy_Packet(pAd, pRxBlk, FromWhichBSSID);
 		return;
 	} else if (pRxD->U2M) {
-		pAd->LastRxRate =
-		    (USHORT) ((pRxWI->MCS) + (pRxWI->BW << 7) +
-			      (pRxWI->ShortGI << 8) + (pRxWI->PHYMODE << 14));
+		pAd->LastRxRate = (USHORT)((pRxWI->MCS) +
+								   (pRxWI->BW << 7) +
+								   (pRxWI->ShortGI << 8) +
+								   (pRxWI->STBC << 9) +
+								   (pRxWI->PHYMODE << 14));
 
 #if defined(DOT11Z_TDLS_SUPPORT) || defined(QOS_DLS_SUPPORT)
 		if (RX_BLK_TEST_FLAG(pRxBlk, fRX_DLS)) {
@@ -604,6 +620,15 @@ VOID STAHandleRxDataFrame(
 			}
 		} else
 #endif
+
+		if (INFRA_ON(pAd)) {
+			MAC_TABLE_ENTRY *pEntry = &pAd->MacTab.Content[BSSID_WCID];
+			if (pEntry)
+				Update_Rssi_Sample(pAd,
+						   &pEntry->RssiSample,
+						   pRxWI);
+		}else
+		
 		if (ADHOC_ON(pAd)) {
 			MAC_TABLE_ENTRY *pAdhocEntry = NULL;
 			pAdhocEntry = MacTableLookup(pAd, pHeader->Addr2);
@@ -618,10 +643,24 @@ VOID STAHandleRxDataFrame(
 		pAd->StaCfg.LastSNR0 = (UCHAR) (pRxWI->SNR0);
 		pAd->StaCfg.LastSNR1 = (UCHAR) (pRxWI->SNR1);
 
-
+#ifdef DOT11N_SS3_SUPPORT
+		if (pAd->CommonCfg.RxStream == 3)
+			pAd->StaCfg.LastSNR2 = (UCHAR) (pRxWI->SNR2);
+#endif /* DOT11N_SS3_SUPPORT */
 
 		pAd->RalinkCounters.OneSecRxOkDataCnt++;
 
+		if (pEntry != NULL)
+		{
+			pEntry->LastRxRate = pAd->LastRxRate;
+
+			pEntry->freqOffset = (CHAR)(pRxWI->FOFFSET);
+			pEntry->freqOffsetValid = TRUE;
+
+		}
+
+#ifdef PRE_ANT_SWITCH
+#endif /* PRE_ANT_SWITCH */
 
 #ifdef RTMP_MAC_USB
 		/* there's packet sent to me, keep awake for 1200ms */
@@ -637,29 +676,23 @@ VOID STAHandleRxDataFrame(
 		}
 
 		if (pRxPacket) {
-			pEntry = &pAd->MacTab.Content[pRxWI->WirelessCliID];
-
 			/* process complete frame */
 			if (bFragment && (pRxD->Decrypted)
-			    && (pEntry->WepStatus ==
-				Ndis802_11Encryption2Enabled)) {
+			    && (pEntry->WepStatus == Ndis802_11Encryption2Enabled)) {
 				/* Minus MIC length */
 				pRxBlk->DataSize -= 8;
 
-				/* For TKIP frame, calculate the MIC value      */
-				if (STACheckTkipMICValue(pAd, pEntry, pRxBlk) ==
-				    FALSE) {
+				/* For TKIP frame, calculate the MIC value */
+				if (STACheckTkipMICValue(pAd, pEntry, pRxBlk) == FALSE) {
 					return;
 				}
 			}
 
-			STARxDataFrameAnnounce(pAd, pEntry, pRxBlk,
-					       FromWhichBSSID);
+			STARxDataFrameAnnounce(pAd, pEntry, pRxBlk, FromWhichBSSID);
 			return;
 		} else {
 			/*
-			   just return 
-			   because RTMPDeFragmentDataFrame() will release rx packet, 
+			   just return because RTMPDeFragmentDataFrame() will release rx packet, 
 			   if packet is fragmented
 			 */
 			return;
@@ -681,18 +714,36 @@ VOID STAHandleRxMgmtFrame(
 	IN PRTMP_ADAPTER pAd,
 	IN RX_BLK *pRxBlk)
 {
-#ifdef ANT_DIVERSITY_SUPPORT
-	PRT28XX_RXD_STRUC pRxD = &(pRxBlk->RxD);
-#endif /* ANT_DIVERSITY_SUPPORT */
 	PRXWI_STRUC pRxWI = pRxBlk->pRxWI;
 	PHEADER_802_11 pHeader = pRxBlk->pHeader;
 	PNDIS_PACKET pRxPacket = pRxBlk->pRxPacket;
 	UCHAR MinSNR = 0;
 
+#ifdef RT_CFG80211_SUPPORT
+	if ( ((pHeader->FC.SubType == SUBTYPE_PROBE_REQ) && ( pAd->Cfg80211RegisterProbeReqFrame == TRUE)) ||
+	     ((pHeader->FC.SubType == SUBTYPE_ACTION)/* && ( pAd->Cfg80211RegisterActionFrame == TRUE) */))
+	{
+		UINT32 freq;
+		
+		//if (pHeader->FC.SubType == SUBTYPE_ACTION)
+		//   DBGPRINT(RT_DEBUG_TRACE,("RtmpOsCFG80211RxMgmt: SUBTYPE_ACTION\n"));	
+	
+		MAP_CHANNEL_ID_TO_KHZ(pAd->CommonCfg.Channel, freq);
+		freq /= 1000;
+		if (CFG80211OS_RxMgmt(pAd->net_dev, freq, (PUCHAR)pHeader, pRxWI->MPDUtotalByteCount) )
+		{
+			DBGPRINT(RT_DEBUG_INFO,("RtmpOsCFG80211RxMgmt OK!! TYPE = %d, freq = %d\n", 
+								pHeader->FC.SubType, freq));
+		}
+	}
+#endif /* RT_CFG80211_SUPPORT */
+
+
 	do {
 
+
 		/* check if need to resend PS Poll when received packet with MoreData = 1 */
-		if ((pAd->StaCfg.Psm == PWR_SAVE)
+		if ((RtmpPktPmBitCheck(pAd) == TRUE)
 		    && (pHeader->FC.MoreData == 1)) {
 			/* for UAPSD, all management frames will be VO priority */
 			if (pAd->CommonCfg.bAPSDAC_VO == 0) {
@@ -711,6 +762,12 @@ VOID STAHandleRxMgmtFrame(
 
 			pAd->StaCfg.LastSNR0 = (UCHAR) (pRxWI->SNR0);
 			pAd->StaCfg.LastSNR1 = (UCHAR) (pRxWI->SNR1);
+#ifdef DOT11N_SS3_SUPPORT
+			pAd->StaCfg.LastSNR2 = (UCHAR) (pRxWI->SNR2);
+#endif /* DOT11N_SS3_SUPPORT */
+
+#ifdef PRE_ANT_SWITCH
+#endif /* PRE_ANT_SWITCH */
 		}
 
 		if ((pHeader->FC.SubType == SUBTYPE_BEACON) &&
@@ -723,23 +780,6 @@ VOID STAHandleRxMgmtFrame(
 						   pRxWI);
 		}
 #ifdef RT30xx
-#ifdef ANT_DIVERSITY_SUPPORT
-		/* collect rssi information for antenna diversity */
-		if (((pAd->NicConfig2.field.AntDiversity) 
-#if TXRX_SW_ANTDIV_SUPPORT
-			|| (pAd->chipCap.bTxRxSwAntDiv)	
-#endif
-			) && (pAd->CommonCfg.bRxAntDiversity != ANT_DIVERSITY_DISABLE)) {
-			if ((pRxD->U2M)
-			    || ((pHeader->FC.SubType == SUBTYPE_BEACON)
-				&&
-				(MAC_ADDR_EQUAL
-				 (&pAd->CommonCfg.Bssid, &pHeader->Addr2)))) {
-				STA_COLLECT_RX_ANTENNA_AVERAGE_RSSI(pAd, ConvertToRssi(pAd, (UCHAR) pRxWI->RSSI0, RSSI_0), 0);	/* Note: RSSI2 not used on RT73 */
-				pAd->StaCfg.NumOfAvgRssiSample++;
-			}
-		}
-#endif /* ANT_DIVERSITY_SUPPORT */
 #endif /* RT30xx */
 
 		/* First check the size, it MUST not exceed the mlme queue size */
@@ -748,15 +788,15 @@ VOID STAHandleRxMgmtFrame(
 			break;
 		}
 
+
 		MinSNR = min((CHAR) pRxWI->SNR0, (CHAR) pRxWI->SNR1);
-		/* 
-		   Signal in MLME_QUEUE isn't used, therefore take this item to save min SNR.
-		 */
+		/* Signal in MLME_QUEUE isn't used, therefore take this item to save min SNR. */
 		REPORT_MGMT_FRAME_TO_MLME(pAd, pRxWI->WirelessCliID, pHeader,
 					  pRxWI->MPDUtotalByteCount,
 					  pRxWI->RSSI0, pRxWI->RSSI1,
 					  pRxWI->RSSI2, MinSNR,
 					  OPMODE_STA);
+
 	} while (FALSE);
 
 	RELEASE_NDIS_PACKET(pAd, pRxPacket, NDIS_STATUS_SUCCESS);
@@ -829,12 +869,13 @@ BOOLEAN STARxDoneInterruptHandle(
 	PNDIS_PACKET pRxPacket;
 	PHEADER_802_11 pHeader;
 	RX_BLK RxCell;
+	UINT8 RXWISize = pAd->chipCap.RXWISize;
 
 	RxProcessed = RxPending = 0;
 
 	/* process whole rx ring */
-	while (1) {
-
+	while (1)
+	{
 		if (RTMP_TEST_FLAG(pAd, fRTMP_ADAPTER_RADIO_OFF |
 				   fRTMP_ADAPTER_RESET_IN_PROGRESS |
 				   fRTMP_ADAPTER_HALT_IN_PROGRESS |
@@ -843,36 +884,38 @@ BOOLEAN STARxDoneInterruptHandle(
 			break;
 		}
 
+
 		RxProcessed++;
 
 		/*
-		   1. allocate a new data packet into rx ring to replace received packet 
-		   then processing the received packet
-		   2. the callee must take charge of release of packet
-		   3. As far as driver is concerned ,
-		   the rx packet must 
-		   a. be indicated to upper layer or 
-		   b. be released if it is discarded
+			1. allocate a new data packet into rx ring to replace received
+				packet, then processing the received packet.
+			2. the callee must take charge of release of packet
+			3. As far as driver is concerned, the rx packet must
+			   a. be indicated to upper layer or 
+			   b. be released if it is discarded
 		 */
-		pRxPacket =
-		    GetPacketFromRxRing(pAd, &(RxCell.RxD), &bReschedule,
-					&RxPending);
-		if (pRxPacket == NULL) {
-			/* no more packet to process */
+		pRxPacket = GetPacketFromRxRing(pAd, &(RxCell.RxD), &bReschedule, &RxPending);
+		if (pRxPacket == NULL)
 			break;
-		}
 
-		/* get rx ring descriptor */
+		/* get rx descriptor and buffer */
 		pRxD = &(RxCell.RxD);
-		/* get rx data buffer */
 		pData = GET_OS_PKT_DATAPTR(pRxPacket);
 		pRxWI = (PRXWI_STRUC) pData;
-		pHeader = (PHEADER_802_11) (pData + RXWI_SIZE);
+		pHeader = (PHEADER_802_11) (pData + RXWISize);
 
 #ifdef RT_BIG_ENDIAN
 		RTMPFrameEndianChange(pAd, (PUCHAR) pHeader, DIR_READ, TRUE);
-		RTMPWIEndianChange((PUCHAR) pRxWI, TYPE_RXWI);
+		RTMPWIEndianChange(pAd, (PUCHAR) pRxWI, TYPE_RXWI);
 #endif
+
+#ifdef DBG_CTRL_SUPPORT
+#ifdef INCLUDE_DEBUG_QUEUE
+		if (pAd->CommonCfg.DebugFlags & DBF_DBQ_RXWI)
+			dbQueueEnqueueRxFrame(pData, (UCHAR *)pHeader, pAd->CommonCfg.DebugFlags);
+#endif /* INCLUDE_DEBUG_QUEUE */
+#endif /* DBG_CTRL_SUPPORT */
 
 		/* build RxCell */
 		RxCell.pRxWI = pRxWI;
@@ -884,10 +927,8 @@ BOOLEAN STARxDoneInterruptHandle(
 		SET_OPMODE_STA(&RxCell);
 
 		/* Increase Total receive byte counter after real data received no mater any error or not */
-		pAd->RalinkCounters.ReceivedByteCount +=
-		    pRxWI->MPDUtotalByteCount;
-		pAd->RalinkCounters.OneSecReceivedByteCount +=
-		    pRxWI->MPDUtotalByteCount;
+		pAd->RalinkCounters.ReceivedByteCount += pRxWI->MPDUtotalByteCount;
+		pAd->RalinkCounters.OneSecReceivedByteCount += pRxWI->MPDUtotalByteCount;
 		pAd->RalinkCounters.RxCount++;
 
 #ifdef STATS_COUNT_SUPPORT
@@ -895,29 +936,17 @@ BOOLEAN STARxDoneInterruptHandle(
 #endif /* STATS_COUNT_SUPPORT */
 
 		if (pRxWI->MPDUtotalByteCount < 14)
+		{
 			Status = NDIS_STATUS_FAILURE;
-
-		if (MONITOR_ON(pAd)) {
-			STA_MonPktSend(pAd, &RxCell);
-			break;
-		}
-
-		/* STARxDoneInterruptHandle() is called in rtusb_bulk.c */
-#ifdef RALINK_ATE
-		if (ATE_ON(pAd)) {
-			pAd->ate.RxCntPerSec++;
-			ATESampleRssi(pAd, pRxWI);
-#ifdef RALINK_QA
-			if (pAd->ate.bQARxStart == TRUE) {
-				/* (*pRxD) has been swapped in GetPacketFromRxRing() */
-				ATE_QA_Statistics(pAd, pRxWI, pRxD, pHeader);
-			}
-#endif /* RALINK_QA */
-			RELEASE_NDIS_PACKET(pAd, pRxPacket,
-					    NDIS_STATUS_SUCCESS);
 			continue;
 		}
-#endif /* RALINK_ATE */
+
+		if (MONITOR_ON(pAd))
+		{
+			STA_MonPktSend(pAd, &RxCell);
+			continue;
+		}
+
 
 		/* Check for all RxD errors */
 		Status = RTMPCheckRxError(pAd, pHeader, pRxWI, pRxD);
@@ -925,57 +954,43 @@ BOOLEAN STARxDoneInterruptHandle(
 		/* Handle the received frame */
 		if (Status == NDIS_STATUS_SUCCESS) {
 #ifdef RTMP_FREQ_CALIBRATION_SUPPORT
-			if ((pAd->FreqCalibrationCtrl.
-			     bEnableFrequencyCalibration == TRUE)
-			    && (INFRA_ON(pAd)) && (pRxD->Crc == 0)
-			    && (pHeader->FC.Type == BTYPE_MGMT)
-			    && (pHeader->FC.SubType == SUBTYPE_BEACON)
-			    &&
-			    (MAC_ADDR_EQUAL
-			     (&pAd->CommonCfg.Bssid, &pHeader->Addr2))) {
-				RTMP_CHIP_ASIC_FREQ_OFFSET_GET(pAd, pRxWI,
-							       pAd->
-							       FreqCalibrationCtrl.
-							       LatestFreqOffsetOverBeacon);
-				pAd->FreqCalibrationCtrl.BeaconPhyMode =
-				    (UCHAR) (pRxWI->PHYMODE);
+			if (pAd->chipCap.FreqCalibrationSupport)
+			{
+				if ((pAd->FreqCalibrationCtrl.bEnableFrequencyCalibration == TRUE)
+			    	&& (INFRA_ON(pAd)) && (pRxD->Crc == 0)
+			    	&& (pHeader->FC.Type == BTYPE_MGMT)
+			    	&& (pHeader->FC.SubType == SUBTYPE_BEACON)
+			    	&& (MAC_ADDR_EQUAL(&pAd->CommonCfg.Bssid, &pHeader->Addr2)))
+				{
+					pAd->FreqCalibrationCtrl.LatestFreqOffsetOverBeacon =
+												GetFrequencyOffset(pAd, pRxWI);
+					pAd->FreqCalibrationCtrl.BeaconPhyMode = (UCHAR) (pRxWI->PHYMODE);
 
-				DBGPRINT(RT_DEBUG_TRACE,
+					DBGPRINT(RT_DEBUG_INFO,
 					 ("%s: Beacon, CRC error = %d, pHeader->Sequence = %d, SA = %02X:%02X:%02X:%02X:%02X:%02X, frequency offset = %d, MCS = %d, BW = %d PHYMODE = %d\n",
 					  __FUNCTION__, pRxD->Crc,
-					  pHeader->Sequence, pHeader->Addr2[0],
-					  pHeader->Addr2[1], pHeader->Addr2[2],
-					  pHeader->Addr2[3], pHeader->Addr2[4],
-					  pHeader->Addr2[5],
+					  pHeader->Sequence, PRINT_MAC(pHeader->Addr2),
 					  ((CHAR) (pRxWI->FOFFSET)), pRxWI->MCS,
 					  pRxWI->BW, pRxWI->PHYMODE));
+				}
 			}
 #endif /* RTMP_FREQ_CALIBRATION_SUPPORT */
 
 			switch (pHeader->FC.Type) {
-				/* CASE I, receive a DATA frame */
 			case BTYPE_DATA:
-				{
-					/* process DATA frame */
 					STAHandleRxDataFrame(pAd, &RxCell);
-				}
 				break;
-				/* CASE II, receive a MGMT frame */
+
 			case BTYPE_MGMT:
-				{
 					STAHandleRxMgmtFrame(pAd, &RxCell);
-				}
 				break;
-				/* CASE III. receive a CNTL frame */
+
 			case BTYPE_CNTL:
-				{
 					STAHandleRxControlFrame(pAd, &RxCell);
-				}
 				break;
-				/* discard other type */
+
 			default:
-				RELEASE_NDIS_PACKET(pAd, pRxPacket,
-						    NDIS_STATUS_FAILURE);
+				RELEASE_NDIS_PACKET(pAd, pRxPacket, NDIS_STATUS_FAILURE);
 				break;
 			}
 		} else {
@@ -994,11 +1009,11 @@ BOOLEAN STAHandleRxDonePacket(
 	IN	PNDIS_PACKET	pRxPacket,
 	IN	RX_BLK			*pRxCell)
 {
-	RT28XX_RXD_STRUC	*pRxD;
-	PRXWI_STRUC		pRxWI;
-	PHEADER_802_11	pHeader;
-	BOOLEAN		bReschedule = FALSE;
-	NDIS_STATUS			Status;
+	RT28XX_RXD_STRUC *pRxD;
+	PRXWI_STRUC pRxWI;
+	PHEADER_802_11 pHeader;
+	BOOLEAN bReschedule = FALSE;
+	NDIS_STATUS Status;
 
 	SET_OPMODE_STA(pRxCell);
 	/*pRxCell->OpMode = OPMODE_STA;*/
@@ -1014,22 +1029,6 @@ BOOLEAN STAHandleRxDonePacket(
 	}
 
 	/* STARxDoneInterruptHandle() is called in rtusb_bulk.c */
-#ifdef RALINK_ATE
-	if (ATE_ON(pAd))
-	{
-		pAd->ate.RxCntPerSec++;
-		ATESampleRssi(pAd, pRxWI);
-#ifdef RALINK_QA
-		if (pAd->ate.bQARxStart == TRUE)
-		{
-			/* (*pRxD) has been swapped in GetPacketFromRxRing() */
-			ATE_QA_Statistics(pAd, pRxWI, pRxD,	pHeader);
-		}
-#endif /* RALINK_QA */
-		RELEASE_NDIS_PACKET(pAd, pRxPacket, NDIS_STATUS_SUCCESS);
-		return bReschedule;
-	}
-#endif /* RALINK_ATE */
 
 	/* Check for all RxD errors */
 	Status = RTMPCheckRxError(pAd, pHeader, pRxWI, pRxD);
@@ -1037,25 +1036,42 @@ BOOLEAN STAHandleRxDonePacket(
 	/* Handle the received frame */
 	if (Status == NDIS_STATUS_SUCCESS)
 	{
+#ifdef RTMP_FREQ_CALIBRATION_SUPPORT
+		if (pAd->chipCap.FreqCalibrationSupport)
+		{
+			if ((pAd->FreqCalibrationCtrl.bEnableFrequencyCalibration == TRUE)
+				&& (INFRA_ON(pAd)) && (pRxD->Crc == 0)
+				&& (pHeader->FC.Type == BTYPE_MGMT)
+				&& (pHeader->FC.SubType == SUBTYPE_BEACON)
+				&& (MAC_ADDR_EQUAL(&pAd->CommonCfg.Bssid, &pHeader->Addr2)))
+			{
+				pAd->FreqCalibrationCtrl.LatestFreqOffsetOverBeacon = GetFrequencyOffset(pAd, pRxWI);
+				pAd->FreqCalibrationCtrl.BeaconPhyMode = (UCHAR) (pRxWI->PHYMODE);
+
+				DBGPRINT(RT_DEBUG_INFO,
+				 ("%s: Beacon, CRC error = %d, pHeader->Sequence = %d, SA = %02X:%02X:%02X:%02X:%02X:%02X, frequency offset = %d, MCS = %d, BW = %d PHYMODE = %d\n",
+				  __FUNCTION__, pRxD->Crc,
+				  pHeader->Sequence, PRINT_MAC(pHeader->Addr2),
+				  ((CHAR) (pRxWI->FOFFSET)), pRxWI->MCS,
+				  pRxWI->BW, pRxWI->PHYMODE));
+			}
+		}
+#endif /* RTMP_FREQ_CALIBRATION_SUPPORT */
 
 		switch (pHeader->FC.Type)
 		{
-			/* CASE I, receive a DATA frame */
 			case BTYPE_DATA:
 				STAHandleRxDataFrame(pAd, pRxCell);
 				break;
 
-			/* CASE II, receive a MGMT frame */
 			case BTYPE_MGMT:
 				STAHandleRxMgmtFrame(pAd, pRxCell);
 				break;
 
-			/* CASE III. receive a CNTL frame */
 			case BTYPE_CNTL:
 				STAHandleRxControlFrame(pAd, pRxCell);
 				break;
 		
-			/* discard other type */
 			default:
 				RELEASE_NDIS_PACKET(pAd, pRxPacket, NDIS_STATUS_FAILURE);
 				break;
@@ -1135,34 +1151,32 @@ VOID STASendPackets(
 			} else {
 				/* Record that orignal packet source is from NDIS layer,so that */
 				/* later on driver knows how to release this NDIS PACKET */
-				if (0
+				if (INFRA_ON(pAd) && (0
 #ifdef QOS_DLS_SUPPORT
 				    || (pAd->CommonCfg.bDLSCapable)
 #endif /* QOS_DLS_SUPPORT */
-				    ) {
+				    )) {
 					MAC_TABLE_ENTRY *pEntry;
 					PUCHAR pSrcBufVA =
 					    GET_OS_PKT_DATAPTR(pPacket);
 
 					pEntry = MacTableLookup(pAd, pSrcBufVA);
 
-					if (pEntry
-					    && (IS_ENTRY_DLS(pEntry)
-						|| IS_ENTRY_TDLS(pEntry))) {
-						RTMP_SET_PACKET_WCID(pPacket,
-								     pEntry->
-								     Aid);
+					if (pEntry && (0
+#ifdef QOS_DLS_SUPPORT
+						|| IS_ENTRY_DLS(pEntry)
+#endif /* QOS_DLS_SUPPORT */
+						)) {
+						RTMP_SET_PACKET_WCID(pPacket, pEntry->Aid);
 					} else {
-						RTMP_SET_PACKET_WCID(pPacket,
-								     0);
+						RTMP_SET_PACKET_WCID(pPacket, 0);
 					}
 				} else {
 					RTMP_SET_PACKET_WCID(pPacket, 0);
 				}
 
 				RTMP_SET_PACKET_SOURCE(pPacket, PKTSRC_NDIS);
-				NDIS_SET_PACKET_STATUS(pPacket,
-						       NDIS_STATUS_PENDING);
+				NDIS_SET_PACKET_STATUS(pPacket, NDIS_STATUS_PENDING);
 				pAd->RalinkCounters.PendingNdisPacketCount++;
 
 				allowToSend = TRUE;
@@ -1250,7 +1264,7 @@ NDIS_STATUS STASendPacket(
 				pEntry = &pAd->MacTab.Content[tmpWcid];
 				Rate = pAd->MacTab.Content[tmpWcid].CurrTxRate;
 			} else
-#endif
+#endif /* defined(QOS_DLS_SUPPORT) || defined(DOT11Z_TDLS_SUPPORT) */
 			{
 				pEntry = &pAd->MacTab.Content[BSSID_WCID];
 				RTMP_SET_PACKET_WCID(pPacket, BSSID_WCID);
@@ -1390,9 +1404,10 @@ NDIS_STATUS STASendPacket(
 	RTMP_SET_PACKET_UP(pPacket, UserPriority);
 
 
+	{
 		/* Make sure SendTxWait queue resource won't be used by other threads */
 		RTMP_IRQ_LOCK(&pAd->irq_lock, IrqFlags);
-		if (pAd->TxSwQueue[QueIdx].Number >= MAX_PACKETS_IN_QUEUE) {
+		if (pAd->TxSwQueue[QueIdx].Number >= pAd->TxSwQMaxLen) {
 			RTMP_IRQ_UNLOCK(&pAd->irq_lock, IrqFlags);
 #ifdef BLOCK_NET_IF
 			StopNetIfQueue(pAd, QueIdx, pPacket);
@@ -1401,10 +1416,10 @@ NDIS_STATUS STASendPacket(
 
 			return NDIS_STATUS_FAILURE;
 		} else {
-			InsertTailQueueAc(pAd, pEntry, &pAd->TxSwQueue[QueIdx],
-					  PACKET_TO_QUEUE_ENTRY(pPacket));
+				InsertTailQueueAc(pAd, pEntry, &pAd->TxSwQueue[QueIdx], PACKET_TO_QUEUE_ENTRY(pPacket));
 		}
 		RTMP_IRQ_UNLOCK(&pAd->irq_lock, IrqFlags);
+	}
 
 #ifdef DOT11_N_SUPPORT
 	if ((pAd->CommonCfg.BACapability.field.AutoBA == TRUE) &&
@@ -1412,19 +1427,17 @@ NDIS_STATUS STASendPacket(
 		if (((pEntry->TXBAbitmap & (1 << UserPriority)) == 0) &&
 		    ((pEntry->BADeclineBitmap & (1 << UserPriority)) == 0) &&
 		    (pEntry->PortSecured == WPA_802_1X_PORT_SECURED)
-		    /*
-		       For IOT compatibility, if  
-		       1. It is Ralink chip or                          
-		       2. It is OPEN or AES mode, 
-		       then BA session can be bulit.
-		     */
 		    &&
 		    ((IS_ENTRY_CLIENT(pEntry) && pAd->MlmeAux.APRalinkIe != 0x0)
 		     || (pEntry->WepStatus != Ndis802_11WEPEnabled
 			 && pEntry->WepStatus != Ndis802_11Encryption2Enabled))
 		    &&
 		    (!(RTMP_TEST_FLAG(pAd, fRTMP_ADAPTER_BSS_SCAN_IN_PROGRESS)))
-		    ) {
+#ifdef RT3290
+		    && (!(IS_RT3290(pAd) && pAd->WlanBTCoexInfo.ampduOff == TRUE))
+#endif /* RT3290 */
+		    )
+		{
 			BAOriSessionSetUp(pAd, pEntry, UserPriority, 0, 10,
 					  FALSE);
 		}
@@ -1517,17 +1530,13 @@ NDIS_STATUS RTMPFreeTXDRequest(
 VOID RTMPSendNullFrame(
 	IN PRTMP_ADAPTER pAd,
 	IN UCHAR TxRate,
-	IN BOOLEAN bQosNull)
+	IN BOOLEAN bQosNull,
+	IN USHORT PwrMgmt)
 {
 	UCHAR NullFrame[48];
 	ULONG Length;
 	PHEADER_802_11 pHeader_802_11;
 
-#ifdef RALINK_ATE
-	if (ATE_ON(pAd)) {
-		return;
-	}
-#endif /* RALINK_ATE */
 
 	/* WPA 802.1x secured port control */
 	if (((pAd->StaCfg.AuthMode == Ndis802_11AuthModeWPA) ||
@@ -1553,14 +1562,22 @@ VOID RTMPSendNullFrame(
 	COPY_MAC_ADDR(pHeader_802_11->Addr2, pAd->CurrentAddress);
 	COPY_MAC_ADDR(pHeader_802_11->Addr3, pAd->CommonCfg.Bssid);
 
-	if (pAd->CommonCfg.bAPSDForcePowerSave) {
+	if (pAd->CommonCfg.bAPSDForcePowerSave)
+	{
 		pHeader_802_11->FC.PwrMgmt = PWR_SAVE;
-	} else {
-		pHeader_802_11->FC.PwrMgmt =
-		    (pAd->StaCfg.Psm == PWR_SAVE) ? 1 : 0;
 	}
-	pHeader_802_11->Duration =
-	    pAd->CommonCfg.Dsifs + RTMPCalcDuration(pAd, TxRate, 14);
+	else
+	{
+		BOOLEAN FlgCanPmBitSet = TRUE;
+
+
+		if (FlgCanPmBitSet == TRUE)
+		pHeader_802_11->FC.PwrMgmt = PwrMgmt;
+		else
+			pHeader_802_11->FC.PwrMgmt = PWR_ACTIVE;
+	}
+
+	pHeader_802_11->Duration = pAd->CommonCfg.Dsifs + RTMPCalcDuration(pAd, TxRate, 14);
 
 	/* sequence is increased in MlmeHardTx */
 	pHeader_802_11->Sequence = pAd->Sequence;
@@ -1579,6 +1596,85 @@ VOID RTMPSendNullFrame(
 	HAL_KickOutNullFrameTx(pAd, 0, NullFrame, Length);
 
 }
+
+#ifdef CONFIG_MULTI_CHANNEL
+VOID RTMPP2PSendNullFrame(
+	IN PRTMP_ADAPTER pAd,
+	IN UCHAR TxRate,
+	IN BOOLEAN bQosNull,
+	IN USHORT PwrMgmt)
+{
+	UCHAR NullFrame[48];
+	ULONG Length;
+	PHEADER_802_11 pHeader_802_11;
+	PAPCLI_STRUCT pApCliEntry = NULL;
+	 PMAC_TABLE_ENTRY pEntry = NULL;
+	pApCliEntry = &pAd->ApCfg.ApCliTab[0];
+
+
+	if (pApCliEntry == NULL || !pApCliEntry->Valid)
+		return;
+	
+ 	pEntry = MacTableLookup(pAd, pApCliEntry->CfgApCliBssid);
+
+	if (pEntry == NULL)
+		return;
+	/* WPA 802.1x secured port control */
+	if (((pEntry->AuthMode == Ndis802_11AuthModeWPA) ||
+	     (pEntry->AuthMode == Ndis802_11AuthModeWPAPSK) ||
+	     (pEntry->AuthMode == Ndis802_11AuthModeWPA2) ||
+	     (pEntry->AuthMode == Ndis802_11AuthModeWPA2PSK)
+	    ) && (pEntry->PortSecured == WPA_802_1X_PORT_NOT_SECURED)) {
+		return;
+	}
+
+	NdisZeroMemory(NullFrame, 48);
+	Length = sizeof (HEADER_802_11);
+
+	pHeader_802_11 = (PHEADER_802_11) NullFrame;
+
+	pHeader_802_11->FC.Type = BTYPE_DATA;
+	pHeader_802_11->FC.SubType = SUBTYPE_NULL_FUNC;
+	pHeader_802_11->FC.ToDs = 1;
+	COPY_MAC_ADDR(pHeader_802_11->Addr1, pEntry->Addr);
+	COPY_MAC_ADDR(pHeader_802_11->Addr2, pApCliEntry->CurrentAddress);
+	COPY_MAC_ADDR(pHeader_802_11->Addr3, pApCliEntry->CfgApCliBssid);
+
+	if (pAd->CommonCfg.bAPSDForcePowerSave)
+	{
+		pHeader_802_11->FC.PwrMgmt = PWR_SAVE;
+	}
+	else
+	{
+		BOOLEAN FlgCanPmBitSet = TRUE;
+
+
+		if (FlgCanPmBitSet == TRUE)
+		pHeader_802_11->FC.PwrMgmt = PwrMgmt;
+		else
+			pHeader_802_11->FC.PwrMgmt = PWR_ACTIVE;
+	}
+
+	pHeader_802_11->Duration = pAd->CommonCfg.Dsifs + RTMPCalcDuration(pAd, TxRate, 14);
+
+	/* sequence is increased in MlmeHardTx */
+	pHeader_802_11->Sequence = pAd->Sequence;
+	pAd->Sequence = (pAd->Sequence + 1) & MAXSEQ;	/* next sequence  */
+
+	/* Prepare QosNull function frame */
+	if (bQosNull) {
+		pHeader_802_11->FC.SubType = SUBTYPE_QOS_NULL;
+
+		/* copy QOS control bytes */
+		NullFrame[Length] = 0;
+		NullFrame[Length + 1] = 0;
+		Length += 2;	/* if pad with 2 bytes for alignment, APSD will fail */
+	}
+	DBGPRINT(RT_DEBUG_OFF, (" RTMPP2PSendNullFrame Addr = %02x:%02x:%02x:%02x:%02x:%02x pwr=%d\n", PRINT_MAC(pHeader_802_11->Addr1),PwrMgmt));
+	
+	HAL_KickOutNullFrameTx(pAd, 0, NullFrame, Length);
+}
+#endif /*CONFIG_MULTI_CHANNEL*/
 
 /*
 --------------------------------------------------------
@@ -1613,14 +1709,12 @@ VOID STAFindCipherAlgorithm(
 			Cipher = pAd->StaCfg.PairCipher;	/* Cipher for Unicast */
 
 		if (RTMP_GET_PACKET_EAPOL(pTxBlk->pPacket)) {
-			ASSERT(pAd->SharedKey[BSS0][0].CipherAlg <=
-			       CIPHER_CKIP128);
 
 			/* 4-way handshaking frame must be clear */
-			if (!(TX_BLK_TEST_FLAG(pTxBlk, fTX_bClearEAPFrame)) &&
-			    (pAd->SharedKey[BSS0][0].CipherAlg) &&
-			    (pAd->SharedKey[BSS0][0].KeyLen)) {
-				CipherAlg = pAd->SharedKey[BSS0][0].CipherAlg;
+			if (!(TX_BLK_TEST_FLAG(pTxBlk, fTX_bClearEAPFrame)) && pMacEntry &&
+			    (pMacEntry->PairwiseKey.CipherAlg) && 
+			    (pMacEntry->PairwiseKey.KeyLen)) { 
+				CipherAlg = pMacEntry->PairwiseKey.CipherAlg; 
 				KeyIdx = 0;
 			}
 		} else if (Cipher == Ndis802_11Encryption1Enabled) {
@@ -1629,7 +1723,9 @@ VOID STAFindCipherAlgorithm(
 			   (Cipher == Ndis802_11Encryption3Enabled)) {
 			if ((*pSrcBufVA & 0x01) && (ADHOC_ON(pAd)))	/* multicast */
 				KeyIdx = pAd->StaCfg.DefaultKeyId;
-			else if (pAd->SharedKey[BSS0][0].KeyLen)
+			else if (ADHOC_ON(pAd) && pAd->SharedKey[BSS0][0].KeyLen)
+				KeyIdx = 0;
+			else if (pMacEntry && pMacEntry->PairwiseKey.KeyLen) 
 				KeyIdx = 0;
 			else
 				KeyIdx = pAd->StaCfg.DefaultKeyId;
@@ -1638,7 +1734,10 @@ VOID STAFindCipherAlgorithm(
 		if (KeyIdx == 0xff)
 			CipherAlg = CIPHER_NONE;
 		else if ((Cipher == Ndis802_11EncryptionDisabled)
-			 || (pAd->SharedKey[BSS0][KeyIdx].KeyLen == 0))
+			 || (((Cipher == Ndis802_11Encryption1Enabled) && (pAd->SharedKey[BSS0][KeyIdx].KeyLen == 0))
+			|| (((Cipher == Ndis802_11Encryption2Enabled) || (Cipher == Ndis802_11Encryption3Enabled)
+			|| (Cipher == Ndis802_11Encryption4Enabled)) && pMacEntry && (pMacEntry->PairwiseKey.KeyLen == 0))
+			&& (!ADHOC_ON(pAd))) || (ADHOC_ON(pAd) && (pAd->SharedKey[BSS0][KeyIdx].KeyLen == 0)))
 			CipherAlg = CIPHER_NONE;
 #ifdef WPA_SUPPLICANT_SUPPORT
 		else if (pAd->StaCfg.WpaSupplicantUP &&
@@ -1649,8 +1748,19 @@ VOID STAFindCipherAlgorithm(
 			CipherAlg = CIPHER_NONE;
 #endif /* WPA_SUPPLICANT_SUPPORT */
 		else {
+			if (ADHOC_ON(pAd)) {
 			CipherAlg = pAd->SharedKey[BSS0][KeyIdx].CipherAlg;
 			pKey = &pAd->SharedKey[BSS0][KeyIdx];
+		}
+			else if (((Cipher == Ndis802_11Encryption2Enabled) ||
+                           (Cipher == Ndis802_11Encryption3Enabled) ||
+			   (Cipher == Ndis802_11Encryption4Enabled)) && pMacEntry) {
+				CipherAlg = pMacEntry->PairwiseKey.CipherAlg;
+				pKey = &pMacEntry->PairwiseKey;
+			} else {
+				CipherAlg = pAd->SharedKey[BSS0][KeyIdx].CipherAlg;
+				pKey = &pAd->SharedKey[BSS0][KeyIdx];
+			}
 		}
 	}
 
@@ -1669,6 +1779,7 @@ VOID STABuildCommon802_11Header(
 	BOOLEAN bDLSFrame = FALSE;
 	INT DlsEntryIndex = 0;
 #endif /* QOS_DLS_SUPPORT */
+	UINT8 TXWISize = pAd->chipCap.TXWISize;
 
 	/* MAKE A COMMON 802.11 HEADER */
 
@@ -1676,7 +1787,7 @@ VOID STABuildCommon802_11Header(
 	pTxBlk->MpduHeaderLen = sizeof (HEADER_802_11);
 
 	pHeader_802_11 =
-	    (HEADER_802_11 *) & pTxBlk->HeaderBuf[TXINFO_SIZE + TXWI_SIZE];
+	    (HEADER_802_11 *) & pTxBlk->HeaderBuf[TXINFO_SIZE + TXWISize];
 
 	NdisZeroMemory(pHeader_802_11, sizeof (HEADER_802_11));
 
@@ -1708,8 +1819,7 @@ VOID STABuildCommon802_11Header(
 			pHeader_802_11->Sequence =
 			    pTxBlk->pMacEntry->TxSeq[pTxBlk->UserPriority];
 			pTxBlk->pMacEntry->TxSeq[pTxBlk->UserPriority] =
-			    (pTxBlk->pMacEntry->TxSeq[pTxBlk->UserPriority] +
-			     1) & MAXSEQ;
+			    (pTxBlk->pMacEntry->TxSeq[pTxBlk->UserPriority] + 1) & MAXSEQ;
 		}
 	} else {
 		pHeader_802_11->Sequence = pAd->Sequence;
@@ -1781,7 +1891,7 @@ VOID STABuildCommon802_11Header(
 	if (pAd->CommonCfg.bAPSDForcePowerSave)
 		pHeader_802_11->FC.PwrMgmt = PWR_SAVE;
 	else
-		pHeader_802_11->FC.PwrMgmt = (pAd->StaCfg.Psm == PWR_SAVE);
+		pHeader_802_11->FC.PwrMgmt = (RtmpPktPmBitCheck(pAd) == TRUE);
 }
 
 #ifdef DOT11_N_SUPPORT
@@ -1826,10 +1936,8 @@ VOID STABuildCache802_11Header(
 		/* The addr3 of normal packet send from DS is Dest Mac address. */
 #ifdef QOS_DLS_SUPPORT
 		if (bDLSFrame) {
-			COPY_MAC_ADDR(pHeader80211->Addr1,
-				      pTxBlk->pSrcBufHeader);
-			COPY_MAC_ADDR(pHeader80211->Addr3,
-				      pAd->CommonCfg.Bssid);
+			COPY_MAC_ADDR(pHeader80211->Addr1, pTxBlk->pSrcBufHeader);
+			COPY_MAC_ADDR(pHeader80211->Addr3, pAd->CommonCfg.Bssid);
 			pHeader80211->FC.ToDs = 0;
 		} else
 #endif /* QOS_DLS_SUPPORT */
@@ -1859,7 +1967,7 @@ VOID STABuildCache802_11Header(
 	if (pAd->CommonCfg.bAPSDForcePowerSave)
 		pHeader80211->FC.PwrMgmt = PWR_SAVE;
 	else
-		pHeader80211->FC.PwrMgmt = (pAd->StaCfg.Psm == PWR_SAVE);
+		pHeader80211->FC.PwrMgmt = (RtmpPktPmBitCheck(pAd) == TRUE);
 }
 #endif /* DOT11_N_SUPPORT */
 
@@ -1872,11 +1980,12 @@ static inline PUCHAR STA_Build_ARalink_Frame_Header(
 	PNDIS_PACKET pNextPacket;
 	UINT32 nextBufLen;
 	PQUEUE_ENTRY pQEntry;
+	UINT8 TXWISize = pAd->chipCap.TXWISize;
 
 	STAFindCipherAlgorithm(pAd, pTxBlk);
 	STABuildCommon802_11Header(pAd, pTxBlk);
 
-	pHeaderBufPtr = &pTxBlk->HeaderBuf[TXINFO_SIZE + TXWI_SIZE];
+	pHeaderBufPtr = &pTxBlk->HeaderBuf[TXINFO_SIZE + TXWISize];
 	pHeader_802_11 = (HEADER_802_11 *) pHeaderBufPtr;
 
 	/* steal "order" bit to mark "aggregation" */
@@ -1888,6 +1997,7 @@ static inline PUCHAR STA_Build_ARalink_Frame_Header(
 	if (TX_BLK_TEST_FLAG(pTxBlk, fTX_bWMM)) {
 		/* build QOS Control bytes */
 		*pHeaderBufPtr = (pTxBlk->UserPriority & 0x0F);
+
 
 		*(pHeaderBufPtr + 1) = 0;
 		pHeaderBufPtr += 2;
@@ -1924,11 +2034,12 @@ static inline PUCHAR STA_Build_AMSDU_Frame_Header(
 {
 	PUCHAR pHeaderBufPtr;
 	HEADER_802_11 *pHeader_802_11;
+	UINT8 TXWISize = pAd->chipCap.TXWISize;
 
 	STAFindCipherAlgorithm(pAd, pTxBlk);
 	STABuildCommon802_11Header(pAd, pTxBlk);
 
-	pHeaderBufPtr = &pTxBlk->HeaderBuf[TXINFO_SIZE + TXWI_SIZE];
+	pHeaderBufPtr = &pTxBlk->HeaderBuf[TXINFO_SIZE + TXWISize];
 	pHeader_802_11 = (HEADER_802_11 *) pHeaderBufPtr;
 
 	/* skip common header */
@@ -1938,6 +2049,7 @@ static inline PUCHAR STA_Build_AMSDU_Frame_Header(
 	*pHeaderBufPtr =
 	    (pTxBlk->UserPriority & 0x0F) | (pAd->CommonCfg.
 					     AckPolicy[pTxBlk->QueIdx] << 5);
+
 
 	/* A-MSDU packet */
 	*pHeaderBufPtr |= 0x80;
@@ -1970,7 +2082,10 @@ VOID STA_AMPDU_Frame_Tx(
 	MAC_TABLE_ENTRY *pMacEntry;
 	BOOLEAN bVLANPkt;
 	PQUEUE_ENTRY pQEntry;
+	BOOLEAN			bHTCPlus;
+	UINT8 TXWISize = pAd->chipCap.TXWISize;
 
+	
 	ASSERT(pTxBlk);
 
 	while (pTxBlk->TxPacketList.Head) {
@@ -1982,24 +2097,25 @@ VOID STA_AMPDU_Frame_Tx(
 			continue;
 		}
 
-		bVLANPkt =
-		    (RTMP_GET_PACKET_VLAN(pTxBlk->pPacket) ? TRUE : FALSE);
+		bVLANPkt = (RTMP_GET_PACKET_VLAN(pTxBlk->pPacket) ? TRUE : FALSE);
 
 		pMacEntry = pTxBlk->pMacEntry;
-		if (pMacEntry->isCached) {
+		if ((pMacEntry->isCached)
+		)
+		{
 			/* NOTE: Please make sure the size of pMacEntry->CachedBuf[] is smaller than pTxBlk->HeaderBuf[]!!!! */
 #ifndef VENDOR_FEATURE1_SUPPORT
 			NdisMoveMemory((PUCHAR)
 				       (&pTxBlk->HeaderBuf[TXINFO_SIZE]),
 				       (PUCHAR) (&pMacEntry->CachedBuf[0]),
-				       TXWI_SIZE + sizeof (HEADER_802_11));
+				       TXWISize + sizeof (HEADER_802_11));
 #else
 			pTxBlk->HeaderBuf = (UCHAR *) (pMacEntry->HeaderBuf);
 #endif /* VENDOR_FEATURE1_SUPPORT */
 
 			pHeaderBufPtr =
 			    (PUCHAR) (&pTxBlk->
-				      HeaderBuf[TXINFO_SIZE + TXWI_SIZE]);
+				      HeaderBuf[TXINFO_SIZE + TXWISize]);
 			STABuildCache802_11Header(pAd, pTxBlk, pHeaderBufPtr);
 
 #ifdef SOFT_ENCRYPT
@@ -2010,7 +2126,7 @@ VOID STA_AMPDU_Frame_Tx(
 			STABuildCommon802_11Header(pAd, pTxBlk);
 
 			pHeaderBufPtr =
-			    &pTxBlk->HeaderBuf[TXINFO_SIZE + TXWI_SIZE];
+			    &pTxBlk->HeaderBuf[TXINFO_SIZE + TXWISize];
 		}
 
 #ifdef SOFT_ENCRYPT
@@ -2032,7 +2148,8 @@ VOID STA_AMPDU_Frame_Tx(
 #ifdef SOFT_ENCRYPT
 		    && !TX_BLK_TEST_FLAG(pTxBlk, fTX_bSwEncrypt)
 #endif /* SOFT_ENCRYPT */
-		    ) {
+			)
+		{
 			pHeader_802_11 = (HEADER_802_11 *) pHeaderBufPtr;
 
 			/* skip common header */
@@ -2056,7 +2173,8 @@ VOID STA_AMPDU_Frame_Tx(
 				pTxBlk->pSrcBufData += LENGTH_802_1Q;
 				pTxBlk->SrcBufLen -= LENGTH_802_1Q;
 			}
-		} else
+		}
+		else
 #endif /* VENDOR_FEATURE1_SUPPORT */
 		{
 			pHeader_802_11 = (HEADER_802_11 *) pHeaderBufPtr;
@@ -2074,27 +2192,39 @@ VOID STA_AMPDU_Frame_Tx(
 
 			/*
 			   build HTC+ 
-			   HTC control filed following QoS field
+			   HTC control field following QoS field
 			 */
+			bHTCPlus = FALSE;
+
 			if ((pAd->CommonCfg.bRdg == TRUE)
-			    && CLIENT_STATUS_TEST_FLAG(pTxBlk->pMacEntry,
-						       fCLIENT_STATUS_RDG_CAPABLE))
+			    && CLIENT_STATUS_TEST_FLAG(pTxBlk->pMacEntry, fCLIENT_STATUS_RDG_CAPABLE)
+			)
 			{
-				if (pMacEntry->isCached == FALSE) {
+				if (pMacEntry->isCached == FALSE)
+				{
 					/* mark HTC bit */
 					pHeader_802_11->FC.Order = 1;
 
-					NdisZeroMemory(pHeaderBufPtr, 4);
-					*(pHeaderBufPtr + 3) |= 0x80;
+					NdisZeroMemory(pHeaderBufPtr, sizeof(HT_CONTROL));
+					((PHT_CONTROL)pHeaderBufPtr)->RDG = 1;
 				}
+				
+				bHTCPlus = TRUE;
+			}
+
+
+			if (bHTCPlus)
+			{
+				pHeader_802_11->FC.Order = 1;
 				pHeaderBufPtr += 4;
 				pTxBlk->MpduHeaderLen += 4;
 			}
+
+			/* pTxBlk->MpduHeaderLen = pHeaderBufPtr - pTxBlk->HeaderBuf - TXWI_SIZE - TXINFO_SIZE; */
 			ASSERT(pTxBlk->MpduHeaderLen >= 24);
 
 			/* skip 802.3 header */
-			pTxBlk->pSrcBufData =
-			    pTxBlk->pSrcBufHeader + LENGTH_802_3;
+			pTxBlk->pSrcBufData = pTxBlk->pSrcBufHeader + LENGTH_802_3;
 			pTxBlk->SrcBufLen -= LENGTH_802_3;
 
 			/* skip vlan tag */
@@ -2111,8 +2241,7 @@ VOID STA_AMPDU_Frame_Tx(
 			 */
 			pTxBlk->HdrPadLen = (ULONG) pHeaderBufPtr;
 			pHeaderBufPtr = (PUCHAR) ROUND_UP(pHeaderBufPtr, 4);
-			pTxBlk->HdrPadLen =
-			    (ULONG) (pHeaderBufPtr - pTxBlk->HdrPadLen);
+			pTxBlk->HdrPadLen = (ULONG) (pHeaderBufPtr - pTxBlk->HdrPadLen);
 
 #ifdef VENDOR_FEATURE1_SUPPORT
 			pMacEntry->HdrPadLen = pTxBlk->HdrPadLen;
@@ -2199,27 +2328,22 @@ VOID STA_AMPDU_Frame_Tx(
 #endif /* VENDOR_FEATURE1_SUPPORT */
 		}
 
-		if (pMacEntry->isCached) {
+		if ((pMacEntry->isCached)
+		)
+		{
 			RTMPWriteTxWI_Cache(pAd,
-					    (PTXWI_STRUC) (&pTxBlk->
-							   HeaderBuf
-							   [TXINFO_SIZE]),
+					    (PTXWI_STRUC) (&pTxBlk->HeaderBuf[TXINFO_SIZE]),
 					    pTxBlk);
 		} else {
 			RTMPWriteTxWI_Data(pAd,
-					   (PTXWI_STRUC) (&pTxBlk->
-							  HeaderBuf
-							  [TXINFO_SIZE]),
+					   (PTXWI_STRUC) (&pTxBlk->HeaderBuf[TXINFO_SIZE]),
 					   pTxBlk);
 
 			NdisZeroMemory((PUCHAR) (&pMacEntry->CachedBuf[0]),
 				       sizeof (pMacEntry->CachedBuf));
 			NdisMoveMemory((PUCHAR) (&pMacEntry->CachedBuf[0]),
-				       (PUCHAR) (&pTxBlk->
-						 HeaderBuf[TXINFO_SIZE]),
-				       (pHeaderBufPtr -
-					(PUCHAR) (&pTxBlk->
-						  HeaderBuf[TXINFO_SIZE])));
+				       (PUCHAR) (&pTxBlk->HeaderBuf[TXINFO_SIZE]),
+				       (pHeaderBufPtr -(PUCHAR) (&pTxBlk->HeaderBuf[TXINFO_SIZE])));
 
 #ifdef VENDOR_FEATURE1_SUPPORT
 			/* use space to get performance enhancement */
@@ -2234,16 +2358,22 @@ VOID STA_AMPDU_Frame_Tx(
 			pMacEntry->isCached = TRUE;
 		}
 
+
 #ifdef STATS_COUNT_SUPPORT
 		/* calculate Transmitted AMPDU count and ByteCount  */
 		{
-			pAd->RalinkCounters.TransmittedMPDUsInAMPDUCount.u.
-			    LowPart++;
-			pAd->RalinkCounters.TransmittedOctetsInAMPDUCount.
-			    QuadPart += pTxBlk->SrcBufLen;
+			pAd->RalinkCounters.TransmittedMPDUsInAMPDUCount.u.LowPart++;
+			pAd->RalinkCounters.TransmittedOctetsInAMPDUCount.QuadPart += pTxBlk->SrcBufLen;
 		}
 #endif /* STATS_COUNT_SUPPORT */
 		HAL_WriteTxResource(pAd, pTxBlk, TRUE, &FreeNumber);
+
+#ifdef DBG_CTRL_SUPPORT
+#ifdef INCLUDE_DEBUG_QUEUE
+		if (pAd->CommonCfg.DebugFlags & DBF_DBQ_TXFRAME)
+			dbQueueEnqueueTxFrame((UCHAR *)(&pTxBlk->HeaderBuf[TXINFO_SIZE]), (UCHAR *)pHeader_802_11);
+#endif /* INCLUDE_DEBUG_QUEUE */
+#endif /* DBG_CTRL_SUPPORT */
 
 		/* Kick out Tx */
 #ifdef PCIE_PS_SUPPORT
@@ -2254,7 +2384,6 @@ VOID STA_AMPDU_Frame_Tx(
 		pAd->RalinkCounters.KickTxCount++;
 		pAd->RalinkCounters.OneSecTxDoneCount++;
 	}
-
 }
 
 VOID STA_AMSDU_Frame_Tx(
@@ -2368,6 +2497,13 @@ VOID STA_AMSDU_Frame_Tx(
 			    HAL_WriteMultiTxResource(pAd, pTxBlk, frameNum,
 						     &FreeNumber);
 
+#ifdef DBG_CTRL_SUPPORT
+#ifdef INCLUDE_DEBUG_QUEUE
+		if (pAd->CommonCfg.DebugFlags & DBF_DBQ_TXFRAME)
+			dbQueueEnqueueTxFrame((UCHAR *)(&pTxBlk->HeaderBuf[TXINFO_SIZE]), NULL);
+#endif /* INCLUDE_DEBUG_QUEUE */
+#endif /* DBG_CTRL_SUPPORT */
+
 		frameNum++;
 
 		pAd->RalinkCounters.KickTxCount++;
@@ -2400,8 +2536,10 @@ VOID STA_Legacy_Frame_Tx(
 	HEADER_802_11 *pHeader_802_11;
 	PUCHAR pHeaderBufPtr;
 	USHORT FreeNumber = 0;
+	MAC_TABLE_ENTRY *pMacEntry;
 	BOOLEAN bVLANPkt;
 	PQUEUE_ENTRY pQEntry;
+	UINT8 TXWISize = pAd->chipCap.TXWISize;
 
 	ASSERT(pTxBlk);
 
@@ -2452,7 +2590,7 @@ VOID STA_Legacy_Frame_Tx(
 		pTxBlk->SrcBufLen -= LENGTH_802_1Q;
 	}
 
-	pHeaderBufPtr = &pTxBlk->HeaderBuf[TXINFO_SIZE + TXWI_SIZE];
+	pHeaderBufPtr = &pTxBlk->HeaderBuf[TXINFO_SIZE + TXWISize];
 	pHeader_802_11 = (HEADER_802_11 *) pHeaderBufPtr;
 
 	/* skip common header */
@@ -2552,7 +2690,17 @@ VOID STA_Legacy_Frame_Tx(
 
 	RTMPWriteTxWI_Data(pAd, (PTXWI_STRUC) (&pTxBlk->HeaderBuf[TXINFO_SIZE]),
 			   pTxBlk);
+
+	pMacEntry = pTxBlk->pMacEntry;
+	pMacEntry->isCached = FALSE;
 	HAL_WriteTxResource(pAd, pTxBlk, TRUE, &FreeNumber);
+
+#ifdef DBG_CTRL_SUPPORT
+#ifdef INCLUDE_DEBUG_QUEUE
+	if (pAd->CommonCfg.DebugFlags & DBF_DBQ_TXFRAME)
+		dbQueueEnqueueTxFrame((UCHAR *)(&pTxBlk->HeaderBuf[TXINFO_SIZE]), (UCHAR *)pHeader_802_11);
+#endif /* INCLUDE_DEBUG_QUEUE */
+#endif /* DBG_CTRL_SUPPORT */
 
 	pAd->RalinkCounters.KickTxCount++;
 	pAd->RalinkCounters.OneSecTxDoneCount++;
@@ -2671,6 +2819,13 @@ VOID STA_ARalink_Frame_Tx(
 			    HAL_WriteMultiTxResource(pAd, pTxBlk, frameNum,
 						     &FreeNumber);
 
+#ifdef DBG_CTRL_SUPPORT
+#ifdef INCLUDE_DEBUG_QUEUE
+		if (pAd->CommonCfg.DebugFlags & DBF_DBQ_TXFRAME)
+			dbQueueEnqueueTxFrame((UCHAR *)(&pTxBlk->HeaderBuf[TXINFO_SIZE]), NULL);
+#endif /* INCLUDE_DEBUG_QUEUE */
+#endif /* DBG_CTRL_SUPPORT */
+
 		frameNum++;
 
 		pAd->RalinkCounters.OneSecTxAggregationCount++;
@@ -2712,6 +2867,7 @@ VOID STA_Fragment_Frame_Tx(
 	PUCHAR tmp_ptr = NULL;
 	UINT32 buf_offset = 0;
 #endif /* SOFT_ENCRYPT */
+	UINT8 TXWISize = pAd->chipCap.TXWISize;
 
 	ASSERT(pTxBlk);
 
@@ -2762,7 +2918,7 @@ VOID STA_Fragment_Frame_Tx(
 		pTxBlk->SrcBufLen -= LENGTH_802_1Q;
 	}
 
-	pHeaderBufPtr = &pTxBlk->HeaderBuf[TXINFO_SIZE + TXWI_SIZE];
+	pHeaderBufPtr = &pTxBlk->HeaderBuf[TXINFO_SIZE + TXWISize];
 	pHeader_802_11 = (HEADER_802_11 *) pHeaderBufPtr;
 
 	/* skip common header */
@@ -2773,6 +2929,7 @@ VOID STA_Fragment_Frame_Tx(
 		   build QOS Control bytes
 		 */
 		*pHeaderBufPtr = (pTxBlk->UserPriority & 0x0F);
+
 
 		*(pHeaderBufPtr + 1) = 0;
 		pHeaderBufPtr += 2;
@@ -2984,6 +3141,13 @@ VOID STA_Fragment_Frame_Tx(
 
 		HAL_WriteFragTxResource(pAd, pTxBlk, fragNum, &FreeNumber);
 
+#ifdef DBG_CTRL_SUPPORT
+#ifdef INCLUDE_DEBUG_QUEUE
+		if (pAd->CommonCfg.DebugFlags & DBF_DBQ_TXFRAME)
+			dbQueueEnqueueTxFrame((UCHAR *)(&pTxBlk->HeaderBuf[TXINFO_SIZE]), (UCHAR *)pHeader_802_11);
+#endif /* INCLUDE_DEBUG_QUEUE */
+#endif /* DBG_CTRL_SUPPORT */
+
 		pAd->RalinkCounters.KickTxCount++;
 		pAd->RalinkCounters.OneSecTxDoneCount++;
 
@@ -3075,6 +3239,12 @@ NDIS_STATUS STAHardTransmit(
 {
 	NDIS_PACKET *pPacket;
 	PQUEUE_ENTRY pQEntry;
+#ifdef CONFIG_MULTI_CHANNEL
+	if (INFRA_ON(pAd) && (pAd->LatchRfRegs.Channel != pAd->CommonCfg.Channel))
+	{
+		return NDIS_STATUS_FAILURE;
+	}
+#endif /*CONFIG_MULTI_CHANNEL*/
 
 	/*
 	   ---------------------------------------------
@@ -3116,12 +3286,12 @@ NDIS_STATUS STAHardTransmit(
 
 	/* It should not change PSM bit, when APSD turn on. */
 	if ((!
-	     (pAd->CommonCfg.bAPSDCapable
+	     (pAd->StaCfg.UapsdInfo.bAPSDCapable
 	      && pAd->CommonCfg.APEdcaParm.bAPSDCapable)
 	     && (pAd->CommonCfg.bAPSDForcePowerSave == FALSE))
 	    || (RTMP_GET_PACKET_EAPOL(pTxBlk->pPacket))
 	    || (RTMP_GET_PACKET_WAI(pTxBlk->pPacket))) {
-		if ((pAd->StaCfg.Psm == PWR_SAVE) &&
+		if ((RtmpPktPmBitCheck(pAd) == TRUE) &&
 		    (pAd->StaCfg.WindowsPowerMode ==
 		     Ndis802_11PowerModeFast_PSP))
 			RTMP_SET_PSM_BIT(pAd, PWR_ACTIVE);

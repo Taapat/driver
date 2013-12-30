@@ -5,37 +5,25 @@
  * Hsinchu County 302,
  * Taiwan, R.O.C.
  *
- * (c) Copyright 2002-2007, Ralink Technology, Inc.
+ * (c) Copyright 2002-2010, Ralink Technology, Inc.
  *
- * This program is free software; you can redistribute it and/or modify  * 
- * it under the terms of the GNU General Public License as published by  * 
- * the Free Software Foundation; either version 2 of the License, or     * 
- * (at your option) any later version.                                   * 
- *                                                                       * 
- * This program is distributed in the hope that it will be useful,       * 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of        * 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         * 
- * GNU General Public License for more details.                          * 
- *                                                                       * 
- * You should have received a copy of the GNU General Public License     * 
- * along with this program; if not, write to the                         * 
- * Free Software Foundation, Inc.,                                       * 
- * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             * 
- *                                                                       * 
- *************************************************************************
- 
-    Module Name:
-    bg_ftph.c
- 
-    Abstract:
-    Provide fast path between LAN and WLAN.
- 
-    Revision History:
-    Who         When          What
-    --------    ----------    ----------------------------------------------
-    Sample Lin	01-22-2008    Created
+ * This program is free software; you can redistribute it and/or modify  *
+ * it under the terms of the GNU General Public License as published by  *
+ * the Free Software Foundation; either version 2 of the License, or     *
+ * (at your option) any later version.                                   *
+ *                                                                       *
+ * This program is distributed in the hope that it will be useful,       *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ * GNU General Public License for more details.                          *
+ *                                                                       *
+ * You should have received a copy of the GNU General Public License     *
+ * along with this program; if not, write to the                         *
+ * Free Software Foundation, Inc.,                                       *
+ * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ *                                                                       *
+ *************************************************************************/
 
- */
 
 #include "rt_config.h"
 
@@ -61,7 +49,7 @@
 
 		if (HandRst != 0)
 		{
-			// pass the packet to upper layer
+			/* pass the packet to upper layer */
 			skb->protocol = eth_type_trans(skb, skb->dev);
 			netif_rx(skb);
 		}
@@ -74,7 +62,7 @@ UINT32 BG_FTPH_PacketFromApHandle(
 extern UINT32 (*RALINK_FP_Handle)(PNDIS_PACKET pPacket);
 #else
 UINT32 (*RALINK_FP_Handle)(PNDIS_PACKET pPacket);
-#endif // BG_FT_OPEN_SUPPORT //
+#endif /* BG_FT_OPEN_SUPPORT */
 
 
 
@@ -200,7 +188,7 @@ LabelPassToUpperLayer:
 } /* End of BG_FTPH_PacketFromApHandle */
 
 
-#endif // CONFIG_BRIDGE || CONFIG_BRIDGE_MODULE //
-#endif // BG_FT_SUPPORT //
+#endif /* CONFIG_BRIDGE || CONFIG_BRIDGE_MODULE */
+#endif /* BG_FT_SUPPORT */
 
 /* End of bg_ftph.c */

@@ -64,38 +64,38 @@
 #define RF_R29			29
 #define RF_R30			30
 #define RF_R31			31
-#define	RF_R32					    32
-#define	RF_R33					    33
-#define	RF_R34					    34
-#define	RF_R35					    35
-#define	RF_R36					    36
-#define	RF_R37					    37
-#define	RF_R38					    38
-#define	RF_R39					    39
-#define	RF_R40					    40
-#define	RF_R41					    41
-#define	RF_R42					    42
-#define	RF_R43					    43
-#define	RF_R44					    44
-#define	RF_R45					    45
-#define	RF_R46					    46
-#define	RF_R47					    47
-#define	RF_R48					    48
-#define	RF_R49					    49
-#define	RF_R50					    50
-#define	RF_R51					    51
-#define	RF_R52					    52
-#define	RF_R53					    53
-#define	RF_R54					    54
-#define	RF_R55					    55
-#define	RF_R56					    56
-#define	RF_R57					    57
-#define	RF_R58					    58
-#define	RF_R59					    59
-#define	RF_R60					    60
-#define	RF_R61					    61
-#define	RF_R62					    62
-#define	RF_R63					    63
+#define	RF_R32			32
+#define	RF_R33			33
+#define	RF_R34			34
+#define	RF_R35			35
+#define	RF_R36			36
+#define	RF_R37			37
+#define	RF_R38			38
+#define	RF_R39			39
+#define	RF_R40			40
+#define	RF_R41			41
+#define	RF_R42			42
+#define	RF_R43			43
+#define	RF_R44			44
+#define	RF_R45			45
+#define	RF_R46			46
+#define	RF_R47			47
+#define	RF_R48			48
+#define	RF_R49			49
+#define	RF_R50			50
+#define	RF_R51			51
+#define	RF_R52			52
+#define	RF_R53			53
+#define	RF_R54			54
+#define	RF_R55			55
+#define	RF_R56			56
+#define	RF_R57			57
+#define	RF_R58			58
+#define	RF_R59			59
+#define	RF_R60			60
+#define	RF_R61			61
+#define	RF_R62			62
+#define	RF_R63			63
 
 
 /* value domain of pAd->RfIcType */
@@ -113,6 +113,7 @@
 #define RFIC_3322                   12      /* 2.4G 2T2R with PA (RT3352/RT3371/RT3372/RT3391/RT3392) */
 #define RFIC_3053                   13      /* 2.4G/5G 3T3R (RT3883/RT3563/RT3573/RT3593/RT3662) */
 #define RFIC_3853                   13      /* 2.4G/5G 3T3R (RT3883/RT3563/RT3573/RT3593/RT3662) */
+#define RFIC_5592			14	 /* 2.4G/5G */
 #define RFIC_UNKNOWN				0xff
 
 #define RFIC_IS_5G_BAND(__pAd)			\
@@ -122,6 +123,7 @@
 	(__pAd->RfIcType == RFIC_2853) ||	\
 	(__pAd->RfIcType == RFIC_3053) ||	\
 	(__pAd->RfIcType == RFIC_3853) ||	\
+	(__pAd->RfIcType == RFIC_5592) ||	\
 	(__pAd->RfIcType == RFIC_UNKNOWN))
 
 /*
@@ -134,12 +136,15 @@
 #define BBP_R4			4
 #define BBP_R5			5
 #define BBP_R6			6
+#define BBP_R10			10 /* Rate report */
 #define BBP_R14			14 /* RX configure */
 #define BBP_R16			16
 #define BBP_R17			17 /* RX sensibility */
 #define BBP_R18			18
+#define BBP_R20			20
 #define BBP_R21			21
 #define BBP_R22			22
+#define BBP_R23			23
 #define BBP_R24			24
 #define BBP_R25			25
 #define BBP_R26			26
@@ -165,6 +170,7 @@
 #define BBP_R69			69
 #define BBP_R70			70 /* Rx AGC SQ CCK Xcorr threshold */
 #define BBP_R73			73
+#define BBP_R74			74
 #define BBP_R75			75
 #define BBP_R76			76
 #define BBP_R77			77
@@ -204,6 +210,10 @@
 #define BBP_R126		126
 #define BBP_R127		127
 #define BBP_R128		128
+#define BBP_R129		129
+#define BBP_R130		130
+#define BBP_R131		131
+#define BBP_R133		133
 #define BBP_R134		134
 #define BBP_R135		135
 #define BBP_R137		137
@@ -219,12 +229,16 @@
 #define BBP_R153		153
 #define BBP_R154		154
 #define BBP_R155		155
-#define BBP_R160		160 /* RT3883 Tx BF control */
+#define BBP_R158		158 /* Calibration register are accessed through R158 and R159 */
+#define BBP_R159		159
+#define BBP_R160		160 /* Tx BF control */
 #define BBP_R161		161
 #define BBP_R162		162
 #define BBP_R163		163
 #define BBP_R164		164
 
+#define BBP_R170		170
+#define BBP_R171		171
 #define BBP_R173		173
 #define BBP_R174		174
 #define BBP_R175		175
@@ -242,10 +256,21 @@
 #define BBP_R189		189
 #define BBP_R190		190
 #define BBP_R191		191
+#define BBP_R195		195
+#define BBP_R196		196
+#define BBP_R250		250
 #define BBP_R253		253
+#define BBP_R254		254
 #define BBP_R255		255
 
 #define BBPR94_DEFAULT	0x06 /* Add 1 value will gain 1db */
+
+typedef enum{
+	RX_CHAIN_0 = 1<<0,
+	RX_CHAIN_1 = 1<<1,
+	RX_CHAIN_2 = 1<<2,
+	RX_CHAIN_ALL = 0xf
+}RX_CHAIN_IDX;
 
 #ifdef RT_BIG_ENDIAN
 typedef union _BBP_R47_STRUC {
@@ -481,18 +506,30 @@ typedef union _BBP_R182_STRUC {
 } BBP_R182_STRUC, *PBBP_R182_STRUC;
 #endif /* RT_BIG_ENDIAN */
 
-#if defined(RT5370) || defined(RT5390) //for hw antenna diversity (PPAD)
+#if defined(RT5370) || defined(RT5390) || defined(RT3290) //for hw antenna diversity (PPAD)
 	#define MAX_BBP_ID	255
-#elif RT30xx
+#elif defined(RT30xx)
 	/* edit by johnli, RF power sequence setup, add BBP R138 for ADC dynamic on/off control */
+#ifdef RT5592
+	#define MAX_BBP_ID	255
+#else
 	#define MAX_BBP_ID	185
+#endif
 #elif defined(RT2883)
 	#define MAX_BBP_ID	180
 #else
 	#define MAX_BBP_ID	136
 #endif /* RT30xx */
 
-	#define MAX_BBP_MSG_SIZE	2048
+	#define MAX_BBP_MSG_SIZE	4096
+
+
+#ifdef RT5572
+#undef MAX_BBP_ID
+#define MAX_BBP_ID	248
+#undef MAX_BBP_MSG_SIZE
+#define MAX_BBP_MSG_SIZE 4096
+#endif
 
 
 /* */
@@ -532,53 +569,31 @@ typedef union _BBP_R182_STRUC {
 	we read/write the bbp value by register's ID. 
 	Generate PER to test BA
  *****************************************************************************/
+	
+#ifdef CARRIER_DETECTION_SUPPORT
+/*TONE_RADAR_DETECT_V2*/
+#define RTMP_CARRIER_IO_READ8(_A, _I, _V)               \
+{                                                       \
+	RTMP_BBP_IO_WRITE8_BY_REG_ID(_A, BBP_R184, _I);          \
+	RTMP_BBP_IO_READ8_BY_REG_ID(_A, BBP_R185, _V);           \
+}
+#define RTMP_CARRIER_IO_WRITE8(_A, _I, _V)              \
+{                                                       \
+	RTMP_BBP_IO_WRITE8_BY_REG_ID(_A, BBP_R184, _I);          \
+	RTMP_BBP_IO_WRITE8_BY_REG_ID(_A, BBP_R185, _V);          \
+}
+#endif /* CARRIER_DETECTION_SUPPORT */
+
 
 #ifdef RTMP_MAC_USB
 #define RTMP_BBP_IO_READ8_BY_REG_ID(_A, _I, _pV)   RTUSBReadBBPRegister(_A, _I, _pV)
 #define RTMP_BBP_IO_WRITE8_BY_REG_ID(_A, _I, _V)   RTUSBWriteBBPRegister(_A, _I, _V)
-
 #define BBP_IO_WRITE8_BY_REG_ID(_A, _I, _V)			RTUSBWriteBBPRegister(_A, _I, _V)
 #define BBP_IO_READ8_BY_REG_ID(_A, _I, _pV)   		RTUSBReadBBPRegister(_A, _I, _pV)
 #endif /* RTMP_MAC_USB */
 
 
 #ifdef RT30xx
-#ifdef ANT_DIVERSITY_SUPPORT
-/*Need to collect each ant's rssi concurrently */
-/*rssi1 is report to pair2 Ant and rss2 is reprot to pair1 Ant when 4 Ant */
-
-#ifdef CONFIG_STA_SUPPORT
-#define STA_COLLECT_RX_ANTENNA_AVERAGE_RSSI(_pAd, _rssi1, _rssi2)					\
-{																				\
-	SHORT	AvgRssi;															\
-	UCHAR	UsedAnt;															\
-	if (_pAd->RxAnt.EvaluatePeriod == 0)									\
-	{																		\
-		UsedAnt = _pAd->RxAnt.Pair1PrimaryRxAnt;							\
-		AvgRssi = _pAd->RxAnt.Pair1AvgRssi[UsedAnt];						\
-		if (AvgRssi < 0)													\
-			AvgRssi = AvgRssi - (AvgRssi >> 3) + _rssi1;					\
-		else																\
-			AvgRssi = _rssi1 << 3;											\
-		_pAd->RxAnt.Pair1AvgRssi[UsedAnt] = AvgRssi;						\
-	}																		\
-	else																	\
-	{																		\
-		UsedAnt = _pAd->RxAnt.Pair1SecondaryRxAnt;							\
-		AvgRssi = _pAd->RxAnt.Pair1AvgRssi[UsedAnt];						\
-		if ((AvgRssi < 0) && (_pAd->RxAnt.FirstPktArrivedWhenEvaluate))		\
-			AvgRssi = AvgRssi - (AvgRssi >> 3) + _rssi1;					\
-		else																\
-		{																	\
-			_pAd->RxAnt.FirstPktArrivedWhenEvaluate = TRUE;					\
-			AvgRssi = _rssi1 << 3;											\
-		}																	\
-		_pAd->RxAnt.Pair1AvgRssi[UsedAnt] = AvgRssi;						\
-		_pAd->RxAnt.RcvPktNumWhenEvaluate++;								\
-	}																		\
-}
-#endif /* CONFIG_STA_SUPPORT */
-#endif /* ANT_DIVERSITY_SUPPORT */
 
 #define RTMP_ASIC_MMPS_DISABLE(_pAd)							\
 	do{															\

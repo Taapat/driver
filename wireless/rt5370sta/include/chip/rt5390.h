@@ -30,7 +30,6 @@
 
 #if defined(RT5370) || defined(RT5372) || defined(RT5390) || defined(RT5392)
 
-
 #ifndef RTMP_RF_RW_SUPPORT
 #error "For RT5390, you should define the compile flag -DRTMP_RF_RW_SUPPORT"
 #endif
@@ -38,54 +37,46 @@
 #ifndef RT30xx
 #error "For RT5390, you should define the compile flag -DRT30xx"
 #endif
-#ifdef CARRIER_DETECTION_SUPPORT
-#define TONE_RADAR_DETECT_SUPPORT
-#define TONE_RADAR_DETECT_V2
-#endif // CARRIER_DETECTION_SUPPORT //
 
-#ifdef CONFIG_STA_SUPPORT
-#endif // CONFIG_STA_SUPPORT //
+#include "chip/rt30xx.h"
+
 extern REG_PAIR RF5390RegTable[];
 extern UCHAR NUM_RF_5390_REG_PARMS;
 
-#define BBP_REG_BF			BBP_R163 // TxBf control
 #ifdef CONFIG_STA_SUPPORT
-#endif // CONFIG_STA_SUPPORT //
+#endif /* CONFIG_STA_SUPPORT */
+
+#define BBP_REG_BF					BBP_R163 /* TxBf control */
+#ifdef CONFIG_STA_SUPPORT
+#endif /* CONFIG_STA_SUPPORT */
 
 #ifdef RTMP_FLASH_SUPPORT
-#define EEPROM_DEFAULT_FILE_PATH                     "etc_ro/Wireless/RT2860AP/RT3092_PCIe_LNA_2T2R_ALC_V1_2.bin"
+#define EEPROM_DEFAULT_FILE_PATH	"/etc_ro/Wireless/iNIC/RT5392_PCIe_2T2R_ALC_V1_3.bin"
 #define RF_OFFSET					0x48000
-extern void RtmpFlashWrite(UCHAR * p, ULONG a, ULONG b);
-extern void RtmpFlashRead(UCHAR * p, ULONG a, ULONG b);
-#endif // RTMP_FLASH_SUPPORT //
+#endif /* RTMP_FLASH_SUPPORT */
 
 /* Device ID & Vendor ID, these values should match EEPROM value */
-
-#define NIC5390_PCIe_DEVICE_ID	0x5390
-#define NIC539F_PCIe_DEVICE_ID  0x539F
-#define NIC5392_PCIe_DEVICE_ID  0x5392
-#define NIC5362_PCI_DEVICE_ID	0x5362
-#define NIC5360_PCI_DEVICE_ID   0x5360
+#define NIC5390_PCIe_DEVICE_ID		0x5390
+#define NIC539F_PCIe_DEVICE_ID 		0x539F
+#define NIC5392_PCIe_DEVICE_ID 		0x5392
+#define NIC5360_PCI_DEVICE_ID   		0x5360
+#define NIC5362_PCI_DEVICE_ID		0x5362
 
 VOID RT5390HaltAction(
-	IN struct _RTMP_ADAPTER			*pAd);
+	IN struct _RTMP_ADAPTER		*pAd);
 
-
-/* add by johnli, RF power sequence setup */
 VOID RT5390LoadRFNormalModeSetup(
-	IN struct _RTMP_ADAPTER			*pAd);
+	IN struct _RTMP_ADAPTER		*pAd);
 
 VOID RT5390LoadRFSleepModeSetup(
-	IN struct _RTMP_ADAPTER			*pAd);
+	IN struct _RTMP_ADAPTER		*pAd);
 
 VOID RT5390ReverseRFSleepModeSetup(
-	IN struct _RTMP_ADAPTER			*pAd,
-	IN BOOLEAN			FlgIsInitState);
-/* end johnli */
-
+	IN struct _RTMP_ADAPTER		*pAd,
+	IN BOOLEAN					FlgIsInitState);
 
 VOID RT5390_Init(
-	IN struct _RTMP_ADAPTER			*pAd);
+	IN struct _RTMP_ADAPTER		*pAd);
 
 VOID NICInitRT5390BbpRegisters(
 	IN struct _RTMP_ADAPTER		*pAd);
@@ -93,25 +84,27 @@ VOID NICInitRT5390BbpRegisters(
 VOID NICInitRT5390MacRegisters(
 	IN struct _RTMP_ADAPTER		*pAd);
 
-VOID RT5390_AsicEeBufferInit(
+VOID NICInitRT5392MacRegisters(
 	IN struct _RTMP_ADAPTER		*pAd);
 
 VOID RT5390_RxSensitivityTuning(
 	IN struct _RTMP_ADAPTER		*pAd);
 
-UCHAR RT5390_ChipStaBBPAdjust(
+UCHAR RT5390_ChipAGCAdjust(
 	IN struct _RTMP_ADAPTER		*pAd,
 	IN CHAR						Rssi,
-	IN UCHAR					R66);
+	IN UCHAR					OrigR66Value);
 
 VOID RT5390_ChipBBPAdjust(
 	IN struct _RTMP_ADAPTER		*pAd);
 
 VOID RT5390_ChipSwitchChannel(
-	IN struct _RTMP_ADAPTER 	*pAd,
+	IN struct _RTMP_ADAPTER 		*pAd,
 	IN UCHAR					Channel,
 	IN BOOLEAN					bScan);
 
+VOID RT539x_AsicExtraPowerOverMAC(
+	IN struct _RTMP_ADAPTER 		*pAd);
 
 #ifdef RTMP_INTERNAL_TX_ALC
 
@@ -131,36 +124,35 @@ VOID RT5390_AsicTxAlcGetAutoAgcOffset(
 	IN PCHAR					pDeltaPwr,
 	IN PCHAR					pTotalDeltaPwr,
 	IN PCHAR					pAgcCompensate,
-	IN PUCHAR					pBbpR49);
-
-UINT32 RT5390_GetDesiredTSSI(
-	IN struct _RTMP_ADAPTER		*pAd);
+	IN PCHAR 					pDeltaPowerByBbpR1);
 
 LONG Rounding(
 	IN struct _RTMP_ADAPTER		*pAd,
-	IN LONG Integer, 
-	IN LONG Fraction, 
-	IN LONG DenominatorOfTssiRatio);
+	IN LONG 						Integer, 
+	IN LONG 						Fraction, 
+	IN LONG 						DenominatorOfTssiRatio);
+
+BOOLEAN GetDesiredTssiAndCurrentTssi(
+	IN struct _RTMP_ADAPTER 		*pAd,
+	INOUT PCHAR 				pDesiredTssi, 
+	INOUT PCHAR 				pCurrentTssi);
 
 #endif /* RTMP_INTERNAL_TX_ALC */
 
-#ifdef RTMP_TEMPERATURE_COMPENSATION
-INT RT5392_ATEReadExternalTSSI(
-	IN struct _RTMP_ADAPTER		*pAd,
-	IN PSTRING					arg);
-#endif /* RTMP_TEMPERATURE_COMPENSATION */
-
-VOID RT5390_RTMPSetAGCInitValue(
+VOID RT5390_ChipAGCInit(
 	IN struct _RTMP_ADAPTER		*pAd,
 	IN UCHAR					BandWidth);
 
-VOID RT5390_ChipResumeMsduTransmission(
-	IN struct _RTMP_ADAPTER		*pAd);
-
-VOID RT5390_AsicResetBbpAgent(
+VOID RT5392_AsicResetBBPAgent(
 	IN struct _RTMP_ADAPTER		*pAd);	
 
+VOID NICStoreBBPValue(
+	IN struct _RTMP_ADAPTER 		*pAd,
+	IN REG_PAIR 					*RegPair);
+
+VOID NICRestoreBBPValue(
+	IN struct _RTMP_ADAPTER 		*pAd,
+	IN REG_PAIR 					*RegPair);
+
 #endif /* defined(RT5370) || defined(RT5372) || defined(RT5390) || defined(RT5392) */
-
 #endif /* __RT5390_H__ */
-

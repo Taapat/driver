@@ -36,7 +36,7 @@
 #include "rtmp_osabl.h"
 
 
-#ifdef PLATFORM_BL2348
+#if defined(PLATFORM_BL2348) || defined(PLATFORM_BL23570)
 
 /* global variables */
 int (*pToUpperLayerPktSent)(struct sk_buff *pSkb) = netif_rx ;

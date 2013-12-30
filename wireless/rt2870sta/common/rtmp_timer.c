@@ -5,52 +5,45 @@
  * Hsinchu County 302,
  * Taiwan, R.O.C.
  *
- * (c) Copyright 2002-2007, Ralink Technology, Inc.
+ * (c) Copyright 2002-2010, Ralink Technology, Inc.
  *
- * This program is free software; you can redistribute it and/or modify  * 
- * it under the terms of the GNU General Public License as published by  * 
- * the Free Software Foundation; either version 2 of the License, or     * 
- * (at your option) any later version.                                   * 
- *                                                                       * 
- * This program is distributed in the hope that it will be useful,       * 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of        * 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         * 
- * GNU General Public License for more details.                          * 
- *                                                                       * 
- * You should have received a copy of the GNU General Public License     * 
- * along with this program; if not, write to the                         * 
- * Free Software Foundation, Inc.,                                       * 
- * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             * 
- *                                                                       * 
- *************************************************************************
+ * This program is free software; you can redistribute it and/or modify  *
+ * it under the terms of the GNU General Public License as published by  *
+ * the Free Software Foundation; either version 2 of the License, or     *
+ * (at your option) any later version.                                   *
+ *                                                                       *
+ * This program is distributed in the hope that it will be useful,       *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ * GNU General Public License for more details.                          *
+ *                                                                       *
+ * You should have received a copy of the GNU General Public License     *
+ * along with this program; if not, write to the                         *
+ * Free Software Foundation, Inc.,                                       *
+ * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ *                                                                       *
+ *************************************************************************/
 
-    Module Name:
-    rtmp_timer.c
-
-    Abstract:
-    task for timer handling
-
-    Revision History:
-    Who         When            What
-    --------    ----------      ----------------------------------------------
-    Name          Date            Modification logs
-    Shiang Tu	08-28-2008   init version
-    
-*/
 
 #include "rt_config.h"
 
 
 BUILD_TIMER_FUNCTION(MlmePeriodicExec);
-//BUILD_TIMER_FUNCTION(MlmeRssiReportExec);
+/*BUILD_TIMER_FUNCTION(MlmeRssiReportExec);*/
 BUILD_TIMER_FUNCTION(AsicRxAntEvalTimeout);
 BUILD_TIMER_FUNCTION(APSDPeriodicExec);
 BUILD_TIMER_FUNCTION(EnqueueStartForPSKExec);
 #ifdef CONFIG_STA_SUPPORT
-#endif // CONFIG_STA_SUPPORT //
+#endif /* CONFIG_STA_SUPPORT */
+
+
 #ifdef RTMP_MAC_USB
 BUILD_TIMER_FUNCTION(BeaconUpdateExec);
-#endif // RTMP_MAC_USB //
+#endif /* RTMP_MAC_USB */
+#ifdef CONFIG_MULTI_CHANNEL
+BUILD_TIMER_FUNCTION(EDCA_ActionTimeout);
+BUILD_TIMER_FUNCTION(HCCA_ActionTimeout);
+#endif /* CONFIG_MULTI_CHANNEL */
 
 
 #ifdef CONFIG_STA_SUPPORT
@@ -66,39 +59,32 @@ BUILD_TIMER_FUNCTION(WpaDisassocApAndBlockAssoc);
 #ifdef PCIE_PS_SUPPORT
 BUILD_TIMER_FUNCTION(PsPollWakeExec);
 BUILD_TIMER_FUNCTION(RadioOnExec);
-#endif // PCIE_PS_SUPPORT //
+#endif /* PCIE_PS_SUPPORT */
 #ifdef QOS_DLS_SUPPORT
 BUILD_TIMER_FUNCTION(DlsTimeoutAction);
-#endif // QOS_DLS_SUPPORT //
+#endif /* QOS_DLS_SUPPORT */
 
 
 
 #ifdef RTMP_MAC_USB
 BUILD_TIMER_FUNCTION(RtmpUsbStaAsicForceWakeupTimeout);
-#endif // RTMP_MAC_USB //
+#endif /* RTMP_MAC_USB */
 
 
-#endif // CONFIG_STA_SUPPORT //
+#endif /* CONFIG_STA_SUPPORT */
 
 
 
-#ifdef WLAN_LED
-extern void LedCtrlMain(
-	IN PVOID SystemSpecific1, 
-	IN PVOID FunctionContext, 
-	IN PVOID SystemSpecific2, 
-	IN PVOID SystemSpecific3);
-BUILD_TIMER_FUNCTION(LedCtrlMain);
-#endif // WLAN_LED //
+
 
 
 
 #ifdef RTMP_TIMER_TASK_SUPPORT
 static void RtmpTimerQHandle(RTMP_ADAPTER *pAd)
 {
-#ifndef KTHREAD_SUPPORT
+/*#ifndef KTHREAD_SUPPORT*/
 	int status;
-#endif
+/*#endif*/
 	RALINK_TIMER_STRUCT	*pTimer;
 	RTMP_TIMER_TASK_ENTRY	*pEntry;
 	unsigned long	irqFlag;
@@ -106,20 +92,20 @@ static void RtmpTimerQHandle(RTMP_ADAPTER *pAd)
 
 
 	pTask = &pAd->timerTask;
-	while(!pTask->task_killed)
+	while(!RTMP_OS_TASK_IS_KILLED(pTask))
 	{
 		pTimer = NULL;
 
-#ifdef KTHREAD_SUPPORT
-		RTMP_WAIT_EVENT_INTERRUPTIBLE(pAd, pTask);
-#else
-		RTMP_SEM_EVENT_WAIT(&(pTask->taskSema), status);
-#endif
+		if (RtmpOSTaskWait(pAd, pTask, &status) == FALSE)
+		{
+			RTMP_SET_FLAG(pAd, fRTMP_ADAPTER_HALT_IN_PROGRESS);
+			break;
+		}
 
 		if (pAd->TimerQ.status == RTMP_TASK_STAT_STOPED)
 			break;
 		
-		// event happened.
+		/* event happened.*/
 		while(pAd->TimerQ.pQHead)
 		{
 			RTMP_INT_LOCK(&pAd->TimerQLock, irqFlag);
@@ -128,12 +114,12 @@ static void RtmpTimerQHandle(RTMP_ADAPTER *pAd)
 			{
 				pTimer = pEntry->pRaTimer;
 
-				// update pQHead
+				/* update pQHead*/
 				pAd->TimerQ.pQHead = pEntry->pNext;
 				if (pEntry == pAd->TimerQ.pQTail)
 					pAd->TimerQ.pQTail = NULL;
 			
-				// return this queue entry to timerQFreeList.
+				/* return this queue entry to timerQFreeList.*/
 				pEntry->pNext = pAd->TimerQ.pQPollFreeList;
 				pAd->TimerQ.pQPollFreeList = pEntry;
 			}
@@ -148,14 +134,14 @@ static void RtmpTimerQHandle(RTMP_ADAPTER *pAd)
 			}
 		}
 		
-#ifndef KTHREAD_SUPPORT
+/*#ifndef KTHREAD_SUPPORT*/
 		if (status != 0)
 		{
 			pAd->TimerQ.status = RTMP_TASK_STAT_STOPED;
 			RTMP_SET_FLAG(pAd, fRTMP_ADAPTER_HALT_IN_PROGRESS);
 			break;
 		}
-#endif
+/*#endif*/
 	}
 }
 
@@ -164,20 +150,23 @@ INT RtmpTimerQThread(
 	IN ULONG Context)
 {
 	RTMP_OS_TASK	*pTask;
-	PRTMP_ADAPTER	pAd;
+	PRTMP_ADAPTER	pAd = NULL;
 
 
 	pTask = (RTMP_OS_TASK *)Context;
-	pAd = (PRTMP_ADAPTER)pTask->priv;
+	pAd = (PRTMP_ADAPTER)RTMP_OS_TASK_DATA_GET(pTask);
+
+	if (pAd == NULL)
+	{
+		DBGPRINT(RT_DEBUG_ERROR,( "%s:: pAd is NULL!\n",__FUNCTION__));
+		return 0;
+	}	
 
 	RtmpOSTaskCustomize(pTask);
-	
+
 	RtmpTimerQHandle(pAd);
 
 	DBGPRINT(RT_DEBUG_TRACE,( "<---%s\n",__FUNCTION__));
-#ifndef KTHREAD_SUPPORT
-	pTask->taskPID = THREAD_PID_INIT_VALUE;
-#endif
 	/* notify the exit routine that we're actually exiting now 
 	 *
 	 * complete()/wait_for_completion() is similar to up()/down(),
@@ -230,11 +219,7 @@ RTMP_TIMER_TASK_ENTRY *RtmpTimerQInsert(
 
 	if (pQNode)
 	{
-#ifdef KTHREAD_SUPPORT
-		WAKE_UP(pTask);
-#else
-		RTMP_SEM_EVENT_UP(&pTask->taskSema);
-#endif
+		RTMP_OS_TASK_WAKE_UP(pTask);
 	}
 
 	return pQNode;
@@ -260,7 +245,7 @@ BOOLEAN RtmpTimerQRemove(
 			pNode = pNode->pNext;
 		}
 
-		// Now move it to freeList queue.
+		/* Now move it to freeList queue.*/
 		if (pNode)
 		{	
 			if (pNode == pAd->TimerQ.pQHead)
@@ -270,7 +255,7 @@ BOOLEAN RtmpTimerQRemove(
 			if (pPrev != NULL)
 				pPrev->pNext = pNode->pNext;
 			
-			// return this queue entry to timerQFreeList.
+			/* return this queue entry to timerQFreeList.*/
 			pNode->pNext = pAd->TimerQ.pQPollFreeList;
 			pAd->TimerQ.pQPollFreeList = pNode;
 		}
@@ -291,17 +276,17 @@ void RtmpTimerQExit(RTMP_ADAPTER *pAd)
 	{
 		pTimerQ = pAd->TimerQ.pQHead;
 		pAd->TimerQ.pQHead = pTimerQ->pNext;
-		// remove the timeQ
+		/* remove the timeQ*/
 	}
 	pAd->TimerQ.pQPollFreeList = NULL;
 	os_free_mem(pAd, pAd->TimerQ.pTimerQPoll);
 	pAd->TimerQ.pQTail = NULL;
 	pAd->TimerQ.pQHead = NULL;
-#ifndef KTHREAD_SUPPORT
+/*#ifndef KTHREAD_SUPPORT*/
 	pAd->TimerQ.status = RTMP_TASK_STAT_STOPED;
-#endif
+/*#endif*/
 	RTMP_INT_UNLOCK(&pAd->TimerQLock, irqFlags);
-	
+/*	NdisFreeSpinLock(&pAd->TimerQLock); */
 }
 
 
@@ -311,7 +296,7 @@ void RtmpTimerQInit(RTMP_ADAPTER *pAd)
 	RTMP_TIMER_TASK_ENTRY *pQNode, *pEntry;
 	unsigned long irqFlags;
 	
-	NdisAllocateSpinLock(&pAd->TimerQLock);
+	NdisAllocateSpinLock(pAd, &pAd->TimerQLock);
 	
 	NdisZeroMemory(&pAd->TimerQ, sizeof(pAd->TimerQ));
 
@@ -336,5 +321,5 @@ void RtmpTimerQInit(RTMP_ADAPTER *pAd)
 		RTMP_INT_UNLOCK(&pAd->TimerQLock, irqFlags);
 	}
 }
-#endif // RTMP_TIMER_TASK_SUPPORT //
+#endif /* RTMP_TIMER_TASK_SUPPORT */
 

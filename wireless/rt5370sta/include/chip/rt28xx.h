@@ -30,11 +30,6 @@
 
 #ifdef RT28xx
 
-#ifdef RTMP_USB_SUPPORT
-#include "chip/mac_usb.h"
-#endif
-
-
 VOID RT28xx_ChipSwitchChannel(
 	IN struct _RTMP_ADAPTER 	*pAd,
 	IN UCHAR					Channel,

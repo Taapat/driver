@@ -112,8 +112,15 @@ DECLARE_TIMER_FUNCTION(APSDPeriodicExec);
 DECLARE_TIMER_FUNCTION(EnqueueStartForPSKExec);
 #ifdef CONFIG_STA_SUPPORT
 #endif /* CONFIG_STA_SUPPORT */
+
+
 #ifdef RTMP_MAC_USB
 DECLARE_TIMER_FUNCTION(BeaconUpdateExec);
+#ifdef CONFIG_MULTI_CHANNEL
+DECLARE_TIMER_FUNCTION(EDCA_ActionTimeout);
+DECLARE_TIMER_FUNCTION(HCCA_ActionTimeout);
+#endif /* CONFIG_MULTI_CHANNEL */
+
 #endif /* RTMP_MAC_USB */
 
 
@@ -139,6 +146,8 @@ DECLARE_TIMER_FUNCTION(RtmpUsbStaAsicForceWakeupTimeout);
 #endif /* RTMP_MAC_USB */
 
 #endif /* CONFIG_STA_SUPPORT */
+
+
 
 
 

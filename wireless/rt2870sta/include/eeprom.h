@@ -5,42 +5,36 @@
  * Hsinchu County 302,
  * Taiwan, R.O.C.
  *
- * (c) Copyright 2002-2007, Ralink Technology, Inc.
+ * (c) Copyright 2002-2010, Ralink Technology, Inc.
  *
- * This program is free software; you can redistribute it and/or modify  * 
- * it under the terms of the GNU General Public License as published by  * 
- * the Free Software Foundation; either version 2 of the License, or     * 
- * (at your option) any later version.                                   * 
- *                                                                       * 
- * This program is distributed in the hope that it will be useful,       * 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of        * 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         * 
- * GNU General Public License for more details.                          * 
- *                                                                       * 
- * You should have received a copy of the GNU General Public License     * 
- * along with this program; if not, write to the                         * 
- * Free Software Foundation, Inc.,                                       * 
- * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             * 
- *                                                                       * 
- *************************************************************************
+ * This program is free software; you can redistribute it and/or modify  *
+ * it under the terms of the GNU General Public License as published by  *
+ * the Free Software Foundation; either version 2 of the License, or     *
+ * (at your option) any later version.                                   *
+ *                                                                       *
+ * This program is distributed in the hope that it will be useful,       *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ * GNU General Public License for more details.                          *
+ *                                                                       *
+ * You should have received a copy of the GNU General Public License     *
+ * along with this program; if not, write to the                         *
+ * Free Software Foundation, Inc.,                                       *
+ * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ *                                                                       *
+ *************************************************************************/
 
-	Module Name:
-	eeprom.h
 
-	Abstract:
-	Miniport header file for eeprom related information
-
-	Revision History:
-	Who         When          What
-	--------    ----------    ----------------------------------------------
-*/
 #ifndef __EEPROM_H__
 #define __EEPROM_H__
+
+/* For ioctl check usage */
+#define EEPROM_IS_PROGRAMMED		0x80
 
 
 #ifdef RTMP_MAC_USB
 #define EEPROM_SIZE					0x400
-#endif // RTMP_MAC_USB //
+#endif /* RTMP_MAC_USB */
 
 
 
@@ -60,7 +54,7 @@ NTSTATUS RTUSBWriteEEPROM16(
 	IN USHORT offset, 
 	IN USHORT value);
 
-#endif // RTMP_USB_SUPPORT //
+#endif /* RTMP_USB_SUPPORT */
 
 
 #if defined(RTMP_RBUS_SUPPORT) || defined(RTMP_FLASH_SUPPORT)
@@ -88,8 +82,21 @@ VOID rtmp_ee_flash_write_all(
 	IN PRTMP_ADAPTER pAd, 
 	IN USHORT *Data);
 
-#endif // defined(RTMP_RBUS_SUPPORT) || defined(RTMP_FLASH_SUPPORT) //
+#endif /* defined(RTMP_RBUS_SUPPORT) || defined(RTMP_FLASH_SUPPORT) */
 
+#ifdef RT30xx
+#ifdef RTMP_EFUSE_SUPPORT
+int rtmp_ee_efuse_read16(
+	IN RTMP_ADAPTER *pAd, 
+	IN USHORT Offset,
+	OUT USHORT *pValue);
+
+int rtmp_ee_efuse_write16(
+	IN RTMP_ADAPTER *pAd, 
+	IN USHORT Offset, 
+	IN USHORT data);
+#endif /* RTMP_EFUSE_SUPPORT */
+#endif /* RT30xx */
 
 /*************************************************************************
   *	Public function declarations for prom operation callback functions setting
@@ -98,4 +105,4 @@ INT RtmpChipOpsEepromHook(
 	IN RTMP_ADAPTER *pAd,
 	IN INT			infType);
 
-#endif // __EEPROM_H__ //
+#endif /* __EEPROM_H__ */

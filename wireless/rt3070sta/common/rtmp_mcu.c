@@ -380,10 +380,69 @@ NDIS_STATUS RtmpAsicLoadFirmware(
 	ULONG			FileLength;
 	/*ULONG			firm;*/
 	UINT32			Version = (pAd->MACVersion >> 16);
+#ifdef RTMP_MAC_USB
+	BOOLEAN			Equal = TRUE;
 	UINT32			MacReg1 = 0;
+	UCHAR			FVer;
+	UINT16			FCS;
+#endif
+
 
 	pFirmwareImage = FirmwareImage;
 	FileLength = sizeof(FirmwareImage);
+
+#ifdef RTMP_MAC_USB
+	/* check firmware version and checksum in RAM and firmware.h */
+	/* if they are equal, then will skip firmware load procedure */
+	if (isMCUNeedToLoadFIrmware(pAd) == NDIS_STATUS_SUCCESS)
+	{
+		RTMP_IO_READ32(pAd, 0x3FFC, &MacReg1);
+		FVer = (MacReg1 >> 8) & 0x00FF;
+		FCS = (MacReg1 >> 16) & 0xFFFF;
+
+	
+		{
+			UCHAR ver = FirmwareImage[FIRMWAREIMAGEV2_LENGTH+0xFFD];
+			UINT16 sum ;
+
+			NdisCopyMemory(&sum, &FirmwareImage[FIRMWAREIMAGEV2_LENGTH+0xFFE], 2);
+			printk("%s: ver %x/%x, sum %x/%x, mac %x\n", __FUNCTION__, FVer, ver, FCS, sum, MacReg1);
+			if ( FVer != ver || FCS != sum )
+				Equal = FALSE;
+		}	
+
+		/* do not need to load firmware */
+		if (Equal == FALSE)
+		{
+			DBGPRINT(RT_DEBUG_OFF, ("%s: WOW stops to go into 4K ram codes ...\n", __FUNCTION__));
+
+
+			/* prevent CPU to run in 4K ram codes */
+			/* only allow USB vendor request */
+			Status = RTUSB_VendorRequest(
+			pAd,
+			USBD_TRANSFER_DIRECTION_OUT,
+			DEVICE_VENDOR_REQUEST_OUT,
+			0x14,
+			0x0,
+			0,
+			NULL,
+			0);
+
+			/* disable external functions */
+			Status = RTUSB_VendorRequest(
+			pAd,
+			USBD_TRANSFER_DIRECTION_OUT,
+			DEVICE_VENDOR_REQUEST_OUT,
+			0x12,
+			0x0,
+			0,
+			NULL,
+			0);
+		}
+	}
+
+#endif /* RTMP_MAC_USB */
 
 	/* New 8k byte firmware size for RT3071/RT3072*/
 	/*DBGPRINT(RT_DEBUG_TRACE, ("Usb Chip\n"));*/
@@ -408,12 +467,58 @@ NDIS_STATUS RtmpAsicLoadFirmware(
 	}
 	else
 	{
-		DBGPRINT(RT_DEBUG_ERROR, ("KH: bin file should be 8KB.\n"));
-		Status = NDIS_STATUS_FAILURE;
+#if defined(WOW_SUPPORT) && defined(RTMP_MAC_USB)
+		/* WOW firmware is 12KB */
+		if ((Version != 0x2860) && (Version != 0x2872) && (Version != 0x3070))
+		{
+			if (FIRMWAREIMAGE_LENGTH == FIRMWAREIMAGE_WOW_LENGTH) /* size 0x3000 */
+			{
+				if (pAd->WOW_Cfg.bWOWFirmware == TRUE)
+				{
+					pFirmwareImage = (PUCHAR)&FirmwareImage[FIRMWAREIMAGEV3_LENGTH]; /* WOW offset: 0x2000 */
+					FileLength = FIRMWAREIMAGEV1_LENGTH; /* 0x1000 */
+					DBGPRINT(RT_DEBUG_OFF, ("%s: Load WOW firmware!!\n", __FUNCTION__));
+				}
+				else
+				{
+					pFirmwareImage = (PUCHAR)&FirmwareImage[FIRMWAREIMAGEV2_LENGTH]; /* normal offset: 0x1000 */
+					FileLength = FIRMWAREIMAGEV1_LENGTH; /* 0x1000 */
+					DBGPRINT(RT_DEBUG_OFF, ("%s: Load normal firmware!!\n", __FUNCTION__));
+				}
+
+			}
+		}
+		else
+#endif /* defined(WOW_SUPPORT) && defined(RTMP_MAC_USB) */
+		{
+			DBGPRINT(RT_DEBUG_ERROR, ("KH: bin file should be 8KB.\n"));
+			Status = NDIS_STATUS_FAILURE;
+		}
 	}
 
-
+#ifdef RTMP_MAC_USB
+	/* firmware is never loaded or the loadable firmware is different with the firmware in the RAM */
+       if (((isMCUNeedToLoadFIrmware(pAd) || Equal == FALSE )) &&
+        (!pAd->FWinAutoRunMode))
+	{
+		DBGPRINT(RT_DEBUG_ERROR, ("NICLoadFirmware: We need to load firmware\n"));	
+		RTMP_WRITE_FIRMWARE(pAd, pFirmwareImage, FileLength); /* FirmwareRun VndReq 0x1/0x8 --> initDone = 1 */
+	}
+	else {
+		DBGPRINT(RT_DEBUG_ERROR, ("NICLoadFirmware: firmware loaded already\n"));
+		RTUSB_VendorRequest(
+                pAd,
+                USBD_TRANSFER_DIRECTION_OUT,
+                DEVICE_VENDOR_REQUEST_OUT,
+                0x01,
+                0x8,
+                0,
+                NULL,
+                0);
+	}
+#else
 	RTMP_WRITE_FIRMWARE(pAd, pFirmwareImage, FileLength);
+#endif /* RTMP_MAC_USB */
 
 #endif
 
@@ -425,13 +530,26 @@ NDIS_STATUS RtmpAsicLoadFirmware(
 #ifdef RTMP_USB_SUPPORT
 	else
 	{
-		RTUSBWriteMACRegister(pAd, H2M_BBP_AGENT, 0); /* initialize BBP R/W access agent. */
-		RTUSBWriteMACRegister(pAd,H2M_MAILBOX_CSR,0);
-		RTUSBWriteMACRegister(pAd, H2M_INT_SRC, 0);
-		AsicSendCommandToMcu(pAd, 0x72, 0x00, 0x00, 0x00); /* reset rf by MCU supported by new firmware */
-//		RTMPusecDelay(1000);
-//		AsicSendCommandToMcu(pAd, 0x31, 0x00, 0x00, 0x00);/* Wakeup MCU */
+		RTUSBWriteMACRegister(pAd, H2M_BBP_AGENT, 0, FALSE); /* initialize BBP R/W access agent. */
+		RTUSBWriteMACRegister(pAd,H2M_MAILBOX_CSR,0, FALSE);
+		RTUSBWriteMACRegister(pAd, H2M_INT_SRC, 0, FALSE);
+		AsicSendCommandToMcu(pAd, 0x72, 0x00, 0x00, 0x00, FALSE); /* reset rf by MCU supported by new firmware */
 	}
+
+	if (Equal == FALSE)
+	{
+		/* allow all requests (USB vendor request, sleep, wake up, led) */
+		Status = RTUSB_VendorRequest(
+		pAd,
+		USBD_TRANSFER_DIRECTION_OUT,
+		DEVICE_VENDOR_REQUEST_OUT,
+		0x13,
+		0x0,
+		0,
+		NULL,
+		0);
+	}
+
 #endif /* RTMP_USB_SUPPORT */
 
     DBGPRINT(RT_DEBUG_TRACE, ("<=== %s (status=%d)\n", __FUNCTION__, Status));
@@ -450,13 +568,13 @@ INT RtmpAsicSendCommandToMcu(
 {
 	HOST_CMD_CSR_STRUC	H2MCmd;
 	H2M_MAILBOX_STRUC	H2MMailbox;
-	ULONG				i = 0;
-#ifdef SPECIFIC_BCN_BUF_SUPPORT
-	ULONG	IrqFlags = 0;
-#endif /* SPECIFIC_BCN_BUF_SUPPORT */
+	INT i = 0;
+	int ret;
+
+
+
 #ifdef CONFIG_STA_SUPPORT
 #ifdef PCIE_PS_SUPPORT
-	POS_COOKIE pObj;
 	ULONG	Configuration;
 	ULONG	offset;
 #endif /* PCIE_PS_SUPPORT */
@@ -465,8 +583,7 @@ INT RtmpAsicSendCommandToMcu(
 
 #ifdef CONFIG_STA_SUPPORT
 #ifdef PCIE_PS_SUPPORT
-	pObj = (POS_COOKIE) pAd->OS_Cookie;
-#if defined(RT5390) || defined(RT5392)
+#if defined(RT5390) || defined(RT5392) || defined(RT5592)
          /* 
          	FW v.30; for 0x30 MCU CMD, Arg1 is not L1/L0 state anymore
 	 	Arg 1 set to 0x5A, then FW will not turn off PCIe CLK for PM4 (Associate-Idle)
@@ -476,7 +593,12 @@ INT RtmpAsicSendCommandToMcu(
 	{
 		Arg1 = 0x00;		/* set default to 0 */ 
 	
-		if ((INFRA_ON(pAd)) && (pAd->OpMode == OPMODE_STA))
+		// TODO: shiang, for this Arg1 adjust, only work in RT5390 chipset???
+		if ((INFRA_ON(pAd)) && (pAd->OpMode == OPMODE_STA)
+#ifdef RT3290
+			&& (!IS_RT3290(pAd))
+#endif /* RT3290 */
+		)
 		{
 			if ((OPSTATUS_TEST_FLAG(pAd, fOP_STATUS_MEDIA_STATE_CONNECTED)) && (pAd->StaCfg.PSControl.field.PM4PCIeCLKOn))
 			{
@@ -490,13 +612,45 @@ INT RtmpAsicSendCommandToMcu(
 	*/
 #endif /* defined(RT5390) || defined(RT5392) */
 
+#ifdef RT3290
+	if (IS_RT3290(pAd))
+	{
+		if (Command == WAKE_MCU_CMD)
+		{
+			RTMPEnableWlan(pAd, TRUE, FALSE);
+		}
+		else if (Command == SLEEP_MCU_CMD)
+		{
+			WPDMA_GLO_CFG_STRUC GloCfg;
 
+			RTMP_IO_READ32(pAd, WPDMA_GLO_CFG, &GloCfg.word);
+			GloCfg.field.EnableTxDMA = 0;
+			RTMP_IO_WRITE32(pAd, WPDMA_GLO_CFG, GloCfg.word);
+
+			// wait TX DMA idle
+			i = 0;
+			do
+			{
+				RTMP_IO_READ32(pAd, WPDMA_GLO_CFG, &GloCfg.word);
+				if (GloCfg.field.TxDMABusy == 0)
+					break;
+				RTMPusecDelay(10);
+				i++;
+			}while(i < 1000);
+
+			if (i >= 1000)
+			{
+				DBGPRINT(RT_DEBUG_ERROR, (" %s: [boundary]DMA Tx keeps busy.  %d\n", __FUNCTION__, i ));
+			}			
+		}
+	}
+#endif /* RT3290 */
 
 	/* 3090F power solution 3 has hw limitation that needs to ban all mcu command */
 	/* when firmware is in radio state.  For other chip doesn't have this limitation. */
-	if ((IS_RT3090(pAd) || IS_RT3572(pAd) || IS_RT3390(pAd) 
+	if ((((IS_RT3090(pAd) || IS_RT3572(pAd) || IS_RT3390(pAd) 
 		|| IS_RT3593(pAd) || IS_RT5390(pAd) || IS_RT5392(pAd)) 
-		&& IS_VERSION_AFTER_F(pAd)
+		&& IS_VERSION_AFTER_F(pAd)) || IS_RT5592(pAd) || IS_RT3290(pAd))
 		&& (pAd->StaCfg.PSControl.field.rt30xxPowerMode == 3) 
 		&& (pAd->StaCfg.PSControl.field.EnableNewPS == TRUE))
 	{
@@ -526,11 +680,12 @@ INT RtmpAsicSendCommandToMcu(
 
 	}
 
-#if defined(RT5390) || defined(RT5392)
+#if defined(RT5390) || defined(RT5392) || defined(RT5592)
 	if (Command == SLEEP_MCU_CMD)
         {
                 /* Write L1 latency */
-		if ((pAd->StaCfg.PSControl.field.AMDNewPSOn == TRUE) && ((IS_RT30xx(pAd) ||IS_RT5390(pAd) || IS_RT5392(pAd))
+		if ((pAd->StaCfg.PSControl.field.AMDNewPSOn == TRUE) &&
+			((IS_RT30xx(pAd) ||IS_RT5390(pAd) || IS_RT5392(pAd) || IS_RT5592(pAd))
 			&& (pAd->HostVendor != PCIBUS_INTEL_VENDOR)))
 		{
 			offset = 0x70F;
@@ -548,7 +703,8 @@ INT RtmpAsicSendCommandToMcu(
 	{
 		/* Write L1 latency */
 		if ((pAd->StaCfg.PSControl.field.AMDNewPSOn == TRUE) && (IS_RT3090(pAd) || IS_RT3572(pAd) 
-			|| IS_RT3390(pAd) || IS_RT3593(pAd) || IS_RT5390(pAd) || IS_RT5392(pAd))
+			|| IS_RT3390(pAd) || IS_RT3593(pAd) || IS_RT5390(pAd) || IS_RT5392(pAd)
+			|| IS_RT5592(pAd))
 			&& (pAd->HostVendor != PCIBUS_INTEL_VENDOR))
 		{
 			offset = 0x70F;
@@ -568,21 +724,18 @@ INT RtmpAsicSendCommandToMcu(
 
 #endif /* defined(RT5390) || defined(RT5392) */
 
-	if ((IS_RT3090(pAd) || IS_RT3572(pAd) || IS_RT3390(pAd) 
-		|| IS_RT3593(pAd) || IS_RT5390(pAd) || IS_RT5392(pAd)) 
+	if (((IS_RT3090(pAd) || IS_RT3572(pAd) || IS_RT3390(pAd) 
+		|| IS_RT3593(pAd) || IS_RT5390(pAd) || IS_RT5392(pAd)
+		|| IS_RT5592(pAd)) 
 		&& IS_VERSION_AFTER_F(pAd)
 		&& (pAd->StaCfg.PSControl.field.rt30xxPowerMode == 3) 
 		&& (pAd->StaCfg.PSControl.field.EnableNewPS == TRUE)
 		&& (Command == WAKE_MCU_CMD))
+#ifdef RT3290
+		|| (IS_RT3290(pAd) && (Command == WAKE_MCU_CMD))
+#endif /* RT3290 */
+	)
 	{
-
-#ifdef SPECIFIC_BCN_BUF_SUPPORT
-		if (FlgIsNeedLocked == TRUE)
-		{
-		           RTMP_MAC_SHR_MSEL_PROTECT_LOCK(pAd, IrqFlags);
-		}
-#endif /* SPECIFIC_BCN_BUF_SUPPORT */
-
 		/* don't check MailBox for 0x84, 0x31*/
 		if ((Command != 0x84) && (Command != WAKE_MCU_CMD))
 		{
@@ -594,10 +747,6 @@ INT RtmpAsicSendCommandToMcu(
 
 				if (RTMP_TEST_FLAG(pAd, fRTMP_ADAPTER_NIC_NOT_EXIST))				
 				{
-#ifdef SPECIFIC_BCN_BUF_SUPPORT	
-					if (FlgIsNeedLocked == TRUE)
-						RTMP_MAC_SHR_MSEL_PROTECT_UNLOCK(pAd, IrqFlags);
-#endif /* SPECIFIC_BCN_BUF_SUPPORT */
 					return FALSE;
 				}
 				RTMPusecDelay(2);
@@ -607,11 +756,6 @@ INT RtmpAsicSendCommandToMcu(
 			if (i >= 100)
 			{
 				DBGPRINT_ERR(("H2M_MAILBOX still hold by MCU. command fail\n"));
-#ifdef SPECIFIC_BCN_BUF_SUPPORT	
-				if (FlgIsNeedLocked == TRUE)
-					RTMP_MAC_SHR_MSEL_PROTECT_UNLOCK(pAd, IrqFlags);
-#endif /* SPECIFIC_BCN_BUF_SUPPORT */
-
 					return FALSE;
 			}
 		}
@@ -625,11 +769,6 @@ INT RtmpAsicSendCommandToMcu(
 		H2MCmd.word 			  = 0;
 		H2MCmd.field.HostCommand  = Command;
 		RTMP_IO_FORCE_WRITE32(pAd, HOST_CMD_CSR, H2MCmd.word);
-#ifdef SPECIFIC_BCN_BUF_SUPPORT
-			if (FlgIsNeedLocked == TRUE)
-				RTMP_MAC_SHR_MSEL_PROTECT_UNLOCK(pAd, IrqFlags);
-#endif /* SPECIFIC_BCN_BUF_SUPPORT */
-
 
 	}
 	else
@@ -637,70 +776,57 @@ INT RtmpAsicSendCommandToMcu(
 #endif /* CONFIG_STA_SUPPORT */
 	{
 
-#ifdef SPECIFIC_BCN_BUF_SUPPORT
-		if (FlgIsNeedLocked == TRUE)
+#ifdef RTMP_MAC_USB
+		if (IS_USB_INF(pAd) && (!FlgIsNeedLocked))
 		{
-		           RTMP_MAC_SHR_MSEL_PROTECT_LOCK(pAd, IrqFlags);
+			RTMP_SEM_EVENT_WAIT(&pAd->reg_atomic, ret);
+			if (ret != 0)
+			{
+				DBGPRINT(RT_DEBUG_ERROR, ("reg_atomic get failed(ret=%d)\n", ret));
+				return FALSE;
+			}
 		}
-#endif /* SPECIFIC_BCN_BUF_SUPPORT */
+#endif /* RTMP_MAC_USB */
 
-	do
-	{
-		RTMP_IO_READ32(pAd, H2M_MAILBOX_CSR, &H2MMailbox.word);
-		if (H2MMailbox.field.Owner == 0)
-			break;
-
-		if (RTMP_TEST_FLAG(pAd, fRTMP_ADAPTER_NIC_NOT_EXIST))				
+		ret = FALSE;
+		do
 		{
-#ifdef SPECIFIC_BCN_BUF_SUPPORT	
-			if (FlgIsNeedLocked == TRUE)
-				RTMP_MAC_SHR_MSEL_PROTECT_UNLOCK(pAd, IrqFlags);
-#endif /* SPECIFIC_BCN_BUF_SUPPORT */
-			return FALSE;
-		}
-		RTMPusecDelay(2);
-	} while(i++ < 100);
+			RTMP_IO_READ32(pAd, H2M_MAILBOX_CSR, &H2MMailbox.word);
+			if (H2MMailbox.field.Owner == 0)
+				break;
 
-	if (i >= 100)
-	{
+			if (RTMP_TEST_FLAG(pAd, fRTMP_ADAPTER_NIC_NOT_EXIST))
+			{
+				goto done;
+			}
+			RTMPusecDelay(2);
+		} while(i++ < 100);
+
+		if (i >= 100)
 		{
-		DBGPRINT_ERR(("H2M_MAILBOX still hold by MCU. command fail\n"));
+			{
+				DBGPRINT_ERR(("H2M_MAILBOX still hold by MCU. command fail\n"));
+			}
+			goto done;
 		}
-#ifdef SPECIFIC_BCN_BUF_SUPPORT	
-		if (FlgIsNeedLocked == TRUE)
-			RTMP_MAC_SHR_MSEL_PROTECT_UNLOCK(pAd, IrqFlags);
-#endif /* SPECIFIC_BCN_BUF_SUPPORT */
-		return FALSE;
-	}
 
+		H2MMailbox.field.Owner = 1;	   /* pass ownership to MCU*/
+		H2MMailbox.field.CmdToken = Token;
+		H2MMailbox.field.HighByte = Arg1;
+		H2MMailbox.field.LowByte  = Arg0;
+		RTMP_IO_WRITE32(pAd, H2M_MAILBOX_CSR, H2MMailbox.word);
 
-	H2MMailbox.field.Owner	  = 1;	   /* pass ownership to MCU*/
-	H2MMailbox.field.CmdToken = Token;
-	H2MMailbox.field.HighByte = Arg1;
-	H2MMailbox.field.LowByte  = Arg0;
-	RTMP_IO_WRITE32(pAd, H2M_MAILBOX_CSR, H2MMailbox.word);
-
-	H2MCmd.word 			  = 0;
-	H2MCmd.field.HostCommand  = Command;
-	RTMP_IO_WRITE32(pAd, HOST_CMD_CSR, H2MCmd.word);
-
-#ifdef SPECIFIC_BCN_BUF_SUPPORT
-			if (FlgIsNeedLocked == TRUE)
-				RTMP_MAC_SHR_MSEL_PROTECT_UNLOCK(pAd, IrqFlags);
-#endif // SPECIFIC_BCN_BUF_SUPPORT //
-
-	if (Command != 0x80)
-	{
-	}
+		H2MCmd.word = 0;
+		H2MCmd.field.HostCommand  = Command;
+		RTMP_IO_WRITE32(pAd, HOST_CMD_CSR, H2MCmd.word);
 }
 
 #ifdef CONFIG_STA_SUPPORT
 #ifdef PCIE_PS_SUPPORT
 	/* 3090 MCU Wakeup command needs more time to be stable. */
 	/* Before stable, don't issue other MCU command to prevent from firmware error.*/
-	if ((IS_RT3090(pAd) || IS_RT3572(pAd) || IS_RT3390(pAd) 
-		|| IS_RT3593(pAd) || IS_RT5390(pAd) || IS_RT5392(pAd)) 
-		&& IS_VERSION_AFTER_F(pAd)
+	if ((((IS_RT3090(pAd) || IS_RT3572(pAd) || IS_RT3390(pAd) 
+		|| IS_RT3593(pAd) || IS_RT5390(pAd) || IS_RT5392(pAd)) && IS_VERSION_AFTER_F(pAd)) || IS_RT5592(pAd) || IS_RT3290(pAd))
 		&& (pAd->StaCfg.PSControl.field.rt30xxPowerMode == 3) 
 		&& (pAd->StaCfg.PSControl.field.EnableNewPS == TRUE))
 	{
@@ -732,7 +858,16 @@ INT RtmpAsicSendCommandToMcu(
 	if (Command == WAKE_MCU_CMD)
 		pAd->LastMCUCmd = Command;
 
-	return TRUE;
+	ret = TRUE;
 
-
+done:
+#ifdef RTMP_MAC_USB
+	if (IS_USB_INF(pAd) && (!FlgIsNeedLocked))
+	{
+		RTMP_SEM_EVENT_UP(&pAd->reg_atomic);
 }
+#endif /* RTMP_MAC_USB */
+
+	return ret;
+}
+

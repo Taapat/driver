@@ -30,6 +30,21 @@
 
 
 /* ============================================================= */
+/*      Common definition */
+/* ============================================================= */
+#define MBSS_VLAN_INFO_GET(												\
+	__pAd, __VLAN_VID, __VLAN_Priority, __FromWhichBSSID) 				\
+{																		\
+	if ((__FromWhichBSSID < __pAd->ApCfg.BssidNum) &&					\
+		(__FromWhichBSSID < HW_BEACON_MAX_NUM) &&						\
+		(__pAd->ApCfg.MBSSID[__FromWhichBSSID].VLAN_VID != 0))			\
+	{																	\
+		__VLAN_VID = __pAd->ApCfg.MBSSID[__FromWhichBSSID].VLAN_VID;	\
+		__VLAN_Priority = __pAd->ApCfg.MBSSID[__FromWhichBSSID].VLAN_Priority; \
+	}																	\
+}
+
+/* ============================================================= */
 /*      Function Prototypes */
 /* ============================================================= */
 
@@ -130,6 +145,7 @@ VOID APMlmeKickOutSta(
 	IN UCHAR Wcid,
 	IN USHORT Reason);
 
+    
 VOID APMlmeDisassocReqAction(
     IN PRTMP_ADAPTER pAd, 
     IN MLME_QUEUE_ELEM *Elem);
@@ -276,31 +292,6 @@ VOID WpaStateMachineInit(
 VOID APMlmePeriodicExec(
     IN  PRTMP_ADAPTER   pAd);
 
-VOID APMlmeSelectTxRateTable(
-	IN PRTMP_ADAPTER		pAd,
-	IN PMAC_TABLE_ENTRY		pEntry,
-	IN PUCHAR				*ppTable,
-	IN PUCHAR				pTableSize,
-	IN PUCHAR				pInitTxRateIdx);
-
-VOID APMlmeSetTxRate(
-	IN PRTMP_ADAPTER		pAd,
-	IN PMAC_TABLE_ENTRY		pEntry,
-	IN PRTMP_TX_RATE_SWITCH	pTxRate);
-
-VOID APMlmeSelectRateSwitchTable11N3SReplacement(
-	IN PUCHAR	*ppTable);
-
-
-VOID APMlmeDynamicTxRateSwitching(
-    IN PRTMP_ADAPTER pAd);
-
-VOID APQuickResponeForRateUpExec(
-    IN PVOID SystemSpecific1, 
-    IN PVOID FunctionContext, 
-    IN PVOID SystemSpecific2, 
-    IN PVOID SystemSpecific3);
-
 BOOLEAN APMsgTypeSubst(
     IN PRTMP_ADAPTER pAd,
     IN PFRAME_802_11 pFrame, 
@@ -312,16 +303,6 @@ VOID APQuickResponeForRateUpExec(
     IN PVOID FunctionContext, 
     IN PVOID SystemSpecific2, 
     IN PVOID SystemSpecific3);
-
-#ifdef NEW_RATE_ADAPT_SUPPORT
-VOID APMlmeDynamicTxRateSwitchingAdapt(
-    IN PRTMP_ADAPTER pAd,
-    IN ULONG idx);
-
-VOID APQuickResponeForRateUpExecAdapt(
-    IN PRTMP_ADAPTER pAd,
-    IN ULONG idx);
-#endif /*NEW_RATE_ADAPT_SUPPORT */
 
 #ifdef RTMP_MAC_USB
 VOID BeaconUpdateExec(

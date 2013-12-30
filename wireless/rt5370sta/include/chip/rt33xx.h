@@ -50,8 +50,20 @@ VOID RT33xx_ChipSwitchChannel(
 	IN UCHAR					Channel,
 	IN BOOLEAN					bScan);
 
-VOID RT33xx_AsicInitDesiredTSSITable(
+#ifdef RTMP_INTERNAL_TX_ALC
+VOID RT33xx_InitDesiredTSSITable(
 	IN struct _RTMP_ADAPTER		*pAd);
+
+UCHAR RT33xx_GetDesiredTSSI(
+	IN struct _RTMP_ADAPTER		*pAd);
+
+VOID RT33xx_AsicTxAlcGetAutoAgcOffset(
+	IN struct _RTMP_ADAPTER		*pAd,
+	IN PCHAR					pDeltaPwr,
+	IN PCHAR					pTotalDeltaPwr,
+	IN PCHAR					pAgcCompensate,
+	IN PCHAR 					pDeltaPowerByBbpR1);
+#endif /* RTMP_INTERNAL_TX_ALC */
 
 #endif /* RT33xx */
 

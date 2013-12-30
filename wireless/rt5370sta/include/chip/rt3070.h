@@ -30,6 +30,8 @@
 
 #ifdef RT3070
 
+struct _RTMP_ADAPTER;
+struct _RSSI_SAMPLE;
 
 #ifndef RTMP_USB_SUPPORT
 #error "For RT3070, you should define the compile flag -DRTMP_USB_SUPPORT"
@@ -47,12 +49,16 @@
 #error "For RT3070, you should define the compile flag -DRT30xx"
 #endif
 
-#include "chip/mac_usb.h"
 #include "chip/rt30xx.h"
 
 /*
     Device ID & Vendor ID, these values should match EEPROM value
 */
+
+
+VOID RT3070_PowerTuning(
+	IN struct _RTMP_ADAPTER		*pAd,
+	IN struct _RSSI_SAMPLE		*pRssi);
 
 #endif /* RT3070 */
 

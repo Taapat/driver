@@ -30,12 +30,11 @@
 #include	"rt_config.h"
 
 #define EFUSE_EEPROM_DEFULT_FILE	"RT30xxEEPROM.bin"
+#define EFUSE_BUFFER_PATH			"/tmp/RT30xxEEPROM.bin"
+
 #define MAX_EEPROM_BIN_FILE_SIZE	1024
 
-
-
 #define EFUSE_TAG				0x2fe
-
 
 #ifdef RT_BIG_ENDIAN
 typedef	union	_EFUSE_CTRL_STRUC {
@@ -73,7 +72,7 @@ static UCHAR eFuseReadRegisters(
 	IN	USHORT Length, 
 	OUT	USHORT* pData);
 
-static VOID eFuseReadPhysical( 
+VOID eFuseReadPhysical( 
 	IN	PRTMP_ADAPTER	pAd, 
   	IN	PUSHORT lpInBuffer,
   	IN	ULONG nInBufferSize,
@@ -130,8 +129,14 @@ UCHAR eFuseReadRegisters(
 	int	i;
 	USHORT	efuseDataOffset;
 	UINT32	data;
+	UINT32 efuse_ctrl_reg = EFUSE_CTRL;
 	
-	RTMP_IO_READ32(pAd, EFUSE_CTRL, &eFuseCtrlStruc.word);
+#ifdef RT3290
+	if (IS_RT3290(pAd))
+		efuse_ctrl_reg = EFUSE_CTRL_3290;
+#endif /* RT3290 */
+	
+	RTMP_IO_READ32(pAd, efuse_ctrl_reg, &eFuseCtrlStruc.word);
 
 	/*Step0. Write 10-bit of address to EFSROM_AIN (0x580, bit25:bit16). The address must be 16-byte alignment.*/
 	/*Use the eeprom logical address and covert to address to block number*/
@@ -144,7 +149,7 @@ UCHAR eFuseReadRegisters(
 	eFuseCtrlStruc.field.EFSROM_KICK = 1;
 	
 	NdisMoveMemory(&data, &eFuseCtrlStruc, 4);
-	RTMP_IO_WRITE32(pAd, EFUSE_CTRL, data);
+	RTMP_IO_WRITE32(pAd, efuse_ctrl_reg, data);
 
 	/*Step3. Polling EFSROM_KICK(0x580, bit30) until it become 0 again.*/
 	i = 0;
@@ -154,9 +159,10 @@ UCHAR eFuseReadRegisters(
 			return 0;
 	
 		/*rtmp.HwMemoryReadDword(EFUSE_CTRL, (DWORD *) &eFuseCtrlStruc, 4);*/
-		RTMP_IO_READ32(pAd, EFUSE_CTRL, &eFuseCtrlStruc.word);
+		RTMP_IO_READ32(pAd, efuse_ctrl_reg, &eFuseCtrlStruc.word);
 		if(eFuseCtrlStruc.field.EFSROM_KICK == 0)
 		{
+			RTMPusecDelay(2);
 			break;
 		}	
 		RTMPusecDelay(2);
@@ -172,6 +178,11 @@ UCHAR eFuseReadRegisters(
 	else
 	{
 		/*Step4. Read 16-byte of data from EFUSE_DATA0-3 (0x590-0x59C)*/
+#ifdef RT3290
+		if (IS_RT3290(pAd))
+			efuseDataOffset =  EFUSE_DATA0_3290 + (Offset & 0xC);
+		else
+#endif /* RT3290 */
 		efuseDataOffset =  EFUSE_DATA3 - (Offset & 0xC);	
 		/*data hold 4 bytes data.*/
 		/*In RTMP_IO_READ32 will automatically execute 32-bytes swapping*/
@@ -221,8 +232,14 @@ VOID eFusePhysicalReadRegisters(
 	int	i;
 	USHORT	efuseDataOffset;
 	UINT32	data;
+	UINT32 efuse_ctrl_reg = EFUSE_CTRL;
 
-	RTMP_IO_READ32(pAd, EFUSE_CTRL, &eFuseCtrlStruc.word);
+#ifdef RT3290
+	if (IS_RT3290(pAd))
+		efuse_ctrl_reg = EFUSE_CTRL_3290;
+#endif /* RT3290 */
+
+	RTMP_IO_READ32(pAd, efuse_ctrl_reg, &eFuseCtrlStruc.word);
 
 	/*Step0. Write 10-bit of address to EFSROM_AIN (0x580, bit25:bit16). The address must be 16-byte alignment.*/
 	eFuseCtrlStruc.field.EFSROM_AIN = Offset & 0xfff0;
@@ -235,7 +252,7 @@ VOID eFusePhysicalReadRegisters(
 	eFuseCtrlStruc.field.EFSROM_KICK = 1;
 
 	NdisMoveMemory(&data, &eFuseCtrlStruc, 4);	
-	RTMP_IO_WRITE32(pAd, EFUSE_CTRL, data);	
+	RTMP_IO_WRITE32(pAd, efuse_ctrl_reg, data);	
 
 	/*Step3. Polling EFSROM_KICK(0x580, bit30) until it become 0 again.*/
 	i = 0;
@@ -246,7 +263,11 @@ VOID eFusePhysicalReadRegisters(
 		
 		RTMP_IO_READ32(pAd, EFUSE_CTRL, &eFuseCtrlStruc.word);	
 		if(eFuseCtrlStruc.field.EFSROM_KICK == 0)
+		{
+			RTMPusecDelay(2);
 			break;
+		}
+		
 		RTMPusecDelay(2);
 		i++;	
 	}
@@ -259,6 +280,11 @@ VOID eFusePhysicalReadRegisters(
 	/*594:B A 9 8 */
 	/*598:7 6 5 4*/
 	/*59C:3 2 1 0*/
+#ifdef RT3290
+	if (IS_RT3290(pAd))
+		efuseDataOffset =  EFUSE_DATA0_3290 + (Offset & 0xC)  ;
+	else
+#endif /* RT3290 */
 	efuseDataOffset =  EFUSE_DATA3 - (Offset & 0xC)  ;	
 
 	RTMP_IO_READ32(pAd, efuseDataOffset, &data);
@@ -286,7 +312,7 @@ VOID eFusePhysicalReadRegisters(
 	
 ========================================================================
 */
-static VOID eFuseReadPhysical( 
+VOID eFuseReadPhysical( 
 	IN	PRTMP_ADAPTER	pAd, 
   	IN	PUSHORT lpInBuffer,
   	IN	ULONG nInBufferSize,
@@ -360,11 +386,17 @@ static VOID eFusePhysicalWriteRegisters(
 	int	i;
 	USHORT	efuseDataOffset;
 	UINT32	data, eFuseDataBuffer[4];
+	UINT32 efuse_ctrl_reg = EFUSE_CTRL;
+
+#ifdef RT3290
+	if (IS_RT3290(pAd))
+		efuse_ctrl_reg = EFUSE_CTRL_3290;
+#endif /* RT3290 */
 
 	/*Step0. Write 16-byte of data to EFUSE_DATA0-3 (0x590-0x59C), where EFUSE_DATA0 is the LSB DW, EFUSE_DATA3 is the MSB DW.*/
 
 	/*read current values of 16-byte block	*/
-	RTMP_IO_READ32(pAd, EFUSE_CTRL,  &eFuseCtrlStruc.word);
+	RTMP_IO_READ32(pAd, efuse_ctrl_reg,  &eFuseCtrlStruc.word);
 
 	/*Step0. Write 10-bit of address to EFSROM_AIN (0x580, bit25:bit16). The address must be 16-byte alignment.*/
 	eFuseCtrlStruc.field.EFSROM_AIN = Offset & 0xfff0;
@@ -376,26 +408,39 @@ static VOID eFusePhysicalWriteRegisters(
 	eFuseCtrlStruc.field.EFSROM_KICK = 1;
 
 	NdisMoveMemory(&data, &eFuseCtrlStruc, 4);
-	RTMP_IO_WRITE32(pAd, EFUSE_CTRL, data);	
+	RTMP_IO_WRITE32(pAd, efuse_ctrl_reg, data);	
 
 	/*Step3. Polling EFSROM_KICK(0x580, bit30) until it become 0 again.*/
 	i = 0;
 	while(i < 500)
 	{	
-		RTMP_IO_READ32(pAd, EFUSE_CTRL, &eFuseCtrlStruc.word);
+		RTMP_IO_READ32(pAd, efuse_ctrl_reg, &eFuseCtrlStruc.word);
 
 		if(eFuseCtrlStruc.field.EFSROM_KICK == 0)
+		{
+			RTMPusecDelay(2);
 			break;
+		}
 		RTMPusecDelay(2);
 		i++;	
 	}
 
 	/*Step4. Read 16-byte of data from EFUSE_DATA0-3 (0x59C-0x590)*/
-	efuseDataOffset =  EFUSE_DATA3;		
+#ifdef RT3290
+	if (IS_RT3290(pAd))
+		efuseDataOffset = EFUSE_DATA0_3290;
+	else
+#endif /* RT3290 */
+		efuseDataOffset =  EFUSE_DATA3;
 	for(i=0; i< 4; i++)
 	{
 		RTMP_IO_READ32(pAd, efuseDataOffset, (PUINT32) &eFuseDataBuffer[i]);
-		efuseDataOffset -=  4;		
+#ifdef RT3290
+		if (IS_RT3290(pAd))
+			efuseDataOffset += 4;
+		else
+#endif /* RT3290 */
+			efuseDataOffset -= 4;
 	}
 
 	/*Update the value, the offset is multiple of 2, length is 2*/
@@ -414,13 +459,18 @@ static VOID eFusePhysicalWriteRegisters(
 	efuseDataOffset =  EFUSE_DATA3;
 	for(i=0; i< 4; i++)
 	{
-		RTMP_IO_WRITE32(pAd, efuseDataOffset, eFuseDataBuffer[i]);			
-		efuseDataOffset -= 4;		
+		RTMP_IO_WRITE32(pAd, efuseDataOffset, eFuseDataBuffer[i]);
+#ifdef RT3290
+		if (IS_RT3290(pAd))
+			efuseDataOffset += 4;
+		else
+#endif /* RT3290 */
+			efuseDataOffset -= 4;		
 	}
 
 	/*Step1. Write 10-bit of address to EFSROM_AIN (0x580, bit25:bit16). The address must be 16-byte alignment.*/
-
-	RTMP_IO_READ32(pAd, EFUSE_CTRL, &eFuseCtrlStruc.word);
+	// TODO: shiang, for below line, windows driver didn't have this read, why we have ??
+	RTMP_IO_READ32(pAd, efuse_ctrl_reg, &eFuseCtrlStruc.word);
 
 	eFuseCtrlStruc.field.EFSROM_AIN = Offset & 0xfff0;
 
@@ -431,17 +481,20 @@ static VOID eFusePhysicalWriteRegisters(
 	eFuseCtrlStruc.field.EFSROM_KICK = 1;
 
 	NdisMoveMemory(&data, &eFuseCtrlStruc, 4);	
-	RTMP_IO_WRITE32(pAd, EFUSE_CTRL, data);	
+	RTMP_IO_WRITE32(pAd, efuse_ctrl_reg, data);	
 
 	/*Step4. Polling EFSROM_KICK(0x580, bit30) until it become 0 again. It¡¦s done.*/
 	i = 0;
 
 	while(i < 500)
 	{	
-		RTMP_IO_READ32(pAd, EFUSE_CTRL, &eFuseCtrlStruc.word);
+		RTMP_IO_READ32(pAd, efuse_ctrl_reg, &eFuseCtrlStruc.word);
 
 		if(eFuseCtrlStruc.field.EFSROM_KICK == 0)
+		{
+			RTMPusecDelay(2);
 			break;
+		}
 		
 		RTMPusecDelay(2);	
 		i++;	
@@ -845,7 +898,7 @@ INT set_eFuseGetFreeBlockCount_Proc(
 	UINT efusefreenum=0;
 	if (pAd->bUseEfuse == FALSE && pAd->bFroceEEPROMBuffer == FALSE)
 		return FALSE;
-	eFuseGetFreeBlockCount(pAd, &efusefreenum);	
+	eFuseGetFreeBlockCount(pAd,&efusefreenum);
 	printk("efuseFreeNumber is %d\n",efusefreenum);
 	return TRUE;
 }
@@ -904,14 +957,14 @@ INT	set_eFuseLoadFromBin_Proc(
 		NdisMoveMemory(src, arg, strlen(arg));
 	else
 		NdisMoveMemory(src, EFUSE_EEPROM_DEFULT_FILE, strlen(EFUSE_EEPROM_DEFULT_FILE));
-	DBGPRINT(RT_DEBUG_TRACE, ("FileName=%s\n",src));
+	DBGPRINT(RT_DEBUG_OFF, ("FileName=%s\n",src));
 
 	RtmpOSFSInfoChange(&osfsInfo, TRUE);
 
 	srcf = RtmpOSFileOpen(src, O_RDONLY, 0);
 	if (IS_FILE_OPEN_ERR(srcf)) 
 	{
-		DBGPRINT(RT_DEBUG_ERROR, ("--> Error opening file %s\n", src));
+		DBGPRINT_ERR(("--> Error opening file %s\n", src));
 		retval = FALSE;
 		goto recoverFS;
 	}
@@ -1338,11 +1391,7 @@ int rtmp_ee_efuse_read16(
 	IN USHORT Offset,
 	OUT USHORT *pValue)
 {
-	 DBGPRINT(RT_DEBUG_TRACE,  ("rtmp_ee_efuse_read16\n"));
 	if (pAd->bFroceEEPROMBuffer
-#ifdef RALINK_ATE
-			||pAd->bEEPROMFile
-#endif /* RALINK_ATE */
 		)
 	{
 	    DBGPRINT(RT_DEBUG_TRACE,  ("Read from EEPROM Buffer\n"));
@@ -1361,9 +1410,6 @@ int rtmp_ee_efuse_write16(
 	IN USHORT data)
 {
     if (pAd->bFroceEEPROMBuffer
-#ifdef RALINK_ATE
-			||pAd->bEEPROMFile
-#endif /* RALINK_ATE */
 		)
     {
     	data = le2cpu16(data);
@@ -1390,30 +1436,6 @@ int RtmpEfuseSupportCheck(
 }
 
 
-#ifdef RALINK_ATE
-INT set_eFuseBufferModeWriteBack_Proc(
-	IN	PRTMP_ADAPTER	pAd,
-	IN	PSTRING			arg)
-{
-	UINT Enable;
-	
-
- 	if(strlen(arg)>0)	
-	{
-		Enable= simple_strtol(arg, 0, 16);
- 	}
-	else
-		return FALSE;
-	if(Enable==1)
-	{
-		DBGPRINT(RT_DEBUG_TRACE, ("set_eFuseBufferMode_Proc:: Call WRITEEEPROMBUF"));	
-		eFuseWriteEeeppromBuf(pAd);
-	}
-	else
-		return FALSE;
-	return TRUE;
-}
-#endif /* RALINK_ATE */
 
 
 /*

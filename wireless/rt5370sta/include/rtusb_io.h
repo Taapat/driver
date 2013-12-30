@@ -38,43 +38,49 @@
 #define CMDTHREAD_RESET_BULK_IN						0x0D730102
 #define CMDTHREAD_CHECK_GPIO							0x0D730103
 #define CMDTHREAD_SET_ASIC_WCID						0x0D730104
-#define CMDTHREAD_SET_CLIENT_MAC_ENTRY				0x0D730105
+#define CMDTHREAD_DEL_ASIC_WCID						0x0D730105
+#define CMDTHREAD_SET_CLIENT_MAC_ENTRY				0x0D730106
 
 #ifdef CONFIG_STA_SUPPORT
-#define CMDTHREAD_SET_PSM_BIT							0x0D730106
-#define CMDTHREAD_FORCE_WAKE_UP						0x0D730107
-#define CMDTHREAD_FORCE_SLEEP_AUTO_WAKEUP			0x0D730108
-#define CMDTHREAD_QKERIODIC_EXECUT					0x0D730109
+#define CMDTHREAD_SET_PSM_BIT							0x0D730107
+#define CMDTHREAD_FORCE_WAKE_UP						0x0D730108
+#define CMDTHREAD_FORCE_SLEEP_AUTO_WAKEUP			0x0D730109
+#define CMDTHREAD_QKERIODIC_EXECUT					0x0D73010A
 #endif /* CONFIG_STA_SUPPORT */
 
 
-#define CMDTHREAD_SET_LED_STATUS				0x0D730110	/* Set WPS LED status (LED_WPS_XXX). */
+#define CMDTHREAD_SET_LED_STATUS				0x0D730111	/* Set WPS LED status (LED_WPS_XXX). */
 
 /* Security related */
-#define CMDTHREAD_SET_WCID_SEC_INFO					0x0D730112
-#define CMDTHREAD_SET_ASIC_WCID_IVEIV				0x0D730113
-#define CMDTHREAD_SET_ASIC_WCID_ATTR				0x0D730114
-#define CMDTHREAD_SET_ASIC_SHARED_KEY				0x0D730115
-#define CMDTHREAD_SET_ASIC_PAIRWISE_KEY				0x0D730116
-#define CMDTHREAD_REMOVE_PAIRWISE_KEY				0x0D730117
+#define CMDTHREAD_SET_WCID_SEC_INFO					0x0D730113
+#define CMDTHREAD_SET_ASIC_WCID_IVEIV				0x0D730114
+#define CMDTHREAD_SET_ASIC_WCID_ATTR				0x0D730115
+#define CMDTHREAD_SET_ASIC_SHARED_KEY				0x0D730116
+#define CMDTHREAD_SET_ASIC_PAIRWISE_KEY				0x0D730117
+#define CMDTHREAD_REMOVE_PAIRWISE_KEY				0x0D730118
 #ifdef CONFIG_STA_SUPPORT
-#define CMDTHREAD_SET_PORT_SECURED					0x0D730118
+#define CMDTHREAD_SET_PORT_SECURED					0x0D730119
 #endif /* CONFIG_STA_SUPPORT */
 
 
 /* add by johnli, fix "in_interrupt" error when call "MacTableDeleteEntry" in Rx tasklet */
-#define CMDTHREAD_UPDATE_PROTECT					0x0D73011A
+#define CMDTHREAD_UPDATE_PROTECT					0x0D73011B
 /* end johnli */
 
 #ifdef LINUX
 #ifdef RT_CFG80211_SUPPORT
-#define CMDTHREAD_REG_HINT							0x0D73011B
-#define CMDTHREAD_REG_HINT_11D						0x0D73011C
-#define CMDTHREAD_SCAN_END							0x0D73011D
-#define CMDTHREAD_CONNECT_RESULT_INFORM				0x0D73011E
+#define CMDTHREAD_REG_HINT							0x0D73011C
+#define CMDTHREAD_REG_HINT_11D						0x0D73011D
+#define CMDTHREAD_SCAN_END							0x0D73011E
+#define CMDTHREAD_CONNECT_RESULT_INFORM				0x0D73011F
 #endif /* RT_CFG80211_SUPPORT */
 #endif /* LINUX */
 
+
+
+#ifdef RT3593
+#define CMDTHREAD_UPDATE_TX_CHAIN_ADDRESS			0x0D730122
+#endif
 
 
 
@@ -125,25 +131,26 @@ typedef struct _RT_ASIC_SHARED_KEY {
 	CIPHER_KEY CipherKey;
 } RT_ASIC_SHARED_KEY, *PRT_ASIC_SHARED_KEY;
 
+typedef struct _RT_ASIC_PROTECT_INFO {
+	USHORT OperationMode;
+	UCHAR SetMask;	
+	BOOLEAN bDisableBGProtect;
+	BOOLEAN bNonGFExist;	
+} RT_ASIC_PROTECT_INFO, *PRT_ASIC_PROTECT_INFO;
+
 /******************************************************************************
 
   	USB Cmd to ASIC Related MACRO
-  	
+
 ******************************************************************************/
 /* reset MAC of a station entry to 0xFFFFFFFFFFFF */
 #define RTMP_STA_ENTRY_MAC_RESET(pAd, Wcid)					\
 	{	RT_SET_ASIC_WCID	SetAsicWcid;						\
 		SetAsicWcid.WCID = Wcid;								\
-		SetAsicWcid.SetTid = 0xffffffff;						\
-		SetAsicWcid.DeleteTid = 0xffffffff;						\
-		RTEnqueueInternalCmd(pAd, CMDTHREAD_SET_ASIC_WCID, 	\
+		RTEnqueueInternalCmd(pAd, CMDTHREAD_DEL_ASIC_WCID, 	\
 				&SetAsicWcid, sizeof(RT_SET_ASIC_WCID));	}
 
-/* add by johnli, fix "in_interrupt" error when call "MacTableDeleteEntry" in Rx tasklet */
 /* Set MAC register value according operation mode */
-#define RTMP_UPDATE_PROTECT(pAd)	\
- 	RTEnqueueInternalCmd(pAd, CMDTHREAD_UPDATE_PROTECT, NULL, 0);
-/* end johnli */
 
 /* Insert the BA bitmap to ASIC for the Wcid entry */
 #define RTMP_ADD_BA_SESSION_TO_ASIC(_pAd, _Aid, _TID)					\
@@ -164,5 +171,15 @@ typedef struct _RT_ASIC_SHARED_KEY {
 			SetAsicWcid.DeleteTid = (0x10000<<(_TID) );					\
 			RTEnqueueInternalCmd((_pAd), CMDTHREAD_SET_ASIC_WCID, &SetAsicWcid, sizeof(RT_SET_ASIC_WCID));	\
 		}while(0)
+
+#define RTMP_UPDATE_PROTECT(_pAd, _OperationMode, _SetMask, _bDisableBGProtect, _bNonGFExist)	\
+		do {\
+			RT_ASIC_PROTECT_INFO AsicProtectInfo;\
+			AsicProtectInfo.OperationMode = (_OperationMode);\
+			AsicProtectInfo.SetMask = (_SetMask);\
+			AsicProtectInfo.bDisableBGProtect = (_bDisableBGProtect);\
+			AsicProtectInfo.bNonGFExist = (_bNonGFExist);\
+			RTEnqueueInternalCmd((_pAd), CMDTHREAD_UPDATE_PROTECT, &AsicProtectInfo, sizeof(RT_ASIC_PROTECT_INFO));\
+		} while(0)
 
 #endif /* __RTUSB_IO_H__ */

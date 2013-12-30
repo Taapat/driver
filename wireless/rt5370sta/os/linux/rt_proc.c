@@ -63,10 +63,39 @@ int wl_proc_exit(void);
 extern struct proc_dir_entry *procRegDir;
 
 #ifdef VIDEO_TURBINE_SUPPORT
+extern BOOLEAN UpdateFromGlobal;
 AP_VIDEO_STRUCT GLOBAL_AP_VIDEO_CONFIG;
 /*struct proc_dir_entry *proc_ralink_platform, *proc_ralink_wl, *proc_ralink_wl_video; */
 struct proc_dir_entry *proc_ralink_wl, *proc_ralink_wl_video;
-static struct proc_dir_entry *entry_wl_video_Enable, *entry_wl_video_ClassifierEnable, *entry_wl_video_HighTxMode, *entry_wl_video_TxPwr, *entry_wl_video_VideoMCSEnable, *entry_wl_video_VideoMCS, *entry_wl_video_TxBASize, *entry_wl_video_TxLifeTimeMode, *entry_wl_video_TxLifeTime, *entry_wl_video_TxRetryLimit;
+static struct proc_dir_entry *entry_wl_video_Update, *entry_wl_video_Enable, *entry_wl_video_ClassifierEnable, *entry_wl_video_HighTxMode, *entry_wl_video_TxPwr, *entry_wl_video_VideoMCSEnable, *entry_wl_video_VideoMCS, *entry_wl_video_TxBASize, *entry_wl_video_TxLifeTimeMode, *entry_wl_video_TxLifeTime, *entry_wl_video_TxRetryLimit;
+
+
+ssize_t video_Update_get(char *page, char **start, off_t off, int count,
+                          int *eof, void *data_unused)
+{
+	sprintf(page, "%d\n", UpdateFromGlobal);
+	*eof = 1;
+        return strlen(page);
+}
+
+ssize_t video_Update_set(struct file *file, const char __user * buffer,
+                       size_t count, loff_t *ppos)
+{
+	char *buf = kmalloc(count, GFP_KERNEL);
+
+	if (buf) {
+		unsigned long val;
+
+		if (copy_from_user(buf, buffer, count))
+			return -EFAULT;
+		
+		if (buf)
+			val = simple_strtoul(buf, NULL, 10);
+
+		UpdateFromGlobal = val;
+	}
+        return count;
+}
 
 ssize_t video_Enable_get(char *page, char **start, off_t off, int count,
                           int *eof, void *data_unused)
@@ -340,17 +369,16 @@ ssize_t video_TxRetryLimit_set(struct file *file, const char __user * buffer,
 
 int wl_video_proc_init(void)
 {
-
-	GLOBAL_AP_VIDEO_CONFIG.Enable = 1;
-	GLOBAL_AP_VIDEO_CONFIG.ClassifierEnable = 1;
-	GLOBAL_AP_VIDEO_CONFIG.HighTxMode = 0;
+	GLOBAL_AP_VIDEO_CONFIG.Enable = FALSE;
+	GLOBAL_AP_VIDEO_CONFIG.ClassifierEnable = FALSE;
+	GLOBAL_AP_VIDEO_CONFIG.HighTxMode = FALSE;
 	GLOBAL_AP_VIDEO_CONFIG.TxPwr = 0;
-	GLOBAL_AP_VIDEO_CONFIG.VideoMCSEnable = 1;
+	GLOBAL_AP_VIDEO_CONFIG.VideoMCSEnable = FALSE;
 	GLOBAL_AP_VIDEO_CONFIG.VideoMCS = 0;
-	GLOBAL_AP_VIDEO_CONFIG.TxBASize = 13;
-	GLOBAL_AP_VIDEO_CONFIG.TxLifeTimeMode = 0;
+	GLOBAL_AP_VIDEO_CONFIG.TxBASize = 0;
+	GLOBAL_AP_VIDEO_CONFIG.TxLifeTimeMode = FALSE;
 	GLOBAL_AP_VIDEO_CONFIG.TxLifeTime = 0;
-	GLOBAL_AP_VIDEO_CONFIG.TxRetryLimit = 0x2f1f;
+	GLOBAL_AP_VIDEO_CONFIG.TxRetryLimit = 0;
 
 		proc_ralink_wl = proc_mkdir("wl", procRegDir);
 
@@ -358,6 +386,12 @@ int wl_video_proc_init(void)
 		proc_ralink_wl_video = proc_mkdir("VideoTurbine", proc_ralink_wl);
 
 	if (proc_ralink_wl_video) {
+		entry_wl_video_Update = create_proc_entry("UpdateFromGlobal", 0, proc_ralink_wl_video);
+		if (entry_wl_video_Update) {
+			entry_wl_video_Update->read_proc = (read_proc_t*)&video_Update_get;
+			entry_wl_video_Update->write_proc = (write_proc_t*)&video_Update_set;
+		}
+
 		entry_wl_video_Enable = create_proc_entry("Enable", 0, proc_ralink_wl_video);
 		if (entry_wl_video_Enable) {
 			entry_wl_video_Enable->read_proc = (read_proc_t*)&video_Enable_get;

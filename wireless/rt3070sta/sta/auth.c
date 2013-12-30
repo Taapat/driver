@@ -100,8 +100,7 @@ VOID AuthTimeout(
 
 	/* Do nothing if the driver is starting halt state. */
 	/* This might happen when timer already been fired before cancel timer with mlmehalt */
-	if (RTMP_TEST_FLAG
-	    (pAd, fRTMP_ADAPTER_HALT_IN_PROGRESS | fRTMP_ADAPTER_NIC_NOT_EXIST))
+	if (RTMP_TEST_FLAG(pAd, fRTMP_ADAPTER_HALT_IN_PROGRESS | fRTMP_ADAPTER_NIC_NOT_EXIST))
 		return;
 
 	/* send a de-auth to reset AP's state machine (Patch AP-Dir635) */
@@ -124,16 +123,14 @@ VOID MlmeAuthReqAction(
 	IN PRTMP_ADAPTER pAd,
 	IN MLME_QUEUE_ELEM *Elem)
 {
-	if (AUTH_ReqSend
-	    (pAd, Elem, &pAd->MlmeAux.AuthTimer, "AUTH", 1, NULL, 0))
+	if (AUTH_ReqSend(pAd, Elem, &pAd->MlmeAux.AuthTimer, "AUTH", 1, NULL, 0))
 		pAd->Mlme.AuthMachine.CurrState = AUTH_WAIT_SEQ2;
 	else {
 		USHORT Status;
 
 		pAd->Mlme.AuthMachine.CurrState = AUTH_REQ_IDLE;
 		Status = MLME_INVALID_FORMAT;
-		MlmeEnqueue(pAd, MLME_CNTL_STATE_MACHINE, MT2_AUTH_CONF, 2,
-			    &Status, 0);
+		MlmeEnqueue(pAd, MLME_CNTL_STATE_MACHINE, MT2_AUTH_CONF, 2, &Status, 0);
 	}
 }
 
@@ -197,8 +194,7 @@ VOID PeerAuthRspAtSeq2Action(
 			if (Status == MLME_SUCCESS) {
 				/* Authentication Mode "LEAP" has allow for CCX 1.X */
 				if (pAd->MlmeAux.Alg == Ndis802_11AuthModeOpen) {
-					pAd->Mlme.AuthMachine.CurrState =
-					    AUTH_REQ_IDLE;
+					pAd->Mlme.AuthMachine.CurrState = AUTH_REQ_IDLE;
 					MlmeEnqueue(pAd,
 						    MLME_CNTL_STATE_MACHINE,
 						    MT2_AUTH_CONF, 2, &Status,
@@ -215,8 +211,7 @@ VOID PeerAuthRspAtSeq2Action(
 					if (NStatus != NDIS_STATUS_SUCCESS) {
 						DBGPRINT(RT_DEBUG_TRACE,
 							 ("AUTH - PeerAuthRspAtSeq2Action() allocate memory fail\n"));
-						pAd->Mlme.AuthMachine.
-						    CurrState = AUTH_REQ_IDLE;
+						pAd->Mlme.AuthMachine.CurrState = AUTH_REQ_IDLE;
 						Status2 = MLME_FAIL_NO_RESOURCE;
 						MlmeEnqueue(pAd,
 							    MLME_CNTL_STATE_MACHINE,
@@ -233,25 +228,15 @@ VOID PeerAuthRspAtSeq2Action(
 					AuthHdr.FC.Wep = 1;
 
 					/* TSC increment */
-					INC_TX_TSC(pAd->
-						   SharedKey[BSS0][pAd->StaCfg.
-								   DefaultKeyId].
-						   TxTsc, LEN_WEP_TSC);
+					INC_TX_TSC(pAd->SharedKey[BSS0][pAd->StaCfg.DefaultKeyId].TxTsc, LEN_WEP_TSC);
 
 					/* Construct the 4-bytes WEP IV header */
-					RTMPConstructWEPIVHdr(pAd->StaCfg.
-							      DefaultKeyId,
-							      pAd->
-							      SharedKey[BSS0]
-							      [pAd->StaCfg.
-							       DefaultKeyId].
-							      TxTsc, iv_hdr);
+					RTMPConstructWEPIVHdr(pAd->StaCfg.DefaultKeyId,
+							      pAd->SharedKey[BSS0][pAd->StaCfg.DefaultKeyId].TxTsc, iv_hdr);
 
 					Alg = cpu2le16(*(USHORT *) & Alg);
 					Seq = cpu2le16(*(USHORT *) & Seq);
-					RemoteStatus =
-					    cpu2le16(*(USHORT *) &
-						     RemoteStatus);
+					RemoteStatus = cpu2le16(*(USHORT *) &RemoteStatus);
 
 					/* Construct message text */
 					MakeOutgoingFrame(CyperChlgText, &c_len,
@@ -266,16 +251,10 @@ VOID PeerAuthRspAtSeq2Action(
 
 					if (RTMPSoftEncryptWEP(pAd,
 							       iv_hdr,
-							       &pAd->
-							       SharedKey[BSS0]
-							       [pAd->StaCfg.
-								DefaultKeyId],
-							       CyperChlgText,
-							       c_len) ==
-					    FALSE) {
+							       &pAd->SharedKey[BSS0][pAd->StaCfg.DefaultKeyId],
+							       CyperChlgText, c_len) == FALSE) {
 						MlmeFreeMemory(pAd, pOutBuffer);
-						pAd->Mlme.AuthMachine.
-						    CurrState = AUTH_REQ_IDLE;
+						pAd->Mlme.AuthMachine.CurrState = AUTH_REQ_IDLE;
 						Status2 = MLME_FAIL_NO_RESOURCE;
 						MlmeEnqueue(pAd,
 							    MLME_CNTL_STATE_MACHINE,
@@ -296,14 +275,11 @@ VOID PeerAuthRspAtSeq2Action(
 							  CyperChlgText,
 							  END_OF_ARGS);
 
-					MiniportMMRequest(pAd, 0, pOutBuffer,
-							  FrameLen);
+					MiniportMMRequest(pAd, 0, pOutBuffer, FrameLen);
 					MlmeFreeMemory(pAd, pOutBuffer);
 
-					RTMPSetTimer(&pAd->MlmeAux.AuthTimer,
-						     AUTH_TIMEOUT);
-					pAd->Mlme.AuthMachine.CurrState =
-					    AUTH_WAIT_SEQ4;
+					RTMPSetTimer(&pAd->MlmeAux.AuthTimer, AUTH_TIMEOUT);
+					pAd->Mlme.AuthMachine.CurrState = AUTH_WAIT_SEQ4;
 				}
 			} else {
 				pAd->StaCfg.AuthFailReason = Status;

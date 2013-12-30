@@ -53,11 +53,7 @@
 #define RTPRIV_IOCTL_E2P                            (SIOCIWFIRSTPRIV + 0x07)
 #endif /* DBG */
 
-#ifdef RALINK_ATE
-#ifdef RALINK_QA
 #define RTPRIV_IOCTL_ATE							(SIOCIWFIRSTPRIV + 0x08)
-#endif /* RALINK_QA */
-#endif /* RALINK_ATE */
 
 #define RTPRIV_IOCTL_STATISTICS                     (SIOCIWFIRSTPRIV + 0x09)
 #define RTPRIV_IOCTL_ADD_PMKID_CACHE                (SIOCIWFIRSTPRIV + 0x0A)

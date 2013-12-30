@@ -680,10 +680,10 @@ VOID RTMPTkipMixKey(
 }
 
 
-
-/* TRUE: Success!*/
-/* FALSE: Decrypt Error!*/
-
+/*
+	TRUE: Success!
+	FALSE: Decrypt Error!
+*/
 BOOLEAN RTMPSoftDecryptTKIP(
 	IN 		PRTMP_ADAPTER 	pAd,
 	IN 		PUCHAR			pHdr,
@@ -779,6 +779,10 @@ BOOLEAN RTMPSoftDecryptTKIP(
 	ciphertext_ptr = pData + LEN_TKIP_IV_HDR;
 	ciphertext_len = *DataByteCnt - LEN_TKIP_IV_HDR;
 
+	/* Ignore abnormal packets */
+	if ((*DataByteCnt) <= LEN_TKIP_IV_HDR)
+		return FALSE;
+
 	/* WEP Decapsulation */
 	/* Generate an RC4 key stream */
 	ARC4_INIT(&ARC4_CTX, &RC4Key[0], 16);
@@ -817,7 +821,18 @@ BOOLEAN RTMPSoftDecryptTKIP(
 	if (!NdisEqualMemory(MIC, TrailMIC, LEN_TKIP_MIC))
 	{
 		DBGPRINT(RT_DEBUG_ERROR, ("! TKIP MIC Error !\n"));	 /*MIC error.*/
+#ifdef CONFIG_STA_SUPPORT
 		/*RTMPReportMicError(pAd, &pWpaKey[KeyID]);	 marked by AlbertY @ 20060630 */
+#ifdef WPA_SUPPLICANT_SUPPORT
+        if (pAd->StaCfg.WpaSupplicantUP) {
+                WpaSendMicFailureToWpaSupplicant(pAd->net_dev,
+                                                (pKey->Type ==
+                                                  PAIRWISEKEY) ? TRUE :
+                                                FALSE);
+        } else
+#endif /* WPA_SUPPLICANT_SUPPORT */
+        RTMPReportMicError(pAd, pKey);
+#endif /* CONFIG_STA_SUPPORT */
 		return FALSE;		
 	}
 

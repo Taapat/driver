@@ -5,35 +5,25 @@
  * Hsinchu County 302,
  * Taiwan, R.O.C.
  *
- * (c) Copyright 2002-2007, Ralink Technology, Inc.
+ * (c) Copyright 2002-2010, Ralink Technology, Inc.
  *
- * This program is free software; you can redistribute it and/or modify  * 
- * it under the terms of the GNU General Public License as published by  * 
- * the Free Software Foundation; either version 2 of the License, or     * 
- * (at your option) any later version.                                   * 
- *                                                                       * 
- * This program is distributed in the hope that it will be useful,       * 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of        * 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         * 
- * GNU General Public License for more details.                          * 
- *                                                                       * 
- * You should have received a copy of the GNU General Public License     * 
- * along with this program; if not, write to the                         * 
- * Free Software Foundation, Inc.,                                       * 
- * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             * 
- *                                                                       * 
- *************************************************************************
+ * This program is free software; you can redistribute it and/or modify  *
+ * it under the terms of the GNU General Public License as published by  *
+ * the Free Software Foundation; either version 2 of the License, or     *
+ * (at your option) any later version.                                   *
+ *                                                                       *
+ * This program is distributed in the hope that it will be useful,       *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ * GNU General Public License for more details.                          *
+ *                                                                       *
+ * You should have received a copy of the GNU General Public License     *
+ * along with this program; if not, write to the                         *
+ * Free Software Foundation, Inc.,                                       *
+ * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ *                                                                       *
+ *************************************************************************/
 
-	Module Name:
-	rtmp_wep.c
-
-	Abstract:
-
-	Revision History:
-	Who			When			What
-	--------	----------		----------------------------------------------
-	Paul Wu		10-28-02		Initial
-*/
 
 #include	"rt_config.h"
 
@@ -164,7 +154,7 @@ VOID	RTMPInitWepEngine(
 	IN	UCHAR			KeyLen,
 	OUT	ARC4_CTX_STRUC  *pARC4_CTX)
 {	
-//	UCHAR   seed[16];
+/*	UCHAR   seed[16];*/
 	PUCHAR	seed = NULL;
 	UINT8	seed_len;
 		
@@ -306,7 +296,7 @@ BOOLEAN	RTMPSoftDecryptWEP(
 	INOUT 	PUCHAR			pData,
 	INOUT 	UINT16			*DataByteCnt)
 {
-	//ARC4_CTX_STRUC 	ARC4_CTX;
+	/*ARC4_CTX_STRUC 	ARC4_CTX;*/
 	ARC4_CTX_STRUC 	*ARC4_CTX = NULL;
 	PUCHAR			plaintext_ptr;
 	UINT16			plaintext_len;
@@ -337,7 +327,11 @@ BOOLEAN	RTMPSoftDecryptWEP(
 	/* Skip the WEP IV header (4-bytes) */
 	ciphertext_ptr = pData + LEN_WEP_IV_HDR;
 	ciphertext_len = *DataByteCnt - LEN_WEP_IV_HDR;
-	
+
+	/* Ignore abnormal packets */
+	if ((*DataByteCnt ) <= LEN_WEP_IV_HDR)
+		return FALSE;
+
 	/* Decrypt the WEP MPDU. It shall include plaintext and ICV.
 	   The result output would overwrite the original WEP IV header position */
 	ARC4_Compute(ARC4_CTX, 
@@ -359,7 +353,7 @@ BOOLEAN	RTMPSoftDecryptWEP(
 
     if(crc32 != cpu2le32(trailfcs))
     {
-		DBGPRINT(RT_DEBUG_ERROR, ("! WEP Data CRC Error !\n"));	 //CRC error.
+		DBGPRINT(RT_DEBUG_ERROR, ("! WEP Data CRC Error !\n"));	 /*CRC error.*/
 		return FALSE;
 	}
 

@@ -80,19 +80,19 @@ VOID NICInitRT3370RFRegisters(IN PRTMP_ADAPTER pAd)
 			/* patch tx EVM issue temporarily*/
 			RTUSBReadMACRegister(pAd, LDO_CFG0, &data);
 			data = ((data & 0xE0FFFFFF) | 0x0D000000);
-			RTUSBWriteMACRegister(pAd, LDO_CFG0, data);
+			RTUSBWriteMACRegister(pAd, LDO_CFG0, data, FALSE);
 			}
 		else
 		{
 			/* patch CCK ok, OFDM failed issue, just toggle and restore LDO_CFG0.*/
 			RTUSBReadMACRegister(pAd, LDO_CFG0, &data);
 			data = ((data & 0xE0FFFFFF) | 0x0D000000);
-			RTUSBWriteMACRegister(pAd, LDO_CFG0, data);
+			RTUSBWriteMACRegister(pAd, LDO_CFG0, data, FALSE);
 
 			RTMPusecDelay(1000);
 
 			data = ((data & 0xE0FFFFFF) | 0x01000000);
-			RTUSBWriteMACRegister(pAd, LDO_CFG0, data);
+			RTUSBWriteMACRegister(pAd, LDO_CFG0, data, FALSE);
 		}
 
 		/* patch LNA_PE_G1 failed issue*/

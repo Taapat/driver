@@ -122,6 +122,27 @@ VOID EnqueueTPCRep(
 	IN UINT8 TxPwr,
 	IN UINT8 LinkMargin);
 
+#ifdef WDS_SUPPORT
+/*
+	==========================================================================
+	Description:
+		Prepare Channel Switch Announcement action frame and enqueue it into
+		management queue waiting for transmition.
+		
+	Parametrs:
+		1. the destination mac address of the frame.
+		2. Channel switch announcement mode.
+		2. a New selected channel.
+	
+	Return	: None.
+	==========================================================================
+ */
+VOID EnqueueChSwAnn(
+	IN PRTMP_ADAPTER pAd,
+	IN PUCHAR pDA, 
+	IN UINT8 ChSwMode,
+	IN UINT8 NewCh);
+#endif /* WDS_SUPPORT */
 
 /*
 	==========================================================================

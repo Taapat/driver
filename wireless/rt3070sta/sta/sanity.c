@@ -242,11 +242,14 @@ BOOLEAN PeerAssocRspSanity(
 			}
 			break;
 		case IE_EXT_CAPABILITY:
-			if (pEid->Len >= sizeof (EXT_CAP_INFO_ELEMENT)) {
-				NdisMoveMemory(pExtCapInfo, &pEid->Octet[0],
-					       sizeof (EXT_CAP_INFO_ELEMENT));
-				DBGPRINT(RT_DEBUG_WARN,
-					 ("PeerAssocReqSanity - IE_EXT_CAPABILITY!\n"));
+			if (pEid->Len >= 1)
+			{
+				UCHAR MaxSize;
+				UCHAR MySize = sizeof(EXT_CAP_INFO_ELEMENT);
+
+				MaxSize = min(pEid->Len, MySize);
+				NdisMoveMemory(pExtCapInfo, &pEid->Octet[0], MaxSize);
+				DBGPRINT(RT_DEBUG_WARN, ("PeerAssocReqSanity - IE_EXT_CAPABILITY!\n"));
 			}
 			break;
 

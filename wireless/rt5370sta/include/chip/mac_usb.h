@@ -56,7 +56,16 @@
 
 #ifdef RT_BIG_ENDIAN
 typedef	struct	GNU_PACKED _RXINFO_STRUC {
-	UINT32		PlcpSignal:12;
+#ifndef RT5592
+	UINT32		rsv:8
+#else
+	UINT32		IPCHKERR:1;		/* IP checksum error */
+	UINT32		TCPCHKERR:1;	/* TCP checksum error */
+	UINT32		IPCHKBPS:1;		/* IP checksum bypass(hw does not do checksum) */
+	UINT32		TCPCHKBPS:1;	/* TCP/UDP checksum bypass(hw does not do checksum) */
+	UINT32		rsv:4;
+#endif
+	UINT32		PlcpSignal:4;
 	UINT32		LastAMSDU:1;
 	UINT32		CipherAlg:1;
 	UINT32		PlcpRssil:1;
@@ -98,7 +107,16 @@ typedef	struct	GNU_PACKED _RXINFO_STRUC {
 	UINT32		PlcpRssil:1;
 	UINT32		CipherAlg:1;
 	UINT32		LastAMSDU:1;
-	UINT32		PlcpSignal:12;
+	UINT32		PlcpSignal:4;
+#ifdef RT5592
+	UINT32		rsv:4;
+	UINT32		TCPCHKBPS:1;	/* TCP/UDP checksum bypass(hw does not do checksum) */
+	UINT32		IPCHKBPS:1;		/* IP checksum bypass(hw does not do checksum) */
+	UINT32		TCPCHKERR:1;	/* TCP checksum error */
+	UINT32		IPCHKERR:1;		/* IP checksum error */
+#else
+	UINT32		rsv:8;
+#endif
 }	RXINFO_STRUC, *PRXINFO_STRUC, RT28XX_RXD_STRUC, *PRT28XX_RXD_STRUC;
 #endif
 
@@ -113,30 +131,26 @@ typedef	struct	_TXINFO_STRUC {
 	/* Word	0 */
 	UINT32		USBDMATxburst:1;/*used ONLY in USB bulk Aggre. Force USB DMA transmit frame from current selected endpoint */
 	UINT32		USBDMANextVLD:1;	/*used ONLY in USB bulk Aggregation, NextValid */
-	UINT32		rsv2:2;  /* Software use. */
-#ifndef USB_BULK_BUF_ALIGMENT
-	UINT32		SwUseLastRound:1; /* Software use. */
-#else
-	UINT32		bFragLasAlignmentsectiontRound:1;/* Software use */
-#endif /* USB_BULK_BUF_ALIGMENT */
+	UINT32		CSO:1; /* Checksum offload */
+	UINT32		USO:1; /* UDP checksum enable */
+	UINT32		SwRingUseLastRound:1;/* Software use */
 	UINT32		QSEL:2;	/* select on-chip FIFO ID for 2nd-stage output scheduler.0:MGMT, 1:HCCA 2:EDCA */
 	UINT32		WIV:1;	/* Wireless Info Valid. 1 if Driver already fill WI,  o if DMA needs to copy WI to correctposition */
-	UINT32		rsv:8;
+	UINT32		TCPOffset:5;
+	UINT32		IPOffset:3; /* FIXME */
 	UINT32		USBDMATxPktLen:16;	/*used ONLY in USB bulk Aggregation,  Total byte counts of all sub-frame. */
 }	TXINFO_STRUC, *PTXINFO_STRUC;
 #else
 typedef	struct	_TXINFO_STRUC {
 	/* Word	0 */
 	UINT32		USBDMATxPktLen:16;	/*used ONLY in USB bulk Aggregation,  Total byte counts of all sub-frame. */
-	UINT32		rsv:8;
+	UINT32		IPOffset:3; /* FIXME */
+	UINT32		TCPOffset:5;
 	UINT32		WIV:1;	/* Wireless Info Valid. 1 if Driver already fill WI,  o if DMA needs to copy WI to correctposition */
 	UINT32		QSEL:2;	/* select on-chip FIFO ID for 2nd-stage output scheduler.0:MGMT, 1:HCCA 2:EDCA */
-#ifndef USB_BULK_BUF_ALIGMENT
-	UINT32		SwUseLastRound:1; /* Software use. */
-#else
-	UINT32		bFragLasAlignmentsectiontRound:1;/* Software use */
-#endif /* USB_BULK_BUF_ALIGMENT */
-	UINT32		rsv2:2;  /* Software use. */
+	UINT32		SwRingUseLastRound:1; /* Software use. */
+	UINT32		USO:1; /* UDP checksum enable */
+	UINT32		CSO:1; /* Checksum offload */
 	UINT32		USBDMANextVLD:1;	/*used ONLY in USB bulk Aggregation, NextValid */
 	UINT32		USBDMATxburst:1;/*used ONLY in USB bulk Aggre. Force USB DMA transmit frame from current selected endpoint */
 }	TXINFO_STRUC, *PTXINFO_STRUC;
@@ -168,7 +182,11 @@ typedef struct __TX_BUFFER{
 
 typedef struct __HTTX_BUFFER{
 	union{
+#ifdef USB_BULK_BUF_ALIGMENT
+		UCHAR		WirelessPacket[MAX_ALIGMENT_TXBULK_SIZE];
+#else
 		UCHAR			WirelessPacket[MAX_TXBULK_SIZE];
+#endif /* USB_BULK_BUF_ALIGMENT */
 		HEADER_802_11	NullFrame;
 		PSPOLL_FRAME	PsPollPacket;
 		RTS_FRAME		RTSFrame;
@@ -206,6 +224,9 @@ typedef struct _TX_CONTEXT
 	UINT			TxRate;
 	ra_dma_addr_t		data_dma;
 
+#ifdef UAPSD_SUPPORT
+	USHORT			Wcid;
+#endif /* UAPSD_SUPPORT */
 }	TX_CONTEXT, *PTX_CONTEXT, **PPTX_CONTEXT;
 
 
@@ -213,10 +234,18 @@ typedef struct _TX_CONTEXT
 typedef struct _HT_TX_CONTEXT
 {
 	PVOID			pAd;		/*Initialized in MiniportInitialize */
+#ifdef USB_BULK_BUF_ALIGMENT
+	PURB			pUrb[BUF_ALIGMENT_RINGSIZE];			/*Initialized in MiniportInitialize */
+#else
 	PURB			pUrb;			/*Initialized in MiniportInitialize */
+#endif /* USB_BULK_BUF_ALIGMENT */
 	PIRP			pIrp;			/*used to cancel pending bulk out. */
 									/*Initialized in MiniportInitialize */
+#ifdef USB_BULK_BUF_ALIGMENT
+	PHTTX_BUFFER	TransferBuffer[BUF_ALIGMENT_RINGSIZE];	/*Initialized in MiniportInitialize */
+#else
 	PHTTX_BUFFER	TransferBuffer;	/*Initialized in MiniportInitialize */
+#endif /* USB_BULK_BUF_ALIGMENT */
 	ULONG			BulkOutSize;	/* Indicate the total bulk-out size in bytes in one bulk-transmission */
 	UCHAR			BulkOutPipeId;
 	BOOLEAN			IRPPending;
@@ -231,10 +260,15 @@ typedef struct _HT_TX_CONTEXT
 	ULONG			NextBulkOutPosition;	/* Indicate the buffer start offset of a bulk-transmission */
 	ULONG			ENextBulkOutPosition;	/* Indicate the buffer end offset of a bulk-transmission */
 	UINT			TxRate;
+#ifdef USB_BULK_BUF_ALIGMENT
+	ra_dma_addr_t		data_dma[BUF_ALIGMENT_RINGSIZE];		/* urb dma on linux */
+#else
 	ra_dma_addr_t		data_dma;		/* urb dma on linux */
+#endif /* USB_BULK_BUF_ALIGMENT */
 #ifdef USB_BULK_BUF_ALIGMENT
 	ULONG 			CurWriteIdx;	/* pointer to next 32k bytes position when wirte tx resource or when bulk out sizze not > 0x6000 */
 	ULONG 			NextBulkIdx;	/* pointer to next alignment section when bulk ot */
+	ULONG 			CurtBulkIdx;	/* pointer to next alignment section when bulk ot */
 #endif /* USB_BULK_BUF_ALIGMENT */
 
 }	HT_TX_CONTEXT, *PHT_TX_CONTEXT, **PPHT_TX_CONTEXT;
@@ -261,35 +295,6 @@ typedef struct _RX_CONTEXT
 	NDIS_SPIN_LOCK		RxContextLock;
 	ra_dma_addr_t			data_dma;		/* urb dma on linux */
 }	RX_CONTEXT, *PRX_CONTEXT;
-
-#ifdef RT_BIG_ENDIAN
-typedef union _TX_ATTENUATION_CTRL_STRUC
-{
-	struct
-	{
-		ULONG	Reserve1:20;
-		ULONG	PCIE_PHY_TX_ATTEN_EN:1;
-		ULONG	PCIE_PHY_TX_ATTEN_VALUE:3;
-		ULONG	Reserve2:7;
-		ULONG	RF_ISOLATION_ENABLE:1;
-	} field;
-
-	ULONG	word;
-} TX_ATTENUATION_CTRL_STRUC, *PTX_ATTENUATION_CTRL_STRUC;
-#else
-typedef union _TX_ATTENUATION_CTRL_STRUC {
-	struct
-	{
-		ULONG	RF_ISOLATION_ENABLE:1;
-		ULONG	Reserve2:7;
-		ULONG	PCIE_PHY_TX_ATTEN_VALUE:3;
-		ULONG	PCIE_PHY_TX_ATTEN_EN:1;
-		ULONG	Reserve1:20;		
-	} field;
-	
-	ULONG	word;
-} TX_ATTENUATION_CTRL_STRUC, *PTX_ATTENUATION_CTRL_STRUC;
-#endif
 
 
 /******************************************************************************
@@ -394,10 +399,6 @@ typedef union _TX_ATTENUATION_CTRL_STRUC {
 			(!RTMP_TEST_FLAG(pAd, fRTMP_ADAPTER_NIC_NOT_EXIST)) &&		\
 			(!RTMP_TEST_FLAG(pAd, fRTMP_ADAPTER_HALT_IN_PROGRESS))) {	\
 			RTEnqueueInternalCmd(pAd, CMDTHREAD_CHECK_GPIO, NULL, 0); } }
-
-#define RTMP_MLME_STA_QUICK_RSP_WAKE_UP(pAd)	\
-	{	RTEnqueueInternalCmd(pAd, CMDTHREAD_QKERIODIC_EXECUT, NULL, 0);	\
-		RTUSBMlmeUp(&(pAd->mlmeTask)); }
 
 #define RTMP_MLME_RESET_STATE_MACHINE(pAd)	\
 		        MlmeEnqueue(pAd, MLME_CNTL_STATE_MACHINE, MT2_RESET_CONF, 0, NULL, 0);	\

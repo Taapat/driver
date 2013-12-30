@@ -116,8 +116,7 @@ BOOLEAN RtmpOsCmdDisplayLenCheck(
 }
 
 
-#ifdef CONFIG_STA_SUPPORT
-#ifdef WPA_SUPPLICANT_SUPPORT
+#if defined(WPA_SUPPLICANT_SUPPORT) || defined(APCLI_WPA_SUPPLICANT_SUPPORT)
 VOID    WpaSendMicFailureToWpaSupplicant(
 	IN	PNET_DEV				pNetDev,
     IN  BOOLEAN					bUnicast)
@@ -132,8 +131,7 @@ VOID    WpaSendMicFailureToWpaSupplicant(
 	
 	return;
 }
-#endif /* WPA_SUPPLICANT_SUPPORT */
-#endif /* CONFIG_STA_SUPPORT */
+#endif /* defined(WPA_SUPPLICANT_SUPPORT) || defined(APCLI_WPA_SUPPLICANT_SUPPORT) */
 
 
 #ifdef NATIVE_WPA_SUPPLICANT_SUPPORT
@@ -200,5 +198,9 @@ VOID    SendAssocIEsToWpaSupplicant(
 #endif /* NATIVE_WPA_SUPPLICANT_SUPPORT */
 #endif /* WPA_SUPPLICANT_SUPPORT */
 
+INT32  RtPrivIoctlSetVal(VOID)
+{
+    return (INT32)RTPRIV_IOCTL_SET;
+}
 
 /* End of rtmp_os_util.c */

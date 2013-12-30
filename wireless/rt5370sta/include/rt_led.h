@@ -48,14 +48,14 @@
 #define LED_MODE_SIGNAL_STREGTH			0x40 /* EEPROM define = 64 */
 
 /* Driver LED Status */
-#define LED_LINK_DOWN		0
-#define LED_LINK_UP			1
-#define LED_RADIO_OFF		2
-#define LED_RADIO_ON		3
-#define LED_HALT			4
-#define LED_WPS				5
-#define LED_ON_SITE_SURVEY	6
-#define LED_POWER_UP		7
+#define LED_LINK_DOWN			0
+#define LED_LINK_UP				1
+#define LED_RADIO_OFF			2
+#define LED_RADIO_ON			3
+#define LED_HALT				4
+#define LED_WPS					5
+#define LED_ON_SITE_SURVEY		6
+#define LED_POWER_UP			7
 
 /* MCU Led Link Status */
 #define LINK_STATUS_LINK_DOWN		0x20
@@ -101,7 +101,10 @@ VOID RTMPSetLEDStatus(
 do{								\
 	UCHAR LEDStatus;			\
 	LEDStatus = Status;			\
-	RTEnqueueInternalCmd(pAd, CMDTHREAD_SET_LED_STATUS, &LEDStatus, sizeof(LEDStatus));	\
+	if (Status == LED_RADIO_OFF)\
+		RTMPSetLEDStatus(pAd, Status);\
+	else\
+		RTEnqueueInternalCmd(pAd, CMDTHREAD_SET_LED_STATUS, &LEDStatus, sizeof(LEDStatus));	\
 }while(0)
 	
 #endif /* RTMP_MAC_USB */

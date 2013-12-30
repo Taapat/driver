@@ -93,6 +93,9 @@ char const *pWirelessFloodEventText[IW_FLOOD_EVENT_TYPE_NUM] = {
 	};
 #endif /* IDS_SUPPORT */
 
+
+#ifdef CONFIG_STA_SUPPORT
+#endif /* CONFIG_STA_SUPPORT */
 #endif /* SYSTEM_LOG_SUPPORT */
 
 
@@ -228,6 +231,8 @@ VOID RtmpDrvSendWirelessEvent(
 			event_table_len = IW_FLOOD_EVENT_TYPE_NUM;
 			break;
 #endif /* IDS_SUPPORT */ 			
+#ifdef CONFIG_STA_SUPPORT
+#endif /* CONFIG_STA_SUPPORT */
 	}
 	
 	if (event_table_len == 0)
@@ -274,6 +279,8 @@ VOID RtmpDrvSendWirelessEvent(
 		else if (type == IW_FLOOD_EVENT_FLAG_START)
 			pBufPtr += sprintf(pBufPtr, "%s", pWirelessFloodEventText[event]);
 #endif /* IDS_SUPPORT */		
+#ifdef CONFIG_STA_SUPPORT
+#endif /* CONFIG_STA_SUPPORT */
 		else
 			pBufPtr += sprintf(pBufPtr, "%s", "unknown event");
 		
@@ -352,10 +359,12 @@ void announce_802_3_packet(
 
 #ifdef IKANOS_VX_1X0
 	IKANOS_DataFrameRx(pAd, pRxPkt);
-#else
+	return;
+#endif /* IKANOS_VX_1X0 */
 
-/* mark for bridge fast path, 2009/06/22 */
-/*	pRxPkt->protocol = eth_type_trans(pRxPkt, pRxPkt->dev); */
+
+	/* mark for bridge fast path, 2009/06/22 */
+	/* pRxPkt->protocol = eth_type_trans(pRxPkt, pRxPkt->dev); */
 
 #ifdef INF_PPA_SUPPORT
 	if (ppa_hook_directpath_send_fn && pAd->PPAEnable==TRUE ) 
@@ -368,18 +377,61 @@ void announce_802_3_packet(
 	}	  	
 #endif /* INF_PPA_SUPPORT */
 
-/*#ifdef CONFIG_5VT_ENHANCE */
-/*	*(int*)(pRxPkt->cb) = BRIDGE_TAG; */
-/*#endif */
-
 	{
+#ifdef CONFIG_RT2880_BRIDGING_ONLY
+/*	pRxPkt->cb[22]=0xa8; */
+		PACKET_CB_ASSIGN(pRxPkt, 22) = 0xa8;
+#endif
+
+#if defined(CONFIG_RA_CLASSIFIER)||defined(CONFIG_RA_CLASSIFIER_MODULE)
+		if(ra_classifier_hook_rx!= NULL)
+		{
+			unsigned int flags;
+			
+			RTMP_IRQ_LOCK(&pAd->page_lock, flags);
+			ra_classifier_hook_rx(pRxPkt, classifier_cur_cycle);
+			RTMP_IRQ_UNLOCK(&pAd->page_lock, flags);
+		}
+#endif /* CONFIG_RA_CLASSIFIER */
+
+#if !defined(CONFIG_RA_NAT_NONE)
+#if defined (CONFIG_RA_HW_NAT)  || defined (CONFIG_RA_HW_NAT_MODULE)
+		RtmpOsPktNatMagicTag(pRxPkt);
+#endif
+
+		/* bruce+
+		  * ra_sw_nat_hook_rx return 1 --> continue
+		  * ra_sw_nat_hook_rx return 0 --> FWD & without netif_rx
+		 */
+		if (ra_sw_nat_hook_rx!= NULL)
+		{
+			unsigned int flags;
+		
+		/*	pRxPkt->protocol = eth_type_trans(pRxPkt, pRxPkt->dev); */
+		RtmpOsPktProtocolAssign(pRxPkt);
+
+		RTMP_IRQ_LOCK(&pAd->page_lock, flags);
+		if(ra_sw_nat_hook_rx(pRxPkt)) 
+		{
+			RtmpOsPktRcvHandle(pRxPkt);
+		}
+		RTMP_IRQ_UNLOCK(&pAd->page_lock, flags);
+		}
+#else
+		{
+#if defined (CONFIG_RA_HW_NAT)  || defined (CONFIG_RA_HW_NAT_MODULE)
+		RtmpOsPktNatNone(pRxPkt);
+#endif /* CONFIG_RA_HW_NAT */
+		}
+#endif /* CONFIG_RA_NAT_NONE */
+	}
+
+	
 
 /*		pRxPkt->protocol = eth_type_trans(pRxPkt, pRxPkt->dev); */
 		RtmpOsPktProtocolAssign(pRxPkt);
 		RtmpOsPktRcvHandle(pRxPkt);
-	}
-
-#endif /* IKANOS_VX_1X0 */
+	
 }
 
 
@@ -466,10 +518,20 @@ VOID	RTMPFreeAdapter(
 
 	if (pAd->BeaconBuf)
 		os_free_mem(NULL, pAd->BeaconBuf);
-
+#ifdef RTMP_FLASH_SUPPORT
+	if (pAd->eebuf && (pAd->eebuf != pAd->chipCap.eebuf))
+	{
+		os_free_mem(NULL, pAd->eebuf);
+		pAd->eebuf = NULL;
+	}
+#endif /* RTMP_FLASH_SUPPORT */
 
 	NdisFreeSpinLock(&pAd->MgmtRingLock);
 	
+
+#ifdef RT3290
+	NdisFreeSpinLock(&pAd->WlanEnLock);
+#endif /* RT3290 */
 
 	for (index =0 ; index < NUM_OF_TX_RING; index++)
 	{
@@ -480,6 +542,11 @@ VOID	RTMPFreeAdapter(
 	
 	NdisFreeSpinLock(&pAd->irq_lock);
 
+
+
+#ifdef UAPSD_SUPPORT
+	NdisFreeSpinLock(&pAd->UAPSDEOSPLock); /* OS_ABL_SUPPORT */
+#endif /* UAPSD_SUPPORT */
 
 #ifdef DOT11_N_SUPPORT
 	NdisFreeSpinLock(&pAd->mpdu_blk_pool.lock);
@@ -497,6 +564,8 @@ VOID	RTMPFreeAdapter(
 	}
 
 	NdisFreeSpinLock(&TimerSemLock);
+
+
 	RTMP_OS_FREE_TIMER(pAd);
 	RTMP_OS_FREE_LOCK(pAd);
 	RTMP_OS_FREE_TASKLET(pAd);
@@ -507,14 +576,6 @@ VOID	RTMPFreeAdapter(
 	RtmpOsVfree(pAd); /* pci_free_consistent(os_cookie->pci_dev,sizeof(RTMP_ADAPTER),pAd,os_cookie->pAd_pa); */
 	if (os_cookie)
 		os_free_mem(NULL, os_cookie);
-
-#ifdef VENDOR_FEATURE4_SUPPORT
-{
-	extern ULONG OS_NumOfMemAlloc, OS_NumOfMemFree;
-	printk("OS_NumOfMemAlloc = %ld, OS_NumOfMemFree = %ld\n",
-			OS_NumOfMemAlloc, OS_NumOfMemFree);
-}
-#endif /* VENDOR_FEATURE4_SUPPORT */
 }
 
 
@@ -529,17 +590,12 @@ int	RTMPSendPackets(
 	PNDIS_PACKET pPacket = ppPacketArray[0];
 
 
+	INC_COUNTER64(pAd->WlanCounters.TransmitCountFrmOs);
+
 	if (pPacket == NULL)
 		goto done;
 
 	/* RT2870STA does this in RTMPSendPackets() */
-#ifdef RALINK_ATE
-	if (ATE_ON(pAd))
-	{
-		RELEASE_NDIS_PACKET(pAd, pPacket, NDIS_STATUS_RESOURCES);
-		return 0;
-	}
-#endif /* RALINK_ATE */
 
 #ifdef CONFIG_STA_SUPPORT
 	IF_DEV_CONFIG_OPMODE_ON_STA(pAd)
@@ -609,6 +665,16 @@ PNET_DEV get_netdev_from_bssid(
 
 
 
+
+#ifdef WDS_SUPPORT
+VOID AP_WDS_KeyNameMakeUp(
+	IN	STRING						*pKey,
+	IN	UINT32						KeyMaxSize,
+	IN	INT							KeyId)
+{
+	snprintf(pKey, KeyMaxSize, "Wds%dKey", KeyId);
+}
+#endif /* WDS_SUPPORT */
 
 
 

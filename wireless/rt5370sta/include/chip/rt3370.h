@@ -52,7 +52,6 @@
 #endif
 
 
-#include "chip/mac_usb.h"
 #include "chip/rt30xx.h"
 #include "chip/rt33xx.h"
 

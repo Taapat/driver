@@ -118,6 +118,11 @@ VOID BuildChannelList(
 						pAd->ChannelList[index + i].Flags = pChannelListFlag[i];
 				}
 
+#ifdef DOT11_N_SUPPORT
+						if (N_ChannelGroupCheck(pAd, pAd->ChannelList[index + i].Channel))
+							pAd->ChannelList[index + i].Flags |= CHANNEL_40M_CAP;
+#endif /* DOT11_N_SUPPORT */
+
 				pAd->ChannelList[index+i].MaxTxPwr = 20;
 			}
 
@@ -190,6 +195,11 @@ VOID BuildChannelList(
 						pAd->ChannelList[index + i].Flags = pChannelListFlag[i];
 				}
 
+#ifdef DOT11_N_SUPPORT
+				if (N_ChannelGroupCheck(pAd, pAd->ChannelList[index + i].Channel))
+					pAd->ChannelList[index + i].Flags |= CHANNEL_40M_CAP;
+#endif /* DOT11_N_SUPPORT */	
+
 				for (j=0; j<15; j++)
 				{
 					if (pChannelList[i] == RadarCh[j])
@@ -208,6 +218,18 @@ VOID BuildChannelList(
 	DBGPRINT(RT_DEBUG_TRACE,("country code=%d/%d, RFIC=%d, PHY mode=%d, support %d channels\n", 
 		pAd->CommonCfg.CountryRegion, pAd->CommonCfg.CountryRegionForABand, pAd->RfIcType, pAd->CommonCfg.PhyMode, pAd->ChannelListNum));
 
+#ifdef RT_CFG80211_SUPPORT
+	for (i=0;i<pAd->ChannelListNum;i++)
+	{
+		CFG80211OS_ChanInfoInit(
+					pAd->pCfg80211_CB,
+					i,
+					pAd->ChannelList[i].Channel,
+					pAd->ChannelList[i].MaxTxPwr,
+					(pAd->CommonCfg.PhyMode >= PHY_11ABGN_MIXED),
+					(pAd->CommonCfg.RegTransmitSetting.field.BW == BW_20));
+	}
+#endif /* RT_CFG80211_SUPPORT */
 
 #ifdef DBG	
 	for (i=0;i<pAd->ChannelListNum;i++)
@@ -262,25 +284,26 @@ UCHAR NextChannel(
 	{
 		if (channel == pAd->ChannelList[i].Channel)
 		{
+			{
 #ifdef DOT11_N_SUPPORT
 #ifdef DOT11N_DRAFT3
-			/* Only scan effected channel if this is a SCAN_2040_BSS_COEXIST*/
-			/* 2009 PF#2: Nee to handle the second channel of AP fall into affected channel range.*/
-			if ((pAd->MlmeAux.ScanType == SCAN_2040_BSS_COEXIST) && (pAd->ChannelList[i+1].Channel >14))
-			{
-				channel = pAd->ChannelList[i+1].Channel;
-				continue;
-			}
-			else
+				/* Only scan effected channel if this is a SCAN_2040_BSS_COEXIST*/
+				/* 2009 PF#2: Nee to handle the second channel of AP fall into affected channel range.*/
+				if ((pAd->MlmeAux.ScanType == SCAN_2040_BSS_COEXIST) && (pAd->ChannelList[i+1].Channel >14))
+				{
+					channel = pAd->ChannelList[i+1].Channel;
+					continue;
+				}
+				else
 #endif /* DOT11N_DRAFT3 */
 #endif /* DOT11_N_SUPPORT */
-			{
-				/* Record this channel's idx in ChannelList array.*/
-			next_channel = pAd->ChannelList[i+1].Channel;
-			break;
-	}
+				{
+					/* Record this channel's idx in ChannelList array.*/
+					next_channel = pAd->ChannelList[i+1].Channel;
+					break;
+				}
+			}
 		}
-		
 	}
 	return next_channel;
 }
@@ -309,8 +332,10 @@ VOID ChangeToCellPowerLimit(
 	IN PRTMP_ADAPTER pAd,
 	IN UCHAR         AironetCellPowerLimit)
 {
-	/*valud 0xFF means that hasn't found power limit information */
-	/*from the AP's Beacon/Probe response.*/
+	/*
+		valud 0xFF means that hasn't found power limit information
+		from the AP's Beacon/Probe response
+	*/
 	if (AironetCellPowerLimit == 0xFF)
 		return;  
 	
@@ -371,21 +396,11 @@ CHAR	ConvertToSnr(
 	IN UCHAR				Snr)	
 {
 	if (pAd->chipCap.SnrFormula == SNR_FORMULA2)
-	{
 		return (Snr * 3 + 8) >> 4;
-	}
-	else
-#if defined(RT5370) || defined(RT5372) || defined(RT5390) || defined(RT5392)
-/* Maybe someday SNR_FORMULA3 should open to other chipsets. */
-	if (pAd->chipCap.SnrFormula == SNR_FORMULA3)
-	{
+	else if (pAd->chipCap.SnrFormula == SNR_FORMULA3)
 		return (Snr * 3 / 16 ); /* * 0.1881 */
-	}
 	else
-#endif /* defined(RT5370) || defined(RT5372) || defined(RT5390) || defined(RT5392) */
-	{
 		return ((0xeb	- Snr) * 3) /	16 ;
-	}
 }
 
 #if defined(AP_SCAN_SUPPORT) || defined(CONFIG_STA_SUPPORT)
@@ -420,36 +435,96 @@ VOID ScanNextChannel(
 	}
 
 	ScanPending = ((pAd->StaCfg.bImprovedScan) && (pAd->StaCfg.ScanChannelCnt>=7));
+
 #endif /* CONFIG_STA_SUPPORT */
 
-#ifdef RALINK_ATE
-	/* Nothing to do in ATE mode. */
-	if (ATE_ON(pAd))
-		return;
-#endif /* RALINK_ATE */
+
+
+#ifdef RT_CFG80211_SUPPORT
+#ifdef CONFIG_STA_SUPPORT
+                if ( (pAd->pCfg80211ChanList != NULL) && (pAd->MlmeAux.Channel != 0))
+                {
+                        UINT32 ChanId;
+                        for ( ChanId = 0 ; ChanId <pAd->Cfg80211ChanListLan ; ChanId++ )
+                        {
+                                if ( pAd->pCfg80211ChanList[ChanId] >= pAd->MlmeAux.Channel )
+                                {
+                                        pAd->MlmeAux.Channel = pAd->pCfg80211ChanList[ChanId];
+                                        break;
+                                }
+                        }
+
+                }
+#endif /* CONFIG_STA_SUPPORT */
+#endif /* RT_CFG80211_SUPPORT */
 
 	if ((pAd->MlmeAux.Channel == 0) || ScanPending) 
 	{
-		if ((pAd->CommonCfg.BBPCurrentBW == BW_40) &&
-			((OpMode == OPMODE_AP)
-#ifdef CONFIG_STA_SUPPORT
-				|| (INFRA_ON(pAd) || ADHOC_ON(pAd)
-			)
-#endif /* CONFIG_STA_SUPPORT */
-			))
+	
+#ifdef CONFIG_MULTI_CHANNEL
+		BOOLEAN bP2PCh= FALSE;
+#endif /*CONFIG_MULTI_CHANNEL*/
+
+
+		if (pAd->CommonCfg.BBPCurrentBW == BW_40)
 		{
+			UINT32	Data = 0, macStatus;
+			UINT32 MTxCycle;
+#ifdef CONFIG_MULTI_CHANNEL
+			if (P2P_CLI_ON(pAd) && pAd->ApCliMlmeAux.Channel != 0 && OpMode == OPMODE_STA)
+			{
+					AsicSwitchChannel(pAd, pAd->ApCliMlmeAux.CentralChannel, FALSE);
+					AsicLockChannel(pAd, pAd->ApCliMlmeAux.CentralChannel);
+					bP2PCh = TRUE;
+			}
+			else
+#endif /*CONFIG_MULTI_CHANNEL*/
+			{		
 			AsicSwitchChannel(pAd, pAd->CommonCfg.CentralChannel, FALSE);
 			AsicLockChannel(pAd, pAd->CommonCfg.CentralChannel);
+			}	
+			
+			//Disable MAC Tx/Rx
+			RTMP_IO_READ32(pAd, MAC_SYS_CTRL, &Data);
+			Data &= (~0x0C);
+			RTMP_IO_WRITE32(pAd, MAC_SYS_CTRL, Data);
+
+			// Check MAC Tx/Rx idle
+			for (MTxCycle = 0; MTxCycle < 10000; MTxCycle++)
+			{
+				RTMP_IO_READ32(pAd, MAC_STATUS_CFG, &macStatus);
+				if (macStatus & 0x3)
+					RTMPusecDelay(50);
+				else
+					break;
+			}
+
 			RTMP_BBP_IO_READ8_BY_REG_ID(pAd, BBP_R4, &BBPValue);
 			BBPValue &= (~0x18);
 			BBPValue |= 0x10;
 			RTMP_BBP_IO_WRITE8_BY_REG_ID(pAd, BBP_R4, BBPValue);
+			
+			//Enable MAC Tx/Rx
+			RTMP_IO_READ32(pAd, MAC_SYS_CTRL, &Data);
+			Data |= 0x0C;
+			RTMP_IO_WRITE32(pAd, MAC_SYS_CTRL, Data);
 			DBGPRINT(RT_DEBUG_TRACE, ("SYNC - End of SCAN, restore to 40MHz channel %d, Total BSS[%02d]\n",pAd->CommonCfg.CentralChannel, pAd->ScanTab.BssNr));
 		}
 		else
 		{
+#ifdef CONFIG_MULTI_CHANNEL
+			if (P2P_CLI_ON(pAd) && pAd->ApCliMlmeAux.Channel != 0 && OpMode == OPMODE_STA)
+			{
+				AsicSwitchChannel(pAd, pAd->ApCliMlmeAux.Channel, FALSE);
+				AsicLockChannel(pAd, pAd->ApCliMlmeAux.Channel);
+				bP2PCh = TRUE;
+			}
+			else
+#endif /*CONFIG_MULTI_CHANNEL*/
+			{
 			AsicSwitchChannel(pAd, pAd->CommonCfg.Channel, FALSE);
 			AsicLockChannel(pAd, pAd->CommonCfg.Channel);
+			}
 			DBGPRINT(RT_DEBUG_TRACE, ("SYNC - End of SCAN, restore to channel %d, Total BSS[%02d]\n",pAd->CommonCfg.Channel, pAd->ScanTab.BssNr));
 		}
 		
@@ -468,20 +543,54 @@ VOID ScanNextChannel(
 				pAd->MlmeAux.SsidLen = pAd->CommonCfg.SsidLen;
 				NdisMoveMemory(pAd->MlmeAux.Ssid, pAd->CommonCfg.Ssid, pAd->CommonCfg.SsidLen);
 			}
-		
-			
-			/* To prevent data lost.*/
-			/* Send an NULL data with turned PSM bit on to current associated AP before SCAN progress.*/
-			/* Now, we need to send an NULL data with turned PSM bit off to AP, when scan progress done */
-			
-			if (OPSTATUS_TEST_FLAG(pAd, fOP_STATUS_MEDIA_STATE_CONNECTED) && (INFRA_ON(pAd)))
+#ifdef CONFIG_MULTI_CHANNEL		
+			RTMP_CLEAR_FLAG(pAd, fRTMP_ADAPTER_BSS_SCAN_IN_PROGRESS);
+#endif /*CONFIG_MULTI_CHANNEL*/
+			/*
+				To prevent data lost.
+				Send an NULL data with turned PSM bit on to current associated AP before SCAN progress.
+				Now, we need to send an NULL data with turned PSM bit off to AP, when scan progress done 
+			*/
+			if (OPSTATUS_TEST_FLAG(pAd, fOP_STATUS_MEDIA_STATE_CONNECTED) && (INFRA_ON(pAd))
+#ifdef CONFIG_MULTI_CHANNEL
+				|| P2P_CLI_ON(pAd)
+#endif /*CONFIG_MULTI_CHANNEL*/
+			)
 			{
+#ifdef CONFIG_MULTI_CHANNEL
+				if (!bP2PCh && (OPSTATUS_TEST_FLAG(pAd, fOP_STATUS_MEDIA_STATE_CONNECTED) && (INFRA_ON(pAd)))
+						&&((pAd->CommonCfg.Channel == pAd->LatchRfRegs.Channel)))
+				{
+						RTMPSendNullFrame(pAd, 
+										  pAd->CommonCfg.TxRate, 
+										  (OPSTATUS_TEST_FLAG(pAd, fOP_STATUS_WMM_INUSED) ? TRUE:FALSE),
+										  pAd->CommonCfg.bAPSDForcePowerSave ? PWR_SAVE : pAd->StaCfg.Psm);
+						OS_WAIT(20);
+				}
+				else
+				{
+						if (((pAd->ApCliMlmeAux.Channel == pAd->LatchRfRegs.Channel)))
+						RTMPP2PSendNullFrame(pAd, 
+										  pAd->CommonCfg.TxRate, 
+										  (OPSTATUS_TEST_FLAG(pAd, fOP_STATUS_WMM_INUSED) ? TRUE:FALSE),
+										  pAd->CommonCfg.bAPSDForcePowerSave ? PWR_SAVE : pAd->StaCfg.Psm);
+						OS_WAIT(20);
+				}
+#else
+				{
 				RTMPSendNullFrame(pAd, 
 								  pAd->CommonCfg.TxRate, 
-								  (OPSTATUS_TEST_FLAG(pAd, fOP_STATUS_WMM_INUSED) ? TRUE:FALSE));
-				DBGPRINT(RT_DEBUG_TRACE, ("%s -- Send PSM Data frame\n", __FUNCTION__));
+								  (OPSTATUS_TEST_FLAG(pAd, fOP_STATUS_WMM_INUSED) ? TRUE:FALSE),
+								  pAd->CommonCfg.bAPSDForcePowerSave ? PWR_SAVE : pAd->StaCfg.Psm);
+				}
+#endif /*CONFIG_MULTI_CHANNEL*/
+				DBGPRINT(RT_DEBUG_TRACE, ("%s -- Send null frame\n", __FUNCTION__));
+
 			}
 
+#ifdef CONFIG_MULTI_CHANNEL		
+			RTMP_SET_FLAG(pAd, fRTMP_ADAPTER_BSS_SCAN_IN_PROGRESS);
+#endif /*CONFIG_MULTI_CHANNEL*/
 			/* keep the latest scan channel, could be 0 for scan complete, or other channel*/
 			pAd->StaCfg.LastScanChannel = pAd->MlmeAux.Channel;
 
@@ -496,6 +605,15 @@ VOID ScanNextChannel(
 				DBGPRINT(RT_DEBUG_WARN, ("bFastRoamingScan ~~~~~~~~~~~~~ Get back to send data ~~~~~~~~~~~~~\n"));
 
 				RTMPResumeMsduTransmission(pAd);
+
+#ifdef CONFIG_MULTI_CHANNEL
+				if (!bP2PCh && (OPSTATUS_TEST_FLAG(pAd, fOP_STATUS_MEDIA_STATE_CONNECTED) && (INFRA_ON(pAd))))
+			RTMP_OS_NETDEV_WAKE_QUEUE(pAd->net_dev);
+				else
+					RTMP_OS_NETDEV_WAKE_QUEUE(pAd->ApCfg.ApCliTab[0].dev);
+#endif /*CONFIG_MULTI_CHANNEL*/
+
+
 			}
 			else
 			{
@@ -505,11 +623,12 @@ VOID ScanNextChannel(
 				pAd->Mlme.SyncMachine.CurrState = SYNC_IDLE;
 				Status = MLME_SUCCESS;
 				MlmeEnqueue(pAd, MLME_CNTL_STATE_MACHINE, MT2_SCAN_CONF, 2, &Status, 0);
-
+				RTMP_MLME_HANDLER(pAd);
 			}
 
 #ifdef LINUX
 #ifdef RT_CFG80211_SUPPORT
+			if ((pAd->MlmeAux.Channel == 0) && (pAd->StaCfg.bImprovedScan == FALSE))
 			RTEnqueueInternalCmd(pAd, CMDTHREAD_SCAN_END, NULL, 0);
 #endif /* RT_CFG80211_SUPPORT */
 #endif /* LINUX */
@@ -549,23 +668,30 @@ VOID ScanNextChannel(
 #ifdef CONFIG_STA_SUPPORT
 		if (OpMode == OPMODE_STA)
 		{
+			BOOLEAN bScanPassive = FALSE;
 			if (pAd->MlmeAux.Channel > 14)
 			{
-				if ((pAd->CommonCfg.bIEEE80211H == 1) && RadarChannelCheck(pAd, pAd->MlmeAux.Channel))
-				{
-					ScanType = SCAN_PASSIVE;
-					ScanTimeIn5gChannel = MIN_CHANNEL_TIME;
-				}
-			}
 
+				if ((pAd->CommonCfg.bIEEE80211H == 1)
+					&& RadarChannelCheck(pAd, pAd->MlmeAux.Channel))
+				{
+					bScanPassive = TRUE;
+				}
+
+			}
 #ifdef CARRIER_DETECTION_SUPPORT /* Roger sync Carrier*/
 			/* carrier detection*/
 			if (pAd->CommonCfg.CarrierDetect.Enable == TRUE)
 			{
+				bScanPassive = TRUE;
+			}
+#endif /* CARRIER_DETECTION_SUPPORT */ 
+
+			if (bScanPassive)
+			{
 				ScanType = SCAN_PASSIVE;
 				ScanTimeIn5gChannel = MIN_CHANNEL_TIME;
 			}
-#endif /* CARRIER_DETECTION_SUPPORT */ 
 		}
 
 #endif /* CONFIG_STA_SUPPORT */
@@ -573,6 +699,7 @@ VOID ScanNextChannel(
 		/* Check if channel if passive scan under current regulatory domain */
 		if (CHAN_PropertyCheck(pAd, pAd->MlmeAux.Channel, CHANNEL_PASSIVE_SCAN) == TRUE)
 			ScanType = SCAN_PASSIVE;
+
 
 		/* We need to shorten active scan time in order for WZC connect issue*/
 		/* Chnage the channel scan time for CISCO stuff based on its IAPP announcement*/
@@ -592,6 +719,11 @@ VOID ScanNextChannel(
 				{
 					if (pAd->MlmeAux.Channel > 14)
 					{
+#ifdef CONFIG_MULTI_CHANNEL
+						if (OpMode == OPMODE_AP && INFRA_ON(pAd) && (pAd->MlmeAux.Channel == pAd->CommonCfg.Channel))
+							RTMPSetTimer(&pAd->MlmeAux.APScanTimer, MAX_CHANNEL_TIME);
+						else
+#endif /*CONFIG_MULTI_CHANNEL*/
 						if (OpMode == OPMODE_AP)
 							RTMPSetTimer(&pAd->MlmeAux.APScanTimer, ScanTimeIn5gChannel);
 						else
@@ -599,16 +731,26 @@ VOID ScanNextChannel(
 					}
 					else
 					{
+#ifdef CONFIG_MULTI_CHANNEL
+						if (OpMode == OPMODE_AP && INFRA_ON(pAd) && (pAd->MlmeAux.Channel == pAd->CommonCfg.Channel))
+							RTMPSetTimer(&pAd->MlmeAux.APScanTimer, MAX_CHANNEL_TIME);
+						else
+#endif /*CONFIG_MULTI_CHANNEL*/
 						if (OpMode == OPMODE_AP)
 							RTMPSetTimer(&pAd->MlmeAux.APScanTimer, MIN_CHANNEL_TIME);
 						else	
-						RTMPSetTimer(&pAd->MlmeAux.ScanTimer, MIN_CHANNEL_TIME);
+							RTMPSetTimer(&pAd->MlmeAux.ScanTimer, MIN_CHANNEL_TIME);
 					}
 				}
 			}
 			else
 			{
 				{
+#ifdef CONFIG_MULTI_CHANNEL
+					if (OpMode == OPMODE_AP && INFRA_ON(pAd) && (pAd->MlmeAux.Channel == pAd->CommonCfg.Channel))
+						RTMPSetTimer(&pAd->MlmeAux.APScanTimer, MAX_CHANNEL_TIME);
+					else
+#endif /*CONFIG_MULTI_CHANNEL*/
 					if (OpMode == OPMODE_AP)
 						RTMPSetTimer(&pAd->MlmeAux.APScanTimer, MAX_CHANNEL_TIME);
 					else
@@ -798,6 +940,14 @@ VOID ScanNextChannel(
 
 			MiniportMMRequest(pAd, 0, pOutBuffer, FrameLen);
 
+#ifdef CONFIG_MULTI_CHANNEL
+			if (P2P_CLI_ON(pAd))
+			{
+				MiniportMMRequest(pAd, 0, pOutBuffer, FrameLen);
+				MiniportMMRequest(pAd, 0, pOutBuffer, FrameLen);
+			}
+#endif /*CONFIG_MULTI_CHANNEL*/
+
 #ifdef CONFIG_STA_SUPPORT
 			if (OpMode == OPMODE_STA)
 			{
@@ -807,13 +957,46 @@ VOID ScanNextChannel(
 					Send an NULL data with turned PSM bit on to current associated AP when SCAN in the channel where
 					associated AP located.
 				*/
+#ifdef CONFIG_MULTI_CHANNEL
+				if (OPSTATUS_TEST_FLAG(pAd, fOP_STATUS_MEDIA_STATE_CONNECTED) && 
+					(INFRA_ON(pAd)) &&
+					(pAd->CommonCfg.Channel == pAd->MlmeAux.Channel)
+					&&(pAd->CommonCfg.Channel == pAd->LatchRfRegs.Channel))
+				{
+					RTMP_CLEAR_FLAG(pAd, fRTMP_ADAPTER_BSS_SCAN_IN_PROGRESS);
+					RTMPSendNullFrame(pAd, 
+								  pAd->CommonCfg.TxRate, 
+								  (OPSTATUS_TEST_FLAG(pAd, fOP_STATUS_WMM_INUSED) ? TRUE:FALSE),
+								  PWR_SAVE);
+					RTMP_SET_FLAG(pAd, fRTMP_ADAPTER_BSS_SCAN_IN_PROGRESS);
+					RTMP_OS_NETDEV_STOP_QUEUE(pAd->net_dev);
+					OS_WAIT(20);
+					DBGPRINT(RT_DEBUG_TRACE, ("ScanNextChannel():Send PWA NullData frame to notify the associated AP!\n"));
+				}
+
+				if (P2P_CLI_ON(pAd) && (pAd->ApCliMlmeAux.Channel == pAd->MlmeAux.Channel)
+					&&(pAd->ApCliMlmeAux.Channel == pAd->LatchRfRegs.Channel))
+				{
+					RTMP_CLEAR_FLAG(pAd, fRTMP_ADAPTER_BSS_SCAN_IN_PROGRESS);
+					RTMPP2PSendNullFrame(pAd, 
+								  pAd->CommonCfg.TxRate, 
+								  (OPSTATUS_TEST_FLAG(pAd, fOP_STATUS_WMM_INUSED) ? TRUE:FALSE),
+								  PWR_SAVE);
+					RTMP_SET_FLAG(pAd, fRTMP_ADAPTER_BSS_SCAN_IN_PROGRESS);
+					RTMP_OS_NETDEV_STOP_QUEUE(pAd->ApCfg.ApCliTab[0].dev);
+					OS_WAIT(20);
+					DBGPRINT(RT_DEBUG_TRACE, ("ScanNextChannel(): P2P Send PWA NullData frame to notify the associated AP!\n"));
+				}
+#endif /*CONFIG_MULTI_CHANNEL*/
+
 				if (OPSTATUS_TEST_FLAG(pAd, fOP_STATUS_MEDIA_STATE_CONNECTED) && 
 					(INFRA_ON(pAd)) &&
 					(pAd->CommonCfg.Channel == pAd->MlmeAux.Channel))
 				{
 					RTMPSendNullFrame(pAd, 
 								  pAd->CommonCfg.TxRate, 
-								  (OPSTATUS_TEST_FLAG(pAd, fOP_STATUS_WMM_INUSED) ? TRUE:FALSE));
+								  (OPSTATUS_TEST_FLAG(pAd, fOP_STATUS_WMM_INUSED) ? TRUE:FALSE),
+								  PWR_SAVE);
 					DBGPRINT(RT_DEBUG_TRACE, ("ScanNextChannel():Send PWA NullData frame to notify the associated AP!\n"));
 				}
 			}
@@ -842,7 +1025,10 @@ BOOLEAN ScanRunning(
 
 #ifdef CONFIG_STA_SUPPORT
 		IF_DEV_CONFIG_OPMODE_ON_STA(pAd)
-			rv = ((pAd->Mlme.SyncMachine.CurrState == SCAN_LISTEN) ? TRUE : FALSE);
+		{
+			if ((pAd->Mlme.SyncMachine.CurrState == SCAN_LISTEN) || (pAd->Mlme.SyncMachine.CurrState == SCAN_PENDING))
+				rv = TRUE;
+		}
 #endif /* CONFIG_STA_SUPPORT */
 
 	return rv;

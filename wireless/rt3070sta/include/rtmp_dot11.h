@@ -30,13 +30,14 @@
 
 #include "rtmp_type.h"
 
+
 /* 4-byte HTC field.  maybe included in any frame except non-QOS data frame.  The Order bit must set 1. */
-typedef struct GNU_PACKED {
+typedef struct GNU_PACKED _HT_CONTROL{
 #ifdef RT_BIG_ENDIAN
 	UINT32 RDG:1;		/*RDG / More PPDU */
 	UINT32 ACConstraint:1;	/*feedback request */
 	UINT32 rsv2:5;		/*calibration sequence */
-	UINT32 NDPAnnouce:1;	/* ZLF announcement */
+	UINT32 NDPAnnounce:1;	/* ZLF announcement */
 	UINT32 CSISTEERING:2;	/*CSI/ STEERING */
 	UINT32 rsv1:2;		/* Reserved */
 	UINT32 CalSeq:2;	/*calibration sequence */
@@ -58,7 +59,7 @@ typedef struct GNU_PACKED {
 	UINT32 CalSeq:2;	/*calibration sequence */
 	UINT32 rsv1:2;		/* Reserved */
 	UINT32 CSISTEERING:2;	/*CSI/ STEERING */
-	UINT32 NDPAnnouce:1;	/* ZLF announcement */
+	UINT32 NDPAnnounce:1;	/* ZLF announcement */
 	UINT32 rsv2:5;		/*calibration sequence */
 	UINT32 ACConstraint:1;	/*feedback request */
 	UINT32 RDG:1;		/*RDG / More PPDU */
@@ -66,7 +67,7 @@ typedef struct GNU_PACKED {
 } HT_CONTROL, *PHT_CONTROL;
 
 /* 2-byte QOS CONTROL field */
-typedef struct GNU_PACKED {
+typedef struct GNU_PACKED _QOS_CONTROL{
 #ifdef RT_BIG_ENDIAN
 	USHORT Txop_QueueSize:8;
 	USHORT AMsduPresent:1;

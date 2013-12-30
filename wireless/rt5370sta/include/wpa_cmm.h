@@ -146,11 +146,11 @@ typedef enum _WPA_VARIABLE_ELEMENT_ID {
 	WPA_ELEM_RESV
 } WPA_VARIABLE_ELEMENT_ID;
 
-#define GROUP_SUITE					0
+#define GROUP_SUITE				0
 #define PAIRWISE_SUITE				1
-#define AKM_SUITE					2
+#define AKM_SUITE				2
 #define RSN_CAP_INFO				3
-#define PMKID_LIST					4
+#define PMKID_LIST				4
 #define G_MGMT_SUITE				5
 
 /* */

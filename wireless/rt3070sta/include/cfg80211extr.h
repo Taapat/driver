@@ -47,6 +47,9 @@
 	CFG80211_Scaning((VOID *)__pAd, __BssIdx, __ChanId, __pFrame,			\
 						__FrameLen, __RSSI);
 
+#define RT_CFG80211_LOST_AP_INFORM(__pAd) 									\
+	CFG80211_LostApInform((VOID *)__pAd);	
+
 #define RT_CFG80211_SCAN_END(__pAd, __FlgIsAborted)							\
 	CFG80211_ScanEnd((VOID *)__pAd, __FlgIsAborted);
 
@@ -101,9 +104,21 @@
 
 
 /* utilities used in DRV module */
+INT CFG80211DRV_IoctlHandle(
+	IN	VOID					*pAdSrc,
+	IN	RTMP_IOCTL_INPUT_STRUCT	*wrq,
+	IN	INT						cmd,
+	IN	USHORT					subcmd,
+	IN	VOID					*pData,
+	IN	ULONG					Data);
+
 BOOLEAN CFG80211DRV_OpsSetChannel(
 	VOID						*pAdOrg,
 	VOID						*pData);
+
+VOID CFG80211DRV_OpsChangeBssParm(
+        VOID                                            *pAdOrg,
+        VOID                                            *pData);
 
 BOOLEAN CFG80211DRV_OpsChgVirtualInf(
 	VOID						*pAdOrg,
@@ -128,11 +143,27 @@ BOOLEAN CFG80211DRV_Connect(
 	VOID						*pAdOrg,
 	VOID						*pData);
 
-BOOLEAN CFG80211DRV_KeyAdd(
+BOOLEAN CFG80211DRV_StaKeyAdd(
+	VOID						*pAdOrg,
+	VOID						*pData);
+
+BOOLEAN CFG80211DRV_ApKeyAdd(
+        VOID                                            *pAdOrg,
+        VOID                                            *pData);
+
+BOOLEAN CFG80211DRV_ApKeyDel(
 	VOID						*pAdOrg,
 	VOID						*pData);
 
 VOID CFG80211DRV_RegNotify(
+	VOID						*pAdOrg,
+	VOID						*pData);
+
+VOID CFG80211DRV_SurveyGet(
+	VOID						*pAdOrg,
+	VOID						*pData);
+
+VOID CFG80211DRV_PmkidConfig(
 	VOID						*pAdOrg,
 	VOID						*pData);
 
@@ -177,9 +208,59 @@ VOID CFG80211_Scaning(
 
 #ifdef RFKILL_HW_SUPPORT
 VOID CFG80211_RFKillStatusUpdate(
-	IN PVOID	pAd,
-	IN BOOLEAN	active);
+	IN PVOID					pAd,
+	IN BOOLEAN					active);
 #endif /* RFKILL_HW_SUPPORT */
+
+VOID CFG80211_UnRegister(
+	IN VOID						*pAdOrg,
+	IN VOID						*pNetDev);
+
+VOID CFG80211_LostApInform(
+	IN VOID 					*pAdCB);
+
+BOOLEAN CFG80211DRV_OpsExtraIesSet(
+	IN VOID						*pAdOrg);
+
+BOOLEAN CFG80211DRV_OpsRemainOnChannel(	
+	VOID						*pAdOrg,	
+	VOID						*pData,	
+	UINT32 						duration);
+
+BOOLEAN CFG80211DRV_OpsCancelRemainOnChannel(
+        VOID                                            *pAdOrg,
+        UINT32                                          cookie);
+
+BOOLEAN CFG80211DRV_OpsBeaconSet(
+        VOID                                            *pAdOrg,
+        VOID                                            *pData,
+        BOOLEAN                                          isAdd);
+
+INT CFG80211_StaPortSecured(
+        IN VOID                                         *pAdCB,
+        IN UCHAR                                        *pMac,
+        IN UINT                                         flag);
+
+INT CFG80211_ApStaDel(
+        IN VOID                                         *pAdCB,
+        IN UCHAR                                        *pMac);
+
+INT CFG80211_setDefaultKey(
+        IN VOID                                         *pAdCB,
+        IN UINT                                         Data);
+
+VOID RemainOnChannelTimeout(
+	IN PVOID SystemSpecific1,
+	IN PVOID FunctionContext,
+	IN PVOID SystemSpecific2,
+	IN PVOID SystemSpecific3);
+
+#ifdef RT_P2P_SPECIFIC_WIRELESS_EVENT
+INT CFG80211_SendWirelessEvent(
+	IN VOID                                         *pAdCB,
+	IN UCHAR 					*pMacAddr);
+#endif /* RT_P2P_SPECIFIC_WIRELESS_EVENT */
+
 
 #endif /* RT_CFG80211_SUPPORT */
 
