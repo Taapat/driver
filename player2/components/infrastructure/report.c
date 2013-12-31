@@ -47,13 +47,11 @@ Date        Modification                                    Name
 /* --- */
 
 /*#define REPORT_KPTRACE*/
-#define REPORT_PRINTK
+/*#define REPORT_PRINTK*/
 
 static int              severity_restriction_lower      = 0;
 static int              severity_restriction_upper      = 0x7fffffff;
-static char             report_buffer[REPORT_STRING_SIZE];
 
-static OS_Mutex_t       report_lock;
 
 #ifdef REPORT_UART
 static void UartInit( void );
@@ -72,7 +70,6 @@ void report_init( void )
 {
     severity_restriction_lower  = 0;
     severity_restriction_upper  = 0x7fffffff;
-    OS_InitializeMutex( &report_lock );
 
 #if defined(REPORT_UART)
     UartInit();
@@ -94,7 +91,7 @@ void report_restricted_severity_levels( int lower_restriction,
 
 /* --- */
 
-static void report_output( void )
+static void report_output( char*  report_buffer )
 {
 #if defined (REPORT_UART)
     UartOutput( report_buffer );
@@ -140,6 +137,7 @@ void report( report_severity_t   report_severity,
 	     const char         *format, ... )
 {
 va_list      list;
+char         report_buffer[REPORT_STRING_SIZE];
 
     /* --- Should we report this message --- */
 
@@ -148,22 +146,20 @@ va_list      list;
 
     /* --- Perform the report --- */
 
-    OS_LockMutex( &report_lock );
-
     if( report_severity >= severity_error )
     {
 	sprintf( report_buffer, "***** %s-%s: ",
 		((report_severity >= severity_fatal) ? "Fatal" : "Error"),
 		OS_ThreadName() );
 
-	report_output();
+	report_output(report_bffer);
     }
 
     va_start(list, format);
     vsnprintf(report_buffer, REPORT_STRING_SIZE, format, list);
     va_end(list);
 
-    report_output();
+    report_output(report_buffer);
 
     if( report_severity == severity_fatal ) 
     {
@@ -174,7 +170,6 @@ va_list      list;
 #endif
         while( true );
     }
-    OS_UnLockMutex( &report_lock );
 }
 #endif
 
