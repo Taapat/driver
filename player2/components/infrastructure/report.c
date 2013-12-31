@@ -152,7 +152,7 @@ char         report_buffer[REPORT_STRING_SIZE];
 		((report_severity >= severity_fatal) ? "Fatal" : "Error"),
 		OS_ThreadName() );
 
-	report_output(report_bffer);
+	report_output(report_buffer);
     }
 
     va_start(list, format);
