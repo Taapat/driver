@@ -220,23 +220,14 @@ int run_draw_thread(struct vfd_ioctl_data *draw_data)
 
     //wait thread stop
     while(!thread_stop)
-    {msleep(50);}
+    {msleep(1);}
 
-    if (draw_data->length < YWPANEL_width) {
-        char buf[DISPLAYWIDTH_MAX + 1];
-        memset(buf, ' ', sizeof(buf) - 1);
-        buf[sizeof(buf)-1] = '\0';
-        if (draw_data->length)
-            memcpy(buf, draw_data->data, draw_data->length);
-        YWPANEL_VFD_ShowString(buf);
-    } else {
-        thread_stop = 2;
-        thread=kthread_run(draw_thread,draw_data,"draw thread",NULL,true);
+    thread_stop = 2;
+    thread=kthread_run(draw_thread,draw_data,"draw thread",NULL,true);
 
-        //wait thread run
-        while(thread_stop == 2)
-        {msleep(50);}
-    }
+    //wait thread run
+    while(thread_stop == 2)
+    {msleep(1);}
 
     return 0;
 }
