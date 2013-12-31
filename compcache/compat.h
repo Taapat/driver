@@ -1,23 +1,21 @@
-#ifndef _CCACHE_COMPAT_H_
-#define _CCACHE_COMPAT_H_
+#ifndef _ZRAM_COMPAT_H_
+#define _ZRAM_COMPAT_H_
 
 #include <linux/version.h>
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,23)
-#define BIO_IO_ERROR(bio)	bio_io_error(bio, PAGE_SIZE)
-#define BIO_ENDIO(bio, error)	bio_endio(bio, PAGE_SIZE, error)
-#else
-#define BIO_IO_ERROR(bio)	bio_io_error(bio)
-#define BIO_ENDIO(bio, error)	bio_endio(bio, error)
+/* Uncomment this if you are using swap free notify patch */
+#define CONFIG_SWAP_FREE_NOTIFY
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
+#ifndef CONFIG_SWAP_FREE_NOTIFY
+#define CONFIG_SWAP_FREE_NOTIFY
+#endif
 #endif
 
-#ifndef pr_info
-#define pr_info(fmt, arg...) \
-	printk(KERN_ERR fmt, ##arg)
-#endif
-
-#ifdef bio_discard
-#define SWAP_DISCARD_SUPPORTED
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31))
+#define blk_queue_physical_block_size(q, size) \
+	blk_queue_hardsect_size(q, size)
+#define blk_queue_logical_block_size(q, size)
 #endif
 
 #endif
