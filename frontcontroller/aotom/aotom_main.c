@@ -237,7 +237,6 @@ int run_draw_thread(struct vfd_ioctl_data *draw_data)
         while(thread_stop == 2)
         {msleep(50);}
     }
-
     return 0;
 }
 
