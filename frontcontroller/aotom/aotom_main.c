@@ -222,8 +222,8 @@ int run_draw_thread(struct vfd_ioctl_data *draw_data)
     while(!thread_stop)
     {msleep(50);}
 
-    if (draw_data->length < YWPANEL_width) {
-        char buf[DISPLAYWIDTH_MAX + 1];
+    if (draw_data->length < mode_digit) {
+        char buf[DIGIT8 + 1];
         memset(buf, ' ', sizeof(buf) - 1);
         buf[sizeof(buf)-1] = '\0';
         if (draw_data->length)
