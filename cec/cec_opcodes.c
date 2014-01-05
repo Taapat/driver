@@ -483,52 +483,75 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
 	    break;
 
 	case VENDOR_COMMAND:
+	{
 	    strcpy(name, "VENDOR_COMMAND");
 	    strcat(name, ": ");
 	    switch (buf[1])
-	    if (activemode)
 	    {
 /*		responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0xF);
 		responseBuffer[1] = FEATURE_ABORT;
 		responseBuffer[2] = VENDOR_COMMAND;
 		responseBuffer[3] = ABORT_REASON_UNRECOGNIZED_OPCODE;
-		sendMessage(4, responseBuffer);*/
+		sendMessage(4, responseBuffer);
+*/
 
 	    	//FIXME
 	    	// LG Vendor Command HACK
 
 
 	    case LG_REQUEST_DEVICE_TYPE: strcat(name, "DEVICE_TYPE");
-    		responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
-    		responseBuffer[1] =	VENDOR_COMMAND;
-	    	responseBuffer[2] =	0x02;
-	    	responseBuffer[3] = LG_DEVICE_TYPE_HDD;
-	    	sendMessage(4, responseBuffer);
+	    	if (activemode)
+	    	{
+	    		responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
+    			responseBuffer[1] = VENDOR_COMMAND;
+    			responseBuffer[2] = 0x02;
+    			responseBuffer[3] = LG_DEVICE_TYPE_HOME_THEATRE;
+    			sendMessage(4, responseBuffer);
+	    	}
 	    	break;
 	    case LG_REQUEST_REMOTE_CONTROL_LEVEL: strcat(name, "REMOTE_LEVEL");
-			responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
-			responseBuffer[1] =	VENDOR_COMMAND;
-	    	responseBuffer[2] =	0x0C;
-	    	responseBuffer[3] = 0x05; // maximum control level
-	    	sendMessage(4, responseBuffer);
+	    	if (activemode)
+	    	{
+	    		responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
+				responseBuffer[1] = VENDOR_COMMAND;
+				responseBuffer[2] = 0x0C;
+				responseBuffer[3] = 0x05; // maximum control level
+				sendMessage(4, responseBuffer);
+	    	}
 	    	break;
 	    case LG_REQUEST_VENDOR_COMMAND1: strcat(name, "ID_1");
-			responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
-			responseBuffer[1] =	VENDOR_COMMAND;
-	    	responseBuffer[2] =	0x05;
-	    	responseBuffer[3] = 0x04;
-	    	sendMessage(4, responseBuffer);
+	    	if (activemode)
+	    	{
+	    		responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
+				responseBuffer[1] = VENDOR_COMMAND;
+				responseBuffer[2] = 0x05;
+				responseBuffer[3] = 0x04;
+				sendMessage(4, responseBuffer);
+	    	}
 	    	break;
 	    case LG_REQUEST_VENDOR_COMMAND2: strcat(name, "ID_2");
-			responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
-			responseBuffer[1] =	VENDOR_COMMAND;
-	    	responseBuffer[2] =	0xA1;
-	    	responseBuffer[3] = 0x04;
-	    	sendMessage(4, responseBuffer);
+	    	if (activemode)
+	    	{
+	    		responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
+				responseBuffer[1] = VENDOR_COMMAND;
+				responseBuffer[2] = 0xA1;
+				responseBuffer[3] = 0x01;
+				sendMessage(4, responseBuffer);
+	    	}
 	    	break;
-
+	    case LG_REQUEST_VENDOR_COMMAND3: strcat(name, "ID_3");
+	    	if (activemode)
+	    	{
+	    		responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0xF);
+	    		responseBuffer[1] = REPORT_POWER_STATUS;
+	    		responseBuffer[2] = POWER_STATUS_GOING_TO_ON;
+	    		sendMessage(3, responseBuffer);
+	    	}
+	    	break;
+	    default: break;
 	    	// End HACK
 	    }
+	}
 	    break;
 
 	case VENDOR_REMOTE_BUTTON_DOWN:
