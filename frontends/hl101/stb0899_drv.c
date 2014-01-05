@@ -1,4 +1,4 @@
-//*
+/*
 	STB0899 Multistandard Frontend driver
 	Copyright (C) Manu Abraham (abraham.manu@gmail.com)
 
