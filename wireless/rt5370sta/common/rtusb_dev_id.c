@@ -227,6 +227,7 @@ USB_DEVICE_ID rtusb_dev_id[] = {
 	{USB_DEVICE(0x2001,0x3C19)}, /* DWA-125/A3 */
 	{USB_DEVICE(0x2001,0x3C1C)}, /* GO-USB-N150 */
 	{USB_DEVICE(0x2001,0x3C1D)}, /* DWA-123/B1 */
+	{USB_DEVICE(0x2001,0x3C1E)}, /* DWA-125/B1 */
 	{USB_DEVICE(0x043E,0x7A12)}, /* Arcadyan */
 	{USB_DEVICE(0x043E,0x7A22)}, /* LG innotek */
 	{USB_DEVICE(0x043E,0x7A32)}, /* Arcadyan */
