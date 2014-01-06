@@ -55,6 +55,9 @@ obj-y	+= bpamem/
 
 ifdef  HL101
 obj-y	+= smartcard/
+obj-y	+= cpu_frequ/
+obj-y	+= cec/
+obj-y	+= cic/
 endif
 
 ifndef SPARK
