@@ -39,5 +39,9 @@ ifdef ATEVIO7500
 EXTRA_CFLAGS	+= -DSTx7105
 endif
 
+ifdef HL101
+EXTRA_CFLAGS	+= -DSTx7105
+endif
+
 endif
 
