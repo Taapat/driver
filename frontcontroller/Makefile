@@ -12,7 +12,7 @@ ccflags-y += $(CCFLAGSY)
 
 
 ifdef HL101
-obj-y   += aotom/
+obj-y   += proton/
 endif
 
 ifdef SPARK
