@@ -23,13 +23,10 @@ HAS_WPA_SUPPLICANT	  = y
 HAS_NATIVE_WPA_SUPPLICANT_SUPPORT=y
 HAS_DOT11_N_SUPPORT       = y
 HAS_DOT11N_DRAFT3_SUPPORT = y
-HAS_KTHREAD_SUPPORT       = y
+HAS_KTHREAD_SUPPORT       = n
 
 EXTRA_CFLAGS += -I$(src)/include
-EXTRA_CFLAGS += -Wall -O2 -Wundef -Wstrict-prototypes
-EXTRA_CFLAGS += -Wno-trigraphs -Wdeclaration-after-statement 
-EXTRA_CFLAGS += -Wno-pointer-sign -fno-strict-aliasing -fno-common 
-EXTRA_CFLAGS += -fomit-frame-pointer -ffreestanding -m4-nofpu
+EXTRA_CFLAGS += -Wall -O2 -Wundef
 
 WFLAGS := -DAGGREGATION_SUPPORT -DPIGGYBACK_SUPPORT -DWMM_SUPPORT  -DLINUX -Wall -Wstrict-prototypes -Wno-trigraphs 
 WFLAGS += -DSYSTEM_LOG_SUPPORT  -DRT28xx_MODE=$(RT28xx_MODE) -DCHIPSET=$(MODULE) -DRESOURCE_PRE_ALLOC
@@ -502,8 +499,7 @@ endif
 ifneq ($(findstring 3573,$(CHIPSET)),)
 WFLAGS += -DRTMP_MAC_USB -DRTMP_USB_SUPPORT -DRT30xx -DRT35xx -DRT3593 -DRT3573\
           -DRTMP_TIMER_TASK_SUPPORT -DRTMP_RF_RW_SUPPORT -DRTMP_EFUSE_SUPPORT\
-          -DA_BAND_SUPPORT -DDOT11N_SS3_SUPPORT \
-		  -DVCORECAL_SUPPORT
+          -DA_BAND_SUPPORT -DDOT11N_SS3_SUPPORT -DVCORECAL_SUPPORT
 
 ifeq ($(HAS_NEW_MBSSID_MODE),y)
 WFLAGS += -DNEW_MBSSID_MODE
@@ -651,8 +647,8 @@ endif
 
 ifneq ($(findstring 5592,$(CHIPSET)),)
 WFLAGS += -DRTMP_MAC_PCI -DRTMP_PCI_SUPPORT -DRT30xx -DRT5592\
-		  -DRTMP_RF_RW_SUPPORT -DRTMP_EFUSE_SUPPORT\
-		  -DA_BAND_SUPPORT -DIQ_CAL_SUPPORT -DRX_DMA_SCATTER -DVCORECAL_SUPPORT\
+          -DRTMP_RF_RW_SUPPORT -DRTMP_EFUSE_SUPPORT\
+          -DA_BAND_SUPPORT -DIQ_CAL_SUPPORT -DRX_DMA_SCATTER -DVCORECAL_SUPPORT\
           -DRTMP_TEMPERATURE_COMPENSATION
 
 ifeq ($(HAS_NEW_MBSSID_MODE),y)
@@ -676,9 +672,9 @@ endif
 
 ifneq ($(findstring 5572,$(CHIPSET)),)
 WFLAGS += -DRTMP_MAC_USB -DRTMP_USB_SUPPORT -DRT30xx -DRT5572 -DRT5592\
-		  -DRTMP_RF_RW_SUPPORT -DRTMP_EFUSE_SUPPORT \
-		  -DRTMP_TIMER_TASK_SUPPORT -DA_BAND_SUPPORT -DIQ_CAL_SUPPORT -DVCORECAL_SUPPORT\
-		  -DRTMP_TEMPERATURE_COMPENSATION
+          -DRTMP_RF_RW_SUPPORT -DRTMP_EFUSE_SUPPORT \
+          -DRTMP_TIMER_TASK_SUPPORT -DA_BAND_SUPPORT -DIQ_CAL_SUPPORT -DVCORECAL_SUPPORT\
+          -DRTMP_TEMPERATURE_COMPENSATION
 CHIPSET_DAT = 2870
 ifeq ($(HAS_TSO_SUPPORT), y)
 WFLAGS += -DCONFIG_TSO_SUPPORT
@@ -821,58 +817,58 @@ obj-m := $(MOD_NAME).o
 #ifdef CONFIG_STA_SUPPORT
 ifeq ($(RT28xx_MODE), STA)
 $(MOD_NAME)-objs := \
-	common/crypt_md5.o\
-	common/crypt_sha2.o\
-	common/crypt_hmac.o\
-	common/crypt_aes.o\
-	common/crypt_arc4.o\
-	common/mlme.o\
-	common/cmm_wep.o\
-	common/action.o\
-	common/cmm_data.o\
-	common/rtmp_init.o\
-	common/rtmp_init_inf.o\
-	common/cmm_tkip.o\
-	common/cmm_aes.o\
-	common/cmm_sync.o\
-	common/eeprom.o\
-	common/cmm_sanity.o\
-	common/cmm_info.o\
-	common/cmm_cfg.o\
-	common/cmm_wpa.o\
-	common/cmm_radar.o\
-	common/spectrum.o\
-	common/rtmp_timer.o\
-	common/rt_channel.o\
-	common/cmm_profile.o\
-	common/cmm_asic.o\
-	common/cmm_cmd.o\
-	common/ps.o\
-	common/uapsd.o\
-	rate_ctrl/ra_ctrl.o\
-	rate_ctrl/alg_legacy.o\
-	rate_ctrl/alg_ags.o\
-	os/linux/rt_profile.o\
-	chips/rtmp_chip.o\
-	sta/assoc.o\
-	sta/auth.o\
-	sta/auth_rsp.o\
-	sta/sync.o\
-	sta/sanity.o\
-	sta/rtmp_data.o\
-	sta/connect.o\
-	sta/wpa.o\
-	sta/sta_cfg.o
+        common/crypt_md5.o\
+        common/crypt_sha2.o\
+        common/crypt_hmac.o\
+        common/crypt_aes.o\
+        common/crypt_arc4.o\
+        common/mlme.o\
+        common/cmm_wep.o\
+        common/action.o\
+        common/cmm_data.o\
+        common/rtmp_init.o\
+        common/rtmp_init_inf.o\
+        common/cmm_tkip.o\
+        common/cmm_aes.o\
+        common/cmm_sync.o\
+        common/eeprom.o\
+        common/cmm_sanity.o\
+        common/cmm_info.o\
+        common/cmm_cfg.o\
+        common/cmm_wpa.o\
+        common/cmm_radar.o\
+        common/spectrum.o\
+        common/rtmp_timer.o\
+        common/rt_channel.o\
+        common/cmm_profile.o\
+        common/cmm_asic.o\
+        common/cmm_cmd.o\
+        common/ps.o\
+        common/uapsd.o\
+        rate_ctrl/ra_ctrl.o\
+        rate_ctrl/alg_legacy.o\
+        rate_ctrl/alg_ags.o\
+        os/linux/rt_profile.o\
+        chips/rtmp_chip.o\
+        sta/assoc.o\
+        sta/auth.o\
+        sta/auth_rsp.o\
+        sta/sync.o\
+        sta/sanity.o\
+        sta/rtmp_data.o\
+        sta/connect.o\
+        sta/wpa.o\
+        sta/sta_cfg.o
 
 ifeq ($(OSABL),NO)
 $(MOD_NAME)-objs += \
-	common/rt_os_util.o\
-	os/linux/sta_ioctl.o\
-	os/linux/rt_linux.o\
-	os/linux/rt_main_dev.o
+        common/rt_os_util.o\
+        os/linux/sta_ioctl.o\
+        os/linux/rt_linux.o\
+        os/linux/rt_main_dev.o
 else
 $(MOD_NAME)-objs += \
-	os/linux/rt_symb.o
+        os/linux/rt_symb.o
 endif
 
 ifeq ($(HAS_NEW_RATE_ADAPT_SUPPORT),y)
@@ -882,7 +878,7 @@ endif
 #ifdef DOT11_N_SUPPORT
 ifeq ($(HAS_DOT11_N_SUPPORT),y)
 $(MOD_NAME)-objs += \
-	common/ba_action.o
+        common/ba_action.o
 
 endif
 #endif // DOT11_N_SUPPORT //
@@ -890,10 +886,10 @@ endif
 #ifdef ETH_CONVERT
 ifeq ($(HAS_ETH_CONVERT_SUPPORT), y)
 $(MOD_NAME)-objs += \
-	common/cmm_mat.o \
-	common/cmm_mat_iparp.o \
-	common/cmm_mat_pppoe.o \
-	common/cmm_mat_ipv6.o
+        common/cmm_mat.o \
+        common/cmm_mat_iparp.o \
+        common/cmm_mat_pppoe.o \
+        common/cmm_mat_ipv6.o
 endif
 #endif // ETH_CONVERT //
 
@@ -915,7 +911,7 @@ endif
 #ifdef LED_CONTROL_SUPPORT
 ifeq ($(HAS_LED_CONTROL_SUPPORT),y)
 $(MOD_NAME)-objs += \
-	common/rt_led.o
+        common/rt_led.o
 endif
 #endif // LED_CONTROL_SUPPORT //
 
@@ -938,15 +934,15 @@ endif
 ifeq ($(OSABL),NO)
 ifeq ($(HAS_CFG80211_SUPPORT),y)
 $(MOD_NAME)-objs += \
-	os/linux/cfg80211.o \
-	os/linux/cfg80211drv.o
+        os/linux/cfg80211.o \
+        os/linux/cfg80211drv.o
 endif
 endif
 
 ifeq ($(OSABL),YES)
 ifeq ($(HAS_CFG80211_SUPPORT),y)
 $(MOD_NAME)-objs += \
-	os/linux/cfg80211drv.o
+        os/linux/cfg80211drv.o
 endif
 endif
 #endif // CRDA_SUPPORT //
@@ -974,27 +970,27 @@ endif
 #ifdef RT2870
 ifneq ($(findstring 2870,$(CHIPSET)),)
 $(MOD_NAME)-objs += \
-	common/cmm_mac_usb.o\
-	common/rtusb_io.o\
-	common/rtusb_data.o\
-	common/cmm_data_usb.o\
-	common/rtmp_mcu.o\
-	common/rtusb_bulk.o\
-	os/linux/rt_usb.o\
-	common/ee_prom.o\
-	chips/rt28xx.o\
+        common/cmm_mac_usb.o\
+        common/rtusb_io.o\
+        common/rtusb_data.o\
+        common/cmm_data_usb.o\
+        common/rtmp_mcu.o\
+        common/rtusb_bulk.o\
+        os/linux/rt_usb.o\
+        common/ee_prom.o\
+        chips/rt28xx.o\
 
 ifeq ($(HAS_ATE),y)
 $(MOD_NAME)-objs += \
-	ate/chips/rt28xx_ate.o\
-	ate/common/ate_usb.o
+        ate/chips/rt28xx_ate.o\
+        ate/common/ate_usb.o
 endif
 
 ifeq ($(OSABL),NO)
 $(MOD_NAME)-objs += \
-	common/rtusb_dev_id.o\
-	os/linux/rt_usb_util.o\
-	os/linux/usb_main_dev.o
+        common/rtusb_dev_id.o\
+        os/linux/rt_usb_util.o\
+        os/linux/usb_main_dev.o
 endif
 endif
 #endif // RT2870 //
@@ -1002,59 +998,58 @@ endif
 #ifdef RT3070
 ifneq ($(findstring 2070,$(CHIPSET)),)
 $(MOD_NAME)-objs += \
-	common/cmm_mac_usb.o\
-	common/rtusb_io.o\
-	common/rtusb_data.o\
-	common/cmm_data_usb.o\
-	common/rtusb_bulk.o\
-	common/rtmp_mcu.o\
-	common/ee_prom.o\
-	common/ee_efuse.o\
-	chips/rt30xx.o\
-	common/rt_rf.o\
-	os/linux/rt_usb.o\
-	chips/rt3070.o
+        common/cmm_mac_usb.o\
+        common/rtusb_io.o\
+        common/rtusb_data.o\
+        common/cmm_data_usb.o\
+        common/rtusb_bulk.o\
+        common/rtmp_mcu.o\
+        common/ee_prom.o\
+        common/ee_efuse.o\
+        chips/rt30xx.o\
+        common/rt_rf.o\
+        os/linux/rt_usb.o\
+        chips/rt3070.o
 
 ifeq ($(HAS_ATE),y)
 $(MOD_NAME)-objs += \
-	ate/chips/rt30xx_ate.o\
-	ate/common/ate_usb.o
+        ate/chips/rt30xx_ate.o\
+        ate/common/ate_usb.o
 endif
 
 ifeq ($(OSABL),NO)
 $(MOD_NAME)-objs += \
-	common/rtusb_dev_id.o\
-	os/linux/rt_usb_util.o\
-	os/linux/usb_main_dev.o
+        common/rtusb_dev_id.o\
+        os/linux/rt_usb_util.o\
+        os/linux/usb_main_dev.o
 endif
 endif
 
 ifneq ($(findstring 3070,$(CHIPSET)),)
 $(MOD_NAME)-objs += \
-	common/cmm_mac_usb.o\
-	common/rtusb_io.o\
-	common/rtusb_data.o\
-	common/cmm_data_usb.o\
-	common/rtusb_bulk.o\
-	common/rtmp_mcu.o\
-	common/ee_prom.o\
-	common/ee_efuse.o\
-	common/rt_rf.o\
-	os/linux/rt_usb.o\
-	chips/rt30xx.o\
-	chips/rt3070.o
-
+        common/cmm_mac_usb.o\
+        common/rtusb_io.o\
+        common/rtusb_data.o\
+        common/cmm_data_usb.o\
+        common/rtusb_bulk.o\
+        common/rtmp_mcu.o\
+        common/ee_prom.o\
+        common/ee_efuse.o\
+        common/rt_rf.o\
+        os/linux/rt_usb.o\
+        chips/rt30xx.o\
+        chips/rt3070.o
 ifeq ($(HAS_ATE),y)
 $(MOD_NAME)-objs += \
-	ate/chips/rt30xx_ate.o\
-	ate/common/ate_usb.o
+        ate/chips/rt30xx_ate.o\
+        ate/common/ate_usb.o
 endif
 
 ifeq ($(OSABL),NO)
 $(MOD_NAME)-objs += \
-	common/rtusb_dev_id.o\
-	os/linux/rt_usb_util.o\
-	os/linux/usb_main_dev.o
+        common/rtusb_dev_id.o\
+        os/linux/rt_usb_util.o\
+        os/linux/usb_main_dev.o
 endif
 endif
 #endif // RT3070 //
@@ -1068,19 +1063,19 @@ endif
 #ifdef RT3572
 ifneq ($(findstring 3572,$(CHIPSET)),)
 $(MOD_NAME)-objs += \
-	common/cmm_mac_usb.o\
-	common/rtusb_io.o\
-	common/rtusb_data.o\
-	common/cmm_data_usb.o\
-	common/rtmp_mcu.o\
-	common/ee_prom.o\
-	common/ee_efuse.o\
-	common/rt_rf.o\
-	common/rtusb_bulk.o\
-	os/linux/rt_usb.o\
-	chips/rt28xx.o\
-	chips/rt30xx.o\
-	chips/rt35xx.o
+        common/cmm_mac_usb.o\
+        common/rtusb_io.o\
+        common/rtusb_data.o\
+        common/cmm_data_usb.o\
+        common/rtmp_mcu.o\
+        common/ee_prom.o\
+        common/ee_efuse.o\
+        common/rt_rf.o\
+        common/rtusb_bulk.o\
+        os/linux/rt_usb.o\
+        chips/rt28xx.o\
+        chips/rt30xx.o\
+        chips/rt35xx.o
 
 ifeq ($(HAS_RTMP_FLASH_SUPPORT),y)
 $(MOD_NAME)-objs += \
@@ -1089,16 +1084,16 @@ endif
 
 ifeq ($(HAS_ATE),y)
 $(MOD_NAME)-objs += \
-	ate/chips/rt28xx_ate.o\
-	ate/chips/rt35xx_ate.o\
-	ate/common/ate_usb.o
+        ate/chips/rt28xx_ate.o\
+        ate/chips/rt35xx_ate.o\
+        ate/common/ate_usb.o
 endif
 
 ifeq ($(OSABL),NO)
 $(MOD_NAME)-objs += \
-	common/rtusb_dev_id.o\
-	os/linux/rt_usb_util.o\
-	os/linux/usb_main_dev.o
+        common/rtusb_dev_id.o\
+        os/linux/rt_usb_util.o\
+        os/linux/usb_main_dev.o
 endif
 
 endif
@@ -1110,39 +1105,39 @@ endif
 #ifdef RT3573
 ifneq ($(findstring 3573,$(CHIPSET)),)
 $(MOD_NAME)-objs += \
-	common/cmm_mac_usb.o\
-	common/rtusb_io.o\
-	common/rtusb_data.o\
-	common/cmm_data_usb.o\
-	common/rtmp_mcu.o\
-	common/ee_prom.o\
-	common/ee_efuse.o\
-	common/rt_rf.o\
-	common/rtusb_bulk.o\
-	os/linux/rt_usb.o\
-	chips/rt28xx.o\
-	chips/rt30xx.o\
-	chips/rt35xx.o\
-	chips/rt3593.o
+        common/cmm_mac_usb.o\
+        common/rtusb_io.o\
+        common/rtusb_data.o\
+        common/cmm_data_usb.o\
+        common/rtmp_mcu.o\
+        common/ee_prom.o\
+        common/ee_efuse.o\
+        common/rt_rf.o\
+        common/rtusb_bulk.o\
+        os/linux/rt_usb.o\
+        chips/rt28xx.o\
+        chips/rt30xx.o\
+        chips/rt35xx.o\
+        chips/rt3593.o
 
 ifeq ($(HAS_ATE),y)
 $(MOD_NAME)-objs += \
-	ate/chips/rt30xx_ate.o\
-	ate/chips/rt35xx_ate.o\
-	ate/chips/rt3593_ate.o\
-	ate/common/ate_usb.o
+        ate/chips/rt30xx_ate.o\
+        ate/chips/rt35xx_ate.o\
+        ate/chips/rt3593_ate.o\
+        ate/common/ate_usb.o
 endif
 
 ifeq ($(OSABL),NO)
 $(MOD_NAME)-objs += \
-	common/rtusb_dev_id.o\
-	os/linux/rt_usb_util.o\
-	os/linux/usb_main_dev.o
+        common/rtusb_dev_id.o\
+        os/linux/rt_usb_util.o\
+        os/linux/usb_main_dev.o
 endif
 
 ifneq ($(findstring STA,$(RT28xx_MODE)),)
 $(MOD_NAME)-objs += \
-	common/frq_cal.o
+        common/frq_cal.o
 endif
 
 endif
@@ -1153,33 +1148,33 @@ endif
 #ifdef RT3370
 ifneq ($(findstring 3370,$(CHIPSET)),)
 $(MOD_NAME)-objs += \
-	common/cmm_mac_usb.o\
-	common/rtusb_io.o\
-	common/rtusb_data.o\
-	common/cmm_data_usb.o\
-	common/rtmp_mcu.o\
-	common/ee_prom.o\
-	common/ee_efuse.o\
-	common/rt_rf.o\
-	common/rtusb_bulk.o\
-	os/linux/rt_usb.o\
-	chips/rt33xx.o\
-	chips/rt3370.o\
-	chips/rt3070.o\
-	chips/rt30xx.o
+        common/cmm_mac_usb.o\
+        common/rtusb_io.o\
+        common/rtusb_data.o\
+        common/cmm_data_usb.o\
+        common/rtmp_mcu.o\
+        common/ee_prom.o\
+        common/ee_efuse.o\
+        common/rt_rf.o\
+        common/rtusb_bulk.o\
+        os/linux/rt_usb.o\
+        chips/rt33xx.o\
+        chips/rt3370.o\
+        chips/rt3070.o\
+        chips/rt30xx.o
 
 ifeq ($(HAS_ATE),y)
 $(MOD_NAME)-objs += \
-	ate/chips/rt33xx_ate.o\
-	ate/chips/rt30xx_ate.o\
-	ate/common/ate_usb.o
+        ate/chips/rt33xx_ate.o\
+        ate/chips/rt30xx_ate.o\
+        ate/common/ate_usb.o
 endif
 
 ifeq ($(OSABL),NO)
 $(MOD_NAME)-objs += \
-	common/rtusb_dev_id.o\
-	os/linux/rt_usb_util.o\
-	os/linux/usb_main_dev.o
+        common/rtusb_dev_id.o\
+        os/linux/rt_usb_util.o\
+        os/linux/usb_main_dev.o
 endif
 endif
 #endif // RT3370 //
@@ -1205,10 +1200,10 @@ $(MOD_NAME)-objs += \
 
 ifeq ($(HAS_ATE),y)
 $(MOD_NAME)-objs += \
-	ate/chips/rt5390_ate.o\
-	ate/chips/rt30xx_ate.o\
-	ate/chips/rt33xx_ate.o\
-	ate/common/ate_usb.o
+        ate/chips/rt5390_ate.o\
+        ate/chips/rt30xx_ate.o\
+        ate/chips/rt33xx_ate.o\
+        ate/common/ate_usb.o
 endif
 
 ifeq ($(OSABL),NO)
@@ -1220,7 +1215,7 @@ endif
 
 ifneq ($(findstring STA,$(RT28xx_MODE)),)
 $(MOD_NAME)-objs += \
-	common/frq_cal.o
+        common/frq_cal.o
 endif
 
 endif
@@ -1230,15 +1225,15 @@ endif
 #ifdef RT3290
 ifneq ($(findstring 3290,$(CHIPSET)),)
 $(MOD_NAME)-objs += \
-	common/cmm_mac_pci.o\
-	common/cmm_data_pci.o\
-	os/linux/rt_rbus_pci_drv.o\
-	common/rtmp_mcu.o\
-	common/ee_prom.o\
-	common/ee_efuse.o\
-	common/rt_rf.o\
-	chips/rt30xx.o\
-	chips/rt3290.o
+        common/cmm_mac_pci.o\
+        common/cmm_data_pci.o\
+        os/linux/rt_rbus_pci_drv.o\
+        common/rtmp_mcu.o\
+        common/ee_prom.o\
+        common/ee_efuse.o\
+        common/rt_rf.o\
+        chips/rt30xx.o\
+        chips/rt3290.o
 
 ifeq ($(OSABL),NO)
 $(MOD_NAME)-objs += \
@@ -1249,7 +1244,7 @@ endif
 
 ifneq ($(findstring STA,$(RT28xx_MODE)),)
 $(MOD_NAME)-objs += \
-	common/frq_cal.o
+        common/frq_cal.o
 endif
 
 endif
@@ -1258,18 +1253,18 @@ endif
 #ifdef RT5572
 ifneq ($(findstring 5572,$(CHIPSET)),)
 $(MOD_NAME)-objs += \
-		common/cmm_mac_usb.o\
-		common/rtusb_io.o\
-		common/rtusb_data.o\
-		common/cmm_data_usb.o\
-		common/rtmp_mcu.o\
-		common/ee_prom.o\
-		common/ee_efuse.o\
-		common/rt_rf.o\
-		common/rtusb_bulk.o\
-		os/linux/rt_usb.o\
-		chips/rt30xx.o\
-		chips/rt5592.o
+        common/cmm_mac_usb.o\
+        common/rtusb_io.o\
+        common/rtusb_data.o\
+        common/cmm_data_usb.o\
+        common/rtmp_mcu.o\
+        common/ee_prom.o\
+        common/ee_efuse.o\
+        common/rt_rf.o\
+        common/rtusb_bulk.o\
+        os/linux/rt_usb.o\
+        chips/rt30xx.o\
+        chips/rt5592.o
 
 ifeq ($(HAS_RTMP_FLASH_SUPPORT),y)
 $(MOD_NAME)-objs += \
@@ -1278,20 +1273,20 @@ endif
 
 ifeq ($(HAS_ATE),y)
 $(MOD_NAME)-objs += \
-	ate/chips/rt5592_ate.o\
-	ate/common/ate_usb.o
+        ate/chips/rt5592_ate.o\
+        ate/common/ate_usb.o
 endif
 
 ifeq ($(OSABL),NO)
 $(MOD_NAME)-objs += \
-		common/rtusb_dev_id.o\
-		os/linux/rt_usb_util.o\
-		os/linux/usb_main_dev.o
+        common/rtusb_dev_id.o\
+        os/linux/rt_usb_util.o\
+        os/linux/usb_main_dev.o
 endif
 
 ifneq ($(findstring STA,$(RT28xx_MODE)),)
 $(MOD_NAME)-objs += \
-	common/frq_cal.o
+        common/frq_cal.o
 endif
 
 endif
