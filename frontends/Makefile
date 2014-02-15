@@ -38,6 +38,7 @@ fe-core-objs +=        hl101/stv6110x.o
 fe-core-objs +=        hl101/ix7306.o
 fe-core-objs +=        hl101/core.o
 obj-m += fe-core.o
+obj-y += lnb/
 else ifdef SPARK
 stv090x-objs +=	spark_dvbapi5/stv090x.o
 stv090x-objs +=	spark_dvbapi5/stv6110x.o
@@ -45,7 +46,6 @@ stv090x-objs +=	spark_dvbapi5/ix7306.o
 stv090x-objs +=	spark_dvbapi5/core.o
 stv090x-objs += spark_common/vz7903.o
 obj-m += stv090x.o
-obj-y += lnb/
 else ifdef SPARK7162
 spark7162-objs +=        spark7162/spark7162.o
 
@@ -82,7 +82,6 @@ spark7162-objs +=        spark7162/tuner/mxl_spur_table.o
 spark7162-objs +=        spark7162/tuner/mxL_user_define.o
 
 obj-m += spark7162.o
-obj-y += lnb/
 
 # other drivers already in kernel
 
