@@ -6452,8 +6452,8 @@ static struct dvb_frontend_ops stv090x_ops = {
 		.symbol_rate_max = 70000000,
 		.caps = FE_CAN_INVERSION_AUTO |
 		FE_CAN_FEC_AUTO |
-		FE_CAN_QPSK /*|
-					  FE_CAN_2G_MODULATION*/
+		FE_CAN_QPSK |
+		FE_CAN_2G_MODULATION
 	},
 
 	.release = stv090x_release,
@@ -6544,6 +6544,9 @@ struct dvb_frontend *stv090x_attach(const struct stv090x_config *config,
 		printk("Error waking device\n");
 		goto error;
 	}
+
+	if (state->dev_ver>=0x30)
+	    state->frontend.ops.info.caps |= FE_CAN_MULTISTREAM;
 
 	dprintk(10, "Attaching %s demodulator(%d) Cut=0x%02x\n",
 		state->device == STV0900 ? "STV0900" : "STV0903",

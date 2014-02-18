@@ -1146,7 +1146,7 @@ static INT32 nim_panic6158_tune_action(struct nim_device *dev, UINT8 system, UIN
 		nim_reg_write(dev, DEMO_BANK_T2, DMD_SSEQSET, &data, 1);
 
 		NIM_PANIC6158_PRINTF("tune T2\n");
-        NIM_PANIC6158_PRINTF("[%s]%d,T2 frq =%d, bw= %d,system =%d\n",__FUNCTION__,__LINE__,frq, bw, system);
+        NIM_PANIC6158_PRINTF("[%s]%d,T2 frq =%d, bw= %d,system =%d,plp = %d\n",__FUNCTION__,__LINE__,frq, bw, system, plp_id);
 		for (i = 0; i < PANIC6158_PLP_TUNE_NUM; i++)
 		{
 			data = 0x80;
@@ -1663,6 +1663,7 @@ int dvb_d6158_get_property(struct dvb_frontend *fe, struct dtv_property* tvp)
 	/* get delivery system info */
 	if(tvp->cmd==DTV_DELIVERY_SYSTEM){
 		switch (tvp->u.data) {
+		case SYS_DVBT2:
 		case SYS_DVBT:
 			break;
 		default:
@@ -2910,7 +2911,7 @@ exit:
 	 .info = {
 		 .name			 = "Tuner3-T/T2/C",
 		 .type			 = FE_OFDM,
-		 .frequency_min 	 = 0,
+		 .frequency_min 	 = 47000000,
 		 .frequency_max 	 = 863250000,
 		 .frequency_stepsize = 62500,
 		 .caps = FE_CAN_FEC_1_2 | FE_CAN_FEC_2_3 | FE_CAN_FEC_3_4 |
@@ -2919,7 +2920,9 @@ exit:
 				 FE_CAN_QAM_16 | FE_CAN_QAM_64 | FE_CAN_QAM_AUTO |
 				 FE_CAN_TRANSMISSION_MODE_AUTO |
 				 FE_CAN_GUARD_INTERVAL_AUTO |
-				 FE_CAN_HIERARCHY_AUTO,
+				 FE_CAN_HIERARCHY_AUTO |
+				 FE_CAN_2G_MODULATION |
+				 FE_CAN_MULTISTREAM
 				 },
 
 
