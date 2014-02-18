@@ -5473,7 +5473,8 @@ static struct dvb_frontend_ops spark_d3501_ops = {
 		.symbol_rate_max 	= 45000000,
 		.caps			= FE_CAN_INVERSION_AUTO |
 					  FE_CAN_FEC_AUTO       |
-					  FE_CAN_QPSK
+					  FE_CAN_QPSK		|
+					  FE_CAN_2G_MODULATION
 	},
 
 	.init				= d3501_init,
