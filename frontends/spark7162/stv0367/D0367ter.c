@@ -246,11 +246,11 @@ static int dvb_d0367_fe_ofdm_set_frontend(struct dvb_frontend* fe,
 	state->p = p;
 
 	D0367ter_ScanFreq(DeviceMap, IOHandle);
-	{
-		BOOL bIsLocked;
-		bIsLocked = FE_367ofdm_lock(&state->DeviceMap, state->IOHandle);
-		//printk("bIsLocked = %d\n", bIsLocked);
-    }
+#if 0
+	BOOL bIsLocked;
+	bIsLocked = FE_367ofdm_lock(&state->DeviceMap, state->IOHandle);
+	printk("bIsLocked = %d\n", bIsLocked);
+#endif
 
 	state->p = NULL;
 
