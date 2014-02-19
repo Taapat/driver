@@ -107,7 +107,7 @@ MODULE_LICENSE("Copyright 2002 STMicroelectronics, All rights reserved");
 static int embx_read_procmem(char *buf, char **start, off_t offset,
                              int count, int *eof, void *data)
 {
-char tmp[1024];
+char tmp[935];
 EMBX_TPINFO tpinfo;
 EMBX_ERROR res;
 
