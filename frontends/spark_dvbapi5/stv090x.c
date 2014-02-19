@@ -6433,9 +6433,10 @@ static int spark_set_voltage(struct dvb_frontend *fe, enum fe_sec_voltage voltag
 
 static int high_lnb_voltage(struct dvb_frontend* fe, long arg)
 {
-	dprintk(10, "%s < arg=%d\n", __func__, arg);
+	dprintk(10, "%s < arg=%ld\n", __func__, arg);
 	if (arg == 0) stpio_set_pin(fe_lnb_14_19, 1);
 	else stpio_set_pin(fe_lnb_14_19, 0);
+	return 0;
 }
 
 static struct dvb_frontend_ops stv090x_ops = {
