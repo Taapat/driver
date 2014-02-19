@@ -246,11 +246,11 @@ static int dvb_d0367_fe_ofdm_set_frontend(struct dvb_frontend* fe,
 	state->p = p;
 
 	D0367ter_ScanFreq(DeviceMap, IOHandle);
-	{
-		BOOL bIsLocked;
-		bIsLocked = FE_367ofdm_lock(&state->DeviceMap, state->IOHandle);
-		//printk("bIsLocked = %d\n", bIsLocked);
-    }
+#if 0
+	BOOL bIsLocked;
+	bIsLocked = FE_367ofdm_lock(&state->DeviceMap, state->IOHandle);
+	printk("bIsLocked = %d\n", bIsLocked);
+#endif
 
 	state->p = NULL;
 
@@ -405,7 +405,7 @@ static struct dvb_frontend_ops dvb_d0367_fe_ofdm_ops = {
 	.info = {
 		.name			= "Tuner3-T/C",
 		.type			= FE_OFDM,
-		.frequency_min		= 0,
+		.frequency_min 		= 47000000,
 		.frequency_max		= 863250000,
 		.frequency_stepsize	= 62500,
 		.caps = FE_CAN_FEC_1_2 | FE_CAN_FEC_2_3 | FE_CAN_FEC_3_4 |

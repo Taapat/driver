@@ -1146,7 +1146,7 @@ static INT32 nim_panic6158_tune_action(struct nim_device *dev, UINT8 system, UIN
 		nim_reg_write(dev, DEMO_BANK_T2, DMD_SSEQSET, &data, 1);
 
 		NIM_PANIC6158_PRINTF("tune T2\n");
-        NIM_PANIC6158_PRINTF("[%s]%d,T2 frq =%d, bw= %d,system =%d\n",__FUNCTION__,__LINE__,frq, bw, system);
+        NIM_PANIC6158_PRINTF("[%s]%d,T2 frq =%d, bw= %d,system =%d,plp = %d\n",__FUNCTION__,__LINE__,frq, bw, system, plp_id);
 		for (i = 0; i < PANIC6158_PLP_TUNE_NUM; i++)
 		{
 			data = 0x80;
@@ -1237,50 +1237,37 @@ static INT32 nim_panic6158_channel_change(struct nim_device *dev, struct NIM_Cha
 
 	priv = (struct nim_panic6158_private *) dev->priv;
 
-	frq = param->freq;//kHz
+	frq = param->freq;//Hz
 	bw = param->bandwidth;//MHz
 	qam = param->modulation;//for DVBC
 	plp_id = param->plp_id;//for DVB-T2
-	NIM_PANIC6158_PRINTF("frq:%dKHz, bw:%dMHz, system:%d, plp id:%d\n", frq, bw, mode, plp_id);
 
 	//param->priv_param;//DEMO_UNKNOWN/DEMO_DVBC/DEMO_DVBT/DEMO_DVBT2
 	if (DEMO_DVBC == param->priv_param)
 	{
 		mode[0] = DEMO_BANK_C;
+		NIM_PANIC6158_PRINTF("frq:%dKHz, bw:%dMHz, system:%d, qam=%d\n", frq / 1000, bw, mode[0],qam);
 	}
 	else
 	{
 		if (DEMO_DVBT == param->priv_param)
 		{
 			mode[0] = DEMO_BANK_T;
+			NIM_PANIC6158_PRINTF("frq:%dKHz, bw:%dMHz, system:%d\n", frq / 1000, bw, mode[0]);
 		}
 		else if (DEMO_DVBT2 == param->priv_param)
 		{
 			mode[0] = DEMO_BANK_T2;
+			NIM_PANIC6158_PRINTF("frq:%dKHz, bw:%dMHz, system:%d, plp id:%d\n", frq / 1000, bw, mode[0], plp_id);
 		}
 		else
 		{
 			tune_num = PANIC6158_TUNE_MAX_NUM;
 			mode[0] = (1 == priv->first_tune_t2) ? DEMO_BANK_T2 : DEMO_BANK_T;
 			mode[1] = (DEMO_BANK_T2 == mode[0]) ? DEMO_BANK_T : DEMO_BANK_T2;
+			NIM_PANIC6158_PRINTF("frq:%dKHz, bw:%dMHz, system:%d+%d, plp id:%d\n", frq / 1000, bw, mode[0], mode[1], plp_id);
 		}
 	}
-	//mode[0]= priv->system;
-
-#if 0
-	/*frq = 514000;
-	bw = 8;
-	tune_num = 1;
-	mode[0] = DEMO_BANK_T;*/
-	frq = 642000;
-	bw = 8;
-	tune_num = 1;
-	mode[0] = DEMO_BANK_C;
-	qam = QAM64;
-
-#endif
-
-	//printf("frq:%dKHz, bw:%dMHz, system mode:%d,qam=%d\n", frq, bw, mode[0],qam);
 
 	priv->scan_stop_flag = 0;
 
@@ -1663,6 +1650,7 @@ int dvb_d6158_get_property(struct dvb_frontend *fe, struct dtv_property* tvp)
 	/* get delivery system info */
 	if(tvp->cmd==DTV_DELIVERY_SYSTEM){
 		switch (tvp->u.data) {
+		case SYS_DVBT2:
 		case SYS_DVBT:
 			break;
 		default:
@@ -1823,38 +1811,10 @@ static YW_ErrorType_T demod_d6158_ScanFreq(struct dvb_frontend_parameters *p,
 
 		return YWHAL_ERROR_BAD_PARAMETER;
 	}
-	if((DEMO_BANK_T2 == System) || (DEMO_BANK_T == System))
-	{
 
-		//printf("TuneMode=%d\n", Inst->DriverParam.Ter.Param.TuneMode);
-		//param.priv_param = DEMO_DVBT;//T2  T
-		param.priv_param = DEMO_UNKNOWN;//T2  T
-		//param.priv_param = DEMO_DVBT2;//T2  T
-
-		//printk("p->frequency:%dKHz, bw:%dMHz\n",
-		//		p->frequency, p->u.ofdm.bandwidth);
-		param.freq = p->frequency;
-		param.plp_id = plp_id;
-		switch(p->u.ofdm.bandwidth)
-		{
-		case BANDWIDTH_6_MHZ:
-			param.bandwidth = MxL_BW_6MHz;
-			break;
-		case BANDWIDTH_7_MHZ:
-			param.bandwidth = MxL_BW_7MHz;
-			break;
-		case BANDWIDTH_8_MHZ:
-			param.bandwidth = MxL_BW_8MHz;
-			break;
-		default:
-			return YWHAL_ERROR_BAD_PARAMETER;
-
-		}
-	}
-	else if(DEMO_BANK_C == System)
+	if(SYS_DVBC_ANNEX_AC == System)
 	{
 		param.priv_param = DEMO_DVBC;
-
 		param.bandwidth = MxL_BW_8MHz;
 		param.freq = p->frequency;
 		switch(p->u.qam.modulation)
@@ -1873,6 +1833,81 @@ static YW_ErrorType_T demod_d6158_ScanFreq(struct dvb_frontend_parameters *p,
 			break;
 		case QAM_256:
 			param.modulation = QAM256;
+			break;
+		default:
+			return YWHAL_ERROR_BAD_PARAMETER;
+		}
+	}
+	else if(SYS_DVBC_ANNEX_B == System)
+	{
+		param.priv_param = DEMO_DVBC;
+		param.bandwidth = MxL_BW_6MHz;
+		param.freq = p->frequency;
+		switch(p->u.qam.modulation)
+		{
+		case QAM_16:
+			param.modulation = QAM16;
+			break;
+		case QAM_32:
+			param.modulation = QAM32;
+			break;
+		case QAM_64:
+			param.modulation = QAM64;
+			break;
+		case QAM_128:
+			param.modulation = QAM128;
+			break;
+		case QAM_256:
+			param.modulation = QAM256;
+			break;
+		default:
+			return YWHAL_ERROR_BAD_PARAMETER;
+		}
+	}
+	else if(SYS_DVBT2 == System)
+	{
+		//printf("TuneMode=%d\n", Inst->DriverParam.Ter.Param.TuneMode);
+		//param.priv_param = DEMO_UNKNOWN;//T2  T
+		param.priv_param = DEMO_DVBT2;//T2
+
+		//printk("p->frequency:%dKHz, bw:%dMHz\n",
+		//		p->frequency, p->u.ofdm.bandwidth);
+		param.freq = p->frequency;
+		param.plp_id = plp_id;
+		switch(p->u.ofdm.bandwidth)
+		{
+		case BANDWIDTH_6_MHZ:
+			param.bandwidth = MxL_BW_6MHz;
+			break;
+		case BANDWIDTH_7_MHZ:
+			param.bandwidth = MxL_BW_7MHz;
+			break;
+		case BANDWIDTH_8_MHZ:
+			param.bandwidth = MxL_BW_8MHz;
+			break;
+		default:
+			return YWHAL_ERROR_BAD_PARAMETER;
+		}
+	}
+	else if(SYS_DVBT == System)
+	{
+		//printf("TuneMode=%d\n", Inst->DriverParam.Ter.Param.TuneMode);
+		param.priv_param = DEMO_UNKNOWN;//T2  T
+
+		//printk("p->frequency:%dKHz, bw:%dMHz\n",
+		//		p->frequency, p->u.ofdm.bandwidth);
+		param.freq = p->frequency;
+		param.plp_id = plp_id;
+		switch(p->u.ofdm.bandwidth)
+		{
+		case BANDWIDTH_6_MHZ:
+			param.bandwidth = MxL_BW_6MHz;
+			break;
+		case BANDWIDTH_7_MHZ:
+			param.bandwidth = MxL_BW_7MHz;
+			break;
+		case BANDWIDTH_8_MHZ:
+			param.bandwidth = MxL_BW_8MHz;
 			break;
 		default:
 			return YWHAL_ERROR_BAD_PARAMETER;
@@ -1954,7 +1989,7 @@ YW_ErrorType_T demod_d6158_Open(U8 Handle,TUNER_OpenParams_T * OpenParams)
 	Tuner_API.nim_Tuner_Init = tun_mxl301_init;
 	Tuner_API.nim_Tuner_Status = tun_mxl301_status;
 	Tuner_API.nim_Tuner_Control = tun_mxl301_control;
-	Tuner_API.tune_t2_first = 1;//when demod_d6158_ScanFreq,param.priv_param >DEMO_DVBT2,tuner tune T2 then t
+	Tuner_API.tune_t2_first = 0;//when demod_d6158_ScanFreq,param.priv_param >DEMO_DVBT2,tuner tune T2 then t
 	Tuner_API.tuner_config.demo_type = PANASONIC_DEMODULATOR;
 	Tuner_API.tuner_config.cTuner_Base_Addr = 0xC2;
 
@@ -2004,15 +2039,12 @@ int d6158_set_frontend(struct dvb_frontend* fe,
 	struct dvb_d6158_fe_ofdm_state* state = fe->demodulator_priv;
 	struct nim_device *dev = &state->spark_nimdev;
 	struct nim_panic6158_private *priv = dev->priv;
-	UINT8 lock, plp_id;
+	UINT8 plp_id;
+
 	plp_id = props->stream_id != NO_STREAM_ID_FILTER ? props->stream_id : 0;
 	state->p = p;
 	printk("-----------------------d6158_set_frontend\n");
-	nim_panic6158_get_lock(dev,&lock);
-	if(lock != 1)
-	{
-		 demod_d6158_ScanFreq(p,&state->spark_nimdev,priv->system,plp_id);
-	}
+	demod_d6158_ScanFreq(p,&state->spark_nimdev,props->delivery_system,plp_id);
 	state->p = NULL;
 
 	return 0;
@@ -2910,7 +2942,7 @@ exit:
 	 .info = {
 		 .name			 = "Tuner3-T/T2/C",
 		 .type			 = FE_OFDM,
-		 .frequency_min 	 = 0,
+		 .frequency_min 	 = 47000000,
 		 .frequency_max 	 = 863250000,
 		 .frequency_stepsize = 62500,
 		 .caps = FE_CAN_FEC_1_2 | FE_CAN_FEC_2_3 | FE_CAN_FEC_3_4 |
@@ -2919,7 +2951,9 @@ exit:
 				 FE_CAN_QAM_16 | FE_CAN_QAM_64 | FE_CAN_QAM_AUTO |
 				 FE_CAN_TRANSMISSION_MODE_AUTO |
 				 FE_CAN_GUARD_INTERVAL_AUTO |
-				 FE_CAN_HIERARCHY_AUTO,
+				 FE_CAN_HIERARCHY_AUTO |
+				 FE_CAN_2G_MODULATION |
+				 FE_CAN_MULTISTREAM
 				 },
 
 

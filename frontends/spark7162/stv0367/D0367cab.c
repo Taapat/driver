@@ -114,13 +114,12 @@ static int dvb_d0367_fe_qam_set_frontend(struct dvb_frontend* fe,
 
 	state->p = p;
 
-    D0367qam_ScanFreq(DeviceMap, IOHandle);
-
-	{
-		BOOL bIsLocked;
-		bIsLocked = FE_367qam_Status(&state->DeviceMap, state->IOHandle);
-		printk("%d:bIsLocked = %d\n", __LINE__, bIsLocked);
-    }
+	D0367qam_ScanFreq(DeviceMap, IOHandle);
+#if 0
+	BOOL bIsLocked;
+	bIsLocked = FE_367qam_Status(&state->DeviceMap, state->IOHandle);
+	printk("%d:bIsLocked = %d\n", __LINE__, bIsLocked);
+#endif
 
 	state->p = NULL;
 
