@@ -45,7 +45,7 @@
 #if defined(PLATFORM_OS_CE) && defined(CONFIG_USB_HCI)
 #define MAX_DUMP_FWSZ	2000
 #else
-#define MAX_DUMP_FWSZ	49152 /*default = 49152 (48k)*/
+#define MAX_DUMP_FWSZ	3072  /*default = 49152 (48k)*/
 #endif
 
 void fill_fwpriv(_adapter * padapter, struct fw_priv *pfwpriv)
@@ -94,6 +94,7 @@ void fill_fwpriv(_adapter * padapter, struct fw_priv *pfwpriv)
 	pfwpriv->turboMode = ( ( pregpriv->wifi_test == 1 ) ? 0 : 1 ) ;	//default enable it
 
 	pfwpriv->lowPowerMode = pregpriv->low_power;
+	pfwpriv->rsvd024 = 1;	//	F/W will issue two probe request. One is with ssid ( if exists ), another is with the wildcard ssid.
 	RT_TRACE(_module_hal_init_c_,_drv_err_,("== fill_fwpriv: pfwpriv->lowPowerMode=%d [0:normal / 1:low power]\n",pfwpriv->lowPowerMode ));
 }
 
@@ -205,7 +206,8 @@ _func_enter_;
 
 		maxlen = (fwhdr.img_IMEM_size > fwhdr.img_SRAM_size)? fwhdr.img_IMEM_size : fwhdr.img_SRAM_size;
 		maxlen += txdscp_sz;
-		ptmpchar = _malloc(maxlen + FWBUFF_ALIGN_SZ);
+		//ptmpchar = _malloc(maxlen + FWBUFF_ALIGN_SZ);
+		ptmpchar = _malloc(4*1024);
 
 		if (ptmpchar==NULL) {
 			RT_TRACE(_module_hal_init_c_,_drv_err_,("can't alloc resources when dl_fw\n"));
@@ -236,8 +238,8 @@ _func_enter_;
 		do {
 			_memset(ptx_desc, 0, TXDESC_SIZE);
 
-			if(imem_sz >  MAX_DUMP_FWSZ/*49152*/) {
-				dump_imem_sz = MAX_DUMP_FWSZ;//49152
+			if(imem_sz >  MAX_DUMP_FWSZ) {
+				dump_imem_sz = MAX_DUMP_FWSZ;
 			} else {
 				dump_imem_sz = imem_sz;
 				ptx_desc->txdw0 |= cpu_to_le32(BIT(28));	
@@ -606,7 +608,11 @@ _func_enter_;
 	RT_TRACE(_module_hal_init_c_,_drv_debug_,("0x1025FE5B=0x%x\n", read8(padapter, 0x1025FE5B)));
 	
 	write8(padapter, 0x102500B5, read8(padapter, 0x102500B5)|BIT(0));//page = 128bytes
+#ifdef CONFIG_USB_RX_AGGREGATION
 	write8(padapter, 0x102500BD, read8(padapter, 0x102500BD)|BIT(7));//enable usb rx aggregation
+#else
+	write8(padapter, 0x102500BD, read8(padapter, 0x102500BD) & (~ BIT(7) ) );//disable usb rx aggregation
+#endif //CONFIG_USB_RX_AGGREGATION
 	//write8(padapter, 0x102500D9, 48);//TH = 48 pages, 6k
 	write8(padapter, 0x102500D9, 1);// TH=1 => means that invalidate  usb rx aggregation
 	//write8(padapter, 0x1025FE5B, 0x02);// 1.7ms/2

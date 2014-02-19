@@ -71,7 +71,7 @@ u32	_init_sta_priv(struct	sta_priv *pstapriv)
 	
 _func_enter_;	
 
-	pstapriv->pallocated_stainfo_buf = _malloc (sizeof(struct sta_info) * NUM_STA+ 4);
+	pstapriv->pallocated_stainfo_buf = _vmalloc (sizeof(struct sta_info) * NUM_STA+ 4);
 
 	if(pstapriv->pallocated_stainfo_buf == NULL){
 		RT_TRACE(_module_rtl871x_sta_mgt_c_,_drv_err_,("_init_sta_priv : alloc stainfo_buf  FAIL !\n"));
@@ -204,7 +204,7 @@ _func_enter_;
 	if(pstapriv){
 		mfree_sta_priv_lock(pstapriv);
 		if(pstapriv->pallocated_stainfo_buf)
-			_mfree(pstapriv->pallocated_stainfo_buf, (sizeof(struct sta_info) * NUM_STA+ 4));
+			_vmfree(pstapriv->pallocated_stainfo_buf, (sizeof(struct sta_info) * NUM_STA+ 4));
 	}
 _func_exit_;
 	return _SUCCESS;
@@ -290,6 +290,7 @@ _func_enter_;
 			preorder_ctrl->wend_b= 0xffff;       
 			//preorder_ctrl->wsize_b = (NR_RECVBUFF-2);
 			preorder_ctrl->wsize_b = 64;
+			preorder_ctrl->enable = _FALSE;
 
 			_init_queue(&preorder_ctrl->pending_recvframe_queue);
 

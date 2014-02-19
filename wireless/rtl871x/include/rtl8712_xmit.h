@@ -302,10 +302,10 @@ struct xmit_frame *dequeue_xframe(struct xmit_priv *pxmitpriv, struct hw_xmit *p
 void do_queue_select(_adapter *padapter, struct pkt_attrib *pattrib);
 u32 get_ff_hwaddr(struct xmit_frame	*pxmitframe);
 
-#ifdef CONFIG_USB_TX_AGGR
+#ifdef CONFIG_USB_TX_AGGREGATION
 u8 xmitframe_aggr_1st(struct xmit_buf * pxmitbuf, struct xmit_frame * pxmitframe);
 u8 dump_aggr_xframe(struct xmit_buf * pxmitbuf, struct xmit_frame * pxmitframe);
-#endif
+#endif //CONFIG_USB_TX_AGGREGATION
 
 
 #endif

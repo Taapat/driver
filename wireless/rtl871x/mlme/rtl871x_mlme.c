@@ -33,7 +33,9 @@
 #include <linux/slab.h>
 #include <linux/module.h>
 #include <linux/kref.h>
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0))
 #include <linux/smp_lock.h>
+#endif
 #include <linux/netdevice.h>
 #include <linux/skbuff.h>
 #include <linux/circ_buf.h>
@@ -57,6 +59,8 @@
 #include <wlan_bssdef.h>
 
 
+extern void indicate_wx_scan_complete_event(_adapter *padapter);
+
 sint _init_mlme_priv(_adapter* padapter)
 {
 	sint	i;
@@ -73,6 +77,7 @@ _func_enter_;
 	pmlmepriv->pscanned = NULL;
 	pmlmepriv->fw_state = 0;
 	pmlmepriv->cur_network.network.InfrastructureMode = Ndis802_11AutoUnknown;
+	pmlmepriv->passive_mode=1; // 1: active, 0: pasive. Maybe someday we should rename this varable to "active_mode" (Jeff)
 
 	_spinlock_init(&(pmlmepriv->lock));
 	_init_queue(&(pmlmepriv->free_bss_pool));
@@ -82,7 +87,7 @@ _func_enter_;
 
 	_memset(&pmlmepriv->assoc_ssid,0,sizeof(NDIS_802_11_SSID));
 
-	pbuf = _malloc(MAX_BSS_CNT * (sizeof(struct wlan_network)));
+	pbuf = _vmalloc(MAX_BSS_CNT * (sizeof(struct wlan_network)));
 
 	if (pbuf == NULL) {
 		res = _FAIL;
@@ -131,7 +136,7 @@ _func_enter_;
 		mfree_mlme_priv_lock (pmlmepriv);
 
 		if (pmlmepriv->free_bss_buf)
-			_mfree(pmlmepriv->free_bss_buf, MAX_BSS_CNT * sizeof(struct wlan_network));
+			_vmfree(pmlmepriv->free_bss_buf, MAX_BSS_CNT * sizeof(struct wlan_network));
 	}
 _func_exit_;
 }
@@ -829,7 +834,7 @@ int is_desired_network(_adapter *adapter, struct wlan_network *pnetwork)
 
 	if(psecuritypriv->wps_phase == _TRUE)
 	{
-		if(get_wps_ie(pnetwork->network.IEs, pnetwork->network.IELength, wps_ie, &wps_ielen)==_TRUE)
+		if(get_wps_ie(pnetwork->network.IEs+_FIXED_IE_LENGTH_, pnetwork->network.IELength-_FIXED_IE_LENGTH_, NULL, &wps_ielen)!=NULL)
 		{
 			return _TRUE;
 		}
@@ -1034,6 +1039,11 @@ _func_enter_;
 	}
 
 	_exit_critical(&pmlmepriv->lock, &irqL);
+	indicate_wx_scan_complete_event(adapter);
+
+#ifdef CONFIG_IOCTL_CFG80211
+	rtw_cfg80211_surveydone_event_callback(adapter);
+#endif //CONFIG_IOCTL_CFG80211
 
 _func_exit_;
 }
@@ -1173,6 +1183,8 @@ _func_enter_;
 		os_indicate_disconnect(padapter);
 	}
 
+	_cancel_timer_ex(&pmlmepriv->survey_timer);
+
 #ifdef CONFIG_PWRCTRL
 	if(padapter->pwrctrlpriv.pwr_mode != padapter->registrypriv.power_mgnt){
 		_cancel_timer_ex(&pmlmepriv->dhcp_timer);
@@ -1183,6 +1195,11 @@ _func_enter_;
 	RT_TRACE(_module_rtl871x_mlme_c_, _drv_err_, ("-indicate_disconnect: fw_state=0x%08x\n", get_fwstate(pmlmepriv)));
 
 _func_exit_;
+}
+
+inline void rtw_indicate_scan_done( _adapter *padapter, bool aborted)
+{
+	rtw_os_indicate_scan_done(padapter, aborted);
 }
 
 #if 0
@@ -1857,6 +1874,13 @@ _func_enter_;
 	{
 		indicate_disconnect(adapter);
 		free_assoc_resources(adapter);
+
+		pwlan = find_network(&pmlmepriv->scanned_queue, tgt_network->network.MacAddress);
+		if (pwlan)
+		{
+			pwlan->fixed = _FALSE;
+			free_network_nolock(pmlmepriv, pwlan);
+		}		
 	}
 
 	if (check_fwstate(pmlmepriv, WIFI_ADHOC_MASTER_STATE|WIFI_ADHOC_STATE) == _TRUE)
@@ -1944,6 +1968,7 @@ void got_addbareq_event_callback(_adapter *adapter, u8 *pbuf)
 	struct		sta_info*					psta;
 	struct		sta_priv*					pstapriv = &adapter->stapriv;
 	struct		recv_reorder_ctrl*			precvreorder_ctrl = NULL;
+	struct registry_priv *pregistrypriv = &adapter->registrypriv;
 
 _func_enter_;	
 	RT_TRACE(_module_rtl871x_mlme_c_,_drv_err_,("got_addbareq_event_callback!!!\n"));
@@ -1957,6 +1982,14 @@ _func_enter_;
 	{
 		precvreorder_ctrl = &psta->recvreorder_ctrl[pAddbareq_pram->tid];	
 		// set the indicate_seq to 0xffff so that the rx reorder can store any following data packet.
+		if (pregistrypriv->wifi_test == 1)
+		{
+			precvreorder_ctrl->enable = _FALSE;
+		}
+		else
+		{
+			precvreorder_ctrl->enable = _TRUE;
+		}
 		precvreorder_ctrl->indicate_seq = 0xffff;
 	}
 _func_exit_;
@@ -1977,6 +2010,20 @@ _func_enter_;
 	}
 
 _func_exit_;
+}
+
+void survey_timer_event_callback(PADAPTER padapter, u8 *pbuf)
+{
+	struct survey_timer_event *ptimer = (struct survey_timer_event*)pbuf;
+	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+
+
+	pmlmepriv->survey_interval = ptimer->timeout * 1000;
+
+	if (pmlmepriv->survey_interval == 0)
+		_cancel_timer_ex(&pmlmepriv->survey_timer);
+	else
+		_set_timer(&pmlmepriv->survey_timer, pmlmepriv->survey_interval);
 }
 
 void _sitesurvey_ctrl_handler(_adapter *adapter)
@@ -2033,10 +2080,10 @@ _func_enter_;
 	_clr_fwstate_(pmlmepriv, _FW_UNDER_LINKING);
 	pmlmepriv->to_join = _FALSE;
 
-	if (check_fwstate(pmlmepriv, _FW_LINKED) == _TRUE) {
+//	if (check_fwstate(pmlmepriv, _FW_LINKED) == _TRUE) {
 		os_indicate_disconnect(adapter);
 		_clr_fwstate_(pmlmepriv, _FW_LINKED);
-	}
+//	}
 
 //	free_scanqueue(pmlmepriv);// for join fail, don't join again
 
@@ -2087,6 +2134,33 @@ _func_enter_;
 	}
 #endif
 _func_exit_;
+}
+
+void _regular_site_survey_handler (PADAPTER padapter)
+{
+	_irqL irqL;
+	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+
+
+	if ((padapter->bDriverStopped == _TRUE) ||
+	    (padapter->bSurpriseRemoved == _TRUE) ||
+	    (padapter->bup == _FALSE))
+	{
+		pmlmepriv->survey_interval = 0;
+		return;
+	}
+
+	_enter_critical(&pmlmepriv->lock, &irqL);
+	if ((check_fwstate(pmlmepriv, _FW_UNDER_LINKING) == _FALSE) &&
+	    (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY) == _FALSE) &&
+	    (pmlmepriv->sitesurveyctrl.traffic_busy == _FALSE))
+	{
+		sitesurvey_cmd(padapter, NULL);
+	}
+	_exit_critical(&pmlmepriv->lock, &irqL);
+
+	if (pmlmepriv->survey_interval)
+		_set_timer(&pmlmepriv->survey_timer, pmlmepriv->survey_interval);
 }
 
 void _wdg_timeout_handler(_adapter *adapter)
@@ -2472,7 +2546,6 @@ _func_enter_;
 		 ("+restruct_sec_ie: ndisauthmode=%d ndissecuritytype=%d\n",
 		  ndisauthmode, ndissecuritytype));
 
-
 	if ((ndisauthmode==Ndis802_11AuthModeWPA)||(ndisauthmode==Ndis802_11AuthModeWPAPSK))
 	{
 		authmode = _WPA_IE_ID_;
@@ -2701,8 +2774,22 @@ _func_enter_;
 
 	}
 
+	if(psecuritypriv->wps_phase == _TRUE)
+	{
+		//DBG_8712("wps_phase == _TRUE\n");
+		_memcpy(out_ie, in_ie, 12);
+		ielength=12;
 
-	if((authmode==_WPA_IE_ID_)||(authmode==_WPA2_IE_ID_))
+		//Commented by Kurt 20110629
+		//In some older APs, WPS handshake
+		//would be failed if we append vender extensions informations to AP
+		_memcpy(out_ie+ielength, psecuritypriv->wps_ie, 14+2);
+		*( out_ie + ielength + 1 ) = 14;
+		ielength += 14+2;
+
+		psecuritypriv->wps_phase == _FALSE;
+	}
+	else if((authmode==_WPA_IE_ID_)||(authmode==_WPA2_IE_ID_))
 	{
 		//copy fixed ie
 		_memcpy(out_ie, in_ie,12);
@@ -2711,14 +2798,29 @@ _func_enter_;
 		//copy RSN or SSN
 		if(match ==_TRUE)
 		{
-			_memcpy(&out_ie[ielength], &sec_ie[0], sec_ie[1]+2);
-			ielength+=sec_ie[1]+2;
-
-			if(authmode==_WPA2_IE_ID_)
+#ifdef CONFIG_IOCTL_CFG80211
+			//Commented by Kurt 20120308
+			//In nl80211, WPA IE length in EAPOL_KEY data would only be 22
+			//So we tailored the last two byte when WPA IE length is 24
+			if( ( authmode==_WPA_IE_ID_ ) && ( sec_ie[1] == 24 ) )
 			{
-				//the Pre-Authentication bit should be zero, john
-				out_ie[ielength-1]= 0;
-				out_ie[ielength-2]= 0;
+				out_ie[ielength] = sec_ie[0];
+				out_ie[ielength+1] = sec_ie[1]-2;
+				_memcpy(&out_ie[ielength+2], &sec_ie[2], sec_ie[1]-2);
+				ielength+=sec_ie[1];
+			}
+			else
+#endif //CONFIG_IOCTL_CFG80211
+			{
+				_memcpy(&out_ie[ielength], &sec_ie[0], sec_ie[1]+2);
+				ielength+=sec_ie[1]+2;
+
+				if(authmode==_WPA2_IE_ID_)
+				{
+					//the Pre-Authentication bit should be zero, john
+					out_ie[ielength-1]= 0;
+					out_ie[ielength-2]= 0;
+				}
 			}
 
 			report_sec_ie(adapter, authmode, sec_ie);
@@ -2885,6 +2987,7 @@ void joinbss_reset(_adapter *padapter)
 {
 	int i;
 	struct mlme_priv	*pmlmepriv = &padapter->mlmepriv;
+	struct registry_priv *pregistrypriv = &padapter->registrypriv;
 
 #ifdef CONFIG_80211N_HT
 	struct ht_priv		*phtpriv = &pmlmepriv->htpriv;
@@ -2910,7 +3013,14 @@ void joinbss_reset(_adapter *padapter)
 #ifdef CONFIG_USB_HCI
 		//validate  usb rx aggregation
 		//printk("joinbss_reset():validate  usb rx aggregation\n");
+		if (pregistrypriv->wifi_test == 1)
+		{
+			write8(padapter, 0x102500D9, 1);// TH=1 => means that invalidate usb rx aggregation
+		}
+		else
+		{
 		write8(padapter, 0x102500D9, 48);//TH = 48 pages, 6k
+		}
 #endif
 
 	}
@@ -2936,7 +3046,7 @@ unsigned int restructure_ht_ie(_adapter *padapter, u8 *in_ie, u8 *out_ie, uint i
 {
 	u32 ielen, out_len;
 	unsigned char *p, *pframe;
-	struct ieee80211_ht_cap ht_capie;
+	struct rtw_ieee80211_ht_cap ht_capie;
 	unsigned char WMM_IE[] = {0x00, 0x50, 0xf2, 0x02, 0x00, 0x01, 0x00};
 	struct mlme_priv	*pmlmepriv = &padapter->mlmepriv;
 	struct qos_priv   	*pqospriv= &pmlmepriv->qospriv;
@@ -2959,7 +3069,7 @@ unsigned int restructure_ht_ie(_adapter *padapter, u8 *in_ie, u8 *out_ie, uint i
 
 		out_len = *pout_len;
 
-		_memset(&ht_capie, 0, sizeof(struct ieee80211_ht_cap));
+		_memset(&ht_capie, 0, sizeof(struct rtw_ieee80211_ht_cap));
 
 		ht_capie.cap_info = IEEE80211_HT_CAP_SUP_WIDTH |IEEE80211_HT_CAP_SGI_20 |
 							IEEE80211_HT_CAP_SGI_40 | IEEE80211_HT_CAP_TX_STBC |
@@ -2969,7 +3079,7 @@ unsigned int restructure_ht_ie(_adapter *padapter, u8 *in_ie, u8 *out_ie, uint i
 										(IEEE80211_HT_CAP_AMPDU_DENSITY&0x00) ;
 
 		pframe = set_ie(out_ie+out_len, _HT_CAPABILITY_IE_,
-							sizeof(struct ieee80211_ht_cap), (unsigned char*)&ht_capie, pout_len);
+							sizeof(struct rtw_ieee80211_ht_cap), (unsigned char*)&ht_capie, pout_len);
 
 		//_memcpy(out_ie+out_len, p, ielen+2);//gtest
 		//*pout_len = *pout_len + (ielen+2);
@@ -2986,7 +3096,7 @@ void update_ht_cap(_adapter *padapter, u8 *pie, uint ie_len)
 	u8 *p, max_ampdu_sz;
 	int i, len;
 	struct sta_info *bmc_sta, *psta;
-	struct ieee80211_ht_cap *pht_capie;
+	struct rtw_ieee80211_ht_cap *pht_capie;
 	struct ieee80211_ht_addt_info *pht_addtinfo;
 	struct recv_reorder_ctrl *preorder_ctrl;
 	struct mlme_priv	*pmlmepriv = &padapter->mlmepriv;
@@ -3005,7 +3115,14 @@ void update_ht_cap(_adapter *padapter, u8 *pie, uint ie_len)
 	//maybe needs check if ap supports rx ampdu.
 	if((phtpriv->ampdu_enable==_FALSE) &&(pregistrypriv->ampdu_enable==1))
 	{
-		phtpriv->ampdu_enable = _TRUE;
+		if (pregistrypriv->wifi_test == 1)
+		{
+			phtpriv->ampdu_enable = _FALSE;
+		}
+		else
+		{	
+			phtpriv->ampdu_enable = _TRUE;
+		}
 	}
 
 
@@ -3014,7 +3131,7 @@ void update_ht_cap(_adapter *padapter, u8 *pie, uint ie_len)
 	p = get_ie(pie+sizeof (NDIS_802_11_FIXED_IEs), _HT_CAPABILITY_IE_, &len, ie_len-sizeof (NDIS_802_11_FIXED_IEs));
 	if(p && len>0)
 	{
-		pht_capie = (struct ieee80211_ht_cap *)(p+2);
+		pht_capie = (struct rtw_ieee80211_ht_cap *)(p+2);
 		max_ampdu_sz = (pht_capie->ampdu_params_info & IEEE80211_HT_CAP_AMPDU_FACTOR);
 		max_ampdu_sz = 1 << (max_ampdu_sz+3); // max_ampdu_sz (kbytes);
 
@@ -3035,6 +3152,7 @@ void update_ht_cap(_adapter *padapter, u8 *pie, uint ie_len)
 			preorder_ctrl = &bmc_sta->recvreorder_ctrl[i];
 			preorder_ctrl->indicate_seq = 0xffff;
 			preorder_ctrl->wend_b= 0xffff;
+			preorder_ctrl->enable = _FALSE;
 			//preorder_ctrl->wsize_b = max_ampdu_sz;//ex. 32(kbytes) -> wsize_b=32
 		}
 	}
@@ -3048,6 +3166,7 @@ void update_ht_cap(_adapter *padapter, u8 *pie, uint ie_len)
 			preorder_ctrl = &psta->recvreorder_ctrl[i];
 			preorder_ctrl->indicate_seq = 0xffff;
 			preorder_ctrl->wend_b= 0xffff;
+			preorder_ctrl->enable = _FALSE;
 			//preorder_ctrl->wsize_b = max_ampdu_sz;//ex. 32(kbytes) -> wsize_b=32
 		}
 	}

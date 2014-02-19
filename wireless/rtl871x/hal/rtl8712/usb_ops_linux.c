@@ -49,6 +49,8 @@ struct zero_bulkout_context
 #define usb_write_cmd_complete usb_write_mem_complete
 //#define usb_read_cmd_complete usb_read_mem_complete
 
+#define RTW_USB_CONTROL_MSG_TIMEOUT		500
+#define RTW_USB_CONTROL_RETRY_CNT		10
 
 uint usb_init_intf_priv(struct intf_priv *pintfpriv)
 {
@@ -1044,10 +1046,9 @@ void usb_write_port_cancel(_adapter *padapter)
 int usbctrl_vendorreq(struct intf_priv *pintfpriv, u8 request, u16 value, u16 index, void *pdata, u16 len, u8 requesttype)
 {
 	unsigned int pipe;
-	int status;
+	int status, intretry;
 	u8 reqtype;
-	
-	struct dvobj_priv  *pdvobjpriv = (struct dvobj_priv  *)pintfpriv->intf_dev;   
+	struct dvobj_priv *pdvobjpriv = ( struct dvobj_priv *) pintfpriv->intf_dev;
 	struct usb_device *udev=pdvobjpriv->pusbdev;
 		
 	// Added by Albert 2010/02/09
@@ -1066,7 +1067,6 @@ int usbctrl_vendorreq(struct intf_priv *pintfpriv, u8 request, u16 value, u16 in
 	
 	pIo_buf = palloc_buf + 16 -((uint)(palloc_buf) & 0x0f );
 	
-		
 	if (requesttype == 0x01)
 	{
 		pipe = usb_rcvctrlpipe(udev, 0);//read_in
@@ -1077,13 +1077,21 @@ int usbctrl_vendorreq(struct intf_priv *pintfpriv, u8 request, u16 value, u16 in
 		pipe = usb_sndctrlpipe(udev, 0);//write_out
 		reqtype =  RTL871X_VENQT_WRITE;		
 		_memcpy( pIo_buf, pdata, len);
-	}		
-	
-	status = usb_control_msg(udev, pipe, request, reqtype, value, index, pIo_buf, len, HZ/2);
+	}
+
+	intretry = 0;
+retry:
+	status = usb_control_msg(udev, pipe, request, reqtype, value, index, pIo_buf, len, RTW_USB_CONTROL_MSG_TIMEOUT );
 	
 	if (status < 0)
        {
+		printk("retry = %d, reg 0x%x, usb read/write TimeOut! status:%d value=0x%x\n", intretry, value, status, *(u32*)pdata);
 		RT_TRACE(_module_hci_ops_os_c_,_drv_err_,("reg 0x%x, usb_read8 TimeOut! status:0x%x value=0x%x\n", value, status, *(u32*)pdata));
+		intretry++;
+		if ( intretry < RTW_USB_CONTROL_RETRY_CNT )
+		{
+			goto retry;
+		}
        }
 	else if ( status > 0 )   // Success this control transfer.
 	{
@@ -1098,4 +1106,5 @@ int usbctrl_vendorreq(struct intf_priv *pintfpriv, u8 request, u16 value, u16 in
 	return status;
 
 }
+
 

@@ -35,7 +35,9 @@
 #include <linux/slab.h>
 #include <linux/module.h>
 #include <linux/kref.h>
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0))
 #include <linux/smp_lock.h>
+#endif
 #include <linux/netdevice.h>
 #include <linux/skbuff.h>
 #include <linux/usb.h>
@@ -518,21 +520,29 @@ _func_enter_;
 	if (ph2c == NULL)
 		return _FAIL;
 
+	_memset(ph2c, 0, sizeof(struct cmd_obj));
+
 	psurveyPara = (struct sitesurvey_parm*)_malloc(sizeof(struct sitesurvey_parm));
 	if (psurveyPara == NULL) {
 		_mfree((unsigned char*) ph2c, sizeof(struct cmd_obj));
 		return _FAIL;
 	}
 
+	_memset(psurveyPara, 0, sizeof(struct sitesurvey_parm));
+
 	init_h2fwcmd_w_parm_no_rsp(ph2c, psurveyPara, GEN_CMD_CODE(_SiteSurvey));
 
 	psurveyPara->bsslimit = cpu_to_le32(48);
-	psurveyPara->passive_mode = cpu_to_le32(1);
+	psurveyPara->passive_mode = cpu_to_le32(pmlmepriv->passive_mode);
 	psurveyPara->ss_ssidlen= cpu_to_le32(0);// pssid->SsidLength;
 	_memset(psurveyPara->ss_ssid, 0, IW_ESSID_MAX_SIZE + 1);
 	if ((pssid != NULL) && (pssid->SsidLength)) {
 		_memcpy(psurveyPara->ss_ssid, pssid->Ssid, pssid->SsidLength);
 		psurveyPara->ss_ssidlen = cpu_to_le32(pssid->SsidLength);
+		// Commented by Kurt 20120323
+		// In Android 4.0 system, it would set passive scan cmd before set scan
+		// We have to change it to active scan to send probe request.
+		psurveyPara->passive_mode = 1;	// 1: active
 	}
 
 	set_fwstate(pmlmepriv, _FW_UNDER_SURVEY);
@@ -579,6 +589,50 @@ _func_enter_;
 	_memcpy(pbsetdataratepara->datarates, rateset, NumRates);
 #endif
 	enqueue_cmd(pcmdpriv, ph2c);
+exit:
+
+_func_exit_;
+
+	return res;
+}
+
+u8 set_chplan_cmd(_adapter *padapter, int chplan)
+{
+	struct cmd_obj		*ph2c;
+	struct SetChannelPlan_param *psetchplanpara;
+	struct cmd_priv		*pcmdpriv = &padapter->cmdpriv;
+	u8 res = _SUCCESS;
+
+_func_enter_;
+
+	//check input parameter
+	if(!rtw_is_channel_plan_valid(chplan)) {
+		res = _FAIL;
+		goto exit;
+	}
+	
+	ph2c = (struct cmd_obj*)_malloc(sizeof(struct cmd_obj));
+	if (ph2c == NULL) {
+		res = _FAIL;
+		goto exit;
+	}
+
+	psetchplanpara= (struct SetChannelPlan_param*)_malloc(sizeof(struct SetChannelPlan_param));
+	if (psetchplanpara== NULL) {
+		_mfree((u8 *) ph2c, sizeof(struct cmd_obj));
+		res = _FAIL;
+		goto exit;
+	}
+
+	init_h2fwcmd_w_parm_no_rsp(ph2c, psetchplanpara, GEN_CMD_CODE(_SetChannelPlan));
+	
+#ifdef MP_FIRMWARE_OFFLOAD
+
+#else
+	psetchplanpara->ChannelPlan= chplan;
+#endif
+	enqueue_cmd(pcmdpriv, ph2c);
+
 exit:
 
 _func_exit_;
@@ -1317,6 +1371,9 @@ _func_enter_;
 		_memcpy(&psetstakey_para->key, &psecuritypriv->dot118021XGrpKey[psecuritypriv->dot118021XGrpKeyid-1].skey, 16);
         }
 
+	//jeff: set this becasue at least sw key is ready
+	padapter->securitypriv.busetkipkey=_TRUE;
+
 	enqueue_cmd(pcmdpriv, ph2c);
 
 exit:
@@ -1958,4 +2015,47 @@ _func_exit_;
 	return res;
 }
 #endif
+
+u8 disconnectCtrlEx_cmd(_adapter* adapter, u32 enableDrvCtrl, u32 tryPktCnt, u32 tryPktInterval, u32 firstStageTO){
+	struct	cmd_obj*	ph2c;
+	struct	DisconnectCtrlEx_param * param;
+	struct	cmd_priv   *pcmdpriv= &( adapter->cmdpriv);
+	u8 res=_SUCCESS;
+
+
+_func_enter_;
+
+	RT_TRACE(_module_rtl871x_cmd_c_,_drv_info_,
+		("%s  = %x, TryPktCnt = %x, TryPktInterval = %x, FirstStageTO = %x"
+		, __function__ , enableDrvCtrl, tryPktCnt, tryPktInterval, firstStageTO)
+	);
+
+	ph2c = (struct cmd_obj*)_malloc(sizeof(struct cmd_obj));
+	if(ph2c==NULL){
+		res= _FAIL;
+		goto exit;
+	}
+
+	param = (struct DisconnectCtrlEx_param *)_malloc(sizeof(struct DisconnectCtrlEx_param));
+	if(param == NULL){
+		_mfree((unsigned char *) ph2c, sizeof(struct	cmd_obj));
+		res= _FAIL;
+		goto exit;
+	}
+
+	_memset(param, 0, sizeof(struct DisconnectCtrlEx_param));
+
+	param->EnableDrvCtrl = (unsigned char)enableDrvCtrl;
+	param->TryPktCnt = (unsigned char)tryPktCnt;
+	param->TryPktInterval = (unsigned char)tryPktInterval;
+	param->FirstStageTO = (unsigned int)firstStageTO;
+
+	init_h2fwcmd_w_parm_no_rsp(ph2c, param, GEN_CMD_CODE(_DisconnectCtrlEx));
+
+	enqueue_cmd(pcmdpriv, ph2c);
+exit:
+_func_exit_;
+	return res;
+
+}
 

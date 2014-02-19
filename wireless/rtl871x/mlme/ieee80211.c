@@ -591,38 +591,53 @@ _func_exit_;
 	
 }
 
-int get_wps_ie(u8 *in_ie, uint in_len, u8 *wps_ie, uint *wps_ielen)
+/**
+ * rtw_get_wps_ie - Search WPS IE from a series of IEs
+ * @in_ie: Address of IEs to search
+ * @in_len: Length limit from in_ie
+ * @wps_ie: If not NULL and WPS IE is found, WPS IE will be copied to the buf starting from wps_ie
+ * @wps_ielen: If not NULL and WPS IE is found, will set to the length of the entire WPS IE
+ *
+ * Returns: The address of the WPS IE found, or NULL
+ */
+u8 *get_wps_ie(u8 *in_ie, uint in_len, u8 *wps_ie, uint *wps_ielen)
 {
-	int match;
-	uint cnt;	
+	uint cnt;
+	u8 *wpsie_ptr=NULL;
 	u8 eid, wps_oui[4]={0x0,0x50,0xf2,0x04};
 
+	if(wps_ielen)
+		*wps_ielen = 0;
 
-	cnt=12;	
-	match=_FALSE;
+	if(!in_ie || in_len<=0)
+		return wpsie_ptr;
+
+	cnt = 0;
+
 	while(cnt<in_len)
 	{
 		eid = in_ie[cnt];
-		
+
 		if((eid==_WPA_IE_ID_)&&(_memcmp(&in_ie[cnt+2], wps_oui, 4)==_TRUE))
 		{
-			_memcpy(wps_ie, &in_ie[cnt], in_ie[cnt+1]+2);
+			wpsie_ptr = &in_ie[cnt];
+
+			if(wps_ie)
+				_memcpy(wps_ie, &in_ie[cnt], in_ie[cnt+1]+2);
 			
-			*wps_ielen = in_ie[cnt+1]+2;
+			if(wps_ielen)
+				*wps_ielen = in_ie[cnt+1]+2;
 			
 			cnt+=in_ie[cnt+1]+2;
 
-			match = _TRUE;
 			break;
 		}
 		else
 		{
 			cnt+=in_ie[cnt+1]+2; //goto next	
 		}		
-		
+
 	}	
 
-	return match;
-
+	return wpsie_ptr;
 }
-
