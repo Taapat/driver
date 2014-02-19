@@ -92,7 +92,7 @@ int mp_mode = 0;
 int software_encrypt = 0;
 int software_decrypt = 0;	  
  
-int wmm_enable = 0;// default is set to disable the wmm.
+int wmm_enable = 1;// default is set to enable the wmm.
 int uapsd_enable = 0;	  
 int uapsd_max_sp = NO_LIMIT;
 int uapsd_acbk_en = 0;
@@ -109,6 +109,7 @@ int rf_config = RTL8712_RF_1T2R;  // 1T2R
 int low_power = 0;
 char* initmac = 0;  // temp mac address if users want to use instead of the mac address in Efuse
 int wifi_test = 0;    // if wifi_test = 1, driver had to disable the turbo mode and pass it to firmware private.
+u8* g_pallocated_recv_buf = NULL;
 
 module_param(initmac, charp, 0644);
 module_param(wifi_test, int, 0644);
@@ -214,7 +215,7 @@ _func_exit_;
 
 static int r871x_net_set_mac_address(struct net_device *pnetdev, void *p)
 {
-	_adapter *padapter = (_adapter *)netdev_priv(pnetdev);
+	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
 	struct sockaddr *addr = p;
 	
 	if(padapter->bup == _FALSE)
@@ -231,7 +232,7 @@ static int r871x_net_set_mac_address(struct net_device *pnetdev, void *p)
 
 static struct net_device_stats *r871x_net_get_stats(struct net_device *pnetdev)
 {
-	_adapter *padapter = (_adapter *)netdev_priv(pnetdev);
+	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
 	struct xmit_priv *pxmitpriv = &(padapter->xmitpriv);
 	struct recv_priv *precvpriv = &(padapter->recvpriv);
 
@@ -252,7 +253,11 @@ static const struct net_device_ops rtl8712_netdev_ops = {
         .ndo_start_xmit = xmit_entry,
         .ndo_set_mac_address = r871x_net_set_mac_address,
         .ndo_get_stats = r871x_net_get_stats,
+#ifdef CONFIG_IOCTL_CFG80211
+	.ndo_do_ioctl = rtw_cfg80211_do_ioctl,
+#else //CONFIG_IOCTL_CFG80211
         .ndo_do_ioctl = r871x_ioctl,
+#endif //CONFIG_IOCTL_CFG80211
 };
 #endif
 
@@ -264,7 +269,7 @@ struct net_device *init_netdev(void)
 	RT_TRACE(_module_os_intfs_c_,_drv_info_,("+init_net_dev\n"));
 
 	//pnetdev = alloc_netdev(sizeof(_adapter), "wlan%d", ether_setup);
-	pnetdev = alloc_etherdev(sizeof(_adapter));	
+	pnetdev = rtw_alloc_etherdev(sizeof(_adapter));	
 	if (!pnetdev)
 	   return NULL;
 
@@ -274,7 +279,7 @@ struct net_device *init_netdev(void)
 
 	//ether_setup(pnetdev); already called in alloc_etherdev() -> alloc_netdev().
 	
-	padapter = netdev_priv(pnetdev);
+	padapter = rtw_netdev_priv(pnetdev);
 	padapter->pnetdev = pnetdev;	
 	
 	//pnetdev->init = NULL;
@@ -292,7 +297,11 @@ struct net_device *init_netdev(void)
 	pnetdev->set_mac_address = r871x_net_set_mac_address;
 	pnetdev->get_stats = r871x_net_get_stats;
 
+#ifdef CONFIG_IOCTL_CFG80211
+	pnetdev->do_ioctl = rtw_cfg80211_do_ioctl;
+#else  //CONFIG_IOCTL_CFG80211
 	pnetdev->do_ioctl = r871x_ioctl;
+#endif //CONFIG_IOCTL_CFG80211
 
 #endif
 
@@ -309,8 +318,12 @@ struct net_device *init_netdev(void)
 	//priv->wireless_data.spy_data = &priv->spy_data;
 	//pnetdev->wireless_data = &priv->wireless_data;
 #endif
-	
+
+#ifdef CONFIG_PLATFORM_MT53XX
+	if(dev_alloc_name(pnetdev,"rea%d") < 0)
+#else
 	if(dev_alloc_name(pnetdev,"wlan%d") < 0)
+#endif
 	{
 		RT_TRACE(_module_os_intfs_c_,_drv_err_,("dev_alloc_name, fail! \n"));
 	}
@@ -421,6 +434,9 @@ void stop_drv_timers (_adapter *padapter)
 	_cancel_timer_ex(&padapter->mlmepriv.dhcp_timer);
 	RT_TRACE(_module_os_intfs_c_,_drv_err_,("stop_drv_timers:cancel dhcp_timer! \n"));
 #endif
+
+	_cancel_timer_ex(&padapter->mlmepriv.survey_timer);
+	RT_TRACE(_module_os_intfs_c_,_drv_info_,("stop_drv_timers: cancel survey_timer!\n"));
 	
 	_cancel_timer_ex(&padapter->mlmepriv.wdg_timer);
 	RT_TRACE(_module_os_intfs_c_,_drv_info_,("stop_drv_timers:cancel wdg_timer! \n"));
@@ -449,6 +465,7 @@ u8 init_default_value(_adapter *padapter)
 	
 
 	//mlme_priv
+	pmlmepriv->passive_mode=1; // 1: active, 0: pasive. Maybe someday we should rename this varable to "active_mode" (Jeff)
 	
 	//qos_priv
 	//pmlmepriv->qospriv.qos_option = pregistrypriv->wmm_enable;
@@ -620,7 +637,7 @@ u8 free_drv_sw(_adapter *padapter)
 
 	if(pnetdev)
 	{
-		free_netdev(pnetdev);
+		rtw_free_netdev(pnetdev);
 	}
 
 	RT_TRACE(_module_os_intfs_c_,_drv_info_,("-free_drv_sw\n"));
@@ -653,7 +670,7 @@ void enable_video_mode( _adapter* padapter, int cbw40_value)
 static int netdev_open(struct net_device *pnetdev)
 {
 	uint status;	
-	_adapter *padapter = (_adapter *)netdev_priv(pnetdev);
+	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
 
 	RT_TRACE(_module_os_intfs_c_,_drv_info_,("+871x_drv - dev_open\n"));
 	//printk("+871x_drv - drv_open, bup=%d\n", padapter->bup);
@@ -723,6 +740,9 @@ static int netdev_open(struct net_device *pnetdev)
 		}			
 #endif
 
+#ifdef CONFIG_IOCTL_CFG80211
+		rtw_cfg80211_init_wiphy(padapter);
+#endif
 	
 #ifdef CONFIG_PWRCTRL
 		RT_TRACE(_module_os_intfs_c_,_drv_info_,("Initialize Power Mode. \n"));
@@ -774,7 +794,7 @@ netdev_open_error:
 
 static int netdev_close(struct net_device *pnetdev)
 {
-	_adapter *padapter = (_adapter *)netdev_priv(pnetdev);
+	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
 		
 	RT_TRACE(_module_os_intfs_c_,_drv_info_,("+871x_drv - drv_close\n"));	
 
@@ -801,9 +821,7 @@ static int netdev_close(struct net_device *pnetdev)
 				netif_stop_queue(pnetdev);
      		}
 		
-		#ifdef CONFIG_PLATFORM_ANDROID
-		if(!padapter->bdisassoc_by_assoc) {
-		#endif
+		#ifndef CONFIG_ANDROID
 			
 		//s2.	
 		//s2-1.  issue disassoc_cmd to fw
@@ -815,19 +833,15 @@ static int netdev_close(struct net_device *pnetdev)
 		//s2-4.
 		free_network_queue(padapter);
 
-
-		//Stop driver mlme relation timer
-		stop_drv_timers(padapter);
-
-		#ifdef CONFIG_PLATFORM_ANDROID
-		} 
-		padapter->bdisassoc_by_assoc=0;//FON
 		#endif
 			
 
 	}
 
-	
+#ifdef CONFIG_IOCTL_CFG80211
+	printk("call rtw_indicate_scan_done when drv_close\n");
+	rtw_indicate_scan_done(padapter, _TRUE);
+#endif //CONFIG_IOCTL_CFG80211	
 
 	//r871x_dev_unload(padapter);
 

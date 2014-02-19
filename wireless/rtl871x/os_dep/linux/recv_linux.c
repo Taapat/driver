@@ -125,12 +125,30 @@ int os_recvbuf_resource_free(_adapter *padapter, struct recv_buf *precvbuf)
 
 void handle_tkip_mic_err(_adapter *padapter,u8 bgroup)
 {
+#ifdef CONFIG_IOCTL_CFG80211
+	enum nl80211_key_type key_type;
+#endif //CONFIG_IOCTL_CFG80211
     union iwreq_data wrqu;
     struct iw_michaelmicfailure    ev;
     struct mlme_priv*              pmlmepriv  = &padapter->mlmepriv;
 
     
     _memset( &ev, 0x00, sizeof( ev ) );
+
+#ifdef CONFIG_IOCTL_CFG80211
+	if ( bgroup )
+	{
+		key_type |= NL80211_KEYTYPE_GROUP;
+	}
+	else
+	{
+		key_type |= NL80211_KEYTYPE_PAIRWISE;
+	}
+
+	cfg80211_michael_mic_failure(padapter->pnetdev, (u8 *)&pmlmepriv->assoc_bssid[ 0 ], key_type, -1,
+		NULL, GFP_ATOMIC);
+#endif
+	
     if ( bgroup )
     {
         ev.flags |= IW_MICFAILURE_GROUP;

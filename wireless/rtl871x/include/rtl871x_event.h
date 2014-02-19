@@ -99,6 +99,28 @@ struct addba_event
  	unsigned int tid;
 };
 
+/*
+ * Site survey timer event
+ *
+ * When would FW send this event?
+ * 1).OnAssociation Response 
+ *	when 20/40coexistence is enable 
+ *	timeout = scan_vale;
+ * 2).OnBeacon
+ *	when AP send the obss_scan_exemption 
+ *	to tell us no need to scan
+ *	timeout = 0;
+ *
+ * Other case (FW don't send c2h cmd, driver should handle this by itself)
+ * 1).disconnect 
+ *	timeout = 0;
+ * 2).join other BSS
+ *	timeout = 0; 
+ */
+struct survey_timer_event
+{
+	unsigned short timeout;	// second, 0 for stop
+};
 
 #ifdef CONFIG_H2CLBK
 struct c2hlbk_event{

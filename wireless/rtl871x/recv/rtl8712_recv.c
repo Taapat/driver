@@ -40,6 +40,7 @@
 #include <wifi.h>
 #include <circ_buf.h>
 
+extern u8* g_pallocated_recv_buf;
 
 int	init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 {
@@ -56,7 +57,7 @@ int	init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
       _init_queue(&precvpriv->free_recv_buf_queue);	  
 
 
-      precvpriv->pallocated_recv_buf = _malloc(NR_RECVBUFF *sizeof(struct recv_buf) + 4);	  
+      precvpriv->pallocated_recv_buf = g_pallocated_recv_buf;
       if(precvpriv->pallocated_recv_buf==NULL){
 		res= _FAIL;
 		RT_TRACE(_module_rtl871x_recv_c_,_drv_err_,("alloc recv_buf fail!\n"));
@@ -68,7 +69,7 @@ int	init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 							((uint) (precvpriv->pallocated_recv_buf) &(4-1));
 
 
-      precvbuf = (struct recv_buf*)precvpriv->precv_buf;     
+      precvbuf = (struct recv_buf*)precvpriv->precv_buf;
 
       for(i=0; i < NR_RECVBUFF ; i++)
      {
@@ -206,7 +207,7 @@ void free_recv_priv (struct recv_priv *precvpriv)
 	}	
 		
 	if(precvpriv->pallocated_recv_buf)
-		_mfree(precvpriv->pallocated_recv_buf, NR_RECVBUFF *sizeof(struct recv_buf) + 4);
+		precvpriv->pallocated_recv_buf = NULL;
 
 
 #ifdef PLATFORM_LINUX
@@ -873,9 +874,9 @@ int amsdu_to_msdu(_adapter *padapter, union recv_frame *prframe)
 		/* convert hdr + possible LLC headers into Ethernet header */
 		eth_type = (sub_skb->data[6] << 8) | sub_skb->data[7];
 		if (sub_skb->len >= 8 &&
-			((_memcmp(sub_skb->data, rfc1042_header, SNAP_SIZE) &&
+			((_memcmp(sub_skb->data, rtw_rfc1042_header, SNAP_SIZE) &&
 			  eth_type != ETH_P_AARP && eth_type != ETH_P_IPX) ||
-			 _memcmp(sub_skb->data, bridge_tunnel_header, SNAP_SIZE) )) {
+			 _memcmp(sub_skb->data, rtw_bridge_tunnel_header, SNAP_SIZE) )) {
 			/* remove RFC1042 or Bridge-Tunnel encapsulation and replace EtherType */
 			skb_pull(sub_skb, SNAP_SIZE);
 			_memcpy(skb_push(sub_skb, ETH_ALEN), pattrib->src, ETH_ALEN);
@@ -1624,6 +1625,16 @@ int recv_indicatepkt_reorder(_adapter *padapter, union recv_frame *prframe)
 				return _FAIL;			
 			}
 		}
+		else if(preorder_ctrl->enable == _FALSE)
+		{
+			preorder_ctrl->indicate_seq = pattrib->seq_num;
+
+			recv_indicatepkt(padapter, prframe);				
+
+			preorder_ctrl->indicate_seq = (preorder_ctrl->indicate_seq + 1)%4096;
+
+			return _SUCCESS;	
+		}			
 #ifndef CONFIG_RECV_REORDERING_CTRL
 		else
 		{
@@ -1637,7 +1648,18 @@ int recv_indicatepkt_reorder(_adapter *padapter, union recv_frame *prframe)
 	else if(pattrib->amsdu==1) //temp filter -> means didn't support A-MSDUs in a A-MPDU
 	{
 		//printk("recv_indicatepkt_reorder():pattrib->amsdu==1\n");
+		if(preorder_ctrl->enable == _FALSE)
+		{
+			preorder_ctrl->indicate_seq = pattrib->seq_num;
+
+			retval = amsdu_to_msdu(padapter, prframe);
 		
+			preorder_ctrl->indicate_seq = (preorder_ctrl->indicate_seq + 1)%4096;
+
+			return retval;	
+		}
+		else
+		{
 #ifndef CONFIG_RECV_REORDERING_CTRL
 
 		preorder_ctrl->indicate_seq = pattrib->seq_num;
@@ -1648,6 +1670,7 @@ int recv_indicatepkt_reorder(_adapter *padapter, union recv_frame *prframe)
 
 		return retval;		
 #endif
+		}
 		
 	}
 	else

@@ -55,10 +55,12 @@ static struct usb_interface *pintf;
 
 extern u32 start_drv_threads(_adapter *padapter);
 extern void stop_drv_threads (_adapter *padapter);
+extern void stop_drv_timers (_adapter *padapter);
 extern u8 init_drv_sw(_adapter *padapter);
 extern u8 free_drv_sw(_adapter *padapter);
 extern struct net_device *init_netdev(void);
 extern char* initmac;
+extern u8* g_pallocated_recv_buf;
 
 void r871x_dev_unload(_adapter *padapter);
 
@@ -109,6 +111,8 @@ static struct usb_device_id rtl871x_usb_id_tbl[] ={
 	{USB_DEVICE(0x177F, 0x0154)},
 	/* Thinkware */
 	{USB_DEVICE(0x0BDA, 0x5077)},
+	/*TP-Link*/
+	{USB_DEVICE(0x0BDA, 0x8179)},
 	/* Toshiba */
 	{USB_DEVICE(0x1690, 0x0752)},
 	/* - */
@@ -586,11 +590,16 @@ static int r871xu_drv_init(struct usb_interface *pusb_intf,const struct usb_devi
 	if (!pnetdev)
 		goto error;	
 	
-	padapter = netdev_priv(pnetdev);
+	padapter = rtw_netdev_priv(pnetdev);
 	pdvobjpriv = &padapter->dvobjpriv;	
 	pdvobjpriv->padapter = padapter;
 
 	padapter->dvobjpriv.pusbdev = udev;
+
+#ifdef CONFIG_IOCTL_CFG80211
+	rtw_wdev_alloc(padapter, &pusb_intf->dev);
+#endif //CONFIG_IOCTL_CFG80211
+
 	usb_set_intfdata(pusb_intf, pnetdev);	
 	SET_NETDEV_DEV(pnetdev, &pusb_intf->dev);
 
@@ -649,14 +658,10 @@ static int r871xu_drv_init(struct usb_interface *pusb_intf,const struct usb_devi
 			printk("Autoload OK!!\n");
 			AutoloadFail = _TRUE;
 
-			//
-			// <Roger_Note> The following operation are prevent Efuse leakage by turn on 2.5V.
-			// 2008.11.25.
-			//
-			tmpU1b = read8(padapter, EFUSE_TEST+3);
-			write8(padapter, EFUSE_TEST+3, tmpU1b|0x80);
-			mdelay_os(1);
-			write8(padapter, EFUSE_TEST+3, (tmpU1b&(~ BIT(7))));
+			//tmpU1b = read8(padapter, EFUSE_TEST+3);
+			//write8(padapter, EFUSE_TEST+3, tmpU1b|0x80);
+			//mdelay_os(1);
+			//write8(padapter, EFUSE_TEST+3, (tmpU1b&(~ BIT(7))));
 
 			// Retrieve Chip version.
 			// 20090915 Joseph: Recognize IC version by Reg0x4 BIT15.
@@ -890,7 +895,7 @@ static void r871xu_dev_remove(struct usb_interface *pusb_intf)
 {	
 	_irqL irqL;
 	struct net_device *pnetdev=usb_get_intfdata(pusb_intf);	
-     _adapter *padapter = (_adapter*)netdev_priv(pnetdev);
+     _adapter *padapter = (_adapter*)rtw_netdev_priv(pnetdev);
 	 struct	mlme_priv *pmlmepriv = &padapter->mlmepriv;
 
 _func_exit_;
@@ -941,7 +946,7 @@ static void r871xu_dev_remove(struct usb_interface *pusb_intf)
 {		
 	struct net_device *pnetdev=usb_get_intfdata(pusb_intf);	
 	struct usb_device	*udev = interface_to_usbdev(pusb_intf);
-       _adapter *padapter = (_adapter*)netdev_priv(pnetdev);
+       _adapter *padapter = (_adapter*)rtw_netdev_priv(pnetdev);
    
 _func_exit_;
 
@@ -949,6 +954,11 @@ _func_exit_;
 
 	if(padapter)	
 	{
+
+#ifdef CONFIG_IOCTL_CFG80211
+		struct wireless_dev *wdev = padapter->rtw_wdev;
+#endif //CONFIG_IOCTL_CFG80211
+
 		printk("+r871xu_dev_remove\n");
        	RT_TRACE(_module_hci_intfs_c_,_drv_err_,("+dev_remove()\n"));		
       		
@@ -977,9 +987,16 @@ _func_exit_;
 #endif
 		udelay_os(1);
 
+		//Stop driver mlme relation timer
+		stop_drv_timers(padapter);
+
 		r871x_dev_unload(padapter);
 
 		free_drv_sw(padapter);
+
+#ifdef CONFIG_IOCTL_CFG80211
+		rtw_wdev_free(wdev);
+#endif //CONFIG_IOCTL_CFG80211		
 	}
 
 	usb_put_dev(udev);//decrease the reference count of the usb device structure when disconnect
@@ -990,7 +1007,7 @@ _func_exit_;
 		usb_reset_device(udev);
 	
 	RT_TRACE(_module_hci_intfs_c_,_drv_err_,("-dev_remove()\n"));
-	printk("-r871xu_dev_remove, hw_init_completed=%d\n", padapter->hw_init_completed);
+	//printk("-r871xu_dev_remove, hw_init_completed=%d\n", padapter->hw_init_completed);
 
 #ifdef CONFIG_PLATFORM_RTD2880B
 	printk("wlan link down\n");
@@ -1008,6 +1025,7 @@ _func_exit_;
 static int __init r8712u_drv_entry(void)
 {
 	RT_TRACE(_module_hci_intfs_c_,_drv_err_,("+r8712u_drv_entry\n"));
+	g_pallocated_recv_buf = _malloc(NR_RECVBUFF *sizeof(struct recv_buf) + 4);
 	drvpriv.drv_registered = _TRUE;
 	return usb_register(&drvpriv.r871xu_drv);	
 }
@@ -1017,7 +1035,12 @@ static void __exit r8712u_drv_halt(void)
 	RT_TRACE(_module_hci_intfs_c_,_drv_err_,("+r8712u_drv_halt\n"));
 	printk("+r8712u_drv_halt\n");
 	drvpriv.drv_registered = _FALSE;
+	
 	usb_deregister(&drvpriv.r871xu_drv);
+
+	if( g_pallocated_recv_buf )
+		_mfree(g_pallocated_recv_buf, NR_RECVBUFF *sizeof(struct recv_buf) + 4);
+	
 	printk("-r8712u_drv_halt\n");
 }
 

@@ -96,6 +96,10 @@ typedef struct _ADAPTER _adapter, ADAPTER,*PADAPTER;
 #include <rtl871x_wlan_sme.h>
 #endif
 
+#ifdef CONFIG_IOCTL_CFG80211
+	#include "ioctl_cfg80211.h"	
+#endif //CONFIG_IOCTL_CFG80211
+
 #define SPEC_DEV_ID_NONE BIT(0)
 #define SPEC_DEV_ID_DISABLE_HT BIT(1)
 #define SPEC_DEV_ID_ENABLE_PS BIT(2)
@@ -331,6 +335,11 @@ struct _ADAPTER{
 	int bup;
 	struct net_device_stats stats;
 	struct iw_statistics iwstats;
+
+#ifdef CONFIG_IOCTL_CFG80211
+	struct wireless_dev *rtw_wdev;
+#endif //CONFIG_IOCTL_CFG80211
+	
 #endif //end of PLATFORM_LINUX
 
 	int pid;//process id from UI
@@ -339,11 +348,6 @@ struct _ADAPTER{
 	u8	blnEnableRxFF0Filter;
 	_lock	lockRxFF0Filter;
 #endif
-
-#ifdef CONFIG_PLATFORM_ANDROID
-	u8 bdisassoc_by_assoc;
-#endif
-
 
 };	
   
