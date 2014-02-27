@@ -221,6 +221,7 @@ USB_DEVICE_ID rtusb_dev_id[] = {
 #ifdef RT5370
 	{USB_DEVICE(0x148F,0x5370)}, /* Ralink 5370 */
 	{USB_DEVICE(0x148F,0x5372)}, /* Ralink 5372 */
+	{USB_DEVICE(0x148F,0x7601)},
 	{USB_DEVICE(0x13D3,0x3365)}, /* Azurewave */
 	{USB_DEVICE(0x13D3,0x3329)}, /* Azurewave */
 	{USB_DEVICE(0x2001,0x3C15)}, /* Alpha */
