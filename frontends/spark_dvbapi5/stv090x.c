@@ -6545,13 +6545,22 @@ struct dvb_frontend *stv090x_attach(const struct stv090x_config *config,
 		goto error;
 	}
 
-	if (state->dev_ver>=0x30)
-	    state->frontend.ops.info.caps |= FE_CAN_MULTISTREAM;
 
-	dprintk(10, "Attaching %s demodulator(%d) Cut=0x%02x\n",
-		state->device == STV0900 ? "STV0900" : "STV0903",
-		demod,
-		state->dev_ver);
+	if (state->device == STX7111) {
+		state->frontend.ops.info.caps |= FE_CAN_MULTISTREAM;
+		dprintk(10, "Attaching %s demodulator(%d) Cut=0x%02x\n",
+			"STV090x(STX711x)",
+			demod,
+			state->dev_ver);
+	}
+	else {
+		if (state->dev_ver>=0x30)
+		    state->frontend.ops.info.caps |= FE_CAN_MULTISTREAM;
+		dprintk(10, "Attaching %s demodulator(%d) Cut=0x%02x\n",
+			state->device == STV0900 ? "STV0900" : "STV0903",
+			demod,
+			state->dev_ver);
+	}
 
 	return &state->frontend;
 
