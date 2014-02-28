@@ -315,12 +315,6 @@ static __inline void _set_workitem(_workitem *pwork)
 
 #include <rtl871x_byteorder.h>
 
-#ifdef CONFIG_IOCTL_CFG80211	
-//	#include <linux/ieee80211.h>        
-        #include <net/ieee80211_radiotap.h>
-	#include <net/cfg80211.h>	
-#endif //CONFIG_IOCTL_CFG80211
-
 #ifndef BIT
 	#define BIT(x)	( 1 << (x))
 #endif
@@ -357,18 +351,8 @@ extern void	msleep_os(int ms);
 extern void	usleep_os(int us);
 extern void	mdelay_os(int ms);
 extern void	udelay_os(int us);
-extern u8*	_zmalloc(u32 sz);
-extern u8	*	_vmalloc(u32 sz);
-extern u8	*	_zvmalloc(u32 sz);
-extern void	_vmfree(u8 * pbuf, u32 sz);
 
-struct rtw_netdev_priv_indicator {
-	void *priv;
-	u32 sizeof_priv;
-};
-extern struct net_device * rtw_alloc_etherdev(int sizeof_priv);
-#define rtw_netdev_priv(netdev) ( ((struct rtw_netdev_priv_indicator *)netdev_priv(netdev))->priv )
-extern void rtw_free_netdev(struct net_device * netdev);
+
 
 static __inline unsigned char _cancel_timer_ex(_timer *ptimer)
 {	

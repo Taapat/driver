@@ -249,7 +249,7 @@ void os_xmit_complete(_adapter *padapter, struct xmit_frame *pxframe)
 int xmit_entry(_pkt *pkt, _nic_hdl pnetdev)
 {
 	struct xmit_frame *pxmitframe = NULL;
-	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
+	_adapter *padapter = (_adapter *)netdev_priv(pnetdev);
 	struct xmit_priv *pxmitpriv = &(padapter->xmitpriv);
 	int ret = 0;
 

@@ -38,8 +38,7 @@
 #define RTL8711_RF_DEF_SENS 4
 
 
-//#define NUM_CHANNELS	15
-#define NUM_CHANNELS	32
+#define NUM_CHANNELS	15
 //#define NUM_REGULATORYS	21
 #define NUM_REGULATORYS	1
 

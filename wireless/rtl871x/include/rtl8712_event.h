@@ -56,8 +56,6 @@ enum rtl8712_c2h_event
 	GEN_EVT_CODE(_ReportPwrState),		//filen: only for PCIE, USB	
 	GEN_EVT_CODE(_WPS_PBC),			/*24*/
 	GEN_EVT_CODE(_ADDBAReq_Report),	/*25*/
-	GEN_EVT_CODE(_Survey_timer),	/*26*///for softap mode, need been modified
-	GEN_EVT_CODE(_OBSS_scan_timer),	/*27*/
  	MAX_C2HEVT
 };
 
@@ -93,8 +91,6 @@ struct fwevent wlanevents[] =
 	{0, &cpwm_event_callback},
 	{0, &wpspbc_event_callback},
 	{0, &got_addbareq_event_callback},
-	{0, fwdbg_event_callback},//for softap mode, need been modified
-	{sizeof(struct survey_timer_event), &survey_timer_event_callback},
 };
 
 #endif//_RTL8712_CMD_C_
