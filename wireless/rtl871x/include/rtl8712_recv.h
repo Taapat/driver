@@ -38,13 +38,7 @@
 		#define NR_RECVBUFF (4)
 	#endif
 #else
-
-#ifdef CONFIG_PLATFORM_MT53XX
-	#define NR_RECVBUFF (1)
-#else
 	#define NR_RECVBUFF (4)
-#endif
-
 	#define NR_PREALLOC_RECV_SKB (8)
 #endif
 
@@ -75,15 +69,7 @@
 //#define MAX_RECVBUF_SZ (32768) // 32k
 //#define MAX_RECVBUF_SZ (16384) //16K
 //#define MAX_RECVBUF_SZ 0x3800
-#ifdef CONFIG_USB_RX_AGGREGATION
-#ifdef CONFIG_PLATFORM_MSTAR389
-#define MAX_RECVBUF_SZ (15360) // 15K
-#else
 #define MAX_RECVBUF_SZ (30720) // 30K
-#endif
-#else
-#define MAX_RECVBUF_SZ (7168) // 7K
-#endif //CONFIG_USB_RX_AGGREGATION
 #endif
 
 #endif

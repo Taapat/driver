@@ -30,19 +30,19 @@
 #define NR_XMITBUFF	(16)
 #else //USB
 
-#ifdef CONFIG_USB_TX_AGGREGATION
+#ifdef CONFIG_USB_TX_AGGR
 #define MAX_XMITBUF_SZ	(16384)
 #else
 #define MAX_XMITBUF_SZ	(2048)
-#endif //CONFIG_USB_TX_AGGREGATION
+#endif
 
 #define NR_XMITBUFF	(4)
 #endif
 
-#ifdef CONFIG_USB_TX_AGGREGATION
+#ifdef CONFIG_USB_TX_AGGR
 #define AGGR_NR_HIGH_BOUND	(4) //(8)
 #define AGGR_NR_LOW_BOUND	(2)
-#endif //CONFIG_USB_TX_AGGREGATION
+#endif
 
 #ifdef PLATFORM_OS_CE
 #define XMITBUF_ALIGN_SZ 4

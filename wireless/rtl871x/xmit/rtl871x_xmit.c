@@ -131,7 +131,7 @@ _func_enter_;
 	Please also apply  free_txobj to link_up all the xmit_frames...
 	*/
 
-	pxmitpriv->pallocated_frame_buf = _vmalloc(NR_XMITFRAME * sizeof(struct xmit_frame) + 4);
+	pxmitpriv->pallocated_frame_buf = _malloc(NR_XMITFRAME * sizeof(struct xmit_frame) + 4);
 	
 	if (pxmitpriv->pallocated_frame_buf  == NULL){
 		pxmitpriv->pxmit_frame_buf =NULL;
@@ -309,7 +309,7 @@ void _free_xmit_priv (struct xmit_priv *pxmitpriv)
 	}
 	
 	if(pxmitpriv->pallocated_frame_buf)
-		_vmfree(pxmitpriv->pallocated_frame_buf, NR_XMITFRAME * sizeof(struct xmit_frame) + 4);
+		_mfree(pxmitpriv->pallocated_frame_buf, NR_XMITFRAME * sizeof(struct xmit_frame) + 4);
 
 	if(pxmitpriv->pallocated_xmitbuf)
 		_mfree(pxmitpriv->pallocated_xmitbuf, NR_XMITBUFF * sizeof(struct xmit_buf) + 4);
@@ -765,7 +765,7 @@ sint make_wlanhdr (_adapter *padapter , u8 *hdr, struct pkt_attrib *pattrib)
 {
 	u16 *qc;
 
-	struct rtw_ieee80211_hdr *pwlanhdr = (struct rtw_ieee80211_hdr *)hdr;
+	struct ieee80211_hdr *pwlanhdr = (struct ieee80211_hdr *)hdr;
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
 	struct qos_priv *pqospriv = &pmlmepriv->qospriv;
 

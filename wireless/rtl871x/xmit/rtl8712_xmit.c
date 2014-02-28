@@ -463,15 +463,13 @@ void do_queue_select(_adapter	*padapter, struct pkt_attrib *pattrib)
 	unsigned int qsel;
 	struct xmit_priv *pxmitpriv = &(padapter->xmitpriv);	
 	struct dvobj_priv	*pdvobj = (struct dvobj_priv *)&padapter->dvobjpriv;
-	struct registry_priv *pregistrypriv = &padapter->registrypriv;
 
 	if(pdvobj->nr_endpoint == 6)
 	{
 		qsel = (uint)pattrib->priority;
 	}
 	else if(pdvobj->nr_endpoint == 4)
-	{
-		if (pregistrypriv->wifi_test == 0)
+#ifndef CONFIG_WIFI_WMM_TEST
 	{
 		qsel = (uint)pattrib->priority;
 
@@ -486,7 +484,7 @@ void do_queue_select(_adapter	*padapter, struct pkt_attrib *pattrib)
 		else
 			qsel = 3;
 	}
-		else //wifi_test 
+#else
 	{
 		switch(pattrib->priority)
 		{
@@ -541,10 +539,8 @@ void do_queue_select(_adapter	*padapter, struct pkt_attrib *pattrib)
 				qsel = (uint)(0x3);
 				break;
 		}
-			
-		}
-		
 	}
+#endif
 
 	pattrib->qsel = qsel;
 
@@ -854,7 +850,7 @@ void update_txdesc_ex(struct xmit_frame *pxmitframe, struct tx_desc *ptxdesc)
 }
 #endif
 
-#ifdef CONFIG_USB_TX_AGGREGATION
+#ifdef CONFIG_USB_TX_AGGR
 u8 construct_txaggr_cmd_desc(struct xmit_buf *pxmitbuf)
 {
 	struct xmit_frame	*pxmitframe	= (struct xmit_frame *)pxmitbuf->priv_data;
@@ -1061,7 +1057,7 @@ u8 dump_aggr_xframe(struct xmit_buf* pxmitbuf, struct xmit_frame * pxmitframe)
 }
 
 
-#endif //CONFIG_USB_TX_AGGREGATION
+#endif
 
 void update_txdesc(struct xmit_frame *pxmitframe, uint *pmem, int sz)
 {
@@ -1074,9 +1070,9 @@ void update_txdesc(struct xmit_frame *pxmitframe, uint *pmem, int sz)
 	struct tx_desc		*ptxdesc = (struct tx_desc *)pmem;
 	struct dvobj_priv	*pdvobj = (struct dvobj_priv   *)&padapter->dvobjpriv;	
 
-#ifdef CONFIG_USB_TX_AGGREGATION
+#ifdef CONFIG_USB_TX_AGGR
 	struct cmd_priv		*pcmdpriv = ( struct cmd_priv  *)&padapter->cmdpriv;
-#endif //CONFIG_USB_TX_AGGREGATION
+#endif
 
 	u8 blnSetTxDescOffset;
 
@@ -1141,7 +1137,7 @@ void update_txdesc(struct xmit_frame *pxmitframe, uint *pmem, int sz)
 		//ptxdesc->txdw1 |= (0x05)&0x1f;//CAM_ID(MAC_ID), default=5;
 		ptxdesc->txdw1 |= cpu_to_le32((pattrib->mac_id)&0x1f);//CAM_ID(MAC_ID)
 
-#ifdef CONFIG_USB_TX_AGGREGATION
+#ifdef CONFIG_USB_TX_AGGR
 		// dirty workaround, need to check if it is aggr cmd.
 		if((u8*)pmem != (u8*)pxmitframe->pxmitbuf->pbuf)
 		{
@@ -1177,7 +1173,7 @@ void update_txdesc(struct xmit_frame *pxmitframe, uint *pmem, int sz)
 		qsel = (uint)(pattrib->qsel & 0x0000001f);
 		ptxdesc->txdw1 |= cpu_to_le32((qsel << QSEL_SHT) & 0x00001f00);
 
-#endif //CONFIG_USB_TX_AGGREGATION
+#endif
 
 		if (!pqospriv->qos_option)
 			ptxdesc->txdw1 |= cpu_to_le32(BIT(16));//Non-QoS
@@ -1395,9 +1391,9 @@ int xmitframe_complete(_adapter *padapter, struct xmit_priv *pxmitpriv, struct x
 	sint hwentry;
 	struct xmit_frame *pxmitframe=NULL;	
 
-#ifdef CONFIG_USB_TX_AGGREGATION
+#ifdef CONFIG_USB_TX_AGGR
 	struct xmit_frame *p2ndxmitframe = NULL;
-#endif //CONFIG_USB_TX_AGGREGATION
+#endif
 
 	int res=_SUCCESS, xcnt = 0;
 
@@ -1414,9 +1410,9 @@ int xmitframe_complete(_adapter *padapter, struct xmit_priv *pxmitpriv, struct x
 			return _FALSE;
 		}
 
-#ifdef CONFIG_USB_TX_AGGREGATION
+#ifdef CONFIG_USB_TX_AGGR
 		pxmitbuf->aggr_nr = 0;
-#endif //CONFIG_USB_TX_AGGREGATION
+#endif
 
 	}
 
@@ -1427,7 +1423,7 @@ int xmitframe_complete(_adapter *padapter, struct xmit_priv *pxmitpriv, struct x
 	if(pxmitframe!=NULL)
 	{
 
-#ifdef CONFIG_USB_TX_AGGREGATION
+#ifdef CONFIG_USB_TX_AGGR
 		/*	1. dequeue 2nd frame
 		 *  2. aggr if 2nd xframe is dequeued, else dump directly
 		 */
@@ -1508,7 +1504,7 @@ int xmitframe_complete(_adapter *padapter, struct xmit_priv *pxmitpriv, struct x
 
 		xcnt++;
 
-#endif //CONFIG_USB_TX_AGGREGATION
+#endif
 	}
 	else // pxmitframe == NULL && p2ndxmitframe == NULL
 	{
@@ -1594,11 +1590,11 @@ void dump_xframe(_adapter *padapter, struct xmit_frame *pxmitframe)
 		write_port(padapter, ff_hwaddr, w_sz, (unsigned char*)mem_addr);
 #else
 
-#ifdef CONFIG_USB_TX_AGGREGATION
+#ifdef CONFIG_USB_TX_AGGR
 		write_port(padapter, RTL8712_DMA_H2CCMD, w_sz, (unsigned char*)pxmitframe);
 #else
 		write_port(padapter, ff_hwaddr, w_sz, (unsigned char*)pxmitframe);
-#endif //CONFIG_USB_TX_AGGREGATION
+#endif
 
 #endif
 

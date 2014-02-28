@@ -52,10 +52,10 @@ static u8 oui_rfc1042[]= {0x00,0x00,0x00};
 
 /* See IEEE 802.1H for LLC/SNAP encapsulation/decapsulation */
 /* Ethernet-II snap header (RFC1042 for most EtherTypes) */
-static u8 rtw_rfc1042_header[] =
+static u8 rfc1042_header[] =
 { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00 };
 /* Bridge-Tunnel header (for EtherTypes ETH_P_AARP and ETH_P_IPX) */
-static u8 rtw_bridge_tunnel_header[] =
+static u8 bridge_tunnel_header[] =
 { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0xf8 };
 /* No encapsulation header if EtherType < 0x600 (=length) */
 
@@ -66,7 +66,6 @@ struct recv_reorder_ctrl
 	u16 indicate_seq;//=wstart_b, init_value=0xffff
 	u16 wend_b;
        u8 wsize_b;	
-	u8 enable;
 	_queue pending_recvframe_queue;
 	_timer reordering_ctrl_timer;
 };

@@ -365,6 +365,7 @@ struct mgnt_frame{
 	
 };
 
+
 int	init_mlme_ext_priv (_adapter* padapter);
 void free_mlme_ext_priv (struct mlme_ext_priv *pmlmeext);
 void init_mlme_ext_timer(_adapter *padapter);
