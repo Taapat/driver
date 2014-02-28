@@ -111,8 +111,6 @@ static struct usb_device_id rtl871x_usb_id_tbl[] ={
 	{USB_DEVICE(0x177F, 0x0154)},
 	/* Thinkware */
 	{USB_DEVICE(0x0BDA, 0x5077)},
-	/*TP-Link*/
-	{USB_DEVICE(0x0BDA, 0x8179)},
 	/* Toshiba */
 	{USB_DEVICE(0x1690, 0x0752)},
 	/* - */
