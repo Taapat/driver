@@ -1652,6 +1652,7 @@ int dvb_d6158_get_property(struct dvb_frontend *fe, struct dtv_property* tvp)
 		switch (tvp->u.data) {
 		case SYS_DVBT2:
 		case SYS_DVBT:
+		case SYS_DVBC_ANNEX_AC:
 			break;
 		default:
 			return -EINVAL;

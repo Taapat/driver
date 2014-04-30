@@ -390,6 +390,7 @@ static int dvb_d0367_fe_ofdm_get_property(struct dvb_frontend *fe, struct dtv_pr
 	if(tvp->cmd==DTV_DELIVERY_SYSTEM){
 		switch (tvp->u.data) {
 		case SYS_DVBT:
+		case SYS_DVBC_ANNEX_AC:
 			break;
 		default:
 			return -EINVAL;
