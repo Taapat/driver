@@ -217,78 +217,19 @@ struct ProcStructure_s
 static int get_player_version(char *page, char **start, off_t off, int count,
                            int *eof, void *data)
 {
-#if defined(PLAYER_191)
-	int len = sprintf(page, "player191\n");
-#elif defined(PLAYER_179)
-	int len = sprintf(page, "player179\n");
-#elif defined(PLAYER_131)
-	int len = sprintf(page, "player131\n");
-#else
-  int len = sprintf(page, "unknown\n");
-#endif
-
+  int len = sprintf(page, "player131\n");
   return len;
 }
 
 static int info_model_read(char *page, char **start, off_t off, int count,
                            int *eof, void *data)
 {
-#if defined(CUBEREVO)
-	int len = sprintf(page, "cuberevo\n");
-#elif defined(CUBEREVO_MINI)
-	int len = sprintf(page, "cuberevo-mini\n");
-#elif defined(CUBEREVO_MINI2)
-	int len = sprintf(page, "cuberevo-mini2\n");
-#elif defined(CUBEREVO_250HD)
-	int len = sprintf(page, "cuberevo-250hd\n");
-#elif defined(CUBEREVO_MINI_FTA)
-	int len = sprintf(page, "cuberevo-mini-fta\n");
-#elif defined(CUBEREVO_2000HD)
-	int len = sprintf(page, "cuberevo-2000hd\n");
-#elif defined(CUBEREVO_9500HD)
-	int len = sprintf(page, "cuberevo-9500hd\n");
-#elif defined(TF7700)
-  int len = sprintf(page, "tf7700hdpvr\n");
+#if defined(SPARK)
+  int len = sprintf(page, "spark\n");
 #elif defined(HL101)
   int len = sprintf(page, "hl101\n");
-#elif defined(VIP1_V2)
-  int len = sprintf(page, "vip1-v2\n");
-#elif defined(VIP2_V1)
-  int len = sprintf(page, "vip2-v1\n");
-#elif defined(UFS922)
-  int len = sprintf(page, "ufs922\n");
-#elif defined(UFS912)
-  int len = sprintf(page, "ufs912\n");
-#elif defined(UFS913)
-  int len = sprintf(page, "ufs913\n");
-#elif defined(SPARK)
-  int len = sprintf(page, "spark\n");
 #elif defined(SPARK7162)
   int len = sprintf(page, "spark7162\n");
-#elif defined(FORTIS_HDBOX)
-  int len = sprintf(page, "hdbox\n");
-#elif defined(HOMECAST5101)
-  int len = sprintf(page, "hs5101\n");
-#elif defined(OCTAGON1008)
-  int len = sprintf(page, "octagon1008\n");
-#elif defined(ATEVIO7500)
-  int len = sprintf(page, "atevio7500\n");
-#elif defined(HS7810A)
-  int len = sprintf(page, "hs7810a\n");
-#elif defined(HS7110)
-  int len = sprintf(page, "hs7110\n");
-#elif defined(WHITEBOX)
-  int len = sprintf(page, "whitebox\n");
-#elif defined(IPBOX9900)
-  int len = sprintf(page, "ipbox9900\n");
-#elif defined(IPBOX99)
-  int len = sprintf(page, "ipbox99\n");
-#elif defined(IPBOX55)
-  int len = sprintf(page, "ipbox55\n");
-#elif defined(ADB_BOX)
-  int len = sprintf(page, "adb_box\n");
-#else
-  int len = sprintf(page, "ufs910\n");
 #endif
 
   return len;
@@ -406,8 +347,6 @@ out:
 	return ret;
 }
 
-#if !defined(IPBOX9900)
-
 int _12v_isON=0;
 
 int proc_misc_12V_output_write(struct file *file, const char __user *buf,
@@ -465,7 +404,6 @@ int proc_misc_12V_output_read (char *page, char **start, off_t off, int count,
 
     return len;
 }
-#endif
 
 static int zero_read(char *page, char **start, off_t off, int count,
                            int *eof, void *data)
@@ -558,11 +496,7 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/tsmux/lnb_b_input"                                            , NULL, NULL, NULL, NULL, ""},
 
 	{cProcDir  , "stb/misc"                                                         , NULL, NULL, NULL, NULL, ""},
-#if !defined(IPBOX9900)
 	{cProcEntry, "stb/misc/12V_output"                                              , NULL, proc_misc_12V_output_read, proc_misc_12V_output_write, NULL, ""},
-#else
-	{cProcEntry, "stb/misc/12V_output"                                              , NULL, NULL, NULL, NULL, ""},
-#endif
 
 	{cProcDir  , "stb/vmpeg"                                                        , NULL, NULL, NULL, NULL, ""},
 	{cProcDir  , "stb/vmpeg/0"                                                      , NULL, NULL, NULL, NULL, ""},
@@ -622,7 +556,7 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/video/plane/psi_contrast"    , NULL, NULL, NULL, NULL, "psi_contrast"},
 	{cProcEntry, "stb/video/plane/psi_tint"        , NULL, NULL, NULL, NULL, "psi_tint"},
 	{cProcEntry, "stb/video/plane/psi_apply"        , NULL, NULL, NULL, NULL, "psi_apply"},
-#if defined(UFS912) || defined(UFS913) || defined(ATEVIO7500) || defined(SPARK) || defined(SPARK7162)
+
 	{cProcDir  , "stb/cec"   	                   , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/cec/state_activesource"   	               , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/cec/state_standby"   	               , NULL, NULL, NULL, NULL, ""},
@@ -631,24 +565,9 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/cec/systemstandby"   	               , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/cec/event_poll"   	               , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/cec/send"   	               , NULL, NULL, NULL, NULL, ""},
-#endif
 
-#ifdef UFS922
-/* dagobert: the dei settings can be used for all 7109 architectures to affec the de-interlacer */
-	{cProcEntry, "stb/video/plane/dei_fmd"         , NULL, NULL, NULL, NULL, "dei_fmd"},
-	{cProcEntry, "stb/video/plane/dei_mode"        , NULL, NULL, NULL, NULL, "dei_mode"},
-	{cProcEntry, "stb/video/plane/dei_ctrl"        , NULL, NULL, NULL, NULL, "dei_ctrl"},
-	{cProcDir  , "stb/fan"   	                    , NULL, NULL, NULL, NULL, ""},
-	{cProcEntry, "stb/fan/fan_ctrl"   	           , NULL, NULL, NULL, NULL, ""},
-#endif
 	{cProcDir  , "stb/player"                      , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/player/version"              , NULL, get_player_version, NULL, NULL, ""},
-
-#ifdef ADB_BOX
-	{cProcDir  , "stb/fan"   	                    , NULL, NULL, NULL, NULL, ""},
-	{cProcEntry, "stb/hdmi/cec"                         , NULL, NULL, NULL, NULL, ""},
-	{cProcEntry, "stb/fan/fan_ctrl"   	           , NULL, NULL, NULL, NULL, ""}, 
-#endif
 };
 
 static int cpp_read_proc(char *page, char **start, off_t off, int count,
