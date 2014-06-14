@@ -132,8 +132,9 @@ static struct proc_dir_entry
 
 unsigned long get_pll0_frequ(void)
 {
-  unsigned long value, freq_pll0 = 0, ndiv, pdiv, mdiv;
+  unsigned long value, freq_pll0 = 0, ndiv, mdiv;
 #ifdef STB7100
+  unsigned long pdiv;
   value = ctrl_inl(CKGA_PLL0_CFG);
   mdiv = (value >>  0) & 0xff;
   ndiv = (value >>  8) & 0xff;
@@ -228,9 +229,6 @@ int update_tmu(unsigned long parent_rate)
 
   ctrl_outb(ctrl_inb(_TMU_TSTR) | _TMU_TSTR_INIT, _TMU_TSTR); // start all tmu
 #else
-  unsigned long actual_latch = LATCH, frequ, value;
-  int module_div=2;
-
   struct sh_timer_priv {
     void (*priv_handler) (void *data);
     void *data;
@@ -255,6 +253,8 @@ int update_tmu(unsigned long parent_rate)
   struct clocksource *cs = NULL;
 
 #ifdef STB7100
+  unsigned long frequ, value;
+  int module_div=2;
   frequ = get_pll0_frequ();
 
   // get module frequ
@@ -360,12 +360,14 @@ static int read_ratio(char *page, char **start,
 {
   int len=0;
   unsigned long value, bogomips;
-  int sh4_div=2, sh4_ic_div=2, module_div=2, slim_div=2, slim_bypass=0;
-  unsigned long freq_pll0, freq_pll1, ndiv, pdiv, mdiv, val_sysaclkout=0;
+  int sh4_div=2;
+  unsigned long freq_pll0, freq_pll1, ndiv, mdiv;
 
   len+=sprintf(page+len, "Modul HZ = %d\n", modul_hz);
 
 #ifdef STB7100
+  int sh4_ic_div=2, module_div=2, slim_div=2, slim_bypass=0;
+  unsigned long pdiv, val_sysaclkout=0;
   value = ctrl_inl(CKGA_LCK);
   len+=sprintf(page+len, "CKGA_LCK = %lx\n", value);
 
@@ -692,12 +694,15 @@ static int write_pll1_ndiv_mdiv(struct file *file, const char *buffer,
 static int write_pll0_ndiv_mdiv(struct file *file, const char *buffer,
                         unsigned long count, void *data)
 {
+#ifdef STB7100
   struct clk *clk;
-  unsigned long regdata, sta, frequ;
+  unsigned long sta;
+#endif
+  unsigned long regdata, frequ;
   int ndiv=0, mdiv=0;
   int ndiv_mdiv=simple_strtoul(buffer, NULL, 10);
 #if defined(STX7105) || defined(STX7111)
-  unsigned long regdata1;
+//  unsigned long regdata1;
 #endif
 
 #ifdef STB7100
