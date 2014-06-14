@@ -231,7 +231,11 @@ struct ProcStructure_s
 static int get_player_version(char *page, char **start, off_t off, int count,
                            int *eof, void *data)
 {
-  int len = sprintf(page, "player131\n");
+#if defined(PLAYER_191)
+  int len = sprintf(page, "player191\n");
+#else
+  int len = sprintf(page, "unknown\n");
+#endif
   return len;
 }
 
