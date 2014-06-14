@@ -6523,7 +6523,7 @@ struct dvb_frontend *stv090x_attach(const struct stv090x_config *config,
 		{
 			stpio_free_pin(fe_lnb_on_off);
 		}
-		return -1;
+		goto error;
 	} else stpio_set_pin(fe_lnb_14_19, 1);
 
 	mutex_init(&demod_lock);
