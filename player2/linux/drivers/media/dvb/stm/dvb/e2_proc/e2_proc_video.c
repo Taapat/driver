@@ -845,6 +845,8 @@ int proc_video_videomode_write(struct file *file, const char __user *buf, unsign
     int new_count;
 
     char* myString = kmalloc(count + 1, GFP_KERNEL);
+    void* fb;
+    struct fb_info *info;
 
 #ifdef VERY_VERBOSE
     printk("%s %ld - ", __FUNCTION__, count);
@@ -852,8 +854,8 @@ int proc_video_videomode_write(struct file *file, const char __user *buf, unsign
 
     mutex_lock(&(ProcDeviceContext->DvbContext->Lock));
 
-    void* fb = stmfb_get_fbinfo_ptr();
-    struct fb_info *info = (struct fb_info*) fb;
+    fb = stmfb_get_fbinfo_ptr();
+    info = (struct fb_info*) fb;
 
     page = (char *)__get_free_page(GFP_KERNEL);
 

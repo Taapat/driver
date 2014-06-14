@@ -100,7 +100,9 @@ int StartFeed(struct dvb_demux_feed *Feed)
 {
     struct dvb_demux*                   DvbDemux        = Feed->demux;
     struct dmxdev_filter*               Filter          = (struct dmxdev_filter*)Feed->feed.ts.priv;
+#ifndef __TDT__
     struct dmx_pes_filter_params*       Params          = &Filter->params.pes;
+#endif
     struct DeviceContext_s*             Context         = (struct DeviceContext_s*)DvbDemux->priv;
     struct DvbContext_s*                DvbContext      = Context->DvbContext;
     int                                 Result          = 0;
@@ -109,6 +111,7 @@ int StartFeed(struct dvb_demux_feed *Feed)
     unsigned int                        Audio           = false;
 #ifdef __TDT__
     struct DeviceContext_s*             AvContext       = NULL;
+    int                                 tsm_reset = 1;
 #endif
 
     DVB_DEBUG("(demux%d)\n", Context->Id);
@@ -117,8 +120,6 @@ int StartFeed(struct dvb_demux_feed *Feed)
 
 #ifdef __TDT__
     // fix recoding freezer on tuner0 and demux1/2 or tuner1 and demux0/2 or tuner2 and demux0/1
-    int tsm_reset = 1;
-
     for (i = 0; i < DVB_MAX_DEVICES_PER_ADAPTER; i++)
     {
         struct DeviceContext_s* DeviceContext = &DvbContext->DeviceContext[i];
@@ -708,8 +709,10 @@ void demultiplexDvbPackets(struct dvb_demux* demux, const u8 *buf, int count)
     int first = 0;
     int next = 0;
     int cnt = 0;
+#ifndef __TDT__
     int diff_count;
     const u8 *first_buf;
+#endif
     u16 pid, firstPid;
 
     struct DeviceContext_s* Context = (struct DeviceContext_s*)demux->priv;

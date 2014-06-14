@@ -428,7 +428,7 @@ static void *reg_sys_config = NULL;
 
 void spark_stm_tsm_init(void)
 {
-    unsigned int     ret;
+    unsigned int     ret, stream_sync = 0xbc4722;
     int              n;
 
     /* ugly hack: the TSM sometimes seems to stop working, a
@@ -548,8 +548,6 @@ void spark_stm_tsm_init(void)
 
     /* configure streams: */
     /* add tag bytes to stream + stream priority */
-    unsigned int stream_sync = 0xbc4722;
-
     ret = ctrl_inl(tsm_io + TSM_STREAM0_CFG);
     ctrl_outl(ret | (0x20020), tsm_io + TSM_STREAM0_CFG);
 
@@ -640,15 +638,15 @@ void spark_stm_tsm_init(void)
 
 void stm_tsm_init(int use_cimax)
 {
+    unsigned int     ret;
+    int              n, reinit = 0;
+
 #if defined(SPARK)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
     spark_stm_tsm_init();
     return;
 #endif
 #endif
-
-    unsigned int     ret;
-    int              n;
 
 //#if defined(UFS910) ???
 #if defined(VIP2_V1) || defined(SPARK) || defined(SPARK7162) || defined(IPBOX99) || defined(IPBOX55) || defined(ADB_BOX) || defined(CUBEREVO_2000HD) || defined(SAGEMCOM88) // none ci targets
@@ -662,8 +660,6 @@ void stm_tsm_init(int use_cimax)
      * but the DMA stuff must not be touched or everything
      * blows up badly
      */
-
-    int reinit = 0;
 
     if (tsm_io)
         reinit = 1;
