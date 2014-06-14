@@ -99,8 +99,8 @@ static const unsigned int VideoId[DVB_MAX_DEVICES_PER_ADAPTER]  = {DMX_TS_PES_VI
 int StartFeed(struct dvb_demux_feed *Feed)
 {
     struct dvb_demux*                   DvbDemux        = Feed->demux;
-    struct dmxdev_filter*               Filter          = (struct dmxdev_filter*)Feed->feed.ts.priv;
 #ifndef __TDT__
+    struct dmxdev_filter*               Filter          = (struct dmxdev_filter*)Feed->feed.ts.priv;
     struct dmx_pes_filter_params*       Params          = &Filter->params.pes;
 #endif
     struct DeviceContext_s*             Context         = (struct DeviceContext_s*)DvbDemux->priv;
