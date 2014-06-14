@@ -59,48 +59,47 @@ Date        Modification                                    Name
 
 class Codec_MmeVideoDivxHd_c : public Codec_MmeVideo_c
 {
-protected:
+    protected:
 
-	// Data
-	MME_DivXHD_Capability_t             DivxTransformCapability;
-	MME_DivXHDVideoDecodeInitParams_t   DivxInitializationParameters;
-	
-	MME_DivXHDSetGlobalParamSequence_t  DivXGlobalParamSequence;	
+        // Data
+        MME_DivXHD_Capability_t             DivxTransformCapability;
+        MME_DivXHDVideoDecodeInitParams_t   DivxInitializationParameters;
 
-	BufferDataDescriptor_t*             DivxMbStructDescriptor;
-	BufferType_t                        DivxMbStructType;
-	BufferPool_t                        DivxMbStructPool;
+        MME_DivXHDSetGlobalParamSequence_t  DivXGlobalParamSequence;
 
-	MME_DivXHDVideoDecodeReturnParams_t   ReturnParams;
-	MME_DivXHDVideoDecodeParams_t       DecodeParams;     
+        BufferDataDescriptor_t*             DivxMbStructDescriptor;
+        BufferType_t                        DivxMbStructType;
+        BufferPool_t                        DivxMbStructPool;
 
-	unsigned int StreamWidth;
-	unsigned int StreamHeight;
-	
-	bool Supports311;
-public:
+        MME_DivXHDVideoDecodeReturnParams_t   ReturnParams;
+        MME_DivXHDVideoDecodeParams_t       DecodeParams;
 
-	// Constructor/Destructor methods
+        unsigned int StreamWidth;
+        unsigned int StreamHeight;
 
-	 Codec_MmeVideoDivxHd_c( void );
-	~Codec_MmeVideoDivxHd_c( void );
+        bool Supports311;
+    public:
 
-protected:
+        // Constructor/Destructor methods
 
-	// Functions
-	CodecStatus_t   Reset( void );
-	CodecStatus_t   HandleCapabilities( void );
+        Codec_MmeVideoDivxHd_c(void);
+        ~Codec_MmeVideoDivxHd_c(void);
 
-	CodecStatus_t   RegisterOutputBufferRing(   Ring_t                    Ring );
-	CodecStatus_t   FillOutTransformerInitializationParameters( void );
-	CodecStatus_t   FillOutSetStreamParametersCommand( void );
-	CodecStatus_t   FillOutDecodeCommand( void );
-    
-	CodecStatus_t   ValidateDecodeContext( CodecBaseDecodeContext_t *Context );
-    
-	CodecStatus_t   DumpSetStreamParameters( void *Parameters );
-	CodecStatus_t   DumpDecodeParameters( void *Parameters );
+    protected:
 
-	CodecStatus_t   InitializeMMETransformer( void );
+        // Functions
+        CodecStatus_t   Reset(void);
+        CodecStatus_t   HandleCapabilities(void);
+
+        CodecStatus_t   RegisterOutputBufferRing(Ring_t                    Ring);
+        CodecStatus_t   FillOutTransformerInitializationParameters(void);
+        CodecStatus_t   FillOutSetStreamParametersCommand(void);
+        CodecStatus_t   FillOutDecodeCommand(void);
+
+        CodecStatus_t   ValidateDecodeContext(CodecBaseDecodeContext_t *Context);
+
+        CodecStatus_t   DumpSetStreamParameters(void *Parameters);
+        CodecStatus_t   DumpDecodeParameters(void *Parameters);
+        CodecStatus_t   InitializeMMETransformer(void);
 };
 #endif

@@ -32,18 +32,21 @@ static class HavanaPlayer_c*    HavanaPlayer;
 extern "C" {
 #endif
 //{{{  BackendInit
-int BackendInit (void)
+int BackendInit(void)
 {
     HavanaStatus_t              Status;
 
     PLAYER_DEBUG("\n");
     HavanaPlayer        = new HavanaPlayer_c;
+
     if (HavanaPlayer == NULL)
     {
         PLAYER_ERROR("Unable to create player\n");
         return -ENOMEM;
     }
-    Status      = HavanaPlayer->Init ();
+
+    Status      = HavanaPlayer->Init();
+
     if (Status != HavanaNoError)
     {
         delete HavanaPlayer;
@@ -51,16 +54,17 @@ int BackendInit (void)
         return -ENOMEM;
     }
 
-    Status      = RegisterBuiltInFactories (HavanaPlayer);
+    Status      = RegisterBuiltInFactories(HavanaPlayer);
 
     return Status;
 }
 //}}}
 //{{{  BackendDelete
-int BackendDelete (void)
+int BackendDelete(void)
 {
     if (HavanaPlayer != NULL)
         delete HavanaPlayer;
+
     HavanaPlayer        = NULL;
 
     return 0;
@@ -68,100 +72,109 @@ int BackendDelete (void)
 //}}}
 
 //{{{  DemuxInjectData
-int DemuxInjectData    (demux_handle_t          Demux,
-                        const unsigned char*    Data,
-                        unsigned int            DataLength)
+int DemuxInjectData(demux_handle_t          Demux,
+                    const unsigned char*    Data,
+                    unsigned int            DataLength)
 {
     class HavanaDemux_c*        HavanaDemux     = (class HavanaDemux_c*)Demux;
 
-    HavanaDemux->InjectData (Data, DataLength);
+    HavanaDemux->InjectData(Data, DataLength);
 
     return DataLength;
 }
 //}}}
 
 //{{{  PlaybackCreate
-int PlaybackCreate     (playback_handle_t*      Playback)
+int PlaybackCreate(playback_handle_t*      Playback)
 {
     HavanaStatus_t              Status;
     class HavanaPlayback_c*     HavanaPlayback = NULL;
 
     PLAYER_DEBUG("\n");
-    Status      = HavanaPlayer->CreatePlayback (&HavanaPlayback);
+    Status      = HavanaPlayer->CreatePlayback(&HavanaPlayback);
+
     if (Status != HavanaNoError)
         return -ENOMEM;
+
     *Playback   = (playback_handle_t)HavanaPlayback;
     return 0;
 }
 //}}}
 //{{{  PlaybackDelete
-int PlaybackDelete     (playback_handle_t       Playback)
+int PlaybackDelete(playback_handle_t       Playback)
 {
     class HavanaPlayback_c*     HavanaPlayback  = (class HavanaPlayback_c*)Playback;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaPlayback == NULL)
         return -EINVAL;
 
-    HavanaPlayer->DeletePlayback (HavanaPlayback);
+    HavanaPlayer->DeletePlayback(HavanaPlayback);
 
     return 0;
 }
 //}}}
 //{{{  PlaybackAddDemux
-int PlaybackAddDemux           (playback_handle_t       Playback,
-                                int                     DemuxId,
-                                demux_handle_t*         Demux)
+int PlaybackAddDemux(playback_handle_t       Playback,
+                     int                     DemuxId,
+                     demux_handle_t*         Demux)
 {
     class HavanaPlayback_c*     HavanaPlayback  = (class HavanaPlayback_c*)Playback;
     class HavanaDemux_c*        HavanaDemux     = NULL;
     HavanaStatus_t              Status;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaPlayback == NULL)
         return -EINVAL;
 
-    Status      = HavanaPlayback->AddDemux (DemuxId, &HavanaDemux);
+    Status      = HavanaPlayback->AddDemux(DemuxId, &HavanaDemux);
+
     if (Status != HavanaNoError)
         return -ENOMEM;
+
     *Demux      = (demux_handle_t)HavanaDemux;
     return 0;
 }
 //}}}
 //{{{  PlaybackRemoveDemux
-int PlaybackRemoveDemux        (playback_handle_t       Playback,
-                                demux_handle_t          Demux)
+int PlaybackRemoveDemux(playback_handle_t       Playback,
+                        demux_handle_t          Demux)
 {
     class HavanaPlayback_c*     HavanaPlayback  = (class HavanaPlayback_c*)Playback;
     class HavanaDemux_c*        HavanaDemux     = (class HavanaDemux_c*)Demux;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaPlayback == NULL)
         return -EINVAL;
 
-    if (HavanaPlayback->RemoveDemux (HavanaDemux) != HavanaNoError)
+    if (HavanaPlayback->RemoveDemux(HavanaDemux) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  PlaybackAddStream
-int PlaybackAddStream           (playback_handle_t      Playback,
-                                 char*                  Media,
-                                 char*                  Format,
-                                 char*                  Encoding,
-                                 unsigned int           SurfaceId,
-                                 stream_handle_t*       Stream)
+int PlaybackAddStream(playback_handle_t      Playback,
+                      char*                  Media,
+                      char*                  Format,
+                      char*                  Encoding,
+                      unsigned int           SurfaceId,
+                      stream_handle_t*       Stream)
 {
     class HavanaPlayback_c*     HavanaPlayback  = (class HavanaPlayback_c*)Playback;
     class HavanaStream_c*       HavanaStream    = NULL;
     HavanaStatus_t              Status          = HavanaNoError;
 
     PLAYER_DEBUG("%s\n", Media);
+
     if (HavanaPlayback == NULL)
         return -EINVAL;
 
-    Status      = HavanaPlayback->AddStream (Media, Format, Encoding, SurfaceId, &HavanaStream);
+    Status      = HavanaPlayback->AddStream(Media, Format, Encoding, SurfaceId, &HavanaStream);
+
     if (Status == HavanaNoMemory)
         return -ENOMEM;
     else if (Status != HavanaNoError)
@@ -172,49 +185,52 @@ int PlaybackAddStream           (playback_handle_t      Playback,
 }
 //}}}
 //{{{  PlaybackRemoveStream
-int PlaybackRemoveStream       (playback_handle_t       Playback,
-                                stream_handle_t         Stream)
+int PlaybackRemoveStream(playback_handle_t       Playback,
+                         stream_handle_t         Stream)
 {
     class HavanaPlayback_c*     HavanaPlayback  = (class HavanaPlayback_c*)Playback;
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaPlayback == NULL)
         return -EINVAL;
 
-    if (HavanaPlayback->RemoveStream (HavanaStream) != HavanaNoError)
+    if (HavanaPlayback->RemoveStream(HavanaStream) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  PlaybackSetSpeed
-int PlaybackSetSpeed            (playback_handle_t       Playback,
-                                 int                     Speed)
+int PlaybackSetSpeed(playback_handle_t       Playback,
+                     int                     Speed)
 {
     class HavanaPlayback_c*     HavanaPlayback  = (class HavanaPlayback_c*)Playback;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaPlayback == NULL)
         return -EINVAL;
 
-    if (HavanaPlayback->SetSpeed (Speed) != HavanaNoError)
+    if (HavanaPlayback->SetSpeed(Speed) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  PlaybackGetSpeed
-int PlaybackGetSpeed            (playback_handle_t       Playback,
-                                 int*                    PlaySpeed)
+int PlaybackGetSpeed(playback_handle_t       Playback,
+                     int*                    PlaySpeed)
 {
     class HavanaPlayback_c*     HavanaPlayback  = (class HavanaPlayback_c*)Playback;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaPlayback == NULL)
         return -EINVAL;
 
-    if (HavanaPlayback->GetSpeed (PlaySpeed) != HavanaNoError)
+    if (HavanaPlayback->GetSpeed(PlaySpeed) != HavanaNoError)
         return -EINVAL;
 
     PLAYER_DEBUG("Speed = %d\n", *PlaySpeed);
@@ -222,17 +238,18 @@ int PlaybackGetSpeed            (playback_handle_t       Playback,
 }
 //}}}
 //{{{  PlaybackSetNativePlaybackTime
-int PlaybackSetNativePlaybackTime (playback_handle_t    Playback,
-                                   unsigned long long   NativeTime,
-                                   unsigned long long   SystemTime)
+int PlaybackSetNativePlaybackTime(playback_handle_t    Playback,
+                                  unsigned long long   NativeTime,
+                                  unsigned long long   SystemTime)
 {
     class HavanaPlayback_c*     HavanaPlayback  = (class HavanaPlayback_c*)Playback;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaPlayback == NULL)
         return -EINVAL;
 
-    if (HavanaPlayback->SetNativePlaybackTime (NativeTime, SystemTime) != HavanaNoError)
+    if (HavanaPlayback->SetNativePlaybackTime(NativeTime, SystemTime) != HavanaNoError)
     {
         PLAYER_ERROR("SetNativePlaybackTime failed\n");
         return -ENOMEM;
@@ -242,34 +259,36 @@ int PlaybackSetNativePlaybackTime (playback_handle_t    Playback,
 }
 //}}}
 //{{{  PlaybackSetOption
-int PlaybackSetOption          (playback_handle_t       Playback,
-                                play_option_t           Option,
-                                unsigned int            Value)
+int PlaybackSetOption(playback_handle_t       Playback,
+                      play_option_t           Option,
+                      unsigned int            Value)
 {
     class HavanaPlayback_c*     HavanaPlayback  = (class HavanaPlayback_c*)Playback;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaPlayback == NULL)
         return -EINVAL;
 
-    if (HavanaPlayback->SetOption (Option, Value) != HavanaNoError)
+    if (HavanaPlayback->SetOption(Option, Value) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  PlaybackGetPlayerEnvironment
-int PlaybackGetPlayerEnvironment (playback_handle_t               Playback,
-                                  playback_handle_t*              playerplayback)
+int PlaybackGetPlayerEnvironment(playback_handle_t               Playback,
+                                 playback_handle_t*              playerplayback)
 {
     PlayerPlayback_t            player_playback = NULL;
     class HavanaPlayback_c*     HavanaPlayback  = (class HavanaPlayback_c*)Playback;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaPlayback == NULL)
         return -EINVAL;
 
-    if (HavanaPlayback->GetPlayerEnvironment (&player_playback) != HavanaNoError)
+    if (HavanaPlayback->GetPlayerEnvironment(&player_playback) != HavanaNoError)
         return -EINVAL;
 
     *playerplayback     = (void *)player_playback;
@@ -278,16 +297,17 @@ int PlaybackGetPlayerEnvironment (playback_handle_t               Playback,
 }
 //}}}
 //{{{  PlaybackSetClockdataPoint
-int PlaybackSetClockDataPoint     (playback_handle_t    Playback,
-                                   clock_data_point_t*  DataPoint)
+int PlaybackSetClockDataPoint(playback_handle_t    Playback,
+                              clock_data_point_t*  DataPoint)
 {
     class HavanaPlayback_c*     HavanaPlayback  = (class HavanaPlayback_c*)Playback;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaPlayback == NULL)
         return -EINVAL;
 
-    if (HavanaPlayback->SetClockDataPoint (DataPoint) != HavanaNoError)
+    if (HavanaPlayback->SetClockDataPoint(DataPoint) != HavanaNoError)
     {
         PLAYER_ERROR("SetClockDataPoint failed\n");
         return -ENOMEM;
@@ -298,203 +318,215 @@ int PlaybackSetClockDataPoint     (playback_handle_t    Playback,
 //}}}
 
 //{{{  StreamInjectData
-int StreamInjectData            (stream_handle_t         Stream,
-                                 const unsigned char*    Data,
-                                 unsigned int            DataLength)
+int StreamInjectData(stream_handle_t         Stream,
+                     const unsigned char*    Data,
+                     unsigned int            DataLength)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    HavanaStream->InjectData (Data, DataLength);
+    HavanaStream->InjectData(Data, DataLength);
 
     return DataLength;
 }
 //}}}
 //{{{  StreamInjectDataPacket
-int StreamInjectDataPacket      (stream_handle_t         Stream,
-                                 const unsigned char*    Data,
-                                 unsigned int            DataLength,
-                                 bool                    PresentationTimeValid,
-                                 unsigned long long      PresentationTime )
+int StreamInjectDataPacket(stream_handle_t         Stream,
+                           const unsigned char*    Data,
+                           unsigned int            DataLength,
+                           bool                    PresentationTimeValid,
+                           unsigned long long      PresentationTime)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    HavanaStream->InjectDataPacket (Data, DataLength, PresentationTimeValid, PresentationTime);
+    HavanaStream->InjectDataPacket(Data, DataLength, PresentationTimeValid, PresentationTime);
 
     return DataLength;
 }
 //}}}
 //{{{  StreamDiscontinuity
-int StreamDiscontinuity         (stream_handle_t         Stream,
-                                 discontinuity_t         Discontinuity)
+int StreamDiscontinuity(stream_handle_t         Stream,
+                        discontinuity_t         Discontinuity)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
     //PLAYER_DEBUG("%x %x %x\n", Discontinuity, Discontinuity & DISCONTINUITY_CONTINUOUS_REVERSE, Discontinuity & DISCONTINUITY_SURPLUS_DATA);
-    if (HavanaStream->Discontinuity     ((Discontinuity & DISCONTINUITY_CONTINUOUS_REVERSE) != 0,
-                                         (Discontinuity & DISCONTINUITY_SURPLUS_DATA) != 0) != HavanaNoError)
+    if (HavanaStream->Discontinuity((Discontinuity & DISCONTINUITY_CONTINUOUS_REVERSE) != 0,
+                                    (Discontinuity & DISCONTINUITY_SURPLUS_DATA) != 0) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  StreamDrain
-int StreamDrain                 (stream_handle_t         Stream,
-                                 unsigned int            Discard,
-                                 unsigned int            NonBlock)
+int StreamDrain(stream_handle_t         Stream,
+                unsigned int            Discard,
+                unsigned int            NonBlock)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    HavanaStream->Drain (Discard, NonBlock);
+    HavanaStream->Drain(Discard, NonBlock);
 
     return 0;
 }
 
-int StreamCheckDrained               (stream_handle_t         Stream)
+int StreamCheckDrained(stream_handle_t         Stream)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
-    return HavanaStream->CheckDrained ();
+    return HavanaStream->CheckDrained();
 }
 
 //}}}
 //{{{  StreamEnable
-int StreamEnable                (stream_handle_t         Stream,
-                                 unsigned int            Enable)
+int StreamEnable(stream_handle_t         Stream,
+                 unsigned int            Enable)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    if (HavanaStream->Enable (Enable) != HavanaNoError)
+    if (HavanaStream->Enable(Enable) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  StreamSetId
-int StreamSetId                 (stream_handle_t         Stream,
-                                 unsigned int            DemuxId,
-                                 unsigned int            Id)
+int StreamSetId(stream_handle_t         Stream,
+                unsigned int            DemuxId,
+                unsigned int            Id)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    if (HavanaStream->SetId (DemuxId, Id) != HavanaNoError)
+    if (HavanaStream->SetId(DemuxId, Id) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  StreamChannelSelect
-int StreamChannelSelect         (stream_handle_t         Stream,
-                                 channel_select_t        Channel)
+int StreamChannelSelect(stream_handle_t         Stream,
+                        channel_select_t        Channel)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
     //PLAYER_DEBUG("%x %x %x\n", Discontinuity, Discontinuity & DISCONTINUITY_CONTINUOUS_REVERSE, Discontinuity & DISCONTINUITY_SURPLUS_DATA);
-    if (HavanaStream->ChannelSelect     (Channel) != HavanaNoError)
+    if (HavanaStream->ChannelSelect(Channel) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  StreamSetOption
-int StreamSetOption            (stream_handle_t         Stream,
-                                play_option_t           Option,
-                                unsigned int            Value)
+int StreamSetOption(stream_handle_t         Stream,
+                    play_option_t           Option,
+                    unsigned int            Value)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    if (HavanaStream->SetOption (Option, Value) != HavanaNoError)
+    if (HavanaStream->SetOption(Option, Value) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  StreamGetOption
-int StreamGetOption            (stream_handle_t         Stream,
-                                play_option_t           Option,
-                                unsigned int*           Value)
+int StreamGetOption(stream_handle_t         Stream,
+                    play_option_t           Option,
+                    unsigned int*           Value)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    if (HavanaStream->GetOption (Option, Value) != HavanaNoError)
+    if (HavanaStream->GetOption(Option, Value) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  StreamStep
-int StreamStep                  (stream_handle_t         Stream)
+int StreamStep(stream_handle_t         Stream)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    if (HavanaStream->Step () != HavanaNoError)
+    if (HavanaStream->Step() != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  StreamSwitch
-int StreamSwitch                (stream_handle_t         Stream,
-                                 char*                   Format,
-                                 char*                   Encoding)
+int StreamSwitch(stream_handle_t         Stream,
+                 char*                   Format,
+                 char*                   Encoding)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    if (HavanaStream->Switch (Format, Encoding) != HavanaNoError)
+    if (HavanaStream->Switch(Format, Encoding) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  StreamSetAlarm
-int StreamSetAlarm              (stream_handle_t         Stream,
-                                 unsigned long long      Pts)
+int StreamSetAlarm(stream_handle_t         Stream,
+                   unsigned long long      Pts)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
@@ -502,38 +534,40 @@ int StreamSetAlarm              (stream_handle_t         Stream,
 }
 //}}}
 //{{{  StreamGetPlayInfo
-int StreamGetPlayInfo           (stream_handle_t         Stream,
-                                 struct play_info_s*     PlayInfo)
+int StreamGetPlayInfo(stream_handle_t         Stream,
+                      struct play_info_s*     PlayInfo)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    if (HavanaStream->GetPlayInfo (PlayInfo) != HavanaNoError)
+    if (HavanaStream->GetPlayInfo(PlayInfo) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  StreamGetDecodeBuffer
-int StreamGetDecodeBuffer      (stream_handle_t         Stream,
-                                buffer_handle_t*        Buffer,
-                                unsigned char**         Data,
-                                unsigned int            Format,
-                                unsigned int            DimensionCount,
-                                unsigned int            Dimensions[],
-                                unsigned int*           Index,
-                                unsigned int*           Stride)
+int StreamGetDecodeBuffer(stream_handle_t         Stream,
+                          buffer_handle_t*        Buffer,
+                          unsigned char**         Data,
+                          unsigned int            Format,
+                          unsigned int            DimensionCount,
+                          unsigned int            Dimensions[],
+                          unsigned int*           Index,
+                          unsigned int*           Stride)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    if ( HavanaStream->GetDecodeBuffer (Buffer, Data, Format, DimensionCount, Dimensions, Index, Stride) != HavanaNoError)
+    if (HavanaStream->GetDecodeBuffer(Buffer, Data, Format, DimensionCount, Dimensions, Index, Stride) != HavanaNoError)
         return -EINVAL;
 
     return 0;
@@ -541,140 +575,148 @@ int StreamGetDecodeBuffer      (stream_handle_t         Stream,
 }
 //}}}
 //{{{  StreamReturnDecodeBuffer
-int StreamReturnDecodeBuffer      (stream_handle_t         Stream,
-                                buffer_handle_t*        Buffer)
+int StreamReturnDecodeBuffer(stream_handle_t         Stream,
+                             buffer_handle_t*        Buffer)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    if (HavanaStream->ReturnDecodeBuffer (Buffer) != HavanaNoError)
+    if (HavanaStream->ReturnDecodeBuffer(Buffer) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  StreamGetDecodeBufferPoolStatus
-int StreamGetDecodeBufferPoolStatus      (stream_handle_t         Stream,
-                                          unsigned int*           BuffersInPool,
-                                          unsigned int*           BuffersWithNonZeroReferenceCount)
+int StreamGetDecodeBufferPoolStatus(stream_handle_t         Stream,
+                                    unsigned int*           BuffersInPool,
+                                    unsigned int*           BuffersWithNonZeroReferenceCount)
 
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    if (HavanaStream->GetDecodeBufferPoolStatus (BuffersInPool,BuffersWithNonZeroReferenceCount) != HavanaNoError)
+    if (HavanaStream->GetDecodeBufferPoolStatus(BuffersInPool, BuffersWithNonZeroReferenceCount) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  StreamSetOutputWindow
-int StreamSetOutputWindow      (stream_handle_t         Stream,
-                                unsigned int            X,
-                                unsigned int            Y,
-                                unsigned int            Width,
-                                unsigned int            Height)
+int StreamSetOutputWindow(stream_handle_t         Stream,
+                          unsigned int            X,
+                          unsigned int            Y,
+                          unsigned int            Width,
+                          unsigned int            Height)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    if (HavanaStream->SetOutputWindow (X, Y, Width, Height) != HavanaNoError)
+    if (HavanaStream->SetOutputWindow(X, Y, Width, Height) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  StreamRegisterEventSignalCallback
-stream_event_signal_callback StreamRegisterEventSignalCallback (stream_handle_t                 Stream,
-                                                                context_handle_t                Context,
-                                                                stream_event_signal_callback    Callback)
+stream_event_signal_callback StreamRegisterEventSignalCallback(stream_handle_t                 Stream,
+        context_handle_t                Context,
+        stream_event_signal_callback    Callback)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return NULL;
 
-    return HavanaStream->RegisterEventSignalCallback (Context, Callback);
+    return HavanaStream->RegisterEventSignalCallback(Context, Callback);
 }
 //}}}
 //{{{  StreamGetOutputWindow
-int StreamGetOutputWindow      (stream_handle_t         Stream,
-                                unsigned int*           X,
-                                unsigned int*           Y,
-                                unsigned int*           Width,
-                                unsigned int*           Height)
+int StreamGetOutputWindow(stream_handle_t         Stream,
+                          unsigned int*           X,
+                          unsigned int*           Y,
+                          unsigned int*           Width,
+                          unsigned int*           Height)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    if (HavanaStream->GetOutputWindow (X, Y, Width, Height) != HavanaNoError)
+    if (HavanaStream->GetOutputWindow(X, Y, Width, Height) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  StreamSetInputWindow
-int StreamSetInputWindow       (stream_handle_t         Stream,
-                                unsigned int            X,
-                                unsigned int            Y,
-                                unsigned int            Width,
-                                unsigned int            Height)
+int StreamSetInputWindow(stream_handle_t         Stream,
+                         unsigned int            X,
+                         unsigned int            Y,
+                         unsigned int            Width,
+                         unsigned int            Height)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    if (HavanaStream->SetInputWindow (X, Y, Width, Height) != HavanaNoError)
+    if (HavanaStream->SetInputWindow(X, Y, Width, Height) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  StreamSetPlayInterval
-int StreamSetPlayInterval      (stream_handle_t         Stream,
-                                play_interval_t*        PlayInterval)
+int StreamSetPlayInterval(stream_handle_t         Stream,
+                          play_interval_t*        PlayInterval)
 {
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    if (HavanaStream->SetPlayInterval (PlayInterval) != HavanaNoError)
+    if (HavanaStream->SetPlayInterval(PlayInterval) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
 //{{{  StreamGetPlayerEnvironment
-int StreamGetPlayerEnvironment (stream_handle_t                 Stream,
-                                playback_handle_t*              playerplayback,
-                                stream_handle_t*                playerstream)
+int StreamGetPlayerEnvironment(stream_handle_t                 Stream,
+                               playback_handle_t*              playerplayback,
+                               stream_handle_t*                playerstream)
 {
     PlayerPlayback_t            player_playback = NULL;
     PlayerStream_t              player_stream   = NULL;
     class HavanaStream_c*       HavanaStream    = (class HavanaStream_c*)Stream;
 
     PLAYER_DEBUG("\n");
+
     if (HavanaStream == NULL)
         return -EINVAL;
 
-    if (HavanaStream->GetPlayerEnvironment (&player_playback, &player_stream) != HavanaNoError)
+    if (HavanaStream->GetPlayerEnvironment(&player_playback, &player_stream) != HavanaNoError)
         return -EINVAL;
 
     *playerplayback     = (void *)player_playback;
@@ -685,7 +727,7 @@ int StreamGetPlayerEnvironment (stream_handle_t                 Stream,
 //}}}
 
 //{{{  MixerGetInstance
-int MixerGetInstance (int StreamId, component_handle_t* Classoid)
+int MixerGetInstance(int StreamId, component_handle_t* Classoid)
 {
     const char *BackendId;
     HavanaStatus_t Status;
@@ -694,13 +736,16 @@ int MixerGetInstance (int StreamId, component_handle_t* Classoid)
 
     switch (StreamId)
     {
-    case 0:  BackendId = BACKEND_MIXER0_ID; break;
-    case 1:  BackendId = BACKEND_MIXER1_ID; break;
-    default: return -EINVAL;
+        case 0:  BackendId = BACKEND_MIXER0_ID; break;
+
+        case 1:  BackendId = BACKEND_MIXER1_ID; break;
+
+        default: return -EINVAL;
     }
 
-    Status      = HavanaPlayer->CallFactory (BACKEND_AUDIO_ID, BackendId,
-                                         StreamTypeAudio, ComponentExternal, Classoid);
+    Status      = HavanaPlayer->CallFactory(BACKEND_AUDIO_ID, BackendId,
+                                            StreamTypeAudio, ComponentExternal, Classoid);
+
     if (Status == HavanaNoMemory)
         return -ENOMEM;
     else if (Status != HavanaNoError)
@@ -710,7 +755,7 @@ int MixerGetInstance (int StreamId, component_handle_t* Classoid)
 }
 //}}}
 //{{{  ComponentSetModuleParameters
-int ComponentSetModuleParameters (component_handle_t Classoid, void *Data, unsigned int Size)
+int ComponentSetModuleParameters(component_handle_t Classoid, void *Data, unsigned int Size)
 {
     BaseComponentClass_c *Component = (BaseComponentClass_c *) Classoid;
     PlayerStatus_t Status;
@@ -718,6 +763,7 @@ int ComponentSetModuleParameters (component_handle_t Classoid, void *Data, unsig
     //PLAYER_DEBUG("\n");
 
     Status = Component->SetModuleParameters(Size, Data);
+
     if (Status != PlayerNoError)
         return -EINVAL;
 
@@ -725,12 +771,13 @@ int ComponentSetModuleParameters (component_handle_t Classoid, void *Data, unsig
 }
 //}}}
 //{{{  MixerAllocSubStream
-int MixerAllocSubStream   (component_handle_t Component, int *SubStreamId)
+int MixerAllocSubStream(component_handle_t Component, int *SubStreamId)
 {
     Mixer_Mme_c *Mixer = (Mixer_Mme_c *) Component;
     PlayerStatus_t Status;
 
     Status = Mixer->AllocInteractiveInput(SubStreamId);
+
     if (Status != PlayerNoError)
         return -EINVAL;
 
@@ -738,12 +785,13 @@ int MixerAllocSubStream   (component_handle_t Component, int *SubStreamId)
 }
 //}}}
 //{{{  MixerFreeSubStream
-int MixerFreeSubStream    (component_handle_t Component, int SubStreamId)
+int MixerFreeSubStream(component_handle_t Component, int SubStreamId)
 {
     Mixer_Mme_c *Mixer = (Mixer_Mme_c *) Component;
     PlayerStatus_t Status;
 
     Status = Mixer->FreeInteractiveInput(SubStreamId);
+
     if (Status != PlayerNoError)
         return -EINVAL;
 
@@ -751,13 +799,14 @@ int MixerFreeSubStream    (component_handle_t Component, int SubStreamId)
 }
 //}}}
 //{{{  MixerSetupSubStream
-int MixerSetupSubStream   (component_handle_t Component, int SubStreamId,
-                           struct alsa_substream_descriptor *Descriptor)
+int MixerSetupSubStream(component_handle_t Component, int SubStreamId,
+                        struct alsa_substream_descriptor *Descriptor)
 {
     Mixer_Mme_c *Mixer = (Mixer_Mme_c *) Component;
     PlayerStatus_t Status;
 
     Status = Mixer->SetupInteractiveInput(SubStreamId, Descriptor);
+
     if (Status != PlayerNoError)
         return -EINVAL;
 
@@ -765,12 +814,13 @@ int MixerSetupSubStream   (component_handle_t Component, int SubStreamId,
 }
 //}}}
 //{{{  MixerPrepareSubStream
-int MixerPrepareSubStream (component_handle_t Component, int SubStreamId)
+int MixerPrepareSubStream(component_handle_t Component, int SubStreamId)
 {
     Mixer_Mme_c *Mixer = (Mixer_Mme_c *) Component;
     PlayerStatus_t Status;
 
     Status = Mixer->PrepareInteractiveInput(SubStreamId);
+
     if (Status != PlayerNoError)
         return -EINVAL;
 
@@ -778,12 +828,13 @@ int MixerPrepareSubStream (component_handle_t Component, int SubStreamId)
 }
 //}}}
 //{{{  MixerStartSubStream
-int MixerStartSubStream   (component_handle_t Component, int SubStreamId)
+int MixerStartSubStream(component_handle_t Component, int SubStreamId)
 {
     Mixer_Mme_c *Mixer = (Mixer_Mme_c *) Component;
     PlayerStatus_t Status;
 
     Status = Mixer->EnableInteractiveInput(SubStreamId);
+
     if (Status != PlayerNoError)
         return -EINVAL;
 
@@ -791,12 +842,13 @@ int MixerStartSubStream   (component_handle_t Component, int SubStreamId)
 }
 //}}}
 //{{{  MixerStopSubstream
-int MixerStopSubStream    (component_handle_t Component, int SubStreamId)
+int MixerStopSubStream(component_handle_t Component, int SubStreamId)
 {
     Mixer_Mme_c *Mixer = (Mixer_Mme_c *) Component;
     PlayerStatus_t Status;
 
     Status = Mixer->DisableInteractiveInput(SubStreamId);
+
     if (Status != PlayerNoError)
         return -EINVAL;
 
@@ -805,39 +857,40 @@ int MixerStopSubStream    (component_handle_t Component, int SubStreamId)
 //}}}
 
 //{{{  DisplayCreate
-int DisplayCreate      (char*           Media,
-                        unsigned int    SurfaceId)
+int DisplayCreate(char*           Media,
+                  unsigned int    SurfaceId)
 {
     class HavanaDisplay_c*      Display;
 
     PLAYER_DEBUG("SurfaceId  = %d\n", SurfaceId);
 
-    if (HavanaPlayer->CreateDisplay (Media, SurfaceId, &Display) != HavanaNoError)
+    if (HavanaPlayer->CreateDisplay(Media, SurfaceId, &Display) != HavanaNoError)
         return -EINVAL;
 
     return 0;
 }
 //}}}
+
 #ifdef __TDT__
 //{{{  DisplayCreate
-//Dagobert
-int isDisplayCreated (char*           Media,
-                      unsigned int    SurfaceId)
+int isDisplayCreated(char*           Media,
+                     unsigned int    SurfaceId)
 {
     PLAYER_DEBUG("SurfaceId  = %d\n", SurfaceId);
 
-    return (HavanaPlayer->isDisplayCreated (Media, SurfaceId));
+    return (HavanaPlayer->isDisplayCreated(Media, SurfaceId));
 }
-//}}}  
+//}}}
 #endif
+
 //{{{  DisplayDelete
-int DisplayDelete      (char*           Media,
-                        unsigned int    SurfaceId)
+int DisplayDelete(char*           Media,
+                  unsigned int    SurfaceId)
 {
 
     PLAYER_DEBUG("SurfaceId  = %d\n", SurfaceId);
 
-    if (HavanaPlayer->DeleteDisplay (Media, SurfaceId) != HavanaNoError)
+    if (HavanaPlayer->DeleteDisplay(Media, SurfaceId) != HavanaNoError)
         return -EINVAL;
 
     return 0;
@@ -845,10 +898,10 @@ int DisplayDelete      (char*           Media,
 //}}}
 
 //{{{  DisplaySynchronize
-int DisplaySynchronize (char*           Media,
-                        unsigned int    SurfaceId)
+int DisplaySynchronize(char*           Media,
+                       unsigned int    SurfaceId)
 {
-    if (HavanaPlayer->SynchronizeDisplay (Media, SurfaceId) != HavanaNoError)
+    if (HavanaPlayer->SynchronizeDisplay(Media, SurfaceId) != HavanaNoError)
         return -EINVAL;
 
     return 0;
@@ -856,9 +909,9 @@ int DisplaySynchronize (char*           Media,
 //}}}
 
 //{{{  ComponentGetAttribute
-int ComponentGetAttribute      (player_component_handle_t       Component,
-                                const char*                     Attribute,
-                                union attribute_descriptor_u*   Value)
+int ComponentGetAttribute(player_component_handle_t       Component,
+                          const char*                     Attribute,
+                          union attribute_descriptor_u*   Value)
 {
     BaseComponentClass_c*               PlayerComponent = (BaseComponentClass_c*)Component;
     PlayerStatus_t                      Status;
@@ -866,7 +919,8 @@ int ComponentGetAttribute      (player_component_handle_t       Component,
 
     //PLAYER_DEBUG("\n");
 
-    Status      = PlayerComponent->GetAttribute (Attribute, &AttributeDescriptor);
+    Status      = PlayerComponent->GetAttribute(Attribute, &AttributeDescriptor);
+
     if (Status != PlayerNoError)
         return -EINVAL;
 
@@ -875,15 +929,19 @@ int ComponentGetAttribute      (player_component_handle_t       Component,
         case SYSFS_ATTRIBUTE_ID_INTEGER:
             Value->Int                      = (int)AttributeDescriptor.u.Int;
             break;
+
         case SYSFS_ATTRIBUTE_ID_BOOL:
             Value->Bool                     = (int)AttributeDescriptor.u.Bool;
             break;
+
         case SYSFS_ATTRIBUTE_ID_UNSIGNEDLONGLONGINT:
             Value->UnsignedLongLongInt      = (unsigned long long int)AttributeDescriptor.u.UnsignedLongLongInt;
             break;
+
         case SYSFS_ATTRIBUTE_ID_CONSTCHARPOINTER:
             Value->ConstCharPointer         = (char*)AttributeDescriptor.u.ConstCharPointer;
             break;
+
         default:
             PLAYER_ERROR("This attribute does not exist.\n");
             return -EINVAL;
@@ -893,16 +951,17 @@ int ComponentGetAttribute      (player_component_handle_t       Component,
 }
 //}}}
 //{{{  ComponentSetAttribute
-int ComponentSetAttribute      (player_component_handle_t       Component,
-                                const char*                     Attribute,
-                                union attribute_descriptor_u*   Value)
+int ComponentSetAttribute(player_component_handle_t       Component,
+                          const char*                     Attribute,
+                          union attribute_descriptor_u*   Value)
 {
     BaseComponentClass_c*       PlayerComponent = (BaseComponentClass_c*)Component;
     PlayerStatus_t              Status;
 
     //PLAYER_DEBUG("\n");
 
-    Status      = PlayerComponent->SetAttribute (Attribute, (PlayerAttributeDescriptor_t*)Value);
+    Status      = PlayerComponent->SetAttribute(Attribute, (PlayerAttributeDescriptor_t*)Value);
+
     if (Status != PlayerNoError)
         return -EINVAL;
 
@@ -911,15 +970,16 @@ int ComponentSetAttribute      (player_component_handle_t       Component,
 //}}}
 //{{{  COMMENT ComponentSetModuleParameters
 #if 0
-int ComponentSetModuleParameters (player_component_handle_t     Component,
-                                  void*                         Data,
-                                  unsigned int                  Size)
+int ComponentSetModuleParameters(player_component_handle_t     Component,
+                                 void*                         Data,
+                                 unsigned int                  Size)
 {
     BaseComponentClass_c*       Component       = (BaseComponentClass_c*)Component;
     PlayerStatus_t              Status;
 
     PLAYER_DEBUG("\n");
-    Status      = Component->SetModuleParameters (Size, Data);
+    Status      = Component->SetModuleParameters(Size, Data);
+
     if (Status != PlayerNoError)
         return -EINVAL;
 
@@ -928,11 +988,11 @@ int ComponentSetModuleParameters (player_component_handle_t     Component,
 #endif
 //}}}
 //{{{  PlayerRegisterEventSignalCallback
-player_event_signal_callback PlayerRegisterEventSignalCallback (player_event_signal_callback Callback)
+player_event_signal_callback PlayerRegisterEventSignalCallback(player_event_signal_callback Callback)
 {
     PLAYER_DEBUG("\n");
 
-    return HavanaPlayer->RegisterEventSignalCallback (Callback);
+    return HavanaPlayer->RegisterEventSignalCallback(Callback);
 }
 //}}}
 
@@ -947,14 +1007,14 @@ player_event_signal_callback PlayerRegisterEventSignalCallback (player_event_sig
 // operator new
 ////////////////////////////////////////////////////////////////////////////
 
-void* operator new (unsigned int size)
+void* operator new(unsigned int size)
 {
 #if 0
-    void* Addr = __builtin_new (size);
-    HAVANA_DEBUG ("Newing %d (%x) at %p\n", size, size, Addr);
+    void* Addr = __builtin_new(size);
+    HAVANA_DEBUG("Newing %d (%x) at %p\n", size, size, Addr);
     return Addr;
 #else
-    return __builtin_new (size);
+    return __builtin_new(size);
 #endif
 }
 
@@ -962,12 +1022,12 @@ void* operator new (unsigned int size)
 // operator delete
 ////////////////////////////////////////////////////////////////////////////
 
-void operator delete (void *mem)
+void operator delete(void *mem)
 {
 #if 0
-    HAVANA_DEBUG ("Deleting (%p)\n", mem);
+    HAVANA_DEBUG("Deleting (%p)\n", mem);
 #else
-    __builtin_delete (mem);
+    __builtin_delete(mem);
 #endif
 }
 
@@ -975,14 +1035,14 @@ void operator delete (void *mem)
 // operator new
 ////////////////////////////////////////////////////////////////////////////
 
-void* operator new[] (unsigned int size)
+void* operator new[](unsigned int size)
 {
 #if 0
-    void* Addr = __builtin_vec_new (size);
-    HAVANA_DEBUG ("Vec newing %d (%x) at %p\n", size, size, Addr);
+    void* Addr = __builtin_vec_new(size);
+    HAVANA_DEBUG("Vec newing %d (%x) at %p\n", size, size, Addr);
     return Addr;
 #else
-    return __builtin_vec_new (size);
+    return __builtin_vec_new(size);
 #endif
 }
 
@@ -990,12 +1050,12 @@ void* operator new[] (unsigned int size)
 //   operator delete
 ////////////////////////////////////////////////////////////////////////////
 
-void operator delete[] (void *mem)
+void operator delete[](void *mem)
 {
 #if 0
-    HAVANA_DEBUG ("Vec deleting (%p)\n", mem);
+    HAVANA_DEBUG("Vec deleting (%p)\n", mem);
 #else
-    __builtin_vec_delete (mem);
+    __builtin_vec_delete(mem);
 #endif
 }
 #endif

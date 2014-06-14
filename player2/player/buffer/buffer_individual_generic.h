@@ -22,7 +22,7 @@ license from ST.
 Source file name : buffer_individual_generic.h
 Author :           Nick
 
-Implementation of the generic class definition of the buffer individual 
+Implementation of the generic class definition of the buffer individual
 class for use in player 2
 
 
@@ -39,141 +39,141 @@ Date        Modification                                    Name
 
 class Buffer_Generic_c : public Buffer_c
 {
-friend class BufferManager_Generic_c;
-friend class BufferPool_Generic_c;
+        friend class BufferManager_Generic_c;
+        friend class BufferPool_Generic_c;
 
-private:
+    private:
 
-    // Friend Data
+        // Friend Data
 
-    BufferManager_Generic_t	  Manager;
-    BufferPool_Generic_t	  Pool;
-    Buffer_Generic_t	  	  Next;
+        BufferManager_Generic_t   Manager;
+        BufferPool_Generic_t      Pool;
+        Buffer_Generic_t          Next;
 
-    unsigned int	 	  Index;
+        unsigned int          Index;
 
-    unsigned int		  ReferenceCount;
-    unsigned int		  OwnerIdentifier[MAX_BUFFER_OWNER_IDENTIFIERS];
+        unsigned int          ReferenceCount;
+        unsigned int          OwnerIdentifier[MAX_BUFFER_OWNER_IDENTIFIERS];
 
-    BlockDescriptor_t		  BufferBlock;
-    BlockDescriptor_t		  ListOfMetaData;
-    Buffer_t			  AttachedBuffers[MAX_ATTACHED_BUFFERS];
+        BlockDescriptor_t         BufferBlock;
+        BlockDescriptor_t         ListOfMetaData;
+        Buffer_t              AttachedBuffers[MAX_ATTACHED_BUFFERS];
 
 
-    unsigned int		  DataSize;
+        unsigned int          DataSize;
 
-    // Data
+        // Data
 
-    OS_Mutex_t			  Lock;
-		
-    // Functions
+        OS_Mutex_t            Lock;
 
-public:
+        // Functions
 
-    Buffer_Generic_c( 				BufferManager_Generic_t	  Manager,
-						BufferPool_Generic_t	  Pool,
-						BufferDataDescriptor_t	 *Descriptor );
-    ~Buffer_Generic_c( void );
+    public:
 
-    //
-    // Meta data activities
-    //
+        Buffer_Generic_c(BufferManager_Generic_t      Manager,
+                         BufferPool_Generic_t      Pool,
+                         BufferDataDescriptor_t   *Descriptor);
+        ~Buffer_Generic_c(void);
 
-    BufferStatus_t	 AttachMetaData(	MetaDataType_t	  Type,
-						unsigned int	  Size				= UNSPECIFIED_SIZE,
-						void		 *MemoryBlock			= NULL,
-						char		 *DeviceMemoryPartitionName	= NULL );
+        //
+        // Meta data activities
+        //
 
-    BufferStatus_t	 DetachMetaData(	MetaDataType_t	  Type );
+        BufferStatus_t   AttachMetaData(MetaDataType_t    Type,
+                                        unsigned int      Size              = UNSPECIFIED_SIZE,
+                                        void         *MemoryBlock           = NULL,
+                                        char         *DeviceMemoryPartitionName = NULL);
 
-    BufferStatus_t	 ObtainMetaDataReference(
-						MetaDataType_t	  Type,
-						void		**Pointer );
+        BufferStatus_t   DetachMetaData(MetaDataType_t    Type);
 
-    //
-    // Buffer manipulators
-    //
+        BufferStatus_t   ObtainMetaDataReference(
+            MetaDataType_t    Type,
+            void        **Pointer);
 
-    BufferStatus_t	 SetUsedDataSize(	unsigned int	  DataSize );
+        //
+        // Buffer manipulators
+        //
 
-    BufferStatus_t	 ShrinkBuffer(		unsigned int	  NewSize );
+        BufferStatus_t   SetUsedDataSize(unsigned int     DataSize);
 
-    BufferStatus_t	 ExtendBuffer(		unsigned int	 *NewSize,
-						bool		  ExtendUpwards		= true );
+        BufferStatus_t   ShrinkBuffer(unsigned int    NewSize);
 
-    BufferStatus_t	 PartitionBuffer(	unsigned int	  LeaveInFirstPartitionSize,
-						bool		  DuplicateMetaData,
-						Buffer_t	 *SecondPartition,
-						unsigned int	  SecondOwnerIdentifier	= UNSPECIFIED_OWNER,
-						bool		  NonBlocking 		= false );
+        BufferStatus_t   ExtendBuffer(unsigned int   *NewSize,
+                                      bool          ExtendUpwards     = true);
 
-    //
-    // Reference manipulation, and ownership control
-    //
+        BufferStatus_t   PartitionBuffer(unsigned int     LeaveInFirstPartitionSize,
+                                         bool          DuplicateMetaData,
+                                         Buffer_t     *SecondPartition,
+                                         unsigned int      SecondOwnerIdentifier = UNSPECIFIED_OWNER,
+                                         bool          NonBlocking       = false);
 
-    BufferStatus_t	 RegisterDataReference(	unsigned int	  BlockSize,
-						void		 *Pointer,
-						AddressType_t	  AddressType = CachedAddress );
+        //
+        // Reference manipulation, and ownership control
+        //
 
-    BufferStatus_t	 RegisterDataReference(	unsigned int	  BlockSize,
-						void		 *Pointers[3] );
+        BufferStatus_t   RegisterDataReference(unsigned int   BlockSize,
+                                               void         *Pointer,
+                                               AddressType_t     AddressType = CachedAddress);
 
-    BufferStatus_t	 ObtainDataReference(	unsigned int	 *BlockSize,
-						unsigned int	 *UsedDataSize,
-						void		**Pointer,
-						AddressType_t	  AddressType = CachedAddress );
+        BufferStatus_t   RegisterDataReference(unsigned int   BlockSize,
+                                               void         *Pointers[3]);
 
-    BufferStatus_t	 TransferOwnership(	unsigned int	  OwnerIdentifier0,
-						unsigned int	  OwnerIdentifier1	= UNSPECIFIED_OWNER );
+        BufferStatus_t   ObtainDataReference(unsigned int    *BlockSize,
+                                             unsigned int     *UsedDataSize,
+                                             void        **Pointer,
+                                             AddressType_t     AddressType = CachedAddress);
 
-    BufferStatus_t	 IncrementReferenceCount(
-						unsigned int	  OwnerIdentifier	= UNSPECIFIED_OWNER );
+        BufferStatus_t   TransferOwnership(unsigned int   OwnerIdentifier0,
+                                           unsigned int      OwnerIdentifier1  = UNSPECIFIED_OWNER);
 
-    BufferStatus_t	 DecrementReferenceCount(
-						unsigned int	  OwnerIdentifier	= UNSPECIFIED_OWNER );
+        BufferStatus_t   IncrementReferenceCount(
+            unsigned int      OwnerIdentifier   = UNSPECIFIED_OWNER);
 
-    //
-    // linking of other buffers to this buffer - for increment/decrement management
-    //
+        BufferStatus_t   DecrementReferenceCount(
+            unsigned int      OwnerIdentifier   = UNSPECIFIED_OWNER);
 
-    BufferStatus_t	 AttachBuffer(		Buffer_t	  Buffer );
-    BufferStatus_t	 DetachBuffer(		Buffer_t	  Buffer );
-    BufferStatus_t	 ObtainAttachedBufferReference(
-						BufferType_t	  Type,
-						Buffer_t	 *Buffer );
+        //
+        // linking of other buffers to this buffer - for increment/decrement management
+        //
 
-    //
-    // Usage/query/debug methods
-    //
+        BufferStatus_t   AttachBuffer(Buffer_t    Buffer);
+        BufferStatus_t   DetachBuffer(Buffer_t    Buffer);
+        BufferStatus_t   ObtainAttachedBufferReference(
+            BufferType_t      Type,
+            Buffer_t     *Buffer);
 
-    BufferStatus_t	 GetType(		BufferType_t	 *Type );
+        //
+        // Usage/query/debug methods
+        //
 
-    BufferStatus_t	 GetIndex(		unsigned int	 *Index );
+        BufferStatus_t   GetType(BufferType_t    *Type);
 
-    BufferStatus_t	 GetMetaDataCount( 	unsigned int	 *Count );
+        BufferStatus_t   GetIndex(unsigned int   *Index);
 
-    BufferStatus_t	 GetMetaDataList(	unsigned int	  ArraySize,
-						unsigned int	 *ArrayOfMetaDataTypes );
+        BufferStatus_t   GetMetaDataCount(unsigned int   *Count);
 
-    BufferStatus_t	 GetOwnerCount( 	unsigned int	 *Count );
+        BufferStatus_t   GetMetaDataList(unsigned int     ArraySize,
+                                         unsigned int     *ArrayOfMetaDataTypes);
 
-    BufferStatus_t	 GetOwnerList(		unsigned int	  ArraySize,
-						unsigned int	 *ArrayOfOwnerIdentifiers );
+        BufferStatus_t   GetOwnerCount(unsigned int  *Count);
 
-	//
-	// Cache functions
-	// 
-		
-    BufferStatus_t	 FlushCache(		void);		
-    BufferStatus_t	 PurgeCache(		void);		
-		
-    //
-    // Status dump/reporting
-    //
+        BufferStatus_t   GetOwnerList(unsigned int    ArraySize,
+                                      unsigned int     *ArrayOfOwnerIdentifiers);
 
-    void		 Dump( 			unsigned int	  Flags	= DumpAll );
+        //
+        // Cache functions
+        //
 
-    void		DumpToRelayFS ( unsigned int id, unsigned int type, void *param );
+        BufferStatus_t   FlushCache(void);
+        BufferStatus_t   PurgeCache(void);
+
+        //
+        // Status dump/reporting
+        //
+
+        void         Dump(unsigned int    Flags = DumpAll);
+
+        void        DumpToRelayFS(unsigned int id, unsigned int type, void *param);
 
 };
 

@@ -42,15 +42,15 @@ Date        Modification                                    Name
 #include "alsa_backend_ops.h"
 #include "player_backend.h"
 
-static int  __init              PlayerLoadModule (void);
-static void __exit              PlayerUnloadModule (void);
+static int  __init              PlayerLoadModule(void);
+static void __exit              PlayerUnloadModule(void);
 
-module_init                     (PlayerLoadModule);
-module_exit                     (PlayerUnloadModule);
+module_init(PlayerLoadModule);
+module_exit(PlayerUnloadModule);
 
-MODULE_DESCRIPTION              ("Player2 backend implementation for STM streaming architecture.");
-MODULE_AUTHOR                   ("Julian Wilson");
-MODULE_LICENSE                  ("GPL");
+MODULE_DESCRIPTION("Player2 backend implementation for STM streaming architecture.");
+MODULE_AUTHOR("Julian Wilson");
+MODULE_LICENSE("GPL");
 
 #ifdef __TDT__
 int noaudiosync = 0;
@@ -113,14 +113,11 @@ static struct dvb_backend_operations            DvbBackendOps        =
     .display_delete                             = DisplayDelete,
     .display_synchronize                        = DisplaySynchronize
 #ifdef __TDT__
-        ,
-/*Dagobert*/
-    .is_display_created                         = isDisplayCreated
+    , .is_display_created                      = isDisplayCreated
 #endif
-
 };
 
-#if 0
+#ifndef __TDT__
 static struct player_interface_operations       PlayerInterfaceOps        =
 {
     .owner                                      = THIS_MODULE,
@@ -146,23 +143,23 @@ static struct alsa_backend_operations           AlsaBackendOps          =
     .mixer_stop_substream                       = MixerStopSubStream,
 };
 
-extern void SysfsInit (void);
+extern void SysfsInit(void);
 
 #ifndef __TDT__
 #define CONFIG_EXPORT_PLAYER_INTERFACE
 #endif
-static int __init PlayerLoadModule (void)
+static int __init PlayerLoadModule(void)
 {
 
-    report_init ();
+    report_init();
 
-    DisplayInit ();
-    BackendInit ();
+    DisplayInit();
+    BackendInit();
 
-    register_dvb_backend       (MODULE_NAME, &DvbBackendOps);
-    register_alsa_backend      (MODULE_NAME, &AlsaBackendOps);
+    register_dvb_backend(MODULE_NAME, &DvbBackendOps);
+    register_alsa_backend(MODULE_NAME, &AlsaBackendOps);
 #if defined (CONFIG_EXPORT_PLAYER_INTERFACE)
-    register_player_interface  (MODULE_NAME, &PlayerInterfaceOps);
+    register_player_interface(MODULE_NAME, &PlayerInterfaceOps);
 #endif
 
     PLAYER_DEBUG("Player2 backend loaded\n");
@@ -170,9 +167,9 @@ static int __init PlayerLoadModule (void)
     return 0;
 }
 
-static void __exit PlayerUnloadModule (void)
+static void __exit PlayerUnloadModule(void)
 {
-    BackendDelete ();
+    BackendDelete();
 
     PLAYER_DEBUG("Player2 backend unloaded\n");
 

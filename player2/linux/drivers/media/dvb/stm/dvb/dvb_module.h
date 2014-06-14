@@ -34,6 +34,7 @@ Date        Modification                                    Name
 #include <linux/dvb/audio.h>
 #include <linux/dvb/video.h>
 #include "linux/dvb/stm_ioctls.h"
+#include <linux/device.h>
 
 #ifdef __TDT__
 #include <pti_public.h>
@@ -69,7 +70,7 @@ struct DeviceContext_s;
 #endif
 
 #define DVB_DEBUG(fmt, args...)         ((void) (ENABLE_DVB_DEBUG && \
-                                                 (printk(KERN_INFO "%s: " fmt, __FUNCTION__,##args), 0)))
+        (printk(KERN_INFO "%s: " fmt, __FUNCTION__,##args), 0)))
 
 /* Output trace information off the critical path */
 #define DVB_TRACE(fmt, args...)         (printk(KERN_NOTICE "%s: " fmt, __FUNCTION__, ##args))
@@ -77,7 +78,7 @@ struct DeviceContext_s;
 #define DVB_ERROR(fmt, args...)         (printk(KERN_CRIT "ERROR in %s: " fmt, __FUNCTION__, ##args))
 
 #define DVB_ASSERT(x) do if(!(x)) printk(KERN_CRIT "%s: Assertion '%s' failed at %s:%d\n", \
-                                         __FUNCTION__, #x, __FILE__, __LINE__); while(0)
+                __FUNCTION__, #x, __FILE__, __LINE__); while(0)
 
 #define DVB_MAX_DEVICES_PER_ADAPTER     4
 
@@ -103,6 +104,7 @@ struct DeviceContext_s
     int                         numRunningFeeds;
 
     struct dvb_device*          AudioDevice;
+    struct device               AudioClassDevice;
     struct audio_status         AudioState;
     unsigned int                AudioId;
     audio_encoding_t            AudioEncoding;
@@ -114,6 +116,7 @@ struct DeviceContext_s
     audio_play_interval_t       AudioPlayInterval;
 
     struct dvb_device*          VideoDevice;
+    struct device               VideoClassDevice;
     struct video_status         VideoState;
     unsigned int                VideoId;
     video_encoding_t            VideoEncoding;
@@ -159,11 +162,11 @@ struct DeviceContext_s
 
 #ifdef __TDT__
     struct PtiSession*          pPtiSession;
-    int dvr_write;
+    int                         dvr_write;
     int                         VideoPlaySpeed;
-    int provideToDecoder;
-    int feedPesType;
-    struct mutex injectMutex;
+    int                         provideToDecoder;
+    int                         feedPesType;
+    struct mutex                injectMutex;
 #endif
 };
 

@@ -36,7 +36,7 @@ Date        Modification                                    Name
 
 // /////////////////////////////////////////////////////////////////////
 //
-//	Include any component headers
+//  Include any component headers
 
 #include "collator_pes_audio_dvd.h"
 #include "eac3_audio.h"
@@ -53,31 +53,30 @@ Date        Modification                                    Name
 
 class Collator_PesAudioEAc3_c : public Collator_PesAudioDvd_c
 {
- private:
- 
-  bool             EightChannelsRequired; ///< Holds the output channel required configuration
-  int              ProgrammeId;           ///< Identifier if the eac3 programme to be decoded
-  int              NbAccumulatedSamples;  ///< The collator has to accumulate 1536 samples so that the eac3->ac3 transcoding is possible (for spdif output)
-  
+    private:
 
-  /// \todo This variable should be updated according to the manifestor constraints via SetModuleParameters
-  ///
+        bool             EightChannelsRequired; ///< Holds the output channel required configuration
+        int              ProgrammeId;           ///< Identifier if the eac3 programme to be decoded
+        int              NbAccumulatedSamples;  ///< The collator has to accumulate 1536 samples so that the eac3->ac3 transcoding is possible (for spdif output)
+
+        /// \todo This variable should be updated according to the manifestor constraints via SetModuleParameters
+        ///
 
 
-protected:
-  
-  CollatorStatus_t FindNextSyncWord( int *CodeOffset );
-  
-  CollatorStatus_t DecideCollatorNextStateAndGetLength( unsigned int *FrameLength );
-  void             GetStreamType( unsigned char * Header, EAc3AudioParsedFrameHeader_t * ParsedFrameHeader);
-  void             SetPesPrivateDataLength(unsigned char SpecificCode);
-  CollatorStatus_t HandlePesPrivateData(unsigned char *PesPrivateData);
-    
-public:
+    protected:
 
-  Collator_PesAudioEAc3_c();
-  
-  CollatorStatus_t   Reset(			void );
+        CollatorStatus_t FindNextSyncWord(int *CodeOffset);
+
+        CollatorStatus_t DecideCollatorNextStateAndGetLength(unsigned int *FrameLength);
+        void             GetStreamType(unsigned char * Header, EAc3AudioParsedFrameHeader_t * ParsedFrameHeader);
+        void             SetPesPrivateDataLength(unsigned char SpecificCode);
+        CollatorStatus_t HandlePesPrivateData(unsigned char *PesPrivateData);
+
+    public:
+
+        Collator_PesAudioEAc3_c();
+
+        CollatorStatus_t   Reset(void);
 };
 
 #endif // H_COLLATOR_PES_AUDIO_EAC3

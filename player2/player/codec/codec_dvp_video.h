@@ -38,58 +38,73 @@ Date        Modification                                    Name
 
 class Codec_DvpVideo_c : public Codec_c
 {
-protected:
-    
-    // Data
+    protected:
 
-    BufferManager_t                       BufferManager;
-    bool                                  DataTypesInitialized;
+        // Data
 
-    CodecTrickModeParameters_t		  DvpTrickModeParameters;
-   
-    BufferPool_t                          DecodeBufferPool;
+        BufferManager_t                       BufferManager;
+        bool                                  DataTypesInitialized;
 
-    Ring_t                                OutputRing;
-    
-    // Functions
+        CodecTrickModeParameters_t        DvpTrickModeParameters;
 
-public:
+        BufferPool_t                          DecodeBufferPool;
 
-    //
-    // Constructor/Destructor methods
-    //
+        Ring_t                                OutputRing;
 
-    Codec_DvpVideo_c(		void );
-    ~Codec_DvpVideo_c(		void );
+        // Functions
 
-    //
-    // Standard class functions. 
-    //
-	
-    CodecStatus_t   GetTrickModeParameters(     CodecTrickModeParameters_t      *TrickModeParameters );
-	
-    CodecStatus_t   RegisterOutputBufferRing(   Ring_t                    Ring );	
-	
-    CodecStatus_t   ReleaseDecodeBuffer(        Buffer_t                  Buffer );	
-	
-    CodecStatus_t   Input(                      Buffer_t                  CodedBuffer );
+    public:
 
-    //
-    // Stubbed out functions that do nothin a dvp situation
-    //
+        //
+        // Constructor/Destructor methods
+        //
 
-    CodecStatus_t   OutputPartialDecodeBuffers( void )							{return CodecNoError;}
-    CodecStatus_t   DiscardQueuedDecodes(       void )							{return CodecNoError;}
-    CodecStatus_t   ReleaseReferenceFrame(	unsigned int		ReferenceFrameDecodeIndex )	{return CodecNoError;}
-    CodecStatus_t   CheckReferenceFrameList(	unsigned int		NumberOfReferenceFrameLists,
-						ReferenceFrameList_t    ReferenceFrameList[] )		{return CodecNoError;}
+        Codec_DvpVideo_c(void);
+        ~Codec_DvpVideo_c(void);
 
-    //
-    // Stubbed out base class function that wrapper expects me to have
-    //
+        //
+        // Standard class functions.
+        //
 
-    CodecStatus_t   SetModuleParameters(	unsigned int		 ParameterBlockSize,
-						void			*ParameterBlock )		{return CodecNoError;}
+        CodecStatus_t   GetTrickModeParameters(CodecTrickModeParameters_t      *TrickModeParameters);
+
+        CodecStatus_t   RegisterOutputBufferRing(Ring_t                    Ring);
+
+        CodecStatus_t   ReleaseDecodeBuffer(Buffer_t                  Buffer);
+
+        CodecStatus_t   Input(Buffer_t                  CodedBuffer);
+
+        //
+        // Stubbed out functions that do nothing in a dvp situation
+        //
+
+        CodecStatus_t   OutputPartialDecodeBuffers(void)
+        {
+            return CodecNoError;
+        }
+        CodecStatus_t   DiscardQueuedDecodes(void)
+        {
+            return CodecNoError;
+        }
+        CodecStatus_t   ReleaseReferenceFrame(unsigned int      ReferenceFrameDecodeIndex)
+        {
+            return CodecNoError;
+        }
+        CodecStatus_t   CheckReferenceFrameList(unsigned int        NumberOfReferenceFrameLists,
+                                                ReferenceFrameList_t    ReferenceFrameList[])
+        {
+            return CodecNoError;
+        }
+
+        //
+        // Stubbed out base class function that wrapper expects me to have
+        //
+
+        CodecStatus_t   SetModuleParameters(unsigned int         ParameterBlockSize,
+                                            void            *ParameterBlock)
+        {
+            return CodecNoError;
+        }
 
 };
 

@@ -38,11 +38,12 @@ Date        Modification                                    Name
 
 const char *ToString(PlayerStreamType_t StreamType)
 {
-    switch (StreamType) {
-	CASE(StreamTypeNone);
-	CASE(StreamTypeAudio);
-	CASE(StreamTypeVideo);
-	CASE(StreamTypeOther);
-	DEFAULT;
+    switch (StreamType)
+    {
+            CASE(StreamTypeNone);
+            CASE(StreamTypeAudio);
+            CASE(StreamTypeVideo);
+            CASE(StreamTypeOther);
+            DEFAULT;
     }
 }

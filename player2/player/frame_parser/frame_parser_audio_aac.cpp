@@ -67,22 +67,22 @@ static BufferDataDescriptor_t     AacAudioFrameParametersBuffer = BUFFER_AAC_AUD
 
 #define AAC_MAX_SAMPLE_RATE_IDX 12
 
- static int aac_sample_rates[AAC_MAX_SAMPLE_RATE_IDX+1] = 
- {
-     96000, 88200, 64000, 48000, 44100, 32000,
-     24000, 22050, 16000, 12000, 11025, 8000, 7350
- };
+static int aac_sample_rates[AAC_MAX_SAMPLE_RATE_IDX + 1] =
+{
+    96000, 88200, 64000, 48000, 44100, 32000,
+    24000, 22050, 16000, 12000, 11025, 8000, 7350
+};
 
 #define AAC_MAX_CHANNELS_IDX 7
 
 #if 0
-static int aac_channels[AAC_MAX_CHANNELS_IDX+1] = 
+static int aac_channels[AAC_MAX_CHANNELS_IDX + 1] =
 {
     0, 1, 2, 3, 4, 5, 6, 8
 };
 #endif
 
-const char* FrameTypeName[] = 
+const char* FrameTypeName[] =
 {
     "ADTS",
     "ADIF",
@@ -137,23 +137,23 @@ const char* FrameTypeName[] =
 ///
 /// \return Frame parser status code, FrameParserNoError indicates success.
 ///
-FrameParserStatus_t FrameParser_AudioAac_c::ParseFrameHeader( unsigned char *FrameHeaderBytes,
-                                                              AacAudioParsedFrameHeader_t *ParsedFrameHeader,
-                                                              int AvailableBytes,
-                                                              AacFrameParsingPurpose_t Action,
-                                                              bool EnableHeaderUnplayableErrors )
+FrameParserStatus_t FrameParser_AudioAac_c::ParseFrameHeader(unsigned char *FrameHeaderBytes,
+        AacAudioParsedFrameHeader_t *ParsedFrameHeader,
+        int AvailableBytes,
+        AacFrameParsingPurpose_t Action,
+        bool EnableHeaderUnplayableErrors)
 {
     unsigned int    SamplingFrequency = 0;
     unsigned int    SampleCount = 0;
     unsigned int    FrameSize = 0;
-    BitStreamClass_c	Bits;
+    BitStreamClass_c    Bits;
 
     AacFormatType_t Type;
-    
+
     Bits.SetPointer(FrameHeaderBytes);
 
     unsigned int Sync = Bits.Get(11);
-    
+
     if (Sync == AAC_AUDIO_LOAS_ASS_SYNC_WORD)
     {
         Type = AAC_AUDIO_LOAS_FORMAT;
@@ -162,24 +162,24 @@ FrameParserStatus_t FrameParser_AudioAac_c::ParseFrameHeader( unsigned char *Fra
 
         if (FrameSize > AAC_LOAS_ASS_MAX_FRAME_SIZE)
         {
-            FRAME_COND_ERROR( "Invalid frame size (%d bytes)\n", FrameSize );
+            FRAME_COND_ERROR("Invalid frame size (%d bytes)\n", FrameSize);
             return FrameParserError;
         }
 
-        if (FrameParserNoError != FrameParser_AudioAac_c::ParseAudioMuxElementConfig( &Bits, 
-                                                                                      &SamplingFrequency, 
-                                                                                      &SampleCount, 
-                                                                                      AvailableBytes - AAC_LOAS_ASS_SYNC_LENGTH_HEADER_SIZE,
-                                                                                      Action ))
+        if (FrameParserNoError != FrameParser_AudioAac_c::ParseAudioMuxElementConfig(&Bits,
+                &SamplingFrequency,
+                &SampleCount,
+                AvailableBytes - AAC_LOAS_ASS_SYNC_LENGTH_HEADER_SIZE,
+                Action))
         {
             return FrameParserError;
         }
     }
-    else 
+    else
     {
         // get more bits
         Sync |= Bits.Get(1) << 11;
-        
+
         if (Sync == AAC_AUDIO_ADTS_SYNC_WORD)
         {
             Type = AAC_AUDIO_ADTS_FORMAT;
@@ -189,7 +189,7 @@ FrameParserStatus_t FrameParser_AudioAac_c::ParseFrameHeader( unsigned char *Fra
 
             if (Layer != 0)
             {
-                FRAME_COND_ERROR( "Invalid AAC layer %d\n", Layer );
+                FRAME_COND_ERROR("Invalid AAC layer %d\n", Layer);
                 return FrameParserError;
             }
 
@@ -197,9 +197,9 @@ FrameParserStatus_t FrameParser_AudioAac_c::ParseFrameHeader( unsigned char *Fra
 
             unsigned int profile_ObjectType = Bits.Get(2);
 
-            if ((profile_ObjectType+1) != AAC_AUDIO_PROFILE_LC)
+            if ((profile_ObjectType + 1) != AAC_AUDIO_PROFILE_LC)
             {
-                if( EnableHeaderUnplayableErrors )
+                if (EnableHeaderUnplayableErrors)
                 {
                     FRAME_COND_ERROR("Unsupported AAC profile in ADTS: %d\n", profile_ObjectType);
                     return FrameParserHeaderUnplayable;
@@ -214,8 +214,8 @@ FrameParserStatus_t FrameParser_AudioAac_c::ParseFrameHeader( unsigned char *Fra
                 return FrameParserError;
             }
 
-            // multiple the sampling freq by two in case a sbr object is present
-            SamplingFrequency   = aac_sample_rates[sampling_frequency_index] * 2;
+            // multiply the sampling freq by two in case a sbr object is present
+            SamplingFrequency = aac_sample_rates[sampling_frequency_index] * 2;
 
             Bits.FlushUnseen(1); //private_bit
 
@@ -233,46 +233,48 @@ FrameParserStatus_t FrameParser_AudioAac_c::ParseFrameHeader( unsigned char *Fra
 
             if (FrameSize < AAC_ADTS_MIN_FRAME_SIZE)
             {
-                FRAME_COND_ERROR( "Invalid frame size (%d bytes)\n", FrameSize );
+                FRAME_COND_ERROR("Invalid frame size (%d bytes)\n", FrameSize);
                 return FrameParserError;
             }
 
             Bits.FlushUnseen(11); //adts_buffer_fullness
 
             unsigned int no_raw_data_blocks_in_frame = Bits.Get(2);
-            
+
             // multiple the sample count by two in case a sbr object is present
             SampleCount         = (no_raw_data_blocks_in_frame + 1) * 1024 * 2 ;
         }
         else
-        { 
+        {
             Sync |= Bits.Get(4) << 12;
-            
+
             if (Sync == AAC_AUDIO_LOAS_EPASS_SYNC_WORD)
             {
                 Type = AAC_AUDIO_LOAS_FORMAT;
 
                 Bits.FlushUnseen(4); //futureUse
-                
+
                 FrameSize = Bits.Get(13) + AAC_LOAS_EP_ASS_HEADER_SIZE;
-                
+
                 // continue the parsing to get more info about the frame
-                
+
                 Bits.FlushUnseen(5 + 18); //frameCounter, headerParity
                 AvailableBytes -= AAC_LOAS_EP_ASS_HEADER_SIZE;
-                
+
                 // now parse the EPMuxElement...
                 bool epUsePreviousMuxConfig = Bits.Get(1);
                 Bits.FlushUnseen(2); //epUsePreviousMuxConfigParity
+
                 if (!epUsePreviousMuxConfig)
                 {
                     unsigned int epSpecificConfigLength = Bits.Get(10);
                     unsigned int epSpecificConfigLengthParity = Bits.Get(11);
                     AvailableBytes -= 3;
+
                     if (AvailableBytes > 0)
                     {
-                        Bits.FlushUnseen(epSpecificConfigLength*8); //ErrorProtectionSpecificConfig
-                        Bits.FlushUnseen(epSpecificConfigLengthParity*8); //ErrorProtectionSpecificConfigParity
+                        Bits.FlushUnseen(epSpecificConfigLength * 8); //ErrorProtectionSpecificConfig
+                        Bits.FlushUnseen(epSpecificConfigLengthParity * 8); //ErrorProtectionSpecificConfigParity
                         AvailableBytes -= epSpecificConfigLength + epSpecificConfigLengthParity;
                     }
                 }
@@ -281,12 +283,12 @@ FrameParserStatus_t FrameParser_AudioAac_c::ParseFrameHeader( unsigned char *Fra
                     Bits.FlushUnseen(5); //ByteAlign()
                     AvailableBytes -= 1;
                 }
-                
-                if (FrameParserNoError != FrameParser_AudioAac_c::ParseAudioMuxElementConfig( &Bits, 
-                                                                                              &SamplingFrequency, 
-                                                                                              &SampleCount, 
-                                                                                              AvailableBytes,
-                                                                                              Action ))
+
+                if (FrameParserNoError != FrameParser_AudioAac_c::ParseAudioMuxElementConfig(&Bits,
+                        &SamplingFrequency,
+                        &SampleCount,
+                        AvailableBytes,
+                        Action))
                 {
                     return FrameParserError;
                 }
@@ -298,12 +300,12 @@ FrameParserStatus_t FrameParser_AudioAac_c::ParseFrameHeader( unsigned char *Fra
                 if (Sync == AAC_AUDIO_ADIF_SYNC_WORD)
                 {
                     Type = AAC_AUDIO_ADIF_FORMAT;
-                    FRAME_COND_ERROR( "The AAC ADIF format is not supported yet!\n");
+                    FRAME_COND_ERROR("The AAC ADIF format is not supported yet!\n");
                     return FrameParserHeaderUnplayable;
                 }
                 else
                 {
-                    FRAME_COND_ERROR( "Unknown Synchronization (0x%x)\n", Sync);
+                    FRAME_COND_ERROR("Unknown Synchronization (0x%x)\n", Sync);
                     return FrameParserError;
                 }
             }
@@ -318,11 +320,11 @@ FrameParserStatus_t FrameParser_AudioAac_c::ParseFrameHeader( unsigned char *Fra
     return FrameParserNoError;
 }
 
-FrameParserStatus_t FrameParser_AudioAac_c::ParseAudioMuxElementConfig( BitStreamClass_c * Bits,
-                                                                        unsigned int *     SamplingFrequency,
-                                                                        unsigned int *     SampleCount,
-                                                                        int                AvailableBytes,
-                                                                        AacFrameParsingPurpose_t Action )
+FrameParserStatus_t FrameParser_AudioAac_c::ParseAudioMuxElementConfig(BitStreamClass_c * Bits,
+        unsigned int *     SamplingFrequency,
+        unsigned int *     SampleCount,
+        int                AvailableBytes,
+        AacFrameParsingPurpose_t Action)
 {
     // do as if a sbr extension is always present (searching for the sbr flag requires parsing efforts...)
     bool ImplicitSbrExtension = true;
@@ -338,9 +340,10 @@ FrameParserStatus_t FrameParser_AudioAac_c::ParseAudioMuxElementConfig( BitStrea
         useSameStreamMux = true;
     }
 
-    if ( !useSameStreamMux )
+    if (!useSameStreamMux)
     {
         bool audioMuxVersion = Bits->Get(1);
+
         if (!audioMuxVersion)
         {
             // only get program 0 and layer 0 information ...
@@ -348,6 +351,7 @@ FrameParserStatus_t FrameParser_AudioAac_c::ParseAudioMuxElementConfig( BitStrea
 
             // now parse AudioSpecificConfig
             unsigned int audioObjectType = Bits->Get(5);
+
             if ((audioObjectType != AAC_AUDIO_PROFILE_LC) && (audioObjectType != AAC_AUDIO_PROFILE_SBR))
             {
                 // supported audio profiles (audio firmware):
@@ -355,7 +359,7 @@ FrameParserStatus_t FrameParser_AudioAac_c::ParseAudioMuxElementConfig( BitStrea
                 FRAME_COND_ERROR("Unsupported AAC Audio Object type: %d\n", audioObjectType);
                 return FrameParserError;
             }
-                
+
             unsigned int samplingFrequencyIndex = Bits->Get(4);
 
             if (samplingFrequencyIndex == 0xf)
@@ -382,8 +386,8 @@ FrameParserStatus_t FrameParser_AudioAac_c::ParseAudioMuxElementConfig( BitStrea
 
             if (audioObjectType == AAC_AUDIO_PROFILE_SBR)
             {
-		ImplicitSbrExtension = false;
-		ExplicitSbrExtension = true;
+                ImplicitSbrExtension = false;
+                ExplicitSbrExtension = true;
                 // simply perform checks on the following values...
                 samplingFrequencyIndex = Bits->Get(4);
 
@@ -414,28 +418,30 @@ FrameParserStatus_t FrameParser_AudioAac_c::ParseAudioMuxElementConfig( BitStrea
         }
         else
         {
-            FRAME_COND_ERROR( "AAC LOAS parser: invalid audioMuxVersion reserved value\n");
+            FRAME_COND_ERROR("AAC LOAS parser: invalid audioMuxVersion reserved value\n");
             return FrameParserError;
         }
 
-	// Nick changed this to distinguish between implicit and explicit signalling of SBR
-	// See NOTE 3 of Table 1.21, page 47 of w5711_(14496-3_3rd_sp1).doc - document name 
-	// ISO/IEC 14496-3:2001(E) provided by Gael
-        *SampleCount = 1024 * ((ImplicitSbrExtension || ExplicitSbrExtension)?2:1);
-        *SamplingFrequency *= (ImplicitSbrExtension?2:1);
+        // Nick changed this to distinguish between implicit and explicit signalling of SBR
+        // See NOTE 3 of Table 1.21, page 47 of w5711_(14496-3_3rd_sp1).doc - document name
+        // ISO/IEC 14496-3:2001(E) provided by Gael
+        *SampleCount = 1024 * ((ImplicitSbrExtension || ExplicitSbrExtension) ? 2 : 1);
+        *SamplingFrequency *= (ImplicitSbrExtension ? 2 : 1);
     } // !useSameStreamMux
     else
     {
-        // we're in the situation whare we found the sync word but don't have 
-        if ( Action == AAC_GET_SYNCHRO )
+        // we're in the situation where we found the sync word but don't have
+        if (Action == AAC_GET_SYNCHRO)
         {
             // means we cannot sync without knowing all the audio properties. (useSameconfig is true)
             return FrameParserError;
         }
+
         // use same parameters as last frame...
         *SampleCount = 0;
         *SamplingFrequency = 0;
     }
+
     return FrameParserNoError;
 }
 
@@ -445,15 +451,15 @@ FrameParserStatus_t FrameParser_AudioAac_c::ParseAudioMuxElementConfig( BitStrea
 ///
 ///     Constructor
 ///
-FrameParser_AudioAac_c::FrameParser_AudioAac_c( void )
+FrameParser_AudioAac_c::FrameParser_AudioAac_c(void)
 {
-    Configuration.FrameParserName		= "AudioAac";
+    Configuration.FrameParserName       = "AudioAac";
 
-    Configuration.StreamParametersCount		= 32;
-    Configuration.StreamParametersDescriptor	= &AacAudioStreamParametersBuffer;
+    Configuration.StreamParametersCount     = 32;
+    Configuration.StreamParametersDescriptor    = &AacAudioStreamParametersBuffer;
 
-    Configuration.FrameParametersCount		= 32;
-    Configuration.FrameParametersDescriptor	= &AacAudioFrameParametersBuffer;
+    Configuration.FrameParametersCount      = 32;
+    Configuration.FrameParametersDescriptor = &AacAudioFrameParametersBuffer;
 
 //
 
@@ -464,7 +470,7 @@ FrameParser_AudioAac_c::FrameParser_AudioAac_c( void )
 ///
 ///     Destructor
 ///
-FrameParser_AudioAac_c::~FrameParser_AudioAac_c( void )
+FrameParser_AudioAac_c::~FrameParser_AudioAac_c(void)
 {
     Halt();
     Reset();
@@ -474,9 +480,9 @@ FrameParser_AudioAac_c::~FrameParser_AudioAac_c( void )
 ///
 ///     The Reset function release any resources, and reset all variable
 ///
-FrameParserStatus_t   FrameParser_AudioAac_c::Reset(  void )
+FrameParserStatus_t   FrameParser_AudioAac_c::Reset(void)
 {
-    memset( &CurrentStreamParameters, 0, sizeof(CurrentStreamParameters) );
+    memset(&CurrentStreamParameters, 0, sizeof(CurrentStreamParameters));
     CurrentStreamParameters.Layer = 0; // illegal layer... force frames a parameters update
 
     NumHeaderUnplayableErrors = 0;
@@ -490,7 +496,7 @@ FrameParserStatus_t   FrameParser_AudioAac_c::Reset(  void )
 ///
 ///     The register output ring function
 ///
-FrameParserStatus_t   FrameParser_AudioAac_c::RegisterOutputBufferRing(       Ring_t          Ring )
+FrameParserStatus_t   FrameParser_AudioAac_c::RegisterOutputBufferRing(Ring_t          Ring)
 {
     //
     // Clear our parameter pointers
@@ -503,7 +509,7 @@ FrameParserStatus_t   FrameParser_AudioAac_c::RegisterOutputBufferRing(       Ri
     // Pass the call down the line
     //
 
-    return FrameParser_Audio_c::RegisterOutputBufferRing( Ring );
+    return FrameParser_Audio_c::RegisterOutputBufferRing(Ring);
 }
 
 
@@ -511,9 +517,9 @@ FrameParserStatus_t   FrameParser_AudioAac_c::RegisterOutputBufferRing(       Ri
 ///
 /// Parse the frame header and store the results for when we emit the frame.
 ///
-FrameParserStatus_t   FrameParser_AudioAac_c::ReadHeaders( void )
+FrameParserStatus_t   FrameParser_AudioAac_c::ReadHeaders(void)
 {
-FrameParserStatus_t Status;
+    FrameParserStatus_t Status;
 
     //
     // Perform the common portion of the read headers function
@@ -528,38 +534,39 @@ FrameParserStatus_t Status;
 
     memcpy(&LastParsedFrameHeader, &ParsedFrameHeader, sizeof(AacAudioParsedFrameHeader_t));
 
-    Status = ParseFrameHeader( BufferData, &ParsedFrameHeader, BufferLength, AAC_GET_FRAME_PROPERTIES, true );
+    Status = ParseFrameHeader(BufferData, &ParsedFrameHeader, BufferLength, AAC_GET_FRAME_PROPERTIES, true);
 
-    if( Status != FrameParserNoError )
+    if (Status != FrameParserNoError)
     {
-        if( Status == FrameParserHeaderUnplayable )
+        if (Status == FrameParserHeaderUnplayable)
         {
             NumHeaderUnplayableErrors++;
-            if( NumHeaderUnplayableErrors >= UnplayabilityThreshold )
+
+            if (NumHeaderUnplayableErrors >= UnplayabilityThreshold)
             {
                 // this is clearly not a passing bit error
                 FRAME_ERROR("Too many unplayability reports, marking stream unplayable\n");
-                Player->MarkStreamUnPlayable( Stream );
+                Player->MarkStreamUnPlayable(Stream);
             }
         }
         else
         {
             FRAME_ERROR("Failed to parse frame header, bad collator selected?\n");
         }
-        
-    	return Status;
+
+        return Status;
     }
-    
+
     if (ParsedFrameHeader.Length != BufferLength)
     {
-    	FRAME_ERROR("Buffer length is inconsistant with frame header, bad collator selected?\n");
-    	return FrameParserError;
+        FRAME_ERROR("Buffer length is inconsistent with frame header, bad collator selected?\n");
+        return FrameParserError;
     }
 
     if (isFirstFrame)
     {
         isFirstFrame = false;
-        
+
         FRAME_TRACE("AAC Frame type: %s, FrameSize %d, Number of samples: %d, SamplingFrequency %d, \n",
                     FrameTypeName[ParsedFrameHeader.Type],
                     ParsedFrameHeader.Length,
@@ -592,11 +599,12 @@ FrameParserStatus_t Status;
 
     NumHeaderUnplayableErrors = 0;
 
-    Status = GetNewFrameParameters( (void **) &FrameParameters );
-    if( Status != FrameParserNoError )
+    Status = GetNewFrameParameters((void **) &FrameParameters);
+
+    if (Status != FrameParserNoError)
     {
-    	FRAME_ERROR( "Cannot get new frame parameters\n" );
-    	return Status;
+        FRAME_ERROR("Cannot get new frame parameters\n");
+        return Status;
     }
 
     // Nick inserted some default values here
@@ -607,10 +615,10 @@ FrameParserStatus_t Status;
     ParsedFrameParameters->KeyFrame                                     = true;
     ParsedFrameParameters->ReferenceFrame                               = false;
 
-    ParsedFrameParameters->NewFrameParameters		 = true;
+    ParsedFrameParameters->NewFrameParameters        = true;
     ParsedFrameParameters->SizeofFrameParameterStructure = sizeof(AacAudioFrameParameters_t);
     ParsedFrameParameters->FrameParameterStructure       = FrameParameters;
-    
+
     FrameParameters->FrameSize = ParsedFrameHeader.Length;
     FrameParameters->Type     = ParsedFrameHeader.Type;
 
@@ -619,7 +627,7 @@ FrameParserStatus_t Status;
     ParsedAudioParameters->Source.SampleRateHz = ParsedFrameHeader.SamplingFrequency;
     ParsedAudioParameters->SampleCount = ParsedFrameHeader.NumberOfSamples;
     ParsedAudioParameters->Organisation = 0; // filled in by codec
-    
+
     return FrameParserNoError;
 }
 
@@ -628,10 +636,10 @@ FrameParserStatus_t Status;
 ///
 ///     The reset reference frame list function
 ///
-FrameParserStatus_t   FrameParser_AudioAac_c::ResetReferenceFrameList( void )
+FrameParserStatus_t   FrameParser_AudioAac_c::ResetReferenceFrameList(void)
 {
     FRAME_DEBUG(">><<");
-    Player->CallInSequence( Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, CODEC_RELEASE_ALL );
+    Player->CallInSequence(Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, CODEC_RELEASE_ALL);
 
     return FrameParserNoError;
 }
@@ -643,7 +651,7 @@ FrameParserStatus_t   FrameParser_AudioAac_c::ResetReferenceFrameList( void )
 ///
 /// \copydoc FrameParser_Audio_c::PurgeQueuedPostDecodeParameterSettings()
 ///
-FrameParserStatus_t   FrameParser_AudioAac_c::PurgeQueuedPostDecodeParameterSettings( void )
+FrameParserStatus_t   FrameParser_AudioAac_c::PurgeQueuedPostDecodeParameterSettings(void)
 {
     return FrameParserNoError;
 }
@@ -655,7 +663,7 @@ FrameParserStatus_t   FrameParser_AudioAac_c::PurgeQueuedPostDecodeParameterSett
 ///
 /// \copydoc FrameParser_Audio_c::ProcessQueuedPostDecodeParameterSettings()
 ///
-FrameParserStatus_t   FrameParser_AudioAac_c::ProcessQueuedPostDecodeParameterSettings( void )
+FrameParserStatus_t   FrameParser_AudioAac_c::ProcessQueuedPostDecodeParameterSettings(void)
 {
     return FrameParserNoError;
 }
@@ -668,12 +676,12 @@ FrameParserStatus_t   FrameParser_AudioAac_c::ProcessQueuedPostDecodeParameterSe
 /// For MPEG audio these can be determined immediately (although it the first
 /// frame for decode does not contain a PTS we must synthesize one).
 ///
-FrameParserStatus_t   FrameParser_AudioAac_c::GeneratePostDecodeParameterSettings( void )
+FrameParserStatus_t   FrameParser_AudioAac_c::GeneratePostDecodeParameterSettings(void)
 {
-FrameParserStatus_t Status;
+    FrameParserStatus_t Status;
 
 //
-    
+
     //
     // Default setting
     //
@@ -688,40 +696,41 @@ FrameParserStatus_t Status;
     // Record in the structure the decode and presentation times if specified
     //
 
-    if( CodedFrameParameters->PlaybackTimeValid )
+    if (CodedFrameParameters->PlaybackTimeValid)
     {
-	ParsedFrameParameters->NativePlaybackTime       = CodedFrameParameters->PlaybackTime;
-	TranslatePlaybackTimeNativeToNormalized( CodedFrameParameters->PlaybackTime, &ParsedFrameParameters->NormalizedPlaybackTime );
+        ParsedFrameParameters->NativePlaybackTime       = CodedFrameParameters->PlaybackTime;
+        TranslatePlaybackTimeNativeToNormalized(CodedFrameParameters->PlaybackTime, &ParsedFrameParameters->NormalizedPlaybackTime);
     }
 
-    if( CodedFrameParameters->DecodeTimeValid )
+    if (CodedFrameParameters->DecodeTimeValid)
     {
-	ParsedFrameParameters->NativeDecodeTime         = CodedFrameParameters->DecodeTime;
-	TranslatePlaybackTimeNativeToNormalized( CodedFrameParameters->DecodeTime, &ParsedFrameParameters->NormalizedDecodeTime );
+        ParsedFrameParameters->NativeDecodeTime         = CodedFrameParameters->DecodeTime;
+        TranslatePlaybackTimeNativeToNormalized(CodedFrameParameters->DecodeTime, &ParsedFrameParameters->NormalizedDecodeTime);
     }
 
     //
-    // Sythesize the presentation time if required
+    // Synthesize the presentation time if required
     //
-    
+
     Status = HandleCurrentFrameNormalizedPlaybackTime();
-    if( Status != FrameParserNoError )
+
+    if (Status != FrameParserNoError)
     {
-    	return Status;
+        return Status;
     }
 
     //
     // We can't fail after this point so this is a good time to provide a display frame index
     //
-    
-    ParsedFrameParameters->DisplayFrameIndex		 = NextDisplayFrameIndex++;
-    
+
+    ParsedFrameParameters->DisplayFrameIndex         = NextDisplayFrameIndex++;
+
     //
     // Use the super-class utilities to complete our housekeeping chores
     //
-    
+
     // no call to HandleUpdateStreamParameters() because UpdateStreamParameters is always false
-    FRAME_ASSERT( false == UpdateStreamParameters && NULL == StreamParametersBuffer );
+    FRAME_ASSERT(false == UpdateStreamParameters && NULL == StreamParametersBuffer);
 
     GenerateNextFrameNormalizedPlaybackTime(ParsedFrameHeader.NumberOfSamples,
                                             ParsedFrameHeader.SamplingFrequency);
@@ -738,7 +747,7 @@ FrameParserStatus_t Status;
 ///
 /// \copydoc FrameParser_Audio_c::PrepareReferenceFrameList()
 ///
-FrameParserStatus_t   FrameParser_AudioAac_c::PrepareReferenceFrameList( void )
+FrameParserStatus_t   FrameParser_AudioAac_c::PrepareReferenceFrameList(void)
 {
     return FrameParserNoError;
 }
@@ -750,7 +759,7 @@ FrameParserStatus_t   FrameParser_AudioAac_c::PrepareReferenceFrameList( void )
 ///
 /// \copydoc FrameParser_Audio_c::PrepareReferenceFrameList()
 ///
-FrameParserStatus_t   FrameParser_AudioAac_c::UpdateReferenceFrameList( void )
+FrameParserStatus_t   FrameParser_AudioAac_c::UpdateReferenceFrameList(void)
 {
     return FrameParserNoError;
 }
@@ -761,7 +770,7 @@ FrameParserStatus_t   FrameParser_AudioAac_c::UpdateReferenceFrameList( void )
 ///
 /// \copydoc FrameParser_Audio_c::ProcessReverseDecodeUnsatisfiedReferenceStack()
 ///
-FrameParserStatus_t   FrameParser_AudioAac_c::ProcessReverseDecodeUnsatisfiedReferenceStack( void )
+FrameParserStatus_t   FrameParser_AudioAac_c::ProcessReverseDecodeUnsatisfiedReferenceStack(void)
 {
     return FrameParserNoError;
 }
@@ -772,7 +781,7 @@ FrameParserStatus_t   FrameParser_AudioAac_c::ProcessReverseDecodeUnsatisfiedRef
 ///
 /// \copydoc FrameParser_Audio_c::ProcessReverseDecodeStack()
 ///
-FrameParserStatus_t   FrameParser_AudioAac_c::ProcessReverseDecodeStack(			void )
+FrameParserStatus_t   FrameParser_AudioAac_c::ProcessReverseDecodeStack(void)
 {
     return FrameParserNoError;
 }
@@ -783,9 +792,9 @@ FrameParserStatus_t   FrameParser_AudioAac_c::ProcessReverseDecodeStack(			void 
 ///
 /// \copydoc FrameParser_Audio_c::PurgeReverseDecodeUnsatisfiedReferenceStack()
 ///
-FrameParserStatus_t   FrameParser_AudioAac_c::PurgeReverseDecodeUnsatisfiedReferenceStack(	void )
+FrameParserStatus_t   FrameParser_AudioAac_c::PurgeReverseDecodeUnsatisfiedReferenceStack(void)
 {
-	
+
     return FrameParserNoError;
 }
 
@@ -795,7 +804,7 @@ FrameParserStatus_t   FrameParser_AudioAac_c::PurgeReverseDecodeUnsatisfiedRefer
 ///
 /// \copydoc FrameParser_Audio_c::PurgeReverseDecodeStack()
 ///
-FrameParserStatus_t   FrameParser_AudioAac_c::PurgeReverseDecodeStack(			void )
+FrameParserStatus_t   FrameParser_AudioAac_c::PurgeReverseDecodeStack(void)
 {
     return FrameParserNoError;
 }
@@ -806,7 +815,7 @@ FrameParserStatus_t   FrameParser_AudioAac_c::PurgeReverseDecodeStack(			void )
 ///
 /// \copydoc FrameParser_Audio_c::TestForTrickModeFrameDrop()
 ///
-FrameParserStatus_t   FrameParser_AudioAac_c::TestForTrickModeFrameDrop(			void )
+FrameParserStatus_t   FrameParser_AudioAac_c::TestForTrickModeFrameDrop(void)
 {
     return FrameParserNoError;
 }

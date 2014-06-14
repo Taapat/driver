@@ -1,8 +1,3 @@
-# workaround for stlinux24
-ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
-ccflags-y += $(CCFLAGSY)
-endif
-
 frame_parser-objs:=     frame_parser_base.o \
                         frame_parser_video.o \
                         frame_parser_video_mpeg2.o \

@@ -44,10 +44,6 @@ Date            Modification            Name
 #include "codec_mme_audio_vorbis.h"
 #include "vorbis_audio.h"
 
-#ifdef __KERNEL__
-extern "C"{void flush_cache_all();};
-#endif
-
 // /////////////////////////////////////////////////////////////////////////
 //
 // Locally defined constants
@@ -75,9 +71,9 @@ static BufferDataDescriptor_t           VorbisAudioCodecDecodeContextDescriptor 
 ///
 /// Fill in the configuration parameters used by the super-class and reset everything.
 ///
-Codec_MmeAudioVorbis_c::Codec_MmeAudioVorbis_c( void )
+Codec_MmeAudioVorbis_c::Codec_MmeAudioVorbis_c(void)
 {
-    CODEC_TRACE ("Codec_MmeAudioVorbis_c::%s\n", __FUNCTION__);
+    CODEC_TRACE("Codec_MmeAudioVorbis_c::%s\n", __FUNCTION__);
     Configuration.CodecName                             = "Vorbis audio";
 
     Configuration.StreamParameterContextCount           = 1;
@@ -100,12 +96,12 @@ Codec_MmeAudioVorbis_c::Codec_MmeAudioVorbis_c( void )
 //{{{  Destructor
 ////////////////////////////////////////////////////////////////////////////
 ///
-///     Destructor function, ensures a full halt and reset 
+///     Destructor function, ensures a full halt and reset
 ///     are executed for all levels of the class.
 ///
-Codec_MmeAudioVorbis_c::~Codec_MmeAudioVorbis_c( void )
+Codec_MmeAudioVorbis_c::~Codec_MmeAudioVorbis_c(void)
 {
-    CODEC_TRACE ("Codec_MmeAudioVorbis_c::%s\n", __FUNCTION__);
+    CODEC_TRACE("Codec_MmeAudioVorbis_c::%s\n", __FUNCTION__);
     Halt();
     Reset();
 }
@@ -117,11 +113,11 @@ Codec_MmeAudioVorbis_c::~Codec_MmeAudioVorbis_c( void )
 /// Populate the supplied structure with parameters for VORBIS audio.
 ///
 ///
-CodecStatus_t Codec_MmeAudioVorbis_c::FillOutTransformerGlobalParameters (MME_LxAudioDecoderGlobalParams_t* GlobalParams_p)
+CodecStatus_t Codec_MmeAudioVorbis_c::FillOutTransformerGlobalParameters(MME_LxAudioDecoderGlobalParams_t* GlobalParams_p)
 {
     MME_LxAudioDecoderGlobalParams_t   &GlobalParams    = *GlobalParams_p;
 
-    CODEC_TRACE ("Codec_MmeAudioVorbis_c::%s\n", __FUNCTION__);
+    CODEC_TRACE("Codec_MmeAudioVorbis_c::%s\n", __FUNCTION__);
 
     GlobalParams.StructSize             = sizeof(MME_LxAudioDecoderGlobalParams_t);
 
@@ -134,6 +130,7 @@ CodecStatus_t Codec_MmeAudioVorbis_c::FillOutTransformerGlobalParameters (MME_Lx
     Config.NbSamplesOut                 = 4096;
 
 #if 0
+
     if (ParsedFrameParameters != NULL)
     {
         VorbisAudioStreamParameters_s*     StreamParams    = (VorbisAudioStreamParameters_s*)ParsedFrameParameters->StreamParameterStructure;
@@ -143,6 +140,7 @@ CodecStatus_t Codec_MmeAudioVorbis_c::FillOutTransformerGlobalParameters (MME_Lx
         CODEC_TRACE("%s - No Params\n", __FUNCTION__);
         Config.StructSize               = 2 * sizeof(U32);      // only transmit the ID and StructSize (all other params are irrelevant)
     }
+
 #endif
 
     CODEC_TRACE("DecoderId                  %d\n", Config.DecoderId);
@@ -151,7 +149,7 @@ CodecStatus_t Codec_MmeAudioVorbis_c::FillOutTransformerGlobalParameters (MME_Lx
     CODEC_TRACE("MaxPageSize                %d\n", Config.MaxPageSize);
     CODEC_TRACE("NbSamplesOut               %d\n", Config.NbSamplesOut);
 
-    return Codec_MmeAudio_c::FillOutTransformerGlobalParameters (GlobalParams_p);
+    return Codec_MmeAudio_c::FillOutTransformerGlobalParameters(GlobalParams_p);
 }
 //}}}
 

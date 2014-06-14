@@ -36,7 +36,7 @@ Date        Modification                                    Name
 
 // /////////////////////////////////////////////////////////////////////
 //
-//	Include any component headers
+//  Include any component headers
 
 #include "mpeg_audio.h"
 #include "frame_parser_audio.h"
@@ -53,59 +53,59 @@ Date        Modification                                    Name
 
 class FrameParser_AudioMpeg_c : public FrameParser_Audio_c
 {
-private:
+    private:
 
-    // Data
-    
-    MpegAudioParsedFrameHeader_t ParsedFrameHeader;
-    
-    MpegAudioStreamParameters_t	*StreamParameters;
-    MpegAudioStreamParameters_t CurrentStreamParameters;
-    MpegAudioFrameParameters_t *FrameParameters;
+        // Data
 
-    // Functions
+        MpegAudioParsedFrameHeader_t ParsedFrameHeader;
 
-public:
+        MpegAudioStreamParameters_t *StreamParameters;
+        MpegAudioStreamParameters_t CurrentStreamParameters;
+        MpegAudioFrameParameters_t *FrameParameters;
 
-    //
-    // Constructor function
-    //
+        // Functions
 
-    FrameParser_AudioMpeg_c( void );
-    ~FrameParser_AudioMpeg_c( void );
+    public:
 
-    //
-    // Overrides for component base class functions
-    //
+        //
+        // Constructor function
+        //
 
-    FrameParserStatus_t   Reset(		void );
+        FrameParser_AudioMpeg_c(void);
+        ~FrameParser_AudioMpeg_c(void);
 
-    //
-    // FrameParser class functions
-    //
+        //
+        // Overrides for component base class functions
+        //
 
-    FrameParserStatus_t   RegisterOutputBufferRing(	Ring_t		Ring );
+        FrameParserStatus_t   Reset(void);
 
-    //
-    // Stream specific functions
-    //
+        //
+        // FrameParser class functions
+        //
 
-    FrameParserStatus_t   ReadHeaders( 					void );
-    FrameParserStatus_t   ResetReferenceFrameList(			void );
-    FrameParserStatus_t   PurgeQueuedPostDecodeParameterSettings(	void );
-    FrameParserStatus_t   PrepareReferenceFrameList(			void );
-    FrameParserStatus_t   ProcessQueuedPostDecodeParameterSettings(	void );
-    FrameParserStatus_t   GeneratePostDecodeParameterSettings(		void );
-    FrameParserStatus_t   UpdateReferenceFrameList(			void );
+        FrameParserStatus_t   RegisterOutputBufferRing(Ring_t       Ring);
 
-    FrameParserStatus_t   ProcessReverseDecodeUnsatisfiedReferenceStack(void );
-    FrameParserStatus_t   ProcessReverseDecodeStack(			void );
-    FrameParserStatus_t   PurgeReverseDecodeUnsatisfiedReferenceStack(	void );
-    FrameParserStatus_t   PurgeReverseDecodeStack(			void );
-    FrameParserStatus_t   TestForTrickModeFrameDrop(			void );
+        //
+        // Stream specific functions
+        //
 
-    static FrameParserStatus_t ParseFrameHeader( unsigned char *FrameHeader, MpegAudioParsedFrameHeader_t *ParsedFrameHeader );
-    static FrameParserStatus_t ParseExtensionHeader( unsigned char *ExtensionHeader, unsigned int *ExtensionLength );
+        FrameParserStatus_t   ReadHeaders(void);
+        FrameParserStatus_t   ResetReferenceFrameList(void);
+        FrameParserStatus_t   PurgeQueuedPostDecodeParameterSettings(void);
+        FrameParserStatus_t   PrepareReferenceFrameList(void);
+        FrameParserStatus_t   ProcessQueuedPostDecodeParameterSettings(void);
+        FrameParserStatus_t   GeneratePostDecodeParameterSettings(void);
+        FrameParserStatus_t   UpdateReferenceFrameList(void);
+
+        FrameParserStatus_t   ProcessReverseDecodeUnsatisfiedReferenceStack(void);
+        FrameParserStatus_t   ProcessReverseDecodeStack(void);
+        FrameParserStatus_t   PurgeReverseDecodeUnsatisfiedReferenceStack(void);
+        FrameParserStatus_t   PurgeReverseDecodeStack(void);
+        FrameParserStatus_t   TestForTrickModeFrameDrop(void);
+
+        static FrameParserStatus_t ParseFrameHeader(unsigned char *FrameHeader, MpegAudioParsedFrameHeader_t *ParsedFrameHeader);
+        static FrameParserStatus_t ParseExtensionHeader(unsigned char *ExtensionHeader, unsigned int *ExtensionLength);
 };
 
 #endif /* H_FRAME_PARSER_AUDIO_MPEG */

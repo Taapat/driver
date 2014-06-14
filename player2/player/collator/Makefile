@@ -1,8 +1,3 @@
-# workaround for stlinux24
-ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
-ccflags-y += $(CCFLAGSY)
-endif
-
 collator-objs:= collator_base.o \
 		collator_pes.o \
 		collator_pes_video.o \

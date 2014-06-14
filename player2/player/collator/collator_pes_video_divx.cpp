@@ -63,10 +63,10 @@ Date        Modification                                    Name
 /// ::Reset again because the calls made by the sub-constructors will not have called
 /// our reset method.
 ///
-Collator_PesVideoDivx_c::Collator_PesVideoDivx_c( void )
+Collator_PesVideoDivx_c::Collator_PesVideoDivx_c(void)
 {
-    if( InitializationStatus != CollatorNoError )
-	return;
+    if (InitializationStatus != CollatorNoError)
+        return;
 
     Collator_PesVideoDivx_c::Reset();
 }
@@ -77,17 +77,18 @@ Collator_PesVideoDivx_c::Collator_PesVideoDivx_c( void )
 ///
 /// \return void
 ///
-CollatorStatus_t Collator_PesVideoDivx_c::Reset( void )
+CollatorStatus_t Collator_PesVideoDivx_c::Reset(void)
 {
-CollatorStatus_t Status;
+    CollatorStatus_t Status;
 
 //
 
     COLLATOR_DEBUG(">><<\n");
 
     Status = Collator_PesVideo_c::Reset();
-    if( Status != CollatorNoError )
-	return Status;
+
+    if (Status != CollatorNoError)
+        return Status;
 
     Configuration.GenerateStartCodeList      = true;
     Configuration.MaxStartCodes              = 16;
@@ -103,7 +104,7 @@ CollatorStatus_t Status;
     Configuration.ExtendedHeaderLength       = 0;
     IgnoreCodes                              = false;
     Version                                  = 5;
-	
+
     Configuration.DeferredTerminateFlag           = true;
     Configuration.StreamTerminateFlushesFrame     = false;
 
@@ -111,30 +112,30 @@ CollatorStatus_t Status;
 }
 
 CollatorStatus_t   Collator_PesVideoDivx_c::Input(
-						  PlayerInputDescriptor_t        *Input,
-						  unsigned int            DataLength,
-						  void                   *Data,
-						bool			  NonBlocking,
-						unsigned int		 *DataLengthRemaining )
+    PlayerInputDescriptor_t        *Input,
+    unsigned int            DataLength,
+    void                   *Data,
+    bool              NonBlocking,
+    unsigned int         *DataLengthRemaining)
 {
-unsigned int            i;
-CollatorStatus_t        Status;
-unsigned int            HeaderSize;
-unsigned int            Transfer;
-unsigned int            Skip;
-unsigned int            SpanningWord;
-unsigned int            StartingWord;
-unsigned int            SpanningCount;
-unsigned int            CodeOffset;
-unsigned char           Code;
+    unsigned int            i;
+    CollatorStatus_t        Status;
+    unsigned int            HeaderSize;
+    unsigned int            Transfer;
+    unsigned int            Skip;
+    unsigned int            SpanningWord;
+    unsigned int            StartingWord;
+    unsigned int            SpanningCount;
+    unsigned int            CodeOffset;
+    unsigned char           Code;
 //
 
-    AssertComponentState( "Collator_PesVideoDivx_c::Input", ComponentRunning );
+    AssertComponentState("Collator_PesVideoDivx_c::Input", ComponentRunning);
 
-    COLLATOR_ASSERT( !NonBlocking );
-    InputEntry( Input, DataLength, Data, NonBlocking );
+    COLLATOR_ASSERT(!NonBlocking);
+    InputEntry(Input, DataLength, Data, NonBlocking);
 
-    ActOnInputDescriptor( Input );
+    ActOnInputDescriptor(Input);
 
     //
     // Initialize scan state
@@ -143,469 +144,481 @@ unsigned char           Code;
     RemainingData       = (unsigned char *)Data;
     RemainingLength     = DataLength;
 
-    while( RemainingLength != 0 )
+    while (RemainingLength != 0)
     {
-	//
-	// Are we building a pes header
-	//
+        //
+        // Are we building a pes header
+        //
 
-	if( GotPartialPesHeader )
-	{
-	    HeaderSize          = PES_INITIAL_HEADER_SIZE;
-	    if( RemainingLength >= (PES_INITIAL_HEADER_SIZE - GotPartialPesHeaderBytes) )
-		HeaderSize      = GotPartialPesHeaderBytes >= PES_INITIAL_HEADER_SIZE ?
-		PES_HEADER_SIZE(StoredPesHeader) :
-	    PES_HEADER_SIZE(RemainingData-GotPartialPesHeaderBytes);
+        if (GotPartialPesHeader)
+        {
+            HeaderSize          = PES_INITIAL_HEADER_SIZE;
 
-	    Transfer    = min( RemainingLength, (HeaderSize - GotPartialPesHeaderBytes) );
-	    memcpy( StoredPesHeader+GotPartialPesHeaderBytes, RemainingData, Transfer );
+            if (RemainingLength >= (PES_INITIAL_HEADER_SIZE - GotPartialPesHeaderBytes))
+                HeaderSize      = GotPartialPesHeaderBytes >= PES_INITIAL_HEADER_SIZE ?
+                                  PES_HEADER_SIZE(StoredPesHeader) :
+                                  PES_HEADER_SIZE(RemainingData - GotPartialPesHeaderBytes);
 
-	    GotPartialPesHeaderBytes    += Transfer;
-	    RemainingData               += Transfer;
-	    RemainingLength             -= Transfer;
+            Transfer    = min(RemainingLength, (HeaderSize - GotPartialPesHeaderBytes));
+            memcpy(StoredPesHeader + GotPartialPesHeaderBytes, RemainingData, Transfer);
 
-	    if( GotPartialPesHeaderBytes == PES_HEADER_SIZE(StoredPesHeader) )
-	    {
-		//
-		// Since we are going to process the partial header, we will not have it in future
-		//
+            GotPartialPesHeaderBytes    += Transfer;
+            RemainingData               += Transfer;
+            RemainingLength             -= Transfer;
 
-		GotPartialPesHeader     = false;
+            if (GotPartialPesHeaderBytes == PES_HEADER_SIZE(StoredPesHeader))
+            {
+                //
+                // Since we are going to process the partial header, we will not have it in future
+                //
 
-		//
+                GotPartialPesHeader     = false;
 
-		Status  = ReadPesHeader();
-		if( Status != CollatorNoError )
-		{
-		    InputExit();
-		    return Status;
-		}
+                //
 
-		if( SeekingPesHeader )
-		{
-		    AccumulatedDataSize         = 0;            // Dump any collected data
-		    SeekingPesHeader            = false;
-		}
-	    }
+                Status  = ReadPesHeader();
 
-	    if( RemainingLength == 0 )
-	    {
-		InputExit();
-		return CollatorNoError;
-	    }
-	}
+                if (Status != CollatorNoError)
+                {
+                    InputExit();
+                    return Status;
+                }
 
-	//
-	// Are we building a padding header
-	//
+                if (SeekingPesHeader)
+                {
+                    AccumulatedDataSize         = 0;            // Dump any collected data
+                    SeekingPesHeader            = false;
+                }
+            }
 
-	if( GotPartialPaddingHeader )
-	{
-	    report(severity_error,"Partial Packing\n");
-	    HeaderSize          = PES_PADDING_INITIAL_HEADER_SIZE;
+            if (RemainingLength == 0)
+            {
+                InputExit();
+                return CollatorNoError;
+            }
+        }
 
-	    Transfer    = min( RemainingLength, (HeaderSize - GotPartialPaddingHeaderBytes) );
-	    memcpy( StoredPaddingHeader+GotPartialPaddingHeaderBytes, RemainingData, Transfer );
+        //
+        // Are we building a padding header
+        //
 
-	    GotPartialPaddingHeaderBytes        += Transfer;
-	    RemainingData                       += Transfer;
-	    RemainingLength                     -= Transfer;
+        if (GotPartialPaddingHeader)
+        {
+            report(severity_error, "Partial Packing\n");
+            HeaderSize          = PES_PADDING_INITIAL_HEADER_SIZE;
 
-	    if( GotPartialPaddingHeaderBytes == PES_PADDING_INITIAL_HEADER_SIZE )
-	    {
-		Skipping                         = PES_PADDING_SKIP(StoredPaddingHeader);
-		report(severity_error,"Skipping\n");
-		GotPartialPaddingHeader          = false;
-	    }
+            Transfer    = min(RemainingLength, (HeaderSize - GotPartialPaddingHeaderBytes));
+            memcpy(StoredPaddingHeader + GotPartialPaddingHeaderBytes, RemainingData, Transfer);
 
-	    if( RemainingLength == 0 )
-	    {
-		InputExit();
-		return CollatorNoError;
-	    }
-	}
+            GotPartialPaddingHeaderBytes        += Transfer;
+            RemainingData                       += Transfer;
+            RemainingLength                     -= Transfer;
 
-	//
-	// Are we skipping padding
-	//
+            if (GotPartialPaddingHeaderBytes == PES_PADDING_INITIAL_HEADER_SIZE)
+            {
+                Skipping                         = PES_PADDING_SKIP(StoredPaddingHeader);
+                report(severity_error, "Skipping\n");
+                GotPartialPaddingHeader          = false;
+            }
 
-	if( Skipping != 0 )
-	{
-	    Skip                 = min( Skipping, RemainingLength );
-	    RemainingData       += Skip;
-	    RemainingLength     -= Skip;
-	    Skipping            -= Skip;
+            if (RemainingLength == 0)
+            {
+                InputExit();
+                return CollatorNoError;
+            }
+        }
 
-	    if( RemainingLength == 0 )
-	    {
-		InputExit();
-		return CollatorNoError;
-	    }
-	}
+        //
+        // Are we skipping padding
+        //
 
-	//
-	// Check for spanning header
-	//
+        if (Skipping != 0)
+        {
+            Skip                 = min(Skipping, RemainingLength);
+            RemainingData       += Skip;
+            RemainingLength     -= Skip;
+            Skipping            -= Skip;
 
-	SpanningWord             = 0xffffffff << (8 * min(AccumulatedDataSize,3));
-	SpanningWord            |= BufferBase[AccumulatedDataSize-3] << 16;
-	SpanningWord            |= BufferBase[AccumulatedDataSize-2] << 8;
-	SpanningWord            |= BufferBase[AccumulatedDataSize-1];
+            if (RemainingLength == 0)
+            {
+                InputExit();
+                return CollatorNoError;
+            }
+        }
 
-	StartingWord             = 0x00ffffff >> (8 * min((RemainingLength-1),3));
-	StartingWord            |= RemainingData[0] << 24;
-	StartingWord            |= RemainingData[1] << 16;
-	StartingWord            |= RemainingData[2] <<  8;
+        //
+        // Check for spanning header
+        //
 
-	//
-	// Check for a start code spanning, or in the first word
-	// record the nature of the span in a counter indicating how many
-	// bytes of the code are in the remaining data.
-	// NOTE the 00 at the bottom indicates we have a byte for the code,
-	//      not what it is.
-	//
+        SpanningWord             = 0xffffffff << (8 * min(AccumulatedDataSize, 3));
+        SpanningWord            |= BufferBase[AccumulatedDataSize - 3] << 16;
+        SpanningWord            |= BufferBase[AccumulatedDataSize - 2] << 8;
+        SpanningWord            |= BufferBase[AccumulatedDataSize - 1];
 
-	SpanningCount           = 0;
+        StartingWord             = 0x00ffffff >> (8 * min((RemainingLength - 1), 3));
+        StartingWord            |= RemainingData[0] << 24;
+        StartingWord            |= RemainingData[1] << 16;
+        StartingWord            |= RemainingData[2] <<  8;
 
-	if( (SpanningWord << 8) == 0x00000100 )
-	{
-	    SpanningCount       = 1;
-	}
-	else if( ((SpanningWord << 16) | ((StartingWord >> 16) & 0xff00)) == 0x00000100 )
-	{
-	    SpanningCount       = 2;
-	}
-	else if( ((SpanningWord << 24) | ((StartingWord >> 8)  & 0xffff00)) == 0x00000100 )
-	{
-	    SpanningCount       = 3;
-	}
-	else if( StartingWord == 0x00000100 )
-	{
-	    SpanningCount       = 4;
-	    UseSpanningTime     = false;
-	}
+        //
+        // Check for a start code spanning, or in the first word
+        // record the nature of the span in a counter indicating how many
+        // bytes of the code are in the remaining data.
+        // NOTE the 00 at the bottom indicates we have a byte for the code,
+        //      not what it is.
+        //
 
-	//
-	// Check that if we have a spanning code, that the code is not to be ignored
-	//
+        SpanningCount           = 0;
 
-	if( (SpanningCount != 0) &&
-	    inrange(RemainingData[SpanningCount-1], Configuration.IgnoreCodesRangeStart, Configuration.IgnoreCodesRangeEnd) )
-	{
-	    SpanningCount       = 0;
-	}
+        if ((SpanningWord << 8) == 0x00000100)
+        {
+            SpanningCount       = 1;
+        }
+        else if (((SpanningWord << 16) | ((StartingWord >> 16) & 0xff00)) == 0x00000100)
+        {
+            SpanningCount       = 2;
+        }
+        else if (((SpanningWord << 24) | ((StartingWord >> 8)  & 0xffff00)) == 0x00000100)
+        {
+            SpanningCount       = 3;
+        }
+        else if (StartingWord == 0x00000100)
+        {
+            SpanningCount       = 4;
+            UseSpanningTime     = false;
+        }
 
-	//
-	// Handle a spanning start code
-	//
+        //
+        // Check that if we have a spanning code, that the code is not to be ignored
+        //
 
-	if( SpanningCount != 0 )
-	{
-	    //
-	    // Copy over the spanning bytes
-	    //
+        if ((SpanningCount != 0) &&
+                inrange(RemainingData[SpanningCount - 1], Configuration.IgnoreCodesRangeStart, Configuration.IgnoreCodesRangeEnd))
+        {
+            SpanningCount       = 0;
+        }
 
-	    for( i=0; i<SpanningCount; i++ )
-		BufferBase[AccumulatedDataSize + i]     = RemainingData[i];
+        //
+        // Handle a spanning start code
+        //
 
-	    AccumulatedDataSize += SpanningCount;
-	    RemainingData       += SpanningCount;
-	    RemainingLength     -= SpanningCount;
+        if (SpanningCount != 0)
+        {
+            //
+            // Copy over the spanning bytes
+            //
 
-	    Code                 = BufferBase[AccumulatedDataSize-1];
+            for (i = 0; i < SpanningCount; i++)
+                BufferBase[AccumulatedDataSize + i]     = RemainingData[i];
+
+            AccumulatedDataSize += SpanningCount;
+            RemainingData       += SpanningCount;
+            RemainingLength     -= SpanningCount;
+
+            Code                 = BufferBase[AccumulatedDataSize - 1];
 
 //            report(severity_info,"Start Code %x\n",Code);
 
-	    if( Code == 0x31 )
-	    {
-		Version = *RemainingData;
-		//report(severity_error,"Version Number %d\n",Version);
-		IgnoreCodes = false;
-	    }
+            if (Code == 0x31)
+            {
+                Version = *RemainingData;
+                //report(severity_error,"Version Number %d\n",Version);
+                IgnoreCodes = false;
+            }
 
-	    if( Code == 0x00 )
-	    {
-		GotPartialZeroHeader             = true;
-		AccumulatedDataSize             -= 4;           // Wind to before it
-		GotPartialZeroHeaderBytes        = 4;
-		StoredZeroHeader                 = BufferBase + AccumulatedDataSize;
-		continue;
-	    }
+            if (Code == 0x00)
+            {
+                GotPartialZeroHeader             = true;
+                AccumulatedDataSize             -= 4;           // Wind to before it
+                GotPartialZeroHeaderBytes        = 4;
+                StoredZeroHeader                 = BufferBase + AccumulatedDataSize;
+                continue;
+            }
 
-	    //
-	    // Is it a pes header, and is it a pes stream we are interested in
-	    //
+            //
+            // Is it a pes header, and is it a pes stream we are interested in
+            //
 
-	    else if( IS_PES_START_CODE_VIDEO(Code) )
-	    {
-		AccumulatedDataSize             -= 4;           // Wind to before it
-		if( (Code & Configuration.StreamIdentifierMask) == Configuration.StreamIdentifierCode )
-		{
-		    GotPartialPesHeader         = true;
-		    GotPartialPesHeaderBytes     = 4;
-		    StoredPesHeader              = BufferBase + AccumulatedDataSize;
-		    }
-		else
-		{
-			SeekingPesHeader                 = true;
-		}
-		continue;
-	    }
+            else if (IS_PES_START_CODE_VIDEO(Code))
+            {
+                AccumulatedDataSize             -= 4;           // Wind to before it
 
-	    //
-	    // Or is it a padding block
-	    //
+                if ((Code & Configuration.StreamIdentifierMask) == Configuration.StreamIdentifierCode)
+                {
+                    GotPartialPesHeader         = true;
+                    GotPartialPesHeaderBytes     = 4;
+                    StoredPesHeader              = BufferBase + AccumulatedDataSize;
+                }
+                else
+                {
+                    SeekingPesHeader                 = true;
+                }
 
-	    else if( Code == PES_PADDING_START_CODE )
-	    {
-		GotPartialPaddingHeader          = true;
-		AccumulatedDataSize             -= 4;           // Wind to before it
-		GotPartialPaddingHeaderBytes     = 4;
-		StoredPaddingHeader              = BufferBase + AccumulatedDataSize;
-		continue;
-	    }
+                continue;
+            }
 
-	    //
-	    // Or if we are seeking a pes header, dump what we have and try again
-	    //
+            //
+            // Or is it a padding block
+            //
 
-	    else if( SeekingPesHeader )
-	    {
-		AccumulatedDataSize              = 0;           // Wind to before it
-		continue;
-	    }
+            else if (Code == PES_PADDING_START_CODE)
+            {
+                GotPartialPaddingHeader          = true;
+                AccumulatedDataSize             -= 4;           // Wind to before it
+                GotPartialPaddingHeaderBytes     = 4;
+                StoredPaddingHeader              = BufferBase + AccumulatedDataSize;
+                continue;
+            }
 
-	    //
-	    // Or is it a block terminate code
-	    //
+            //
+            // Or if we are seeking a pes header, dump what we have and try again
+            //
 
-	    else if( TerminationFlagIsSet)
-	    {
-		AccumulatedDataSize             -=4;
-		Status                           = InternalFrameFlush();
-		if( Status != CollatorNoError )
-		{
-		    InputExit();
-		    return Status;
-		}
+            else if (SeekingPesHeader)
+            {
+                AccumulatedDataSize              = 0;           // Wind to before it
+                continue;
+            }
 
-		BufferBase[0]                    = 0x00;
-		BufferBase[1]                    = 0x00;
-		BufferBase[2]                    = 0x01;
-		BufferBase[3]                    = Code;
-		AccumulatedDataSize              = 4;
-		SeekingPesHeader                 = false;
-		TerminationFlagIsSet = false;
+            //
+            // Or is it a block terminate code
+            //
 
-		if ( Configuration.DeferredTerminateFlag &&
-		     ((Code & Configuration.BlockTerminateMask) == Configuration.BlockTerminateCode))
-		{
-			TerminationFlagIsSet = true;
-		}                
+            else if (TerminationFlagIsSet)
+            {
+                AccumulatedDataSize             -= 4;
+                Status                           = InternalFrameFlush();
 
-	    }
-	    else if ( Configuration.DeferredTerminateFlag &&
-			  ((Code & Configuration.BlockTerminateMask) == Configuration.BlockTerminateCode)) 
-	    {
-		IgnoreCodes = true;
-		TerminationFlagIsSet = true;
-	    }
+                if (Status != CollatorNoError)
+                {
+                    InputExit();
+                    return Status;
+                }
 
+                BufferBase[0]                    = 0x00;
+                BufferBase[1]                    = 0x00;
+                BufferBase[2]                    = 0x01;
+                BufferBase[3]                    = Code;
+                AccumulatedDataSize              = 4;
+                SeekingPesHeader                 = false;
+                TerminationFlagIsSet = false;
 
-	    //
-	    // Otherwise (and if its a block terminate) accumulate the start code
-	    //
+                if (Configuration.DeferredTerminateFlag &&
+                        ((Code & Configuration.BlockTerminateMask) == Configuration.BlockTerminateCode))
+                {
+                    TerminationFlagIsSet = true;
+                }
 
-	    Status      = AccumulateStartCode( PackStartCode(AccumulatedDataSize-4,Code) );
-	    if( Status != CollatorNoError )
-	    {
-		DiscardAccumulatedData();
-		InputExit();
-		return Status;
-	    }
-	}
-        
-	//
-	// If we had no spanning code, but we had a spanning PTS, and we 
-	// had no normal PTS for this frame, the copy the spanning time 
-	// to the normal time.
-	//
-
-	else if( !PlaybackTimeValid )
-	{
-	    PlaybackTimeValid		= SpanningPlaybackTimeValid;
-	    PlaybackTime		= SpanningPlaybackTime;
-	    DecodeTimeValid		= SpanningDecodeTimeValid;
-	    DecodeTime			= SpanningDecodeTime;
-	    UseSpanningTime		= false;
-	    SpanningPlaybackTimeValid	= false;
-	    SpanningDecodeTimeValid	= false;
-	}
-
-	//
-	// Now enter the loop processing start codes
-	//
+            }
+            else if (Configuration.DeferredTerminateFlag &&
+                     ((Code & Configuration.BlockTerminateMask) == Configuration.BlockTerminateCode))
+            {
+                IgnoreCodes = true;
+                TerminationFlagIsSet = true;
+            }
 
 
-	while( true )
-	{
+            //
+            // Otherwise (and if its a block terminate) accumulate the start code
+            //
 
-	    Status      = FindNextStartCode( &CodeOffset );
+            Status      = AccumulateStartCode(PackStartCode(AccumulatedDataSize - 4, Code));
 
-	    if( Status != CollatorNoError)
-	    {
-		//
-		// Terminal code after start code processing copy remaining data into buffer
-		//
+            if (Status != CollatorNoError)
+            {
+                DiscardAccumulatedData();
+                InputExit();
+                return Status;
+            }
+        }
 
-		Status  = AccumulateData( RemainingLength, RemainingData );
-		if( Status != CollatorNoError )
-		    DiscardAccumulatedData();
+        //
+        // If we had no spanning code, but we had a spanning PTS, and we
+        // had no normal PTS for this frame, the copy the spanning time
+        // to the normal time.
+        //
 
-		RemainingLength         = 0;
+        else if (!PlaybackTimeValid)
+        {
+            PlaybackTimeValid       = SpanningPlaybackTimeValid;
+            PlaybackTime        = SpanningPlaybackTime;
+            DecodeTimeValid     = SpanningDecodeTimeValid;
+            DecodeTime          = SpanningDecodeTime;
+            UseSpanningTime     = false;
+            SpanningPlaybackTimeValid   = false;
+            SpanningDecodeTimeValid = false;
+        }
 
-		InputExit();
-		return Status;
-	    }
+        //
+        // Now enter the loop processing start codes
+        //
 
-	    //
-	    // Got one accumulate upto and including it
-	    //
 
-	    Status      = AccumulateData( CodeOffset+4, RemainingData );
-	    if( Status != CollatorNoError )
-	    {
-		DiscardAccumulatedData();
-		InputExit();
-		return Status;
-	    }
+        while (true)
+        {
 
-	    Code                                 = RemainingData[CodeOffset+3];
-	    RemainingLength                     -= CodeOffset+4;
-	    RemainingData                       += CodeOffset+4;
+            Status      = FindNextStartCode(&CodeOffset);
+
+            if (Status != CollatorNoError)
+            {
+                //
+                // Terminal code after start code processing copy remaining data into buffer
+                //
+
+                Status  = AccumulateData(RemainingLength, RemainingData);
+
+                if (Status != CollatorNoError)
+                    DiscardAccumulatedData();
+
+                RemainingLength         = 0;
+
+                InputExit();
+                return Status;
+            }
+
+            //
+            // Got one accumulate up to and including it
+            //
+
+            Status      = AccumulateData(CodeOffset + 4, RemainingData);
+
+            if (Status != CollatorNoError)
+            {
+                DiscardAccumulatedData();
+                InputExit();
+                return Status;
+            }
+
+            Code                                 = RemainingData[CodeOffset + 3];
+            RemainingLength                     -= CodeOffset + 4;
+            RemainingData                       += CodeOffset + 4;
 
 //            report(severity_info,"Start Code %x (ignore %d)\n",Code,IgnoreCodes);
 
 
-	    // second case is for when we have 2 B6's in a group which can cause issues. Test with BatmanBegins
-	    if ((IgnoreCodes == false) || ((Code & Configuration.BlockTerminateMask) == Configuration.BlockTerminateCode) )
-	    {    
+            // second case is for when we have 2 B6's in a group which can cause issues. Test with BatmanBegins
+            if ((IgnoreCodes == false) || ((Code & Configuration.BlockTerminateMask) == Configuration.BlockTerminateCode))
+            {
 
-		//
-		// Is it a pes header, and is it a pes stream we are interested in
-		//
+                //
+                // Is it a pes header, and is it a pes stream we are interested in
+                //
 
-		if( Code == 0x00 )
-		{
-		    GotPartialZeroHeader                 = true;
-		    AccumulatedDataSize         -= 4;           // Wind to before it
-		    GotPartialZeroHeaderBytes    = 4;
-		    StoredZeroHeader             = BufferBase + AccumulatedDataSize;
-		    continue;
-		}
+                if (Code == 0x00)
+                {
+                    GotPartialZeroHeader                 = true;
+                    AccumulatedDataSize         -= 4;           // Wind to before it
+                    GotPartialZeroHeaderBytes    = 4;
+                    StoredZeroHeader             = BufferBase + AccumulatedDataSize;
+                    continue;
+                }
 
-		else if( IS_PES_START_CODE_VIDEO(Code) )
-		{
-		    AccumulatedDataSize         -= 4;           // Wind to before it
-		    if( (Code & Configuration.StreamIdentifierMask) == Configuration.StreamIdentifierCode )
-		    {
-			GotPartialPesHeader             = true;
-			GotPartialPesHeaderBytes         = 4;
-			StoredPesHeader          = BufferBase + AccumulatedDataSize;
-		    }
-		    else
-		    {
-			SeekingPesHeader                 = true;
-		    }
-		    break;
-		}
+                else if (IS_PES_START_CODE_VIDEO(Code))
+                {
+                    AccumulatedDataSize         -= 4;           // Wind to before it
 
-		//
-		// Or is it a padding block
-		//
+                    if ((Code & Configuration.StreamIdentifierMask) == Configuration.StreamIdentifierCode)
+                    {
+                        GotPartialPesHeader             = true;
+                        GotPartialPesHeaderBytes         = 4;
+                        StoredPesHeader          = BufferBase + AccumulatedDataSize;
+                    }
+                    else
+                    {
+                        SeekingPesHeader                 = true;
+                    }
 
-		else if( Code == PES_PADDING_START_CODE )
-		{
-		    GotPartialPaddingHeader              = true;
-		    AccumulatedDataSize         -= 4;           // Wind to before it
-		    GotPartialPaddingHeaderBytes         = 4;
-		    StoredPaddingHeader          = BufferBase + AccumulatedDataSize;
-		    break;
-		}
+                    break;
+                }
 
-		//
-		// Or if we are seeking a pes header, dump what we have and try again
-		//
+                //
+                // Or is it a padding block
+                //
 
-		else if( SeekingPesHeader )
-		{
-		    AccumulatedDataSize          = 0;           // Wind to before it
-		    break;
-		}
+                else if (Code == PES_PADDING_START_CODE)
+                {
+                    GotPartialPaddingHeader              = true;
+                    AccumulatedDataSize         -= 4;           // Wind to before it
+                    GotPartialPaddingHeaderBytes         = 4;
+                    StoredPaddingHeader          = BufferBase + AccumulatedDataSize;
+                    break;
+                }
 
-		//
-		// Or is it a block terminate code
-		//
+                //
+                // Or if we are seeking a pes header, dump what we have and try again
+                //
 
-		else if( TerminationFlagIsSet)
-		{
-		    AccumulatedDataSize         -=4;
-		    Status                               = InternalFrameFlush();
-		    if( Status != CollatorNoError )
-		    {
-			InputExit();
-			return Status;
-		    }
+                else if (SeekingPesHeader)
+                {
+                    AccumulatedDataSize          = 0;           // Wind to before it
+                    break;
+                }
 
-		    BufferBase[0]                        = 0x00;
-		    BufferBase[1]                        = 0x00;
-		    BufferBase[2]                        = 0x01;
-		    BufferBase[3]                        = Code;
-		    AccumulatedDataSize          = 4;
-		    SeekingPesHeader             = false;
+                //
+                // Or is it a block terminate code
+                //
 
+                else if (TerminationFlagIsSet)
+                {
+                    AccumulatedDataSize         -= 4;
+                    Status                               = InternalFrameFlush();
 
-		    if ( Configuration.DeferredTerminateFlag &&
-			 ((Code & Configuration.BlockTerminateMask) == Configuration.BlockTerminateCode))
-		    {    
-			TerminationFlagIsSet = true;
-		    }
+                    if (Status != CollatorNoError)
+                    {
+                        InputExit();
+                        return Status;
+                    }
 
-		    else
-			TerminationFlagIsSet = false;                    
+                    BufferBase[0]                        = 0x00;
+                    BufferBase[1]                        = 0x00;
+                    BufferBase[2]                        = 0x01;
+                    BufferBase[3]                        = Code;
+                    AccumulatedDataSize          = 4;
+                    SeekingPesHeader             = false;
 
 
-		}
+                    if (Configuration.DeferredTerminateFlag &&
+                            ((Code & Configuration.BlockTerminateMask) == Configuration.BlockTerminateCode))
+                    {
+                        TerminationFlagIsSet = true;
+                    }
 
-		else if ( (Code & Configuration.BlockTerminateMask) == Configuration.BlockTerminateCode)
-		{
-		    TerminationFlagIsSet = true;
-		    IgnoreCodes = true;
-		}
+                    else
+                        TerminationFlagIsSet = false;
 
-		//
-		// Otherwise (and if its a block terminate) accumulate the start code
-		//
 
-		Status  = AccumulateStartCode( PackStartCode(AccumulatedDataSize-4,Code) );
-		if( Status != CollatorNoError )
-		{
-		    DiscardAccumulatedData();
-		    InputExit();
-		    return Status;
-		}
-		else if (Version != 3) // work around for issues with fake start codes in 311 streams
-		{	    
-			IgnoreCodes = false;
-		}
-	    }
-	    else
-	    {    
+                }
+
+                else if ((Code & Configuration.BlockTerminateMask) == Configuration.BlockTerminateCode)
+                {
+                    TerminationFlagIsSet = true;
+                    IgnoreCodes = true;
+                }
+
+                //
+                // Otherwise (and if its a block terminate) accumulate the start code
+                //
+
+                Status  = AccumulateStartCode(PackStartCode(AccumulatedDataSize - 4, Code));
+
+                if (Status != CollatorNoError)
+                {
+                    DiscardAccumulatedData();
+                    InputExit();
+                    return Status;
+                }
+                else if (Version != 3) // work around for issues with fake start codes in 311 streams
+                {
+                    IgnoreCodes = false;
+                }
+            }
+            else
+            {
 //                report (severity_error,"Ignoring Code %x\n",Code);
-		continue;
-	    }
+                continue;
+            }
 
-	}
+        }
 
     }
 

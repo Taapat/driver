@@ -1,8 +1,3 @@
-# workaround for stlinux24
-ifneq (,$(findstring 2.6.3,$(KERNELVERSION)))
-ccflags-y += $(CCFLAGSY)
-endif
-
 player-objs :=  player_coded_frame.o \
 		player_construct.o \
 		player_events.o \

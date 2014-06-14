@@ -19,15 +19,15 @@ Date        Modification                                    Name
 // ------------------------------------------------------------------------
 // Constructor function
 
-RingGeneric_c::RingGeneric_c( unsigned int MaxEntries )
+RingGeneric_c::RingGeneric_c(unsigned int MaxEntries)
 {
-    OS_InitializeMutex( &Lock );
-    OS_InitializeEvent( &Signal );
+    OS_InitializeMutex(&Lock);
+    OS_InitializeEvent(&Signal);
 
     Limit       = MaxEntries + 1;
     NextExtract = 0;
     NextInsert  = 0;
-    Storage     = new unsigned int[Limit];
+    Storage     = new uintptr_t[Limit];
 
     InitializationStatus = (Storage == NULL) ? RingNoMemory : RingNoError;
 }
@@ -35,43 +35,44 @@ RingGeneric_c::RingGeneric_c( unsigned int MaxEntries )
 // ------------------------------------------------------------------------
 // Destructor function
 
-RingGeneric_c::~RingGeneric_c( void )
+RingGeneric_c::~RingGeneric_c(void)
 {
-    OS_SetEvent( &Signal );
-    OS_SleepMilliSeconds( 1 );
+    OS_SetEvent(&Signal);
+    OS_SleepMilliSeconds(1);
 
-    OS_TerminateMutex( &Lock );
-    OS_TerminateEvent( &Signal );
+    OS_TerminateMutex(&Lock);
+    OS_TerminateEvent(&Signal);
 
-    if( Storage != NULL )
-	delete Storage;
+    if (Storage != NULL)
+        delete [] Storage;
 }
 
 // ------------------------------------------------------------------------
 // Insert function
 
-RingStatus_t   RingGeneric_c::Insert( unsigned int       Value )
+RingStatus_t   RingGeneric_c::Insert(uintptr_t      Value)
 {
-unsigned int OldNextInsert;
+    unsigned int OldNextInsert;
 
-    OS_LockMutex( &Lock );
+    OS_LockMutex(&Lock);
 
     OldNextInsert       = NextInsert;
     Storage[NextInsert] = Value;
 
     NextInsert++;
-    if( NextInsert == Limit )
-	NextInsert = 0;
 
-    if( NextInsert == NextExtract )
+    if (NextInsert == Limit)
+        NextInsert = 0;
+
+    if (NextInsert == NextExtract)
     {
-	NextInsert      = OldNextInsert;
-	OS_UnLockMutex( &Lock );
-	return RingTooManyEntries;
+        NextInsert      = OldNextInsert;
+        OS_UnLockMutex(&Lock);
+        return RingTooManyEntries;
     }
 
-    OS_UnLockMutex( &Lock );
-    OS_SetEvent( &Signal );
+    OS_UnLockMutex(&Lock);
+    OS_SetEvent(&Signal);
 
     return RingNoError;
 }
@@ -79,43 +80,46 @@ unsigned int OldNextInsert;
 // ------------------------------------------------------------------------
 // Extract function
 
-RingStatus_t   RingGeneric_c::Extract(  unsigned int    *Value,
-					unsigned int     BlockingPeriod )
+RingStatus_t   RingGeneric_c::Extract(uintptr_t       *Value,
+                                      unsigned int     BlockingPeriod)
 {
     //
-    // If there is nothing in the ring we wait for upto the specified period.
+    // If there is nothing in the ring we wait for up to the specified period.
     //
 
-    OS_ResetEvent( &Signal );
-    if( (NextExtract == NextInsert) && (BlockingPeriod != RING_NONE_BLOCKING) )
-	OS_WaitForEvent( &Signal, BlockingPeriod );
+    OS_ResetEvent(&Signal);
 
-    OS_LockMutex( &Lock );
-    if( NextExtract != NextInsert )
+    if ((NextExtract == NextInsert) && (BlockingPeriod != RING_NONE_BLOCKING))
+        OS_WaitForEvent(&Signal, BlockingPeriod);
+
+    OS_LockMutex(&Lock);
+
+    if (NextExtract != NextInsert)
     {
-	*Value = Storage[NextExtract];
+        *Value = Storage[NextExtract];
 
-	NextExtract++;
-	if( NextExtract == Limit )
-	    NextExtract = 0;
+        NextExtract++;
 
-	OS_UnLockMutex( &Lock );
-	return RingNoError;
+        if (NextExtract == Limit)
+            NextExtract = 0;
+
+        OS_UnLockMutex(&Lock);
+        return RingNoError;
     }
 
-    OS_UnLockMutex( &Lock );
+    OS_UnLockMutex(&Lock);
     return RingNothingToGet;
 }
 
 // ------------------------------------------------------------------------
 // Flush function
 
-RingStatus_t   RingGeneric_c::Flush( void )
+RingStatus_t   RingGeneric_c::Flush(void)
 {
-    OS_LockMutex( &Lock );
-    NextExtract	= 0;
-    NextInsert	= 0;
-    OS_UnLockMutex( &Lock );
+    OS_LockMutex(&Lock);
+    NextExtract = 0;
+    NextInsert  = 0;
+    OS_UnLockMutex(&Lock);
 
     return RingNoError;
 }
@@ -123,8 +127,15 @@ RingStatus_t   RingGeneric_c::Flush( void )
 // ------------------------------------------------------------------------
 // Non-empty function
 
-bool   RingGeneric_c::NonEmpty( void )
+bool   RingGeneric_c::NonEmpty(void)
 {
-    return (NextExtract != NextInsert);
+    bool result;
+    OS_LockMutex(&Lock);
+
+    result = (NextExtract != NextInsert);
+
+    OS_UnLockMutex(&Lock);
+
+    return result;
 }
 

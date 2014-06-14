@@ -32,12 +32,8 @@ Date        Modification                                    Name
 #define H_MONITOR_MME
 
 #include <linux/sched.h>
-#include <linux/version.h>
-#if defined(__TDT__) && (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30))
-#include <asm/semaphore.h>
-#else
 #include <linux/semaphore.h>
-#endif
+#include <linux/device.h>
 
 #include "mme.h"
 #include "EVENT_Log_TransformerTypes.h"
@@ -67,10 +63,10 @@ struct MMEContext_s
 };
 
 
-int MonitorMMEInit                     (struct DeviceContext_s*         DeviceContext,
-                                        struct MMEContext_s*            Context,
-                                        unsigned int                    Id);
-int MonitorMMETerminate                (struct MMEContext_s*            Context);
+int MonitorMMEInit(struct DeviceContext_s*         DeviceContext,
+                   struct MMEContext_s*            Context,
+                   unsigned int                    Id);
+int MonitorMMETerminate(struct MMEContext_s*            Context);
 
 
 #endif

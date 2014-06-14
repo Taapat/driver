@@ -36,7 +36,7 @@ Date        Modification                                    Name
 
 // /////////////////////////////////////////////////////////////////////
 //
-//	Include any component headers
+//  Include any component headers
 
 #include "codec_mme_audio.h"
 #include "codec_mme_audio_dtshd.h"
@@ -59,49 +59,49 @@ Date        Modification                                    Name
 
 class Codec_MmeAudioSilence_c : public Codec_MmeAudio_c
 {
-protected:
+    protected:
 
-    // Data
-    unsigned int             CurrentTranscodeBufferIndex;
-    CodecBufferState_t       TranscodedBuffers[DTSHD_TRANSCODE_BUFFER_COUNT];
-    Buffer_c*                CurrentTranscodeBuffer;
-    bool                     TranscodeEnable;
-    
-    allocator_device_t       TranscodedFrameMemoryDevice;
-    BufferPool_t             TranscodedFramePool;
-    void                    *TranscodedFrameMemory[3];
+        // Data
+        unsigned int             CurrentTranscodeBufferIndex;
+        CodecBufferState_t       TranscodedBuffers[DTSHD_TRANSCODE_BUFFER_COUNT];
+        Buffer_c*                CurrentTranscodeBuffer;
+        bool                     TranscodeEnable;
 
-    BufferDataDescriptor_t  *TranscodedFrameBufferDescriptor;
-    BufferType_t             TranscodedFrameBufferType;
-    // Functions
+        allocator_device_t       TranscodedFrameMemoryDevice;
+        BufferPool_t             TranscodedFramePool;
+        void                    *TranscodedFrameMemory[3];
 
-public:
+        BufferDataDescriptor_t  *TranscodedFrameBufferDescriptor;
+        BufferType_t             TranscodedFrameBufferType;
+        // Functions
 
-    //
-    // Constructor/Destructor methods
-    //
+    public:
 
-    Codec_MmeAudioSilence_c(		void );
-    ~Codec_MmeAudioSilence_c(		void );
+        //
+        // Constructor/Destructor methods
+        //
 
-    //
-    // Extension to base functions
-    //
-    
-    CodecStatus_t   HandleCapabilities(         void );
+        Codec_MmeAudioSilence_c(void);
+        ~Codec_MmeAudioSilence_c(void);
 
-protected:
+        //
+        // Extension to base functions
+        //
 
-    CodecStatus_t   FillOutTransformerInitializationParameters( void );
-    CodecStatus_t   FillOutSetStreamParametersCommand( 		void );
-    CodecStatus_t   FillOutDecodeCommand(       		void );
-    CodecStatus_t   ValidateDecodeContext( CodecBaseDecodeContext_t *Context );
-    CodecStatus_t   DumpSetStreamParameters( 			void	*Parameters );
-    void            SetCommandIO(void);
-    CodecStatus_t   GetTranscodedFrameBufferPool( BufferPool_t * Tfp );
-    CodecStatus_t   GetTranscodeBuffer( void );
-    void            AttachCodedFrameBuffer( void );
-    CodecStatus_t   DumpDecodeParameters( 			void	*Parameters );
-    CodecStatus_t   Reset( void );
+        CodecStatus_t   HandleCapabilities(void);
+
+    protected:
+
+        CodecStatus_t   FillOutTransformerInitializationParameters(void);
+        CodecStatus_t   FillOutSetStreamParametersCommand(void);
+        CodecStatus_t   FillOutDecodeCommand(void);
+        CodecStatus_t   ValidateDecodeContext(CodecBaseDecodeContext_t *Context);
+        CodecStatus_t   DumpSetStreamParameters(void    *Parameters);
+        void            SetCommandIO(void);
+        CodecStatus_t   GetTranscodedFrameBufferPool(BufferPool_t * Tfp);
+        CodecStatus_t   GetTranscodeBuffer(void);
+        void            AttachCodedFrameBuffer(void);
+        CodecStatus_t   DumpDecodeParameters(void   *Parameters);
+        CodecStatus_t   Reset(void);
 };
 #endif /* H_CODEC_MME_AUDIO_SILENCE */

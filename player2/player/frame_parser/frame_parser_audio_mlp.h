@@ -36,7 +36,7 @@ Date        Modification                                    Name
 
 // /////////////////////////////////////////////////////////////////////
 //
-//	Include any component headers
+//  Include any component headers
 
 #include "mlp.h"
 #include "frame_parser_audio.h"
@@ -53,61 +53,61 @@ Date        Modification                                    Name
 
 class FrameParser_AudioMlp_c : public FrameParser_Audio_c
 {
-private:
+    private:
 
-    // Data
-    
-    MlpAudioParsedFrameHeader_t ParsedFrameHeader;
-    
-    MlpAudioStreamParameters_t	*StreamParameters;
-    MlpAudioStreamParameters_t CurrentStreamParameters;
-    MlpAudioFrameParameters_t *FrameParameters;
+        // Data
 
-    bool IsFirstMajorFrame;      ///< True if we are handling the very first major sync frame.
+        MlpAudioParsedFrameHeader_t ParsedFrameHeader;
 
-    // Functions
+        MlpAudioStreamParameters_t  *StreamParameters;
+        MlpAudioStreamParameters_t CurrentStreamParameters;
+        MlpAudioFrameParameters_t *FrameParameters;
 
-public:
+        bool IsFirstMajorFrame;      ///< True if we are handling the very first major sync frame.
 
-    //
-    // Constructor function
-    //
+        // Functions
 
-    FrameParser_AudioMlp_c( void );
-    ~FrameParser_AudioMlp_c( void );
+    public:
 
-    //
-    // Overrides for component base class functions
-    //
+        //
+        // Constructor function
+        //
 
-    FrameParserStatus_t   Reset(		void );
+        FrameParser_AudioMlp_c(void);
+        ~FrameParser_AudioMlp_c(void);
 
-    //
-    // FrameParser class functions
-    //
+        //
+        // Overrides for component base class functions
+        //
 
-    FrameParserStatus_t   RegisterOutputBufferRing(	Ring_t		Ring );
+        FrameParserStatus_t   Reset(void);
 
-    //
-    // Stream specific functions
-    //
+        //
+        // FrameParser class functions
+        //
 
-    FrameParserStatus_t   ReadHeaders( 					void );
-    FrameParserStatus_t   ResetReferenceFrameList(			void );
-    FrameParserStatus_t   PurgeQueuedPostDecodeParameterSettings(	void );
-    FrameParserStatus_t   PrepareReferenceFrameList(			void );
-    FrameParserStatus_t   ProcessQueuedPostDecodeParameterSettings(	void );
-    FrameParserStatus_t   GeneratePostDecodeParameterSettings(		void );
-    FrameParserStatus_t   UpdateReferenceFrameList(			void );
+        FrameParserStatus_t   RegisterOutputBufferRing(Ring_t       Ring);
 
-    FrameParserStatus_t   ProcessReverseDecodeUnsatisfiedReferenceStack(void );
-    FrameParserStatus_t   ProcessReverseDecodeStack(			void );
-    FrameParserStatus_t   PurgeReverseDecodeUnsatisfiedReferenceStack(	void );
-    FrameParserStatus_t   PurgeReverseDecodeStack(			void );
-    FrameParserStatus_t   TestForTrickModeFrameDrop(			void );
+        //
+        // Stream specific functions
+        //
 
-    static FrameParserStatus_t ParseSingleFrameHeader( unsigned char *FrameHeader, MlpAudioParsedFrameHeader_t *ParsedFrameHeader );
-    FrameParserStatus_t ParseFrameHeader( unsigned char *FrameHeader, MlpAudioParsedFrameHeader_t *ParsedFrameHeader, int GivenFrameSize );
+        FrameParserStatus_t   ReadHeaders(void);
+        FrameParserStatus_t   ResetReferenceFrameList(void);
+        FrameParserStatus_t   PurgeQueuedPostDecodeParameterSettings(void);
+        FrameParserStatus_t   PrepareReferenceFrameList(void);
+        FrameParserStatus_t   ProcessQueuedPostDecodeParameterSettings(void);
+        FrameParserStatus_t   GeneratePostDecodeParameterSettings(void);
+        FrameParserStatus_t   UpdateReferenceFrameList(void);
+
+        FrameParserStatus_t   ProcessReverseDecodeUnsatisfiedReferenceStack(void);
+        FrameParserStatus_t   ProcessReverseDecodeStack(void);
+        FrameParserStatus_t   PurgeReverseDecodeUnsatisfiedReferenceStack(void);
+        FrameParserStatus_t   PurgeReverseDecodeStack(void);
+        FrameParserStatus_t   TestForTrickModeFrameDrop(void);
+
+        static FrameParserStatus_t ParseSingleFrameHeader(unsigned char *FrameHeader, MlpAudioParsedFrameHeader_t *ParsedFrameHeader);
+        FrameParserStatus_t ParseFrameHeader(unsigned char *FrameHeader, MlpAudioParsedFrameHeader_t *ParsedFrameHeader, int GivenFrameSize);
 };
 
 #endif /* H_FRAME_PARSER_AUDIO_MLP */
