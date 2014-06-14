@@ -16,7 +16,7 @@ CCFLAGSY+= -fno-exceptions
 
 ## It would be good to make this CXXFLAGS however, this generates some missing cxx symbols???
 ## Somebody is using c++ in c code.
-CCFLAGSY+= -fno-rtti
+EXTRA_CXXFLAGS+= -fno-rtti
 
 ##A bit of a hack to stop conflicting functions
 ifeq ($(CONFIG_STM_UNIFY_PLAYER2),y)
