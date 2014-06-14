@@ -157,14 +157,13 @@ static void VFD_clr(void)
 	}
 }
 
-void draw_thread(void *arg)
+int draw_thread(void *arg)
 {
   struct vfd_ioctl_data *data;
   struct vfd_ioctl_data draw_data;
   unsigned char buf[VFD_DATA_LEN];
   int count = 0;
   int pos = 0;
-
 
   data = (struct vfd_ioctl_data *)arg;
 
@@ -179,14 +178,16 @@ void draw_thread(void *arg)
   {
     while(pos < draw_data.length)
     {
+       int countb;
+
        if(kthread_should_stop())
        {
     	   thread_stop = 1;
-    	   return;
+    	   return 0;
        }
 
+       countb = utf8_count(&draw_data.data[pos], draw_data.length - pos, 8);
        clear_display();
-       int countb = utf8_count(&draw_data.data[pos], draw_data.length - pos, 8);
        memcpy(buf, &draw_data.data[pos], countb);
        buf[countb] = '\0';
        YWPANEL_VFD_ShowString(buf);
@@ -202,8 +203,8 @@ void draw_thread(void *arg)
 
   if(count > 0)
   {
-      clear_display();
       int countb = utf8_count(&draw_data.data[0], draw_data.length, 8);
+      clear_display();
       memcpy(buf, draw_data.data, countb);
       buf[countb] = '\0';
       YWPANEL_VFD_ShowString(buf);
@@ -211,6 +212,7 @@ void draw_thread(void *arg)
   else VFD_clr();
 
   thread_stop = 1;
+  return 0;
 }
 
 int run_draw_thread(struct vfd_ioctl_data *draw_data)
@@ -231,7 +233,7 @@ int run_draw_thread(struct vfd_ioctl_data *draw_data)
         YWPANEL_VFD_ShowString(buf);
     } else {
         thread_stop = 2;
-        thread=kthread_run(draw_thread,draw_data,"draw thread",NULL,true);
+        thread=kthread_run(draw_thread,draw_data,"draw thread");
 
         //wait thread run
         while(thread_stop == 2)
@@ -325,7 +327,6 @@ EXPORT_SYMBOL(aotomSetIcon);
 
 static ssize_t AOTOMdev_write(struct file *filp, const char *buff, size_t len, loff_t *off)
 {
-    char* kernel_buf;
     int minor, vLoop, res = 0;
 
     struct vfd_ioctl_data data;
@@ -559,7 +560,9 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 	{
 	    if (mode_digit != DIGITNO) {
 		u32 uTime = 0;
+#if 0
 		u32 uStandByKey = 0;
+#endif
 		u32 uPowerOnTime = 0;
 		get_user(uTime, (int *) arg);
 		//printk("uTime = %d\n", uTime);
@@ -595,7 +598,6 @@ static int AOTOMdev_ioctl(struct inode *Inode, struct file *File, unsigned int c
 	{
 	    if (mode_digit != DIGITNO) {
 		u32 uTime = 0;
-		char cTime[5];
 		uTime = YWPANEL_FP_GetTime();
 		//printk("uTime = %d\n", uTime);
 		put_user(uTime, (int *) arg);
@@ -678,7 +680,7 @@ static struct workqueue_struct *fpwq;
 
 struct semaphore button_sem;
 
-void button_bad_polling(void)
+static void button_bad_polling(struct work_struct *work)
 {
 	int btn_pressed = 0;
 	int report_key = 0;
@@ -854,8 +856,8 @@ static int __init aotom_init_module(void)
 
 	vfd_class = class_create(THIS_MODULE, DEVICE_NAME);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
-	device_create(vfd_class, NULL, MKDEV(VFD_MAJOR, 0), NULL, "vfd", 0);
-	device_create(vfd_class, NULL, MKDEV(VFD_MAJOR, 1), NULL, "rc", 1);
+	device_create(vfd_class, NULL, MKDEV(VFD_MAJOR, 0), NULL, "vfd");
+	device_create(vfd_class, NULL, MKDEV(VFD_MAJOR, 1), NULL, "rc");
 #else
 	class_device_create(vfd_class, NULL, MKDEV(VFD_MAJOR, 0), NULL, "vfd", 0);
 	class_device_create(vfd_class, NULL, MKDEV(VFD_MAJOR, 1), NULL, "rc", 1);

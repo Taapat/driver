@@ -386,7 +386,7 @@ enum YWPANL_WRITE_INSTR_e
 
 //static SegAddrVal_T VfdSegAddr[15];
 static struct i2c_adapter*	panel_i2c_adapter;
-static REMOTE_TYPE		Remote_type_use = REMOTE_NEW;
+//static REMOTE_TYPE		Remote_type_use = REMOTE_NEW;
 
 //const u16 cnCRC_16 = 0x8005;
 // CRC-16 = X16 + X15 + X2 + X0
@@ -1459,7 +1459,7 @@ YWPANEL_POWERONSTATE_t YWPANEL_FP_GetPowerOnStatus(void)
 		ywtrace_print(TRACE_ERROR,"YWPANEL_FP_SendData not seccussfully!![%d]\n",__LINE__);
 		return false;
 	}
-	if((data.data.CpuState.state < YWPANEL_POWERONSTATE_RUNNING) ||(data.data.CpuState.state > YWPANEL_POWERONSTATE_CHECKPOWERBIT) )
+	if((data.data.CpuState.state < YWPANEL_POWERONSTATE_RUNNING) || (data.data.CpuState.state > YWPANEL_POWERONSTATE_CHECKPOWERBIT))
 	{
 		return YWPANEL_POWERONSTATE_UNKNOW;
 	}
@@ -2547,7 +2547,7 @@ int YWVFD_LED_ShowString(const char *str)
 
 int YWPANEL_VFD_ShowString_StandBy(char* str)
 {
-	int ST_ErrCode = 0 ;
+	int ST_ErrCode = 0, pos = 0;
 	u8 lenth;
 	u8 i,c;
 
@@ -2568,7 +2568,6 @@ int YWPANEL_VFD_ShowString_StandBy(char* str)
 		return ST_ErrCode;
 	}
 	data.dataType = YWPANEL_DATATYPE_VFD;
-	int pos = 0;
 	for(i = 0; i < 8; i++)
 	{
 		data.data.vfdData.type = YWPANEL_VFD_DISPLAYSTRING;
