@@ -1,5 +1,24 @@
-#ifndef __IOCTL_H
-#define __IOCTL_H
+/******************************************************************************
+ *
+ * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
+ *                                        
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of version 2 of the GNU General Public License as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+ *
+ *
+ ******************************************************************************/
+#ifndef _RTW_IOCTL_H_
+#define _RTW_IOCTL_H_
 
 #include <drv_conf.h>
 #include <osdep_service.h>
@@ -68,14 +87,14 @@ struct oid_funs_node {
 
 struct oid_par_priv
 {
-	void				*adapter_context;
-	NDIS_OID		oid;
-	void*			information_buf;
-	unsigned long		information_buf_len;
-	unsigned long*	bytes_rw;
-	unsigned long*	bytes_needed;
+	void		*adapter_context;
+	NDIS_OID	oid;
+	void		*information_buf;
+	u32		information_buf_len;
+	u32		*bytes_rw;
+	u32		*bytes_needed;
 	enum oid_type	type_of_oid;
-	unsigned int 		dbg;
+	u32		dbg;
 };
 
 struct oid_obj_priv {
@@ -83,8 +102,15 @@ struct oid_obj_priv {
 	NDIS_STATUS (*oidfuns)(struct oid_par_priv *poid_par_priv);	
 };
 
-
-NDIS_STATUS oid_null_function(struct oid_par_priv* poid_par_priv);
+#if (defined(CONFIG_MP_INCLUDED) && defined(_RTW_MP_IOCTL_C_)) || \
+	(defined(PLATFORM_WINDOWS) && defined(_RTW_IOCTL_RTL_C_))
+static NDIS_STATUS oid_null_function(struct oid_par_priv* poid_par_priv)
+{
+	_func_enter_;
+	_func_exit_;
+	return NDIS_STATUS_SUCCESS;
+}
+#endif
 
 #ifdef PLATFORM_WINDOWS
 
@@ -217,10 +243,8 @@ void Set_802_3_MULTICAST_LIST(ADAPTER *pAdapter, UCHAR *MCListbuf, ULONG MCListl
 #endif// end of PLATFORM_WINDOWS
 
 
-#ifdef PLATFORM_LINUX
-
+#if defined(PLATFORM_LINUX) && defined(CONFIG_WIRELESS_EXT)
 extern struct iw_handler_def  rtw_handlers_def;
-
 #endif
 
 extern	NDIS_STATUS drv_query_info(

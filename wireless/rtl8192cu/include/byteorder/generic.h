@@ -1,3 +1,22 @@
+/******************************************************************************
+ *
+ * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
+ *                                        
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of version 2 of the GNU General Public License as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+ *
+ *
+ ******************************************************************************/
 #ifndef _LINUX_BYTEORDER_GENERIC_H
 #define _LINUX_BYTEORDER_GENERIC_H
 
@@ -79,7 +98,7 @@
  */
 
 
-#if defined(PLATFORM_LINUX) || defined(PLATFORM_WINDOWS) || defined(PLATFORM_MPIXEL)
+#if defined(PLATFORM_LINUX) || defined(PLATFORM_WINDOWS) || defined(PLATFORM_MPIXEL) || defined(PLATFORM_FREEBSD)
 /*
  * inside the kernel, we can use nicknames;
  * outside of it, we must avoid POSIX namespace pollution...
@@ -149,13 +168,16 @@
 #if defined(PLATFORM_LINUX) || (defined (__GLIBC__) && __GLIBC__ >= 2)
 extern __u32			ntohl(__u32);
 extern __u32			htonl(__u32);
-#else
+#else //defined(PLATFORM_LINUX) || (defined (__GLIBC__) && __GLIBC__ >= 2)
+#ifndef PLATFORM_FREEBSD
 extern unsigned long int	ntohl(unsigned long int);
 extern unsigned long int	htonl(unsigned long int);
 #endif
+#endif
+#ifndef PLATFORM_FREEBSD
 extern unsigned short int	ntohs(unsigned short int);
 extern unsigned short int	htons(unsigned short int);
-
+#endif
 
 #if defined(__GNUC__) && (__GNUC__ >= 2) && defined(__OPTIMIZE__) ||  defined(PLATFORM_MPIXEL)
 

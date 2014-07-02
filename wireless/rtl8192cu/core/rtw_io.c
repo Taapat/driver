@@ -1,25 +1,27 @@
 /******************************************************************************
-* rtl871x_io.c                                                                                                                                 *
-*                                                                                                                                          *
-* Description :                                                                                                                       *
-*                                                                                                                                           *
-* Author :                                                                                                                       *
-*                                                                                                                                         *
-* History :                                                          
-*
-*                                        
-*                                                                                                                                       *
-* Copyright 2007, Realtek Corp.                                                                                                  *
-*                                                                                                                                        *
-* The contents of this file is the sole property of Realtek Corp.  It can not be                                     *
-* be used, copied or modified without written permission from Realtek Corp.                                         *
-*                                                                                                                                          *
-*******************************************************************************/
+ *
+ * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of version 2 of the GNU General Public License as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+ *
+ *
+ ******************************************************************************/
 /*
 
-The purpose of rtl871x_io.c
+The purpose of rtw_io.c
 
-a. provides the API 
+a. provides the API
 
 b. provides the protocol engine
 
@@ -39,13 +41,13 @@ Compiler Flag Option:
    b. USE_SYNC_IRP: Only sync operations are provided.
 
 
-Only sync read/write_mem operations are provided.
+Only sync read/rtw_write_mem operations are provided.
 
 jackson@realtek.com.tw
 
 */
 
-#define _RTL871X_IO_C_
+#define _RTW_IO_C_
 #include <drv_conf.h>
 #include <osdep_service.h>
 #include <drv_types.h>
@@ -56,34 +58,6 @@ jackson@realtek.com.tw
 #error "Shall be Linux or Windows, but not both!\n"
 #endif
 
-#ifdef PLATFORM_LINUX
-#include <linux/compiler.h>
-#include <linux/kernel.h>
-#include <linux/errno.h>
-#include <linux/init.h>
-#include <linux/slab.h>
-#include <linux/module.h>
-#include <linux/kref.h>
-#include <linux/smp_lock.h>
-#include <linux/netdevice.h>
-#include <linux/skbuff.h>
-#include <linux/usb.h>
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20))
-#include <linux/usb_ch9.h>
-#else
-#include <linux/usb/ch9.h>
-#endif
-#include <linux/circ_buf.h>
-#include <asm/uaccess.h>
-#include <asm/byteorder.h>
-#include <asm/atomic.h>
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26))
-#include <asm/semaphore.h>
-#else
-#include <linux/semaphore.h>
-#endif
-#endif
-
 #ifdef CONFIG_SDIO_HCI
 #include <sdio_ops.h>
 #endif
@@ -92,8 +66,12 @@ jackson@realtek.com.tw
 #include <usb_ops.h>
 #endif
 
+#ifdef CONFIG_PCI_HCI
+#include <pci_ops.h>
+#endif
 
-u8 read8(_adapter *adapter, u32 addr)
+
+u8 _rtw_read8(_adapter *adapter, u32 addr)
 {
 	u8 r_val;
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
@@ -102,13 +80,13 @@ u8 read8(_adapter *adapter, u32 addr)
 	u8 (*_read8)(struct intf_hdl *pintfhdl, u32 addr);
 	_func_enter_;
 	_read8 = pintfhdl->io_ops._read8;
-	
+
 	r_val = _read8(pintfhdl, addr);
 	_func_exit_;
 	return r_val;
 }
 
-u16 read16(_adapter *adapter, u32 addr)
+u16 _rtw_read16(_adapter *adapter, u32 addr)
 {
 	u16 r_val;
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
@@ -122,8 +100,8 @@ u16 read16(_adapter *adapter, u32 addr)
 	_func_exit_;
 	return r_val;
 }
-	
-u32 read32(_adapter *adapter, u32 addr)
+
+u32 _rtw_read32(_adapter *adapter, u32 addr)
 {
 	u32 r_val;
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
@@ -132,290 +110,355 @@ u32 read32(_adapter *adapter, u32 addr)
 	u32 	(*_read32)(struct intf_hdl *pintfhdl, u32 addr);
 	_func_enter_;
 	_read32 = pintfhdl->io_ops._read32;
-	
+
 	r_val = _read32(pintfhdl, addr);
 	_func_exit_;
-	return r_val;	
+	return r_val;
 
 }
 
-void write8(_adapter *adapter, u32 addr, u8 val)
+int _rtw_write8(_adapter *adapter, u32 addr, u8 val)
 {
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
-	void (*_write8)(struct intf_hdl *pintfhdl, u32 addr, u8 val);
+	int (*_write8)(struct intf_hdl *pintfhdl, u32 addr, u8 val);
+	int ret;
 	_func_enter_;
 	_write8 = pintfhdl->io_ops._write8;
+
+	ret = _write8(pintfhdl, addr, val);
+	_func_exit_;
 	
-	_write8(pintfhdl, addr, val);
+	return RTW_STATUS_CODE(ret);
 }
-void write16(_adapter *adapter, u32 addr, u16 val)
+int _rtw_write16(_adapter *adapter, u32 addr, u16 val)
 {
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
-	void (*_write16)(struct intf_hdl *pintfhdl, u32 addr, u16 val);
+	int (*_write16)(struct intf_hdl *pintfhdl, u32 addr, u16 val);
+	int ret;
 	_func_enter_;
 	_write16 = pintfhdl->io_ops._write16;
-	
-	_write16(pintfhdl, addr, val);
+
+	ret = _write16(pintfhdl, addr, val);
 	_func_exit_;
 
+	return RTW_STATUS_CODE(ret);
 }
-void write32(_adapter *adapter, u32 addr, u32 val)
+int _rtw_write32(_adapter *adapter, u32 addr, u32 val)
 {
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
-	void (*_write32)(struct intf_hdl *pintfhdl, u32 addr, u32 val);
+	int (*_write32)(struct intf_hdl *pintfhdl, u32 addr, u32 val);
+	int ret;
 	_func_enter_;
 	_write32 = pintfhdl->io_ops._write32;
-	
-	_write32(pintfhdl, addr, val);	
+
+	ret = _write32(pintfhdl, addr, val);
 	_func_exit_;
 
+	return RTW_STATUS_CODE(ret);
 }
-void writeN(_adapter *adapter, u32 addr ,u32 length , u8 *pdata)
+
+int _rtw_writeN(_adapter *adapter, u32 addr ,u32 length , u8 *pdata)
 {
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
 	struct io_priv *pio_priv = &adapter->iopriv;
         struct	intf_hdl	*pintfhdl = (struct intf_hdl*)(&(pio_priv->intf));
-	void (*_writeN)(struct intf_hdl *pintfhdl, u32 addr,u32 length, u8 *pdata);
+	int (*_writeN)(struct intf_hdl *pintfhdl, u32 addr,u32 length, u8 *pdata);
+	int ret;
 	_func_enter_;
 	_writeN = pintfhdl->io_ops._writeN;
-	
-	_writeN(pintfhdl, addr,length,pdata);	
+
+	ret = _writeN(pintfhdl, addr,length,pdata);
 	_func_exit_;
 
+	return RTW_STATUS_CODE(ret);
 }
-void write8_async(_adapter *adapter, u32 addr, u8 val)
+int _rtw_write8_async(_adapter *adapter, u32 addr, u8 val)
 {
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
-	void (*_write8_async)(struct intf_hdl *pintfhdl, u32 addr, u8 val);
+	int (*_write8_async)(struct intf_hdl *pintfhdl, u32 addr, u8 val);
+	int ret;
 	_func_enter_;
 	_write8_async = pintfhdl->io_ops._write8_async;
-	
-	_write8_async(pintfhdl, addr, val);	
+
+	ret = _write8_async(pintfhdl, addr, val);
 	_func_exit_;
 
+	return RTW_STATUS_CODE(ret);
 }
-void write16_async(_adapter *adapter, u32 addr, u16 val)
+int _rtw_write16_async(_adapter *adapter, u32 addr, u16 val)
 {
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
-	void (*_write16_async)(struct intf_hdl *pintfhdl, u32 addr, u16 val);
+	int (*_write16_async)(struct intf_hdl *pintfhdl, u32 addr, u16 val);
+	int ret;
 	_func_enter_;
 	_write16_async = pintfhdl->io_ops._write16_async;
-	
-	_write16_async(pintfhdl, addr, val);	
+
+	ret = _write16_async(pintfhdl, addr, val);
 	_func_exit_;
 
+	return RTW_STATUS_CODE(ret);
 }
-void write32_async(_adapter *adapter, u32 addr, u32 val)
+int _rtw_write32_async(_adapter *adapter, u32 addr, u32 val)
 {
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
-	void (*_write32_async)(struct intf_hdl *pintfhdl, u32 addr, u32 val);
+	int (*_write32_async)(struct intf_hdl *pintfhdl, u32 addr, u32 val);
+	int ret;
 	_func_enter_;
 	_write32_async = pintfhdl->io_ops._write32_async;
-	
-	_write32_async(pintfhdl, addr, val);	
+
+	ret = _write32_async(pintfhdl, addr, val);
 	_func_exit_;
 
+	return RTW_STATUS_CODE(ret);
 }
-void read_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
+void _rtw_read_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
 {
-	void (*_read_mem)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);	
+	void (*_read_mem)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
-	
+
 	_func_enter_;
 
 	if( (adapter->bDriverStopped ==_TRUE) || (adapter->bSurpriseRemoved == _TRUE))
 	{
-	     RT_TRACE(_module_rtl871x_io_c_, _drv_info_, ("read_mem:bDriverStopped(%d) OR bSurpriseRemoved(%d)", adapter->bDriverStopped, adapter->bSurpriseRemoved));	    
+	     RT_TRACE(_module_rtl871x_io_c_, _drv_info_, ("rtw_read_mem:bDriverStopped(%d) OR bSurpriseRemoved(%d)", adapter->bDriverStopped, adapter->bSurpriseRemoved));	    
 	     return;
-	}	
-	
+	}
+
 	_read_mem = pintfhdl->io_ops._read_mem;
-	
+
 	_read_mem(pintfhdl, addr, cnt, pmem);
-	
+
 	_func_exit_;
-	
+
 }
 
-void write_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
-{	
-	void (*_write_mem)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);	
+void _rtw_write_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
+{
+	void (*_write_mem)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
 
 	_func_enter_;
-	
+
 	_write_mem = pintfhdl->io_ops._write_mem;
-	
+
 	_write_mem(pintfhdl, addr, cnt, pmem);
-	
-	_func_exit_;	
-	
+
+	_func_exit_;
+
 }
 
-void read_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
-{	
-	u32 (*_read_port)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);	
+void _rtw_read_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
+{
+	u32 (*_read_port)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
-	
-	_func_enter_;	
+
+	_func_enter_;
 
 	if( (adapter->bDriverStopped ==_TRUE) || (adapter->bSurpriseRemoved == _TRUE))
 	{
-	     RT_TRACE(_module_rtl871x_io_c_, _drv_info_, ("read_port:bDriverStopped(%d) OR bSurpriseRemoved(%d)", adapter->bDriverStopped, adapter->bSurpriseRemoved));	    
+	     RT_TRACE(_module_rtl871x_io_c_, _drv_info_, ("rtw_read_port:bDriverStopped(%d) OR bSurpriseRemoved(%d)", adapter->bDriverStopped, adapter->bSurpriseRemoved));	    
 	     return;
-	}	
+	}
 
 	_read_port = pintfhdl->io_ops._read_port;
-	
+
 	_read_port(pintfhdl, addr, cnt, pmem);
-	 
+
 	_func_exit_;
 
 }
 
-void read_port_cancel(_adapter *adapter)
+void _rtw_read_port_cancel(_adapter *adapter)
 {
 	void (*_read_port_cancel)(struct intf_hdl *pintfhdl);
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct intf_hdl *pintfhdl = &(pio_priv->intf);
-	
+
 	_read_port_cancel = pintfhdl->io_ops._read_port_cancel;
 
 	if(_read_port_cancel)
-		_read_port_cancel(pintfhdl);	
-			
+		_read_port_cancel(pintfhdl);
+
 }
 
-void write_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
-{	
+u32 _rtw_write_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
+{
 	u32 (*_write_port)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
 	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
-	
-	_func_enter_;	
-	
+	u32 ret = _SUCCESS;
+
+	_func_enter_;
+
 	_write_port = pintfhdl->io_ops._write_port;
 	
-	_write_port(pintfhdl, addr, cnt, pmem);
-	
+	ret = _write_port(pintfhdl, addr, cnt, pmem);
+
 	 _func_exit_;
-	 
+
+	return ret;
 }
 
-void write_port_cancel(_adapter *adapter)
+u32 _rtw_write_port_and_wait(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem, int timeout_ms)
+{
+	int ret = _SUCCESS;
+	struct xmit_buf *pxmitbuf = (struct xmit_buf *)pmem;
+	struct submit_ctx sctx;
+
+	rtw_sctx_init(&sctx, timeout_ms);
+	pxmitbuf->sctx = &sctx;
+
+	ret = _rtw_write_port(adapter, addr, cnt, pmem);
+
+	if (ret == _SUCCESS)
+		ret = rtw_sctx_wait(&sctx);
+
+	 return ret;
+}
+
+void _rtw_write_port_cancel(_adapter *adapter)
 {
 	void (*_write_port_cancel)(struct intf_hdl *pintfhdl);
 	struct io_priv *pio_priv = &adapter->iopriv;
 	struct intf_hdl *pintfhdl = &(pio_priv->intf);
-	
-	_write_port_cancel = pintfhdl->io_ops._read_port_cancel;
+
+	_write_port_cancel = pintfhdl->io_ops._write_port_cancel;
 
 	if(_write_port_cancel)
-		_write_port_cancel(pintfhdl);	
+		_write_port_cancel(pintfhdl);
 
 }
 
-
-void attrib_read(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem){
-#ifdef CONFIG_SDIO_HCI
-	void (*_attrib_read)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
-	
-	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
-	struct io_priv *pio_priv = &adapter->iopriv;
-	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
-	
-	_func_enter_;	
-	
-	_attrib_read= pintfhdl->io_ops._attrib_read;
-	
-	_attrib_read(pintfhdl, addr, cnt, pmem);
-	
-	 _func_exit_;
-#endif
-}
-
-void attrib_write(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem){
-#ifdef CONFIG_SDIO_HCI
-	void (*_attrib_write)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
-	
-	//struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue;
-	struct io_priv *pio_priv = &adapter->iopriv;
-	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
-	
-	_func_enter_;	
-	
-	_attrib_write= pintfhdl->io_ops._attrib_write;
-	
-	_attrib_write(pintfhdl, addr, cnt, pmem);
-	
-	 _func_exit_;
-
-#endif
-}
-
-int init_io_priv(_adapter *padapter)
-{	
-	void (*set_intf_ops)(struct _io_ops	*pops);
+int rtw_init_io_priv(_adapter *padapter, void (*set_intf_ops)(struct _io_ops *pops))
+{
 	struct io_priv	*piopriv = &padapter->iopriv;
 	struct intf_hdl *pintf = &piopriv->intf;
 
-	piopriv->padapter = padapter;
-	pintf->padapter = padapter;
-	pintf->pintf_dev = &padapter->dvobjpriv;
-	
-	
-#ifdef CONFIG_SDIO_HCI	
-	set_intf_ops = &sdio_set_intf_ops;	
-#endif //END OF CONFIG_SDIO_HCI
-
-
-#ifdef CONFIG_USB_HCI	
-
-	if(padapter->chip_type == RTL8188C_8192C)
-	{
-#ifdef CONFIG_RTL8192C
-		set_intf_ops = &rtl8192cu_set_intf_ops;
-#endif
-	}
-	else if(padapter->chip_type == RTL8192D)
-	{
-#ifdef CONFIG_RTL8192D
-		set_intf_ops = &rtl8192cu_set_intf_ops;
-#endif		
-	}
-	else
-	{
-		set_intf_ops = NULL;		
-	}
-#endif //END OF CONFIG_USB_HCI
-
-
-	if(set_intf_ops==NULL)
+	if (set_intf_ops == NULL)
 		return _FAIL;
 
+	piopriv->padapter = padapter;
+	pintf->padapter = padapter;
+	pintf->pintf_dev = adapter_to_dvobj(padapter);
 
 	set_intf_ops(&pintf->io_ops);
 
 	return _SUCCESS;
-
 }
+
+#ifdef DBG_IO
+
+u16 read_sniff_ranges[][2] = {
+	//{0x550, 0x551},
+}; 
+
+u16 write_sniff_ranges[][2] = {
+	//{0x550, 0x551},
+	//{0x4c, 0x4c},
+}; 
+
+int read_sniff_num = sizeof(read_sniff_ranges)/sizeof(u16)/2;
+int write_sniff_num = sizeof(write_sniff_ranges)/sizeof(u16)/2;
+
+bool match_read_sniff_ranges(u16 addr, u16 len)
+{
+	int i;
+	for (i = 0; i<read_sniff_num; i++) {
+		if (addr + len > read_sniff_ranges[i][0] && addr <= read_sniff_ranges[i][1])
+			return _TRUE;
+	}
+	
+	return _FALSE;
+}
+
+bool match_write_sniff_ranges(u16 addr, u16 len)
+{
+	int i;
+	for (i = 0; i<write_sniff_num; i++) {
+		if (addr + len > write_sniff_ranges[i][0] && addr <= write_sniff_ranges[i][1])
+			return _TRUE;
+	}
+	
+	return _FALSE;
+}
+
+u8 dbg_rtw_read8(_adapter *adapter, u32 addr, const char *caller, const int line)
+{
+	u8 val = _rtw_read8(adapter, addr);
+
+	if (match_read_sniff_ranges(addr, 1))
+		DBG_871X("DBG_IO %s:%d rtw_read8(0x%04x) return 0x%02x\n", caller, line, addr, val);
+
+	return val;
+}
+
+u16 dbg_rtw_read16(_adapter *adapter, u32 addr, const char *caller, const int line)
+{
+	u16 val = _rtw_read16(adapter, addr);
+	
+	if (match_read_sniff_ranges(addr, 2))
+		DBG_871X("DBG_IO %s:%d rtw_read16(0x%04x) return 0x%04x\n", caller, line, addr, val);
+
+	return val;
+}
+
+u32 dbg_rtw_read32(_adapter *adapter, u32 addr, const char *caller, const int line)
+{
+	u32 val = _rtw_read32(adapter, addr);
+	
+	if (match_read_sniff_ranges(addr, 4))
+		DBG_871X("DBG_IO %s:%d rtw_read32(0x%04x) return 0x%08x\n", caller, line, addr, val);
+
+	return val;
+}
+
+int dbg_rtw_write8(_adapter *adapter, u32 addr, u8 val, const char *caller, const int line)
+{
+	if (match_write_sniff_ranges(addr, 1))
+		DBG_871X("DBG_IO %s:%d rtw_write8(0x%04x, 0x%02x)\n", caller, line, addr, val);
+	
+	return _rtw_write8(adapter, addr, val);
+}
+int dbg_rtw_write16(_adapter *adapter, u32 addr, u16 val, const char *caller, const int line)
+{
+	if (match_write_sniff_ranges(addr, 2))
+		DBG_871X("DBG_IO %s:%d rtw_write16(0x%04x, 0x%04x)\n", caller, line, addr, val);
+	
+	return _rtw_write16(adapter, addr, val);
+}
+int dbg_rtw_write32(_adapter *adapter, u32 addr, u32 val, const char *caller, const int line)
+{
+	if (match_write_sniff_ranges(addr, 4))
+		DBG_871X("DBG_IO %s:%d rtw_write32(0x%04x, 0x%08x)\n", caller, line, addr, val);
+	
+	return _rtw_write32(adapter, addr, val);
+}
+int dbg_rtw_writeN(_adapter *adapter, u32 addr ,u32 length , u8 *data, const char *caller, const int line)
+{
+	if (match_write_sniff_ranges(addr, length))
+		DBG_871X("DBG_IO %s:%d rtw_writeN(0x%04x, %u)\n", caller, line, addr, length);
+
+	return _rtw_writeN(adapter, addr, length, data);
+}
+#endif
+
 

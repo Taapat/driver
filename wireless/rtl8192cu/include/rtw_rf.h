@@ -1,5 +1,24 @@
-#ifndef	__RTL871X_RF_H_ 
-#define __RTL871X_RF_H_
+/******************************************************************************
+ *
+ * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
+ *                                        
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of version 2 of the GNU General Public License as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+ *
+ *
+ ******************************************************************************/
+#ifndef	__RTW_RF_H_ 
+#define __RTW_RF_H_
 
 #include <drv_conf.h>
 #include <rtw_cmd.h>
@@ -10,12 +29,23 @@
 
 #define NumRates	(13)
 
+// slot time for 11g
+#define SHORT_SLOT_TIME					9
+#define NON_SHORT_SLOT_TIME				20
 
 #define RTL8711_RF_MAX_SENS 6
 #define RTL8711_RF_DEF_SENS 4
 
+//
+// We now define the following channels as the max channels in each channel plan.
+// 2G, total 14 chnls
+// {1,2,3,4,5,6,7,8,9,10,11,12,13,14}
+// 5G, total 24 chnls
+// {36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,149,153,157,161,165}
+#define	MAX_CHANNEL_NUM_2G				14
+#define	MAX_CHANNEL_NUM_5G				24
+#define	MAX_CHANNEL_NUM					38//14+24
 
-#define NUM_CHANNELS	15
 //#define NUM_REGULATORYS	21
 #define NUM_REGULATORYS	1
 
@@ -26,14 +56,32 @@
 
 struct	regulatory_class {
 	u32	starting_freq;					//MHz, 
-	u8	channel_set[NUM_CHANNELS];
-	u8	channel_cck_power[NUM_CHANNELS];//dbm
-	u8	channel_ofdm_power[NUM_CHANNELS];//dbm
+	u8	channel_set[MAX_CHANNEL_NUM];
+	u8	channel_cck_power[MAX_CHANNEL_NUM];//dbm
+	u8	channel_ofdm_power[MAX_CHANNEL_NUM];//dbm
 	u8	txpower_limit;  				//dbm
 	u8	channel_spacing;				//MHz
 	u8	modem;
 };
 
+typedef enum _CAPABILITY{
+	cESS			= 0x0001,
+	cIBSS			= 0x0002,
+	cPollable		= 0x0004,
+	cPollReq			= 0x0008,
+	cPrivacy		= 0x0010,
+	cShortPreamble	= 0x0020,
+	cPBCC			= 0x0040,
+	cChannelAgility	= 0x0080,
+	cSpectrumMgnt	= 0x0100,
+	cQos			= 0x0200,	// For HCCA, use with CF-Pollable and CF-PollReq
+	cShortSlotTime	= 0x0400,
+	cAPSD			= 0x0800,
+	cRM				= 0x1000,	// RRM (Radio Request Measurement)
+	cDSSS_OFDM	= 0x2000,
+	cDelayedBA		= 0x4000,
+	cImmediateBA	= 0x8000,
+}CAPABILITY, *PCAPABILITY;
 
 enum	_REG_PREAMBLE_MODE{
 	PREAMBLE_LONG	= 1,
@@ -88,16 +136,16 @@ typedef	enum _RT_RF_TYPE_DEFINITION
 	RF_819X_MAX_TYPE = 5,
 }RT_RF_TYPE_DEF_E;
 
-struct setphyinfo_parm;
-void init_phyinfo(_adapter  *adapter, struct setphyinfo_parm* psetphyinfopara);
-u8 writephyinfo_fw(_adapter *padapter, u32 addr);
-u32 ch2freq(u32 ch);
-u32 freq2ch(u32 freq);
+typedef enum _RF_RADIO_PATH{
+	RF_PATH_A = 0,			//Radio Path A
+	RF_PATH_B = 1,			//Radio Path B
+	RF_PATH_C = 2,			//Radio Path C
+	RF_PATH_D = 3,			//Radio Path D
+	//RF_PATH_MAX				//Max RF number 90 support 
+}RF_RADIO_PATH_E, *PRF_RADIO_PATH_E;
 
-
-#ifdef CONFIG_RTL8712
-#include "rtl8712_rf.h"
-#endif
+u32 rtw_ch2freq(u32 ch);
+u32 rtw_freq2ch(u32 freq);
 
 
 #endif //_RTL8711_RF_H_

@@ -1,3 +1,22 @@
+/******************************************************************************
+ *
+ * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
+ *                                        
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of version 2 of the GNU General Public License as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+ *
+ *
+ ******************************************************************************/
 #ifndef _LINUX_BYTEORDER_SWABB_H
 #define _LINUX_BYTEORDER_SWABB_H
 
@@ -92,29 +111,29 @@
 #endif /* OPTIMIZE */
 
 
-static __inline__ __const__ __u32 __fswahw32(__u32 x)
+__inline static__ __const__ __u32 __fswahw32(__u32 x)
 {
 	return __arch__swahw32(x);
 }
-static __inline__ __u32 __swahw32p(__u32 *x)
+__inline static__ __u32 __swahw32p(__u32 *x)
 {
 	return __arch__swahw32p(x);
 }
-static __inline__ void __swahw32s(__u32 *addr)
+__inline static__ void __swahw32s(__u32 *addr)
 {
 	__arch__swahw32s(addr);
 }
 
 
-static __inline__ __const__ __u32 __fswahb32(__u32 x)
+__inline static__ __const__ __u32 __fswahb32(__u32 x)
 {
 	return __arch__swahb32(x);
 }
-static __inline__ __u32 __swahb32p(__u32 *x)
+__inline static__ __u32 __swahb32p(__u32 *x)
 {
 	return __arch__swahb32p(x);
 }
-static __inline__ void __swahb32s(__u32 *addr)
+__inline static__ void __swahb32s(__u32 *addr)
 {
 	__arch__swahb32s(addr);
 }

@@ -1,20 +1,22 @@
 /******************************************************************************
-* usb_ops_ce.c                                                                                                                                 *
-*                                                                                                                                          *
-* Description :                                                                                                                       *
-*                                                                                                                                           *
-* Author :                                                                                                                       *
-*                                                                                                                                         *
-* History :
-*
-*
-*                                                                                                                                       *
-* Copyright 2007, Realtek Corp.                                                                                                  *
-*                                                                                                                                        *
-* The contents of this file is the sole property of Realtek Corp.  It can not be                                     *
-* be used, copied or modified without written permission from Realtek Corp.                                         *
-*                                                                                                                                          *
-*******************************************************************************/
+ *
+ * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
+ *                                        
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of version 2 of the GNU General Public License as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+ *
+ *
+ ******************************************************************************/
 #define _HCI_OPS_OS_C_
 
 #include <drv_conf.h>
@@ -30,7 +32,6 @@
 	#error "CONFIG_USB_HCI shall be on!\n"
 #endif
 
-#include <rtl8712_spec.h>
 #include <usb_ops.h>
 #include <recv_osdep.h>
 
@@ -166,14 +167,14 @@ _func_enter_;
 	{
 
 		// get a recv buffer
-		init_recvbuf(adapter, precvbuf);
+		rtl8192cu_init_recvbuf(adapter, precvbuf);
 	
 
 
-		_spinlock(&precvpriv->lock);
+		_rtw_spinlock(&precvpriv->lock);
 		precvpriv->rx_pending_cnt++;
 		precvbuf->irp_pending = _TRUE;
-		_spinunlock(&precvpriv->lock);
+		_rtw_spinunlock(&precvpriv->lock);
 
 
 		//translate DMA FIFO addr to pipehandle
@@ -258,10 +259,10 @@ DWORD usb_read_port_complete( PVOID context )
 _func_enter_;
 
 
-	_spinlock_ex(&precvpriv->lock);
+	_rtw_spinlock_ex(&precvpriv->lock);
 	precvbuf->irp_pending=_FALSE;
 	precvpriv->rx_pending_cnt --;
-	_spinunlock_ex(&precvpriv->lock);	
+	_rtw_spinunlock_ex(&precvpriv->lock);	
 
 
 #if 1
@@ -287,7 +288,7 @@ _func_enter_;
 		{
 			RT_TRACE(_module_hci_ops_os_c_,_drv_err_,
 				("\n usb_read_port_complete: (pbulkurb->TransferBufferLength > MAX_RECVBUF_SZ) || (pbulkurb->TransferBufferLength < RXDESC_SIZE): %d\n",dwBytesTransferred));
-			read_port(adapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
+			rtw_read_port(adapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
 
     	    //usb_read_port(pintfhdl, 0, 0, (unsigned char *)precvframe);
     	}
@@ -303,14 +304,14 @@ _func_enter_;
 					("\n usb_read_port_complete: get a event\n"));
 				rxcmd_event_hdl(adapter, pbuf);//rx c2h events
 
-				read_port(adapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
+				rtw_read_port(adapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
 			}
 			else
 			{
 				if(recvbuf2recvframe(adapter, precvbuf)==_FAIL)//rx packets
 				{
 					//precvbuf->reuse = _TRUE;		
-					read_port(adapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
+					rtw_read_port(adapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
 				}
 			}
 	    }
@@ -356,19 +357,19 @@ _func_enter_;
 	RT_TRACE( _module_hci_ops_os_c_, _drv_info_, ("+usb_write_mem_complete %p\n", Context));
 
 #if 1
-	_enter_critical(&(pio_q->lock), &irqL);
+	_enter_critical_bh(&(pio_q->lock), &irqL);
 	
 
 	//free irp in processing list...	
-	while(is_list_empty(head) != _TRUE)
+	while(rtw_is_list_empty(head) != _TRUE)
 	{
 		plist = get_next(head);	
-		list_delete(plist);
+		rtw_list_delete(plist);
 		pio_req = LIST_CONTAINOR(plist, struct io_req, list);
-		_up_sema(&pio_req->sema);
+		_rtw_up_sema(&pio_req->sema);
 	}
 
-	_exit_critical(&(pio_q->lock), &irqL);
+	_exit_critical_bh(&(pio_q->lock), &irqL);
 #endif
 
 
@@ -431,11 +432,11 @@ _func_enter_;
 		goto exit;
 	}	
 
-	_enter_critical(&(pio_queue->lock), &irqL);
+	_enter_critical_bh(&(pio_queue->lock), &irqL);
 
 
 	// insert the io_request into processing io_queue
-	list_insert_tail(&(pio_req->list),&(pio_queue->processing));
+	rtw_list_insert_tail(&(pio_req->list),&(pio_queue->processing));
 	
 	
 	if((adapter->bDriverStopped) || (adapter->bSurpriseRemoved) ||(adapter->pwrctrlpriv.pnp_bstop_trx)) 
@@ -476,7 +477,7 @@ _func_enter_;
 			RT_TRACE( _module_hci_ops_os_c_, _drv_err_, 
 				("usb_write_mem not yet finished %X\n", 
 				pio_req->usb_transfer_write_mem));
-			msleep_os(10);
+			rtw_msleep_os(10);
 		}
 		
 	}
@@ -484,13 +485,13 @@ _func_enter_;
 #endif
 
 
-//	_down_sema(&pio_req->sema);	
+//	_rtw_down_sema(&pio_req->sema);	
 
 	RT_TRACE( _module_hci_ops_os_c_, _drv_info_, ("-usb_write_mem(%X)\n",pio_req->usb_transfer_write_mem));
 
-	_exit_critical(&(pio_queue->lock), &irqL);
+	_exit_critical_bh(&(pio_queue->lock), &irqL);
 
-	_down_sema(&pio_req->sema); 
+	_rtw_down_sema(&pio_req->sema); 
 	free_ioreq(pio_req, pio_queue);
 
 exit:
@@ -639,10 +640,10 @@ _func_enter_;
 	{
 		if(pcontext->pbuf)
 		{			
-			_mfree(pcontext->pbuf, sizeof(int));	
+			rtw_mfree(pcontext->pbuf, sizeof(int));	
 		}	
 
-		_mfree((u8*)pcontext, sizeof(struct zero_bulkout_context));	
+		rtw_mfree((u8*)pcontext, sizeof(struct zero_bulkout_context));	
 	}	
 
 _func_exit_;
@@ -674,9 +675,9 @@ _func_enter_;
 	}
 
 
-	pcontext = (struct zero_bulkout_context *)_malloc(sizeof(struct zero_bulkout_context));
+	pcontext = (struct zero_bulkout_context *)rtw_zmalloc(sizeof(struct zero_bulkout_context));
 
-	pbuf = (unsigned char *)_malloc(sizeof(int));	
+	pbuf = (unsigned char *)rtw_zmalloc(sizeof(int));	
 
 	len = 0;
 	
@@ -748,10 +749,10 @@ _func_enter_;
 	{
 		if(pxmitframe->bpending[i] == _FALSE)
 		{
-			_spinlock(&pxmitpriv->lock);	
+			_rtw_spinlock(&pxmitpriv->lock);	
 			pxmitpriv->txirp_cnt++;
 			pxmitframe->bpending[i]  = _TRUE;
-			_spinunlock(&pxmitpriv->lock);
+			_rtw_spinunlock(&pxmitpriv->lock);
 			
 			pxmitframe->sz[i] = cnt;
 			pxmitframe->ac_tag[i] = ac_tag;
@@ -857,18 +858,18 @@ _func_enter_;
 
 	RT_TRACE(_module_hci_ops_os_c_,_drv_info_,("+usb_write_port_complete\n"));
 
-	_spinlock_ex(&pxmitpriv->lock);	
+	_rtw_spinlock_ex(&pxmitpriv->lock);	
 	pxmitpriv->txirp_cnt--;
-	_spinunlock_ex(&pxmitpriv->lock);
+	_rtw_spinunlock_ex(&pxmitpriv->lock);
 
 	if(pxmitpriv->txirp_cnt==0){
 		RT_TRACE(_module_hci_ops_os_c_,_drv_err_,("usb_write_port_complete: txirp_cnt== 0, set allrxreturnevt!\n"));		
-		_up_sema(&(pxmitpriv->tx_retevt));
+		_rtw_up_sema(&(pxmitpriv->tx_retevt));
 	}
 
 
 	//not to consider tx fragment
-	free_xmitframe_ex(pxmitpriv, pxmitframe);		
+	rtw_free_xmitframe(pxmitpriv, pxmitframe);		
 
 
 #if 1
@@ -894,7 +895,7 @@ _func_enter_;
 		("%s(%u): pxmitpriv %X pxmitpriv->free_xmitframe_cnt %X pxmitframe->padapter %X pxmitframe->padapter %X\n", 
 		__LINE__, pxmitpriv, pxmitpriv->free_xmitframe_cnt, pxmitframe->padapter));
 
-    xmitframe_complete(padapter, pxmitpriv, pxmitbuf);
+    rtl8192cu_xmitframe_complete(padapter, pxmitpriv, pxmitbuf);
 
 _func_exit_;
 
@@ -945,7 +946,7 @@ _func_enter_;
 	RT_TRACE( _module_hci_ops_os_c_, _drv_info_, ("%s(%u)\n",__FUNCTION__, __LINE__));
 	if(CIRC_CNT(psb->head,psb->tail,SCSI_BUFFER_NUMBER)==0){
 		RT_TRACE( _module_hci_ops_os_c_, _drv_info_, ("write_txcmd_scsififo_callback: up_sema\n"));
-		_up_sema(&pxmitpriv->xmit_sema);
+		_rtw_up_sema(&pxmitpriv->xmit_sema);
 	}
 
 	RT_TRACE( _module_hci_ops_os_c_, _drv_info_, ("%s(%u)\n",__FUNCTION__, __LINE__));
@@ -995,61 +996,61 @@ _func_exit_;
  */
 uint usb_init_intf_priv(struct intf_priv *pintfpriv)
 {
-    // get the dvobj_priv object
+	// get the dvobj_priv object
 	struct dvobj_priv * pNdisCEDvice = (struct dvobj_priv *) pintfpriv->intf_dev;
 
 	RT_TRACE( _module_hci_ops_os_c_, _drv_info_, ("%s(%u)\n",__FUNCTION__, __LINE__));
-    // set init intf_priv init status as _IOREADY
+	// set init intf_priv init status as _IOREADY
 	pintfpriv->intf_status = _IOREADY;
 
-    //  determine the max io size by dvobj_priv.ishighspeed
-    if(pNdisCEDvice->ishighspeed)
-        pintfpriv->max_iosz =  128;
+	//  determine the max io size by dvobj_priv.ishighspeed
+	if(pNdisCEDvice->ishighspeed)
+		pintfpriv->max_iosz =  128;
 	else
-        pintfpriv->max_iosz =  64;
+		pintfpriv->max_iosz =  64;
 
-    //  read/write size set as 0
+	//  read/write size set as 0
 	pintfpriv->io_wsz = 0;
 	pintfpriv->io_rsz = 0;
 
-    //  init io_rwmem buffer
-	pintfpriv->allocated_io_rwmem = _malloc(pintfpriv->max_iosz +4);
-    if (pintfpriv->allocated_io_rwmem == NULL)
-    {
-	    _mfree((u8 *)(pintfpriv->allocated_io_rwmem), pintfpriv->max_iosz +4);
-	    return _FAIL;
-    }
-    else
-    {
-        // word align the io_rwmem
-	    pintfpriv->io_rwmem = pintfpriv->allocated_io_rwmem + 4 - ( (u32)(pintfpriv->allocated_io_rwmem) & 3);
-    }
+	//  init io_rwmem buffer
+	pintfpriv->allocated_io_rwmem = rtw_zmalloc(pintfpriv->max_iosz +4);
+	if (pintfpriv->allocated_io_rwmem == NULL)
+	{
+		rtw_mfree((u8 *)(pintfpriv->allocated_io_rwmem), pintfpriv->max_iosz +4);
+		return _FAIL;
+	}
+	else
+	{
+		// word align the io_rwmem
+		pintfpriv->io_rwmem = pintfpriv->allocated_io_rwmem + 4 - ( (u32)(pintfpriv->allocated_io_rwmem) & 3);
+	}
 
 #ifndef PLATFORM_OS_CE
 
-    //  init io_r_mem buffer
-	pintfpriv->allocated_io_r_mem = _malloc(pintfpriv->max_iosz +4);
-    if (pintfpriv->allocated_io_r_mem == NULL)
-    {
-	    _mfree((u8 *)(pintfpriv->allocated_io_r_mem), pintfpriv->max_iosz +4);
-	    return _FAIL;
-    }
-    else
-    {
-        // word align the io_rwmem
-	    pintfpriv->io_r_mem = pintfpriv->allocated_io_r_mem + 4 - ( (u32)(pintfpriv->allocated_io_r_mem) & 3);
-    }
+	//  init io_r_mem buffer
+	pintfpriv->allocated_io_r_mem = rtw_zmalloc(pintfpriv->max_iosz +4);
+	if (pintfpriv->allocated_io_r_mem == NULL)
+	{
+		rtw_mfree((u8 *)(pintfpriv->allocated_io_r_mem), pintfpriv->max_iosz +4);
+		return _FAIL;
+	}
+	else
+	{
+		// word align the io_rwmem
+		pintfpriv->io_r_mem = pintfpriv->allocated_io_r_mem + 4 - ( (u32)(pintfpriv->allocated_io_r_mem) & 3);
+	}
 #endif
 
-    return _SUCCESS;
+	return _SUCCESS;
 }
 
 void usb_unload_intf_priv(struct intf_priv *pintfpriv)
 {
 #ifndef PLATFORM_OS_CE
 
-	_mfree((u8 *)(pintfpriv->allocated_io_rwmem), pintfpriv->max_iosz+4);
-    _mfree((u8 *)(pintfpriv->allocated_io_r_mem), pintfpriv->max_iosz+4);
+	rtw_mfree((u8 *)(pintfpriv->allocated_io_rwmem), pintfpriv->max_iosz+4);
+	rtw_mfree((u8 *)(pintfpriv->allocated_io_r_mem), pintfpriv->max_iosz+4);
 #endif
 
 	RT_TRACE( _module_hci_ops_os_c_, _drv_info_, ("%s(%u)\n",__FUNCTION__, __LINE__));
@@ -1065,9 +1066,9 @@ void usb_write_port_cancel(_adapter *padapter)
 	struct xmit_priv *pxmitpriv=&padapter->xmitpriv;
 	struct xmit_frame *pxmitframe;
 
-	_spinlock(&pxmitpriv->lock);
+	_rtw_spinlock(&pxmitpriv->lock);
 	pxmitpriv->txirp_cnt--; //decrease 1 for Initialize ++
-	_spinunlock(&pxmitpriv->lock);
+	_rtw_spinunlock(&pxmitpriv->lock);
 	
 	if (pxmitpriv->txirp_cnt) 
 	{
@@ -1089,7 +1090,7 @@ void usb_write_port_cancel(_adapter *padapter)
 			pxmitframe++;
 		}
 
-		_down_sema(&(pxmitpriv->tx_retevt));
+		_rtw_down_sema(&(pxmitpriv->tx_retevt));
 		
 	}
 
@@ -1162,7 +1163,7 @@ int usbctrl_vendorreq(struct intf_priv *pintfpriv, u8 request, u16 value, u16 in
 							transfer_flags, &usb_device_req, pdata, 0);
 #endif
 
-//	usleep_os(10);
+//	rtw_usleep_os(10);
 
 	if ( usbTrans )
 	{

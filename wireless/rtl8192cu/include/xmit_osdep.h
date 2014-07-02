@@ -1,3 +1,22 @@
+/******************************************************************************
+ *
+ * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
+ *                                        
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of version 2 of the GNU General Public License as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+ *
+ *
+ ******************************************************************************/
 #ifndef __XMIT_OSDEP_H_
 #define __XMIT_OSDEP_H_
 
@@ -7,11 +26,11 @@
 
 struct pkt_file {
 	_pkt *pkt;
-	u32	pkt_len;	 //the remainder length of the open_file
+	SIZE_T pkt_len;	 //the remainder length of the open_file
 	_buffer *cur_buffer;
 	u8 *buf_start;
 	u8 *cur_addr;
-	u32 buf_len;
+	SIZE_T buf_len;
 };
 
 #ifdef PLATFORM_WINDOWS
@@ -28,7 +47,7 @@ struct pkt_file {
 
 #define ETH_ALEN	6
 
-extern NDIS_STATUS xmit_entry(
+extern NDIS_STATUS rtw_xmit_entry(
 IN _nic_hdl		cnxt,
 IN NDIS_PACKET		*pkt,
 IN UINT				flags
@@ -36,6 +55,11 @@ IN UINT				flags
 
 #endif
 
+#ifdef PLATFORM_FREEBSD
+#define NR_XMITFRAME	256
+extern int rtw_xmit_entry(_pkt *pkt, _nic_hdl pnetdev);
+extern void rtw_xmit_entry_wrap (struct ifnet * pifp);
+#endif //PLATFORM_FREEBSD
 
 #ifdef PLATFORM_LINUX
 
@@ -47,26 +71,25 @@ struct sta_xmit_priv;
 struct xmit_frame;
 struct xmit_buf;
 
-extern int xmit_entry(_pkt *pkt, _nic_hdl pnetdev);
-
-#ifdef CONFIG_USB_HCI
-extern void xmit_tasklet(void *priv);
-#endif
+extern int _rtw_xmit_entry(_pkt *pkt, _nic_hdl pnetdev);
+extern int rtw_xmit_entry(_pkt *pkt, _nic_hdl pnetdev);
 
 #endif
 
+void rtw_os_xmit_schedule(_adapter *padapter);
 
-int os_xmit_resource_alloc(_adapter *padapter, struct xmit_buf *pxmitbuf);
-void os_xmit_resource_free(_adapter *padapter, struct xmit_buf *pxmitbuf);
+int rtw_os_xmit_resource_alloc(_adapter *padapter, struct xmit_buf *pxmitbuf,u32 alloc_sz);
+void rtw_os_xmit_resource_free(_adapter *padapter, struct xmit_buf *pxmitbuf,u32 free_sz);
 
-extern void set_tx_chksum_offload(_pkt *pkt, struct pkt_attrib *pattrib);
+extern void rtw_set_tx_chksum_offload(_pkt *pkt, struct pkt_attrib *pattrib);
 
-extern uint remainder_len(struct pkt_file *pfile);
-extern void _open_pktfile(_pkt *pkt, struct pkt_file *pfile);
-extern uint _pktfile_read (struct pkt_file *pfile, u8 *rmem, uint rlen);
-extern sint endofpktfile (struct pkt_file *pfile);
+extern uint rtw_remainder_len(struct pkt_file *pfile);
+extern void _rtw_open_pktfile(_pkt *pkt, struct pkt_file *pfile);
+extern uint _rtw_pktfile_read (struct pkt_file *pfile, u8 *rmem, uint rlen);
+extern sint rtw_endofpktfile (struct pkt_file *pfile);
 
-extern void os_xmit_complete(_adapter *padapter, struct xmit_frame *pxframe);
+extern void rtw_os_pkt_complete(_adapter *padapter, _pkt *pkt);
+extern void rtw_os_xmit_complete(_adapter *padapter, struct xmit_frame *pxframe);
 
-#endif //
+#endif //__XMIT_OSDEP_H_
 

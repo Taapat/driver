@@ -1,3 +1,22 @@
+/******************************************************************************
+ *
+ * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
+ *                                        
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of version 2 of the GNU General Public License as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+ *
+ *
+ ******************************************************************************/
 #ifndef _RTL8192C_RECV_H_
 #define _RTL8192C_RECV_H_
 
@@ -7,93 +26,63 @@
 
 
 #ifdef PLATFORM_OS_XP
-	#ifdef CONFIG_SDIO_HCI
-		#define NR_RECVBUFF 1024//512//128
-	#else
-		#define NR_RECVBUFF (16)
-	#endif
+	#define NR_RECVBUFF (16)
 #elif defined(PLATFORM_OS_CE)
-	#ifdef CONFIG_SDIO_HCI
-		#define NR_RECVBUFF (128)
-	#else
-		#define NR_RECVBUFF (4)
-	#endif
+	#define NR_RECVBUFF (4)
+#else
+#ifdef CONFIG_SINGLE_RECV_BUF
+	#define NR_RECVBUFF (1)
 #else
 	#define NR_RECVBUFF (4)
+#endif //CONFIG_SINGLE_RECV_BUF
+
 	#define NR_PREALLOC_RECV_SKB (8)
 #endif
 
-#define RXDESC_SIZE	24
-#define RXDESC_OFFSET RXDESC_SIZE
 
 #define RECV_BLK_SZ 512
 #define RECV_BLK_CNT 16
 #define RECV_BLK_TH RECV_BLK_CNT
 
-//#define MAX_RECVBUF_SZ 2048 // 2k
-//#define MAX_RECVBUF_SZ (8192) // 8K
-//#define MAX_RECVBUF_SZ (16384) //16K
-//#define MAX_RECVBUF_SZ (16384 + 1024) //16K + 1k
-//#define MAX_RECVBUF_SZ (30720) //30k
-//#define MAX_RECVBUF_SZ (30720 + 1024) //30k+1k
-//#define MAX_RECVBUF_SZ (32768) // 32k
-
-#if defined(CONFIG_SDIO_HCI)
-
-#define MAX_RECVBUF_SZ (50000) //30k //(2048)//(30720) //30k
-
-#elif defined(CONFIG_USB_HCI)
+#if defined(CONFIG_USB_HCI)
 
 #ifdef PLATFORM_OS_CE
 #define MAX_RECVBUF_SZ (8192+1024) // 8K+1k
 #else
-//#define MAX_RECVBUF_SZ (32768) // 32k
-//#define MAX_RECVBUF_SZ (16384) //16K
-//#define MAX_RECVBUF_SZ (10240) //10K
-#define MAX_RECVBUF_SZ (15360) // 15k < 16k
+	#ifndef CONFIG_MINIMAL_MEMORY_USAGE
+		//#define MAX_RECVBUF_SZ (32768) // 32k
+		//#define MAX_RECVBUF_SZ (16384) //16K
+		//#define MAX_RECVBUF_SZ (10240) //10K
+		#ifdef CONFIG_PLATFORM_MSTAR
+			#define MAX_RECVBUF_SZ (8192) // 8K
+		#else
+			#define MAX_RECVBUF_SZ (15360) // 15k < 16k
+		#endif
+		//#define MAX_RECVBUF_SZ (8192+1024) // 8K+1k
+	#else
+		#define MAX_RECVBUF_SZ (4000) // about 4K
+	#endif
 #endif
 
+#elif defined(CONFIG_PCI_HCI)
+//#ifndef CONFIG_MINIMAL_MEMORY_USAGE
+//	#define MAX_RECVBUF_SZ (9100)
+//#else
+	#define MAX_RECVBUF_SZ (4000) // about 4K
+//#endif
+
+#define RX_MPDU_QUEUE				0
+#define RX_CMD_QUEUE				1
+#define RX_MAX_QUEUE				2
 #endif
+
 
 #define RECV_BULK_IN_ADDR		0x80
 #define RECV_INT_IN_ADDR		0x81
 
-#define RECVBUFF_ALIGN_SZ 512
+#define PHY_RSSI_SLID_WIN_MAX				100
+#define PHY_LINKQUALITY_SLID_WIN_MAX		20
 
-#define RSVD_ROOM_SZ (0)
-
-
-//These definition is used for Rx packet reordering.
-#define SN_LESS(a, b)		(((a-b)&0x800)!=0)
-#define SN_EQUAL(a, b)	(a == b)
-//#define REORDER_WIN_SIZE	128
-//#define REORDER_ENTRY_NUM	128
-#define REORDER_WAIT_TIME	(30) // (ms)
-
-
-struct recv_stat
-{
-	unsigned int rxdw0;
-
-	unsigned int rxdw1;
-
-	unsigned int rxdw2;
-
-	unsigned int rxdw3;
-
-	unsigned int rxdw4;
-
-	unsigned int rxdw5;
-};
-
-struct phy_cck_rx_status
-{
-	/* For CCK rate descriptor. This is a unsigned 8:1 variable. LSB bit presend
-	   0.5. And MSB 7 bts presend a signed value. Range from -64~+63.5. */
-	u8	adc_pwdb_X[4];
-	u8	sq_rpt;
-	u8	cck_agc_rpt;
-};
 
 struct phy_stat
 {
@@ -113,154 +102,83 @@ struct phy_stat
 
 	unsigned int phydw7;
 };
-#define PHY_STAT_GAIN_TRSW_SHT 0
-#define PHY_STAT_PWDB_ALL_SHT 4
-#define PHY_STAT_CFOSHO_SHT 5
-#define PHY_STAT_CCK_AGC_RPT_SHT 5
-#define PHY_STAT_CFOTAIL_SHT 9
-#define PHY_STAT_RXEVM_SHT 13
-#define PHY_STAT_RXSNR_SHT 15
-#define PHY_STAT_PDSNR_SHT 19
-#define PHY_STAT_CSI_CURRENT_SHT 21
-#define PHY_STAT_CSI_TARGET_SHT 23
-#define PHY_STAT_SIGEVM_SHT 25
-#define PHY_STAT_MAX_EX_PWR_SHT 26
+
+typedef struct _Phy_OFDM_Rx_Status_Report_8192cd
+{
+	unsigned char	trsw_gain_X[4];
+	unsigned char	pwdb_all;
+	unsigned char	cfosho_X[4];
+	unsigned char	cfotail_X[4];
+	unsigned char	rxevm_X[2];
+	unsigned char	rxsnr_X[4];
+	unsigned char	pdsnr_X[2];
+	unsigned char	csi_current_X[2];
+	unsigned char	csi_target_X[2];
+	unsigned char	sigevm;
+	unsigned char	max_ex_pwr;
+//#ifdef RTL8192SE
+#ifdef CONFIG_LITTLE_ENDIAN
+	unsigned char ex_intf_flg:1;
+	unsigned char sgi_en:1;
+	unsigned char rxsc:2;
+	//unsigned char rsvd:4;
+	unsigned char idle_long:1;
+	unsigned char r_ant_train_en:1;
+	unsigned char ANTSELB:1;
+	unsigned char ANTSEL:1;	
+#else	// _BIG_ENDIAN_
+	//unsigned char rsvd:4;
+	unsigned char ANTSEL:1;	
+	unsigned char ANTSELB:1;
+	unsigned char r_ant_train_en:1;
+	unsigned char idle_long:1;
+	unsigned char rxsc:2;
+	unsigned char sgi_en:1;
+	unsigned char ex_intf_flg:1;
+#endif
+//#else	// RTL8190, RTL8192E
+//	unsigned char	sgi_en;
+//	unsigned char	rxsc_sgien_exflg;
+//#endif
+} __attribute__ ((packed))PHY_STS_OFDM_8192CD_T,PHY_RX_DRIVER_INFO_8192CD;
+
+typedef struct _Phy_CCK_Rx_Status_Report_8192cd
+{
+	/* For CCK rate descriptor. This is a signed 8:1 variable. LSB bit presend
+		0.5. And MSB 7 bts presend a signed value. Range from -64~+63.5. */
+	u8	adc_pwdb_X[4];
+	u8	SQ_rpt;
+	u8	cck_agc_rpt;
+} PHY_STS_CCK_8192CD_T;
+
 
 // Rx smooth factor
 #define	Rx_Smooth_Factor (20)
 
-union recvstat {
-	struct recv_stat recv_stat;
-	unsigned int value[RXDESC_SIZE>>2];
-};
-
-
-struct recv_buf{
-
-	_list list;
-
-	_lock recvbuf_lock;
-
-	u32	ref_cnt;
-
-	_adapter  *adapter;
-
-#ifdef CONFIG_SDIO_HCI
-#ifdef PLATFORM_OS_XP
-	PMDL mdl_ptr;
-#endif
-	u8	cmd_fail;
-#endif
-
 
 #ifdef CONFIG_USB_HCI
+typedef struct _INTERRUPT_MSG_FORMAT_EX{
+	unsigned int C2H_MSG0;
+	unsigned int C2H_MSG1;
+	unsigned int C2H_MSG2;
+	unsigned int C2H_MSG3;
+	unsigned int HISR; // from HISR Reg0x124, read to clear
+	unsigned int HISRE;// from HISRE Reg0x12c, read to clear
+	unsigned int  MSG_EX;
+}INTERRUPT_MSG_FORMAT_EX,*PINTERRUPT_MSG_FORMAT_EX;
 
-	#if defined(PLATFORM_OS_XP)||defined(PLATFORM_LINUX)
-	PURB	purb;
-
-	#endif
-
-	#ifdef PLATFORM_OS_XP
-		PIRP		pirp;
-	#endif
-
-	#ifdef PLATFORM_OS_CE
-		USB_TRANSFER	usb_transfer_read_port;
-	#endif
-
-	u8  irp_pending;
-	int  transfer_len;
-
+void rtl8192cu_init_recvbuf(_adapter *padapter, struct recv_buf *precvbuf);
+int	rtl8192cu_init_recv_priv(_adapter * padapter);
+void rtl8192cu_free_recv_priv(_adapter * padapter);
 #endif
 
-#ifdef PLATFORM_LINUX
-	_pkt *pskb;
-	u8 reuse;
+#ifdef CONFIG_PCI_HCI
+int	rtl8192ce_init_recv_priv(_adapter * padapter);
+void rtl8192ce_free_recv_priv(_adapter * padapter);
 #endif
 
-	uint  len;
-	u8 *phead;
-	u8 *pdata;
-	u8 *ptail;
-	u8 *pend;
-
-	u8 *pbuf;
-	u8 *pallocated_buf;
-
-
-};
-
-
-/*
-	head  ----->
-
-		data  ----->
-
-			payload
-
-		tail  ----->
-
-
-	end   ----->
-
-	len = (unsigned int )(tail - data);
-
-*/
-struct recv_frame_hdr{
-
-	_list	list;
-	_pkt	*pkt;
-	_pkt *pkt_newalloc;
-
-	_adapter  *adapter;
-	
-	u8 fragcnt;
-
-	int frame_tag;
-
-	struct rx_pkt_attrib attrib;
-
-	uint  len;
-	u8 *rx_head;
-	u8 *rx_data;
-	u8 *rx_tail;
-	u8 *rx_end;
-
-	void *precvbuf;
-
-
-	//
-	struct sta_info *psta;
-
-	//for A-MPDU Rx reordering buffer control
-	struct recv_reorder_ctrl *preorder_ctrl;
-
-};
-
-
-union recv_frame{
-
-	union{
-		_list list;
-		struct recv_frame_hdr hdr;
-		uint mem[RECVFRAME_HDR_ALIGN>>2];
-	}u;
-
-	//uint mem[MAX_RXSZ>>2];
-
-};
-
-
-int init_recvbuf(_adapter *padapter, struct recv_buf *precvbuf);
-
-void rtl8192cu_update_recvframe_attrib_from_recvstat(_adapter *padapter,union recv_frame *precvframe, struct recv_stat *prxstat);
-
-void reordering_ctrl_timeout_handler(void *pcontext);
-
-void rtl8192c_query_rx_phy_status(union recv_frame *prframe, struct recv_stat *prxstat);
-
-//void rtl8192c_process_phy_info(_adapter *padapter, union recv_frame *prframe);
-void rtl8192c_process_phy_info(_adapter *padapter, void *prframe);
+void rtl8192c_translate_rx_signal_stuff(union recv_frame *precvframe, struct phy_stat *pphy_info);
+void rtl8192c_query_rx_desc_status(union recv_frame *precvframe, struct recv_stat *pdesc);
 
 #endif
 

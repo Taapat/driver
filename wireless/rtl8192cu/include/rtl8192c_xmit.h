@@ -1,18 +1,24 @@
+/******************************************************************************
+ *
+ * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
+ *                                        
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of version 2 of the GNU General Public License as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+ *
+ *
+ ******************************************************************************/
 #ifndef _RTL8192C_XMIT_H_
 #define _RTL8192C_XMIT_H_
-
-#define HWXMIT_ENTRY	4
-
-#define VO_QUEUE_INX	0
-#define VI_QUEUE_INX	1
-#define BE_QUEUE_INX	2
-#define BK_QUEUE_INX	3
-#define TS_QUEUE_INX	4
-#define MGT_QUEUE_INX	5
-#define BMC_QUEUE_INX	6
-#define BCN_QUEUE_INX	7
-
-#define HW_QUEUE_ENTRY	8
 
 //
 // Queue Select Value in TxDesc
@@ -26,90 +32,98 @@
 #define QSLT_MGNT						0x12
 #define QSLT_CMD						0x13
 
-#define TXDESC_SIZE 32
-#define PACKET_OFFSET_SZ (8)
-#define TXDESC_OFFSET (TXDESC_SIZE + PACKET_OFFSET_SZ)
+struct txrpt_ccx_8192c {
+	/* offset 0 */
+	u8 retry_cnt:6;
+	u8 rsvd_0:2;
 
-#if USB_TX_AGGREGATION_92C
+	/* offset 1 */
+	u8 rts_retry_cnt:6;
+	u8 rsvd_1:2;
+
+	/* offset 2 */
+	u8 ccx_qtime0;
+	u8 ccx_qtime1;
+
+	/* offset 4 */
+	u8 missed_pkt_num:5;
+	u8 rsvd_4:3;
+
+	/* offset 5 */
+	u8 mac_id:5;
+	u8 des1_fragssn:3;
+
+	/* offset 6 */
+	u8 rpt_pkt_num:5;
+	u8 pkt_drop:1;
+	u8 lifetime_over:1;
+	u8 retry_over:1;
+
+	/* offset 7*/
+	u8 edca_tx_queue:4;
+	u8 rsvd_7:1;
+	u8 bmc:1;
+	u8 pkt_ok:1;
+	u8 int_ccx:1;
+};
+
+#define txrpt_ccx_qtime_8192c(txrpt_ccx) ((txrpt_ccx)->ccx_qtime0+((txrpt_ccx)->ccx_qtime1<<8))
+
+#ifdef CONFIG_XMIT_ACK
+void dump_txrpt_ccx_8192c(void *buf);
+void handle_txrpt_ccx_8192c(_adapter *adapter, void *buf);
+#else
+#define dump_txrpt_ccx_8192c(buf) do {} while(0)
+#define handle_txrpt_ccx_8192c(adapter, buf) do {} while(0)
+#endif
+
+#ifdef CONFIG_USB_HCI
+
+#ifdef CONFIG_USB_TX_AGGREGATION
 #define MAX_TX_AGG_PACKET_NUMBER 0xFF
 #endif
 
-#define tx_cmd tx_desc
+s32	rtl8192cu_init_xmit_priv(_adapter * padapter);
 
-//
-//defined for TX DESC Operation
-//
+void	rtl8192cu_free_xmit_priv(_adapter * padapter);
 
-#define MAX_TID (15)
+void rtl8192cu_cal_txdesc_chksum(struct tx_desc	*ptxdesc);
 
-//OFFSET 0
-#define OFFSET_SZ (0)
-#define OFFSET_SHT (16)
-#define OWN 	BIT(31)
-#define FSG	BIT(27)
-#define LSG	BIT(26)
+s32 rtl8192cu_xmitframe_complete(_adapter *padapter, struct xmit_priv *pxmitpriv, struct xmit_buf *pxmitbuf);
 
-//OFFSET 4
-#define PKT_OFFSET_SZ (0)
-#define QSEL_SHT (8)
-#define NAVUSEHDR BIT(20)
-#define HWPC BIT(31)
+s32 rtl8192cu_mgnt_xmit(_adapter *padapter, struct xmit_frame *pmgntframe);
 
-//OFFSET 8
-#define BMC BIT(7)
-#define BK BIT(30)
-#define AGG_EN BIT(29)
+s32 rtl8192cu_hal_xmit(_adapter *padapter, struct xmit_frame *pxmitframe);
 
-//OFFSET 12
-#define SEQ_SHT (16)
+s32	 rtl8192cu_hal_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitframe);
 
-//OFFSET 16
-#define TXBW BIT(18)
+#ifdef CONFIG_HOSTAPD_MLME
+s32 rtl8192cu_hostap_mgnt_xmit_entry(_adapter *padapter, _pkt *pkt);
+#endif
 
-//OFFSET 20
-#define DISFB BIT(15)
+#endif
 
-struct tx_desc{
+#ifdef CONFIG_PCI_HCI
+s32	rtl8192ce_init_xmit_priv(_adapter * padapter);
+void	rtl8192ce_free_xmit_priv(_adapter * padapter);
 
-	//DWORD 0
-	u32 txdw0;
+s32	rtl8192ce_enqueue_xmitbuf(struct rtw_tx_ring *ring, struct xmit_buf *pxmitbuf);
+struct xmit_buf *rtl8192ce_dequeue_xmitbuf(struct rtw_tx_ring *ring);
 
-	u32 txdw1;
+void	rtl8192ce_xmitframe_resume(_adapter *padapter);
 
-	u32 txdw2;
+s32	rtl8192ce_mgnt_xmit(_adapter *padapter, struct xmit_frame *pmgntframe);
 
-	u32 txdw3;
+s32	rtl8192ce_hal_xmit(_adapter *padapter, struct xmit_frame *pxmitframe);
 
-	u32 txdw4;
-
-	u32 txdw5;
-
-	u32 txdw6;
-
-	u32 txdw7;	
-
-};
+s32	 rtl8192ce_hal_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitframe);
 
 
-union txdesc {
-	struct tx_desc txdesc;
-	u32 value[TXDESC_SIZE>>2];	
-};
+#ifdef CONFIG_HOSTAPD_MLME
+s32	rtl8192ce_hostap_mgnt_xmit_entry(_adapter *padapter, _pkt *pkt);
+#endif
 
-void cal_txdesc_chksum(struct tx_desc	*ptxdesc);
-s32 update_txdesc(struct xmit_frame *pxmitframe, u32 *ptxdesc, s32 sz);
-void dump_xframe(_adapter *padapter, struct xmit_frame *pxmitframe);
-
-s32 xmitframe_complete(_adapter *padapter, struct xmit_priv *pxmitpriv, struct xmit_buf *pxmitbuf);
-
-void do_queue_select(_adapter *padapter, struct pkt_attrib *pattrib);
-u32 get_ff_hwaddr(struct xmit_frame	*pxmitframe);
-
-s32 pre_xmitframe(_adapter *padapter, struct xmit_frame *pxmitframe);
-s32 xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitframe);
-s32 xmitframe_direct(_adapter *padapter, struct xmit_frame *pxmitframe);
-
-s32 hal_xmit(_adapter *padapter, struct xmit_frame *pxmitframe);
+#endif
 
 #endif
 

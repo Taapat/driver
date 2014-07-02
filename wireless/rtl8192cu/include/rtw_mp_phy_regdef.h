@@ -1,7 +1,25 @@
-/*****************************************************************************
- *	Copyright(c) 2008,  RealTEK Technology Inc. All Right Reserved.
+/******************************************************************************
  *
- * Module:	__INC_HAL8192SPHYREG_H
+ * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
+ *                                        
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of version 2 of the GNU General Public License as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+ *
+ *
+ ******************************************************************************/
+/*****************************************************************************
+ *
+ * Module:	__RTW_MP_PHY_REGDEF_H_
  *
  *
  * Note:	1. Define PMAC/BB register map
@@ -22,8 +40,8 @@
  *	09/25/2008	MH		1. Add RL6052 register definition
  * 
  *****************************************************************************/
-#ifndef __RTL871X_MP_PHY_REGDEF_H
-#define __RTL871X_MP_PHY_REGDEF_H
+#ifndef __RTW_MP_PHY_REGDEF_H_
+#define __RTW_MP_PHY_REGDEF_H_
 
 
 /*--------------------------Define Parameters-------------------------------*/
@@ -225,6 +243,7 @@
 #define		rOFDM0_XCTxAFE            			0xc94
 #define		rOFDM0_XDTxIQImbalance		0xc98
 #define		rOFDM0_XDTxAFE				0xc9c
+#define		rOFDM0_RxIQExtAnta			0xca0
 
 #define		rOFDM0_RxHPParameter			0xce0
 #define		rOFDM0_TxPseudoNoiseWgt		0xce4
@@ -989,13 +1008,17 @@
 #define		bDWord                    0xf
 
 //for PutRegsetting & GetRegSetting BitMask
-#define		bMaskByte0                0xff	// Reg 0xc50 rOFDM0_XAAGCCore~0xC6f
-#define		bMaskByte1                0xff00
-#define		bMaskByte2                0xff0000
-#define		bMaskByte3                0xff000000
-#define		bMaskHWord                0xffff0000
-#define		bMaskLWord                0x0000ffff
-#define		bMaskDWord                0xffffffff
+#define		bMaskByte0		0xff	// Reg 0xc50 rOFDM0_XAAGCCore~0xC6f
+#define		bMaskByte1		0xff00
+#define		bMaskByte2		0xff0000
+#define		bMaskByte3		0xff000000
+#define		bMaskHWord		0xffff0000
+#define		bMaskLWord		0x0000ffff
+#define		bMaskDWord		0xffffffff
+#define		bMaskH4Bits		0xf0000000	
+#define 	bMaskOFDM_D		0xffc00000
+#define		bMaskCCK		0x3f3f3f3f
+#define		bMask12Bits		0xfff
 
 //for PutRFRegsetting & GetRFRegSetting BitMask
 #if (RTL92SE_FPGA_VERIFY == 1)
@@ -1038,14 +1061,15 @@
 #define		bPMACControl	0x0		// Useless
 #define		bWMACControl	0x1
 #define		bWNICControl	0x2
-       		
+
+#if 0
 #define		ANTENNA_A	0x1	// Useless
 #define		ANTENNA_B	0x2
-#define		ANTENNA_AB	0x3	// ANTENNA_A |ANTENNA_B
+#define		ANTENNA_AB	0x3	// ANTENNA_A|ANTENNA_B
 
 #define		ANTENNA_C	0x4
 #define		ANTENNA_D	0x8
-
+#endif
 
 #define RCR_AAP			BIT(0)				// accept all physical address
 #define RCR_APM			BIT(1)				// accept physical match
