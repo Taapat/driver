@@ -80,6 +80,7 @@ int proc_bus_nim_sockets_read(char *page, char **start, off_t off, int count, in
 #endif
     struct dvb_frontend *fe;
     char *pType = "unknown";
+    char *pMode = NULL;
     struct
     {
         int type;
@@ -94,6 +95,7 @@ int proc_bus_nim_sockets_read(char *page, char **start, off_t off, int count, in
 #else
         { SYS_DVBS2,         "DVB-S2"},
         { SYS_DVBS,          "DVB-S" },
+        { SYS_DVBT,          "DVB-T2" },
         { SYS_DVBT,          "DVB-T" },
         { SYS_DSS,           "DVB-DSS"},
         { SYS_DVBC_ANNEX_AC, "DVB-C"},
@@ -140,6 +142,13 @@ int proc_bus_nim_sockets_read(char *page, char **start, off_t off, int count, in
                 if (fe->ops.get_property(fe, &p) == 0)
                 {
                     pType = typeMap[k].pType;
+                    if (typeMap[k].type == SYS_DVBT2 || typeMap[k].type == SYS_DVBT)
+                    {
+                        p.cmd = DTV_DELIVERY_SYSTEM;
+                        p.u.data = SYS_DVBC_ANNEX_AC;
+                        if(fe->ops.get_property(fe, &p) == 0)
+                        pMode = "DVB-C";
+                    }
                     break;
                 }
 
@@ -151,6 +160,15 @@ int proc_bus_nim_sockets_read(char *page, char **start, off_t off, int count, in
                            "Name: %s\n"
                            "Frontend_Device: %d\n",
                            feIndex, pType, fe->ops.info.name, feIndex);
+#if (DVB_API_VERSION >= 5)
+            if (fe->ops.info.caps & FE_CAN_MULTISTREAM)
+                len += sprintf(page + len, "Multistream: yes\n");
+#endif
+            if (pMode)
+            {
+                len += sprintf(page + len, "Mode 0: %s\n"
+                                           "Mode 1: %s\n", pType, pMode);
+            }
             feIndex++;
         }
     }
