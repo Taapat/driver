@@ -95,7 +95,7 @@ int proc_bus_nim_sockets_read(char *page, char **start, off_t off, int count, in
 #else
         { SYS_DVBS2,         "DVB-S2"},
         { SYS_DVBS,          "DVB-S" },
-        { SYS_DVBT,          "DVB-T2" },
+        { SYS_DVBT2,          "DVB-T2" },
         { SYS_DVBT,          "DVB-T" },
         { SYS_DSS,           "DVB-DSS"},
         { SYS_DVBC_ANNEX_AC, "DVB-C"},
