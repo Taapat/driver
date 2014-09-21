@@ -79,7 +79,7 @@ extern void switch_video_command_kernel(char *kbuf);
 #include "linux/dvb/stm_ioctls.h"
 
 /* fixme:
- * brauchen wir für die stmfb aufrufe:
+ * brauchen wir fÃ¼r die stmfb aufrufe:
  * void* fb =  stmfb_get_fbinfo_ptr();
  * stmfb_ioctl((void*) fb , YourRequest, &screen_info);
  */
