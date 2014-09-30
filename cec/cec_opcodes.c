@@ -730,9 +730,13 @@ void parseRawMessage(unsigned int len, unsigned char buf[])
 
     if (dataLen > 0)
     {
+	if ((dst == logicalDeviceType) || (dst == BROADCAST)) //Use only messages for us or broadcast
+	{
 	parseMessage(src, dst, dataLen, buf + 1);
 	if (!activemode)
 	    AddMessageToBuffer(buf, len);
+	} else
+	    dprintk(2, "Don't parse Message, it's not for us\n");
     } else
     {
 	dprintk(4, "\tis PING\n");
