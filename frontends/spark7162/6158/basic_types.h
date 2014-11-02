@@ -18,16 +18,15 @@
 //
 //				$State$
 //
-// 文件描述：	ter 6158
+// 文件描述：	basic types
 //
 /******************************************************************************/
 
-#ifndef __D6158_H
-#define __D6158_H
+#ifndef __BASIC_TYPES_H
+#define __BASIC_TYPES_H
 
 /********************************  文件包含************************************/
 
-#include "nim_panic6158.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,52 +39,39 @@ extern "C" {
 
 /********************************  宏 定 义************************************/
 
-#if defined(MODULE)
-#define printf printk
-#endif
-
 /********************************  变量定义************************************/
 
 /********************************  变量引用************************************/
 
 /********************************  函数声明************************************/
 
-YW_ErrorType_T demod_d6158_Open(U8 Handle);
-YW_ErrorType_T demod_d6158_Close(U8 Index);
-YW_ErrorType_T demod_d6158_IsLocked(U8 Handle, BOOL *IsLocked);
-#if !defined(MODULE)
-YW_ErrorType_T demod_d6158_Identify(IOARCH_Handle_t IOHandle, U8 ucID, U8 *
-pucActualID);
-#endif
-
-YW_ErrorType_T demod_d6158_Repeat(IOARCH_Handle_t				DemodIOHandle, /*demod
-io ??柄*/
-									IOARCH_Handle_t				TunerIOHandle, /*??? io ??柄*/
-									TUNER_IOARCH_Operation_t Operation,
-									unsigned short SubAddr,
-									unsigned char *Data,
-									unsigned int TransferSize,
-									unsigned int Timeout);
-YW_ErrorType_T demod_d6158_GetSignalInfo(U8 Handle,
-										unsigned int  *Quality,
-										unsigned int  *Intensity,
-										unsigned int  *Ber);
-
-YW_ErrorType_T demod_d6158_ScanFreqDVB(struct dvb_frontend_parameters *p,
-	                                            struct nim_device *dev,UINT8   System,UINT8   plp_id);
-YW_ErrorType_T demod_d6158earda_ScanFreq(struct dvb_frontend_parameters *p,
-	                                            struct nim_device *dev,UINT8   System,UINT8   plp_id);
-void nim_config_EARDATEK11658(struct COFDM_TUNER_CONFIG_API *Tuner_API_T, UINT32 i2c_id, UINT8 idx);
 /********************************  函数定义************************************/
 
+#ifndef INTTYPE
+typedef char			INT8;
+typedef unsigned char	UINT8;
 
+typedef short			INT16;
+typedef unsigned short	UINT16;
+
+typedef int				INT32;
+typedef unsigned int	UINT32;
+
+
+typedef unsigned long long	UINT64;
+typedef unsigned long long	U64;
+
+typedef long long INT64;
+typedef long long S64;
+#define INTTYPE
+#endif
 
 #ifdef __cplusplus
 }
 #endif
 
 
-#endif  /* __D6158_H */
+#endif  /* __BASIC_TYPES_H */
 /* EOF------------------------------------------------------------------------*/
 
 /* BOL-------------------------------------------------------------------*/

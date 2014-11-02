@@ -46,6 +46,7 @@ typedef unsigned short	U16;
 typedef int			    S32;
 typedef unsigned int	U32;
 
+#ifndef INTTYPE
 typedef char			INT8;
 typedef unsigned char	UINT8;
 
@@ -55,16 +56,17 @@ typedef unsigned short	UINT16;
 typedef int			    INT32;
 typedef unsigned int	UINT32;
 
-//typedef unsigned int	IOARCH_Handle_t;
-typedef unsigned int	YW_ErrorType_T;
-
-
-
 typedef unsigned long long UINT64;
 typedef unsigned long long U64;
 
 typedef long long INT64;
 typedef long long S64;
+
+#define INTTYPE
+#endif
+
+//typedef unsigned int	IOARCH_Handle_t;
+typedef unsigned int	YW_ErrorType_T;
 
 #ifndef DEFINED_BOOL
 #define DEFINED_BOOL
@@ -117,6 +119,11 @@ typedef const char * ST_Revision_t;
 #define YWLIB_Strcpy(a, b)		strcpy(a, b)
 
 #define YWOSTRACE(x)
+
+#if defined(MODULE)
+#define malloc(n)	YWOS_Malloc(n)
+#define free(p)		YWOS_Free(p)
+#endif
 
 /********************************  º¯Êý¶¨Òå************************************/
 

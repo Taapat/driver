@@ -23,26 +23,19 @@ Copyright(C) 2011 SHARP CORPORATION
  File Name:      MxL_User_Define.c
 
  */
-/*#include <sys_config.h>
-#include <retcode.h>
 #include <types.h>
-#include <api/libc/printf.h>
-#include <api/libc/string.h>
-#include <bus/i2c/i2c.h>
-#include <osal/osal.h>*/
 
-#include <unistd.h>
 #ifdef SHARP_DEBUG_FOR_CYGWIN
 #include <stdio.h>
 #else
 //#include <windows.h>
 #endif
-#include "ywdefs.h"
-#include "mxl_common.h"
+#include <unistd.h>
+
 #include "mxL_user_define.h"
 
 /* '11/02/09 : Correct build error. */
-//#include "tun_mxl301.h"
+#include "tun_mxl301.h"
 #include "mxl_common.h"
 
 

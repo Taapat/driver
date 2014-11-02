@@ -34,7 +34,10 @@
 #include <linux/i2c.h>
 #include <linux/dvb/version.h>
 
-#include "nim_dev.h"
+//#include "nim_dev.h"
+#include "ywdefs.h"
+
+#include "nim_panic6158.h"
 
 #include "dvbdev.h"
 #include "dmxdev.h"
@@ -384,10 +387,22 @@ int spark_dvb_attach_T2(struct dvb_adapter *dvb_adap,
 	pFrontend = dvb_d6158_attach(pI2c,system);
 	if(!pFrontend)
 	{
-		printk (KERN_INFO "%s: error attaching d0367\n", __FUNCTION__);
-		return -1;
+		printk (KERN_INFO "%s: error attaching d6158\n", __FUNCTION__);
+		pFrontend = dvb_d6158earda_attach(pI2c, system);
+		if (!pFrontend)
+		{
+			printk (KERN_INFO "%s: error attaching d6158earda\n", __FUNCTION__);
+			return -1;
+		}
+		else
+		{
+			printk("%s: d6158earda attached\n", __FUNCTION__);
+		}
 	}
-	printk("%s: d6158 attached\n", __FUNCTION__);
+	else
+	{
+		printk("%s: d6158 attached\n", __FUNCTION__);
+	}
 
 	if(!dvb_attach(mxl301_attach, pFrontend, &mxl301_config, pI2c))
 

@@ -19,11 +19,19 @@ CCFLAGSY += -I$(TREE_ROOT)/frontends/spark7162/stv0367/stv0367qam
 CCFLAGSY += -I$(TREE_ROOT)/frontends/spark7162/stv0367/stv0367ter
 CCFLAGSY += -I$(TREE_ROOT)/frontends/spark7162/6158
 CCFLAGSY += -I$(TREE_ROOT)/frontends/spark7162/tuner
-
+CCFLAGSY += -I$(TREE_ROOT)/frontends/spark7162/tuner/MxL301_Ext
+CCFLAGSY += -I$(TREE_ROOT)/frontends/spark7162/tuner/MxL603
 CCFLAGSY += -I$(TREE_ROOT)/frontends/spark_dvbapi5
 CCFLAGSY += -I$(TREE_ROOT)/frontends/spark_common
 
-CCFLAGSY += -Wall #-Werror
+CCFLAGSY += -Wall -DCONFIG_DVB_DUMMY_FE#-Werror
+
+CCFLAGSY += -DSTB_BOARD_TYPE=1
+CCFLAGSY += -DFULAN_3606_220_1CA_1CI=0
+CCFLAGSY += -DFULAN_3606_220_SIMPLE=0
+CCFLAGSY += -DSYS_TUN_MODULE=1
+CCFLAGSY += -DMXL603=1
+CCFLAGSY += -DANY_TUNER=0
 endif
 
 ccflags-y += $(CCFLAGSY)
@@ -72,14 +80,21 @@ spark7162-objs +=        spark7162/stv0367/stv0367qam/stv0367qam_drv.o
 spark7162-objs +=        spark7162/stv0367/stv0367qam/d0367_qam.o
 
 spark7162-objs +=        spark7162/6158/d6158.o
+spark7162-objs +=        spark7162/6158/d6158_dvb.o
+spark7162-objs +=        spark7162/6158/nim_panic6158.o
 spark7162-objs +=        spark7162/6158/MN88472_autoctrl.o
 spark7162-objs +=        spark7162/6158/MN88472_register.o
 spark7162-objs +=        spark7162/6158/MN88472_variable.o
 
-spark7162-objs +=        spark7162/tuner/mxl301rf.o
-spark7162-objs +=        spark7162/tuner/mxl_common.o
-spark7162-objs +=        spark7162/tuner/mxl_spur_table.o
-spark7162-objs +=        spark7162/tuner/mxL_user_define.o
+spark7162-objs +=        spark7162/tuner/MxL301_Ext/mxl301rf.o
+spark7162-objs +=        spark7162/tuner/MxL301_Ext/mxl_common.o
+spark7162-objs +=        spark7162/tuner/MxL301_Ext/mxl_spur_table.o
+spark7162-objs +=        spark7162/tuner/MxL301_Ext/mxL_user_define.o
+spark7162-objs +=        spark7162/tuner/MxL301_Ext/tun_mxl301.o
+
+spark7162-objs +=        spark7162/tuner/MxL603/MxL603_TunerApi.o
+spark7162-objs +=        spark7162/tuner/MxL603/MxL603_TunerCfg.o
+spark7162-objs +=        spark7162/tuner/MxL603/tun_mxl603.o
 
 obj-m += spark7162.o
 

@@ -1,6 +1,6 @@
 
 
-#include "d6158.h"
+#include "nim_panic6158.h"
 
 UINT32	logtbl[] = {
 0	,-1000,-699	,-523,-398,

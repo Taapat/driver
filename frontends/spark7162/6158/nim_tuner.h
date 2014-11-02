@@ -44,7 +44,7 @@ Parameters:  UINT32 tuner_id, tuner device id in same tuner type
 			UINT8 *lock, pointer to the place to write back the Tuner Current Status
 Return:         INT32, operation status code; configuration successful return with SUCCESS
 */
-//#define MAX_TUNER_SUPPORT_NUM	2
+#define MAX_TUNER_SUPPORT_NUM	4
 #define FAST_TIMECST_AGC	1
 #define SLOW_TIMECST_AGC	0
 #define Tuner_Chip_SANYO        9
@@ -70,6 +70,19 @@ Return:         INT32, operation status code; configuration successful return wi
 #define TUNER_TUNING		2
 #define TUNER_TUNED		3
 
+//add by bill for tuner standby function
+#define NIM_TUNER_SET_STANDBY_CMD	0xffffffff
+
+typedef INT32  (*INTERFACE_DEM_WRITE_READ_TUNER)(void * nim_dev_priv, UINT8 tuner_address, UINT8 *wdata, int wlen, UINT8* rdata, int rlen);
+typedef struct
+{
+    void * nim_dev_priv; //for support dual demodulator.
+    //The tuner can not be directly accessed through I2C,
+    //tuner driver summit data to dem, dem driver will Write_Read tuner.
+//    INT32  (*Dem_Write_Read_Tuner)(void * nim_dev_priv, UINT8 slv_addr, UINT8 *wdata, int wlen, UINT8* rdata, int rlen);
+    INTERFACE_DEM_WRITE_READ_TUNER  Dem_Write_Read_Tuner;
+} DEM_WRITE_READ_TUNER;  //Dem control tuner by through mode (it's not by-pass mode).
+
 /*external demodulator config parameter*/
 struct EXT_DM_CONFIG{
 	UINT32 i2c_base_addr;
@@ -79,6 +92,8 @@ struct EXT_DM_CONFIG{
 	UINT32 polar_gpio_num;
     	UINT32 lock_polar_reverse;
 	UINT8  nim_idx;		//dmq add for combo and twin tuner
+	UINT8   ts_mode;		//dmq 2012/03/07 add
+	UINT8   demo_type;	//dmq 2012/03/09 add
 };
 
 #define LNB_CMD_BASE		0xf0
@@ -140,7 +155,9 @@ struct COFDM_TUNER_CONFIG_DATA
 
 struct COFDM_TUNER_CONFIG_EXT
 {
+	#if defined(MODULE)
 	IOARCH_Handle_t	*i2c_adap;
+	#endif
 	UINT16  cTuner_Crystal;
 	UINT8  cTuner_Base_Addr;		/* Tuner BaseAddress for Write Operation: (BaseAddress + 1) for Read */
 	UINT8  cChip;
@@ -168,6 +185,7 @@ struct COFDM_TUNER_CONFIG_EXT
 	UINT32 i2c_mutex_id;
 	void *priv;//dmq 2011/12/21
 #endif
+
 	INT32  if_signal_target_intensity;
 };
 
@@ -234,6 +252,12 @@ extern INT32 tun_mxl5007_init(UINT32 *tuner_id, struct COFDM_TUNER_CONFIG_EXT * 
 extern INT32 tun_mxl5007_control(UINT32 tuner_id, UINT32 freq, UINT8 bandwidth,UINT8 AGC_Time_Const,UINT8 *data,UINT8 _i2c_cmd);
 extern INT32 tun_mxl5007_status(UINT32 tuner_id, UINT8 *lock);
 
+extern INT32 tun_mxl603_init(UINT32 *tuner_id,struct COFDM_TUNER_CONFIG_EXT * ptrTuner_Config);
+extern INT32 tun_mxl603_control(UINT32 tuner_id,UINT32 freq, UINT8 bandwidth,UINT8 AGC_Time_Const,UINT8 *data,UINT8 _i2c_cmd);
+extern INT32 tun_mxl603_status(UINT32 tuner_id,UINT8 *lock);
+extern INT32 tun_mxl603_command(UINT32 tuner_id, INT32 cmd, UINT32 param);
+extern INT32 tun_mxl603_set_addr(UINT32 tuner_idx, UINT8 addr, UINT32 i2c_mutex_id);
+extern INT32 tun_mxl603_rfpower(UINT32 tuner_id, INT16 *rf_power_dbm);
 #if 0
 //#if (SYS_TUN_MODULE == ANY_TUNER)
 //extern UINT32 SYS_TUN_TYPE;
@@ -610,9 +634,5 @@ extern INT32 tun_g031d_control(UINT32 tuner_id, UINT32 freq, UINT32 sym, UINT8 p
 extern INT32 tun_tda18250_init(UINT32 * ptrTun_id, struct QAM_TUNER_CONFIG_EXT * ptrTuner_Config);
 extern INT32 tun_tda18250_control(UINT32 Tun_id, UINT32 freq, UINT32 sym, UINT8 AGC_Time_Const, UINT8 _i2c_cmd);
 extern INT32 tun_tda18250_status(UINT32 Tun_id, UINT8 *lock);
-
-INT32 tun_mxl301_init(UINT32 *tuner_idx, struct COFDM_TUNER_CONFIG_EXT * ptrTuner_Config);
-INT32 tun_mxl301_control(UINT32 tuner_idx, UINT32 freq, UINT8 bandwidth,UINT8 AGC_Time_Const,UINT8 *data,UINT8 _i2c_cmd);
-INT32 tun_mxl301_status(UINT32 tuner_idx, UINT8 *lock);
 //#endif
 #endif // _NIM_TUNER_H_

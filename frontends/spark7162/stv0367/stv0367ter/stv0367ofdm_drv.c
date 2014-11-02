@@ -1743,6 +1743,7 @@ int	FE_STV0367TER_GetPower(TUNER_IOREG_DeviceMap_t *DeviceMap,
 				{
 					/*-33dBm to -43dBm*/
 					power = -33+ (-1)*i;
+					break;
 				}
 			}
 			if(i==RF_LOOKUP_TABLE_SIZE_3) power = -44;
@@ -1755,6 +1756,7 @@ int	FE_STV0367TER_GetPower(TUNER_IOREG_DeviceMap_t *DeviceMap,
 				{
 					/*-44dBm to -86dBm*/
 					power = -44+ (-1)*i;
+					break;
 				}
 			}
 			if(i==IF_LOOKUP_TABLE_SIZE_4) power = -88;
@@ -1764,7 +1766,7 @@ int	FE_STV0367TER_GetPower(TUNER_IOREG_DeviceMap_t *DeviceMap,
 		   power=-90 ;
     }
     power = power+100;
-    power = 100-power;
+    //power = 100-power;
     if (power > 100)
     {
         power = 100;

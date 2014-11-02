@@ -12,7 +12,7 @@ Demodulator IC control functions
 Copyright(C) 2011 SHARP CORPORATION
 ******************************************************/
 
-#include "d6158.h"
+#include "nim_panic6158.h"
 #if 0
 // MN88472 Autocontrol Register
 // Date : 2011/11/09 15:27

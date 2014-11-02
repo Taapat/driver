@@ -162,8 +162,7 @@ void MxL_Delay(UINT32 mSec);
 //=========================================================================
 
 INT32 MXL301_register_write_bit_name(UINT32 tuner_idx, MxL_BIT_NAME bit_name, UINT8	RegData);
-INT32 tun_mxl301_i2c_write(UINT32 tuner_id, UINT8* pArray, UINT32 count);
-INT32 tun_mxl301_i2c_read(UINT32 tuner_id, UINT8 Addr, UINT8* mData);
+
 #ifdef __cplusplus
 }
 #endif

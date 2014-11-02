@@ -47,6 +47,7 @@ typedef enum TUNER_DemodType_e
     TUNER_DEMOD_MT352,                   /* terrestrial */
     TUNER_DEMOD_MT353,                   /* terrestrial */
     TUNER_DEMOD_PN2020,                  /* terrestrial */
+    TUNER_DEMOD_MN88472,                  /* terrestrial */
     TUNER_DEMOD_STV0297,                 /* Cable : demodulation, fec & digital interface chip, J83 A/C */
     TUNER_DEMOD_10023,
     TUNER_DEMOD_STB0899,
@@ -71,6 +72,7 @@ typedef enum TUNER_TunerType_e
     TUNER_TUNER_STB6110,
     TUNER_TUNER_SHARP7306,
     TUNER_TUNER_SHARP7803,
+    TUNER_TUNER_SHARP7903,
 
     TUNER_TUNER_TDTE9251,  /* terr 2005.10.11.chm*/
     TUNER_TUNER_SHARP6055,  /* terr 2005.10.11.chm*/
@@ -81,6 +83,8 @@ typedef enum TUNER_TunerType_e
     TUNER_TUNER_EDTPH42PRF,  /* terr 2005.10.11.chm*/
     TUNER_TUNER_ED5265,  /* terr 2005.10.11.chm*/
     TUNER_TUNER_STV4100,
+    TUNER_TUNER_MXL301, /*terr 2012.2.13 jhy*/
+	TUNER_TUNER_MXL603,
 
     TUNER_TUNER_MT2060,  /* cab 2006.04.13.chm*/
     TUNER_TUNER_TDA6651,  /* cab 2006.04.13.chm*/
@@ -90,6 +94,8 @@ typedef enum TUNER_TunerType_e
     TUNER_TUNER_SHARP5469C
 } TUNER_TunerType_T;
 
+#define TUNER_TunerTypeIsMXL(TunerType) ((TunerType == TUNER_TUNER_MXL301) || \
+										(TunerType == TUNER_TUNER_MXL603))
 
 /* lnb device-driver (sat) */
 typedef enum TUNER_LnbType_e
@@ -258,12 +264,12 @@ typedef enum TUNER_MotorOperation_e
 /* tuner status (common) */
 typedef enum TUNER_Status_e
 {
-    TUNER_STATUS_UNLOCKED,
-    TUNER_STATUS_SCANNING,
-    TUNER_STATUS_LOCKED,
-    TUNER_STATUS_NOT_FOUND,
-    TUNER_STATUS_SLEEP,
-    TUNER_STATUS_STANDBY
+    TUNER_INNER_STATUS_UNLOCKED,
+    TUNER_INNER_STATUS_SCANNING,
+    TUNER_INNER_STATUS_LOCKED,
+    TUNER_INNER_STATUS_NOT_FOUND,
+    TUNER_INNER_STATUS_SLEEP,
+    TUNER_INNER_STATUS_STANDBY
 } TUNER_Status_T;
 
 /*2005.07.11.chm
@@ -568,16 +574,18 @@ typedef struct TUNER_TerParam_s
     S32                        EchoPos;
     BOOL                    bAntenna;
 	U8                    TuneMode;//jhy add for panosonic 6158 ,0=unkown,1=c;2=T;3=T2
+	U8						T2PlpID; //Mutiplp
+	U8						T2PlpNum;
 }TUNER_TerParam_T;
 
 /*ter demod 的功能函数*/
 typedef struct TUNER_TerDemodDriver_s
 {
     /*关闭demod*/
-    YW_ErrorType_T        (*Demod_standy)(U8 Index  );
+    YW_ErrorType_T        (*Demod_standy)(U8 Index);
 
     /*复位demod*/
-    YW_ErrorType_T        (*Demod_reset)(U8 Index  );
+    YW_ErrorType_T        (*Demod_reset)(U8 Index);
     /*demod 转发功能函数*/
     YW_ErrorType_T        (*Demod_repeat)(IOARCH_Handle_t DemodIOHandle,
                                             IOARCH_Handle_t TunerIOHandle,
@@ -587,11 +595,13 @@ typedef struct TUNER_TerDemodDriver_s
                                             U32 TransferSize,
                                             U32 Timeout);
     /*demod 获取信号质量与强度*/
-    YW_ErrorType_T        (*Demod_GetSignalInfo)(U8 Index  , U32  *Quality, U32  *Intensity, U32 *Ber);
+    YW_ErrorType_T        (*Demod_GetSignalInfo)(U8 Index, U32 *Quality, U32 *Intensity, U32 *Ber);
     /*demod 获取信号是否锁定*/
-    YW_ErrorType_T        (*Demod_IsLocked)(U8 Index  , BOOL  *IsLocked);
+    YW_ErrorType_T        (*Demod_IsLocked)(U8 Index, BOOL *IsLocked);
     /*demod 锁定一个频率的搜索过程*/
-    YW_ErrorType_T        (*Demod_ScanFreq)(U8 Index  );
+    YW_ErrorType_T        (*Demod_ScanFreq)(U8 Index);
+	YW_ErrorType_T        (*Demod_GetTransponder)(U8 Index, void *Deliver);
+	YW_ErrorType_T        (*Demod_GetTransponderNum)(U8 Index, U32 *Num);
 }TUNER_TerDemodDriver_T;
 
 /*ter tuner 的功能函数*/
@@ -849,6 +859,8 @@ typedef struct TUNER_ScanTaskParam_s
     //TUNER_ScanTask_T          ScanTask;            /*搜索进程*/
     BOOL                      ForceSearchTerm;    /*是否强制停止当前搜索*/
 
+	TUNER_OpenParams_T*       pOpenParams;
+
     void                      *userdata;
 
 } TUNER_ScanTaskParam_T;
@@ -890,7 +902,9 @@ YW_ErrorType_T  TUNER_GetStatus(U8 Index , BOOL *IsLocked);
 
 YW_ErrorType_T  TUNER_GetSignalInfo(U8 Index, YWTUNER_SignalInfo_T *SignalInfo);
 
+YW_ErrorType_T  TUNER_GetTransponderNum(U8 Index, U32 *Num);
 
+YW_ErrorType_T  TUNER_GetTransponder(U8 Index, YWTUNER_SourceDeliver_T* DeliverPar);
 #ifdef __cplusplus
 }
 #endif

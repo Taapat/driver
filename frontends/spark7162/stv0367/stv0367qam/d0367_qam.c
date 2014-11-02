@@ -957,7 +957,7 @@ YW_ErrorType_T demod_d0367qam_ScanFreq(U8 Index)
 	{
 		/* update results */
         //printk("TUNER_STATUS_LOCKED #######################\n");
-	    Inst->Status = TUNER_STATUS_LOCKED;
+	    Inst->Status = TUNER_INNER_STATUS_LOCKED;
 		//pResult->Frequency_kHz = pIntParams->DemodResult.Frequency_kHz;
 		//pResult->SymbolRate_Bds = pIntParams->DemodResult.SymbolRate_Bds;
 		//pResult->SpectInv = pIntParams->DemodResult.SpectInv;
@@ -965,7 +965,7 @@ YW_ErrorType_T demod_d0367qam_ScanFreq(U8 Index)
 	}
 	else
 	{
-		Inst->Status = TUNER_STATUS_UNLOCKED;
+		Inst->Status = TUNER_INNER_STATUS_UNLOCKED;
 	}
 
 

@@ -16,26 +16,27 @@
 #ifndef __HLD_NIM_DEV_H__
 #define __HLD_NIM_DEV_H__
 
-
-
-//#include <hld/hld_dev.h>
-//#include <hld/nim/nim_dev.h>
-#include "d6158.h"
+#include "d6158_inner.h"
 
 #define EXT_QPSK_MODE_SPI 		0
 #define EXT_QPSK_MODE_SSI 		1
 
-//#if (defined(_M36F_SINGLE_CPU) || ((STB_BOARD_TYPE == FULAN_3606_220_1CA_1CI) ||(STB_BOARD_TYPE == FULAN_3606_220_SIMPLE)))
+#if (defined(_M36F_SINGLE_CPU) || ((STB_BOARD_TYPE == FULAN_3606_220_1CA_1CI) ||(STB_BOARD_TYPE == FULAN_3606_220_SIMPLE)))
 #define NIM_MAX_NUM 			1//dmq add
-//#else
-//#define NIM_MAX_NUM 			2 //dmq add
-//#endif
+#else
+#define NIM_MAX_NUM 			2 //dmq add
+#endif
 #define NIM_CHIP_ID_M3501A		0x350100C0
 #define NIM_CHIP_ID_M3501B		0x350100D0
 #define NIM_CHIP_SUB_ID_S3501D	0x00
 #define NIM_CHIP_SUB_ID_M3501B	0xC0
+#define NIM_CHIP_SUB_ID_M3501C	0xCC
 #define NIM_FREQ_RETURN_REAL	0
 #define NIM_FREQ_RETURN_SET		1
+#define FS_MAXNUM 15000
+#define TP_MAXNUM 2000
+#define CRYSTAL_FREQ 			13500    //13.5M
+//#define CRYSTAL_FREQ 			16000    //16M
 
 /* NIM Device I/O control command */
 enum nim_device_ioctrl_command
@@ -94,6 +95,11 @@ enum nim_device_ioctrl_command
     NIM_DRIVER_GET_FFT_MODE,
     NIM_DRIVER_GET_MODULATION,
     NIM_DRIVER_GET_SPECTRUM_INV,
+	//AD2DMA tool
+	NIM_DRIVER_ADC2MEM_START,
+	NIM_DRIVER_ADC2MEM_STOP,
+	NIM_DRIVER_ADC2MEM_SEEK_SET,
+	NIM_DRIVER_ADC2MEM_READ_8K,
     // The following code is for tuner io command
     NIM_TUNER_COMMAND = 0x8000,
     NIM_TUNER_POWER_CONTROL,
@@ -106,7 +112,9 @@ enum nim_device_ioctrl_command
     NIM_TUNER_CHECK,
     NIM_TUNER_LOOPTHROUGH,//dmq add
     NIM_DRIVER_SET_BLSCAN_MODE,    // Para = 0, NIM_SCAN_FAST; Para = 1, NIM_SCAN_ACCURATE(slower)
+    NIM_TURNER_SET_STANDBY,/*set av2012 standby add by bill 2012.02.21*/
     NIM_DRIVER_STOP_TUNER_FRONTEND,	//add by rxj 2011/06/10.
+    NIM_TUNER_SET_THROUGH_MODE,
 };
 /* NIM Device I/O control command  extension */
 enum nim_device_ioctrl_command_ext
@@ -125,6 +133,8 @@ enum nim_device_ioctrl_command_ext
     NIM_DRIVER_GET_FFT_RESULT       = 0x00FC000B,   /* Get Current NIM Device Channel FFT spectrum result */
     NIM_DRIVER_DISEQC_OPERATION     = 0x00FC000C,   /* NIM DiSEqC Device Opearation */
     NIM_DRIVER_DISEQC2X_OPERATION   = 0x00FC000D,   /* NIM DiSEqC2X Device Opearation */
+	NIM_DRIVER_SET_NIM_MODE	  	= 0x00FC000E, /* NIM J83AC/J83B mode setting */
+	NIM_DRIVER_SET_QAM_INFO		= 0x00FC000F,
 };
 
 /* NIM performance level setting */
@@ -211,7 +221,8 @@ struct NIM_Channel_Change
 	UINT8 op_mode;		//0:channel change 1:search mode //dmq add
 	UINT8 priv_param;		//dmq add
 	UINT8 dvb_t2_c;			//add by rxj   0:t2,t 1:c
-	UINT8 plp_id;			//add by crazycat
+	UINT8 PLP_id;			//add for t2
+	UINT8 scan_mode;  	//add for t2
 };
 
 /* Structure for Channel Search parameters */
@@ -368,6 +379,9 @@ struct nim_device
 	INT32	(*get_freq_offset)(struct nim_device *dev, INT32 *freq_offset);
 	INT32	(*get_bandwidth)(struct nim_device *dev, INT32 *bandwith);
 	INT32       (*get_frontend_type)(struct nim_device *dev, UINT8 *system); //dmq 2011/11/28 add
+	INT32	(*get_workmode)(struct nim_device *dev, INT32 *qpsk_mode);
+	INT32   	(*get_PLP_num)(struct nim_device *dev, UINT8 *plp_num);
+	INT32   	(*get_PLP_id)(struct nim_device *dev, UINT8 *plp_id);
 
 	UINT32 	i2c_type_id;					//dmq modify
 	UINT32    mutex_id;					//dmq add
@@ -381,7 +395,6 @@ struct nim_device
 #define DISEQC_SUPPORT
 #endif
 #endif  /* 0 */
-
 
 
 #endif  /* __HLD_NIM_DEV_H__ */

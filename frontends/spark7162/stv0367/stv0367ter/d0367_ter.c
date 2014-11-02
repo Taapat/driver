@@ -897,17 +897,17 @@ YW_ErrorType_T demod_d0367ter_ScanFreq(U8 Index)
 		if (pResult.Locked)
 		{
             //printk("TUNER_STATUS_LOCKED #######################\n");
-		    Inst->Status = TUNER_STATUS_LOCKED;
+		    Inst->Status = TUNER_INNER_STATUS_LOCKED;
 		}
         else
         {
             //printk("TUNER_STATUS_UNLOCKED #######################\n");
-       		Inst->Status = TUNER_STATUS_UNLOCKED;
+			Inst->Status = TUNER_INNER_STATUS_UNLOCKED;
         }
 	}
 	else
 	{
-		Inst->Status = TUNER_STATUS_UNLOCKED;
+		Inst->Status = TUNER_INNER_STATUS_UNLOCKED;
 	}
 
 

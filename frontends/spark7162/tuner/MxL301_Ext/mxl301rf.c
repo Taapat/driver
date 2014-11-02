@@ -24,15 +24,7 @@ Copyright(C) 2011 SHARP CORPORATION
 	The user can then pass this array to their I2C function to perform programming the tuner.
 */
 /* #include "StdAfx.h" */
-//#include <sys_config.h>
-//#include <retcode.h>
-//#include <types.h>
-//#include <api/libc/printf.h>
-//#include <api/libc/string.h>
-//#include <bus/i2c/i2c.h>
-//#include <osal/osal.h>
-
-#include "ywdefs.h"
+#include <types.h>
 #include "mxl301rf.h"
 
 
@@ -819,7 +811,9 @@ UINT32 MxL301RF_RFTune(UINT8* pArray,
 			break;
 		case MxL_MODE_ANA_I:
 			{	/* Added V9.4.2.0 */
+				#if defined(MODULE)
 				long long llRF_Freq = (long long)RF_Freq * 10;
+				#endif
 
 				if(RF_Freq <= 682*MHz)
 				{
@@ -828,11 +822,12 @@ UINT32 MxL301RF_RFTune(UINT8* pArray,
 				}
 				/*****     2012-09-07     *****/
 				//YWDRIVER_MODI modify by lf for change to int start
-				#if 1
+				#if defined(MODULE)
 				else if (((llRF_Freq >= (long long)6895*MHz) && (llRF_Freq <= (long long)6905*MHz)) ||
 					((llRF_Freq >= (long long)7135*MHz) && (llRF_Freq <= (long long)7145*MHz)) ||
 					((llRF_Freq >= (long long)7375*MHz) && (llRF_Freq <= (long long)7385*MHz)))
 				#else
+				else if (((RF_Freq >= 689.5*MHz) && (RF_Freq <= 690.5*MHz)) || ((RF_Freq >= 713.5*MHz) && (RF_Freq <= 714.5*MHz)) || ((RF_Freq >= 737.5*MHz) && (RF_Freq <= 738.5*MHz)))
 				#endif
 				//YWDRIVER_MODI modify by lf end
 				{
@@ -841,7 +836,7 @@ UINT32 MxL301RF_RFTune(UINT8* pArray,
 				}
 				/*****     2012-09-07     *****/
 				//YWDRIVER_MODI modify by lf for change to int start
-				#if 1
+				#if defined(MODULE)
 				else if (((llRF_Freq >= (long long)7615*MHz) && (llRF_Freq <= (long long)7625*MHz)) ||
 					((llRF_Freq >= (long long)7855*MHz) && (llRF_Freq <= (long long)7865*MHz)) ||
 					((llRF_Freq >= (long long)8095*MHz) && (llRF_Freq <= (long long)8105*MHz))
