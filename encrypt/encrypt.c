@@ -52,7 +52,7 @@ int init_module(void)
 
 void cleanup_module(void)
 {
-    remove_proc_entry("sparkid", proc_entry);
+    remove_proc_entry("sparkid", NULL);
     printk(KERN_INFO "encrypt unloaded.\n");
 }
 
