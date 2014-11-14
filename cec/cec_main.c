@@ -49,12 +49,12 @@
 
 static unsigned char cancelStart = 0;
 int activemode = 0;
-extern int debug=0;
+int debug = 0;
 
 //----------------------------
 
 int __init cec_init(void) {
-    dprintk(0,"init - starting\n");
+    dprintk(0, "init - starting\n");
 
     cec_internal_init();
 
@@ -75,30 +75,31 @@ int __init cec_init(void) {
     {
 
     } else {
-	dprintk(0,"Can't get irq\n");
+	dprintk(0, "Can't get irq\n");
     }
 
     if (activemode) {
-	init_e2_proc();
+		//init_e2_proc();
 
-	input_init();
+		//input_init();
 
-	wakeTV();
+		wakeTV();
     } else {
-	init_dev();
+		init_dev();
     }
 
     // TODO: how can we implement hotplug support?
     //while(!cancelStart && getPhysicalAddress() == 0) // HDMI is not plugged in
     //  msleep(200);
 
-    cec_worker_init();
+	if (activemode == 0)
+		cec_worker_init();
 
     return 0;
 }
 
 static void __exit cec_exit(void) {
-    dprintk(0,"unloaded\n");
+    dprintk(0, "unloaded\n");
 
     cancelStart = 1;
     udelay(20000);
@@ -106,9 +107,9 @@ static void __exit cec_exit(void) {
     endTask();
 
     if (activemode) {
-	cleanup_e2_proc();
+		//cleanup_e2_proc();
 
-	input_cleanup();
+		//input_cleanup();
     } else {
 	cleanup_dev();
     }

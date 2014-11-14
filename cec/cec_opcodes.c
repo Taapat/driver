@@ -201,7 +201,7 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
 	    {
 		responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0xF);
 		responseBuffer[1] = DECK_STATUS;
-		responseBuffer[2] = 0x20;
+		responseBuffer[2] = DECK_INFO_PLAY;
 		sendMessage(3, responseBuffer);
 	    }
 	    break;
@@ -505,7 +505,7 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
 	    		responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
     			responseBuffer[1] = VENDOR_COMMAND;
     			responseBuffer[2] = 0x02;
-    			responseBuffer[3] = LG_DEVICE_TYPE_BR;
+    			responseBuffer[3] = LG_DEVICE_TYPE_HOME_THEATRE;
     			sendMessage(4, responseBuffer);
 	    	}
 	    	break;
@@ -513,28 +513,38 @@ void parseMessage(unsigned char src, unsigned char dst, unsigned int len, unsign
 	    	if (activemode)
 	    	{
 	    		responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
-			responseBuffer[1] = VENDOR_COMMAND;
-			responseBuffer[2] = 0x0C;
-			responseBuffer[3] = 0x05; // maximum control level
-			sendMessage(4, responseBuffer);
+				responseBuffer[1] = VENDOR_COMMAND;
+				responseBuffer[2] = 0x0C;
+				responseBuffer[3] = 0x05; // maximum control level
+				sendMessage(4, responseBuffer);
 	    	}
 	    	break;
 	    case LG_REQUEST_VENDOR_COMMAND1: strcat(name, "ID_1");
 	    	if (activemode)
 	    	{
 	    		responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
-			responseBuffer[1] = VENDOR_COMMAND;
-			responseBuffer[2] = 0x05;
-			responseBuffer[3] = 0x04;
-			sendMessage(4, responseBuffer);
+				responseBuffer[1] = VENDOR_COMMAND;
+				responseBuffer[2] = 0x05;
+				responseBuffer[3] = 0x04;
+				sendMessage(4, responseBuffer);
 	    	}
 	    	break;
 	    case LG_REQUEST_VENDOR_COMMAND2: strcat(name, "ID_2");
 	    	if (activemode)
 	    	{
+	    		responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0x0);
+				responseBuffer[1] = VENDOR_COMMAND;
+				responseBuffer[2] = 0xA1;
+				responseBuffer[3] = 0x01;
+				sendMessage(4, responseBuffer);
+	    	}
+	    	break;
+	    case LG_REQUEST_VENDOR_COMMAND3: strcat(name, "ID_3");
+	    	if (activemode)
+	    	{
 	    		responseBuffer[0] = (getLogicalDeviceType() << 4) + (src & 0xF);
-	    		responseBuffer[1] = 0x90;
-	    		responseBuffer[2] = POWER_STATUS_ON;
+	    		responseBuffer[1] = REPORT_POWER_STATUS;
+	    		responseBuffer[2] = POWER_STATUS_GOING_TO_ON;
 	    		sendMessage(3, responseBuffer);
 	    	}
 	    	break;
@@ -728,25 +738,25 @@ void parseRawMessage(unsigned int len, unsigned char buf[])
       dprintk(2, "%02x ", buf[ic+1]);
     dprintk(2, "\n");
 
-    if (dataLen > 0)
-    {
-	if ((dst == logicalDeviceType) || (dst == BROADCAST)) //Use only messages for us or broadcast
+	if (dataLen > 0)
 	{
-	parseMessage(src, dst, dataLen, buf + 1);
-	if (!activemode)
-	    AddMessageToBuffer(buf, len);
-	} else
-	    dprintk(2, "Don't parse Message, it's not for us\n");
+		if ((dst == logicalDeviceType) || (dst == BROADCAST)) //Use only messages for us or broadcast
+		{
+			parseMessage(src, dst, dataLen, buf + 1);
+			if (!activemode)
+				AddMessageToBuffer(buf, len);
+		} else
+			dprintk(2, "Don't parse Message, it's not for us\n");
     } else
     {
-	dprintk(4, "\tis PING\n");
-	//Lets check if the ping was send from or id, if so this means that 
-	//the deviceId pinged ist already been taken
-	if (src == dst && src == getLogicalDeviceType())
-	{
-	    if (getLogicalDeviceType() != DEVICE_TYPE_UNREG)
-		sendPingWithAutoIncrement();
-	}
+		dprintk(4, "\tis PING\n");
+		//Lets check if the ping was send from or id, if so this means that 
+		//the deviceId pinged ist already been taken
+		if (src == dst && src == getLogicalDeviceType())
+		{
+	    	if (getLogicalDeviceType() != DEVICE_TYPE_UNREG)
+			sendPingWithAutoIncrement();
+		}
     }
 }
 
