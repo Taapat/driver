@@ -64,81 +64,81 @@ typedef enum
 
 class Collator_Pes_c : public Collator_Base_c
 {
-    protected:
+protected:
 
-        // Data
+    // Data
 
-        bool                  SeekingPesHeader;
+    bool                  SeekingPesHeader;
 
-        bool                  GotPartialHeader;         // New style partial header management
-        PartialHeaderType_t   GotPartialType;
-        unsigned int          GotPartialCurrentSize;
-        unsigned int          GotPartialDesiredSize;
-        unsigned char        *StoredPartialHeader;
-        unsigned char     StoredPartialHeaderCopy[256];
+    bool                  GotPartialHeader;			// New style partial header mangement
+    PartialHeaderType_t	  GotPartialType;
+    unsigned int          GotPartialCurrentSize;
+    unsigned int          GotPartialDesiredSize;
+    unsigned char        *StoredPartialHeader;
+    unsigned char	  StoredPartialHeaderCopy[256];
 
-        bool                  GotPartialZeroHeader;         // Following 3 partial wossnames are now for divx old code support only
-        unsigned int          GotPartialZeroHeaderBytes;
-        unsigned char        *StoredZeroHeader;
+    bool                  GotPartialZeroHeader;			// Following 3 partial wossnames are now for divx old code support only
+    unsigned int          GotPartialZeroHeaderBytes;
+    unsigned char        *StoredZeroHeader;
 
-        bool                  GotPartialPesHeader;
-        unsigned int          GotPartialPesHeaderBytes;
-        unsigned char        *StoredPesHeader;
+    bool                  GotPartialPesHeader;
+    unsigned int          GotPartialPesHeaderBytes;
+    unsigned char        *StoredPesHeader;
 
-        bool                  GotPartialPaddingHeader;
-        unsigned int          GotPartialPaddingHeaderBytes;
-        unsigned char        *StoredPaddingHeader;
-        unsigned int          Skipping;
+    bool                  GotPartialPaddingHeader;
+    unsigned int          GotPartialPaddingHeaderBytes;
+    unsigned char        *StoredPaddingHeader;
+    unsigned int          Skipping;
 
-        unsigned int          RemainingLength;
-        unsigned char        *RemainingData;
+    unsigned int          RemainingLength;
+    unsigned char        *RemainingData;
 
-        unsigned int          PesPacketLength;
-        unsigned int          PesPayloadLength;
+    unsigned int          PesPacketLength;
+    unsigned int          PesPayloadLength;
 
-        bool                  PlaybackTimeValid;
-        bool                  DecodeTimeValid;
-        unsigned long long    PlaybackTime;
-        unsigned long long    DecodeTime;
-        bool                  UseSpanningTime;
-        bool                  SpanningPlaybackTimeValid;
-        unsigned long long    SpanningPlaybackTime;
-        bool                  SpanningDecodeTimeValid;
-        unsigned long long    SpanningDecodeTime;
+    bool                  PlaybackTimeValid;
+    bool                  DecodeTimeValid;
+    unsigned long long    PlaybackTime;
+    unsigned long long    DecodeTime;
+    bool                  UseSpanningTime;
+    bool                  SpanningPlaybackTimeValid;
+    unsigned long long    SpanningPlaybackTime;
+    bool                  SpanningDecodeTimeValid;
+    unsigned long long    SpanningDecodeTime;
 
-        BitStreamClass_c      Bits;
+    BitStreamClass_c      Bits;
 
-        // Functions
+    // Functions
 
-        virtual CollatorStatus_t   FindNextStartCode(unsigned int             *CodeOffset);
-        CollatorStatus_t   ReadPesHeader(void);
+    virtual CollatorStatus_t   FindNextStartCode(       unsigned int             *CodeOffset );
+    CollatorStatus_t   ReadPesHeader(           void );
 
 //
 
-    public:
+public:
 
-        //
-        // Constructor/Destructor methods
-        //
+    //
+    // Constructor/Destructor methods
+    //
 
-        Collator_Pes_c(void);
-        ~Collator_Pes_c(void);
+    Collator_Pes_c(     void );
+    ~Collator_Pes_c(    void );
 
-        //
-        // Base overrides
-        //
+    //
+    // Base overrides
+    //
 
-        CollatorStatus_t   Halt(void);
-        CollatorStatus_t   Reset(void);
+    CollatorStatus_t   Halt(                    void );
+    CollatorStatus_t   Reset(                   void );
 
-        //
-        // Collator class functions
-        //
+    //
+    // Collator class functions
+    //
 
-        CollatorStatus_t   DiscardAccumulatedData(void);
+    CollatorStatus_t   DiscardAccumulatedData(  void );
 
-        CollatorStatus_t   InputJump(bool                      SurplusDataInjected,
-                                     bool                      ContinuousReverseJump);
+    CollatorStatus_t   InputJump(               bool                      SurplusDataInjected,
+						bool                      ContinuousReverseJump );
 };
 
 #endif

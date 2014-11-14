@@ -32,12 +32,18 @@ Date        Modification                                    Name
 #define H_DVB_DEMUX
 
 #include "dvbdev.h"
+#include <dvb_demux.h>
 
-int StartFeed(struct dvb_demux_feed *Feed);
-int StopFeed(struct dvb_demux_feed *Feed);
+#if 0
+int DmxWrite   (struct dmx_demux*       Demux,
+                const char*             Buffer,
+                size_t                  Count);
+#endif
+int StartFeed  (struct dvb_demux_feed*  Feed);
+int StopFeed   (struct dvb_demux_feed*  Feed);
 
-#ifdef __TDT__
-int WriteToDecoder(struct dvb_demux_feed *Feed, const u8 *buf, size_t count);
+#ifdef __TDT__ 
+int WriteToDecoder (struct dvb_demux_feed *Feed, const u8 *buf, size_t count);
 #endif
 
 #endif

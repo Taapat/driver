@@ -30,6 +30,7 @@ Date        Modification                                    Name
 
 ************************************************************************/
 
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/ioport.h>
@@ -39,8 +40,12 @@ Date        Modification                                    Name
 #include <linux/cdev.h>
 #include <linux/kthread.h>
 #include <asm/uaccess.h>
+#if defined(__TDT__) && (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30))
+#include <asm/timer.h>
+#else
 #include <linux/timer.h>
-#include <linux/clk.h>
+#endif
+#include <asm/clock.h>
 #include <linux/delay.h>
 
 #include "mme.h"
@@ -51,22 +56,26 @@ Date        Modification                                    Name
 
 #define MONITOR_MME_THREAD_NAME         "MonitorMMEThread"
 
-static int      MonitorMMEThread(void*                   Param);
-static int      TransformerInitialize(struct MMEContext_s*    Context);
-static int      TransformerTerminate(struct MMEContext_s*    Context);
-static void     TransformerCallback(MME_Event_t             Event,
-                                    MME_Command_t*          CallbackData,
-                                    void*                   UserData);
+static int      MonitorMMEThread               (void*                   Param);
+static int      TransformerInitialize          (struct MMEContext_s*    Context);
+static int      TransformerTerminate           (struct MMEContext_s*    Context);
+static void     TransformerCallback            (MME_Event_t             Event,
+                                                MME_Command_t*          CallbackData,
+                                                void*                   UserData);
 
 /*{{{  MonitorMMEInit*/
-int MonitorMMEInit(struct DeviceContext_s*         DeviceContext,
-                   struct MMEContext_s*            Context,
-                   unsigned int                    Id)
+int MonitorMMEInit                     (struct DeviceContext_s*         DeviceContext,
+                                        struct MMEContext_s*            Context,
+                                        unsigned int                    Id)
 {
     struct sched_param          Param;
     struct task_struct*         Taskp;
     int                         Status;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
     struct clk*                 Tmu1Clock       = clk_get(NULL, "tmu1_clk");
+#else
+    struct clk*                 Tmu1Clock       = clk_get("tmu1_clk");
+#endif
     unsigned long long          TimeStamp;
     unsigned int                TimeValue;
 
@@ -82,35 +91,32 @@ int MonitorMMEInit(struct DeviceContext_s*         DeviceContext,
     Context->ClockMaxValue              = 0xffffffff;
 
     TimeValue                           = *DeviceContext->Timer;
-    TimeStamp                           = ktime_to_us(ktime_get());
+    TimeStamp                           = ktime_to_us (ktime_get ());
 
     msleep(10); // Sleep for some random amount of time
 
     TimeValue                           = *DeviceContext->Timer - TimeValue;
-    TimeStamp                           = ktime_to_us(ktime_get()) - TimeStamp;
+    TimeStamp                           = ktime_to_us (ktime_get ()) - TimeStamp;
 
     // If my maths is correct you don't need to cope with rap case....
-    Context->TicksPerSecond             = (((unsigned long long)TimeValue) * 1000000ull);
-    do_div(Context->TicksPerSecond, (unsigned long long)TimeStamp);
+    Context->TicksPerSecond             = ((((unsigned long long)TimeValue) * 1000000ull) / (unsigned long long)TimeStamp);
 
-    MONITOR_TRACE("TicksPerSecond %lld\n", Context->TicksPerSecond);
+    MONITOR_TRACE("TicksPerSecond %lld\n",Context->TicksPerSecond);
 
     Context->Id                         = Id;
     Context->TransformerInitialized     = 0;
 
-    sprintf(Context->TransformerName, "%s%d", EVENT_LOG_MME_TRANSFORMER_NAME, Context->Id - 1);
-    Status                              = TransformerInitialize(Context);
-
+    sprintf (Context->TransformerName, "%s%d", EVENT_LOG_MME_TRANSFORMER_NAME, Context->Id-1);
+    Status                              = TransformerInitialize (Context);
     if (Status != 0)
         return Status;
 
-    sema_init(&(Context->ThreadTerminated), 0);
-    sema_init(&(Context->EventReceived), 0);
+    sema_init (&(Context->ThreadTerminated), 0);
+    sema_init (&(Context->EventReceived), 0);
     Context->Monitoring                 = true;
     Context->MonitorMMEThread           = NULL;
 
-    Taskp                               = kthread_run(MonitorMMEThread, Context, MONITOR_MME_THREAD_NAME);
-
+    Taskp                               = kthread_run (MonitorMMEThread, Context, MONITOR_MME_THREAD_NAME);
     if (!Taskp)
     {
         Context->Monitoring             = false;
@@ -120,23 +126,22 @@ int MonitorMMEInit(struct DeviceContext_s*         DeviceContext,
 
 
     Param.sched_priority                = 40;
-    sched_setscheduler(Taskp, SCHED_RR, &Param);
+    sched_setscheduler (Taskp, SCHED_RR, &Param);
 
     return 0;
 }
 /*}}}  */
 /*{{{  MonitorMMETerminate*/
-int MonitorMMETerminate(struct MMEContext_s*    Context)
+int MonitorMMETerminate                (struct MMEContext_s*    Context)
 {
     if (Context->TransformerInitialized)
-        TransformerTerminate(Context);
+        TransformerTerminate (Context);
 
     if (Context->MonitorMMEThread != NULL)
     {
         Context->Monitoring     = false;
 
-        if (down_interruptible(&(Context->ThreadTerminated)) != 0)
-            MONITOR_ERROR("%s: MonitorMMETerminate: Failed to wait for thread to terminate\n", Context->TransformerName);
+        down_interruptible (&(Context->ThreadTerminated));
     }
 
     return 0;
@@ -144,65 +149,61 @@ int MonitorMMETerminate(struct MMEContext_s*    Context)
 /*}}}  */
 
 /*{{{  VerifyCapabilities*/
-static int VerifyCapabilities(struct MMEContext_s*    Context)
+static int VerifyCapabilities       (struct MMEContext_s*    Context)
 {
     EVENT_LOG_TransformerCapability_t   EventLogCapability      = {0};
     MME_TransformerCapability_t         MMECapability           = {0};
     MME_ERROR                           MMEStatus;
 
-    MMECapability.StructSize            = sizeof(MME_TransformerCapability_t);
-    MMECapability.TransformerInfoSize   = sizeof(EVENT_LOG_TransformerCapability_t);
+    MMECapability.StructSize            = sizeof (MME_TransformerCapability_t);
+    MMECapability.TransformerInfoSize   = sizeof (EVENT_LOG_TransformerCapability_t);
     MMECapability.TransformerInfo_p     = &EventLogCapability;
 
-    MMEStatus                           = MME_GetTransformerCapability(Context->TransformerName, &MMECapability);
-
+    MMEStatus                           = MME_GetTransformerCapability (Context->TransformerName, &MMECapability );
     if (MMEStatus == MME_UNKNOWN_TRANSFORMER)
     {
-        MONITOR_DEBUG("%s: Transformer not found.  This event source will not be monitored.\n", Context->TransformerName);
+        MONITOR_DEBUG ("%s: Transformer not found.  This event source will not be monitored.\n", Context->TransformerName);
         return -EFAULT;
     }
-
     if (MMEStatus != MME_SUCCESS)
     {
-        MONITOR_ERROR("%s: Failed to retrieve transformer capabilities - Error 0x%08x.\n", Context->TransformerName, MMEStatus);
+        MONITOR_ERROR ("%s: Failed to retrieve transformer capabilities - Error 0x%08x.\n", Context->TransformerName, MMEStatus);
         return -EFAULT;
     }
 
-    MONITOR_TRACE("Found %s transformer (version %x)\n", Context->TransformerName, MMECapability.Version);
+    MONITOR_TRACE ("Found %s transformer (version %x)\n", Context->TransformerName, MMECapability.Version);
 
     return 0;
 }
 /*}}}  */
 /*{{{  TransformerInitialize*/
-static int TransformerInitialize(struct MMEContext_s*    Context)
+static int TransformerInitialize       (struct MMEContext_s*    Context)
 {
     EVENT_LOG_InitTransformerParam_t    EventLogInitParams      = {0};
     MME_TransformerInitParams_t         MMEInitParams           = {0};
     MME_ERROR                           MMEStatus;
     int                                 Status;
 
-    Status                                      = VerifyCapabilities(Context);
-
+    Status                                      = VerifyCapabilities (Context);
     if (Status != 0)
         return Status;
 
-    EventLogInitParams.StructSize               = sizeof(EVENT_LOG_InitTransformerParam_t);
+    EventLogInitParams.StructSize               = sizeof (EVENT_LOG_InitTransformerParam_t);
     EventLogInitParams.TimeCodeMemoryAddress    = Context->ClockAddress;
 
     MMEInitParams.Priority                      = MME_PRIORITY_LOWEST;
-    MMEInitParams.StructSize                    = sizeof(MME_TransformerInitParams_t);
+    MMEInitParams.StructSize                    = sizeof (MME_TransformerInitParams_t);
     MMEInitParams.Callback                      = &TransformerCallback;
     MMEInitParams.CallbackUserData              = Context;
 
-    MMEInitParams.TransformerInitParamsSize     = sizeof(EVENT_LOG_InitTransformerParam_t);
+    MMEInitParams.TransformerInitParamsSize     = sizeof (EVENT_LOG_InitTransformerParam_t);
     MMEInitParams.TransformerInitParams_p       = (MME_GenericParams_t)(&EventLogInitParams);
 
 
-    MMEStatus   = MME_InitTransformer(Context->TransformerName, &MMEInitParams, &Context->MMEHandle);
-
+    MMEStatus   = MME_InitTransformer (Context->TransformerName, &MMEInitParams, &Context->MMEHandle);
     if (MMEStatus != MME_SUCCESS)
     {
-        MONITOR_ERROR("%s: Failed to initialize transformer - Error 0x%08x.\n", Context->TransformerName, MMEStatus);
+        MONITOR_ERROR ("%s: Failed to initialize transformer - Error 0x%08x.\n", Context->TransformerName, MMEStatus);
         return -EFAULT;
     }
 
@@ -213,7 +214,7 @@ static int TransformerInitialize(struct MMEContext_s*    Context)
 }
 /*}}}  */
 /*{{{  TransformerTerminate*/
-static int TransformerTerminate(struct MMEContext_s*    Context)
+static int TransformerTerminate        (struct MMEContext_s*    Context)
 {
     MME_ERROR           MMEStatus;
 
@@ -221,11 +222,10 @@ static int TransformerTerminate(struct MMEContext_s*    Context)
     {
         Context->TransformerInitialized         = false;
 
-        MMEStatus                               = MME_TermTransformer(Context->MMEHandle);
-
+        MMEStatus                               = MME_TermTransformer (Context->MMEHandle);
         if (MMEStatus != MME_SUCCESS)
         {
-            MONITOR_ERROR("%s: Failed to terminate mme transformer - Error 0x%08x.\n", Context->TransformerName, MMEStatus);
+            MONITOR_ERROR ("%s: Failed to terminate mme transformer - Error 0x%08x.\n", Context->TransformerName, MMEStatus);
             return -EFAULT;
         }
     }
@@ -234,17 +234,17 @@ static int TransformerTerminate(struct MMEContext_s*    Context)
 }
 /*}}}  */
 /*{{{  TransformerGetLogEvent*/
-static int TransformerGetLogEvent(struct MMEContext_s*    Context)
+static int TransformerGetLogEvent              (struct MMEContext_s*    Context)
 {
     MME_Command_t                       MMECommand;
     MME_ERROR                           MMEStatus;
     /*EVENT_LOG_TransformParam_t          TransformParams;*/
 
-    memset(&MMECommand, 0x00, sizeof(MME_Command_t));
+    memset (&MMECommand, 0x00, sizeof(MME_Command_t));
 
     MMECommand.CmdStatus.AdditionalInfoSize     = sizeof(EVENT_LOG_CommandStatus_t);
     MMECommand.CmdStatus.AdditionalInfo_p       = (MME_GenericParams_t)(&(Context->MMECommandStatus));
-    MMECommand.StructSize                       = sizeof(MME_Command_t);
+    MMECommand.StructSize                       = sizeof (MME_Command_t);
     MMECommand.CmdCode                          = MME_TRANSFORM;
     MMECommand.CmdEnd                           = MME_COMMAND_END_RETURN_NOTIFY;
     MMECommand.DueTime                          = (MME_Time_t)0;
@@ -256,27 +256,25 @@ static int TransformerGetLogEvent(struct MMEContext_s*    Context)
     MMECommand.ParamSize                        = 0;/*sizeof(EVENT_LOG_TransformParam_t);*/
     MMECommand.Param_p                          = NULL; /*(MME_GenericParams_t)&TransformParams;*/
 
-    MMEStatus                                   = MME_SendCommand(Context->MMEHandle, &MMECommand);
-
+    MMEStatus                                   = MME_SendCommand (Context->MMEHandle, &MMECommand);
     if (MMEStatus != MME_SUCCESS)
     {
-        MONITOR_ERROR("%s: Failed to send command - Error 0x%08x.\n", Context->TransformerName, MMEStatus);
+        MONITOR_ERROR ("%s: Failed to send command - Error 0x%08x.\n", Context->TransformerName, MMEStatus);
         return -EFAULT;
     }
-
     return 0;
 }
 /*}}}  */
 /*{{{  TransformerCallback*/
-static void     TransformerCallback(MME_Event_t             Event,
-                                    MME_Command_t*          CallbackData,
-                                    void*                   UserData)
+static void     TransformerCallback            (MME_Event_t             Event,
+                                                MME_Command_t*          CallbackData,
+                                                void*                   UserData)
 {
     struct MMEContext_s*        Context = (struct MMEContext_s*)UserData;
 
     if (CallbackData == NULL)
     {
-        MONITOR_ERROR("%s: ####################### No CallbackData #######################\n", Context->TransformerName);
+        MONITOR_ERROR ("%s: ####################### No CallbackData #######################\n", Context->TransformerName);
         return;
     }
 
@@ -285,7 +283,7 @@ static void     TransformerCallback(MME_Event_t             Event,
         case MME_TRANSFORM:
         {
 
-            up(&(Context->EventReceived));
+            up (&(Context->EventReceived));
             break;
         }
 
@@ -297,7 +295,7 @@ static void     TransformerCallback(MME_Event_t             Event,
 /*}}}  */
 
 /*{{{  MonitorMMEThread*/
-static int MonitorMMEThread(void* Param)
+static int MonitorMMEThread (void* Param)
 {
     struct MMEContext_s*        Context = (struct MMEContext_s*)Param;
     MME_ERROR                   MMEStatus;
@@ -310,45 +308,40 @@ static int MonitorMMEThread(void* Param)
 
     while (Context->Monitoring)
     {
-        MMEStatus               = TransformerGetLogEvent(Context);
-
+        MMEStatus               = TransformerGetLogEvent (Context);
         if (MMEStatus != MME_SUCCESS)
             break;
 
-        if (down_interruptible(&(Context->EventReceived)) != 0)
+        if (down_interruptible (&(Context->EventReceived)) != 0)
             break;
 
         TimeValue               = *Context->DeviceContext->Timer;
-        TimeStamp               = ktime_to_us(ktime_get());
+        TimeStamp               = ktime_to_us (ktime_get ());
 
         if (Context->MMECommandStatus.TimeCode != 0)
         {
             unsigned long long  TimeDiff;
-
             /* This assumes that the timer is counting down from ClockMaxValue to 0 */
             if (Context->MMECommandStatus.TimeCode > TimeValue)
                 TimeDiff        = (unsigned long long)(Context->MMECommandStatus.TimeCode - TimeValue);
             else
                 TimeDiff        = ((unsigned long long)Context->MMECommandStatus.TimeCode + Context->ClockMaxValue + 1) - (unsigned long long)TimeValue;
 
-            TimeDiff            = ((unsigned long long)TimeDiff * 1000000ull);
-            do_div(TimeDiff, Context->TicksPerSecond);
-            TimeStamp          -= TimeDiff;
+            TimeStamp          -= ((unsigned long long)TimeDiff * 1000000ull) / Context->TicksPerSecond;
         }
-
         if (Context->Monitoring)
-            MonitorRecordEvent(Context->DeviceContext,
-                               Context->Id,
-                               Context->MMECommandStatus.EventID,
-                               TimeStamp,
-                               Context->MMECommandStatus.Parameters,
-                               Context->MMECommandStatus.Message);
+            MonitorRecordEvent         (Context->DeviceContext,
+                                        Context->Id,
+                                        Context->MMECommandStatus.EventID,
+                                        TimeStamp,
+                                        Context->MMECommandStatus.Parameters,
+                                        Context->MMECommandStatus.Message);
 
     }
 
     MONITOR_DEBUG("Terminating\n");
 
-    up(&(Context->ThreadTerminated));
+    up (&(Context->ThreadTerminated));
 
     return 0;
 }

@@ -36,7 +36,6 @@ Date        Modification                                    Name
 
 #include "backend_ops.h"
 #include "player_interface_ops.h"
-#include "osinline.h"
 #include "player.h"
 #include "buffer_generic.h"
 #include "player_generic.h"
@@ -55,7 +54,7 @@ Date        Modification                                    Name
 #endif
 
 #define HAVANA_DEBUG(fmt, args...)      ((void) (ENABLE_HAVANA_DEBUG && \
-        (report(severity_note, "HavanaPlayer_c::%s: " fmt, __FUNCTION__, ##args), 0)))
+                                            (report(severity_note, "HavanaPlayer_c::%s: " fmt, __FUNCTION__, ##args), 0)))
 
 /* Output trace information off the critical path */
 #define HAVANA_TRACE(fmt, args...)      (report(severity_note, "HavanaPlayer_c::%s: " fmt, __FUNCTION__, ##args))
@@ -87,77 +86,77 @@ class HavanaFactory_c;
 /// Player wrapper class responsible for managing the player.
 class HavanaPlayer_c
 {
-    private:
-        DeviceHandle_t              DisplayDevice;
+private:
+    DeviceHandle_t              DisplayDevice;
 
-        class HavanaFactory_c*      FactoryList;
-        class HavanaPlayback_c*     Playback[MAX_PLAYBACKS];
-        class HavanaDisplay_c*      AudioDisplays[MAX_DISPLAYS];
-        class HavanaDisplay_c*      VideoDisplays[MAX_DISPLAYS];
-        class HavanaDisplay_c*      OtherDisplays[MAX_DISPLAYS];
+    class HavanaFactory_c*      FactoryList;
+    class HavanaPlayback_c*     Playback[MAX_PLAYBACKS];
+    class HavanaDisplay_c*      AudioDisplays[MAX_DISPLAYS];
+    class HavanaDisplay_c*      VideoDisplays[MAX_DISPLAYS];
+    class HavanaDisplay_c*      OtherDisplays[MAX_DISPLAYS];
 
-        DemultiplexorContext_t      DemuxContext[MAX_DEMUX_CONTEXTS];
+    DemultiplexorContext_t      DemuxContext[MAX_DEMUX_CONTEXTS];
 
-        class BufferManager_c*      BufferManager;
-        class Demultiplexor_c*      Demultiplexor;
-        class Player_c*             Player;
+    class BufferManager_c*      BufferManager;
+    class Demultiplexor_c*      Demultiplexor;
+    class Player_c*             Player;
 
-        OS_Mutex_t                  Lock;
+    OS_Mutex_t                  Lock;
 
-        /* Data shared with event signal process */
-        OS_Event_t                  EventSignal;
-        OS_Event_t                  EventSignalThreadTerminated;
-        OS_Thread_t                 EventSignalThreadId;
-        bool                        EventSignalThreadRunning;
-        player_event_signal_callback EventSignalCallback;
+    /* Data shared with event signal process */
+    OS_Event_t                  EventSignal;
+    OS_Event_t                  EventSignalThreadTerminated;
+    OS_Thread_t                 EventSignalThreadId;
+    bool                        EventSignalThreadRunning;
+    player_event_signal_callback        EventSignalCallback;
 
-    public:
+public:
 
-        HavanaPlayer_c(void);
-        ~HavanaPlayer_c(void);
-        HavanaStatus_t              Init(void);
+                                HavanaPlayer_c                 (void);
+                               ~HavanaPlayer_c                 (void);
+    HavanaStatus_t              Init                           (void);
 
-        HavanaStatus_t              CallFactory(const char*             Id,
-                                                const char*             SubId,
-                                                PlayerStreamType_t      StreamType,
-                                                PlayerComponent_t       Component,
-                                                void**                  Class);
-        HavanaStatus_t              RegisterFactory(const char*             Id,
-                const char*             SubId,
-                PlayerStreamType_t      StreamType,
-                PlayerComponent_t       Component,
-                unsigned int            Version,
-                bool                    Force,
-                void * (*NewFactory)(void));
-        HavanaStatus_t              DeRegisterFactory(const char*             Id,
-                const char*             SubId,
-                PlayerStreamType_t      StreamType,
-                PlayerComponent_t       Component,
-                unsigned int            Version);
+    HavanaStatus_t              CallFactory                    (const char*             Id,
+                                                                const char*             SubId,
+                                                                PlayerStreamType_t      StreamType,
+                                                                PlayerComponent_t       Component,
+                                                                void**                  Class);
+    HavanaStatus_t              RegisterFactory                (const char*             Id,
+                                                                const char*             SubId,
+                                                                PlayerStreamType_t      StreamType,
+                                                                PlayerComponent_t       Component,
+                                                                unsigned int            Version,
+                                                                bool                    Force,
+                                                                void*                  (*NewFactory)     (void));
+    HavanaStatus_t              DeRegisterFactory              (const char*             Id,
+                                                                const char*             SubId,
+                                                                PlayerStreamType_t      StreamType,
+                                                                PlayerComponent_t       Component,
+                                                                unsigned int            Version);
 
-        HavanaStatus_t              GetManifestor(char*                   Media,
-                char*                   Encoding,
-                unsigned int            SurfaceId,
-                class Manifestor_c**    Manifestor);
-        HavanaStatus_t              GetDemuxContext(unsigned int            DemuxId,
-                class Demultiplexor_c** Demultiplexor,
-                DemultiplexorContext_t* DemultiplexorContext);
-        HavanaStatus_t              CreatePlayback(HavanaPlayback_c**      HavanaPlayback);
-        HavanaStatus_t              DeletePlayback(HavanaPlayback_c*       HavanaPlayback);
-        HavanaStatus_t              CreateDisplay(char*                   Media,
-                unsigned int            SurfaceId,
-                HavanaDisplay_c**       HavanaDisplay);
+    HavanaStatus_t              GetManifestor                  (char*                   Media,
+                                                                char*                   Encoding,
+                                                                unsigned int            SurfaceId,
+                                                                class Manifestor_c**    Manifestor);
+    HavanaStatus_t              GetDemuxContext                (unsigned int            DemuxId,
+                                                                class Demultiplexor_c** Demultiplexor,
+                                                                DemultiplexorContext_t* DemultiplexorContext);
+    HavanaStatus_t              CreatePlayback                 (HavanaPlayback_c**      HavanaPlayback);
+    HavanaStatus_t              DeletePlayback                 (HavanaPlayback_c*       HavanaPlayback);
+    HavanaStatus_t              CreateDisplay                  (char*                   Media,
+                                                                unsigned int            SurfaceId,
+                                                                HavanaDisplay_c**       HavanaDisplay);
+    HavanaStatus_t              DeleteDisplay                  (char*                   Media,
+                                                                unsigned int            SurfaceId);
+    HavanaStatus_t              SynchronizeDisplay             (char*                   Media,
+                                                                unsigned int            SurfaceId);
+
+    player_event_signal_callback        RegisterEventSignalCallback    (player_event_signal_callback   EventSignalCallback);
+    void                        EventSignalThread              (void);
 #ifdef __TDT__
-        int                         isDisplayCreated(char*                   Media,
-                unsigned int            SurfaceId);
+    int              isDisplayCreated                          (char*                   Media,
+                                                                unsigned int            SurfaceId);
 #endif
-        HavanaStatus_t              DeleteDisplay(char*                   Media,
-                unsigned int            SurfaceId);
-        HavanaStatus_t              SynchronizeDisplay(char*                   Media,
-                unsigned int            SurfaceId);
-
-        player_event_signal_callback RegisterEventSignalCallback(player_event_signal_callback EventSignalCallback);
-        void                        EventSignalThread(void);
 };
 
 /*{{{  doxynote*/
@@ -232,14 +231,14 @@ pes video mpeg2 and pes video vc1 for example.
 \param SubId            TODO
 \param StreamType       Audio or Video
 \param Component        Which player component to be manufactured.
-\param Class            Pointer to location of component to build.
+\param Class            Pointer to location of ccomponent to build.
 
 \return Havana status code, HavanaNoError indicates success.
 */
 
 /*! \fn HavanaStatus_t HavanaPlayer_c::GetDemuxContext (unsigned int            DemuxId,
-                                                        class Demultiplexor_c** Demultiplexor,
-                                                        DemultiplexorContext_t* DemultiplexorContext);
+                                                      class Demultiplexor_c** Demultiplexor,
+                                                      DemultiplexorContext_t* DemultiplexorContext);
 
 \brief Identify or create the DemultiplexorContext associated with this DemuxId
 
@@ -257,7 +256,7 @@ pes video mpeg2 and pes video vc1 for example.
 
 \return Havana status code, HavanaNoError indicates success.
 */
-/*}}}*/
+/*}}}  */
 
 #endif
 

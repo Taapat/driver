@@ -36,7 +36,7 @@ Date        Modification                                    Name
 
 // /////////////////////////////////////////////////////////////////////
 //
-//  Include any component headers
+//	Include any component headers
 
 #include "collator_pes_audio.h"
 #include "aac_audio.h"
@@ -53,19 +53,19 @@ Date        Modification                                    Name
 
 class Collator_PesAudioAac_c : public Collator_PesAudio_c
 {
-    protected:
+protected:
 
-        CollatorStatus_t FindNextSyncWord(int *CodeOffset);
-        CollatorStatus_t DecideCollatorNextStateAndGetLength(unsigned int *FrameLength);
-        void             SetPesPrivateDataLength(unsigned char SpecificCode);
+    CollatorStatus_t FindNextSyncWord( int *CodeOffset );
+    CollatorStatus_t DecideCollatorNextStateAndGetLength( unsigned int *FrameLength );
+    void             SetPesPrivateDataLength(unsigned char SpecificCode);
 
-        AacFormatType_t FormatType;
+    AacFormatType_t FormatType;
+    
+public:
 
-    public:
+    Collator_PesAudioAac_c();
 
-        Collator_PesAudioAac_c();
-
-        CollatorStatus_t   Reset(void);
+    CollatorStatus_t   Reset(			void );
 };
 
 #endif // H_COLLATOR_PES_AUDIO_AAC

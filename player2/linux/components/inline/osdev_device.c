@@ -44,7 +44,7 @@ Date        Modification                                    Name
 OSDEV_ExportSymbol(OSDEV_Malloc);
 OSDEV_ExportSymbol(OSDEV_Free);
 OSDEV_ExportSymbol(OSDEV_TranslateAddressToUncached);
-OSDEV_ExportSymbol(OSDEV_FlushCacheAll);
+OSDEV_ExportSymbol(OSDEV_PurgeCacheAll);
 OSDEV_ExportSymbol(OSDEV_FlushCacheRange);
 OSDEV_ExportSymbol(OSDEV_InvalidateCacheRange);
 OSDEV_ExportSymbol(OSDEV_SnoopCacheRange);

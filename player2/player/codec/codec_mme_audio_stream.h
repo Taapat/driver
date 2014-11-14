@@ -79,108 +79,108 @@ typedef struct StreamAudioCodecDecodeContext_s
 class Codec_MmeAudioStream_c : public Codec_MmeAudio_c
 {
 //! Stuff for MME_TRANFORM commands
-    private:
+private:
 
-        bool                        TransformThreadRunning;
-        OS_Thread_t                 TransformThreadId;
-        OS_Event_t                  TransformThreadTerminated;
-        OS_Mutex_t                  InputMutex;
-        OS_Event_t                  IssueTransformCommandEvent;
+    bool                        TransformThreadRunning;
+    OS_Thread_t                 TransformThreadId;
+    OS_Event_t                  TransformThreadTerminated;
+    OS_Mutex_t                  InputMutex;
+    OS_Event_t                  IssueTransformCommandEvent;
 
-        BufferPool_t                TransformContextPool;
-        CodecBaseDecodeContext_t*   TransformContext;
-        Buffer_t                    TransformContextBuffer;
+    BufferPool_t                TransformContextPool;
+    CodecBaseDecodeContext_t*   TransformContext;
+    Buffer_t                    TransformContextBuffer;
 
-        allocator_device_t          TransformCodedFrameMemoryDevice;
-        void                       *TransformCodedFrameMemory[3];
-        BufferPool_t                TransformCodedFramePool;
+    allocator_device_t          TransformCodedFrameMemoryDevice;
+    void                       *TransformCodedFrameMemory[3];
+    BufferPool_t                TransformCodedFramePool;
 
-        unsigned int                CurrentDecodeFrameIndex;
+    unsigned int                CurrentDecodeFrameIndex;
 
-        ParsedFrameParameters_t     SavedParsedFrameParameters;
-        PlayerSequenceNumber_t      SavedSequenceNumberStructure;
+    ParsedFrameParameters_t     SavedParsedFrameParameters;
+    PlayerSequenceNumber_t      SavedSequenceNumberStructure;
 
-        bool                        InPossibleMarkerStallState;
-        unsigned long long          TimeOfEntryToPossibleMarkerStallState;
-        int                         StallStateSendBuffersCommandsIssued;
-        int                         StallStateTransformCommandsCompleted;
+    bool                        InPossibleMarkerStallState;
+    unsigned long long          TimeOfEntryToPossibleMarkerStallState;
+    int                         StallStateSendBuffersCommandsIssued;
+    int                         StallStateTransformCommandsCompleted;
 
-        int                         SendBuffersCommandsIssued;
-        int                         SendBuffersCommandsCompleted;
-        int                         TransformCommandsIssued;
-        int                         TransformCommandsCompleted;
+    int                         SendBuffersCommandsIssued;
+    int                         SendBuffersCommandsCompleted;
+    int                         TransformCommandsIssued;
+    int                         TransformCommandsCompleted;
 
-        unsigned long long          LastNormalizedPlaybackTime;
+    unsigned long long          LastNormalizedPlaybackTime;
 
-    protected:
+protected:
 
-        // Data
-        int                         SendbufTriggerTransformCount;
+    // Data
+    int                         SendbufTriggerTransformCount;
 
-        bool                        NeedToMarkStreamUnplayable;
+    bool                        NeedToMarkStreamUnplayable;
 
-        /// The presence of the worker thread means we must be careful not to manipulate the pool
-        /// while we are iterating over its members.
-        OS_Mutex_t                  DecodeContextPoolMutex;
+    /// The presence of the worker thread means we must be careful not to manipulate the pool
+    /// while we are iterating over its members.
+    OS_Mutex_t                  DecodeContextPoolMutex;
 
-        eAccDecoderId               DecoderId;
+    eAccDecoderId               DecoderId;
 
-        // Functions
+    // Functions
 
-    private:
+private:
 
-        // Helper methods for the playback thread
-        CodecStatus_t   FillOutTransformContext(void);
-        CodecStatus_t   FillOutTransformCommand(void);
-        CodecStatus_t   SendTransformCommand(void);
-        void            FinishedTransform(void);
-        //CodecStatus_t   AbortSendBuffersCommands(   void );
-        CodecStatus_t   SendMMETransformCommand(void);
-        //CodecStatus_t   AbortTransformCommands(     void );
-        CodecStatus_t   AbortMMECommands(BufferPool_t            CommandContextPool);
+    // Helper methods for the playback thread
+    CodecStatus_t   FillOutTransformContext(    void );
+    CodecStatus_t   FillOutTransformCommand(    void );
+    CodecStatus_t   SendTransformCommand(       void );
+    void            FinishedTransform(          void );
+    //CodecStatus_t   AbortSendBuffersCommands(   void );
+    CodecStatus_t   SendMMETransformCommand(    void );
+    //CodecStatus_t   AbortTransformCommands(     void );
+    CodecStatus_t   AbortMMECommands(           BufferPool_t            CommandContextPool);
 
-    public:
+public:
 
-        //
-        // Constructor/Destructor methods
-        //
+    //
+    // Constructor/Destructor methods
+    //
 
-        Codec_MmeAudioStream_c(void);
-        ~Codec_MmeAudioStream_c(void);
+    Codec_MmeAudioStream_c(             void );
+    ~Codec_MmeAudioStream_c(            void );
 
-        //
-        // Overrides for component base class functions
-        //
+    //
+    // Overrides for component base class functions
+    //
 
-        CodecStatus_t   Halt(void);
-        CodecStatus_t   Reset(void);
+    CodecStatus_t   Halt(                       void );
+    CodecStatus_t   Reset(                      void );
 
-        CodecStatus_t   FillOutDecodeContext(void);
-        void            FinishedDecode(void);
-        CodecStatus_t   RegisterOutputBufferRing(Ring_t                    Ring);
+    CodecStatus_t   FillOutDecodeContext(       void );
+    void            FinishedDecode(             void );
+    CodecStatus_t   RegisterOutputBufferRing(   Ring_t                    Ring );
 
-        void            CallbackFromMME(MME_Event_t               Event,
-                                        MME_Command_t            *Command);
-        CodecStatus_t   SendMMEDecodeCommand(void);
+    void            CallbackFromMME(            MME_Event_t               Event,
+                                                MME_Command_t            *Command );
+    CodecStatus_t   SendMMEDecodeCommand(       void );
 
-        CodecStatus_t   Input(Buffer_t                  CodedBuffer);
-        CodecStatus_t   DiscardQueuedDecodes(void);
-        CodecStatus_t   CheckForMarkerFrameStall(void);
+    CodecStatus_t   Input(                      Buffer_t                  CodedBuffer );
+    CodecStatus_t   DiscardQueuedDecodes(       void );
+    CodecStatus_t   CheckForMarkerFrameStall(   void );
 
-        void            TransformThread(void);
+    void            TransformThread(            void );
 
-        //
-        // Stream specific functions
-        //
+    //
+    // Stream specific functions
+    //
 
-    protected:
+protected:
 
-        CodecStatus_t   FillOutTransformerInitializationParameters(void);
-        CodecStatus_t   FillOutSetStreamParametersCommand(void);
-        CodecStatus_t   FillOutDecodeCommand(void);
-        CodecStatus_t   ValidateDecodeContext(CodecBaseDecodeContext_t       *Context);
-        CodecStatus_t   DumpSetStreamParameters(void                           *Parameters);
-        CodecStatus_t   DumpDecodeParameters(void                           *Parameters);
+    CodecStatus_t   FillOutTransformerInitializationParameters( void );
+    CodecStatus_t   FillOutSetStreamParametersCommand(          void );
+    CodecStatus_t   FillOutDecodeCommand(                       void );
+    CodecStatus_t   ValidateDecodeContext(                      CodecBaseDecodeContext_t       *Context );
+    CodecStatus_t   DumpSetStreamParameters(                    void                           *Parameters );
+    CodecStatus_t   DumpDecodeParameters(                       void                           *Parameters );
 
 
 };

@@ -22,7 +22,7 @@ license from ST.
 Source file name ; avs.h
 Author ;           Andy
 
-Definition of the constants/macros that define useful things associated with
+Definition of the constants/macros that define useful things associated with 
 AVS streams.
 
 
@@ -39,7 +39,7 @@ Date        Modification                                    Name
 #define AVS_PES_START_CODE_MASK                         0xf0
 #define AVS_VIDEO_PES_START_CODE                        0xe0
 
-// Definition of start code values
+// Definition of start code values 
 #define AVS_FIRST_SLICE_START_CODE                      0x00
 #define AVS_GREATEST_SLICE_START_CODE                   0xAF
 
@@ -79,7 +79,7 @@ Date        Modification                                    Name
 
 // ////////////////////////////////////////////////////////////////////////////////////
 //
-//
+// 
 //
 
 #define PROFILE_FORBIDDEN           0x00
@@ -243,14 +243,14 @@ typedef struct AvsVideoSlice_s
 #define AVS_MAX_SLICE_COUNT                                     68
 typedef struct AvsVideoSlice_s
 {
-    unsigned int    slice_start_code;
-    unsigned int    slice_offset;
+        unsigned int    slice_start_code;
+        unsigned int    slice_offset;
 } AvsVideoSlice_t;
 
 typedef struct AvsVideoSliceList_s
 {
-    unsigned int    no_slice_headers;
-    AvsVideoSlice_t slice_array[AVS_MAX_SLICE_COUNT];
+        unsigned int    no_slice_headers;
+        AvsVideoSlice_t slice_array[AVS_MAX_SLICE_COUNT];
 } AvsVideoSliceList_t;
 #endif
 // macroblock

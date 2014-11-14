@@ -75,7 +75,7 @@ static unsigned int PictureNo;
 //      Constructor
 //
 
-FrameParser_VideoVp6_c::FrameParser_VideoVp6_c(void)
+FrameParser_VideoVp6_c::FrameParser_VideoVp6_c (void)
 {
 
     // Our constructor is called after our subclass so the only change is to rename the frame parser
@@ -88,7 +88,7 @@ FrameParser_VideoVp6_c::FrameParser_VideoVp6_c(void)
     Configuration.FrameParametersCount          = 32;
     Configuration.FrameParametersDescriptor     = &Vp6FrameParametersBuffer;
 
-    memset(&ReferenceFrameList, 0x00, sizeof(ReferenceFrameList_t));
+    memset (&ReferenceFrameList, 0x00, sizeof(ReferenceFrameList_t));
 
     FrameRate                                   = Rational_t (24000, 1001);
     StreamMetadataValid                         = false;
@@ -106,7 +106,7 @@ FrameParser_VideoVp6_c::FrameParser_VideoVp6_c(void)
 //      Destructor
 //
 
-FrameParser_VideoVp6_c::~FrameParser_VideoVp6_c(void)
+FrameParser_VideoVp6_c::~FrameParser_VideoVp6_c (void)
 {
     Halt();
     Reset();
@@ -118,10 +118,10 @@ FrameParser_VideoVp6_c::~FrameParser_VideoVp6_c(void)
 /// \brief      The Reset function release any resources, and reset all variable
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoVp6_c::Reset(void)
+FrameParserStatus_t   FrameParser_VideoVp6_c::Reset (void)
 {
-    memset(&CopyOfStreamParameters, 0x00, sizeof(Vp6StreamParameters_t));
-    memset(&ReferenceFrameList, 0x00, sizeof(ReferenceFrameList_t));
+    memset (&CopyOfStreamParameters, 0x00, sizeof(Vp6StreamParameters_t));
+    memset (&ReferenceFrameList, 0x00, sizeof(ReferenceFrameList_t));
 
     StreamParameters                            = NULL;
     FrameParameters                             = NULL;
@@ -140,28 +140,25 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::Reset(void)
 /// \brief      Scan the start code list reading header specific information
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoVp6_c::ReadHeaders(void)
+FrameParserStatus_t   FrameParser_VideoVp6_c::ReadHeaders (void)
 {
     FrameParserStatus_t         Status  = FrameParserNoError;
 
 #if 0
     unsigned int                i;
-    report(severity_info, "First 32 bytes of %d :", BufferLength);
-
-    for (i = 0; i < 32; i++)
-        report(severity_info, " %02x", BufferData[i]);
-
-    report(severity_info, "\n");
+    report (severity_info, "First 32 bytes of %d :", BufferLength);
+    for (i=0; i<32; i++)
+        report (severity_info, " %02x", BufferData[i]);
+    report (severity_info, "\n");
 #endif
 
-    Bits.SetPointer(BufferData);
+    Bits.SetPointer (BufferData);
 
     if (!StreamMetadataValid)
         Status          = ReadStreamMetadata();
     else
     {
-        Status          = ReadPictureHeader();
-
+        Status          = ReadPictureHeader ();
         if (Status == FrameParserNoError)
             Status      = CommitFrameForDecode();
     }
@@ -175,7 +172,7 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::ReadHeaders(void)
 /// \brief      Read in an abc metadata structure
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoVp6_c::ReadStreamMetadata(void)
+FrameParserStatus_t   FrameParser_VideoVp6_c::ReadStreamMetadata (void)
 {
 
 #if 0
@@ -186,19 +183,18 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::ReadStreamMetadata(void)
 
         Bits.GetPosition(&Buff, &Bib);
         Buff -= 4;
-
-        for (i = 0; i < 40; i += 4)
-            report(severity_info, "%02x %02x %02x %02x\n", Buff[i], Buff[i + 1], Buff[i + 2], Buff[i + 3]);
+        for (i=0; i<40; i+=4)
+            report (severity_info, "%02x %02x %02x %02x\n", Buff[i], Buff[i+1], Buff[i+2], Buff[i+3]);
     }
 #endif
 
     if ((StreamParameters != NULL) && (StreamParameters->SequenceHeaderPresent))
     {
-        report(severity_error, "%s: Received Sequence Layer MetaData after previous sequence data\n", __FUNCTION__);
+        report (severity_error, "%s: Received Sequence Layer MetaData after previous sequence data\n", __FUNCTION__);
         return FrameParserNoError;
     }
 
-    memcpy(&MetaData, BufferData, sizeof(MetaData));
+    memcpy (&MetaData, BufferData, sizeof (MetaData));
 
 
     if (MetaData.FrameRate < 23950000)
@@ -224,12 +220,12 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::ReadStreamMetadata(void)
     StreamMetadataValid                         = (MetaData.Codec == CODEC_ID_VP6) || (MetaData.Codec == CODEC_ID_VP6_ALPHA);
 
 #ifdef DUMP_HEADERS
-    report(severity_info, "StreamMetadata :- \n");
-    report(severity_info, "    Codec             : %6d\n", MetaData.Codec);
-    report(severity_info, "    Width             : %6d\n", MetaData.Width);
-    report(severity_info, "    Height            : %6d\n", MetaData.Height);
-    report(severity_info, "    Duration          : %6d\n", MetaData.Duration);
-    report(severity_info, "    FrameRate         : %6d\n", MetaData.FrameRate);
+    report (severity_info, "StreamMetadata :- \n");
+    report (severity_info, "    Codec             : %6d\n", MetaData.Codec);
+    report (severity_info, "    Width             : %6d\n", MetaData.Width);
+    report (severity_info, "    Height            : %6d\n", MetaData.Height);
+    report (severity_info, "    Duration          : %6d\n", MetaData.Duration);
+    report (severity_info, "    FrameRate         : %6d\n", MetaData.FrameRate);
 #endif
 
     return FrameParserNoError;
@@ -241,7 +237,7 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::ReadStreamMetadata(void)
 /// \brief      Read in a picture header
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoVp6_c::ReadPictureHeader(void)
+FrameParserStatus_t   FrameParser_VideoVp6_c::ReadPictureHeader (void)
 {
     FrameParserStatus_t         Status;
     Vp6VideoPicture_t*          Header;
@@ -262,24 +258,21 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::ReadPictureHeader(void)
 
     if (FrameParameters == NULL)
     {
-        Status                                  = GetNewFrameParameters((void **)&FrameParameters);
-
+        Status                                  = GetNewFrameParameters ((void **)&FrameParameters);
         if (Status != FrameParserNoError)
-            return Status;
+        return Status;
     }
 
     Header                                      = &FrameParameters->PictureHeader;
-    memset(Header, 0x00, sizeof(Vp6VideoPicture_t));
+    memset (Header, 0x00, sizeof(Vp6VideoPicture_t));
 
     HorizontalAdjustment                        = Bits.Get(4);
     VerticalAdjustment                          = Bits.Get(4);
-
     if ((StreamMetadataValid) && (MetaData.Codec == CODEC_ID_VP6_ALPHA))
     {
         unsigned int  OffsetToAlpha             = Bits.Get(24);
-        FRAME_DEBUG("Offset to alpha = %d\n", OffsetToAlpha);
+        FRAME_DEBUG ("Offset to alpha = %d\n", OffsetToAlpha);
     }
-
     Header->ptype                               = Bits.Get(1);
     Header->pquant                              = Bits.Get(6);
 
@@ -290,12 +283,12 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::ReadPictureHeader(void)
     {
         // VersionNo. The values 6,7, and 8 represent VP6.0, VP6.1, and VP6.2 bitsreams, respectively.
         Version                                 = Bits.Get(5);
-        Assert(Version <= 8, "Version %d not supported\n", Version);
+        Assert (Version <= 8, "Version %d not supported\n", Version);
 
         Profile                                 = Bits.Get(2);
-        Assert(Profile == VP6_PROFILE_ADVANCED, "Profile %d not supported\n", Profile);
+        Assert (Profile == VP6_PROFILE_ADVANCED, "Profile %d not supported\n", Profile);
 
-        Assert(Bits.Get(1) == 0, "Interlaced not supported\n")
+        Assert (Bits.Get(1) == 0, "Interlaced not supported\n")
 
         EncodedHeight                           = Bits.Get(8) * 16;
         EncodedWidth                            = Bits.Get(8) * 16;             // Values are given in macro blocks
@@ -304,20 +297,18 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::ReadPictureHeader(void)
 
         // For VP6 there is no sequence header so we create one whenever the picture size changes
         if ((StreamParameters == NULL) || (!StreamParameters->SequenceHeaderPresent) ||
-                (EncodedWidth  != StreamParameters->SequenceHeader.encoded_width)  ||
-                (EncodedHeight != StreamParameters->SequenceHeader.encoded_height) ||
-                (DisplayWidth  != StreamParameters->SequenceHeader.display_width)  ||
-                (DisplayHeight != StreamParameters->SequenceHeader.display_height))
+            (EncodedWidth  != StreamParameters->SequenceHeader.encoded_width)  ||
+            (EncodedHeight != StreamParameters->SequenceHeader.encoded_height) ||
+            (DisplayWidth  != StreamParameters->SequenceHeader.display_width)  ||
+            (DisplayHeight != StreamParameters->SequenceHeader.display_height))
         {
-            Status                                      = GetNewStreamParameters((void **)&StreamParameters);
-
+            Status                                      = GetNewStreamParameters ((void **)&StreamParameters);
             if (Status != FrameParserNoError)
                 return Status;
-
             StreamParameters->UpdatedSinceLastFrame     = true;
 
             SequenceHeader                              = &StreamParameters->SequenceHeader;
-            memset(SequenceHeader, 0x00, sizeof(Vp6VideoSequence_t));
+            memset (SequenceHeader, 0x00, sizeof(Vp6VideoSequence_t));
             StreamParameters->SequenceHeaderPresent     = true;
 
             SequenceHeader->version                     = Version;
@@ -330,10 +321,10 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::ReadPictureHeader(void)
         else
             SequenceHeader                              = &StreamParameters->SequenceHeader;
 
-        Bits.GetPosition(&BitsPointer, &BitsInByte);
-        RangeDecoder.Init(BitsPointer);
+        Bits.GetPosition (&BitsPointer, &BitsInByte);
+        RangeDecoder.Init (BitsPointer);
 
-        RangeDecoder.GetBits(2);                                                // marker bits - ignored
+        RangeDecoder.GetBits (2);                                               // marker bits - ignored
 
         ParseFilterInfo                         = 1;
 
@@ -342,7 +333,7 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::ReadPictureHeader(void)
     }
     else if ((StreamParameters == NULL) || !StreamParameters->SequenceHeaderPresent)
     {
-        FRAME_ERROR("Sequence header not found.\n");
+        FRAME_ERROR ("Sequence header not found.\n");
         return FrameParserNoStreamParameters;
     }
     else
@@ -351,22 +342,20 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::ReadPictureHeader(void)
 
         if (SequenceHeader->version == 0)
         {
-            FRAME_ERROR("Cannot decode p frame as unknown version\n");
+            FRAME_ERROR ("Cannot decode p frame as unknown version\n");
             return FrameParserError;
         }
 
-        Bits.GetPosition(&BitsPointer, &BitsInByte);
-        RangeDecoder.Init(BitsPointer);
+        Bits.GetPosition (&BitsPointer, &BitsInByte);
+        RangeDecoder.Init (BitsPointer);
 
         Header->golden_frame                    = RangeDecoder.GetBit();
         Header->deblock_filtering               = RangeDecoder.GetBit();        // UseLoopFilter,present in Advanced Profile only
-
         if (Header->deblock_filtering)
-            RangeDecoder.GetBit();              // Parse LoopFilterSelector
-
-        // The de-ringing version of the loop-filter is NOT currently defined in the VP6
-        // decoder specification. Therefore, at the current time it is mandated that where
-        // the loop-filter is used the field LoopFilterSelector must be set to the value 0
+            RangeDecoder.GetBit ();             // Parse LoopFilterSelector
+                                                // The de-ringing version of the loop-filter is NOT currently defined in the VP6
+                                                // decoder specification. Therefore, at the current time it is mandated that where
+                                                // the loop-filter is used the field LoopFilterSelector must be set to the value 0
 
         if (SequenceHeader->version > 7)
             ParseFilterInfo                     = RangeDecoder.GetBit();        // Present only in VP6.2 bitstreams
@@ -407,36 +396,35 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::ReadPictureHeader(void)
     FrameParameters->PictureHeaderPresent       = true;
 
 #ifdef DUMP_HEADERS
-
     if (Header->ptype == VP6_PICTURE_CODING_TYPE_I)
     {
-        report(severity_note, "Picture header (%d)\n", PictureNo++);
-        report(severity_info, "    version             : %6d\n", SequenceHeader->version);
-        report(severity_info, "    profile             : %6d\n", SequenceHeader->profile);
-        report(severity_info, "    HorizontalAdjustment: %6d\n", HorizontalAdjustment);
-        report(severity_info, "    VerticalAdjustment  : %6d\n", VerticalAdjustment);
-        report(severity_info, "    encoded_width       : %6d\n", SequenceHeader->encoded_width);
-        report(severity_info, "    encoded_height      : %6d\n", SequenceHeader->encoded_height);
-        report(severity_info, "    display_width       : %6d\n", SequenceHeader->display_width);
-        report(severity_info, "    display_height      : %6d\n", SequenceHeader->display_height);
-        report(severity_info, "    filter_mode         : %6d\n", SequenceHeader->filter_mode);
-        report(severity_info, "    variance_threshold  : %6d\n", SequenceHeader->variance_threshold);
-        report(severity_info, "    max_vector_length   : %6d\n", SequenceHeader->max_vector_length);
-        report(severity_info, "    filter_selection    : %6d\n", SequenceHeader->filter_selection);
+        report (severity_note, "Picture header (%d)\n", PictureNo++);
+        report (severity_info, "    version             : %6d\n", SequenceHeader->version);
+        report (severity_info, "    profile             : %6d\n", SequenceHeader->profile);
+        report (severity_info, "    HorizontalAdjustment: %6d\n", HorizontalAdjustment);
+        report (severity_info, "    VerticalAdjustment  : %6d\n", VerticalAdjustment);
+        report (severity_info, "    encoded_width       : %6d\n", SequenceHeader->encoded_width);
+        report (severity_info, "    encoded_height      : %6d\n", SequenceHeader->encoded_height);
+        report (severity_info, "    display_width       : %6d\n", SequenceHeader->display_width);
+        report (severity_info, "    display_height      : %6d\n", SequenceHeader->display_height);
+        report (severity_info, "    filter_mode         : %6d\n", SequenceHeader->filter_mode);
+        report (severity_info, "    variance_threshold  : %6d\n", SequenceHeader->variance_threshold);
+        report (severity_info, "    max_vector_length   : %6d\n", SequenceHeader->max_vector_length);
+        report (severity_info, "    filter_selection    : %6d\n", SequenceHeader->filter_selection);
     }
     else
         PictureNo++;
 
 #if 0
-    report(severity_info, "    ptype               : %6d\n", Header->ptype);
-    report(severity_info, "    pquant              : %6d\n", Header->pquant);
-    report(severity_info, "    golden_frame        : %6d\n", Header->golden_frame);
-    report(severity_info, "    deblock_filtering   : %6d\n", Header->deblock_filtering);
+    report (severity_info, "    ptype               : %6d\n", Header->ptype);
+    report (severity_info, "    pquant              : %6d\n", Header->pquant);
+    report (severity_info, "    golden_frame        : %6d\n", Header->golden_frame);
+    report (severity_info, "    deblock_filtering   : %6d\n", Header->deblock_filtering);
 #endif
 
 #endif
 
-    return FrameParserNoError;
+     return FrameParserNoError;
 }
 //}}}
 
@@ -446,7 +434,7 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::ReadPictureHeader(void)
 /// \brief      Register the output ring
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoVp6_c::RegisterOutputBufferRing(Ring_t          Ring)
+FrameParserStatus_t   FrameParser_VideoVp6_c::RegisterOutputBufferRing (Ring_t          Ring)
 {
 
     //
@@ -462,7 +450,7 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::RegisterOutputBufferRing(Ring_t   
     // Pass the call on down (we need the frame parameters count obtained by the lower level function).
     //
 
-    return FrameParser_Video_c::RegisterOutputBufferRing(Ring);
+    return FrameParser_Video_c::RegisterOutputBufferRing (Ring);
 }
 //}}}
 //{{{  PrepareReferenceFrameList
@@ -471,7 +459,7 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::RegisterOutputBufferRing(Ring_t   
 /// \brief      Stream specific function to prepare a reference frame list
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoVp6_c::PrepareReferenceFrameList(void)
+FrameParserStatus_t   FrameParser_VideoVp6_c::PrepareReferenceFrameList (void)
 {
     unsigned int               i;
     unsigned int               ReferenceFramesNeeded;
@@ -481,7 +469,7 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::PrepareReferenceFrameList(void)
     //
     // Note we cannot use StreamParameters or FrameParameters to address data directly,
     // as these may no longer apply to the frame we are dealing with.
-    // Particularly if we have seen a sequence header or group of pictures
+    // Particularly if we have seen a sequenece header or group of pictures
     // header which belong to the next frame.
     //
 
@@ -507,11 +495,9 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::PrepareReferenceFrameList(void)
     else
     {
         ParsedFrameParameters->ReferenceFrameList[0].EntryCount         = ReferenceFrameList.EntryCount;
-
-        for (i = 0; i < ReferenceFrameList.EntryCount; i++)
+        for (i=0; i<ReferenceFrameList.EntryCount; i++)
             ParsedFrameParameters->ReferenceFrameList[0].EntryIndicies[i]   = ReferenceFrameList.EntryIndicies[i];
     }
-
     //report (severity_info, "Prepare Ref list %d %d - %d %d - %d %d %d\n", ParsedFrameParameters->ReferenceFrameList[0].EntryIndicies[0], ParsedFrameParameters->ReferenceFrameList[0].EntryIndicies[1],
     //        ReferenceFrameList.EntryIndicies[0], ReferenceFrameList.EntryIndicies[1],
     //        ReferenceFramesNeeded, ReferenceFrameList.EntryCount, ReferenceFrameList.EntryCount - ReferenceFramesNeeded );
@@ -528,7 +514,7 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::PrepareReferenceFrameList(void)
 ///             codec is informed immediately of a release on the first field of a field picture.
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoVp6_c::ForPlayUpdateReferenceFrameList(void)
+FrameParserStatus_t   FrameParser_VideoVp6_c::ForPlayUpdateReferenceFrameList (void)
 {
     Vp6FrameParameters_t*       FrameParameters = (Vp6FrameParameters_t*)ParsedFrameParameters->FrameParameterStructure;
 
@@ -539,7 +525,7 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::ForPlayUpdateReferenceFrameList(vo
     if (ReferenceFrameList.EntryCount == 0)
         ReferenceFrameList.EntryCount           = 1;
     else if (ReferenceFrameList.EntryIndicies[0] != ReferenceFrameList.EntryIndicies[1])
-        Player->CallInSequence(Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, ReferenceFrameList.EntryIndicies[0]);
+        Player->CallInSequence (Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, ReferenceFrameList.EntryIndicies[0]);
 
     ReferenceFrameList.EntryIndicies[0]         = ParsedFrameParameters->DecodeFrameIndex;      // put us into slot 0 as a reference frame
 
@@ -548,8 +534,7 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::ForPlayUpdateReferenceFrameList(vo
         if (ReferenceFrameList.EntryCount == 1)
             ReferenceFrameList.EntryCount       = 2;
         else
-            Player->CallInSequence(Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, ReferenceFrameList.EntryIndicies[1]);
-
+            Player->CallInSequence (Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, ReferenceFrameList.EntryIndicies[1]);
         ReferenceFrameList.EntryIndicies[1]     = ParsedFrameParameters->DecodeFrameIndex;      // insert into slot 1 as a golden frame
     }
 
@@ -560,12 +545,12 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::ForPlayUpdateReferenceFrameList(vo
 //{{{  RevPlayProcessDecodeStacks
 // /////////////////////////////////////////////////////////////////////////
 //
-//      Stream specific override function for processing decode stacks, this
-//      initializes the post decode ring before passing itno the real
+//      Stream specific override function for processing decode stacks, this 
+//      initializes the post decode ring before passing itno the real 
 //      implementation of this function.
 //
 
-FrameParserStatus_t   FrameParser_VideoVp6_c::RevPlayProcessDecodeStacks(void)
+FrameParserStatus_t   FrameParser_VideoVp6_c::RevPlayProcessDecodeStacks (void)
 {
     ReverseQueuedPostDecodeSettingsRing->Flush();
 
@@ -579,7 +564,7 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::RevPlayProcessDecodeStacks(void)
 /// \brief      Send frame for decode
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoVp6_c::CommitFrameForDecode(void)
+FrameParserStatus_t   FrameParser_VideoVp6_c::CommitFrameForDecode (void)
 {
     Vp6VideoPicture_t*                  PictureHeader;
     Vp6VideoSequence_t*                 SequenceHeader;
@@ -589,13 +574,13 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::CommitFrameForDecode(void)
     //
     if ((StreamParameters == NULL) || !StreamParameters->SequenceHeaderPresent)
     {
-        FRAME_ERROR("Stream parameters unavailable for decode.\n");
+        FRAME_ERROR ("Stream parameters unavailable for decode.\n");
         return FrameParserNoStreamParameters;
     }
 
     if ((FrameParameters == NULL) || !FrameParameters->PictureHeaderPresent)
     {
-        FRAME_ERROR("Frame parameters unavailable for decode (%p).\n", FrameParameters);
+        FRAME_ERROR ("Frame parameters unavailable for decode (%p).\n", FrameParameters);
         return FrameParserPartialFrameParameters;
     }
 
@@ -650,12 +635,12 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::CommitFrameForDecode(void)
     ParsedVideoParameters->PanScan.Count                        = 0;
 
     // Record our claim on both the frame and stream parameters
-    Buffer->AttachBuffer(StreamParametersBuffer);
-    Buffer->AttachBuffer(FrameParametersBuffer);
+    Buffer->AttachBuffer (StreamParametersBuffer);
+    Buffer->AttachBuffer (FrameParametersBuffer);
 
     // We clear the FrameParameters pointer, a new one will be obtained
-    // before/if we read in headers pertaining to the next frame. This
-    // will generate an error should I accidentally write code that
+    // before/if we read in headers pertaining to the next frame. This 
+    // will generate an error should I accidentally write code that 
     // accesses this data when it should not.
     FrameParameters                                             = NULL;
 
@@ -672,7 +657,7 @@ FrameParserStatus_t   FrameParser_VideoVp6_c::CommitFrameForDecode(void)
 ///             parameters are new.
 ///
 /// /////////////////////////////////////////////////////////////////////////
-bool   FrameParser_VideoVp6_c::NewStreamParametersCheck(void)
+bool   FrameParser_VideoVp6_c::NewStreamParametersCheck (void)
 {
     bool            Different;
 
@@ -691,11 +676,10 @@ bool   FrameParser_VideoVp6_c::NewStreamParametersCheck(void)
     // memcmp should be sufficient).
     //
 
-    Different   = memcmp(&CopyOfStreamParameters, StreamParameters, sizeof(Vp6StreamParameters_t)) != 0;
-
+    Different   = memcmp (&CopyOfStreamParameters, StreamParameters, sizeof(Vp6StreamParameters_t)) != 0;
     if (Different)
     {
-        memcpy(&CopyOfStreamParameters, StreamParameters, sizeof(Vp6StreamParameters_t));
+        memcpy (&CopyOfStreamParameters, StreamParameters, sizeof(Vp6StreamParameters_t));
         return true;
     }
 

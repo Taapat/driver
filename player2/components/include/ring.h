@@ -37,9 +37,9 @@ Date        Modification                                    Name
 
 #include "osinline.h"
 
-typedef enum
+typedef enum 
 {
-    RingNoError     = 0,
+    RingNoError		= 0,
     RingNoMemory,
     RingTooManyEntries,
     RingNothingToGet
@@ -47,24 +47,24 @@ typedef enum
 
 //
 
-#define RING_NONE_BLOCKING  0
+#define	RING_NONE_BLOCKING	0
 
 //
 
 class Ring_c
 {
-    public:
+public:
 
-        RingStatus_t    InitializationStatus;
+    RingStatus_t	InitializationStatus;
 
-        virtual ~Ring_c(void) {};
+    virtual ~Ring_c( void ) {};
 
-        virtual RingStatus_t Insert(uintptr_t Value) = 0;
-        virtual RingStatus_t Extract(uintptr_t *Value,
-                                     unsigned int   BlockingPeriod = RING_NONE_BLOCKING) = 0;
-        virtual RingStatus_t Flush(void) = 0;
-        virtual bool         NonEmpty(void) = 0;
+    virtual RingStatus_t Insert(  unsigned int	 Value ) = 0;
+    virtual RingStatus_t Extract( unsigned int  *Value,
+                                  unsigned int   BlockingPeriod = RING_NONE_BLOCKING ) = 0;
+    virtual RingStatus_t Flush( void ) = 0;
+    virtual bool         NonEmpty( void ) = 0;
 };
 
-typedef class Ring_c    *Ring_t;
+typedef class Ring_c	*Ring_t;
 #endif

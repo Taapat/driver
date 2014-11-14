@@ -46,25 +46,25 @@ Date        Modification                                    Name
 
 class RingGeneric_c : public Ring_c
 {
-    private:
+private:
 
-        OS_Mutex_t       Lock;
-        OS_Event_t       Signal;
-        unsigned int     Limit;
-        unsigned int     NextExtract;
-        unsigned int     NextInsert;
-        uintptr_t       *Storage;
+    OS_Mutex_t		 Lock;
+    OS_Event_t		 Signal;
+    unsigned int 	 Limit;
+    unsigned int 	 NextExtract;
+    unsigned int 	 NextInsert;
+    unsigned int	*Storage;
 
-    public:
+public:
 
-        RingGeneric_c(unsigned int MaxEntries = 16);
-        ~RingGeneric_c(void);
+    RingGeneric_c( unsigned int MaxEntries = 16 );
+    ~RingGeneric_c( void );
 
-        RingStatus_t Insert(uintptr_t     Value);
-        RingStatus_t Extract(uintptr_t    *Value,
-                             unsigned int   BlockingPeriod = OS_INFINITE);
-        RingStatus_t Flush(void);
-        bool         NonEmpty(void);
+    RingStatus_t Insert(  unsigned int	 Value );
+    RingStatus_t Extract( unsigned int	*Value,
+			  unsigned int   BlockingPeriod = OS_INFINITE );
+    RingStatus_t Flush( void );
+    bool         NonEmpty( void );
 };
 
 #endif

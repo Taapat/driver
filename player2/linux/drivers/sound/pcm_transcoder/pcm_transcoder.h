@@ -17,7 +17,7 @@
 #endif
 
 #define PCM_DEBUG(fmt, args...)         ((void) (ENABLE_PCM_DEBUG && \
-        (printk(KERN_INFO "%s: " fmt, __FUNCTION__,##args), 0)))
+                                                 (printk(KERN_INFO "%s: " fmt, __FUNCTION__,##args), 0)))
 
 /* Output trace information off the critical path */
 #define PCM_TRACE(fmt, args...)         (printk(KERN_NOTICE "%s: " fmt, __FUNCTION__, ##args))

@@ -63,10 +63,10 @@ Date        Modification                                    Name
 /// ::Reset again because the calls made by the sub-constructors will not have called
 /// our reset method.
 ///
-Collator_PesVideoMpeg2_c::Collator_PesVideoMpeg2_c(void)
+Collator_PesVideoMpeg2_c::Collator_PesVideoMpeg2_c( void )
 {
-    if (InitializationStatus != CollatorNoError)
-        return;
+    if( InitializationStatus != CollatorNoError )
+	return;
 
     Collator_PesVideoMpeg2_c::Reset();
 }
@@ -77,18 +77,17 @@ Collator_PesVideoMpeg2_c::Collator_PesVideoMpeg2_c(void)
 ///
 /// \return void
 ///
-CollatorStatus_t Collator_PesVideoMpeg2_c::Reset(void)
+CollatorStatus_t Collator_PesVideoMpeg2_c::Reset( void )
 {
-    CollatorStatus_t Status;
+CollatorStatus_t Status;
 
 //
 
     COLLATOR_DEBUG(">><<\n");
 
     Status = Collator_PesVideo_c::Reset();
-
-    if (Status != CollatorNoError)
-        return Status;
+    if( Status != CollatorNoError )
+	return Status;
 
     Configuration.GenerateStartCodeList      = true;
     Configuration.MaxStartCodes              = 256;
@@ -97,16 +96,16 @@ CollatorStatus_t Collator_PesVideoMpeg2_c::Reset(void)
     Configuration.StreamIdentifierCode       = PES_START_CODE_VIDEO;
     Configuration.BlockTerminateMask         = 0xff;                            // Picture
     Configuration.BlockTerminateCode         = 0x00;
-    Configuration.IgnoreCodesRangeStart      = MPEG2_FIRST_SLICE_START_CODE + 1; // Slice codes other than first
+    Configuration.IgnoreCodesRangeStart      = MPEG2_FIRST_SLICE_START_CODE+1;  // Slice codes other than first
     Configuration.IgnoreCodesRangeEnd        = MPEG2_GREATEST_SLICE_START_CODE;
     Configuration.InsertFrameTerminateCode   = true;                            // Force the mme decode to terminate after a picture
     Configuration.TerminalCode               = MPEG2_SEQUENCE_END_CODE;
     Configuration.ExtendedHeaderLength       = 0;
-
+	
     Configuration.DeferredTerminateFlag      = false;
-
-    Configuration.StreamTerminateFlushesFrame   = true;     // Use an end of sequence to force a frame flush
-    Configuration.StreamTerminationCode     = MPEG2_SEQUENCE_END_CODE;
+	
+    Configuration.StreamTerminateFlushesFrame	= true;		// Use an end of sequence to force a frame flush
+    Configuration.StreamTerminationCode		= MPEG2_SEQUENCE_END_CODE;
 
     return CollatorNoError;
 }

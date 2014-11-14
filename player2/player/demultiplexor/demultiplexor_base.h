@@ -36,7 +36,7 @@ Date        Modification                                    Name
 
 // /////////////////////////////////////////////////////////////////////
 //
-//  Include any component headers
+//	Include any component headers
 
 #include "player.h"
 
@@ -45,7 +45,7 @@ Date        Modification                                    Name
 // Locally defined constants
 //
 
-#define DEMULTIPLEXOR_MAX_STREAMS   4
+#define	DEMULTIPLEXOR_MAX_STREAMS	4
 
 // /////////////////////////////////////////////////////////////////////////
 //
@@ -54,22 +54,22 @@ Date        Modification                                    Name
 
 typedef struct DemultiplexorBaseStreamContext_s
 {
-    PlayerStream_t  Stream;
-    unsigned int    Identifier;
-    Collator_t      Collator;
+    PlayerStream_t	Stream;
+    unsigned int	Identifier;
+    Collator_t		Collator;
 } DemultiplexorBaseStreamContext_t;
 
 //
 
 struct DemultiplexorBaseContext_s
 {
-    OS_Mutex_t                Lock;
+    OS_Mutex_t				  Lock;
 
-    unsigned int              LastStreamSet;
-    PlayerInputDescriptor_t      *Descriptor;
-    unsigned int              BufferLength;
-    unsigned char            *BufferData;
-    DemultiplexorBaseStreamContext_t      Streams[DEMULTIPLEXOR_MAX_STREAMS];
+    unsigned int			  LastStreamSet;
+    PlayerInputDescriptor_t		 *Descriptor;
+    unsigned int			  BufferLength;
+    unsigned char			 *BufferData;
+    DemultiplexorBaseStreamContext_t	  Streams[DEMULTIPLEXOR_MAX_STREAMS];
 };
 
 //
@@ -83,48 +83,48 @@ typedef struct DemultiplexorBaseContext_s   *DemultiplexorBaseContext_t;
 
 class Demultiplexor_Base_c : public Demultiplexor_c
 {
-    protected:
+protected:
 
-        // Data
+    // Data
 
-        unsigned int      SizeofContext;
+    unsigned int	  SizeofContext;
 
-        // Functions
+    // Functions
 
-        void          SetContextSize(unsigned int   SizeofContext);
+    void		  SetContextSize(	unsigned int	SizeofContext );
 
-    public:
+public:
 
-        //
-        // Constructor/Destructor methods
-        //
+    //
+    // Constructor/Destructor methods
+    //
 
-        Demultiplexor_Base_c(void);
-        ~Demultiplexor_Base_c(void);
+    Demultiplexor_Base_c( 	void );
+    ~Demultiplexor_Base_c( 	void );
 
-        //
-        // Context management functions
-        //
+    //
+    // Context managment functions
+    //
 
-        DemultiplexorStatus_t   CreateContext(DemultiplexorContext_t     *Context);
+    DemultiplexorStatus_t   CreateContext(	DemultiplexorContext_t	 *Context );
 
-        DemultiplexorStatus_t   DestroyContext(DemultiplexorContext_t     Context);
+    DemultiplexorStatus_t   DestroyContext(	DemultiplexorContext_t	  Context );
 
-        DemultiplexorStatus_t   AddStream(DemultiplexorContext_t      Context,
-                                          PlayerStream_t        Stream,
-                                          unsigned int          StreamIdentifier);
+    DemultiplexorStatus_t   AddStream(		DemultiplexorContext_t	  Context,
+						PlayerStream_t		  Stream,
+						unsigned int		  StreamIdentifier );
 
-        DemultiplexorStatus_t   RemoveStream(DemultiplexorContext_t   Context,
-                                             unsigned int          StreamIdentifier);
+    DemultiplexorStatus_t   RemoveStream(	DemultiplexorContext_t	  Context,
+						unsigned int		  StreamIdentifier );
 
-        DemultiplexorStatus_t   SwitchStream(DemultiplexorContext_t   Context,
-                                             PlayerStream_t        Stream);
+    DemultiplexorStatus_t   SwitchStream(	DemultiplexorContext_t	  Context,
+						PlayerStream_t		  Stream );
 
-        DemultiplexorStatus_t   InputJump(DemultiplexorContext_t      Context);
+    DemultiplexorStatus_t   InputJump(		DemultiplexorContext_t	  Context );
 
-        DemultiplexorStatus_t   Demux(PlayerPlayback_t    Playback,
-                                      DemultiplexorContext_t    Context,
-                                      Buffer_t          Buffer);
+    DemultiplexorStatus_t   Demux(		PlayerPlayback_t	  Playback,
+						DemultiplexorContext_t	  Context,
+						Buffer_t		  Buffer );
 };
 
 #endif

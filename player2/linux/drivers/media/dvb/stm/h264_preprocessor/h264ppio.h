@@ -43,12 +43,12 @@ Date        Modification                                    Name
 
 typedef struct h264pp_ioctl_queue_s
 {
-    unsigned int      QueueIdentifier;
-    void         *InputBufferCachedAddress;
-    void         *InputBufferPhysicalAddress;
-    void         *OutputBufferCachedAddress;
-    void         *OutputBufferPhysicalAddress;
-    unsigned int      Field;
+    unsigned int	  QueueIdentifier;
+    void		 *InputBufferCachedAddress;
+    void		 *InputBufferPhysicalAddress;
+    void		 *OutputBufferCachedAddress;
+    void		 *OutputBufferPhysicalAddress;
+    unsigned int	  Field;
     unsigned int          InputSize;
     unsigned int          SliceCount;
     unsigned int          CodeLength;
@@ -60,8 +60,8 @@ typedef struct h264pp_ioctl_queue_s
 
 typedef struct h264pp_ioctl_dequeue_s
 {
-    unsigned int      QueueIdentifier;
-    unsigned int      OutputSize;
+    unsigned int	  QueueIdentifier;
+    unsigned int	  OutputSize;
     unsigned int          ErrorMask;
 } h264pp_ioctl_dequeue_t;
 

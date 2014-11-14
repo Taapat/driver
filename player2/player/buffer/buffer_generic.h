@@ -22,8 +22,8 @@ license from ST.
 Source file name : buffer_generic.h
 Author :           Nick
 
-Common header file bringing together the buffer headers for the generic
-implementation, note the sub-includes are order dependent, at least that
+Common header file bringing together the buffer headers for the generic 
+implementation, note the sub-includes are order dependent, at least that 
 is the plan.
 
 
@@ -45,22 +45,22 @@ Date        Modification                                    Name
 
 //
 
-#define MAX_BUFFER_DATA_TYPES       256     // Number of data types, no restriction, uses minimal memory
-#define MAX_BUFFER_OWNER_IDENTIFIERS    4
-#define MAX_ATTACHED_BUFFERS        4
+#define MAX_BUFFER_DATA_TYPES		256		// Number of data types, no restriction, uses minimal memory
+#define MAX_BUFFER_OWNER_IDENTIFIERS	4
+#define MAX_ATTACHED_BUFFERS		4
 
-#define BUFFER_MAXIMUM_EVENT_WAIT   50      // ms
+#define BUFFER_MAXIMUM_EVENT_WAIT	50		// ms
 
-#define TYPE_INDEX_MASK         (MAX_BUFFER_DATA_TYPES - 1)
-#define TYPE_TYPE_MASK          (~TYPE_INDEX_MASK)
+#define TYPE_INDEX_MASK			(MAX_BUFFER_DATA_TYPES - 1)
+#define TYPE_TYPE_MASK			(~TYPE_INDEX_MASK)
 
 //
 
-typedef struct BlockDescriptor_s    *BlockDescriptor_t;
+typedef struct BlockDescriptor_s 	*BlockDescriptor_t;
 
-typedef  class Buffer_Generic_c     *Buffer_Generic_t;
-typedef  class BufferPool_Generic_c *BufferPool_Generic_t;
-typedef  class BufferManager_Generic_c  *BufferManager_Generic_t;
+typedef  class Buffer_Generic_c		*Buffer_Generic_t;
+typedef  class BufferPool_Generic_c	*BufferPool_Generic_t;
+typedef  class BufferManager_Generic_c	*BufferManager_Generic_t;
 
 //
 

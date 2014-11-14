@@ -55,21 +55,21 @@ static BufferDataDescriptor_t                   InitialDecodeBufferDescriptor = 
 // /////////////////////////////////////////////////////////////////////////
 
 //{{{  Thread entry stubs
-static OS_TaskEntry(BufferReleaseThreadStub)
+static OS_TaskEntry (BufferReleaseThreadStub)
 {
     Manifestor_Video_c* VideoManifestor = (Manifestor_Video_c*)Parameter;
 
-    VideoManifestor->BufferReleaseThread();
-    OS_TerminateThread();
+    VideoManifestor->BufferReleaseThread ();
+    OS_TerminateThread ();
     return NULL;
 }
 
-static OS_TaskEntry(DisplaySignalThreadStub)
+static OS_TaskEntry (DisplaySignalThreadStub)
 {
     Manifestor_Video_c* VideoManifestor = (Manifestor_Video_c*)Parameter;
 
-    VideoManifestor->DisplaySignalThread();
-    OS_TerminateThread();
+    VideoManifestor->DisplaySignalThread ();
+    OS_TerminateThread ();
     return NULL;
 }
 //}}}
@@ -84,12 +84,12 @@ static OS_TaskEntry(DisplaySignalThreadStub)
 //      Result  :
 //
 
-Manifestor_Video_c::Manifestor_Video_c(void)
+Manifestor_Video_c::Manifestor_Video_c  (void)
 {
     //MANIFESTOR_DEBUG ("\n");
     if (InitializationStatus != ManifestorNoError)
     {
-        MANIFESTOR_ERROR("Initialization status not valid - aborting init\n");
+        MANIFESTOR_ERROR ("Initialization status not valid - aborting init\n");
         return;
     }
 
@@ -97,7 +97,7 @@ Manifestor_Video_c::Manifestor_Video_c(void)
 
     Configuration.ManifestorName        = "Video";
     Configuration.StreamType            = StreamTypeVideo;
-    Configuration.DecodeBufferDescriptor = &InitialDecodeBufferDescriptor;
+    Configuration.DecodeBufferDescriptor= &InitialDecodeBufferDescriptor;
     Configuration.PostProcessControlBufferCount = 16;
 
     DisplayAspectRatioPolicyValue       = 0xffffffff;
@@ -124,11 +124,11 @@ Manifestor_Video_c::Manifestor_Video_c(void)
 
     PtsOnDisplay                        = INVALID_TIME;
 
-    OS_InitializeMutex(&BufferLock);
+    OS_InitializeMutex (&BufferLock);
 
     RelayfsIndex = st_relayfs_getindex(ST_RELAY_SOURCE_VIDEO_MANIFESTOR);
 
-    Manifestor_Video_c::Reset();
+    Manifestor_Video_c::Reset ();
 
     InitializationStatus                = ManifestorNoError;
 }
@@ -143,14 +143,14 @@ Manifestor_Video_c::Manifestor_Video_c(void)
 //      Result  :
 //
 
-Manifestor_Video_c::~Manifestor_Video_c(void)
+Manifestor_Video_c::~Manifestor_Video_c   (void)
 {
     //MANIFESTOR_DEBUG ("\n");
-    Manifestor_Video_c::Halt();
+    Manifestor_Video_c::Halt ();
 
-    OS_TerminateMutex(&BufferLock);
+    OS_TerminateMutex (&BufferLock);
 
-    st_relayfs_freeindex(ST_RELAY_SOURCE_VIDEO_MANIFESTOR, RelayfsIndex);
+    st_relayfs_freeindex(ST_RELAY_SOURCE_VIDEO_MANIFESTOR,RelayfsIndex);
 
 }
 //}}}
@@ -159,42 +159,41 @@ Manifestor_Video_c::~Manifestor_Video_c(void)
 /// \brief              Shutdown, stop presenting and retrieving frames
 ///                     don't return until complete
 //}}}
-ManifestorStatus_t      Manifestor_Video_c::Halt(void)
+ManifestorStatus_t      Manifestor_Video_c::Halt (void)
 {
-    MANIFESTOR_DEBUG("Video\n");
+    MANIFESTOR_DEBUG ("Video\n");
 
     if (DisplaySignalThreadId != OS_INVALID_THREAD)
     {
         DisplaySignalThreadRunning              = false;
-        OS_SemaphoreSignal(&InitialFrameDisplayed);
-        OS_SemaphoreSignal(&BufferDisplayed);
-        OS_WaitForEvent(&DisplaySignalThreadTerminated, OS_INFINITE);           // Wait for display signal to exit
-        OS_TerminateEvent(&DisplaySignalThreadTerminated);
-        OS_SemaphoreTerminate(&InitialFrameDisplayed);
-        OS_SemaphoreTerminate(&BufferDisplayed);
+        OS_SemaphoreSignal    (&InitialFrameDisplayed);
+        OS_SemaphoreSignal    (&BufferDisplayed);
+        OS_WaitForEvent       (&DisplaySignalThreadTerminated, OS_INFINITE);    // Wait for display signal to exit
+        OS_TerminateEvent     (&DisplaySignalThreadTerminated);
+        OS_SemaphoreTerminate (&InitialFrameDisplayed);
+        OS_SemaphoreTerminate (&BufferDisplayed);
         DisplaySignalThreadId                   = OS_INVALID_THREAD;
     }
 
     if (BufferReleaseThreadId != OS_INVALID_THREAD)
     {
         BufferReleaseThreadRunning              = false;
-        OS_WaitForEvent(&BufferReleaseThreadTerminated, OS_INFINITE);           // Wait for buffer release to exit
-        OS_TerminateEvent(&BufferReleaseThreadTerminated);
-        OS_TerminateMutex(&InitialFrameLock);
+        OS_WaitForEvent       (&BufferReleaseThreadTerminated, OS_INFINITE);    // Wait for buffer release to exit
+        OS_TerminateEvent     (&BufferReleaseThreadTerminated);
+        OS_TerminateMutex     (&InitialFrameLock);
         BufferReleaseThreadId                   = OS_INVALID_THREAD;
     }
 
-    return Manifestor_Base_c::Halt();
+    return Manifestor_Base_c::Halt ();
 }
 //}}}
 //{{{  Reset
 /// \brief              Reset all state to intial values
-ManifestorStatus_t Manifestor_Video_c::Reset(void)
+ManifestorStatus_t Manifestor_Video_c::Reset (void)
 {
     MANIFESTOR_DEBUG("\n");
-
-    if (TestComponentState(ComponentRunning))
-        Halt();
+    if (TestComponentState (ComponentRunning))
+        Halt ();
 
     BufferOnDisplay                     = INVALID_BUFFER_ID;
     LastQueuedBuffer                    = ANY_BUFFER_ID;
@@ -223,7 +222,7 @@ ManifestorStatus_t Manifestor_Video_c::Reset(void)
     Steps                               = 1;
     Stepping                            = false;
 
-    return Manifestor_Base_c::Reset();
+    return Manifestor_Base_c::Reset ();
 }
 //}}}
 //{{{  GetDecodeBufferPool
@@ -233,12 +232,12 @@ ManifestorStatus_t Manifestor_Video_c::Reset(void)
 ///                     details of the buffer pool holding the decode buffers.
 /// \return             Succes or failure
 //}}}
-ManifestorStatus_t      Manifestor_Video_c::GetDecodeBufferPool(class BufferPool_c**   Pool)
+ManifestorStatus_t      Manifestor_Video_c::GetDecodeBufferPool         (class BufferPool_c**   Pool)
 {
     unsigned int                        i;
     ManifestorStatus_t                  Status;
 
-    MANIFESTOR_DEBUG("\n");
+    MANIFESTOR_DEBUG ("\n");
 
     // Only create the pool if it doesn't exist and buffers have been created
     if (DecodeBufferPool != NULL)
@@ -250,71 +249,62 @@ ManifestorStatus_t      Manifestor_Video_c::GetDecodeBufferPool(class BufferPool
     //{{{  Create buffer release thread
     if (BufferReleaseThreadId == OS_INVALID_THREAD)
     {
-        if (OS_InitializeMutex(&InitialFrameLock) != OS_NO_ERROR)
+        if (OS_InitializeMutex (&InitialFrameLock) != OS_NO_ERROR)
         {
-            MANIFESTOR_ERROR("Failed to initialize InitialFrameLock mutex\n");
+            MANIFESTOR_ERROR ("Failed to initialize InitialFrameLock mutex\n");
             return ManifestorError;
         }
-
-        if (OS_InitializeEvent(&BufferReleaseThreadTerminated) != OS_NO_ERROR)
+        if (OS_InitializeEvent (&BufferReleaseThreadTerminated) != OS_NO_ERROR)
         {
-            MANIFESTOR_ERROR("Failed to initialize BufferReleaseThreadTerminated mutex\n");
-            OS_TerminateMutex(&InitialFrameLock);
+            MANIFESTOR_ERROR ("Failed to initialize BufferReleaseThreadTerminated mutex\n");
+            OS_TerminateMutex (&InitialFrameLock);
             return ManifestorError;
         }
-
         BufferReleaseThreadRunning      = true;
-
-        if (OS_CreateThread(&BufferReleaseThreadId, BufferReleaseThreadStub, this, "Manifestor_Buffer_Release_Thread", OS_MID_PRIORITY + 16) != OS_NO_ERROR)
+        if (OS_CreateThread (&BufferReleaseThreadId, BufferReleaseThreadStub, this, "Manifestor Buffer Release Thread", OS_MID_PRIORITY+16) != OS_NO_ERROR)
         {
             MANIFESTOR_ERROR("Unable to create Buffer Release thread\n");
             BufferReleaseThreadId       = OS_INVALID_THREAD;
             BufferReleaseThreadRunning  = false;
-            OS_TerminateEvent(&BufferReleaseThreadTerminated);
-            OS_TerminateMutex(&InitialFrameLock);
+            OS_TerminateEvent (&BufferReleaseThreadTerminated);
+            OS_TerminateMutex (&InitialFrameLock);
             return ManifestorError;
         }
     }
-
     //}}}
     //{{{  Create display signal thread
     if (DisplaySignalThreadId == OS_INVALID_THREAD)
     {
-        if (OS_SemaphoreInitialize(&InitialFrameDisplayed, 0) != OS_NO_ERROR)
+        if (OS_SemaphoreInitialize (&InitialFrameDisplayed, 0) != OS_NO_ERROR)
         {
-            MANIFESTOR_ERROR("Failed to initialize InitialFrameDisplayed semaphore\n");
+            MANIFESTOR_ERROR ("Failed to initialize InitialFrameDisplayed semaphore\n");
             return ManifestorError;
         }
-
-        if (OS_SemaphoreInitialize(&BufferDisplayed, 0) != OS_NO_ERROR)
+        if (OS_SemaphoreInitialize (&BufferDisplayed, 0) != OS_NO_ERROR)
         {
-            MANIFESTOR_ERROR("Failed to initialize BufferDisplayed semaphore\n");
-            OS_SemaphoreTerminate(&InitialFrameDisplayed);
+            MANIFESTOR_ERROR ("Failed to initialize BufferDisplayed semaphore\n");
+            OS_SemaphoreTerminate (&InitialFrameDisplayed);
             return ManifestorError;
         }
-
-        if (OS_InitializeEvent(&DisplaySignalThreadTerminated) != OS_NO_ERROR)
+        if (OS_InitializeEvent (&DisplaySignalThreadTerminated) != OS_NO_ERROR)
         {
-            MANIFESTOR_ERROR("Failed to initialize DisplaySignalThreadTerminated mutex\n");
-            OS_SemaphoreTerminate(&InitialFrameDisplayed);
-            OS_SemaphoreTerminate(&BufferDisplayed);
+            MANIFESTOR_ERROR ("Failed to initialize DisplaySignalThreadTerminated mutex\n");
+            OS_SemaphoreTerminate (&InitialFrameDisplayed);
+            OS_SemaphoreTerminate (&BufferDisplayed);
             return ManifestorError;
         }
-
         DisplaySignalThreadRunning      = true;
-
-        if (OS_CreateThread(&DisplaySignalThreadId, DisplaySignalThreadStub, this, "Manifestor_Display_Signal_Thread", (OS_HIGHEST_PRIORITY + OS_MID_PRIORITY) / 2) != OS_NO_ERROR)
+        if (OS_CreateThread (&DisplaySignalThreadId, DisplaySignalThreadStub, this, "Manifestor Display Signal Thread", (OS_HIGHEST_PRIORITY+OS_MID_PRIORITY)/2) != OS_NO_ERROR)
         {
             MANIFESTOR_ERROR("Unable to create Display Signal thread\n");
             DisplaySignalThreadId       = OS_INVALID_THREAD;
             DisplaySignalThreadRunning  = false;
-            OS_TerminateEvent(&DisplaySignalThreadTerminated);
-            OS_SemaphoreTerminate(&InitialFrameDisplayed);
-            OS_SemaphoreTerminate(&BufferDisplayed);
+            OS_TerminateEvent     (&DisplaySignalThreadTerminated);
+            OS_SemaphoreTerminate (&InitialFrameDisplayed);
+            OS_SemaphoreTerminate (&BufferDisplayed);
             return ManifestorError;
         }
     }
-
     //}}}
 
     for (i = 0; i < BufferConfiguration.MaxBufferCount; i++)
@@ -328,11 +318,10 @@ ManifestorStatus_t      Manifestor_Video_c::GetDecodeBufferPool(class BufferPool
         StreamBuffer[i].Data                        = NULL;
     }
 
-    Status      = Manifestor_Base_c::GetDecodeBufferPool(Pool);
-
-    if (Status != ManifestorNoError)
+    Status      = Manifestor_Base_c::GetDecodeBufferPool( Pool );
+    if( Status != ManifestorNoError )
     {
-        MANIFESTOR_ERROR("Failed to create a pool of decode buffers.\n");
+        MANIFESTOR_ERROR ("Failed to create a pool of decode buffers.\n");
         DecodeBufferPool        = NULL;
         return ManifestorError;
     }
@@ -354,7 +343,6 @@ ManifestorStatus_t      Manifestor_Video_c::GetDecodeBufferPool(class BufferPool
         OldSurfaceWindow.Width          = SurfaceDescriptor.DisplayWidth;
         OldSurfaceWindow.Height         = SurfaceDescriptor.DisplayHeight;
     }
-
     MANIFESTOR_DEBUG("Surface X %d, Y %d, Width %d, Height %d\n", SurfaceWindow.X, SurfaceWindow.Y, SurfaceWindow.Width, SurfaceWindow.Height);
 
     // Setup input window - portion of incoming content to copy to output window
@@ -375,14 +363,14 @@ ManifestorStatus_t      Manifestor_Video_c::GetDecodeBufferPool(class BufferPool
     InputCrop.Width                      = 0;
     InputCrop.Height                     = 0;
 
-    memset((void*)&StreamDisplayParameters, 0, sizeof(struct VideoDisplayParameters_s));
+    memset ((void*)&StreamDisplayParameters, 0, sizeof (struct VideoDisplayParameters_s));
     StreamDisplayParameters.PixelAspectRatio    = 0;
     StreamDisplayParameters.FrameRate           = 0;
 
 
     // Let outside world know about the created pool
 
-    SetComponentState(ComponentRunning);
+    SetComponentState (ComponentRunning);
 
     return ManifestorNoError;
 }
@@ -392,9 +380,9 @@ ManifestorStatus_t      Manifestor_Video_c::GetDecodeBufferPool(class BufferPool
 /// \brief      Fill in private structure with timing details of display surface
 /// \param      SurfaceParameters pointer to structure to complete
 //}}}
-ManifestorStatus_t      Manifestor_Video_c::GetSurfaceParameters(void** SurfaceParameters)
+ManifestorStatus_t      Manifestor_Video_c::GetSurfaceParameters (void** SurfaceParameters )
 {
-    MANIFESTOR_DEBUG("\n");
+    MANIFESTOR_DEBUG ("\n");
 
     UpdateOutputSurfaceDescriptor();
 
@@ -412,26 +400,24 @@ ManifestorStatus_t      Manifestor_Video_c::GetSurfaceParameters(void** SurfaceP
 /// \param Time         Pointer to 64-bit system time variable
 /// \result             Success or fail if no time can be inferred
 //}}}
-ManifestorStatus_t      Manifestor_Video_c::GetNextQueuedManifestationTime(unsigned long long*    Time)
+ManifestorStatus_t      Manifestor_Video_c::GetNextQueuedManifestationTime   (unsigned long long*    Time)
 {
-    unsigned long long          Now             = OS_GetTimeInMicroSeconds();
+    unsigned long long          Now             = OS_GetTimeInMicroSeconds ();
     Rational_t                  Period          = 1000000 / SurfaceDescriptor.FrameRate;
     Rational_t                  Behind;
 
 
     // No buffer on display wait for initial frame if pending
-    OS_LockMutex(&InitialFrameLock);
-
+    OS_LockMutex (&InitialFrameLock);
     if ((BufferOnDisplay == INVALID_BUFFER_ID) && (InitialFrameState == InitialFrameQueued))
-        OS_SemaphoreWait(&InitialFrameDisplayed);
-
-    OS_UnLockMutex(&InitialFrameLock);
+        OS_SemaphoreWait (&InitialFrameDisplayed);
+    OS_UnLockMutex (&InitialFrameLock);
 
     // No buffer on display and initial frame not available (or aborted) - return now plus 4 field periods at 50Hz
     if (BufferOnDisplay == INVALID_BUFFER_ID)
     {
-        *Time           = OS_GetTimeInMicroSeconds() + 80000;
-        MANIFESTOR_DEBUG("Estimate %llu\n", *Time);
+        *Time           = OS_GetTimeInMicroSeconds () + 80000;
+        MANIFESTOR_DEBUG ("Estimate %llu\n", *Time);
         return ManifestorNoError;
     }
 
@@ -440,18 +426,18 @@ ManifestorStatus_t      Manifestor_Video_c::GetNextQueuedManifestationTime(unsig
     {
         unsigned long long      Vsync           = StreamBuffer[BufferOnDisplay].TimeOnDisplay;
 
-        Now             = OS_GetTimeInMicroSeconds();
-
+        Now             = OS_GetTimeInMicroSeconds ();
         if (Vsync == 0)
             Vsync       = Now;
-
         Behind          = (Now - Vsync) / Period;
         Period          = (Behind.IntegerPart() + 5) * Period;          // we want to be at least 4 vsyncs ahead
         *Time           = Vsync + Period.RoundedLongLongIntegerPart();
         NextTimeSlot    = *Time;                                        // Initialize timeslot.
-        MANIFESTOR_DEBUG("Estimate %llu, Time from now %u, Time since Vsync %u, FrameRate %d.%06d\n", *Time,
-                         (unsigned int)(*Time - Now), (unsigned int)(Now - Vsync),
-                         SurfaceDescriptor.FrameRate.IntegerPart(), SurfaceDescriptor.FrameRate.RemainderDecimal());
+        MANIFESTOR_TRACE ("0 - Estimate %llu, Time from now %u, Time since Vsync %u, FrameRate %d.%06d\n", *Time,
+                          (unsigned int)(*Time - Now), (unsigned int)(Now - Vsync),
+                          SurfaceDescriptor.FrameRate.IntegerPart(), SurfaceDescriptor.FrameRate.RemainderDecimal());
+        Behind.Print();
+        Period.Print();
         return ManifestorNoError;
     }
 
@@ -459,33 +445,33 @@ ManifestorStatus_t      Manifestor_Video_c::GetNextQueuedManifestationTime(unsig
     if ((NextTimeSlot != 0ull) && (TimeSlotOnDisplay == 0ull))
     {
         *Time           = NextTimeSlot;
-        MANIFESTOR_DEBUG("Estimate %llu, Time from now %u\n", *Time, (unsigned int)(*Time - Now));
+        MANIFESTOR_TRACE ("1 - Estimate %llu, Time from now %u\n", *Time, (unsigned int)(*Time - Now));
+        Period.Print();
         return ManifestorNoError;
     }
 
     // Latest display time is the next available time slot adjusted by the difference between
     // time current buffer was put on display and time it was supposed to go on display
-    Now         = OS_GetTimeInMicroSeconds();
+    Now         = OS_GetTimeInMicroSeconds ();
     *Time       = NextTimeSlot + (StreamBuffer[BufferOnDisplay].TimeOnDisplay - TimeSlotOnDisplay);
-
     if (*Time < (Now + RoundedLongLongIntegerPart(4 * Period)))
     {
         Behind          = (Now - *Time) / Period;
         Period          = (Behind.IntegerPart() + 5) * Period;        // we want to be at least 4 vsyncs ahead
         *Time          += Period.RoundedLongLongIntegerPart();
     }
-
-    MANIFESTOR_DEBUG("NextTimeSlot %llu, TimeSlotOnDisplay %llu Buff.TimeOnDisplay %llu  Estimate %llu, Now %llu diff %d\n",
-                     NextTimeSlot, TimeSlotOnDisplay, StreamBuffer[BufferOnDisplay].TimeOnDisplay,
-                     *Time, Now, *Time - Now);
+    MANIFESTOR_TRACE ("2 - NextTimeSlot %llu, TimeSlotOnDisplay %llu Buff.TimeOnDisplay %llu  Estimate %llu, Now %llu diff %d\n",
+                      NextTimeSlot, TimeSlotOnDisplay, StreamBuffer[BufferOnDisplay].TimeOnDisplay,
+                      *Time, Now, *Time - Now);
+    Behind.Print();
+    Period.Print();
 
     return ManifestorNoError;
 }
-//}}}
 //{{{  ReleaseQueuedDecodeBuffers
 ManifestorStatus_t      Manifestor_Video_c::ReleaseQueuedDecodeBuffers(void)
 {
-    NextTimeSlot                      = TimeSlotOnDisplay;
+    NextTimeSlot	= TimeSlotOnDisplay;
     return Manifestor_Base_c::ReleaseQueuedDecodeBuffers();
 }
 //}}}
@@ -495,10 +481,9 @@ ManifestorStatus_t      Manifestor_Video_c::ReleaseQueuedDecodeBuffers(void)
 /// \param              Buffer containing frame to be displayed
 /// \result             Success if frame displayed, fail if not displayed or a frame has already been displayed
 //}}}
-ManifestorStatus_t      Manifestor_Video_c::InitialFrame(class Buffer_c*         Buffer)
+ManifestorStatus_t      Manifestor_Video_c::InitialFrame       (class Buffer_c*         Buffer)
 {
     MANIFESTOR_DEBUG("%d\n", __LINE__);
-
     if (InitialFrameState == InitialFramePossible)
     {
         struct StreamBuffer_s*              StreamBuff;
@@ -509,89 +494,80 @@ ManifestorStatus_t      Manifestor_Video_c::InitialFrame(class Buffer_c*        
         unsigned int                        BufferIndex;
         ManifestorStatus_t                  Status;
 
-        AssertComponentState("Manifestor_Video_c::InitialFrame", ComponentRunning);
+        AssertComponentState ("Manifestor_Video_c::InitialFrame", ComponentRunning);
 
-        OS_LockMutex(&BufferLock);
+        OS_LockMutex (&BufferLock);
 
-        BufferStatus                    = Buffer->GetIndex(&BufferIndex);
-
+        BufferStatus                    = Buffer->GetIndex (&BufferIndex);
         if (BufferStatus != BufferNoError)
         {
-            MANIFESTOR_ERROR("Buffer not accessible %x.\n", BufferStatus);
-            OS_UnLockMutex(&BufferLock);
+            MANIFESTOR_ERROR ("Buffer not accessible %x.\n", BufferStatus);
+            OS_UnLockMutex (&BufferLock);
             return ManifestorError;
         }
 
         // Check buffer state
         StreamBuff                      = &StreamBuffer[BufferIndex];
-
         if (StreamBuff->BufferState != BufferStateAvailable)
         {
-            MANIFESTOR_ERROR("Buffer already being manifested %d %d.\n", BufferIndex, StreamBuff->BufferState);
-            OS_UnLockMutex(&BufferLock);
+            MANIFESTOR_ERROR ("Buffer already being manifested %d %d.\n", BufferIndex, StreamBuff->BufferState);
+            OS_UnLockMutex (&BufferLock);
             return ManifestorError;
         }
 
-        BufferStatus                    = Buffer->ObtainMetaDataReference(Player->MetaDataParsedFrameParametersReferenceType, (void**)&FrameParameters);
-
+        BufferStatus                    = Buffer->ObtainMetaDataReference (Player->MetaDataParsedFrameParametersReferenceType, (void**)&FrameParameters);
         if (BufferStatus != BufferNoError)
         {
-            MANIFESTOR_ERROR("Unable to access buffer parsed frame parameters %x.\n", BufferStatus);
-            OS_UnLockMutex(&BufferLock);
+            MANIFESTOR_ERROR ("Unable to access buffer parsed frame parameters %x.\n", BufferStatus);
+            OS_UnLockMutex (&BufferLock);
             return ManifestorError;
         }
 
-        BufferStatus                    = Buffer->ObtainMetaDataReference(Player->MetaDataParsedVideoParametersType, (void**)&VideoParameters);
-
+        BufferStatus                    = Buffer->ObtainMetaDataReference (Player->MetaDataParsedVideoParametersType, (void**)&VideoParameters);
         if (BufferStatus != BufferNoError)
         {
-            MANIFESTOR_ERROR("Unable to access buffer parsed video parameters %x.\n", BufferStatus);
-            OS_UnLockMutex(&BufferLock);
+            MANIFESTOR_ERROR ("Unable to access buffer parsed video parameters %x.\n", BufferStatus);
+            OS_UnLockMutex (&BufferLock);
             return ManifestorError;
         }
 
-        BufferStatus                = Buffer->ObtainMetaDataReference(Player->MetaDataBufferStructureType, (void**)&BufferStructure);
-
+        BufferStatus                = Buffer->ObtainMetaDataReference (Player->MetaDataBufferStructureType, (void**)&BufferStructure);
         if (BufferStatus != BufferNoError)
         {
-            MANIFESTOR_ERROR("Unable to access buffer structure parameters %x.\n", BufferStatus);
-            OS_UnLockMutex(&BufferLock);
+            MANIFESTOR_ERROR ("Unable to access buffer structure parameters %x.\n", BufferStatus);
+            OS_UnLockMutex (&BufferLock);
             return ManifestorError;
         }
 
-        BufferStatus                    = Buffer->ObtainDataReference(NULL, NULL, (void**)(&StreamBuffer[BufferIndex].Data), PhysicalAddress);
+        BufferStatus                    = Buffer->ObtainDataReference (NULL, NULL, (void**)(&StreamBuffer[BufferIndex].Data), PhysicalAddress);
         StreamBuff->BufferClass         = Buffer;
         StreamBuff->OutputTiming        = NULL;
         StreamBuff->EventPending        = false;
 
         // Queue the buffer onto the display
-        Status  = SetDisplayWindows(&VideoParameters->Content);
-
+        Status  = SetDisplayWindows (&VideoParameters->Content);
         if (Status != ManifestorNoError)
         {
-            MANIFESTOR_ERROR("Unable to configure display for stream.\n");
-            OS_UnLockMutex(&BufferLock);
-
+            MANIFESTOR_ERROR ("Unable to configure display for stream.\n");
+            OS_UnLockMutex (&BufferLock);
             if (Status == ManifestorUnplayable)
-                Player->MarkStreamUnPlayable(Stream);
-
+                Player->MarkStreamUnPlayable (Stream);
             return Status;
         }
-
         StreamBuff->DecimateIfAvailable = DecimateIfAvailable;
 
-        if (QueueInitialFrame(BufferIndex, VideoParameters, BufferStructure) != ManifestorNoError)
+        if (QueueInitialFrame (BufferIndex, VideoParameters, BufferStructure) != ManifestorNoError)
         {
-            MANIFESTOR_ERROR("Unable to queue initial buffer to display.\n");
-            OS_UnLockMutex(&BufferLock);
+            MANIFESTOR_ERROR ("Unable to queue initial buffer to display.\n");
+            OS_UnLockMutex (&BufferLock);
             return ManifestorError;
         }
 
-        memset((void*)&StreamDisplayParameters, 0, sizeof(struct VideoDisplayParameters_s));
+        memset ((void*)&StreamDisplayParameters, 0, sizeof (struct VideoDisplayParameters_s));
         StreamDisplayParameters.PixelAspectRatio    = 0;
         StreamDisplayParameters.FrameRate           = 0;
 
-        OS_UnLockMutex(&BufferLock);
+        OS_UnLockMutex (&BufferLock);
         return ManifestorNoError;
     }
 
@@ -605,7 +581,7 @@ ManifestorStatus_t      Manifestor_Video_c::InitialFrame(class Buffer_c*        
 /// \param              Buffer containing decoded frame witha attached display meta data
 /// \result             Success if frame displayed, fail if not displayed
 //}}}
-ManifestorStatus_t      Manifestor_Video_c::_QueueDecodeBuffer(class Buffer_c*        Buffer)
+ManifestorStatus_t      Manifestor_Video_c::_QueueDecodeBuffer   (class Buffer_c*        Buffer)
 {
     struct StreamBuffer_s*              StreamBuff;
     BufferStatus_t                      BufferStatus;
@@ -617,64 +593,56 @@ ManifestorStatus_t      Manifestor_Video_c::_QueueDecodeBuffer(class Buffer_c*  
 
     //MANIFESTOR_DEBUG("\n");
 
-    BufferStatus                = Buffer->GetIndex(&BufferIndex);
-
+    BufferStatus                = Buffer->GetIndex (&BufferIndex);
     if (BufferStatus != BufferNoError)
     {
-        MANIFESTOR_ERROR("Buffer not accessible %x.\n", BufferStatus);
+        MANIFESTOR_ERROR ("Buffer not accessible %x.\n", BufferStatus);
         return ManifestorError;
     }
 
     // Check buffer state
     StreamBuff                  = &StreamBuffer[BufferIndex];
-
     if ((StreamBuff->BufferState != BufferStateAvailable) && (StreamBuff->BufferState != BufferStateMultiQueue))
     {
-        MANIFESTOR_ERROR("Buffer already being manifested %d %d.\n", BufferIndex, StreamBuff->BufferState);
+        MANIFESTOR_ERROR ("Buffer already being manifested %d %d.\n", BufferIndex, StreamBuff->BufferState);
         return ManifestorError;
     }
 
-    BufferStatus                = Buffer->ObtainMetaDataReference(Player->MetaDataParsedFrameParametersReferenceType, (void**)&FrameParameters);
-
+    BufferStatus                = Buffer->ObtainMetaDataReference (Player->MetaDataParsedFrameParametersReferenceType, (void**)&FrameParameters);
     if (BufferStatus != BufferNoError)
     {
-        MANIFESTOR_ERROR("Unable to access buffer parsed frame parameters %x.\n", BufferStatus);
+        MANIFESTOR_ERROR ("Unable to access buffer parsed frame parameters %x.\n", BufferStatus);
         return ManifestorError;
     }
-
-    BufferStatus                = Buffer->ObtainMetaDataReference(Player->MetaDataParsedVideoParametersType, (void**)&VideoParameters);
-
+    BufferStatus                = Buffer->ObtainMetaDataReference (Player->MetaDataParsedVideoParametersType, (void**)&VideoParameters);
     if (BufferStatus != BufferNoError)
     {
-        MANIFESTOR_ERROR("Unable to access buffer parsed video parameters %x.\n", BufferStatus);
+        MANIFESTOR_ERROR ("Unable to access buffer parsed video parameters %x.\n", BufferStatus);
         return ManifestorError;
     }
 
     Buffer->DumpToRelayFS(ST_RELAY_TYPE_DECODED_VIDEO_BUFFER, ST_RELAY_SOURCE_VIDEO_MANIFESTOR + RelayfsIndex, (void*)Player);
 
-    BufferStatus                = Buffer->ObtainMetaDataReference(Player->MetaDataVideoOutputTimingType, (void**)&VideoOutputTiming);
-
+    BufferStatus                = Buffer->ObtainMetaDataReference (Player->MetaDataVideoOutputTimingType, (void**)&VideoOutputTiming);
     if (BufferStatus != BufferNoError)
     {
-        MANIFESTOR_ERROR("Unable to access buffer video output timing parameters %x.\n", BufferStatus);
+        MANIFESTOR_ERROR ("Unable to access buffer video output timing parameters %x.\n", BufferStatus);
         return ManifestorError;
     }
 
-    BufferStatus                = Buffer->ObtainMetaDataReference(Player->MetaDataBufferStructureType, (void**)&BufferStructure);
-
+    BufferStatus                = Buffer->ObtainMetaDataReference (Player->MetaDataBufferStructureType, (void**)&BufferStructure);
     if (BufferStatus != BufferNoError)
     {
-        MANIFESTOR_ERROR("Unable to access buffer structure parameters %x.\n", BufferStatus);
+        MANIFESTOR_ERROR ("Unable to access buffer structure parameters %x.\n", BufferStatus);
         return ManifestorError;
     }
 
-    BufferStatus                = Buffer->ObtainDataReference(NULL, NULL, (void**)(&StreamBuffer[BufferIndex].Data), PhysicalAddress);
+    BufferStatus                = Buffer->ObtainDataReference (NULL, NULL, (void**)(&StreamBuffer[BufferIndex].Data), PhysicalAddress);
 
     StreamBuff->BufferClass     = Buffer;
     StreamBuff->OutputTiming    = VideoOutputTiming;
     StreamBuff->EventPending    = EventPending;
     EventPending                = false;
-
     if (StreamBuff->BufferState == BufferStateAvailable)
         StreamBuff->BufferState = BufferStateNotQueued;
 
@@ -685,40 +653,33 @@ ManifestorStatus_t      Manifestor_Video_c::_QueueDecodeBuffer(class Buffer_c*  
 
         // Some events may have been queued so we need to insert a dummy event into the event queue
         DisplayEventRequested           = 0;
-        Status                          = SetDisplayWindows(&VideoParameters->Content);
-
+        Status                          = SetDisplayWindows (&VideoParameters->Content);
         if (Status != ManifestorNoError)
         {
-            MANIFESTOR_ERROR("Unable to configure display for stream.\n");
-
+            MANIFESTOR_ERROR ("Unable to configure display for stream.\n");
             if (StreamBuff->BufferState == BufferStateNotQueued)
                 StreamBuff->BufferState = BufferStateAvailable;
-
             if (Status == ManifestorUnplayable)
-                Player->MarkStreamUnPlayable(Stream);
-
+                Player->MarkStreamUnPlayable (Stream);
             return Status;
         }
-
         StreamBuff->DecimateIfAvailable = DecimateIfAvailable;
 
         //memcpy ((void*)&StreamPanScan, (void*)&VideoParameters->PanScan, sizeof(struct PanScan_s));
-        StreamBuff->TimeSlot            = ValidTime(VideoOutputTiming->SystemPlaybackTime) ?
-                                          VideoOutputTiming->SystemPlaybackTime :
-                                          NextTimeSlot;
-
+        StreamBuff->TimeSlot            = ValidTime    (VideoOutputTiming->SystemPlaybackTime) ?
+                                                                VideoOutputTiming->SystemPlaybackTime :
+                                                                NextTimeSlot;
         StreamBuff->NativePlaybackTime  = FrameParameters->NativePlaybackTime;
 
-        Status                          = QueueBuffer(BufferIndex,
-                                          FrameParameters,
-                                          VideoParameters,
-                                          VideoOutputTiming,
-                                          BufferStructure);
-
+        Status                          = QueueBuffer  (BufferIndex,
+                                                        FrameParameters,
+                                                        VideoParameters,
+                                                        VideoOutputTiming,
+                                                        BufferStructure);
         if (Status != ManifestorNoError)
         {
             NotQueuedBufferCount++;
-            //MANIFESTOR_ERROR ("Failed to queue buffer %d to display.\n", BufferIndex);
+            MANIFESTOR_ERROR ("Failed to queue buffer %d to display.\n", BufferIndex);
             DisplayEventRequested       = 0;
             EventPending                = false;
             //return ManifestorNoError;
@@ -729,7 +690,6 @@ ManifestorStatus_t      Manifestor_Video_c::_QueueDecodeBuffer(class Buffer_c*  
             QueuedBufferCount++;
             LastQueuedBuffer            = BufferIndex;
         }
-
         NextTimeSlot                    = StreamBuff->TimeSlot + VideoOutputTiming->ExpectedDurationTime;
     }
     else
@@ -748,15 +708,15 @@ ManifestorStatus_t      Manifestor_Video_c::_QueueDecodeBuffer(class Buffer_c*  
 /// \param              Buffer containing decoded frame witha attached display meta data
 /// \result             Success if frame displayed, fail if not displayed
 //}}}
-ManifestorStatus_t      Manifestor_Video_c::QueueDecodeBuffer(class Buffer_c*        Buffer)
+ManifestorStatus_t      Manifestor_Video_c::QueueDecodeBuffer   (class Buffer_c*        Buffer)
 {
     ManifestorStatus_t  Status;
 
-    AssertComponentState("Manifestor_Video_c::QueueDecodeBuffer", ComponentRunning);
+    AssertComponentState ("Manifestor_Video_c::QueueDecodeBuffer", ComponentRunning);
 
-    OS_LockMutex(&BufferLock);
-    Status      = _QueueDecodeBuffer(Buffer);
-    OS_UnLockMutex(&BufferLock);
+    OS_LockMutex (&BufferLock);
+    Status      = _QueueDecodeBuffer (Buffer);
+    OS_UnLockMutex (&BufferLock);
 
     return Status;
 }
@@ -767,7 +727,7 @@ ManifestorStatus_t      Manifestor_Video_c::QueueDecodeBuffer(class Buffer_c*   
 ///             yet queued returns ANY_BUFFER_ID
 /// \return     Buffer index of last buffer sent for display
 //}}}
-unsigned int    Manifestor_Video_c::GetBufferId(void)
+unsigned int    Manifestor_Video_c::GetBufferId    (void)
 {
     return LastQueuedBuffer;
 }
@@ -778,15 +738,14 @@ unsigned int    Manifestor_Video_c::GetBufferId(void)
 /// \param Pts          Pointer to Pts variable
 /// \return             Success if Pts value is available
 //}}}
-ManifestorStatus_t Manifestor_Video_c::GetNativeTimeOfCurrentlyManifestedFrame(unsigned long long* Time)
+ManifestorStatus_t Manifestor_Video_c::GetNativeTimeOfCurrentlyManifestedFrame (unsigned long long* Time)
 {
-    MANIFESTOR_DEBUG("\n");
+    MANIFESTOR_DEBUG ("\n");
 
     *Time       = PtsOnDisplay;
-
     if (PtsOnDisplay == INVALID_TIME)
     {
-        MANIFESTOR_ERROR("No buffer on display.\n");
+        MANIFESTOR_ERROR ("No buffer on display.\n");
         return ManifestorError;
     }
 
@@ -798,14 +757,14 @@ ManifestorStatus_t Manifestor_Video_c::GetNativeTimeOfCurrentlyManifestedFrame(u
 /// \brief              Specify output window
 /// \param              The coordinates and size of desired window
 //}}}
-ManifestorStatus_t   Manifestor_Video_c::SetOutputWindow(unsigned int            X,
-        unsigned int            Y,
-        unsigned int            Width,
-        unsigned int            Height)
+ManifestorStatus_t   Manifestor_Video_c::SetOutputWindow       (unsigned int            X,
+                                                                unsigned int            Y,
+                                                                unsigned int            Width,
+                                                                unsigned int            Height)
 {
-    OS_LockMutex(&BufferLock);
+    OS_LockMutex (&BufferLock);
 
-    if ((X == 0) && (Y == 0) && (Width == 0) && (Height == 0))
+    if( (X == 0) && (Y == 0) && (Width == 0) && (Height == 0) )
     {
         SurfaceWindow.X         = 0;
         SurfaceWindow.Y         = 0;
@@ -816,13 +775,10 @@ ManifestorStatus_t   Manifestor_Video_c::SetOutputWindow(unsigned int           
     {
         if (X > SurfaceDescriptor.DisplayWidth)
             X                   = 0;
-
         if (Y > SurfaceDescriptor.DisplayHeight)
             Y                   = 0;
-
         if ((X + Width) > SurfaceDescriptor.DisplayWidth)
             Width               = SurfaceDescriptor.DisplayWidth - X;
-
         if ((Y + Height) > SurfaceDescriptor.DisplayHeight)
             Height              = SurfaceDescriptor.DisplayHeight - Y;
 
@@ -833,20 +789,18 @@ ManifestorStatus_t   Manifestor_Video_c::SetOutputWindow(unsigned int           
     }
 
     Step                        = 0;
-    Steps                       = Player->PolicyValue(Playback, Stream, PolicyVideoOutputWindowResizeSteps);
-
+    Steps                       = Player->PolicyValue (Playback, Stream, PolicyVideoOutputWindowResizeSteps);
     if (Steps > MAX_RESIZE_STEPS)
         Steps                   = MAX_RESIZE_STEPS;
-
     Stepping                    = Steps > 1;
 
-    memset((void*)&StreamDisplayParameters, 0, sizeof(struct VideoDisplayParameters_s));
+    memset ((void*)&StreamDisplayParameters, 0, sizeof (struct VideoDisplayParameters_s));
     StreamDisplayParameters.PixelAspectRatio    = 0;
     StreamDisplayParameters.FrameRate           = 0;
 
-    RequeueBufferOnDisplayIfNecessary();
+    RequeueBufferOnDisplayIfNecessary ();
 
-    OS_UnLockMutex(&BufferLock);
+    OS_UnLockMutex (&BufferLock);
     MANIFESTOR_DEBUG("%dx%d at %d,%d (Steps(%d) = %d)\n", Width, Height, X, Y, Stepping, Steps);
 
     return ManifestorNoError;
@@ -857,10 +811,10 @@ ManifestorStatus_t   Manifestor_Video_c::SetOutputWindow(unsigned int           
 /// \brief              Retrieve output window
 /// \param              Places to save coordinates and size of desired window
 //}}}
-ManifestorStatus_t   Manifestor_Video_c::GetOutputWindow(unsigned int*           X,
-        unsigned int*           Y,
-        unsigned int*           Width,
-        unsigned int*           Height)
+ManifestorStatus_t   Manifestor_Video_c::GetOutputWindow       (unsigned int*           X,
+                                                                unsigned int*           Y,
+                                                                unsigned int*           Width,
+                                                                unsigned int*           Height)
 {
 
     *X          = SurfaceWindow.X;
@@ -878,17 +832,16 @@ ManifestorStatus_t   Manifestor_Video_c::GetOutputWindow(unsigned int*          
 /// \brief              Specify input crop
 /// \param              The coordinates and size of desired window
 //}}}
-ManifestorStatus_t   Manifestor_Video_c::SetInputWindow(unsigned int            X,
-        unsigned int            Y,
-        unsigned int            Width,
-        unsigned int            Height)
+ManifestorStatus_t   Manifestor_Video_c::SetInputWindow        (unsigned int            X,
+                                                                unsigned int            Y,
+                                                                unsigned int            Width,
+                                                                unsigned int            Height)
 {
     ManifestorStatus_t  Status;
 
     MANIFESTOR_DEBUG("%dx%d at %d,%d\n", Width, Height, X, Y);
 
-    Status      = CheckInputDimensions(Width, Height);
-
+    Status      = CheckInputDimensions (Width, Height);
     if (Status != ManifestorNoError)
     {
         MANIFESTOR_ERROR("Unsupported window dimensions %dx%d\n", Width, Height);
@@ -901,7 +854,7 @@ ManifestorStatus_t   Manifestor_Video_c::SetInputWindow(unsigned int            
     InputCrop.Height    = Height;
 
 
-    memset((void*)&StreamDisplayParameters, 0, sizeof(struct VideoDisplayParameters_s));
+    memset ((void*)&StreamDisplayParameters, 0, sizeof (struct VideoDisplayParameters_s));
     StreamDisplayParameters.PixelAspectRatio    = 0;
     StreamDisplayParameters.FrameRate           = 0;
 
@@ -914,7 +867,7 @@ ManifestorStatus_t   Manifestor_Video_c::SetInputWindow(unsigned int            
 /// \param Framecount   Pointer to FrameCount variable
 /// \return             Success
 //}}}
-ManifestorStatus_t Manifestor_Video_c::GetFrameCount(unsigned long long* FrameCount)
+ManifestorStatus_t Manifestor_Video_c::GetFrameCount (unsigned long long* FrameCount)
 {
     //MANIFESTOR_DEBUG ("\n");
 
@@ -928,7 +881,7 @@ ManifestorStatus_t Manifestor_Video_c::GetFrameCount(unsigned long long* FrameCo
 //{{{  doxynote
 /// \brief              Requeue visible buffer if size has changed while paused
 //}}}
-ManifestorStatus_t   Manifestor_Video_c::RequeueBufferOnDisplayIfNecessary(void)
+ManifestorStatus_t   Manifestor_Video_c::RequeueBufferOnDisplayIfNecessary (void)
 {
     Rational_t                          Speed;
     PlayDirection_t                     Direction;
@@ -940,8 +893,7 @@ ManifestorStatus_t   Manifestor_Video_c::RequeueBufferOnDisplayIfNecessary(void)
 
     MANIFESTOR_DEBUG("LastQueuedBuffer = %d\n", LastQueuedBuffer);
     BufferIndex                          = INVALID_INDEX;
-    Player->GetPlaybackSpeed(Playback, &Speed, &Direction);
-
+    Player->GetPlaybackSpeed (Playback, &Speed, &Direction);
     if (Speed != 0)
         return ManifestorNoError;
 
@@ -950,8 +902,7 @@ ManifestorStatus_t   Manifestor_Video_c::RequeueBufferOnDisplayIfNecessary(void)
         if ((StreamBuffer[i].BufferState == BufferStateQueued) || (StreamBuffer[i].BufferState == BufferStateMultiQueue))
         {
             MANIFESTOR_DEBUG("Buffer %d queued state = %x QueueCount = %d Timeslot = %llu\n",
-                             StreamBuffer[i].BufferIndex, StreamBuffer[i].BufferState, StreamBuffer[i].QueueCount, StreamBuffer[i].TimeSlot);
-
+                StreamBuffer[i].BufferIndex, StreamBuffer[i].BufferState, StreamBuffer[i].QueueCount, StreamBuffer[i].TimeSlot);
             if (StreamBuffer[i].TimeSlot > TimeSlot)
             {
                 TimeSlot                = StreamBuffer[i].TimeSlot;
@@ -962,13 +913,13 @@ ManifestorStatus_t   Manifestor_Video_c::RequeueBufferOnDisplayIfNecessary(void)
 
     if (BufferIndex != INVALID_INDEX)
     {
-        AssertComponentState("Manifestor_Video_c::RequeueBufferOnDisplayIfNecessary", ComponentRunning);
+        AssertComponentState ("Manifestor_Video_c::RequeueBufferOnDisplayIfNecessary", ComponentRunning);
 
         MANIFESTOR_DEBUG("Stream Buffer %d selected for requeue, queuecount = %d\n", BufferIndex, StreamBuffer[BufferIndex].QueueCount);
         //Stepping                                        = false;
         //Steps                                           = 1;
         StreamBuffer[BufferIndex].BufferState           = BufferStateMultiQueue;
-        Status                                          = _QueueDecodeBuffer(StreamBuffer[BufferIndex].BufferClass);
+        Status                                          = _QueueDecodeBuffer   (StreamBuffer[BufferIndex].BufferClass);
         RequeuedBufferIndex                             = BufferIndex;
     }
 
@@ -1043,7 +994,7 @@ ManifestorStatus_t   Manifestor_Video_c::RequeueBufferOnDisplayIfNecessary(void)
 ///                                      720 * 4 / 3     = 960   * 9 / 16    = 540
 ///                                  Result: black bars for 90 at sides
 //}}}
-ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayParameters_s*   VideoParameters)
+ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayParameters_s*   VideoParameters)
 {
     int                         SourceX,                SourceY;
     int                         SourceWidth,            SourceHeight;
@@ -1063,15 +1014,15 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayPara
     StreamDisplayParameters.FrameRate   = VideoParameters->FrameRate;
 
     if (!Stepping &&
-            (Player->PolicyValue(Playback, Stream, PolicyDisplayAspectRatio)         == DisplayAspectRatioPolicyValue)  &&
-            (Player->PolicyValue(Playback, Stream, PolicyDisplayFormat)              == DisplayFormatPolicyValue)       &&
-            (Player->PolicyValue(Playback, Stream, PolicyPixelAspectRatioCorrection) == PixelAspectRatioCorrectionPolicyValue) &&
-            (memcmp((void*)&StreamDisplayParameters, (void*)VideoParameters, sizeof(struct VideoDisplayParameters_s)) == 0))
+        (Player->PolicyValue (Playback, Stream, PolicyDisplayAspectRatio)         == DisplayAspectRatioPolicyValue)  &&
+        (Player->PolicyValue (Playback, Stream, PolicyDisplayFormat)              == DisplayFormatPolicyValue)       &&
+        (Player->PolicyValue (Playback, Stream, PolicyPixelAspectRatioCorrection) == PixelAspectRatioCorrectionPolicyValue) &&
+        (memcmp ((void*)&StreamDisplayParameters, (void*)VideoParameters, sizeof(struct VideoDisplayParameters_s)) == 0))
         return ManifestorNoError;
 
-    DisplayAspectRatioPolicyValue       = Player->PolicyValue(Playback, Stream, PolicyDisplayAspectRatio);
-    DisplayFormatPolicyValue            = Player->PolicyValue(Playback, Stream, PolicyDisplayFormat);
-    PixelAspectRatioCorrectionPolicyValue = Player->PolicyValue(Playback, Stream, PolicyPixelAspectRatioCorrection);
+    DisplayAspectRatioPolicyValue       = Player->PolicyValue (Playback, Stream, PolicyDisplayAspectRatio);
+    DisplayFormatPolicyValue            = Player->PolicyValue (Playback, Stream, PolicyDisplayFormat);
+    PixelAspectRatioCorrectionPolicyValue = Player->PolicyValue (Playback, Stream, PolicyPixelAspectRatioCorrection);
 
     //MANIFESTOR_DEBUG("Size %dx%d, Display %dx%d, Prog %d, Scan %d, Rate %d.%06d, PAR %d.%06d\n",
     //        StreamDisplayParameters.Width, StreamDisplayParameters.Height,
@@ -1086,7 +1037,7 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayPara
     // Check whether the display width/height overrides aspect ratio info (for 4x3 display only)
     // Aspect ratio information is completely worked out by the frame parser so is no longer used here
     if (0 && ((VideoParameters->DisplayWidth != 0) || (VideoParameters->DisplayHeight != 0)) &&
-            (DisplayAspectRatioPolicyValue == PolicyValue4x3))
+       (DisplayAspectRatioPolicyValue == PolicyValue4x3))
     {
         SourceWidth             = (int)VideoParameters->DisplayWidth;
         SourceHeight            = (int)VideoParameters->DisplayHeight;
@@ -1097,13 +1048,11 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayPara
     {
         if (InputCrop.X > VideoParameters->Width)
             InputCrop.X         = 0;
-
         if (InputCrop.Y > VideoParameters->Height)
             InputCrop.Y         = VideoParameters->Height;
 
         if ((InputCrop.X + InputCrop.Width) > VideoParameters->Width)
             InputCrop.Width     = VideoParameters->Width - InputCrop.X;
-
         if ((InputCrop.Y + InputCrop.Height) > VideoParameters->Height)
             InputCrop.Height    = VideoParameters->Height - InputCrop.Y;
 
@@ -1119,7 +1068,6 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayPara
         SourceWidth             = (int)VideoParameters->Width;
         SourceHeight            = (int)VideoParameters->Height;
     }
-
     //{{{  work out initial output window guess
     if (!Stepping || (++Step == Steps))
     {
@@ -1142,7 +1090,6 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayPara
         DestWidth               = ((((OldSurfaceWindow.Width  * (Steps - Step)) + (SurfaceWindow.Width  * Step)) / Steps) + 1) & 0xfffffffe;  // Force width to even number of pixels
         DestHeight              = ((OldSurfaceWindow.Height * (Steps - Step)) + (SurfaceWindow.Height * Step)) / Steps;
     }
-
     //}}}
 
     PictureAspectRatio          = Rational_t(SourceWidth, SourceHeight) * VideoParameters->PixelAspectRatio;
@@ -1153,18 +1100,18 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayPara
         // Prints have been changed to reduce time taken to do them and lock interrupts for shorter periods as
         // on occasion this has effected our AV sync calculations on startup.
 
-        report(severity_info, "Incoming Source %dx%d @ %d,%d\n",
-               VideoParameters->Width, VideoParameters->Height,
-               SourceX, SourceY);
+        report(severity_info,"Incoming Source %dx%d @ %d,%d\n",
+             VideoParameters->Width, VideoParameters->Height,
+             SourceX, SourceY);
 
-        report(severity_info, "Display Size %dx%d @ %d,%d\n",
-               DestWidth, DestHeight,
-               DestX, DestY);
+        report(severity_info,"Display Size %dx%d @ %d,%d\n",
+             DestWidth, DestHeight,
+             DestX, DestY);
 
-        report(severity_info, "%s Content, FrameRate %d.%02d, PixelAspectRatio %d.%02d\n",
-               VideoParameters->Progressive ? "Progressive" : "Interlaced",
-               VideoParameters->FrameRate.IntegerPart(), VideoParameters->FrameRate.RemainderDecimal(),
-               VideoParameters->PixelAspectRatio.IntegerPart(), VideoParameters->PixelAspectRatio.RemainderDecimal());
+        report(severity_info,"%s Content, FrameRate %d.%02d, PixelAspectRatio %d.%02d\n",
+            VideoParameters->Progressive ? "Progressive" : "Interlaced",
+            VideoParameters->FrameRate.IntegerPart(), VideoParameters->FrameRate.RemainderDecimal(),
+            VideoParameters->PixelAspectRatio.IntegerPart(), VideoParameters->PixelAspectRatio.RemainderDecimal());
         /*
         MANIFESTOR_DEBUG("Incoming Source %dx%d (%dx%d), at %d,%d, Dest %dx%d at %d,%d\n",
             VideoParameters->Width, VideoParameters->Height,
@@ -1178,10 +1125,9 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayPara
             VideoParameters->VideoFullRange, VideoParameters->ColourMatrixCoefficients );
         */
     }
-
     if ((SourceWidth > MAX_SUPPORTED_VIDEO_CONTENT_WIDTH)  | (SourceHeight > MAX_SUPPORTED_VIDEO_CONTENT_HEIGHT))
     {
-        MANIFESTOR_ERROR("Infeasible source dimensions %dx%d\n", SourceWidth, SourceHeight);
+        MANIFESTOR_ERROR ("Infeasible source dimensions %dx%d\n", SourceWidth, SourceHeight);
         return ManifestorUnplayable;
     }
 
@@ -1195,10 +1141,10 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayPara
     }
 
     //if ((EventMask & EventSourceSizeChangeManifest) != 0)       // Create an event record indicating that size/shape has changed
-    /* #warning "Not checking EventMask in SetDisplayWindows" */
+/* #warning "Not checking EventMask in SetDisplayWindows" */
     if ((VideoParameters->Width != StreamDisplayParameters.Width) || (VideoParameters->Height != StreamDisplayParameters.Height) ||
-            (VideoParameters->DisplayWidth != StreamDisplayParameters.DisplayWidth) || (VideoParameters->DisplayHeight != StreamDisplayParameters.DisplayHeight) ||
-            (VideoParameters->PixelAspectRatio != StreamDisplayParameters.PixelAspectRatio))
+        (VideoParameters->DisplayWidth != StreamDisplayParameters.DisplayWidth) || (VideoParameters->DisplayHeight != StreamDisplayParameters.DisplayHeight) ||
+        (VideoParameters->PixelAspectRatio != StreamDisplayParameters.PixelAspectRatio))
     {
         DisplayEventRequested              |= EventSourceSizeChangeManifest;
         DisplayEvent.Value[0].UnsignedInt   = SourceWidth;
@@ -1209,8 +1155,7 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayPara
         DisplayEvent.Rational               = VideoParameters->PixelAspectRatio;
 #endif
     }
-
-    memcpy((void*)&StreamDisplayParameters, (void*)VideoParameters, sizeof(struct VideoDisplayParameters_s));
+    memcpy ((void*)&StreamDisplayParameters, (void*)VideoParameters, sizeof (struct VideoDisplayParameters_s));
 
     if (DisplayFormatPolicyValue != PolicyValueFullScreen)
     {
@@ -1231,7 +1176,6 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayPara
                     DestHeight = (DestHeight * wRatio) / pRatio;
 #else
                     Rational_t   NewHeight       = (DestHeight * WindowAspectRatio) / PictureAspectRatio;
-                    DestHeight                   = NewHeight.IntegerPart();
 #endif
                     DestY                        = DestY + ((SurfaceWindow.Height - DestHeight) >> 1);
 
@@ -1249,7 +1193,7 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayPara
 
                     DestWidth = (DestWidth * pRatio) / wRatio;
 #else
-                    Rational_t   NewWidth        = (DestWidth * PictureAspectRatio) / WindowAspectRatio;
+										Rational_t   NewWidth        = (DestWidth * PictureAspectRatio) / WindowAspectRatio;
                     DestWidth                    = NewWidth.IntegerPart();
 #endif
                     DestX                        = DestX + ((SurfaceWindow.Width - DestWidth) >> 1);
@@ -1259,52 +1203,51 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayPara
             }
             else
             {
-                if (PictureAspectRatio > WindowAspectRatio)
-                {
-                    // Picture is wider than display surface so must chop off edges
-                    int          OldWidth        = SourceWidth;
+               if (PictureAspectRatio > WindowAspectRatio)
+               {
+                   // Picture is wider than display surface so must chop off edges
+                   int          OldWidth        = SourceWidth;
 #ifdef __TDT__
-                    Rational_t pRatioR = PictureAspectRatio * 1000;
-                    int pRatio = pRatioR.IntegerPart();
+                   Rational_t pRatioR = PictureAspectRatio * 1000;
+                   int pRatio = pRatioR.IntegerPart();
 
-                    Rational_t wRatioR = WindowAspectRatio * 1000;
-                    int wRatio = wRatioR.IntegerPart();
+                   Rational_t wRatioR = WindowAspectRatio * 1000;
+                   int wRatio = wRatioR.IntegerPart();
 
-                    SourceWidth = (SourceWidth * wRatio) / pRatio;
+                   SourceWidth = (SourceWidth * wRatio) / pRatio;
 #else
-                    Rational_t   NewWidth        = (SourceWidth * WindowAspectRatio) / PictureAspectRatio;
-                    SourceWidth                  = NewWidth.IntegerPart();
+                   Rational_t   NewWidth        = (SourceWidth * WindowAspectRatio) / PictureAspectRatio;
+                   SourceWidth                  = NewWidth.IntegerPart();
 #endif
-                    SourceX                      = SourceX + ((OldWidth - SourceWidth) >> 1);
+                   SourceX                      = SourceX + ((OldWidth - SourceWidth) >> 1);
 
-                    MANIFESTOR_ERROR("check3: SourceWidth=%d SourceX=%d\n", SourceWidth, SourceX);
-                }
-                else
-                {
-                    // Picture is taller than display surface so must chop off top and bottom
-                    int          OldHeight       = SourceHeight;
+                   MANIFESTOR_ERROR("check3: SourceWidth=%d SourceX=%d\n", SourceWidth, SourceX);
+               }
+               else
+               {
+                   // Picture is taller than display surface so must chop off top and bottom
+                   int          OldHeight       = SourceHeight;
 #ifdef __TDT__
-                    Rational_t pRatioR = PictureAspectRatio * 1000;
-                    int pRatio = pRatioR.IntegerPart();
+                   Rational_t pRatioR = PictureAspectRatio * 1000;
+                   int pRatio = pRatioR.IntegerPart();
 
-                    Rational_t wRatioR = WindowAspectRatio * 1000;
-                    int wRatio = wRatioR.IntegerPart();
+                   Rational_t wRatioR = WindowAspectRatio * 1000;
+                   int wRatio = wRatioR.IntegerPart();
 
-                    SourceHeight = (SourceHeight * pRatio) / wRatio;
+                   SourceHeight = (SourceHeight * pRatio) / wRatio;
 #else
-                    Rational_t   NewHeight       = (SourceHeight * PictureAspectRatio) / WindowAspectRatio;
-                    SourceHeight                 = NewHeight.IntegerPart();
+                   Rational_t   NewHeight       = (SourceHeight * PictureAspectRatio) / WindowAspectRatio;
+                   SourceHeight                 = NewHeight.IntegerPart();
 #endif
-                    SourceY                      = SourceY + ((OldHeight - SourceHeight) >> 1);
+                   SourceY                      = SourceY + ((OldHeight - SourceHeight) >> 1);
 
-                    MANIFESTOR_ERROR("check4: SourceHeight=%d SourceY=%d\n", SourceHeight, SourceY);
-                }
+                   MANIFESTOR_ERROR("check4: SourceHeight=%d SourceY=%d\n", SourceHeight, SourceY);
+               }
             }
         }
     }
 
 #if defined (CROP_TOP_FEW_LINES)
-
     if ((SourceHeight > DestHeight) && ((SourceHeight - DestHeight) < 16))
     {
         // if we have ended up with the source being very slightly larger than the destination we should
@@ -1324,7 +1267,6 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayPara
         SourceY         += 4;
         SourceHeight    -= 8;
     }
-
 #endif
 
     if (SourceX < 0)
@@ -1338,7 +1280,6 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayPara
         SourceX         = 0;
         SourceWidth    -= (Shift + Shift);
     }
-
     if (SourceY < 0)
     {
         int  Shift, Height;
@@ -1356,9 +1297,9 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayPara
     //
 
     if ((OutputWindow.X      != (unsigned int)DestX) ||
-            (OutputWindow.Y      != (unsigned int)DestY) ||
-            (OutputWindow.Width  != (unsigned int)DestWidth) ||
-            (OutputWindow.Height != (unsigned int)DestHeight))
+        (OutputWindow.Y      != (unsigned int)DestY) ||
+        (OutputWindow.Width  != (unsigned int)DestWidth) ||
+        (OutputWindow.Height != (unsigned int)DestHeight))
     {
         DisplayEventRequested              |= EventOutputSizeChangeManifest;
     }
@@ -1378,31 +1319,25 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayPara
     // Decide whether the display requires scaling/cropping or not
     DecimateIfAvailable                 = false;
 
-#if 0
-
     // Hm why is here not the decimate value used from havana_stream ?
     // Lets set it depending on the value from havana_stream
-    if (OutputWindow.Height > 576 || OutputWindow.Height < 425)
+	if(OutputWindow.Height > 576 || OutputWindow.Height < 425)
     {
-        int decimate = Player->PolicyValue(Playback, Stream, PolicyDecimateDecoderOutput);
-
+        int decimate = Player->PolicyValue (Playback, Stream, PolicyDecimateDecoderOutput);
         if (decimate == PolicyValueDecimateDecoderOutputDisabled)
             DecimateIfAvailable = false;
         else
             DecimateIfAvailable = true;
     }
 
-#endif
 #if defined (CROP_INPUT_WHEN_DECIMATION_NEEDED_BUT_NOT_AVAILABLE)
-
-    if ((Player->PolicyValue(Playback, Stream, PolicyDecimateDecoderOutput) != PolicyValueDecimateDecoderOutputDisabled) &&
-            ((SourceWidth > (DestWidth * MAX_SCALING_FACTOR)) || (SourceHeight > (DestHeight * MAX_SCALING_FACTOR))))
+    if ((Player->PolicyValue (Playback, Stream, PolicyDecimateDecoderOutput) != PolicyValueDecimateDecoderOutputDisabled) &&
+       ((SourceWidth > (DestWidth * MAX_SCALING_FACTOR)) || (SourceHeight > (DestHeight * MAX_SCALING_FACTOR))))
     {
         // Decimation is necessary but may not be available. Crop out a section from the middle of
         // the source with the same aspect ration as previously determined.
         Rational_t          WidthRatio  = Rational_t (SourceWidth, DestWidth * MAX_SCALING_FACTOR);
         Rational_t          HeightRatio = Rational_t (SourceHeight, DestHeight * MAX_SCALING_FACTOR);
-
         if (WidthRatio > HeightRatio)
         {
             unsigned int NewHeight      = (SourceHeight * (DestWidth * MAX_SCALING_FACTOR)) / SourceWidth;
@@ -1422,15 +1357,6 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayPara
 
         DecimateIfAvailable             = true;
     }
-
-#else
-
-    if ((Player->PolicyValue(Playback, Stream, PolicyDecimateDecoderOutput) != PolicyValueDecimateDecoderOutputDisabled) &&
-            ((SourceWidth > (DestWidth * MAX_SCALING_FACTOR)) || (SourceHeight > (DestHeight * MAX_SCALING_FACTOR))))
-    {
-        DecimateIfAvailable             = true;
-    }
-
 #endif
 
     CroppedWindow.X                     = SourceX * INPUT_WINDOW_SCALE_FACTOR;
@@ -1439,23 +1365,23 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows(struct VideoDisplayPara
     CroppedWindow.Height                = SourceHeight;
 
     if (!Stepping)
-        MANIFESTOR_DEBUG("Outgoing Source %dx%d, at %d,%d(16ths), Dest %dx%d at %d,%d\n",
-                         InputWindow.Width,  InputWindow.Height,  InputWindow.X,  InputWindow.Y,
-                         OutputWindow.Width, OutputWindow.Height, OutputWindow.X, OutputWindow.Y);
+        MANIFESTOR_DEBUG ("Outgoing Source %dx%d, at %d,%d(16ths), Dest %dx%d at %d,%d\n",
+                       InputWindow.Width,  InputWindow.Height,  InputWindow.X,  InputWindow.Y,
+                       OutputWindow.Width, OutputWindow.Height, OutputWindow.X, OutputWindow.Y);
 
-    return UpdateDisplayWindows();
+    return UpdateDisplayWindows ();
 }
 //}}}
 //{{{  BufferReleaseThread
-void  Manifestor_Video_c::BufferReleaseThread(void)
+void  Manifestor_Video_c::BufferReleaseThread (void)
 {
     unsigned int                i;
 
-    MANIFESTOR_DEBUG("Starting\n");
+    MANIFESTOR_DEBUG ("Starting\n");
 
     while (BufferReleaseThreadRunning)
     {
-        OS_LockMutex(&BufferLock);
+        OS_LockMutex (&BufferLock);
 
         // Check if any buffers were not manifested so can be released immediately
         if (NotQueuedBufferCount != 0)
@@ -1466,7 +1392,7 @@ void  Manifestor_Video_c::BufferReleaseThread(void)
                     StreamBuffer[i].BufferState = BufferStateAvailable;
                     NotQueuedBufferCount--;
 
-                    OutputRing->Insert((unsigned int)StreamBuffer[i].BufferClass);
+                    OutputRing->Insert ((unsigned int)StreamBuffer[i].BufferClass);
                     InitialFrameState           = InitialFrameNotPossible;
                 }
 
@@ -1484,7 +1410,7 @@ void  Manifestor_Video_c::BufferReleaseThread(void)
             PlayerStatus_t              PlayerStatus;
             PlayerEventRecord_t         Event;
 
-            if (FatalHardwareError && !FatalHardwareErrorSignalled)
+            if( FatalHardwareError && !FatalHardwareErrorSignalled )
             {
                 Event.Code                      = EventFatalHardwareFailure;
                 Event.Playback                  = Playback;
@@ -1492,10 +1418,9 @@ void  Manifestor_Video_c::BufferReleaseThread(void)
                 Event.PlaybackTime              = TIME_NOT_APPLICABLE;
                 Event.UserData                  = NULL;
 
-                PlayerStatus                    = Player->SignalEvent(&Event);
-
-                if (PlayerStatus != PlayerNoError)
-                    MANIFESTOR_ERROR("Failed to signal fatal hardware failure event.\n");
+                PlayerStatus                    = Player->SignalEvent( &Event );
+                if( PlayerStatus != PlayerNoError )
+                    MANIFESTOR_ERROR("Failed to signal fatal hardware failure event.\n" );
 
                 FatalHardwareErrorSignalled     = true;
             }
@@ -1503,7 +1428,6 @@ void  Manifestor_Video_c::BufferReleaseThread(void)
             DequeuedStreamBuffer                = DequeuedStreamBuffers[DequeueOut];
 
             DequeueOut++;
-
             if (DequeueOut == MAX_DEQUEUE_BUFFERS)
                 DequeueOut                      = 0;
 
@@ -1515,7 +1439,6 @@ void  Manifestor_Video_c::BufferReleaseThread(void)
             {
                 if ((DequeuedStreamBuffer->BufferState != BufferStateQueued) && (DequeuedStreamBuffer->BufferState != BufferStateMultiQueue))
                     MANIFESTOR_ERROR("Buffer  %d state = %x - could go on ring twice\n", DequeuedStreamBuffer->BufferIndex, DequeuedStreamBuffer->BufferState);
-
                 //if (DequeuedStreamBuffer->BufferIndex == RequeuedBufferIndex)
                 //    MANIFESTOR_DEBUG("Buffer  %d (%x) has been requeued\n", DequeuedStreamBuffer->BufferIndex, DequeuedStreamBuffer->BufferState);
 
@@ -1523,63 +1446,58 @@ void  Manifestor_Video_c::BufferReleaseThread(void)
                 //MANIFESTOR_DEBUG ("DQ %d (%d, %d)\n", DQCount++, StreamBuffer->BufferIndex, QueuedBufferCount);
 
                 QueuedBufferCount--;
-                Status                              = OutputRing->Insert((unsigned int)DequeuedStreamBuffer->BufferClass);
+                Status                              = OutputRing->Insert ((unsigned int)DequeuedStreamBuffer->BufferClass);
                 InitialFrameState                   = InitialFrameNotPossible;
             }
 
-            OS_UnLockMutex(&BufferLock);
+            OS_UnLockMutex (&BufferLock);
         }
         else
         {
             if (Stepping)
-                RequeueBufferOnDisplayIfNecessary();
-
-            OS_UnLockMutex(&BufferLock);
-            OS_SleepMilliSeconds(10);
+                RequeueBufferOnDisplayIfNecessary ();
+            OS_UnLockMutex (&BufferLock);
+            OS_SleepMilliSeconds (20);
         }
     }
 
-    OS_LockMutex(&BufferLock);
-
+    OS_LockMutex (&BufferLock);
     // Give back to the ring all buffers currently within our ambit
     // ignoring the dequeued buffer list
     for (i = 0; i < BufferConfiguration.MaxBufferCount; i++)
     {
         if (StreamBuffer[i].BufferState != BufferStateAvailable)
         {
-            MANIFESTOR_DEBUG("Buffer %d state = %x\n", i, StreamBuffer[i].BufferState);
+            MANIFESTOR_DEBUG ("Buffer %d state = %x\n", i, StreamBuffer[i].BufferState);
             StreamBuffer[i].BufferState         = BufferStateAvailable;
-
             if (StreamBuffer[i].BufferClass != NULL)
-                OutputRing->Insert((unsigned int)StreamBuffer[i].BufferClass);
-
+                OutputRing->Insert ((unsigned int)StreamBuffer[i].BufferClass);
             StreamBuffer[i].BufferClass         = NULL;
         }
     }
+    OS_UnLockMutex (&BufferLock);
 
-    OS_UnLockMutex(&BufferLock);
-
-    MANIFESTOR_DEBUG("Terminating\n");
-    OS_SetEvent(&BufferReleaseThreadTerminated);
+    OS_SetEvent (&BufferReleaseThreadTerminated);
+    MANIFESTOR_DEBUG ("Terminating\n");
 }
 //}}}
 //{{{  DisplaySignalThread
-void  Manifestor_Video_c::DisplaySignalThread(void)
+void  Manifestor_Video_c::DisplaySignalThread (void)
 {
     //struct StreamBuffer_s*      Buffer;
 
-    MANIFESTOR_DEBUG("Starting\n");
+    MANIFESTOR_DEBUG ("Starting\n");
 
     while (DisplaySignalThreadRunning)
     {
-        OS_SemaphoreWait(&BufferDisplayed);
+        OS_SemaphoreWait (&BufferDisplayed);
 
         if (DisplaySignalThreadRunning)
-            ServiceEventQueue(BufferOnDisplay);
+            ServiceEventQueue (BufferOnDisplay);
     }
 
-    MANIFESTOR_DEBUG("Terminating\n");
-    OS_SetEvent(&DisplaySignalThreadTerminated);
+    MANIFESTOR_DEBUG ("Terminating\n");
+    OS_SetEvent (&DisplaySignalThreadTerminated);
 }
 //}}}
 
@@ -1588,17 +1506,17 @@ void  Manifestor_Video_c::DisplaySignalThread(void)
 //
 //      Function to flesh out a buffer request structure
 
-ManifestorStatus_t   Manifestor_Video_c::FillOutBufferStructure(BufferStructure_t       *RequestedStructure)
+ManifestorStatus_t   Manifestor_Video_c::FillOutBufferStructure( BufferStructure_t       *RequestedStructure )
 {
     //
     // Do a switch depending on the buffer type
     //
 
-    unsigned int    DecimationPolicyValue   = Player->PolicyValue(Playback, Stream, PolicyDecimateDecoderOutput);
-    unsigned int    DecimationValue         = (DecimationPolicyValue == PolicyValueDecimateDecoderOutputHalf) ? 2 : 4;
+   unsigned int    DecimationPolicyValue   = Player->PolicyValue (Playback, Stream, PolicyDecimateDecoderOutput);
+   unsigned int    DecimationValue         = (DecimationPolicyValue == PolicyValueDecimateDecoderOutputHalf) ? 2 : 4;
 
 
-    switch (RequestedStructure->Format)
+    switch( RequestedStructure->Format )
     {
         case FormatVideo420_PairedMacroBlock:
             //
@@ -1623,7 +1541,7 @@ ManifestorStatus_t   Manifestor_Video_c::FillOutBufferStructure(BufferStructure_
             RequestedStructure->Strides[0][1]           = RequestedStructure->Dimension[0];
 
             RequestedStructure->Size                    = RequestedStructure->ComponentOffset[1] +
-                    ((RequestedStructure->Dimension[0] * RequestedStructure->Dimension[1]) / 2);
+                                                              ((RequestedStructure->Dimension[0] * RequestedStructure->Dimension[1])/2);
 
             RequestedStructure->ComponentCount          = 2;
 
@@ -1642,25 +1560,23 @@ ManifestorStatus_t   Manifestor_Video_c::FillOutBufferStructure(BufferStructure_
                 RequestedStructure->Strides[0][3]       = RequestedStructure->Dimension[2];
 
                 RequestedStructure->ComponentOffset[2]  = RequestedStructure->ComponentOffset[1] +
-                        ((RequestedStructure->Dimension[0] * RequestedStructure->Dimension[1]) / 2);
+                                                              ((RequestedStructure->Dimension[0] * RequestedStructure->Dimension[1]) / 2);
 
                 RequestedStructure->ComponentOffset[3]  = RequestedStructure->ComponentOffset[2] +
-                        (RequestedStructure->Dimension[2] * RequestedStructure->Dimension[3]);
+                                                              (RequestedStructure->Dimension[2] * RequestedStructure->Dimension[3]);
 
                 // Force a 1k alignment, to support the 7109 hardware mpeg2 decoder
                 RequestedStructure->ComponentOffset[3]      = (RequestedStructure->ComponentOffset[3] + 0x3ff) & 0xfffffc00;
 
 
                 RequestedStructure->DecimatedSize      += (RequestedStructure->Dimension[2] * RequestedStructure->Dimension[3]) +
-                        ((RequestedStructure->Dimension[2] * RequestedStructure->Dimension[3]) / 2);
+                                                              ((RequestedStructure->Dimension[2] * RequestedStructure->Dimension[3])/2);
 
                 RequestedStructure->Size               += RequestedStructure->DecimatedSize;
 
             }
-
             break;
         }
-
         case FormatVideo422_Raster:
 
             //
@@ -1681,27 +1597,26 @@ ManifestorStatus_t   Manifestor_Video_c::FillOutBufferStructure(BufferStructure_
             // Not possible for now so untested!
             if (RequestedStructure->DecimationRequired)
             {
-                RequestedStructure->Dimension[2]         = RequestedStructure->Dimension[0] / DecimationValue;
-                RequestedStructure->Dimension[3]         = RequestedStructure->Dimension[1] / DecimationValue;
+               RequestedStructure->Dimension[2]         = RequestedStructure->Dimension[0] / DecimationValue;
+               RequestedStructure->Dimension[3]         = RequestedStructure->Dimension[1] / DecimationValue;
 
-                RequestedStructure->ComponentCount       = 4;
-                RequestedStructure->ComponentOffset[2]   = (2 * RequestedStructure->Dimension[0] * RequestedStructure->Dimension[1]);
+               RequestedStructure->ComponentCount       = 4;
+               RequestedStructure->ComponentOffset[2]   = (2 * RequestedStructure->Dimension[0] * RequestedStructure->Dimension[1]);
 
-                RequestedStructure->Strides[0][2]        = 2 * RequestedStructure->Dimension[2];
-                RequestedStructure->Strides[0][3]        = 2 * RequestedStructure->Dimension[3];
+               RequestedStructure->Strides[0][2]        = 2 * RequestedStructure->Dimension[2];
+               RequestedStructure->Strides[0][3]        = 2 * RequestedStructure->Dimension[3];
 
-                RequestedStructure->DecimatedSize        = (2 * RequestedStructure->Dimension[2] * RequestedStructure->Dimension[3]);
+               RequestedStructure->DecimatedSize        = (2 * RequestedStructure->Dimension[2] * RequestedStructure->Dimension[3]);
 
-                RequestedStructure->Size                += RequestedStructure->DecimatedSize;
+               RequestedStructure->Size                += RequestedStructure->DecimatedSize;
 
             }
-
             break;
 
         case FormatVideo420_Planar:
 
-            RequestedStructure->Dimension[0]            = (RequestedStructure->Dimension[0] + RequestedStructure->ComponentBorder[0] * 2 + 0x0f) & 0xfffffff0;
-            RequestedStructure->Dimension[1]            = (RequestedStructure->Dimension[1] + RequestedStructure->ComponentBorder[1] * 2 + 0x0f) & 0xfffffff0;
+            RequestedStructure->Dimension[0]            = (RequestedStructure->Dimension[0] + RequestedStructure->ComponentBorder[0]*2 + 0x0f) & 0xfffffff0;
+            RequestedStructure->Dimension[1]            = (RequestedStructure->Dimension[1] + RequestedStructure->ComponentBorder[1]*2 + 0x0f) & 0xfffffff0;
 
             RequestedStructure->ComponentCount          = 2;
             RequestedStructure->ComponentOffset[0]      = 0;
@@ -1715,9 +1630,9 @@ ManifestorStatus_t   Manifestor_Video_c::FillOutBufferStructure(BufferStructure_
 
         case FormatVideo420_PlanarAligned:
 
-            RequestedStructure->Dimension[0]            = (RequestedStructure->Dimension[0] + RequestedStructure->ComponentBorder[0] * 2 + 0x0f) & 0xfffffff0;
+            RequestedStructure->Dimension[0]            = (RequestedStructure->Dimension[0] + RequestedStructure->ComponentBorder[0]*2 + 0x0f) & 0xfffffff0;
             RequestedStructure->Dimension[0]            = (RequestedStructure->Dimension[0] + 0x3f) & 0xffffffc0;
-            RequestedStructure->Dimension[1]            = (RequestedStructure->Dimension[1] + RequestedStructure->ComponentBorder[1] * 2 + 0x0f) & 0xfffffff0;
+            RequestedStructure->Dimension[1]            = (RequestedStructure->Dimension[1] + RequestedStructure->ComponentBorder[1]*2 + 0x0f) & 0xfffffff0;
 
             RequestedStructure->ComponentCount          = 2;
             RequestedStructure->ComponentOffset[0]      = 0;
@@ -1731,8 +1646,8 @@ ManifestorStatus_t   Manifestor_Video_c::FillOutBufferStructure(BufferStructure_
 
         case FormatVideo422_Planar:
 
-            RequestedStructure->Dimension[0]            = (RequestedStructure->Dimension[0] + RequestedStructure->ComponentBorder[0] * 2 + 0x0f) & 0xfffffff0;
-            RequestedStructure->Dimension[1]            = (RequestedStructure->Dimension[1] + RequestedStructure->ComponentBorder[1] * 2 + 0x0f) & 0xfffffff0;
+            RequestedStructure->Dimension[0]            = (RequestedStructure->Dimension[0] + RequestedStructure->ComponentBorder[0]*2 + 0x0f) & 0xfffffff0;
+            RequestedStructure->Dimension[1]            = (RequestedStructure->Dimension[1] + RequestedStructure->ComponentBorder[1]*2 + 0x0f) & 0xfffffff0;
 
             RequestedStructure->ComponentCount          = 2;
             RequestedStructure->ComponentOffset[0]      = 0;
@@ -1796,7 +1711,7 @@ ManifestorStatus_t   Manifestor_Video_c::FillOutBufferStructure(BufferStructure_
             RequestedStructure->Size                    = (RequestedStructure->Dimension[0] * RequestedStructure->Dimension[1] * 2);
             break;
 
-        default: MANIFESTOR_ERROR("Unsupported buffer format (%d)\n", RequestedStructure->Format);
+        default: MANIFESTOR_ERROR("Unsupported buffer format (%d)\n", RequestedStructure->Format );
     }
 
     return ManifestorNoError;

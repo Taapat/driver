@@ -22,4 +22,3 @@ LIBRARIES               = -L$(LIB_DIR)
 all:    $(LIBRARY_OR_MODULE) headers
 
 include $(SRC_DIR)/make$(LIBRARY_OR_MODULE)
-

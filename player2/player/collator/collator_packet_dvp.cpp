@@ -53,21 +53,21 @@ Date        Modification                                    Name
 // Resets and configures according to the requirements of this stream content
 //
 
-CollatorStatus_t Collator_PacketDvp_c::Input(PlayerInputDescriptor_t  *Input,
-        unsigned int          DataLength,
-        void                     *Data,
-        bool              NonBlocking,
-        unsigned int         *DataLengthRemaining)
+CollatorStatus_t Collator_PacketDvp_c::Input(	PlayerInputDescriptor_t  *Input,
+						unsigned int		  DataLength,
+						void                     *Data,
+						bool			  NonBlocking,
+						unsigned int		 *DataLengthRemaining )
 {
-    CollatorStatus_t     Status;
-    StreamInfo_t        *CapturedFrameDescriptor = (StreamInfo_t *)Data;
-    Buffer_t         CapturedBuffer;
+CollatorStatus_t	 Status;
+StreamInfo_t		*CapturedFrameDescriptor = (StreamInfo_t *)Data;
+Buffer_t		 CapturedBuffer;
 
 //
 
-    COLLATOR_ASSERT(!NonBlocking);
-    AssertComponentState("Collator_Packet_c::Input", ComponentRunning);
-    InputEntry(Input, DataLength, Data, NonBlocking);
+    COLLATOR_ASSERT( !NonBlocking );
+    AssertComponentState( "Collator_Packet_c::Input", ComponentRunning );
+    InputEntry( Input, DataLength, Data, NonBlocking );
 
     //
     // Attach the decode buffer mentioned in the input packet
@@ -75,20 +75,20 @@ CollatorStatus_t Collator_PacketDvp_c::Input(PlayerInputDescriptor_t  *Input,
     // at the appropriate time.
     //
 
-    if (DataLength != sizeof(StreamInfo_t))
+    if( DataLength != sizeof(StreamInfo_t) )
     {
-        report(severity_error, "Collator_Packet_c::Input - Packet is wrong size (%d != %d)\n", DataLength, sizeof(StreamInfo_t));
-        return CollatorError;
+	report( severity_error, "Collator_Packet_c::Input - Packet is wrong size (%d != %d)\n", DataLength, sizeof(StreamInfo_t) );
+	return CollatorError;
     }
 
-    CapturedBuffer  = (Buffer_t)(CapturedFrameDescriptor->buffer_class);
-    CodedFrameBuffer->AttachBuffer(CapturedBuffer);
+    CapturedBuffer	= (Buffer_t)(CapturedFrameDescriptor->buffer_class);
+    CodedFrameBuffer->AttachBuffer( CapturedBuffer );
 
     //
     // Perform the standard packet handling
     //
 
-    Status  = Collator_Packet_c::Input(Input, DataLength, Data);
+    Status	= Collator_Packet_c::Input( Input, DataLength, Data );
 
     InputExit();
     return Status;

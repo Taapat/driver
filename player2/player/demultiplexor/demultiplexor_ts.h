@@ -36,7 +36,7 @@ Date        Modification                                    Name
 
 // /////////////////////////////////////////////////////////////////////
 //
-//  Include any component headers
+//	Include any component headers
 #include "demultiplexor_base.h"
 #include "dvb.h"
 
@@ -45,9 +45,9 @@ Date        Modification                                    Name
 // Locally defined constants
 //
 
-#define DEMULTIPLEXOR_SELECT_ON_PRIORITY    0x00002000
-#define DEMULTIPLEXOR_PRIORITY_HIGH     0x00004000
-#define DEMULTIPLEXOR_PRIORITY_LOW      0x00000000
+#define DEMULTIPLEXOR_SELECT_ON_PRIORITY	0x00002000
+#define DEMULTIPLEXOR_PRIORITY_HIGH		0x00004000
+#define DEMULTIPLEXOR_PRIORITY_LOW		0x00000000
 
 // /////////////////////////////////////////////////////////////////////////
 //
@@ -56,8 +56,8 @@ Date        Modification                                    Name
 
 typedef struct DemultiplexorStreamContext_s
 {
-    bool        ValidExpectedContinuityCount;
-    unsigned char   ExpectedContinuityCount;
+    bool		ValidExpectedContinuityCount;
+    unsigned char	ExpectedContinuityCount;
     bool                SelectOnPriority;
     bool                DesiredPriority;
 } DemultiplexorStreamContext_t;
@@ -66,10 +66,10 @@ typedef struct DemultiplexorStreamContext_s
 
 struct DemultiplexorContext_s
 {
-    struct DemultiplexorBaseContext_s   Base;
+    struct DemultiplexorBaseContext_s	Base;
 
-    DemultiplexorStreamContext_t    Streams[DEMULTIPLEXOR_MAX_STREAMS];
-    unsigned char           PidTable[DVB_MAX_PIDS];
+    DemultiplexorStreamContext_t	Streams[DEMULTIPLEXOR_MAX_STREAMS];
+    unsigned char			PidTable[DVB_MAX_PIDS];
 
     bool                                AddedNewStream;
     unsigned int                        BluRayExtraData;
@@ -83,38 +83,38 @@ struct DemultiplexorContext_s
 
 class Demultiplexor_Ts_c : public Demultiplexor_Base_c
 {
-    private:
+private:
 
-        // Data
+    // Data
 
-        // Functions
+    // Functions
 
-    public:
+public:
 
-        //
-        // Constructor/Destructor methods
-        //
+    //
+    // Constructor/Destructor methods 
+    //
 
-        Demultiplexor_Ts_c(void);
+    Demultiplexor_Ts_c( void );
 
-        //
-        // API functions
-        //
+    //
+    // API functions
+    //
 
-        DemultiplexorStatus_t   GetHandledMuxType(PlayerInputMuxType_t   *HandledType);
+    DemultiplexorStatus_t   GetHandledMuxType(	PlayerInputMuxType_t	 *HandledType );
 
-        DemultiplexorStatus_t   AddStream(DemultiplexorContext_t      Context,
-                                          PlayerStream_t        Stream,
-                                          unsigned int          StreamIdentifier);
+    DemultiplexorStatus_t   AddStream(		DemultiplexorContext_t	  Context,
+						PlayerStream_t		  Stream,
+						unsigned int		  StreamIdentifier );
 
-        DemultiplexorStatus_t   RemoveStream(DemultiplexorContext_t   Context,
-                                             unsigned int          StreamIdentifier);
+    DemultiplexorStatus_t   RemoveStream(	DemultiplexorContext_t	  Context,
+						unsigned int		  StreamIdentifier );
 
-        DemultiplexorStatus_t   InputJump(DemultiplexorContext_t      Context);
+    DemultiplexorStatus_t   InputJump(		DemultiplexorContext_t	  Context );
 
-        DemultiplexorStatus_t   Demux(PlayerPlayback_t    Playback,
-                                      DemultiplexorContext_t    Context,
-                                      Buffer_t          Buffer);
+    DemultiplexorStatus_t   Demux(		PlayerPlayback_t	  Playback,
+						DemultiplexorContext_t	  Context,
+						Buffer_t		  Buffer );
 };
 
 #endif

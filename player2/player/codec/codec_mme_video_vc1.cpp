@@ -85,12 +85,12 @@ static BufferDataDescriptor_t                   Vc1CodecDecodeContextDescriptor 
 //{{{  Constructor
 // /////////////////////////////////////////////////////////////////////////
 //
-//      Constructor function, fills in the codec specific parameter values
+//      Cosntructor function, fills in the codec specific parameter values
 //
 
-Codec_MmeVideoVc1_c::Codec_MmeVideoVc1_c(void)
+Codec_MmeVideoVc1_c::Codec_MmeVideoVc1_c( void )
 {
-    //printf( "Codec_MmeVideoVc1_c::Codec_MmeVideoVc1_c - decode context coming from system memory - needs fixing inbox\n" );
+        //printf( "Codec_MmeVideoVc1_c::Codec_MmeVideoVc1_c - decode context coming from system memory - needs fixing inbox\n" );
 
     Configuration.CodecName                             = "Vc1 video";
 
@@ -145,11 +145,11 @@ Codec_MmeVideoVc1_c::Codec_MmeVideoVc1_c(void)
 //{{{  Destructor
 // /////////////////////////////////////////////////////////////////////////
 //
-//      Destructor function, ensures a full halt and reset
+//      Destructor function, ensures a full halt and reset 
 //      are executed for all levels of the class.
 //
 
-Codec_MmeVideoVc1_c::~Codec_MmeVideoVc1_c(void)
+Codec_MmeVideoVc1_c::~Codec_MmeVideoVc1_c( void )
 {
     Halt();
     Reset();
@@ -159,14 +159,14 @@ Codec_MmeVideoVc1_c::~Codec_MmeVideoVc1_c(void)
 // /////////////////////////////////////////////////////////////////////////
 //
 //      Reset function for VC1 specific members.
-//
+//      
 //
 
-CodecStatus_t   Codec_MmeVideoVc1_c::Reset(void)
+CodecStatus_t   Codec_MmeVideoVc1_c::Reset( void )
 {
-    if (Vc1MbStructPool != NULL)
+    if( Vc1MbStructPool != NULL )
     {
-        BufferManager->DestroyPool(Vc1MbStructPool);
+        BufferManager->DestroyPool( Vc1MbStructPool );
         Vc1MbStructPool = NULL;
     }
 
@@ -180,10 +180,10 @@ CodecStatus_t   Codec_MmeVideoVc1_c::Reset(void)
 //      Function to deal with the returned capabilities
 //      structure for an vc1 mme transformer.
 //
-CodecStatus_t   Codec_MmeVideoVc1_c::HandleCapabilities(void)
+CodecStatus_t   Codec_MmeVideoVc1_c::HandleCapabilities( void )
 {
     CODEC_TRACE("MME Transformer '%s' capabilities are :-\n", VC9_MME_TRANSFORMER_NAME);
-//    CODEC_TRACE("    Maximum field decoding latency %d\n", Vc1TransformCapability.MaximumFieldDecodingLatency90KHz);
+    CODEC_TRACE("    Maximum field decoding latency %d\n", Vc1TransformCapability.MaximumFieldDecodingLatency90KHz);
 
     return CodecNoError;
 }
@@ -197,13 +197,12 @@ CodecStatus_t   Codec_MmeVideoVc1_c::HandleCapabilities(void)
 ///     the majority of the resources when the player supplies it with an
 ///     output buffer.
 ///
-CodecStatus_t   Codec_MmeVideoVc1_c::RegisterOutputBufferRing(Ring_t                    Ring)
+CodecStatus_t   Codec_MmeVideoVc1_c::RegisterOutputBufferRing(   Ring_t                    Ring )
 {
     CodecStatus_t Status;
 
-    Status = Codec_MmeVideo_c::RegisterOutputBufferRing(Ring);
-
-    if (Status != CodecNoError)
+    Status = Codec_MmeVideo_c::RegisterOutputBufferRing( Ring );
+    if( Status != CodecNoError )
         return Status;
 
     //
@@ -212,20 +211,18 @@ CodecStatus_t   Codec_MmeVideoVc1_c::RegisterOutputBufferRing(Ring_t            
     // Find the type if it already exists
     //
 
-    Status      = BufferManager->FindBufferDataType(BUFFER_VC1_MBSTRUCT, &Vc1MbStructType);
-
-    if (Status != BufferNoError)
+    Status      = BufferManager->FindBufferDataType( BUFFER_VC1_MBSTRUCT, &Vc1MbStructType );
+    if( Status != BufferNoError )
     {
         //
         // It didn't already exist - create it
         //
 
-        Status  = BufferManager->CreateBufferDataType(&Vc1MbStructInitialDescriptor, &Vc1MbStructType);
-
-        if (Status != BufferNoError)
+        Status  = BufferManager->CreateBufferDataType( &Vc1MbStructInitialDescriptor, &Vc1MbStructType );
+        if( Status != BufferNoError )
         {
-            CODEC_ERROR("Failed to create the %s buffer type.\n", Vc1MbStructInitialDescriptor.TypeName);
-            return Status;
+                CODEC_ERROR ("Failed to create the %s buffer type.\n", Vc1MbStructInitialDescriptor.TypeName );
+                return Status;
         }
     }
 
@@ -235,12 +232,11 @@ CodecStatus_t   Codec_MmeVideoVc1_c::RegisterOutputBufferRing(Ring_t            
 
     unsigned int                    Size;
     Size = (1920 >> 4) * (1088 >> 4) * 16;  // Allocate the maximum for now. FIX ME & save space on smaller streams.
-    Status          = BufferManager->CreatePool(&Vc1MbStructPool, Vc1MbStructType, DecodeBufferCount, Size,
-                      NULL, NULL, Configuration.AncillaryMemoryPartitionName);
-
-    if (Status != BufferNoError)
+    Status          = BufferManager->CreatePool( &Vc1MbStructPool, Vc1MbStructType, DecodeBufferCount, Size,
+                                                 NULL, NULL, Configuration.AncillaryMemoryPartitionName );
+    if( Status != BufferNoError )
     {
-        CODEC_ERROR("Failed to create macroblock structure pool.\n");
+        CODEC_ERROR ("Failed to create macroblock structure pool.\n" );
         return Status;
     }
 
@@ -250,15 +246,15 @@ CodecStatus_t   Codec_MmeVideoVc1_c::RegisterOutputBufferRing(Ring_t            
 //{{{  FillOutTransformerInitializationParameters
 // /////////////////////////////////////////////////////////////////////////
 //
-//      Function to deal with the returned capabilities
+//      Function to deal with the returned capabilities 
 //      structure for an vc1 mme transformer.
 //
 
-CodecStatus_t   Codec_MmeVideoVc1_c::FillOutTransformerInitializationParameters(void)
+CodecStatus_t   Codec_MmeVideoVc1_c::FillOutTransformerInitializationParameters( void )
 {
 
     //
-    // Fill out the command parameters
+    // Fillout the command parameters
     //
 
     // Vc1InitializationParameters.InputBufferBegin     = 0x00000000;
@@ -267,7 +263,7 @@ CodecStatus_t   Codec_MmeVideoVc1_c::FillOutTransformerInitializationParameters(
     CODEC_TRACE("FillOutTransformerInitializationParameters\n");
 
     //
-    // Fill out the actual command
+    // Fillout the actual command
     //
 
     MMEInitializationParameters.TransformerInitParamsSize       = sizeof(VC9_InitTransformerParam_fmw_t);
@@ -289,11 +285,11 @@ CodecStatus_t   Codec_MmeVideoVc1_c::FillOutTransformerInitializationParameters(
 
 VC9_CommandStatus_t hack;
 
-CodecStatus_t   Codec_MmeVideoVc1_c::FillOutSetStreamParametersCommand(void)
+CodecStatus_t   Codec_MmeVideoVc1_c::FillOutSetStreamParametersCommand( void )
 {
     //report (severity_info, "Codec_MmeVideoVc1_c::FillOutSetStreamParametersCommand\n");
     //
-    // Fill out the actual command
+    // Fillout the actual command
     //
 
     // memset( &Context->BaseContext.MMECommand, 0x00, sizeof(MME_Command_t) );
@@ -318,7 +314,7 @@ CodecStatus_t   Codec_MmeVideoVc1_c::FillOutSetStreamParametersCommand(void)
 //      structure for an vc1 mme transformer.
 //
 
-CodecStatus_t   Codec_MmeVideoVc1_c::FillOutDecodeCommand(void)
+CodecStatus_t   Codec_MmeVideoVc1_c::FillOutDecodeCommand(       void )
 {
     Vc1CodecDecodeContext_t         *Context        = (Vc1CodecDecodeContext_t *)DecodeContext;
     Vc1FrameParameters_t            *Frame          = (Vc1FrameParameters_t *)ParsedFrameParameters->FrameParameterStructure;
@@ -340,7 +336,7 @@ CodecStatus_t   Codec_MmeVideoVc1_c::FillOutDecodeCommand(void)
     KnownLastSliceInFieldFrame                      = true;
 
     //
-    // Fill out the straight forward command parameters
+    // Fillout the straight forward command parameters
     //
 
     Param                                       = &Context->DecodeParameters;
@@ -357,7 +353,6 @@ CodecStatus_t   Codec_MmeVideoVc1_c::FillOutDecodeCommand(void)
         Param->PictureStartAddrCompressedBuffer_p   = (VC9_CompressedData_t)(CodedData + 4);
     else
         Param->PictureStartAddrCompressedBuffer_p   = (VC9_CompressedData_t)CodedData;
-
     Param->PictureStopAddrCompressedBuffer_p    = (VC9_CompressedData_t)(CodedData + CodedDataLength + 32);
 
     // Two lines below changed in line with modified firmware for skipped pictures
@@ -370,7 +365,7 @@ CodecStatus_t   Codec_MmeVideoVc1_c::FillOutDecodeCommand(void)
     Decode->Chroma_p                            = (VC9_ChromaAddress_t)BufferState[CurrentDecodeBufferIndex].BufferChromaPointer;
     // cjt
 
-    if (Player->PolicyValue(Playback, this->Stream, PolicyDecimateDecoderOutput) != PolicyValueDecimateDecoderOutputDisabled)
+    if (Player->PolicyValue( Playback, this->Stream, PolicyDecimateDecoderOutput) != PolicyValueDecimateDecoderOutputDisabled)
     {
         Decode->LumaDecimated_p                 = (VC9_LumaAddress_t)BufferState[CurrentDecodeBufferIndex].DecimatedLumaPointer;
         Decode->ChromaDecimated_p               = (VC9_ChromaAddress_t)BufferState[CurrentDecodeBufferIndex].DecimatedChromaPointer;
@@ -390,24 +385,23 @@ CodecStatus_t   Codec_MmeVideoVc1_c::FillOutDecodeCommand(void)
 
         Size = (1920 >> 4) * (1088 >> 4) * 16;  // Allocate the maximum for now. FIX ME & save space on smaller streams.
 
-        Status  = Vc1MbStructPool->GetBuffer(&Vc1MbStructBuffer, Size);
-
-        if (Status != BufferNoError)
+        Status  = Vc1MbStructPool->GetBuffer (&Vc1MbStructBuffer, Size);
+        if( Status != BufferNoError )
         {
-            CODEC_ERROR("Failed to get macroblock structure buffer.\n");
+            CODEC_ERROR ("Failed to get macroblock structure buffer.\n" );
             return Status;
         }
 
-        Vc1MbStructBuffer->ObtainDataReference(NULL, NULL, (void **)&Decode->MBStruct_p, PhysicalAddress);
+        Vc1MbStructBuffer->ObtainDataReference (NULL, NULL, (void **)&Decode->MBStruct_p, PhysicalAddress);
 
-        CurrentDecodeBuffer->AttachBuffer(Vc1MbStructBuffer);           // Attach to decode buffer (so it will be freed at the same time)
+        CurrentDecodeBuffer->AttachBuffer (Vc1MbStructBuffer);          // Attach to decode buffer (so it will be freed at the same time)
         Vc1MbStructBuffer->DecrementReferenceCount();                   // and release ownership of the buffer to the decode buffer
 
         // Remember the MBStruct pointer in case we have a second field to follow
         BufferState[CurrentDecodeBufferIndex].BufferMacroblockStructurePointer  = (unsigned char*)Decode->MBStruct_p;
 
         // Initialise the intensity compensation information (0xffffffff is no intensity com and is an invalid value)
-        memset(&BufferState[CurrentDecodeBufferIndex].AppliedIntensityCompensation, 0xff, sizeof(CodecIntensityCompensation_t));
+        memset (&BufferState[CurrentDecodeBufferIndex].AppliedIntensityCompensation, 0xff, sizeof(CodecIntensityCompensation_t));
     }
     else
         Decode->MBStruct_p                      = (VC9_MBStructureAddress_t)BufferState[CurrentDecodeBufferIndex].BufferMacroblockStructurePointer;
@@ -427,7 +421,6 @@ CodecStatus_t   Codec_MmeVideoVc1_c::FillOutDecodeCommand(void)
                 RangeMapLumaPresent         = true;
                 RangeMapLuma                = Stream->EntryPointHeader.range_mapy;
             }
-
             if (Stream->EntryPointHeader.range_mapuv_flag == 1)
             {
                 RangeMapChromaPresent       = true;
@@ -442,41 +435,36 @@ CodecStatus_t   Codec_MmeVideoVc1_c::FillOutDecodeCommand(void)
             RangeMapChroma                  = 7;    // so Luma and Chroma values should be set to 7 in above formula
 
         }
-
-#if 0
-        report(severity_info, "%s: Luma (%d, %d), Chroma %d, %d)\n", __FUNCTION__,
-               RangeMapLumaPresent, RangeMapLuma, RangeMapChromaPresent, RangeMapChroma);
-#endif
-
+    #if 0
+        report (severity_info, "%s: Luma (%d, %d), Chroma %d, %d)\n", __FUNCTION__,
+                RangeMapLumaPresent, RangeMapLuma, RangeMapChromaPresent, RangeMapChroma);
+    #endif
         if ((RangeMapLumaPresent || RangeMapChromaPresent) && (PostProcessControlBufferPool != NULL))
         {
             Buffer_t                            PostProcessBuffer;
             VideoPostProcessingControl_t*       PPControl;
 
-            Status  = PostProcessControlBufferPool->GetBuffer(&PostProcessBuffer);
-
+            Status  = PostProcessControlBufferPool->GetBuffer (&PostProcessBuffer);
             if (Status != BufferNoError)
             {
-                report(severity_error, "Codec_MmeVideoVc1_c::FillOutDecodeCommand - Failed to get post process control structure buffer.\n");
+                report( severity_error, "Codec_MmeVideoVc1_c::FillOutDecodeCommand - Failed to get post process control structure buffer.\n" );
                 return Status;
             }
-
-            PostProcessBuffer->ObtainDataReference(NULL, NULL, (void**)&PPControl);
+            PostProcessBuffer->ObtainDataReference (NULL, NULL, (void**)&PPControl);
 
             PPControl->RangeMapLumaPresent      = RangeMapLumaPresent;
             PPControl->RangeMapLuma             = RangeMapLuma;
             PPControl->RangeMapChromaPresent    = RangeMapChromaPresent;
             PPControl->RangeMapChroma           = RangeMapChroma;
 
-            CurrentDecodeBuffer->AttachBuffer(PostProcessBuffer);       // Attach to decode buffer (so it will be freed at the same time)
+            CurrentDecodeBuffer->AttachBuffer (PostProcessBuffer);      // Attach to decode buffer (so it will be freed at the same time)
             PostProcessBuffer->DecrementReferenceCount();               // and release ownership of the buffer to the decode buffer
         }
     }
-
     //}}}
 
-    switch (Player->PolicyValue(Playback, this->Stream, PolicyDecimateDecoderOutput))
-    {
+    switch (Player->PolicyValue (Playback, this->Stream, PolicyDecimateDecoderOutput))
+    {   
         case PolicyValueDecimateDecoderOutputDisabled:
         {
             // Normal Case
@@ -485,20 +473,16 @@ CodecStatus_t   Codec_MmeVideoVc1_c::FillOutDecodeCommand(void)
             Param->VerticalDecimationFactor     = VC9_VDEC_1;
             break;
         }
-
         case PolicyValueDecimateDecoderOutputHalf:
         {
             Param->MainAuxEnable                = VC9_AUX_MAIN_OUT_EN;
             Param->HorizontalDecimationFactor   = VC9_HDEC_ADVANCED_2;
-
             if ((VC9_PictureSyntax_t)Frame->PictureHeader.fcm == VC9_PICTURE_SYNTAX_PROGRESSIVE)
                 Param->VerticalDecimationFactor = VC9_VDEC_ADVANCED_2_PROG;
             else
                 Param->VerticalDecimationFactor = VC9_VDEC_ADVANCED_2_INT;
-
             break;
         }
-
         case PolicyValueDecimateDecoderOutputQuarter:
         {
             Param->MainAuxEnable                = VC9_AUX_MAIN_OUT_EN;
@@ -511,26 +495,22 @@ CodecStatus_t   Codec_MmeVideoVc1_c::FillOutDecodeCommand(void)
     //Param->DecodingMode                         = VC9_NORMAL_DECODE_WITHOUT_ERROR_RECOVERY;
     Param->DecodingMode                         = VC9_NORMAL_DECODE;
     Param->AdditionalFlags                      = 0;
-
     switch (Stream->SequenceHeader.profile)
     {
         case VC1_SIMPLE_PROFILE:
             Param->AebrFlag                     = 0;
             Param->Profile                      = VC9_PROFILE_SIMPLE;
             break;
-
         case VC1_MAIN_PROFILE:
             Param->AebrFlag                     = 0;
             Param->Profile                      = VC9_PROFILE_MAIN;
             break;
-
         case VC1_ADVANCED_PROFILE:
         default:
             Param->AebrFlag                     = 1;
             Param->Profile                      = VC9_PROFILE_ADVANCE;
             break;
     }
-
     Param->PictureSyntax                        = (VC9_PictureSyntax_t)Frame->PictureHeader.fcm;        // Prog/Field/Frame
     Param->PictureType                          = (VC9_PictureType_t)Frame->PictureHeader.ptype;        // I/P/B/BI/Skip
     Param->FinterpFlag                          = Stream->SequenceHeader.finterpflag;
@@ -540,7 +520,7 @@ CodecStatus_t   Codec_MmeVideoVc1_c::FillOutDecodeCommand(void)
     if (Frame->PictureHeader.first_field != 0)                          // Remember Picture syntax
         BufferState[CurrentDecodeBufferIndex].PictureSyntax     = (unsigned int)Param->PictureSyntax;
 
-    memset(Intensity, 0xff, sizeof(VC9_IntensityComp_t));
+    memset (Intensity, 0xff, sizeof(VC9_IntensityComp_t) );
 
     Param->RndCtrl                              = Frame->PictureHeader.rndctrl;
     Param->NumeratorBFraction                   = Frame->PictureHeader.bfraction_numerator;
@@ -567,13 +547,13 @@ CodecStatus_t   Codec_MmeVideoVc1_c::FillOutDecodeCommand(void)
 
     StartCodes->SliceCount                      = Frame->SliceHeaderList.no_slice_headers;
 
-    for (i = 0; i < StartCodes->SliceCount; i++)
+    for (i=0; i<StartCodes->SliceCount; i++)
     {
         StartCodes->SliceArray[i].SliceStartAddrCompressedBuffer_p      = (VC9_CompressedData_t)(CodedData + Frame->SliceHeaderList.slice_start_code[i]);
         StartCodes->SliceArray[i].SliceAddress                          = Frame->SliceHeaderList.slice_addr[i];
     }
 
-    if (Stream->EntryPointHeader.refdist_flag)
+    if(Stream->EntryPointHeader.refdist_flag)
     {
         Param->RefDist                      = Frame->PictureHeader.refdist;
         Param->BackwardRefdist              = Frame->PictureHeader.backward_refdist;
@@ -605,7 +585,7 @@ CodecStatus_t   Codec_MmeVideoVc1_c::FillOutDecodeCommand(void)
     //Param->BackwardPicOrderCount            = 0;                    // FIX for trick modes
 
     //
-    // Fill out the reference frame list stuff
+    // Fillout the reference frame list stuff
     //
 
     if (ParsedFrameParameters->NumberOfReferenceFrameLists != 0)
@@ -619,11 +599,10 @@ CodecStatus_t   Codec_MmeVideoVc1_c::FillOutDecodeCommand(void)
             RefList->ForwardReferencePictureSyntax      = (VC9_PictureSyntax_t)BufferState[i].PictureSyntax;
 
             if (Frame->PictureHeader.mvmode == VC1_MV_MODE_INTENSITY_COMP)
-                SaveIntensityCompensationData(i, Intensity);
+                SaveIntensityCompensationData (i, Intensity);
 
-            GetForwardIntensityCompensationData(i, Intensity);
+            GetForwardIntensityCompensationData (i, Intensity);
         }
-
         if (DecodeContext->ReferenceFrameList[0].EntryCount > 1)
         {
             i                                           = DecodeContext->ReferenceFrameList[0].EntryIndicies[1];
@@ -632,79 +611,63 @@ CodecStatus_t   Codec_MmeVideoVc1_c::FillOutDecodeCommand(void)
             RefList->BackwardReferenceMBStruct_p        = (VC9_MBStructureAddress_t)BufferState[i].BufferMacroblockStructurePointer;
             RefList->BackwardReferencePictureSyntax     = (VC9_PictureSyntax_t)BufferState[i].PictureSyntax;
 
-            GetBackwardIntensityCompensationData(i, Intensity);
+            GetBackwardIntensityCompensationData (i, Intensity);
         }
     }
 
     //{{{  Dump picture indexes
-#if 0
+    #if 0
     {
         static unsigned int PictureNo  = 0;
 
         PictureNo++;
-
         if ((Param->IntensityComp.ForwTop_1 != 0xffffffff) || (Param->IntensityComp.ForwBot_1 != 0xffffffff) ||
-                (Param->IntensityComp.ForwTop_2 != 0xffffffff) || (Param->IntensityComp.ForwBot_2 != 0xffffffff) ||
-                (Param->IntensityComp.BackTop_1 != 0xffffffff) || (Param->IntensityComp.BackBot_1 != 0xffffffff) ||
-                (Param->IntensityComp.BackTop_2 != 0xffffffff) || (Param->IntensityComp.BackBot_2 != 0xffffffff))
+            (Param->IntensityComp.ForwTop_2 != 0xffffffff) || (Param->IntensityComp.ForwBot_2 != 0xffffffff) ||
+            (Param->IntensityComp.BackTop_1 != 0xffffffff) || (Param->IntensityComp.BackBot_1 != 0xffffffff) ||
+            (Param->IntensityComp.BackTop_2 != 0xffffffff) || (Param->IntensityComp.BackBot_2 != 0xffffffff))
         {
-            report(severity_info, "Codec: Decode %2d, Display %2d ", PictureNo - 1, ParsedFrameParameters->DisplayFrameIndex);
+            report (severity_info, "Codec: Decode %2d, Display %2d ", PictureNo-1, ParsedFrameParameters->DisplayFrameIndex);
 
             switch (Param->PictureType)
             {
-                case VC9_PICTURE_TYPE_P:            report(severity_info, "P  ");            break;
-
-                case VC9_PICTURE_TYPE_B:            report(severity_info, "B  ");            break;
-
-                case VC9_PICTURE_TYPE_I:            report(severity_info, "I  ");            break;
-
-                case VC9_PICTURE_TYPE_SKIP:         report(severity_info, "S  ");            break;
-
-                case VC9_PICTURE_TYPE_BI:           report(severity_info, "BI ");            break;
+                case VC9_PICTURE_TYPE_P:            report (severity_info, "P  ");            break;
+                case VC9_PICTURE_TYPE_B:            report (severity_info, "B  ");            break;
+                case VC9_PICTURE_TYPE_I:            report (severity_info, "I  ");            break;
+                case VC9_PICTURE_TYPE_SKIP:         report (severity_info, "S  ");            break;
+                case VC9_PICTURE_TYPE_BI:           report (severity_info, "BI ");            break;
             }
-
             switch (Param->PictureSyntax)
             {
-                case VC9_PICTURE_SYNTAX_PROGRESSIVE:      report(severity_info, "Progressive\n");   break;
-
-                case VC9_PICTURE_SYNTAX_INTERLACED_FRAME: report(severity_info, "Interlaced Frame (%s)\n", Param->TffFlag ? "T" : "B");   break;
-
-                case VC9_PICTURE_SYNTAX_INTERLACED_FIELD: report(severity_info, "Interlaced Field (%d)\n", Frame->PictureHeader.first_field);   break;
+                case VC9_PICTURE_SYNTAX_PROGRESSIVE:      report (severity_info, "Progressive\n");   break;
+                case VC9_PICTURE_SYNTAX_INTERLACED_FRAME: report (severity_info, "Interlaced Frame (%s)\n", Param->TffFlag? "T":"B");   break;
+                case VC9_PICTURE_SYNTAX_INTERLACED_FIELD: report (severity_info, "Interlaced Field (%d)\n",Frame->PictureHeader.first_field);   break;
             }
-
             if (Param->IntensityComp.ForwTop_1 != 0xffffffff)
-                report(severity_info, "    : IntensityComp_ForwTop_1            = %08x\n", Param->IntensityComp.ForwTop_1);
-
+                report (severity_info, "    : IntensityComp_ForwTop_1            = %08x\n", Param->IntensityComp.ForwTop_1);
             if (Param->IntensityComp.ForwBot_1 != 0xffffffff)
-                report(severity_info, "    : IntensityComp_ForwBot_1            = %08x\n", Param->IntensityComp.ForwBot_1);
-
+                report (severity_info, "    : IntensityComp_ForwBot_1            = %08x\n", Param->IntensityComp.ForwBot_1);
             if (Param->IntensityComp.ForwTop_2 != 0xffffffff)
-                report(severity_info, "    : IntensityComp_ForwTop_2            = %08x\n", Param->IntensityComp.ForwTop_2);
-
+                report (severity_info, "    : IntensityComp_ForwTop_2            = %08x\n", Param->IntensityComp.ForwTop_2);
             if (Param->IntensityComp.ForwBot_2 != 0xffffffff)
-                report(severity_info, "    : IntensityComp_ForwBot_2            = %08x\n", Param->IntensityComp.ForwBot_2);
-
+                report (severity_info, "    : IntensityComp_ForwBot_2            = %08x\n", Param->IntensityComp.ForwBot_2);
             if (Param->IntensityComp.BackTop_1 != 0xffffffff)
-                report(severity_info, "    : IntensityComp_BackTop_1            = %08x\n", Param->IntensityComp.BackTop_1);
-
+                report (severity_info, "    : IntensityComp_BackTop_1            = %08x\n", Param->IntensityComp.BackTop_1);
             if (Param->IntensityComp.BackBot_1 != 0xffffffff)
-                report(severity_info, "    : IntensityComp_BackBot_1            = %08x\n", Param->IntensityComp.BackBot_1);
-
+                report (severity_info, "    : IntensityComp_BackBot_1            = %08x\n", Param->IntensityComp.BackBot_1);
             if (Param->IntensityComp.BackTop_2 != 0xffffffff)
-                report(severity_info, "    : IntensityComp_BackTop_2            = %08x\n", Param->IntensityComp.BackTop_2);
-
+                report (severity_info, "    : IntensityComp_BackTop_2            = %08x\n", Param->IntensityComp.BackTop_2);
             if (Param->IntensityComp.BackBot_2 != 0xffffffff)
-                report(severity_info, "    : IntensityComp_BackBot_2            = %08x\n", Param->IntensityComp.BackBot_2);
+                report (severity_info, "    : IntensityComp_BackBot_2            = %08x\n", Param->IntensityComp.BackBot_2);
         }
     }
-#endif
+    #endif
     //}}}
 
     //
-    // Fill out the actual command
+    // Fillout the actual command
     //
 
-    memset(&Context->BaseContext.MMECommand, 0x00, sizeof(MME_Command_t));
+    memset( &Context->BaseContext.MMECommand, 0x00, sizeof(MME_Command_t) );
 
     Context->BaseContext.MMECommand.CmdStatus.AdditionalInfoSize    = sizeof(VC9_CommandStatus_t);
     Context->BaseContext.MMECommand.CmdStatus.AdditionalInfo_p      = (MME_GenericParams_t)(&Context->DecodeStatus);
@@ -718,14 +681,14 @@ CodecStatus_t   Codec_MmeVideoVc1_c::FillOutDecodeCommand(void)
 ////////////////////////////////////////////////////////////////////////////
 ///
 /// Unconditionally return success.
-///
+/// 
 /// Success and failure codes are located entirely in the generic MME structures
 /// allowing the super-class to determine whether the decode was successful. This
 /// means that we have no work to do here.
 ///
 /// \return CodecNoError
 ///
-CodecStatus_t   Codec_MmeVideoVc1_c::ValidateDecodeContext(CodecBaseDecodeContext_t *Context)
+CodecStatus_t   Codec_MmeVideoVc1_c::ValidateDecodeContext( CodecBaseDecodeContext_t *Context )
 {
     return CodecNoError;
 }
@@ -737,7 +700,7 @@ CodecStatus_t   Codec_MmeVideoVc1_c::ValidateDecodeContext(CodecBaseDecodeContex
 //      parameters from an mme command.
 //
 
-CodecStatus_t   Codec_MmeVideoVc1_c::DumpSetStreamParameters(void    *Parameters)
+CodecStatus_t   Codec_MmeVideoVc1_c::DumpSetStreamParameters(         void    *Parameters )
 {
     return CodecNoError;
 }
@@ -750,7 +713,7 @@ CodecStatus_t   Codec_MmeVideoVc1_c::DumpSetStreamParameters(void    *Parameters
 //
 
 unsigned int StaticPicture;
-CodecStatus_t   Codec_MmeVideoVc1_c::DumpDecodeParameters(void    *Parameters)
+CodecStatus_t   Codec_MmeVideoVc1_c::DumpDecodeParameters(            void    *Parameters )
 {
     unsigned int                        i;
     VC9_TransformParam_t*               FrameParams;
@@ -765,93 +728,91 @@ CodecStatus_t   Codec_MmeVideoVc1_c::DumpDecodeParameters(void    *Parameters)
 
     StaticPicture++;
 
+{
+    report (severity_info, "********** Picture %d *********\n", StaticPicture-1);
+    report (severity_info, "DDP -    Entry->LoopfilterFlag               %08x\n", Entry->LoopfilterFlag);
+    report (severity_info, "DDP -    Entry->FastuvmcFlag                 %08x\n", Entry->FastuvmcFlag);
+    report (severity_info, "DDP -    Entry->ExtendedmvFlag               %08x\n", Entry->ExtendedmvFlag);
+    report (severity_info, "DDP -    Entry->Dquant                       %08x\n", Entry->Dquant);
+    report (severity_info, "DDP -    Entry->VstransformFlag              %08x\n", Entry->VstransformFlag);
+    report (severity_info, "DDP -    Entry->OverlapFlag                  %08x\n", Entry->OverlapFlag);
+    report (severity_info, "DDP -    Entry->Quantizer                    %08x\n", Entry->Quantizer);
+    report (severity_info, "DDP -    Entry->ExtendedDmvFlag              %08x\n", Entry->ExtendedDmvFlag);
+    report (severity_info, "DDP -    Entry->PanScanFlag                  %08x\n", Entry->PanScanFlag);
+    report (severity_info, "DDP -    Entry->RefdistFlag                  %08x\n", Entry->RefdistFlag);
+
+    report (severity_info, "DDP -   Luma_p                             = %08x\n", Decode->Luma_p);
+    report (severity_info, "DDP -   Chroma_p                           = %08x\n", Decode->Chroma_p);
+    report (severity_info, "DDP -   MBStruct_p                         = %08x\n", Decode->MBStruct_p);
+
+    report (severity_info, "DDP -   CircularBufferBeginAddr_p          = %08x\n", FrameParams->CircularBufferBeginAddr_p);
+    report (severity_info, "DDP -   CircularBufferEndAddr_p            = %08x\n", FrameParams->CircularBufferEndAddr_p);
+
+    report (severity_info, "DDP -   PictureStartAddrCompressedBuffer_p = %08x\n", FrameParams->PictureStartAddrCompressedBuffer_p);
+    report (severity_info, "DDP -   PictureStopAddrCompressedBuffer_p  = %08x\n", FrameParams->PictureStopAddrCompressedBuffer_p);
+
+    report (severity_info, "DDP -   BackwardReferenceLuma_p            = %08x\n", FrameParams->RefPicListAddress.BackwardReferenceLuma_p);
+    report (severity_info, "DDP -   BackwardReferenceChroma_p          = %08x\n", FrameParams->RefPicListAddress.BackwardReferenceChroma_p);
+    report (severity_info, "DDP -   BackwardReferenceMBStruct_p        = %08x\n", FrameParams->RefPicListAddress.BackwardReferenceMBStruct_p);
+    report (severity_info, "DDP -   ForwardReferenceLuma_p             = %08x\n", FrameParams->RefPicListAddress.ForwardReferenceLuma_p);
+    report (severity_info, "DDP -   ForwardReferenceChroma_p           = %08x\n", FrameParams->RefPicListAddress.ForwardReferenceChroma_p);
+    report (severity_info, "DDP -   BackwardReferencePictureSyntax     = %08x\n", FrameParams->RefPicListAddress.BackwardReferencePictureSyntax);
+    report (severity_info, "DDP -   ForwardReferencePictureSyntax      = %08x\n", FrameParams->RefPicListAddress.ForwardReferencePictureSyntax);
+    report (severity_info, "DDP -   MainAuxEnable                      = %d\n", FrameParams->MainAuxEnable);
+    report (severity_info, "DDP -   HorizontalDecimationFactor         = %d\n", FrameParams->HorizontalDecimationFactor);
+    report (severity_info, "DDP -   VerticalDecimationFactor           = %d\n", FrameParams->VerticalDecimationFactor);
+    report (severity_info, "DDP -   DecodingMode                       = %d\n", FrameParams->DecodingMode);
+    report (severity_info, "DDP -   AebrFlag                           = %d\n", FrameParams->AebrFlag);
+    report (severity_info, "DDP -   Profile                            = %d\n", FrameParams->Profile);
+    report (severity_info, "DDP -   PictureSyntax                      = %d\n", FrameParams->PictureSyntax);
+    report (severity_info, "DDP -   PictureType                        = %d\n", FrameParams->PictureType);
+    report (severity_info, "DDP -   FinterpFlag                        = %d\n", FrameParams->FinterpFlag);
+    report (severity_info, "DDP -   FrameHorizSize                     = %d\n", FrameParams->FrameHorizSize);
+    report (severity_info, "DDP -   FrameVertSize                      = %d\n", FrameParams->FrameVertSize);
+    report (severity_info, "DDP -   IntensityComp_ForwTop_1            = %d\n", FrameParams->IntensityComp.ForwTop_1);
+    report (severity_info, "DDP -   IntensityComp_ForwTop_2            = %d\n", FrameParams->IntensityComp.ForwTop_2);
+    report (severity_info, "DDP -   IntensityComp_ForwBot_1            = %d\n", FrameParams->IntensityComp.ForwBot_1);
+    report (severity_info, "DDP -   IntensityComp_ForwBot_2            = %d\n", FrameParams->IntensityComp.ForwBot_2);
+    report (severity_info, "DDP -   IntensityComp_BackTop_1            = %d\n", FrameParams->IntensityComp.BackTop_1);
+    report (severity_info, "DDP -   IntensityComp_BackTop_2            = %d\n", FrameParams->IntensityComp.BackTop_2);
+    report (severity_info, "DDP -   IntensityComp_BackBot_1            = %d\n", FrameParams->IntensityComp.BackBot_1);
+    report (severity_info, "DDP -   IntensityComp_BackBot_2            = %d\n", FrameParams->IntensityComp.BackBot_2);
+    report (severity_info, "DDP -   RndCtrl                            = %d\n", FrameParams->RndCtrl);
+    report (severity_info, "DDP -   NumeratorBFraction                 = %d\n", FrameParams->NumeratorBFraction );
+    report (severity_info, "DDP -   DenominatorBFraction               = %d\n", FrameParams->DenominatorBFraction  );
+
+    report (severity_info, "DDP -   PostprocFlag                       = %d\n", FrameParams->PostprocFlag);
+    report (severity_info, "DDP -   PulldownFlag                       = %d\n", FrameParams->PulldownFlag);
+    report (severity_info, "DDP -   InterlaceFlag                      = %d\n", FrameParams->InterlaceFlag);
+    report (severity_info, "DDP -   TfcntrFlag                         = %d\n", FrameParams->TfcntrFlag);
+    report (severity_info, "DDP -   SliceCount                         = %d\n", FrameParams->StartCodes.SliceCount);
+    for ( i = 0 ; i < FrameParams->StartCodes.SliceCount ; i++)
     {
-        report(severity_info, "********** Picture %d *********\n", StaticPicture - 1);
-        report(severity_info, "DDP -    Entry->LoopfilterFlag               %08x\n", Entry->LoopfilterFlag);
-        report(severity_info, "DDP -    Entry->FastuvmcFlag                 %08x\n", Entry->FastuvmcFlag);
-        report(severity_info, "DDP -    Entry->ExtendedmvFlag               %08x\n", Entry->ExtendedmvFlag);
-        report(severity_info, "DDP -    Entry->Dquant                       %08x\n", Entry->Dquant);
-        report(severity_info, "DDP -    Entry->VstransformFlag              %08x\n", Entry->VstransformFlag);
-        report(severity_info, "DDP -    Entry->OverlapFlag                  %08x\n", Entry->OverlapFlag);
-        report(severity_info, "DDP -    Entry->Quantizer                    %08x\n", Entry->Quantizer);
-        report(severity_info, "DDP -    Entry->ExtendedDmvFlag              %08x\n", Entry->ExtendedDmvFlag);
-        report(severity_info, "DDP -    Entry->PanScanFlag                  %08x\n", Entry->PanScanFlag);
-        report(severity_info, "DDP -    Entry->RefdistFlag                  %08x\n", Entry->RefdistFlag);
-
-        report(severity_info, "DDP -   Luma_p                             = %08x\n", Decode->Luma_p);
-        report(severity_info, "DDP -   Chroma_p                           = %08x\n", Decode->Chroma_p);
-        report(severity_info, "DDP -   MBStruct_p                         = %08x\n", Decode->MBStruct_p);
-
-        report(severity_info, "DDP -   CircularBufferBeginAddr_p          = %08x\n", FrameParams->CircularBufferBeginAddr_p);
-        report(severity_info, "DDP -   CircularBufferEndAddr_p            = %08x\n", FrameParams->CircularBufferEndAddr_p);
-
-        report(severity_info, "DDP -   PictureStartAddrCompressedBuffer_p = %08x\n", FrameParams->PictureStartAddrCompressedBuffer_p);
-        report(severity_info, "DDP -   PictureStopAddrCompressedBuffer_p  = %08x\n", FrameParams->PictureStopAddrCompressedBuffer_p);
-
-        report(severity_info, "DDP -   BackwardReferenceLuma_p            = %08x\n", FrameParams->RefPicListAddress.BackwardReferenceLuma_p);
-        report(severity_info, "DDP -   BackwardReferenceChroma_p          = %08x\n", FrameParams->RefPicListAddress.BackwardReferenceChroma_p);
-        report(severity_info, "DDP -   BackwardReferenceMBStruct_p        = %08x\n", FrameParams->RefPicListAddress.BackwardReferenceMBStruct_p);
-        report(severity_info, "DDP -   ForwardReferenceLuma_p             = %08x\n", FrameParams->RefPicListAddress.ForwardReferenceLuma_p);
-        report(severity_info, "DDP -   ForwardReferenceChroma_p           = %08x\n", FrameParams->RefPicListAddress.ForwardReferenceChroma_p);
-        report(severity_info, "DDP -   BackwardReferencePictureSyntax     = %08x\n", FrameParams->RefPicListAddress.BackwardReferencePictureSyntax);
-        report(severity_info, "DDP -   ForwardReferencePictureSyntax      = %08x\n", FrameParams->RefPicListAddress.ForwardReferencePictureSyntax);
-        report(severity_info, "DDP -   MainAuxEnable                      = %d\n", FrameParams->MainAuxEnable);
-        report(severity_info, "DDP -   HorizontalDecimationFactor         = %d\n", FrameParams->HorizontalDecimationFactor);
-        report(severity_info, "DDP -   VerticalDecimationFactor           = %d\n", FrameParams->VerticalDecimationFactor);
-        report(severity_info, "DDP -   DecodingMode                       = %d\n", FrameParams->DecodingMode);
-        report(severity_info, "DDP -   AebrFlag                           = %d\n", FrameParams->AebrFlag);
-        report(severity_info, "DDP -   Profile                            = %d\n", FrameParams->Profile);
-        report(severity_info, "DDP -   PictureSyntax                      = %d\n", FrameParams->PictureSyntax);
-        report(severity_info, "DDP -   PictureType                        = %d\n", FrameParams->PictureType);
-        report(severity_info, "DDP -   FinterpFlag                        = %d\n", FrameParams->FinterpFlag);
-        report(severity_info, "DDP -   FrameHorizSize                     = %d\n", FrameParams->FrameHorizSize);
-        report(severity_info, "DDP -   FrameVertSize                      = %d\n", FrameParams->FrameVertSize);
-        report(severity_info, "DDP -   IntensityComp_ForwTop_1            = %d\n", FrameParams->IntensityComp.ForwTop_1);
-        report(severity_info, "DDP -   IntensityComp_ForwTop_2            = %d\n", FrameParams->IntensityComp.ForwTop_2);
-        report(severity_info, "DDP -   IntensityComp_ForwBot_1            = %d\n", FrameParams->IntensityComp.ForwBot_1);
-        report(severity_info, "DDP -   IntensityComp_ForwBot_2            = %d\n", FrameParams->IntensityComp.ForwBot_2);
-        report(severity_info, "DDP -   IntensityComp_BackTop_1            = %d\n", FrameParams->IntensityComp.BackTop_1);
-        report(severity_info, "DDP -   IntensityComp_BackTop_2            = %d\n", FrameParams->IntensityComp.BackTop_2);
-        report(severity_info, "DDP -   IntensityComp_BackBot_1            = %d\n", FrameParams->IntensityComp.BackBot_1);
-        report(severity_info, "DDP -   IntensityComp_BackBot_2            = %d\n", FrameParams->IntensityComp.BackBot_2);
-        report(severity_info, "DDP -   RndCtrl                            = %d\n", FrameParams->RndCtrl);
-        report(severity_info, "DDP -   NumeratorBFraction                 = %d\n", FrameParams->NumeratorBFraction);
-        report(severity_info, "DDP -   DenominatorBFraction               = %d\n", FrameParams->DenominatorBFraction);
-
-        report(severity_info, "DDP -   PostprocFlag                       = %d\n", FrameParams->PostprocFlag);
-        report(severity_info, "DDP -   PulldownFlag                       = %d\n", FrameParams->PulldownFlag);
-        report(severity_info, "DDP -   InterlaceFlag                      = %d\n", FrameParams->InterlaceFlag);
-        report(severity_info, "DDP -   TfcntrFlag                         = %d\n", FrameParams->TfcntrFlag);
-        report(severity_info, "DDP -   SliceCount                         = %d\n", FrameParams->StartCodes.SliceCount);
-
-        for (i = 0 ; i < FrameParams->StartCodes.SliceCount ; i++)
-        {
-            report(severity_info, "DDP -   SLICE %d\n", i + 1);
-            report(severity_info, "DDP -   SliceStartAddrCompressedBuffer_p = %d\n", FrameParams->StartCodes.SliceArray[i].SliceStartAddrCompressedBuffer_p);
-            report(severity_info, "DDP -   SliceAddress = %d\n", FrameParams->StartCodes.SliceArray[i].SliceAddress);
-        }
-
-        report(severity_info, "DDP -   BackwardRefdist                    = %d\n", FrameParams->BackwardRefdist);
-        report(severity_info, "DDP -   FramePictureLayerSize              = %d\n", FrameParams->FramePictureLayerSize);
-        report(severity_info, "DDP -   TffFlag                            = %d\n", FrameParams->TffFlag);
-        report(severity_info, "DDP -   SecondFieldFlag                    = %d\n", FrameParams->SecondFieldFlag);
-        report(severity_info, "DDP -   RefDist                            = %d\n", FrameParams->RefDist);
+        report (severity_info, "DDP -   SLICE %d\n", i+1);
+        report (severity_info, "DDP -   SliceStartAddrCompressedBuffer_p = %d\n", FrameParams->StartCodes.SliceArray[i].SliceStartAddrCompressedBuffer_p);
+        report (severity_info, "DDP -   SliceAddress = %d\n", FrameParams->StartCodes.SliceArray[i].SliceAddress);
     }
+    report (severity_info, "DDP -   BackwardRefdist                    = %d\n", FrameParams->BackwardRefdist);
+    report (severity_info, "DDP -   FramePictureLayerSize              = %d\n", FrameParams->FramePictureLayerSize );
+    report (severity_info, "DDP -   TffFlag                            = %d\n", FrameParams->TffFlag  );
+    report (severity_info, "DDP -   SecondFieldFlag                    = %d\n", FrameParams->SecondFieldFlag  );
+    report (severity_info, "DDP -   RefDist                            = %d\n", FrameParams->RefDist  );
+}
 
     return CodecNoError;
 }
 //}}}
 
 //{{{  SaveIntensityCompenationData
-void Codec_MmeVideoVc1_c::SaveIntensityCompensationData(unsigned int            RefBufferIndex,
-        VC9_IntensityComp_t*    Intensity)
+void Codec_MmeVideoVc1_c::SaveIntensityCompensationData        (unsigned int            RefBufferIndex,
+                                                                VC9_IntensityComp_t*    Intensity)
 {
     Vc1FrameParameters_t*               Frame                   = (Vc1FrameParameters_t *)ParsedFrameParameters->FrameParameterStructure;
     CodecIntensityCompensation_t*       RefIntensityComp        = &BufferState[RefBufferIndex].AppliedIntensityCompensation;
     CodecIntensityCompensation_t*       OurIntensityComp        = &BufferState[CurrentDecodeBufferIndex].AppliedIntensityCompensation;
 
     if (Frame->PictureHeader.first_field == 1)
-        // For first field intensity compensation is applied to the reference frame
+    // For first field intensity compensation is applied to the reference frame
     {
         if (Frame->PictureHeader.intensity_comp_field != VC1_INTENSITY_COMP_BOTTOM)
         {
@@ -870,7 +831,7 @@ void Codec_MmeVideoVc1_c::SaveIntensityCompensationData(unsigned int            
         }
     }
     else
-        // For second field part is applied to the first field and part to the reference frame
+    // For second field part is applied to the first field and part to the reference frame
     {
         if (Frame->PictureHeader.tff == 1)
         {
@@ -902,8 +863,8 @@ void Codec_MmeVideoVc1_c::SaveIntensityCompensationData(unsigned int            
 }
 //}}}
 //{{{  GetForwardIntensityCompenationData
-void Codec_MmeVideoVc1_c::GetForwardIntensityCompensationData(unsigned int            RefBufferIndex,
-        VC9_IntensityComp_t*    Intensity)
+void Codec_MmeVideoVc1_c::GetForwardIntensityCompensationData  (unsigned int            RefBufferIndex,
+                                                                VC9_IntensityComp_t*    Intensity)
 {
     Vc1FrameParameters_t*               Frame                   = (Vc1FrameParameters_t *)ParsedFrameParameters->FrameParameterStructure;
     CodecIntensityCompensation_t*       RefIntensityComp        = &BufferState[RefBufferIndex].AppliedIntensityCompensation;
@@ -913,7 +874,7 @@ void Codec_MmeVideoVc1_c::GetForwardIntensityCompensationData(unsigned int      
         return;
 
     if (Frame->PictureHeader.first_field == 1) //|| (Frame->PictureHeader.ptype == VC1_PICTURE_CODING_TYPE_B))
-        // For first field intensity compensation is obtained from that already used for the reference frame
+    // For first field intensity compensation is obtained from that already used for the reference frame
     {
         Intensity->ForwTop_1            = RefIntensityComp->Top1;
         Intensity->ForwTop_2            = RefIntensityComp->Top2;
@@ -921,8 +882,8 @@ void Codec_MmeVideoVc1_c::GetForwardIntensityCompensationData(unsigned int      
         Intensity->ForwBot_2            = RefIntensityComp->Bottom2;
     }
     else if (Frame->PictureHeader.ptype != VC1_PICTURE_CODING_TYPE_B)
-        // Second field of B frame uses first field as reference so cannot have intensity compensation applied
-        // For second field of P frame part is obtained from the first field and part from the reference frame
+    // Second field of B frame uses first field as reference so cannot have intensity compensation applied
+    // For second field of P frame part is obtained from the first field and part from the reference frame
     {
         if (Frame->PictureHeader.tff == 1)
         {
@@ -942,8 +903,8 @@ void Codec_MmeVideoVc1_c::GetForwardIntensityCompensationData(unsigned int      
 }
 //}}}
 //{{{  GetBackwardIntensityCompenationData
-void Codec_MmeVideoVc1_c::GetBackwardIntensityCompensationData(unsigned int            RefBufferIndex,
-        VC9_IntensityComp_t*    Intensity)
+void Codec_MmeVideoVc1_c::GetBackwardIntensityCompensationData (unsigned int            RefBufferIndex,
+                                                                VC9_IntensityComp_t*    Intensity)
 {
     CodecIntensityCompensation_t*       RefIntensityComp        = &BufferState[RefBufferIndex].AppliedIntensityCompensation;
 
@@ -951,27 +912,25 @@ void Codec_MmeVideoVc1_c::GetBackwardIntensityCompensationData(unsigned int     
     Intensity->BackTop_2                = RefIntensityComp->Top2;
     Intensity->BackBot_1                = RefIntensityComp->Bottom1;
     Intensity->BackBot_2                = RefIntensityComp->Bottom2;
+
 }
 //}}}
 //{{{  CheckCodecReturnParameters
 // Convert the return code into human readable form.
-static const char* LookupError(unsigned int Error)
+static const char* LookupError (unsigned int Error)
 {
 #define E(e) case e: return #e
-
-    switch (Error)
+    switch(Error)
     {
-            E(VC9_DECODER_ERROR_MB_OVERFLOW);
-            E(VC9_DECODER_ERROR_RECOVERED);
-            E(VC9_DECODER_ERROR_NOT_RECOVERED);
-            E(VC9_DECODER_ERROR_TASK_TIMEOUT);
-
+        E(VC9_DECODER_ERROR_MB_OVERFLOW);
+        E(VC9_DECODER_ERROR_RECOVERED);
+        E(VC9_DECODER_ERROR_NOT_RECOVERED);
+        E(VC9_DECODER_ERROR_TASK_TIMEOUT);
         default: return "VC9_DECODER_UNKNOWN_ERROR";
     }
-
 #undef E
 }
-CodecStatus_t   Codec_MmeVideoVc1_c::CheckCodecReturnParameters(CodecBaseDecodeContext_t *Context)
+CodecStatus_t   Codec_MmeVideoVc1_c::CheckCodecReturnParameters( CodecBaseDecodeContext_t *Context )
 {
 
     MME_Command_t*                              MMECommand              = (MME_Command_t*)(&Context->MMECommand);

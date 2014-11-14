@@ -22,7 +22,7 @@ license from ST.
 Source file name ; mjpeg.h
 Author ;           Julian
 
-Definition of the constants/macros that define useful things associated with
+Definition of the constants/macros that define useful things associated with 
 AVS streams.
 
 
@@ -173,21 +173,21 @@ typedef struct MjpegStartOfScan_s
 } MjpegStartOfScan_t;
 
 // ////////////////////////////////////////////////////////////////////////////
-//
+// 
 //  Definition of the natural order matrix for coefficients
 //
 
 #ifdef DEFINE_MJPEG_NATURAL_COEFFICIENT_ORDER_MATRIX
 static int MjpegCoefficientMatrixNaturalOrder[MJPEG_QUANTIZATION_MATRIX_SIZE] =
 {
-    0,   1,  8, 16,  9,  2,  3, 10,                              // This translates zigzag matrix indices,
-    17, 24, 32, 25, 18, 11,  4,  5,                              // used in coefficient transmission,
-    12, 19, 26, 33, 40, 48, 41, 34,                              // to natural order indices.
-    27, 20, 13,  6,  7, 14, 21, 28,
-    35, 42, 49, 56, 57, 50, 43, 36,
-    29, 22, 15, 23, 30, 37, 44, 51,
-    58, 59, 52, 45, 38, 31, 39, 46,
-    53, 60, 61, 54, 47, 55, 62, 63,
+   0,   1,  8, 16,  9,  2,  3, 10,                              // This translates zigzag matrix indices,
+   17, 24, 32, 25, 18, 11,  4,  5,                              // used in coefficient transmission,
+   12, 19, 26, 33, 40, 48, 41, 34,                              // to natural order indices.
+   27, 20, 13,  6,  7, 14, 21, 28,
+   35, 42, 49, 56, 57, 50, 43, 36,
+   29, 22, 15, 23, 30, 37, 44, 51,
+   58, 59, 52, 45, 38, 31, 39, 46,
+   53, 60, 61, 54, 47, 55, 62, 63,
 };
 #endif
 

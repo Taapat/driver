@@ -50,9 +50,9 @@ static BufferDataDescriptor_t     RmaAudioFrameParametersBuffer        = BUFFER_
 
 #define CodeToInteger(a,b,c,d)          ((a << 0) | (b << 8) | (c << 16) | (d << 24))
 
-static inline unsigned int BE2LE(unsigned int Value)
+static inline unsigned int BE2LE (unsigned int Value)
 {
-    return (((Value & 0xff) << 24) | ((Value & 0xff00) << 8) | ((Value >> 8) & 0xff00) | ((Value >> 24) & 0xff));
+    return (((Value&0xff)<<24) | ((Value&0xff00)<<8) | ((Value>>8)&0xff00) | ((Value>>24)&0xff));
 }
 //}}}
 
@@ -62,7 +62,7 @@ static inline unsigned int BE2LE(unsigned int Value)
 //      Constructor
 //
 
-FrameParser_AudioRma_c::FrameParser_AudioRma_c(void)
+FrameParser_AudioRma_c::FrameParser_AudioRma_c( void )
 {
     Configuration.FrameParserName               = "AudioRma";
 
@@ -83,7 +83,7 @@ FrameParser_AudioRma_c::FrameParser_AudioRma_c(void)
 //      Destructor
 //
 
-FrameParser_AudioRma_c::~FrameParser_AudioRma_c(void)
+FrameParser_AudioRma_c::~FrameParser_AudioRma_c (void)
 {
     Halt();
     Reset();
@@ -97,7 +97,7 @@ FrameParser_AudioRma_c::~FrameParser_AudioRma_c(void)
 ///
 /// /////////////////////////////////////////////////////////////////////////
 
-FrameParserStatus_t   FrameParser_AudioRma_c::Reset(void)
+FrameParserStatus_t   FrameParser_AudioRma_c::Reset (void )
 {
     return FrameParser_Audio_c::Reset();
 }
@@ -107,17 +107,17 @@ FrameParserStatus_t   FrameParser_AudioRma_c::Reset(void)
 ///
 /// \brief      Register the output ring
 ///
-FrameParserStatus_t   FrameParser_AudioRma_c::RegisterOutputBufferRing(Ring_t          Ring)
+FrameParserStatus_t   FrameParser_AudioRma_c::RegisterOutputBufferRing (Ring_t          Ring)
 {
     // Clear our parameter pointers
     StreamParameters                    = NULL;
     FrameParameters                     = NULL;
 
     // Set illegal state forcing a parameter update on the first frame
-    memset(&CurrentStreamParameters, 0, sizeof(CurrentStreamParameters));
+    memset (&CurrentStreamParameters, 0, sizeof(CurrentStreamParameters));
 
     // Pass the call down the line
-    return FrameParser_Audio_c::RegisterOutputBufferRing(Ring);
+    return FrameParser_Audio_c::RegisterOutputBufferRing( Ring );
 }
 //}}}
 
@@ -126,11 +126,11 @@ FrameParserStatus_t   FrameParser_AudioRma_c::RegisterOutputBufferRing(Ring_t   
 //
 //      The reset reference frame list function
 //
-FrameParserStatus_t   FrameParser_AudioRma_c::ResetReferenceFrameList(void)
+FrameParserStatus_t   FrameParser_AudioRma_c::ResetReferenceFrameList( void )
 {
     FRAME_DEBUG(">><<");
 
-    Player->CallInSequence(Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, CODEC_RELEASE_ALL);
+    Player->CallInSequence( Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, CODEC_RELEASE_ALL );
 
     return FrameParserNoError;
 }
@@ -140,7 +140,7 @@ FrameParserStatus_t   FrameParser_AudioRma_c::ResetReferenceFrameList(void)
 ///
 /// \brief      Not required for Rma audio
 ///
-FrameParserStatus_t   FrameParser_AudioRma_c::PrepareReferenceFrameList(void)
+FrameParserStatus_t   FrameParser_AudioRma_c::PrepareReferenceFrameList (void)
 {
     return FrameParserNoError;
 }
@@ -150,7 +150,7 @@ FrameParserStatus_t   FrameParser_AudioRma_c::PrepareReferenceFrameList(void)
 ///
 /// \brief      Not required for Rma audio
 ///
-FrameParserStatus_t   FrameParser_AudioRma_c::UpdateReferenceFrameList(void)
+FrameParserStatus_t   FrameParser_AudioRma_c::UpdateReferenceFrameList (void)
 {
     return FrameParserNoError;
 }
@@ -162,7 +162,7 @@ FrameParserStatus_t   FrameParser_AudioRma_c::UpdateReferenceFrameList(void)
 /// \brief      Not required for Rma audio
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_AudioRma_c::ProcessReverseDecodeStack(void)
+FrameParserStatus_t   FrameParser_AudioRma_c::ProcessReverseDecodeStack (void)
 {
     return FrameParserNoError;
 }
@@ -172,7 +172,7 @@ FrameParserStatus_t   FrameParser_AudioRma_c::ProcessReverseDecodeStack(void)
 ///
 /// \brief      Not required for Rma audio
 ///
-FrameParserStatus_t   FrameParser_AudioRma_c::ProcessReverseDecodeUnsatisfiedReferenceStack(void)
+FrameParserStatus_t   FrameParser_AudioRma_c::ProcessReverseDecodeUnsatisfiedReferenceStack (void)
 {
     return FrameParserNoError;
 }
@@ -182,7 +182,7 @@ FrameParserStatus_t   FrameParser_AudioRma_c::ProcessReverseDecodeUnsatisfiedRef
 ///
 /// \brief      Not required for Rma audio
 ///
-FrameParserStatus_t   FrameParser_AudioRma_c::PurgeReverseDecodeUnsatisfiedReferenceStack(void)
+FrameParserStatus_t   FrameParser_AudioRma_c::PurgeReverseDecodeUnsatisfiedReferenceStack(     void )
 {
 
     return FrameParserNoError;
@@ -193,7 +193,7 @@ FrameParserStatus_t   FrameParser_AudioRma_c::PurgeReverseDecodeUnsatisfiedRefer
 ///
 /// \brief      Not required for Rma audio
 ///
-FrameParserStatus_t   FrameParser_AudioRma_c::PurgeReverseDecodeStack(void)
+FrameParserStatus_t   FrameParser_AudioRma_c::PurgeReverseDecodeStack (void)
 {
 
     return FrameParserNoError;
@@ -207,7 +207,7 @@ FrameParserStatus_t   FrameParser_AudioRma_c::PurgeReverseDecodeStack(void)
 ///
 /// \copydoc FrameParser_Audio_c::PurgeQueuedPostDecodeParameterSettings()
 ///
-FrameParserStatus_t   FrameParser_AudioRma_c::PurgeQueuedPostDecodeParameterSettings(void)
+FrameParserStatus_t   FrameParser_AudioRma_c::PurgeQueuedPostDecodeParameterSettings( void )
 {
     return FrameParserNoError;
 }
@@ -219,7 +219,7 @@ FrameParserStatus_t   FrameParser_AudioRma_c::PurgeQueuedPostDecodeParameterSett
 ///
 /// \copydoc FrameParser_Audio_c::ProcessQueuedPostDecodeParameterSettings()
 ///
-FrameParserStatus_t   FrameParser_AudioRma_c::ProcessQueuedPostDecodeParameterSettings(void)
+FrameParserStatus_t   FrameParser_AudioRma_c::ProcessQueuedPostDecodeParameterSettings( void )
 {
     return FrameParserNoError;
 }
@@ -232,7 +232,7 @@ FrameParserStatus_t   FrameParser_AudioRma_c::ProcessQueuedPostDecodeParameterSe
 /// For Real Audio these can be determined immediately (although it the first
 /// frame for decode does not contain a PTS we must synthesize one).
 ///
-FrameParserStatus_t   FrameParser_AudioRma_c::GeneratePostDecodeParameterSettings(void)
+FrameParserStatus_t   FrameParser_AudioRma_c::GeneratePostDecodeParameterSettings( void )
 {
     FrameParserStatus_t Status;
 
@@ -250,21 +250,20 @@ FrameParserStatus_t   FrameParser_AudioRma_c::GeneratePostDecodeParameterSetting
     // Record in the structure the decode and presentation times if specified
     //
 
-    if (CodedFrameParameters->PlaybackTimeValid)
+    if( CodedFrameParameters->PlaybackTimeValid )
     {
         ParsedFrameParameters->NativePlaybackTime       = CodedFrameParameters->PlaybackTime;
-        TranslatePlaybackTimeNativeToNormalized(CodedFrameParameters->PlaybackTime, &ParsedFrameParameters->NormalizedPlaybackTime);
+        TranslatePlaybackTimeNativeToNormalized( CodedFrameParameters->PlaybackTime, &ParsedFrameParameters->NormalizedPlaybackTime );
     }
 
-    if (CodedFrameParameters->DecodeTimeValid)
+    if( CodedFrameParameters->DecodeTimeValid )
     {
         ParsedFrameParameters->NativeDecodeTime         = CodedFrameParameters->DecodeTime;
-        TranslatePlaybackTimeNativeToNormalized(CodedFrameParameters->DecodeTime, &ParsedFrameParameters->NormalizedDecodeTime);
+        TranslatePlaybackTimeNativeToNormalized( CodedFrameParameters->DecodeTime, &ParsedFrameParameters->NormalizedDecodeTime );
     }
 
-    // Synthesize the presentation time if required
+    // Sythesize the presentation time if required
     Status                                              = HandleCurrentFrameNormalizedPlaybackTime();
-
     if (Status != FrameParserNoError)
         return Status;
 
@@ -273,7 +272,7 @@ FrameParserStatus_t   FrameParser_AudioRma_c::GeneratePostDecodeParameterSetting
 
     // Use the super-class utilities to complete our housekeeping chores
     HandleUpdateStreamParameters();
-    GenerateNextFrameNormalizedPlaybackTime(CurrentStreamParameters.SamplesPerFrame,  CurrentStreamParameters.SampleRate);
+    GenerateNextFrameNormalizedPlaybackTime (CurrentStreamParameters.SamplesPerFrame,  CurrentStreamParameters.SampleRate);
 
     return FrameParserNoError;
 }
@@ -284,7 +283,7 @@ FrameParserStatus_t   FrameParser_AudioRma_c::GeneratePostDecodeParameterSetting
 ///
 /// \brief      Not required for Rma audio
 ///
-FrameParserStatus_t   FrameParser_AudioRma_c::TestForTrickModeFrameDrop(void)
+FrameParserStatus_t   FrameParser_AudioRma_c::TestForTrickModeFrameDrop (void)
 {
 
     return FrameParserNoError;
@@ -297,26 +296,23 @@ FrameParserStatus_t   FrameParser_AudioRma_c::TestForTrickModeFrameDrop(void)
 /// \brief      Scan the start code list reading header specific information
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_AudioRma_c::ReadHeaders(void)
+FrameParserStatus_t   FrameParser_AudioRma_c::ReadHeaders (void)
 {
     FrameParserStatus_t         Status;
 
 #if 0
     unsigned int                i;
-    report(severity_info, "Buffer (%d) :", BufferLength);
-
-    for (i = 0; i < BufferLength; i++)
+    report (severity_info, "Buffer (%d) :", BufferLength);
+    for (i=0; i<BufferLength; i++)
     {
-        report(severity_info, "%02x ", BufferData[i]);
-
-        if (((i + 1) & 0x1f) == 0)
-            report(severity_info, "\n");
+        report (severity_info, "%02x ", BufferData[i]);
+        if (((i+1)&0x1f)==0)
+            report (severity_info, "\n");
     }
-
-    report(severity_info, "\n");
+    report (severity_info, "\n");
 #endif
 
-    Bits.SetPointer(BufferData);
+    Bits.SetPointer (BufferData);
     DataOffset                  = 0;
 
     // Perform the common portion of the read headers function
@@ -324,31 +320,28 @@ FrameParserStatus_t   FrameParser_AudioRma_c::ReadHeaders(void)
 
     if (!StreamFormatInfoValid)
     {
-        Status                  = GetNewStreamParameters((void **)&StreamParameters);
-
+        Status                  = GetNewStreamParameters ((void **)&StreamParameters);
         if (Status != FrameParserNoError)
         {
-            FRAME_ERROR("Cannot get new stream parameters\n");
+            FRAME_ERROR ("Cannot get new stream parameters\n");
             return Status;
         }
 
         Status                  = ReadStreamParameters();
-
         if (Status != FrameParserNoError)
         {
-            FRAME_ERROR("Failed to parse stream parameters\n");
+            FRAME_ERROR ("Failed to parse stream parameters\n" );
             return Status;
         }
 
-        memcpy(&CurrentStreamParameters, StreamParameters, sizeof(CurrentStreamParameters));
+        memcpy (&CurrentStreamParameters, StreamParameters, sizeof(CurrentStreamParameters));
         StreamFormatInfoValid   = true;
     }
 
-    Status = GetNewFrameParameters((void**)&FrameParameters);
-
+    Status = GetNewFrameParameters ((void**)&FrameParameters);
     if (Status != FrameParserNoError)
     {
-        FRAME_ERROR("Cannot get new frame parameters\n");
+        FRAME_ERROR ("Cannot get new frame parameters\n");
         return Status;
     }
 
@@ -366,7 +359,7 @@ FrameParserStatus_t   FrameParser_AudioRma_c::ReadHeaders(void)
 
     FrameParameters->FrameSize                                          = CurrentStreamParameters.SubPacketSize;
     FrameParameters->BitRate                                            = (CurrentStreamParameters.SubPacketSize * CurrentStreamParameters.SampleRate * 8) /
-            CurrentStreamParameters.SamplesPerFrame;
+                                                                           CurrentStreamParameters.SamplesPerFrame;
 
     ParsedAudioParameters->Source.BitsPerSample                         = CurrentStreamParameters.SampleSize;
     ParsedAudioParameters->Source.ChannelCount                          = CurrentStreamParameters.ChannelCount;
@@ -388,7 +381,7 @@ FrameParserStatus_t   FrameParser_AudioRma_c::ReadHeaders(void)
 ///
 /// /////////////////////////////////////////////////////////////////////////
 
-FrameParserStatus_t   FrameParser_AudioRma_c::ReadStreamParameters(void)
+FrameParserStatus_t   FrameParser_AudioRma_c::ReadStreamParameters (void)
 {
     unsigned int                Unused;
     unsigned char*              StartPointer;
@@ -399,26 +392,22 @@ FrameParserStatus_t   FrameParser_AudioRma_c::ReadStreamParameters(void)
 
 #if 0
     unsigned int        Checksum = 0;
-    report(severity_info, "data %d :\n", BufferLength);
-
-    for (int i = 0; i < BufferLength; i++)
+    report (severity_info, "data %d :\n", BufferLength);
+    for (int i=0; i<BufferLength; i++)
     {
-        if ((i & 0x0f) == 0)
-            report(severity_info, "\n%06x", i);
-
-        report(severity_info, " %02x", BufferData[i]);
+        if ((i&0x0f)==0)
+            report (severity_info, "\n%06x", i);
+        report (severity_info, " %02x", BufferData[i]);
         Checksum       += BufferData[i];
     }
-
-    report(severity_info, "\nChecksum %08x\n", Checksum);
+    report (severity_info, "\nChecksum %08x\n", Checksum);
 #endif
 
-    Bits.GetPosition(&StartPointer, &BitsInByte);
+    Bits.GetPosition (&StartPointer, &BitsInByte);
 
     StreamParameters->Length                    = Bits.Get(32);
     StreamParameters->HeaderSignature           = BE2LE(Bits.Get(32));
     StreamParameters->Version                   = Bits.Get(16);
-
     if (StreamParameters->Version == 3)
     {
         StreamParameters->HeaderSize            = Bits.Get(32);
@@ -448,13 +437,11 @@ FrameParserStatus_t   FrameParser_AudioRma_c::ReadStreamParameters(void)
             Bits.Get(32);
             Bits.Get(16);
         }
-
         StreamParameters->SampleRate            = Bits.Get(16);
 
         Bits.Get(16);
         StreamParameters->SampleSize            = Bits.Get(16);
         StreamParameters->ChannelCount          = Bits.Get(16);
-
         if (StreamParameters->Version == 4)
         {
             Bits.Get(8);
@@ -467,41 +454,36 @@ FrameParserStatus_t   FrameParser_AudioRma_c::ReadStreamParameters(void)
             StreamParameters->InterleaverId     = BE2LE(Bits.Get(32));
             StreamParameters->CodecId           = BE2LE(Bits.Get(32));
         }
-
 //{{{  COMMENT
 #if 0
-        FormatInfo->Length                      = ReadObject32(RmfFile);
-        fread(&FormatInfo->HeaderSignature, 1, 4, RmfFile);
-        FormatInfo->Version                 = ReadObject16(RmfFile);
-        Unused                          = ReadObject16(RmfFile);
-        fread(&FormatInfo->RaSignature, 1, 4, RmfFile);
-        FormatInfo->Size                = ReadObject32(RmfFile);
-        FormatInfo->Version2            = ReadObject16(RmfFile);
-        FormatInfo->HeaderSize          = ReadObject32(RmfFile);
-        FormatInfo->CodecFlavour        = ReadObject16(RmfFile);
-        FormatInfo->CodedFrameSize      = ReadObject32(RmfFile);
-        fseeko(RmfFile, 12, SEEK_CUR);
-        FormatInfo->SubPacket           = ReadObject16(RmfFile);
-        FormatInfo->FrameSize           = ReadObject16(RmfFile);
-        FormatInfo->SubPacketSize       = ReadObject16(RmfFile);
-        fseeko(RmfFile, 2, SEEK_CUR);
-
+    FormatInfo->Length                      = ReadObject32 (RmfFile);
+    fread (&FormatInfo->HeaderSignature, 1, 4, RmfFile);
+    FormatInfo->Version                 = ReadObject16 (RmfFile);
+        Unused                          = ReadObject16 (RmfFile);
+        fread (&FormatInfo->RaSignature, 1, 4, RmfFile);
+        FormatInfo->Size                = ReadObject32 (RmfFile);
+        FormatInfo->Version2            = ReadObject16 (RmfFile);
+        FormatInfo->HeaderSize          = ReadObject32 (RmfFile);
+        FormatInfo->CodecFlavour        = ReadObject16 (RmfFile);
+        FormatInfo->CodedFrameSize      = ReadObject32 (RmfFile);
+        fseeko (RmfFile, 12, SEEK_CUR);
+        FormatInfo->SubPacket           = ReadObject16 (RmfFile);
+        FormatInfo->FrameSize           = ReadObject16 (RmfFile);
+        FormatInfo->SubPacketSize       = ReadObject16 (RmfFile);
+        fseeko (RmfFile, 2, SEEK_CUR);
         if (FormatInfo->Version == 5)
-            fseeko(RmfFile, 6, SEEK_CUR);
-
-        FormatInfo->SampleRate          = ReadObject16(RmfFile);
-        fseeko(RmfFile, 2, SEEK_CUR);
-        FormatInfo->SampleSize          = ReadObject16(RmfFile);
-        FormatInfo->ChannelCount        = ReadObject16(RmfFile);
-
+            fseeko (RmfFile, 6, SEEK_CUR);
+        FormatInfo->SampleRate          = ReadObject16 (RmfFile);
+        fseeko (RmfFile, 2, SEEK_CUR);
+        FormatInfo->SampleSize          = ReadObject16 (RmfFile);
+        FormatInfo->ChannelCount        = ReadObject16 (RmfFile);
         if (FormatInfo->Version == 4)
         {
-            fgetc(RmfFile);
-            fread(&FormatInfo->InterleaverId, 1, 4, RmfFile);
-            fgetc(RmfFile);
-            fread(&FormatInfo->CodecId, 1, 4, RmfFile);
+            fgetc (RmfFile);
+            fread (&FormatInfo->InterleaverId, 1, 4, RmfFile);
+            fgetc (RmfFile);
+            fread (&FormatInfo->CodecId, 1, 4, RmfFile);
         }
-
 #endif
 //}}}
 
@@ -512,76 +494,68 @@ FrameParserStatus_t   FrameParser_AudioRma_c::ReadStreamParameters(void)
 
         StreamParameters->CodecOpaqueDataLength  = Bits.Get(32);
 
-        Bits.GetPosition(&EndPointer, &BitsInByte);
+        Bits.GetPosition (&EndPointer, &BitsInByte);
         DataOffset                               = (unsigned int)EndPointer - (unsigned int)StartPointer;
 
 #if 0
-        FRAME_TRACE("%s: Data %p, Length %d\n", __FUNCTION__, EndPointer, BufferLength - DataOffset);
-        report(severity_info, "Data\n");
-
-        for (int i = DataOffset; i < BufferLength; i++)
+        FRAME_TRACE("%s: Data %p, Length %d\n", __FUNCTION__, EndPointer, BufferLength-DataOffset);
+        report (severity_info, "Data\n");
+        for (int i=DataOffset; i<BufferLength; i++)
         {
-            report(severity_info, "%02x ", BufferData[i]);
-
-            if (((i + 1 - DataOffset) & 0x1f) == 0)
-                report(severity_info, "\n");
+            report (severity_info, "%02x ", BufferData[i]);
+            if (((i+1-DataOffset)&0x1f)==0)
+                report (severity_info, "\n");
         }
-
-        report(severity_info, "\n");
+        report (severity_info, "\n");
 #endif
 
         switch (StreamParameters->CodecId)
         {
-            case CodeToInteger('d', 'n', 'e', 't'):             /* AC3 */
+            case CodeToInteger('d','n','e','t'):                /* AC3 */
                 break;
-
-            case CodeToInteger('s', 'i', 'p', 'r'):             /* Sipro */
+            case CodeToInteger('s','i','p','r'):                /* Sipro */
                 break;
-
-            case CodeToInteger('2', '8', '_', '8'):             /* Real Audio 2.0 */
+            case CodeToInteger('2','8','_','8'):                /* Real Audio 2.0 */
                 break;
-
-            case CodeToInteger('c', 'o', 'o', 'k'):             /* Rma */
-            case CodeToInteger('a', 't', 'r', 'c'):             /* ATRAC */
+            case CodeToInteger('c','o','o','k'):                /* Rma */
+            case CodeToInteger('a','t','r','c'):                /* ATRAC */
             {
                 StreamParameters->RmaVersion            = Bits.Get(32);
                 StreamParameters->SamplesPerFrame       = Bits.Get(16) / StreamParameters->ChannelCount;
 
                 break;
             }
-
-            case CodeToInteger('r', 'a', 'a', 'c'):             /* LC-AAC */
-            case CodeToInteger('r', 'a', 'c', 'p'):             /* HE-AAC */
+            case CodeToInteger('r','a','a','c'):                /* LC-AAC */
+            case CodeToInteger('r','a','c','p'):                /* HE-AAC */
                 break;
-
-            case CodeToInteger('r', 'a', 'l', 'f'):             /* Real Audio Lossless */
+            case CodeToInteger('r','a','l','f'):                /* Real Audio Lossless */
                 break;
         }
     }
 
 #ifdef DUMP_HEADERS
-    report(severity_info, "StreamFormatInfo :- \n");
-    report(severity_info, "Length                      %6u\n", StreamParameters->Length);
-    report(severity_info, "HeaderSignature               %.4s\n", (unsigned char*)&StreamParameters->HeaderSignature);
-    report(severity_info, "Version                     %6u\n", StreamParameters->Version);
-    report(severity_info, "RaSignature                   %.4s\n", (unsigned char*)&StreamParameters->RaSignature);
-    report(severity_info, "Size                        %6u\n", StreamParameters->Size);
-    report(severity_info, "Version2                    %6u\n", StreamParameters->Version2);
-    report(severity_info, "HeaderSize                  %6u\n", StreamParameters->HeaderSize);
-    report(severity_info, "CodecFlavour                %6u\n", StreamParameters->CodecFlavour);
-    report(severity_info, "CodedFrameSize              %6u\n", StreamParameters->CodedFrameSize);
-    report(severity_info, "SubPacket                   %6u\n", StreamParameters->SubPacket);
-    report(severity_info, "FrameSize                   %6u\n", StreamParameters->FrameSize);
-    report(severity_info, "SubPacketSize               %6u\n", StreamParameters->SubPacketSize);
-    report(severity_info, "SampleRate                  %6u\n", StreamParameters->SampleRate);
-    report(severity_info, "SampleSize                  %6u\n", StreamParameters->SampleSize);
-    report(severity_info, "ChannelCount                %6u\n", StreamParameters->ChannelCount);
-    report(severity_info, "InterleaverId                 %.4s\n", (unsigned char*)&StreamParameters->InterleaverId);
-    report(severity_info, "CodecId                       %.4s\n", (unsigned char*)&StreamParameters->CodecId);
-    report(severity_info, "CodecOpaqueDataLength       %6u\n", StreamParameters->CodecOpaqueDataLength);
-    report(severity_info, "DataOffset                  %6u\n", DataOffset);
-    report(severity_info, "RmaVersion             0x%08x\n", StreamParameters->RmaVersion);
-    report(severity_info, "SamplesPerFrame             %6u\n", StreamParameters->SamplesPerFrame);
+    report (severity_info, "StreamFormatInfo :- \n");
+    report (severity_info, "Length                      %6u\n", StreamParameters->Length);
+    report (severity_info, "HeaderSignature               %.4s\n", (unsigned char*)&StreamParameters->HeaderSignature);
+    report (severity_info, "Version                     %6u\n", StreamParameters->Version);
+    report (severity_info, "RaSignature                   %.4s\n", (unsigned char*)&StreamParameters->RaSignature);
+    report (severity_info, "Size                        %6u\n", StreamParameters->Size);
+    report (severity_info, "Version2                    %6u\n", StreamParameters->Version2);
+    report (severity_info, "HeaderSize                  %6u\n", StreamParameters->HeaderSize);
+    report (severity_info, "CodecFlavour                %6u\n", StreamParameters->CodecFlavour);
+    report (severity_info, "CodedFrameSize              %6u\n", StreamParameters->CodedFrameSize);
+    report (severity_info, "SubPacket                   %6u\n", StreamParameters->SubPacket);
+    report (severity_info, "FrameSize                   %6u\n", StreamParameters->FrameSize);
+    report (severity_info, "SubPacketSize               %6u\n", StreamParameters->SubPacketSize);
+    report (severity_info, "SampleRate                  %6u\n", StreamParameters->SampleRate);
+    report (severity_info, "SampleSize                  %6u\n", StreamParameters->SampleSize);
+    report (severity_info, "ChannelCount                %6u\n", StreamParameters->ChannelCount);
+    report (severity_info, "InterleaverId                 %.4s\n", (unsigned char*)&StreamParameters->InterleaverId);
+    report (severity_info, "CodecId                       %.4s\n", (unsigned char*)&StreamParameters->CodecId);
+    report (severity_info, "CodecOpaqueDataLength       %6u\n", StreamParameters->CodecOpaqueDataLength);
+    report (severity_info, "DataOffset                  %6u\n", DataOffset);
+    report (severity_info, "RmaVersion             0x%08x\n", StreamParameters->RmaVersion);
+    report (severity_info, "SamplesPerFrame             %6u\n", StreamParameters->SamplesPerFrame);
 
 #endif
 

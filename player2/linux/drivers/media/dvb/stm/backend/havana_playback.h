@@ -45,7 +45,7 @@ Date        Modification                                    Name
 #endif
 
 #define PLAYBACK_DEBUG(fmt, args...)      ((void) (ENABLE_PLAYBACK_DEBUG && \
-        (report(severity_note, "HavanaPlayback_c::%s: " fmt, __FUNCTION__, ##args), 0)))
+                                            (report(severity_note, "HavanaPlayback_c::%s: " fmt, __FUNCTION__, ##args), 0)))
 
 /* Output trace information off the critical path */
 #define PLAYBACK_TRACE(fmt, args...)      (report(severity_note, "HavanaPlayback_c::%s: " fmt, __FUNCTION__, ##args))
@@ -59,59 +59,63 @@ class HavanaStream_c;
 class HavanaPlayback_c
 {
 
-    private:
-        PlayDirection_t             Direction;
+private:
+    PlayDirection_t             Direction;
 
-        class OutputCoordinator_c*  OutputCoordinator;
+    class OutputCoordinator_c*  OutputCoordinator;
 
-        unsigned int                CurrentSpeed;
-        bool                        RealTime;
-        bool                        SyncState;
-        bool                        SurroundSoundOn;
-        OS_Mutex_t                  Lock;
-        bool                        LockInitialised;
+    unsigned int                CurrentSpeed;
+    bool                        RealTime;
+    bool                        SyncState;
+    bool                        SurroundSoundOn;
+    /*
+    AspectRatio_t               AspectRatio;
+    DisplayFormat_t             DisplayFormat;
+    */
+    OS_Mutex_t                  Lock;
+    bool                        LockInitialised;
 
-        class HavanaPlayer_c*       HavanaPlayer;
-        class HavanaStream_c*       Stream[MAX_STREAMS_PER_PLAYBACK];
-        class HavanaDemux_c*        Demux[MAX_DEMUX_CONTEXTS];
+    class HavanaPlayer_c*       HavanaPlayer;
+    class HavanaStream_c*       Stream[MAX_STREAMS_PER_PLAYBACK];
+    class HavanaDemux_c*        Demux[MAX_DEMUX_CONTEXTS];
 
-        class BufferManager_c*      BufferManager;
-        class Player_c*             Player;
-        PlayerPlayback_t            PlayerPlayback;
+    class BufferManager_c*      BufferManager;
+    class Player_c*             Player;
+    PlayerPlayback_t            PlayerPlayback;
 
-    public:
+public:
 
-        HavanaPlayback_c(void);
+                                HavanaPlayback_c               (void);
 
-        ~HavanaPlayback_c(void);
+                               ~HavanaPlayback_c               (void);
 
-        HavanaStatus_t              Init(class HavanaPlayer_c*           HavanaPlayer,
-                                         class Player_c*                 Player,
-                                         class BufferManager_c*          BufferManager);
+    HavanaStatus_t              Init                           (class HavanaPlayer_c*           HavanaPlayer,
+                                                                class Player_c*                 Player,
+                                                                class BufferManager_c*          BufferManager);
 
-        HavanaStatus_t              Active(void);
+    HavanaStatus_t              Active                         (void);
 
-        HavanaStatus_t              AddDemux(unsigned int                    DemuxId,
-                                             class HavanaDemux_c**           HavanaDemux);
-        HavanaStatus_t              RemoveDemux(class HavanaDemux_c*            HavanaDemux);
+    HavanaStatus_t              AddDemux                       (unsigned int                    DemuxId,
+                                                                class HavanaDemux_c**           HavanaDemux);
+    HavanaStatus_t              RemoveDemux                    (class HavanaDemux_c*            HavanaDemux);
 
-        HavanaStatus_t              AddStream(char*                           Media,
-                                              char*                           Format,
-                                              char*                           Encoding,
-                                              unsigned int                    SurfaceId,
-                                              class HavanaStream_c**          HavanaStream);
-        HavanaStatus_t              RemoveStream(class HavanaStream_c*           HavanaStream);
+    HavanaStatus_t              AddStream                      (char*                           Media,
+                                                                char*                           Format,
+                                                                char*                           Encoding,
+                                                                unsigned int                    SurfaceId,
+                                                                class HavanaStream_c**          HavanaStream);
+    HavanaStatus_t              RemoveStream                   (class HavanaStream_c*           HavanaStream);
 
-        HavanaStatus_t              SetSpeed(int                             PlaySpeed);
-        HavanaStatus_t              GetSpeed(int*                            PlaySpeed);
-        HavanaStatus_t              SetNativePlaybackTime(unsigned long long              NativeTime,
-                unsigned long long              SystemTime);
-        HavanaStatus_t              SetOption(play_option_t                   Option,
-                                              unsigned int                    Value);
-        HavanaStatus_t              CheckEvent(struct PlayerEventRecord_s*     PlayerEvent);
-        HavanaStatus_t              GetPlayerEnvironment(PlayerPlayback_t*               PlayerPlayback);
+    HavanaStatus_t              SetSpeed                       (int                             PlaySpeed);
+    HavanaStatus_t              GetSpeed                       (int*                            PlaySpeed);
+    HavanaStatus_t              SetNativePlaybackTime          (unsigned long long              NativeTime,
+                                                                unsigned long long              SystemTime);
+    HavanaStatus_t              SetOption                      (play_option_t                   Option,
+                                                                unsigned int                    Value);
+    HavanaStatus_t              CheckEvent                     (struct PlayerEventRecord_s*     PlayerEvent);
+    HavanaStatus_t              GetPlayerEnvironment           (PlayerPlayback_t*               PlayerPlayback);
 
-        HavanaStatus_t              SetClockDataPoint(clock_data_point_t*             DataPoint);
+    HavanaStatus_t              SetClockDataPoint              (clock_data_point_t*             DataPoint);
 };
 
 

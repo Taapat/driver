@@ -73,54 +73,54 @@ Date        Modification                                    Name
 /// The FLV1 video codec proxy.
 class Codec_MmeVideoFlv1_c : public Codec_MmeVideo_c
 {
-    private:
+private:
 
-        // Data
+    // Data
 
-        FLV1_InitTransformerParam_t         Flv1InitializationParameters;
+    FLV1_InitTransformerParam_t         Flv1InitializationParameters;
 
-        allocator_device_t                  TranscodedFrameMemoryDevice;
-        void*                               TranscodedFrameMemory[3];
-        unsigned char*                      TranscodedFrameLumaBuffer;
-        unsigned char*                      TranscodedFrameChromaBuffer;
+    allocator_device_t                  TranscodedFrameMemoryDevice;
+    void*                               TranscodedFrameMemory[3];
+    unsigned char*                      TranscodedFrameLumaBuffer;
+    unsigned char*                      TranscodedFrameChromaBuffer;
 
-        bool                                RestartTransformer;
-        unsigned int                        DecodingWidth;
-        unsigned int                        DecodingHeight;
-        unsigned int                        MaxBytesPerFrame;
+    bool                                RestartTransformer;
+    unsigned int                        DecodingWidth;
+    unsigned int                        DecodingHeight;
+    unsigned int                        MaxBytesPerFrame;
 
-        // Functions
+    // Functions
 
-    public:
+public:
 
-        //
-        // Constructor/Destructor methods
-        //
+    //
+    // Constructor/Destructor methods
+    //
 
-        Codec_MmeVideoFlv1_c(void);
-        ~Codec_MmeVideoFlv1_c(void);
+    Codec_MmeVideoFlv1_c(                void );
+    ~Codec_MmeVideoFlv1_c(               void );
 
-        //
-        // Stream specific functions
-        //
+    //
+    // Stream specific functions
+    //
 
-    protected:
+protected:
 
-        CodecStatus_t   Reset(void);
-        CodecStatus_t   HandleCapabilities(void);
-        CodecStatus_t   RegisterOutputBufferRing(Ring_t                          Ring);
-        CodecStatus_t   InitializeMMETransformer(void);
+    CodecStatus_t   Reset(                                      void );
+    CodecStatus_t   HandleCapabilities(                         void );
+    CodecStatus_t   RegisterOutputBufferRing (                  Ring_t                          Ring);
+    CodecStatus_t   InitializeMMETransformer(                   void );
 
-        CodecStatus_t   FillOutTransformerInitializationParameters(void);
-        CodecStatus_t   FillOutSetStreamParametersCommand(void);
-        CodecStatus_t   FillOutDecodeCommand(void);
-        CodecStatus_t   FillOutDecodeBufferRequest(BufferStructure_t              *Request);
+    CodecStatus_t   FillOutTransformerInitializationParameters( void );
+    CodecStatus_t   FillOutSetStreamParametersCommand(          void );
+    CodecStatus_t   FillOutDecodeCommand(                       void );
+    CodecStatus_t   FillOutDecodeBufferRequest(                 BufferStructure_t              *Request );
 
-        CodecStatus_t   ValidateDecodeContext(CodecBaseDecodeContext_t       *Context);
-        CodecStatus_t   DumpSetStreamParameters(void                           *Parameters);
-        CodecStatus_t   DumpDecodeParameters(void                           *Parameters);
+    CodecStatus_t   ValidateDecodeContext(                      CodecBaseDecodeContext_t       *Context );
+    CodecStatus_t   DumpSetStreamParameters(                    void                           *Parameters );
+    CodecStatus_t   DumpDecodeParameters(                       void                           *Parameters );
 
-        CodecStatus_t   SendMMEStreamParameters(void);
+    CodecStatus_t   SendMMEStreamParameters(                    void );
 
 };
 #endif

@@ -1,8 +1,8 @@
 /*
- *
+ * 
  * Generic TSMerger driver
- *
- *
+ * 
+ * 
  */
 
 #ifndef _TSMERGER_H_
@@ -11,63 +11,63 @@
 /* Parameters for device */
 #if defined(ST5100) || defined(ST5301) || defined(CONFIG_CPU_SUBTYPE_STB7100) || defined (CONFIG_CPU_SUBTYPE_STX7100)
 #ifdef CONFIG_CPU_SUBTYPE_STB5301
-#define TSM_BASE_ADDRESS 0x21100000
-#define TSM_BASE_SIZE    0x400
+  #define TSM_BASE_ADDRESS 0x21100000
+  #define TSM_BASE_SIZE    0x400
 
-#define TSM_NUM_INPUT_STREAMS 0x5
-#define TSM_NUM_OUPUT_STREAMS 0x2
+  #define TSM_NUM_INPUT_STREAMS 0x5
+  #define TSM_NUM_OUPUT_STREAMS 0x2
 
-#define TSM_INPUT_TSIS       (1 << 0 | 1 << 1 | 1 << 2)
-#define TSM_INPUT_SWTS       (1 << 3)
-#define TSM_INPUT_PTIALT     (1 << 4)
+  #define TSM_INPUT_TSIS       (1 << 0 | 1 << 1 | 1 << 2)
+  #define TSM_INPUT_SWTS       (1 << 3)
+  #define TSM_INPUT_PTIALT     (1 << 4)
 
-#define TSM_OUTPUT_PTI       (1 << 0)
-#define TSM_OUTPUT_1394      (1 << 1)
+  #define TSM_OUTPUT_PTI       (1 << 0)
+  #define TSM_OUTPUT_1394      (1 << 1)
 #endif
 
 #if defined(CONFIG_CPU_SUBTYPE_STB7100) || defined (CONFIG_CPU_SUBTYPE_STX7100)
-#define TSM_BASE_ADDRESS 0x19242000
-#define TSM_BASE_SIZE    0x900
+  #define TSM_BASE_ADDRESS 0x19242000
+  #define TSM_BASE_SIZE    0x900
 
-#define TSM_NUM_INPUT_STREAMS 0x5
-#define TSM_NUM_OUPUT_STREAMS 0x2
+  #define TSM_NUM_INPUT_STREAMS 0x5
+  #define TSM_NUM_OUPUT_STREAMS 0x2
 
-#define TSM_INPUT_TSIS       (1 << 0 | 1 << 1 | 1 << 2)
-#define TSM_INPUT_SWTS       (1 << 3)
-#define TSM_INPUT_PTIALT     (1 << 4)
+  #define TSM_INPUT_TSIS       (1 << 0 | 1 << 1 | 1 << 2)
+  #define TSM_INPUT_SWTS       (1 << 3)
+  #define TSM_INPUT_PTIALT     (1 << 4)
 
-#define TSM_OUTPUT_PTI       (1 << 0)
-#define TSM_OUTPUT_1394      (1 << 1)
+  #define TSM_OUTPUT_PTI       (1 << 0)
+  #define TSM_OUTPUT_1394      (1 << 1)
 
-#define TSM_NUM_PTI_ALT_OUT  1
-#define TSM_NUM_1394_ALT_OUT 1
+  #define TSM_NUM_PTI_ALT_OUT  1
+  #define TSM_NUM_1394_ALT_OUT 1
 #endif
 
 #else /* It's the generic TSMerger, therefore only the following parameters need be specified */
 #if 0
-#define TSM_BASE_ADDRESS     ??
+  #define TSM_BASE_ADDRESS     ??
 
-#define TSM_NO_INPUT_STREAMS ??
-#define TSM_NO_OUPUT_STREAMS ??
+  #define TSM_NO_INPUT_STREAMS ??
+  #define TSM_NO_OUPUT_STREAMS ??
 
-#define TSM_INPUT_TSIS       ()
-#define TSM_INPUT_SWTS       ()
-#define TSM_INPUT_PTIALT     ()
+  #define TSM_INPUT_TSIS       ()
+  #define TSM_INPUT_SWTS       ()
+  #define TSM_INPUT_PTIALT     ()
 
-#define TSM_OUTPUT_PTI       ()
-#define TSM_OUTPUT_1394      ()
-
-#define TSM_NUM_PTI_ALT_OUT  ()
-#define TSM_NUM_1394_ALT_OUT ()
+  #define TSM_OUTPUT_PTI       ()
+  #define TSM_OUTPUT_1394      ()
+  
+  #define TSM_NUM_PTI_ALT_OUT  ()
+  #define TSM_NUM_1394_ALT_OUT ()
 #endif
 #endif
 
 #if defined(ST5100) || defined(ST5301) // defined(CPU_SUBTYPE_STB7100)
-#define TSM_SYSTEM_CFG       (0x03F0)
-#define TSM_SW_RESET         (0x03F8)
+  #define TSM_SYSTEM_CFG       (0x03F0)
+  #define TSM_SW_RESET         (0x03F8)
 #else
-#define TSM_SYSTEM_CFG       (0x0800 + ((TSM_NUM_PTI_ALT_OUT + TSM_NUM_1394_ALT_OUT) * 0x10) )
-#define TSM_SW_RESET         (0x0810 + ((TSM_NUM_PTI_ALT_OUT + TSM_NUM_1394_ALT_OUT) * 0x10) )
+  #define TSM_SYSTEM_CFG       (0x0800 + ((TSM_NUM_PTI_ALT_OUT + TSM_NUM_1394_ALT_OUT) * 0x10) )
+  #define TSM_SW_RESET         (0x0810 + ((TSM_NUM_PTI_ALT_OUT + TSM_NUM_1394_ALT_OUT) * 0x10) )
 #endif
 
 #define TSM_CFG_BYPASS_NORMAL    (0x0 << 0)
@@ -77,16 +77,16 @@
 
 /* TSM Destination register */
 #if defined(ST5100) || defined(ST5301) //|| defined(CPU_SUBTYPE_STB7100)
-#define TSM_DESTINATION(input)  (0x0200 + (0x38 * input))
+  #define TSM_DESTINATION(input)  (0x0200 + (0x38 * input))
 #else
-#define TSM_DESTINATION(input)  (0x0200 + (0x10 * input))
+  #define TSM_DESTINATION(input)  (0x0200 + (0x10 * input))
 #endif
 
 /* TSM PTI Alt Out configuration */
 #if defined(ST5100) || defined(ST5301) //|| defined(CPU_SUBTYPE_STB7100)
-#define TSM_PTI_ALT_OUT_CFG(x)  (0x300)
+  #define TSM_PTI_ALT_OUT_CFG(x)  (0x300)
 #else
-#define TSM_PTI_ALT_OUT_CFG(x)  (0x800 + (n*0x10))
+  #define TSM_PTI_ALT_OUT_CFG(x)  (0x800 + (n*0x10))
 #endif
 #define TSM_PTI_ALT_OUT_PACE(cycle)  (cycle & 0xffff)
 #define TSM_PTI_ALT_OUT_AUTO_PACE    (1 << 16)
@@ -94,9 +94,9 @@
 
 /* TSM 1394 configuration registers */
 #if defined(ST5100) || defined(ST5301) //|| defined(CPU_SUBTYPE_STB7100)
-#define TSM_1394_CFG(x)   (0x338)
+  #define TSM_1394_CFG(x)   (0x338)
 #else
-#define TSM_1394_CFG(x)   (0x0800 + (TSM_NUM_PTI_ALT_OUT * 0x10))
+  #define TSM_1394_CFG(x)   (0x0800 + (TSM_NUM_PTI_ALT_OUT * 0x10))
 #endif
 #define TSM_1394_PACE(cycles)         (cycles & 0xffff)
 #define TSM_1394_CLKSRC_NOT_INPUTCLK  (1 << 16)
@@ -105,9 +105,9 @@
 
 /* TSM SWTS configuration registers */
 #if defined(ST5100) || defined(ST5301) //|| defined(CPU_SUBTYPE_STB7100)
-#define TSM_SWTS_CFG(x)   (0x2e0)
+  #define TSM_SWTS_CFG(x)   (0x2e0)
 #else
-#define TSM_SWTS_CFG(x)   (0x0600 + (x*0x10))
+  #define TSM_SWTS_CFG(x)   (0x0600 + (x*0x10))
 #endif
 #define TSM_SWTS_PACE(bytes)      (bytes & 0xffff)
 #define TSM_SWTS_AUTO_PACE        (1 << 16)
@@ -118,12 +118,12 @@
 #define TSM_SWTS_FIFO(input)        (0x10BE000)
 
 /*
- * Merger output configuration
+ * Merger output configuration 
  */
 #if defined(ST5100) || defined(ST5301) //|| defined(CPU_SUBTYPE_STB7100)
-#define TSM_PROG_COUNTER(n)       (0x240 + (n * 0x8))
+  #define TSM_PROG_COUNTER(n)       (0x240 + (n * 0x8))
 #else
-#define TSM_PROG_COUNTER(n)       (0x400 + (n * 0x10))
+  #define TSM_PROG_COUNTER(n)       (0x400 + (n * 0x10))
 #endif
 #define TSM_COUNTER_VALUE(value)  (value & 0xffffff)
 #define TSM_AUTOMATIC_COUNTER     (1 << 24)

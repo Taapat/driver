@@ -65,7 +65,7 @@ Date        Modification                                    Name
 #define DTSHD_START_CODE_SUBSTREAM              0x64582025
 #define DTSHD_START_CODE_SUBSTREAM_CORE         0x02b09261
 
-#define DTSHD_SYNCHRO_BYTES_NEEDED              6 // from 4 to 6 bytes: dts extension substream is 4 bytes while 14 bit core synchro takes 6 bytes...
+#define DTSHD_SYNCHRO_BYTES_NEEDED              6 // from 4 to 6 bytes: dts extention substream is 4 bytes while 14 bit core synchro takes 6 bytes...
 #define DTSHD_RAW_SYNCHRO_BYTES_NEEDED          5
 
 
@@ -91,37 +91,37 @@ Date        Modification                                    Name
 ///
 typedef enum
 {
-    TypeDtshdCore,       ///< frame is a dtshd core substream
-    TypeDtshdExt         ///< frame is a dtshd extension substream
+  TypeDtshdCore,       ///< frame is a dtshd core substream
+  TypeDtshdExt         ///< frame is a dtshd extension substream
 } DtshdStreamType_t;
 
 typedef enum
 {
-    ParseForSynchro,     /// < Parse frame to get frame extension length and type, and perform crc
-    ParseExtended,       /// < Parse frame to get frame extension length and type, but don't compute crc, and get asset info
-    ParseSmart,          /// < The parsing type is to be decided smartly
+  ParseForSynchro,     /// < Parse frame to get frame extension length and type, and perform crc
+  ParseExtended,       /// < Parse frame to get frame extension length and type, but don't compute crc, and get asset info
+  ParseSmart,          /// < The parsing type is to be decided smartly
 } DtshdParseType_t;
 
 
 typedef struct DtshdParseModel_s
 {
-    unsigned int ParseType: 2; // of type DtshdParseType_t
-    unsigned int ParseExtendedIndex: 2; // index fo the extension to be parsed
-    unsigned int Unused: 4;
+    unsigned int ParseType:2; // of type DtshdParseType_t
+    unsigned int ParseExtendedIndex:2; // index fo the extension to be parsed
+    unsigned int Unused:4;
 } DtshdParseModel_t;
 
 typedef enum
 {
-    CodeDtshdCore      = 0x001,      ///< coding component is core within the core substream
-    CodeDtshdXch       = 0x008 ,     ///< coding component is Xch within the core substream
-    CodeDtshdXXch      = 0x002 ,     ///< coding component is XXch within the core substream
-    CodeDtshdX96K      = 0x004 ,     ///< coding component is X96K within the core substream
-    CodeDtshdExSSCore  = 0x010,      ///< coding component is Xch within the extension substream
-    CodeDtshdExtSSXXch = 0x040,      ///< coding component is XXch within the extension substream
-    CodeDtshdExtSSX96K = 0x080,      ///< coding component is X96K within the extension substream
-    CodeDtshdExtSSXBR  = 0x020,      ///< coding component is XBR within the extension substream
-    CodeDtshdExtSSLBR  = 0x100,      ///< coding component is LBR within the extension substream
-    CodeDtshdExtSSXLL  = 0x200       ///< coding component is XLL within the extension substream
+  CodeDtshdCore      = 0x001,      ///< coding component is core within the core substream
+  CodeDtshdXch       = 0x008 ,     ///< coding component is Xch within the core substream
+  CodeDtshdXXch      = 0x002 ,     ///< coding component is XXch within the core substream
+  CodeDtshdX96K      = 0x004 ,     ///< coding component is X96K within the core substream
+  CodeDtshdExSSCore  = 0x010,      ///< coding component is Xch within the extension substream
+  CodeDtshdExtSSXXch = 0x040,      ///< coding component is XXch within the extension substream
+  CodeDtshdExtSSX96K = 0x080,      ///< coding component is X96K within the extension substream
+  CodeDtshdExtSSXBR  = 0x020,      ///< coding component is XBR within the extension substream
+  CodeDtshdExtSSLBR  = 0x100,      ///< coding component is LBR within the extension substream
+  CodeDtshdExtSSXLL  = 0x200       ///< coding component is XLL within the extension substream
 } DtshdCodingComponentType_t;
 
 typedef enum
@@ -150,7 +150,7 @@ typedef struct DtshdAudioParsedFrameHeader_s
     DtshdStreamType_t   Type;
     unsigned char       SubStreamId;
     unsigned int        SamplingFrequency; ///< Sampling frequency in Hz.
-
+    
     // Derived values
     unsigned int        NumberOfSamples;                   ///< Number of samples per channel within the frame.
     unsigned int        CoreNumberOfSamples;               ///< Number of samples per channel within the core substream
@@ -197,13 +197,13 @@ typedef struct DtshdAudioStreamParameters_s
 ///
 typedef struct DtshdAudioFrameParameters_s
 {
-    /// Stream type
+    /// Stream type   
     bool                IsSubStreamCore;
     /// Size of the core substream (in bytes)
     unsigned int        CoreSize;
     /// Offset tot the backward compatible core substream location
     unsigned int        BcCoreOffset;
-
+    
 } DtshdAudioFrameParameters_t;
 
 #define BUFFER_DTSHD_AUDIO_FRAME_PARAMETERS        "DtshdAudioFrameParameters"

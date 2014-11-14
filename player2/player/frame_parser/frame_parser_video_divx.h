@@ -65,93 +65,93 @@ Date        Modification                                    Name
 
 class FrameParser_VideoDivx_c : public FrameParser_Video_c
 {
-    protected:
+protected:
 
-        // Data
+	// Data
 
-        unsigned int                 DivXVersion;
+	unsigned int                 DivXVersion;
 
-        Mpeg4VideoFrameParameters_t  *FrameParameters;
-        Mpeg4VideoStreamParameters_t *StreamParameters;
+	Mpeg4VideoFrameParameters_t  *FrameParameters;
+	Mpeg4VideoStreamParameters_t *StreamParameters;
 
-        bool                          DroppedFrame;
-        bool                          StreamParametersSet;
-        bool                          SentStreamParameter;
-        unsigned int                  TimeIncrementBits;
-        unsigned int                  QuantPrecision;
-        unsigned int                  Interlaced;
-        unsigned int                  CurrentMicroSecondsPerFrame;
+	bool                          DroppedFrame;
+	bool                          StreamParametersSet;
+	bool                          SentStreamParameter;
+	unsigned int                  TimeIncrementBits;
+	unsigned int                  QuantPrecision;
+	unsigned int                  Interlaced;       
+	unsigned int                  CurrentMicroSecondsPerFrame;
 
-        unsigned int                  LastPredictionType;     // for fake NVOP detection
-        unsigned int                  LastTimeIncrement;      // for fake NVOP detection
+	unsigned int                  LastPredictionType;     // for fake NVOP detection
+	unsigned int                  LastTimeIncrement;      // for fake NVOP detection
 
-        unsigned int                  bit_skip_no;
-        unsigned int                  old_time_base;
-        unsigned int                  prev_time_base;
-        unsigned int                  TimeIncrementResolution;
-        Mpeg4VopHeader_t              LastVop;
+	unsigned int                  bit_skip_no;      
+	unsigned int                  old_time_base;
+	unsigned int                  prev_time_base;
+	unsigned int                  TimeIncrementResolution;
+	Mpeg4VopHeader_t              LastVop;
 
-        // Functions
+	// Functions
 
-        FrameParserStatus_t  ReadVolHeader(Mpeg4VolHeader_t *Vol);
-        FrameParserStatus_t  ReadVoHeader(void);
-        virtual FrameParserStatus_t   ReadVopHeader(Mpeg4VopHeader_t *Vop);
-        unsigned int ReadVosHeader(void);
+	FrameParserStatus_t  ReadVolHeader( Mpeg4VolHeader_t *Vol );
+	FrameParserStatus_t  ReadVoHeader( void );
+    virtual FrameParserStatus_t   ReadVopHeader( Mpeg4VopHeader_t *Vop );
+	unsigned int ReadVosHeader( void );
 
-        FrameParserStatus_t  CommitFrameForDecode(void);
+	FrameParserStatus_t  CommitFrameForDecode(void);
 
-    public:
+public:
 
-        //
-        // Constructor/Destructor methods
-        //
+    //
+    // Constructor/Destructor methods
+    //
 
-        FrameParser_VideoDivx_c(void);
-        ~FrameParser_VideoDivx_c(void);
+    FrameParser_VideoDivx_c ( void );
+    ~FrameParser_VideoDivx_c( void );
 
-        //
-        // Overrides for component base class functions
-        //
+    //
+    // Overrides for component base class functions
+    //
 
-        FrameParserStatus_t   Reset(void);
+    FrameParserStatus_t   Reset( void );
 
-        //
-        // FrameParser class functions
-        //
+    //
+    // FrameParser class functions
+    //
 
-        FrameParserStatus_t   RegisterOutputBufferRing(Ring_t Ring);
+    FrameParserStatus_t   RegisterOutputBufferRing( Ring_t Ring );
 
-        //
-        // Extensions to the class overriding the base implementations
-        // NOTE in order to keep the names reasonably short, in the following
-        // functions specifically for forward playback will be prefixed with
-        // ForPlay and functions specific to reverse playback will be prefixed with
-        // RevPlay.
-        //
+    //
+    // Extensions to the class overriding the base implementations
+    // NOTE in order to keep the names reasonably short, in the following
+    // functions specifically for forward playback will be prefixed with 
+    // ForPlay and functions specific to reverse playback will be prefixed with 
+    // RevPlay.
+    //
 
-        FrameParserStatus_t   ForPlayProcessFrame(void);
-        FrameParserStatus_t   ForPlayQueueFrameForDecode(void);
-        /*
-            FrameParserStatus_t   RevPlayProcessFrame( void );
-            FrameParserStatus_t   RevPlayQueueFrameForDecode( void );
-            FrameParserStatus_t   RevPlayPurgeDecodeStacks( void );
-            FrameParserStatus_t   RevPlayProcessDecodeStacks( void );
-            FrameParserStatus_t   RevPlayGeneratePostDecodeParameterSettings(           void );
-            FrameParserStatus_t   RevPlayAppendToReferenceFrameList(                    void );
-            FrameParserStatus_t   RevPlayRemoveReferenceFrameFromList(                  void );
-            FrameParserStatus_t   RevPlayJunkReferenceFrameList(                        void );
-        */
+    FrameParserStatus_t   ForPlayProcessFrame( void );
+    FrameParserStatus_t   ForPlayQueueFrameForDecode( void );
+/*
+    FrameParserStatus_t   RevPlayProcessFrame( void );
+    FrameParserStatus_t   RevPlayQueueFrameForDecode( void );
+    FrameParserStatus_t   RevPlayPurgeDecodeStacks( void );
+    FrameParserStatus_t   RevPlayProcessDecodeStacks( void );
+    FrameParserStatus_t   RevPlayGeneratePostDecodeParameterSettings(           void );
+    FrameParserStatus_t   RevPlayAppendToReferenceFrameList(                    void );
+    FrameParserStatus_t   RevPlayRemoveReferenceFrameFromList(                  void );
+    FrameParserStatus_t   RevPlayJunkReferenceFrameList(                        void );
+*/      
 
 
-        //
-        // Extensions to the class to be fulfilled by my inheritors,
-        // these are required to support the process buffer override
-        //
+    //
+    // Extensions to the class to be fulfilled by my inheritors, 
+    // these are required to support the process buffer override
+    //
 
-        virtual FrameParserStatus_t   ReadHeaders(void);
+    virtual FrameParserStatus_t   ReadHeaders( void );
 
-        FrameParserStatus_t   PrepareReferenceFrameList(void);
-        FrameParserStatus_t   ForPlayUpdateReferenceFrameList(void);
+    FrameParserStatus_t   PrepareReferenceFrameList( void );
+    FrameParserStatus_t   ForPlayUpdateReferenceFrameList( void );
 
 };
 

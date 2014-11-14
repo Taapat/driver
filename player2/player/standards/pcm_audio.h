@@ -22,7 +22,7 @@ license from ST.
 Source file name : pcm_audio.h
 Author :           Julian
 
-Definition of the constants/macros that define useful things associated with
+Definition of the constants/macros that define useful things associated with 
 pcm audio streams.
 
 

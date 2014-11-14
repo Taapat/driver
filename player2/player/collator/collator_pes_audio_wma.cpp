@@ -75,10 +75,10 @@ Date        Modification                                    Name
 /// ::Reset again because the calls made by the sub-constructors will not have called
 /// our reset method.
 ///
-Collator_PesAudioWma_c::Collator_PesAudioWma_c(void)
+Collator_PesAudioWma_c::Collator_PesAudioWma_c( void )
 {
-    if (InitializationStatus != CollatorNoError)
-        return;
+    if( InitializationStatus != CollatorNoError )
+	return;
 
     Collator_PesAudioWma_c::Reset();
 }
@@ -91,7 +91,7 @@ Collator_PesAudioWma_c::Collator_PesAudioWma_c(void)
 ///
 /// \return Collator status code, CollatorNoError indicates success.
 ///
-CollatorStatus_t Collator_PesAudioWma_c::FindNextSyncWord(int *CodeOffset)
+CollatorStatus_t Collator_PesAudioWma_c::FindNextSyncWord( int *CodeOffset )
 {
     *CodeOffset = 0;
     return CollatorNoError;
@@ -104,44 +104,37 @@ CollatorStatus_t Collator_PesAudioWma_c::FindNextSyncWord(int *CodeOffset)
 ///
 /// \return Collator status code, CollatorNoError indicates success.
 ///
-CollatorStatus_t Collator_PesAudioWma_c::DecideCollatorNextStateAndGetLength(unsigned int *FrameLength)
+CollatorStatus_t Collator_PesAudioWma_c::DecideCollatorNextStateAndGetLength( unsigned int *FrameLength )
 {
     // handle the easy case first to keep the rest of the logic clean
-    if (CollatorState == GotSynchronized)
-    {
-        *FrameLength = RemainingElementaryLength;
-        CollatorState = SeekingFrameEnd;
-        return CollatorNoError;
+    if (CollatorState == GotSynchronized) {
+	*FrameLength = RemainingElementaryLength;
+	CollatorState = SeekingFrameEnd;
+	return CollatorNoError;
     }
 
     // if we've just accumulated a stream properties object then extract the block size
-    if (0 == memcmp(BufferBase, asf_guid_lookup[ASF_GUID_STREAM_PROPERTIES_OBJECT], sizeof(asf_guid_t)))
-    {
+    if( 0 == memcmp(BufferBase, asf_guid_lookup[ASF_GUID_STREAM_PROPERTIES_OBJECT], sizeof(asf_guid_t) ) ) {
         WmaAudioStreamParameters_t StreamParameters;
-        FrameParserStatus_t Status;
+	FrameParserStatus_t Status;
 
-        Status = FrameParser_AudioWma_c::ParseStreamHeader(BufferBase, &StreamParameters, false);
-
-        if (Status == FrameParserNoError)
-        {
-            WMADataBlockSize = StreamParameters.BlockAlignment;
-            COLLATOR_TRACE("Found Stream Properties Object - WMADataBlockSize %d\n", WMADataBlockSize);
-        }
-        else
-        {
-            COLLATOR_ERROR("Found GUID for Stream Properties Object but parser reported error\n");
-        }
+	Status = FrameParser_AudioWma_c::ParseStreamHeader(BufferBase, &StreamParameters, false);
+	if (Status == FrameParserNoError) {
+	    WMADataBlockSize = StreamParameters.BlockAlignment;
+	    COLLATOR_TRACE( "Found Stream Properties Object - WMADataBlockSize %d\n", WMADataBlockSize);
+        } else {
+	    COLLATOR_ERROR( "Found GUID for Stream Properties Object but parser reported error\n");
+	}
     }
 
     // check if the block we are *about* to accumulate is a stream properties object
-    if ((RemainingElementaryLength > sizeof(asf_guid_t)) &&
-            (0 == memcmp(RemainingElementaryData,
-                         asf_guid_lookup[ASF_GUID_STREAM_PROPERTIES_OBJECT], sizeof(asf_guid_t))))
-    {
-        COLLATOR_TRACE("Anticipating a Stream Properties Object - Clearing WMADataBlockSize\n");
-        WMADataBlockSize = 0;
+    if( ( RemainingElementaryLength > sizeof(asf_guid_t) ) &&
+	( 0 == memcmp(RemainingElementaryData,
+		      asf_guid_lookup[ASF_GUID_STREAM_PROPERTIES_OBJECT], sizeof(asf_guid_t) ) ) ) {
+        COLLATOR_TRACE( "Anticipating a Stream Properties Object - Clearing WMADataBlockSize\n" );
+	WMADataBlockSize = 0;
     }
-
+    
     // if we are handling normal data (WMADataBlockSize is non-zero)
     // we must check to see if we need to shrink the blocks to avoid
     // confusing the firmware. we only shrink the block if its size is
@@ -149,13 +142,12 @@ CollatorStatus_t Collator_PesAudioWma_c::DecideCollatorNextStateAndGetLength(uns
     // from becoming unaligned on incoming writes and missing a stream
     // properties object (noting that the above code only scans the
     // first sixteen bytes).
-    if ((0 != WMADataBlockSize) && (0 == (RemainingElementaryLength % WMADataBlockSize)))
-        *FrameLength = WMADataBlockSize;
+    if ( ( 0 != WMADataBlockSize ) && ( 0 == ( RemainingElementaryLength % WMADataBlockSize ) ) )
+	*FrameLength = WMADataBlockSize;
     else
-        *FrameLength = RemainingElementaryLength;
-
+	*FrameLength = RemainingElementaryLength;
     COLLATOR_DEBUG("WMADataBlockSize %4d  RemainingElementaryLength %4d  FrameLength %4d\n",
-                   WMADataBlockSize, RemainingElementaryLength, *FrameLength);
+		   WMADataBlockSize, RemainingElementaryLength, *FrameLength);
 
     CollatorState = GotCompleteFrame;
     return CollatorNoError;
@@ -170,7 +162,7 @@ CollatorStatus_t Collator_PesAudioWma_c::DecideCollatorNextStateAndGetLength(uns
 ///
 void  Collator_PesAudioWma_c::SetPesPrivateDataLength(unsigned char SpecificCode)
 {
-    /* do nothing, configuration already set to the right value... */
+  /* do nothing, configuration already set to the right value... */
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -181,22 +173,21 @@ void  Collator_PesAudioWma_c::SetPesPrivateDataLength(unsigned char SpecificCode
 ///
 CollatorStatus_t Collator_PesAudioWma_c::HandlePesPrivateData(unsigned char *PesPrivateData)
 {
-    /* do nothing, configuration already set to the right value... */
+  /* do nothing, configuration already set to the right value... */
     return CollatorNoError;
 }
 
-CollatorStatus_t Collator_PesAudioWma_c::Reset(void)
+CollatorStatus_t Collator_PesAudioWma_c::Reset( void )
 {
     CollatorStatus_t Status;
 
     COLLATOR_DEBUG(">><<\n");
 
     Status = Collator_PesAudio_c::Reset();
+    if( Status != CollatorNoError )
+	return Status;
 
-    if (Status != CollatorNoError)
-        return Status;
-
-    // FrameHeaderLength belongs to Collator_PesAudio_c so we must set it after the class has been reset
+    // FrameHeaderLength belongs to Collator_PesAudio_c so we must set it after the class has been reset    
     FrameHeaderLength = WMA_HEADER_SIZE;
 
     Configuration.StreamIdentifierMask       = PES_START_CODE_MASK;

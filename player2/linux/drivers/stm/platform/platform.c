@@ -15,7 +15,7 @@
 #ifdef __TDT__
 #include <linux/version.h>
 #endif
-#if defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+#if  defined(__TDT__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
 #else
 #include <asm-sh/processor.h>
 #endif
@@ -25,7 +25,7 @@
 #include <asm-sh/irq.h>
 #else /* STLinux 2.2 kernel */
 #define ILC_IRQ(x) (x + MUXED_IRQ_BASE)
-#endif
+#endif 
 
 
 

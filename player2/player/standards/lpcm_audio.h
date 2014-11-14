@@ -22,7 +22,7 @@ license from ST.
 Source file name : lpcm_audio.h
 Author :           Adam
 
-Definition of the constants/macros that define useful things associated with
+Definition of the constants/macros that define useful things associated with 
 LPCM audio streams.
 
 
@@ -46,17 +46,15 @@ Date        Modification                                    Name
 #define LPCM_AUDIO_START_CODE_MASK 0xF8
 #define LPCM_AUDIO_START_CODE      0xA0
 
-enum
-{
-    LPCM_QUANTIZATION_16_BIT,
-    LPCM_QUANTIZATION_20_BIT,
-    LPCM_QUANTIZATION_24_BIT
+enum {
+	LPCM_QUANTIZATION_16_BIT,
+	LPCM_QUANTIZATION_20_BIT,
+	LPCM_QUANTIZATION_24_BIT
 };
 
-enum
-{
-    LPCM_SAMPLING_FREQ_48KHZ,
-    LPCM_SAMPLING_FREQ_96KHZ
+enum {
+	LPCM_SAMPLING_FREQ_48KHZ,
+	LPCM_SAMPLING_FREQ_96KHZ
 };
 
 #define LPCM_BITS_PER_SAMPLE(x)         (16 + ((x)*4))
@@ -82,7 +80,7 @@ typedef struct LpcmAudioParsedFrameHeader_s
 
     // Directly interpretted values
 //    unsigned char Layer; ///< MPEG audio layer. Either 1, 2 or 3.
-//    unsigned char MpegStandard; ///< MPEG standard (sample rate grouping). Either 1, 2 or 25 (unofficial MPEG 2.5 standard)
+//    unsigned char MpegStandard; ///< MPEG standard (sample rate grouping). Either 1, 2 or 25 (unofficial MPEG 2.5 standard) 
 //    unsigned short BitRate; ///< MPEG bit rate in kbits/sec.
 //    unsigned int SamplingFrequency; ///< Sampling frequency in Hz.
 //    bool PaddedFrame; ///< True if the padding bit is set.
@@ -100,7 +98,7 @@ typedef struct LpcmAudioParsedFrameHeader_s
     unsigned int AudioSamplingFrequency;
     unsigned int NumberOfAudioChannels;
     unsigned int DynamicRangeControl;
-
+	
     // Derived values
     unsigned int SamplingFrequency; ///< Sampling frequency in Hz.
     unsigned int NumberOfSamples; ///< Number of samples per channel within the frame.
@@ -137,7 +135,7 @@ typedef struct LpcmAudioFrameParameters_s
 {
     /// The bit rate of the frame
     unsigned int BitRate;
-
+    
     /// Size of the compressed frame (in bytes)
     unsigned int FrameSize;
 } LpcmAudioFrameParameters_t;

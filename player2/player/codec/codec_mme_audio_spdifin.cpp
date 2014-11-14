@@ -42,7 +42,6 @@ Date        Modification                                    Name
 //      Include any component headers
 
 #define CODEC_TAG "SPDIFIN audio codec"
-#include "osdev_device.h"
 #include "codec_mme_audio_spdifin.h"
 #include "codec_mme_audio_eac3.h"
 #include "codec_mme_audio_dtshd.h"
@@ -66,8 +65,14 @@ typedef struct SpdifinAudioCodecStreamParameterContext_s
     MME_LxAudioDecoderGlobalParams_t    StreamParameters;
 } SpdifinAudioCodecStreamParameterContext_t;
 
+//#if __KERNEL__
+#if 0
+#define BUFFER_SPDIFIN_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT        "SpdifinAudioCodecStreamParameterContext"
+#define BUFFER_SPDIFIN_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT_TYPE   {BUFFER_SPDIFIN_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT, BufferDataTypeBase, AllocateFromDeviceMemory, 32, 0, true, true, sizeof(SpdifinAudioCodecStreamParameterContext_t)}
+#else
 #define BUFFER_SPDIFIN_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT        "SpdifinAudioCodecStreamParameterContext"
 #define BUFFER_SPDIFIN_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT_TYPE   {BUFFER_SPDIFIN_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT, BufferDataTypeBase, AllocateFromOSMemory, 32, 0, true, true, sizeof(SpdifinAudioCodecStreamParameterContext_t)}
+#endif
 
 static BufferDataDescriptor_t           SpdifinAudioCodecStreamParameterContextDescriptor = BUFFER_SPDIFIN_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT_TYPE;
 
@@ -87,8 +92,14 @@ typedef struct SpdifinAudioCodecDecodeContext_s
     MME_LxAudioDecoderFrameStatus_t     BufferStatus;
 } SpdifinAudioCodecDecodeContext_t;
 
+//#if __KERNEL__
+#if 0
+#define BUFFER_SPDIFIN_AUDIO_CODEC_DECODE_CONTEXT          "SpdifinAudioCodecDecodeContext"
+#define BUFFER_SPDIFIN_AUDIO_CODEC_DECODE_CONTEXT_TYPE     {BUFFER_SPDIFIN_AUDIO_CODEC_DECODE_CONTEXT, BufferDataTypeBase, AllocateFromDeviceMemory, 32, 0, true, true, sizeof(SpdifinAudioCodecDecodeContext_t)}
+#else
 #define BUFFER_SPDIFIN_AUDIO_CODEC_DECODE_CONTEXT          "SpdifinAudioCodecDecodeContext"
 #define BUFFER_SPDIFIN_AUDIO_CODEC_DECODE_CONTEXT_TYPE     {BUFFER_SPDIFIN_AUDIO_CODEC_DECODE_CONTEXT, BufferDataTypeBase, AllocateFromOSMemory, 32, 0, true, true, sizeof(SpdifinAudioCodecDecodeContext_t)}
+#endif
 
 static BufferDataDescriptor_t           SpdifinAudioCodecDecodeContextDescriptor = BUFFER_SPDIFIN_AUDIO_CODEC_DECODE_CONTEXT_TYPE;
 
@@ -101,7 +112,7 @@ static BufferDataDescriptor_t           SpdifinAudioCodecDecodeContextDescriptor
 /// \todo Correctly setup AudioDecoderTransformCapabilityMask
 ///
 
-Codec_MmeAudioSpdifin_c::Codec_MmeAudioSpdifin_c(void)
+Codec_MmeAudioSpdifin_c::Codec_MmeAudioSpdifin_c( void )
 {
     Configuration.CodecName                             = "SPDIFIN audio";
 
@@ -117,8 +128,8 @@ Codec_MmeAudioSpdifin_c::Codec_MmeAudioSpdifin_c(void)
     Configuration.DecodeContextCount                    = 10;
     Configuration.DecodeContextDescriptor               = &SpdifinAudioCodecDecodeContextDescriptor;
 
-    DecodeErrors                    = 0;
-    NumberOfSamplesProcessed                = 0;
+    DecodeErrors					= 0;
+    NumberOfSamplesProcessed				= 0;
 
     //AudioDecoderTransformCapabilityMask.DecoderCapabilityFlags = (1 << ACC_SPDIFIN);
 
@@ -139,52 +150,52 @@ Codec_MmeAudioSpdifin_c::Codec_MmeAudioSpdifin_c(void)
 ///     Destructor function, ensures a full halt and reset
 ///     are executed for all levels of the class.
 ///
-Codec_MmeAudioSpdifin_c::~Codec_MmeAudioSpdifin_c(void)
+Codec_MmeAudioSpdifin_c::~Codec_MmeAudioSpdifin_c( void )
 {
     Halt();
     Reset();
 }
 
-CodecStatus_t   Codec_MmeAudioSpdifin_c::Reset(void)
+CodecStatus_t   Codec_MmeAudioSpdifin_c::Reset(      void )
 {
     EOF.SentEOFCommand = false;
     return Codec_MmeAudio_c::Reset();
 }
 
 const static enum eAccFsCode LpcmSpdifin2ACC[] =
-    {
+{
 
-        // DVD Video Supported Frequencies
-        ACC_FS48k,
-        ACC_FS96k,
-        ACC_FS192k,
-        ACC_FS_reserved,
-        ACC_FS32k,
-        ACC_FS16k,
-        ACC_FS22k,
-        ACC_FS24k,
-        // DVD Audio Supported Frequencies
-        ACC_FS44k,
-        ACC_FS88k,
-        ACC_FS176k,
-        ACC_FS_reserved,
-        ACC_FS_reserved,
-        ACC_FS_reserved,
-        ACC_FS_reserved,
-        ACC_FS_reserved,
+    // DVD Video Supported Frequencies
+    ACC_FS48k,
+    ACC_FS96k,
+    ACC_FS192k,
+    ACC_FS_reserved,
+    ACC_FS32k,
+    ACC_FS16k,
+    ACC_FS22k,
+    ACC_FS24k,
+    // DVD Audio Supported Frequencies
+    ACC_FS44k,
+    ACC_FS88k,
+    ACC_FS176k,
+    ACC_FS_reserved,
+    ACC_FS_reserved,
+    ACC_FS_reserved,
+    ACC_FS_reserved,
+    ACC_FS_reserved,
 
-        // SPDIFIN Supported frequencies
-        ACC_FS_reserved,
-        ACC_FS_reserved,
-        ACC_FS_reserved,
-        ACC_FS_reserved,
-        ACC_FS_reserved,
-        ACC_FS_reserved,
-        ACC_FS_reserved,
-        ACC_FS_reserved,
-        ACC_FS_reserved,
-        ACC_FS_reserved,
-    };
+    // SPDIFIN Supported frequencies
+    ACC_FS_reserved,
+    ACC_FS_reserved,
+    ACC_FS_reserved,
+    ACC_FS_reserved,
+    ACC_FS_reserved,
+    ACC_FS_reserved,
+    ACC_FS_reserved,
+    ACC_FS_reserved,
+    ACC_FS_reserved,
+    ACC_FS_reserved,
+};
 
 
 static const LpcmAudioStreamParameters_t  DefaultStreamParameters =
@@ -200,23 +211,23 @@ static const LpcmAudioStreamParameters_t  DefaultStreamParameters =
     0,
     LPCM_DEFAULT_CHANNEL_ASSIGNMENT, // derived from NbChannels.
 
-    /*
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-    */
+/*
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+*/
 };
 
 ////////////////////////////////////////////////////////////////////////////
 ///
 /// Populate the supplied structure with parameters for SPDIFIN audio.
 ///
-CodecStatus_t Codec_MmeAudioSpdifin_c::FillOutTransformerGlobalParameters(MME_LxAudioDecoderGlobalParams_t *GlobalParams_p)
+CodecStatus_t Codec_MmeAudioSpdifin_c::FillOutTransformerGlobalParameters( MME_LxAudioDecoderGlobalParams_t *GlobalParams_p )
 {
     CodecStatus_t Status;
 
@@ -257,19 +268,19 @@ CodecStatus_t Codec_MmeAudioSpdifin_c::FillOutTransformerGlobalParameters(MME_Lx
 
 //
 
-    Status = Codec_MmeAudio_c::FillOutTransformerGlobalParameters(GlobalParams_p);
+    Status = Codec_MmeAudio_c::FillOutTransformerGlobalParameters( GlobalParams_p );
 
-    if (Status != CodecNoError)
+    if( Status != CodecNoError )
     {
-        return Status;
+	return Status;
     }
 
 //
-
+    
     unsigned char *PcmParams_p = ((unsigned char *) &Config) + Config.StructSize;
     MME_LxPcmProcessingGlobalParams_Subset_t &PcmParams =
-        *((MME_LxPcmProcessingGlobalParams_Subset_t *) PcmParams_p);
-
+	*((MME_LxPcmProcessingGlobalParams_Subset_t *) PcmParams_p);
+    
     MME_Resamplex2GlobalParams_t &resamplex2 = PcmParams.Resamplex2;
     // Id already set
     // StructSize already set
@@ -290,7 +301,7 @@ CodecStatus_t Codec_MmeAudioSpdifin_c::FillOutTransformerGlobalParameters(MME_Lx
 /// will have been filled out with valid values sufficient to initialize an
 /// SPDIFIN audio decoder.
 ///
-CodecStatus_t   Codec_MmeAudioSpdifin_c::FillOutTransformerInitializationParameters(void)
+CodecStatus_t   Codec_MmeAudioSpdifin_c::FillOutTransformerInitializationParameters( void )
 {
     CodecStatus_t Status;
     MME_LxAudioDecoderInitParams_t &Params = AudioDecoderInitializationParameters;
@@ -303,16 +314,15 @@ CodecStatus_t   Codec_MmeAudioSpdifin_c::FillOutTransformerInitializationParamet
 //
 
     Status = Codec_MmeAudio_c::FillOutTransformerInitializationParameters();
-
     if (Status != CodecNoError)
-        return Status;
+	return Status;
 
     // Spdifin decoder must be handled as streambase.
     AUDIODEC_SET_STREAMBASE((&Params), ACC_MME_TRUE);
 
 //
 
-    return FillOutTransformerGlobalParameters(&Params.GlobalParams);
+    return FillOutTransformerGlobalParameters( &Params.GlobalParams );
 }
 
 
@@ -320,7 +330,7 @@ CodecStatus_t   Codec_MmeAudioSpdifin_c::FillOutTransformerInitializationParamet
 ///
 /// Populate the AUDIO_DECODER's MME_SET_GLOBAL_TRANSFORMER_PARAMS parameters for SPDIFIN audio.
 ///
-CodecStatus_t   Codec_MmeAudioSpdifin_c::FillOutSetStreamParametersCommand(void)
+CodecStatus_t   Codec_MmeAudioSpdifin_c::FillOutSetStreamParametersCommand( void )
 {
     CodecStatus_t                               Status;
     SpdifinAudioCodecStreamParameterContext_t  *Context = (SpdifinAudioCodecStreamParameterContext_t *)StreamParameterContext;
@@ -334,15 +344,14 @@ CodecStatus_t   Codec_MmeAudioSpdifin_c::FillOutSetStreamParametersCommand(void)
     //
     // Now fill out the actual structure
     //
-    memset(&(Context->StreamParameters), 0, sizeof(Context->StreamParameters));
+    memset( &(Context->StreamParameters), 0, sizeof(Context->StreamParameters) );
 
-    Status = FillOutTransformerGlobalParameters(&(Context->StreamParameters));
-
-    if (Status != CodecNoError)
-        return Status;
+    Status = FillOutTransformerGlobalParameters( &(Context->StreamParameters) );
+    if( Status != CodecNoError )
+	return Status;
 
     //
-    // Fill out the actual command
+    // Fillout the actual command
     //
 
     Context->BaseContext.MMECommand.CmdStatus.AdditionalInfoSize        = 0;
@@ -359,7 +368,7 @@ CodecStatus_t   Codec_MmeAudioSpdifin_c::FillOutSetStreamParametersCommand(void)
 ///
 /// Populate the AUDIO_DECODER's MME_TRANSFORM parameters for SPDIFIN audio.
 ///
-CodecStatus_t   Codec_MmeAudioSpdifin_c::FillOutDecodeCommand(void)
+CodecStatus_t   Codec_MmeAudioSpdifin_c::FillOutDecodeCommand(       void )
 {
     SpdifinAudioCodecDecodeContext_t   *Context        = (SpdifinAudioCodecDecodeContext_t *)DecodeContext;
 
@@ -367,16 +376,16 @@ CodecStatus_t   Codec_MmeAudioSpdifin_c::FillOutDecodeCommand(void)
     // Initialize the frame parameters (we don't actually have much to say here)
     //
 
-    memset(&Context->DecodeParameters, 0, sizeof(Context->DecodeParameters));
+    memset( &Context->DecodeParameters, 0, sizeof(Context->DecodeParameters) );
 
     //
     // Zero the reply structure
     //
 
-    memset(&Context->DecodeStatus, 0, sizeof(Context->DecodeStatus));
+    memset( &Context->DecodeStatus, 0, sizeof(Context->DecodeStatus) );
 
     //
-    // Fill out the actual command
+    // Fillout the actual command
     //
 
     Context->BaseContext.MMECommand.CmdStatus.AdditionalInfoSize = sizeof(Context->DecodeStatus);
@@ -387,6 +396,11 @@ CodecStatus_t   Codec_MmeAudioSpdifin_c::FillOutDecodeCommand(void)
     return CodecNoError;
 }
 
+
+#ifdef __KERNEL__
+extern "C"{void flush_cache_all();};
+#endif
+
 ////////////////////////////////////////////////////////////////////////////
 ///
 /// Populate the AUDIO_DECODER's MME_SEND_BUFFERS parameters for SPDIFIN audio.
@@ -394,30 +408,30 @@ CodecStatus_t   Codec_MmeAudioSpdifin_c::FillOutDecodeCommand(void)
 /// Do not expect any Callback upon completion of this SEND_BUFFER as its
 /// completion must be synchronous with the TRANSFORM command that contains the
 /// corresponding decoded buffer.
-CodecStatus_t   Codec_MmeAudioSpdifin_c::FillOutSendBufferCommand(void)
+CodecStatus_t   Codec_MmeAudioSpdifin_c::FillOutSendBufferCommand(       void )
 {
     SpdifinAudioCodecDecodeContext_t   *Context        = (SpdifinAudioCodecDecodeContext_t *)DecodeContext;
 
     if (EOF.SentEOFCommand)
     {
-        CODEC_TRACE("Already sent EOF command - refusing to queue more buffers\n");
-        return CodecNoError;
+	CODEC_TRACE("Already sent EOF command - refusing to queue more buffers\n");
+	return CodecNoError;
     }
 
     //
     // Initialize the input buffer parameters (we don't actually have much to say here)
     //
 
-    memset(&Context->BufferParameters, 0, sizeof(Context->BufferParameters));
+    memset( &Context->BufferParameters, 0, sizeof(Context->BufferParameters) );
 
     //
     // Zero the reply structure
     //
 
-    memset(&Context->BufferStatus, 0, sizeof(Context->BufferStatus));
+    memset( &Context->BufferStatus, 0, sizeof(Context->BufferStatus) );
 
     //
-    // Fill out the actual command
+    // Fillout the actual command
     //
 
     Context->BufferCommand.CmdStatus.AdditionalInfoSize = sizeof(Context->BufferStatus);
@@ -431,15 +445,14 @@ CodecStatus_t   Codec_MmeAudioSpdifin_c::FillOutSendBufferCommand(void)
     Context->BufferCommand.CmdEnd                       = MME_COMMAND_END_RETURN_NO_INFO;
 
 #ifdef __KERNEL__
-    OS_FlushCacheAll();
+    flush_cache_all();
 #endif
 
-    MME_ERROR Status = MME_SendCommand(MMEHandle, &Context->BufferCommand);
-
-    if (Status != MME_SUCCESS)
+    MME_ERROR Status = MME_SendCommand( MMEHandle, &Context->BufferCommand );
+    if( Status != MME_SUCCESS )
     {
-        report(severity_error, "Codec_MmeAudioSpdifin_c::FillOutSendBufferCommand(%s) - Unable to send buffer command (%08x).\n", Configuration.CodecName, Status);
-        return CodecError;
+	report( severity_error, "Codec_MmeAudioSpdifin_c::FillOutSendBufferCommand(%s) - Unable to send buffer command (%08x).\n", Configuration.CodecName, Status );
+	return CodecError;
     }
 
     return CodecNoError;
@@ -484,14 +497,13 @@ void Codec_MmeAudioSpdifin_c::SetCommandIO(void)
 CodecStatus_t Codec_MmeAudioSpdifin_c::SendEofCommand()
 {
     MME_Command_t *eof = &EOF.Command;
-
-    if (EOF.SentEOFCommand)
-    {
-        CODEC_TRACE("Already sent EOF command once, refusing to do it again.\n");
-
-        return CodecNoError;
+    
+    if (EOF.SentEOFCommand) {
+	CODEC_TRACE("Already sent EOF command once, refusing to do it again.\n");
+	
+	return CodecNoError;
     }
-
+    
     EOF.SentEOFCommand = true;
 
     // Setup EOF Command ::
@@ -514,11 +526,11 @@ CodecStatus_t Codec_MmeAudioSpdifin_c::SendEofCommand()
 
     // Setup EOF Params
     EOF.Params.StructSize               = sizeof(MME_StreamingBufferParams_t);
-#if DRV_MULTICOM_AUDIO_DECODER_VERSION >= 0x090128
+#if DRV_MULTICOM_AUDIO_DECODER_VERSION >= 0x090128	
     STREAMING_SET_BUFFER_TYPE(((unsigned int*)&EOF.Params.BufferFlags), STREAMING_DEC_EOF);
 #else
     STREAMING_SET_BUFFER_TYPE(EOF.Params.BufferParams, STREAMING_DEC_EOF);
-#endif
+#endif 
 
     // Setup DataBuffer ::
     EOF.DataBuffers[0]                  = &EOF.DataBuffer;
@@ -548,31 +560,28 @@ CodecStatus_t Codec_MmeAudioSpdifin_c::SendEofCommand()
     //EOF.ScatterPage.FlagsIn   = 0;
     //EOF.ScatterPage.FlagsOut  = 0;
 
-    MME_ERROR Result = MME_SendCommand(MMEHandle, eof);
-
-    if (Result != MME_SUCCESS)
+    MME_ERROR Result = MME_SendCommand( MMEHandle, eof);
+    if( Result != MME_SUCCESS )
     {
-        CODEC_ERROR("Unable to send eof (%08x).\n", Result);
-        return CodecError;
+	CODEC_ERROR("Unable to send eof (%08x).\n", Result );
+	return CodecError;
     }
-
+    
     return CodecNoError;
 }
 
 CodecStatus_t Codec_MmeAudioSpdifin_c::DiscardQueuedDecodes()
 {
     CodecStatus_t Status;
-
+    
     Status = Codec_MmeAudio_c::DiscardQueuedDecodes();
-
     if (CodecNoError != Status)
-        return Status;
-
+	return Status;
+    
     Status = SendEofCommand();
-
     if (CodecNoError != Status)
-        return Status;
-
+	return Status;
+    
     return CodecNoError;
 }
 
@@ -582,7 +591,7 @@ CodecStatus_t Codec_MmeAudioSpdifin_c::DiscardQueuedDecodes()
 
 #define SPDIFIN_TEXT(x) #x
 
-const char * SpdifinStreamTypeText[] =
+const char * SpdifinStreamTypeText[]=
 {
     SPDIFIN_TEXT(SPDIFIN_NULL_DATA_BURST),
     SPDIFIN_TEXT(SPDIFIN_AC3),
@@ -622,7 +631,7 @@ const char * SpdifinStreamTypeText[] =
     SPDIFIN_TEXT(SPDIFIN_RESERVED)
 };
 
-const char * SpdifinStateText[] =
+const char * SpdifinStateText[]=
 {
     SPDIFIN_TEXT(SPDIFIN_STATE_RESET),
     SPDIFIN_TEXT(SPDIFIN_STATE_PCM_BYPASS),
@@ -651,7 +660,7 @@ static inline const char * reportState(enum eMulticomSpdifinState state)
 ///
 /// \return CodecSuccess
 ///
-CodecStatus_t   Codec_MmeAudioSpdifin_c::ValidateDecodeContext(CodecBaseDecodeContext_t *Context)
+CodecStatus_t   Codec_MmeAudioSpdifin_c::ValidateDecodeContext( CodecBaseDecodeContext_t *Context )
 {
     SpdifinAudioCodecDecodeContext_t * DecodeContext = (SpdifinAudioCodecDecodeContext_t *) Context;
     MME_LxAudioDecoderFrameStatus_t  & Status        = DecodeContext->DecodeStatus;
@@ -662,7 +671,7 @@ CodecStatus_t   Codec_MmeAudioSpdifin_c::ValidateDecodeContext(CodecBaseDecodeCo
     tMMESpdifinStatus         *FrameStatus        = (tMMESpdifinStatus *) &Status.FrameStatus[0];
 
     NewState = (enum eMulticomSpdifinState) FrameStatus->CurrentState;
-    NewPC    = (enum eMulticomSpdifinPC) FrameStatus->PC;
+    NewPC    = (enum eMulticomSpdifinPC   ) FrameStatus->PC;
 
     bool StatusChange = (AudioDecoderStatus.SamplingFreq != Status.SamplingFreq) ||
                         (AudioDecoderStatus.DecAudioMode != Status.DecAudioMode);
@@ -675,8 +684,8 @@ CodecStatus_t   Codec_MmeAudioSpdifin_c::ValidateDecodeContext(CodecBaseDecodeCo
         SpdifStatus.State      = NewState;
         SpdifStatus.StreamType = NewPC;
 
-        report(severity_info, "Codec_MmeAudioSpdifin_c::ValidateDecodeContext() New State      :: %s after %d samples\n", reportState(NewState) ,  SpdifStatus.PlayedSamples);
-        report(severity_info, "Codec_MmeAudioSpdifin_c::ValidateDecodeContext() New StreamType :: [%d] %s after %d samples\n", NewPC, reportStreamType(NewPC), SpdifStatus.PlayedSamples);
+        report( severity_info, "Codec_MmeAudioSpdifin_c::ValidateDecodeContext() New State      :: %s after %d samples\n", reportState(NewState) ,  SpdifStatus.PlayedSamples);
+        report( severity_info, "Codec_MmeAudioSpdifin_c::ValidateDecodeContext() New StreamType :: [%d] %s after %d samples\n", NewPC, reportStreamType(NewPC), SpdifStatus.PlayedSamples);
 
 
         PlayerStatus_t            PlayerStatus;
@@ -690,37 +699,36 @@ CodecStatus_t   Codec_MmeAudioSpdifin_c::ValidateDecodeContext(CodecBaseDecodeCo
         Event.UserData          = EventUserData;
         Event.Value[0].Pointer  = this; // pointer to the component
 
-        PlayerStatus  = Player->SignalEvent(&Event);
-
-        if (PlayerStatus != PlayerNoError)
+        PlayerStatus  = Player->SignalEvent( &Event );
+        if( PlayerStatus != PlayerNoError )
         {
-            report(severity_error, "Codec_MmeAudioSpdifin_c::ValidateDecodeContext - Failed to signal event.\n");
+            report( severity_error, "Codec_MmeAudioSpdifin_c::ValidateDecodeContext - Failed to signal event.\n" );
             return CodecError;
         }
-
         // END SYSFS
 
     }
 
     SpdifStatus.PlayedSamples += Status.NbOutSamples;
 
-    NumberOfSamplesProcessed  += Status.NbOutSamples;   // SYSFS
+    NumberOfSamplesProcessed  += Status.NbOutSamples;	// SYSFS
 
     CODEC_DEBUG("Codec_MmeAudioSpdifin_c::ValidateDecodeContext() Transform Cmd returned \n");
 
     if (ENABLE_CODEC_DEBUG)
     {
-        //DumpCommand(bufferIndex);
+	//DumpCommand(bufferIndex);
     }
 
     if (Status.DecStatus)
     {
 
-        CODEC_ERROR("SPDIFIN audio decode error (muted frame): %d\n", Status.DecStatus);
-        DecodeErrors++;
+	CODEC_ERROR("SPDIFIN audio decode error (muted frame): %d\n", Status.DecStatus);
 
-        //DumpCommand(bufferIndex);
-        // don't report an error to the higher levels (because the frame is muted)
+	DecodeErrors++;
+
+	//DumpCommand(bufferIndex);
+	// don't report an error to the higher levels (because the frame is muted)
     }
 
     //
@@ -742,15 +750,14 @@ CodecStatus_t   Codec_MmeAudioSpdifin_c::ValidateDecodeContext(CodecBaseDecodeCo
     AudioParameters->SampleCount          = Status.NbOutSamples;
 
     enum eAccFsCode SamplingFreqCode = (enum eAccFsCode) Status.SamplingFreq;
-
     if (SamplingFreqCode < ACC_FS_reserved)
     {
-        AudioParameters->Source.SampleRateHz = Codec_MmeAudio_c::ConvertCodecSamplingFreq(SamplingFreqCode);
-        //AudioParameters->Source.SampleRateHz = 44100;
+	AudioParameters->Source.SampleRateHz = Codec_MmeAudio_c::ConvertCodecSamplingFreq(SamplingFreqCode);
+	//AudioParameters->Source.SampleRateHz = 44100;
     }
     else
     {
-        AudioParameters->Source.SampleRateHz = 0;
+	AudioParameters->Source.SampleRateHz = 0;
         CODEC_ERROR("SPDIFIn audio decode bad sampling freq returned: 0x%x\n", SamplingFreqCode);
     }
 
@@ -765,8 +772,8 @@ CodecStatus_t   Codec_MmeAudioSpdifin_c::ValidateDecodeContext(CodecBaseDecodeCo
     }
     else
     {
-        // do nothing, the AudioParameters are zeroed by FrameParser_Audio_c::Input() which is
-        // appropriate (i.e. OriginalEncoding is AudioOriginalEncodingUnknown)
+	// do nothing, the AudioParameters are zeroed by FrameParser_Audio_c::Input() which is
+	// appropriate (i.e. OriginalEncoding is AudioOriginalEncodingUnknown)
     }
 
     return CodecNoError;
@@ -778,14 +785,13 @@ CodecStatus_t   Codec_MmeAudioSpdifin_c::ValidateDecodeContext(CodecBaseDecodeCo
 /// First Send an Empty BUFFER with EOF Tag so that in unlocks pending TRANSFORM in case it is waiting
 /// for more buffers, then wait for all SentBuffers and DecodeTransforms to have returned
 
-CodecStatus_t   Codec_MmeAudioSpdifin_c::TerminateMMETransformer(void)
+CodecStatus_t   Codec_MmeAudioSpdifin_c::TerminateMMETransformer( void )
 {
     CodecStatus_t           Status;
 
-    if (MMEInitialized)
+    if( MMEInitialized )
     {
         Status = SendEofCommand();
-
         if (CodecNoError != Status)
             return Status;
 
@@ -807,7 +813,7 @@ CodecStatus_t   Codec_MmeAudioSpdifin_c::TerminateMMETransformer(void)
 //      parameters from an mme command.
 //
 
-CodecStatus_t   Codec_MmeAudioSpdifin_c::DumpSetStreamParameters(void    *Parameters)
+CodecStatus_t   Codec_MmeAudioSpdifin_c::DumpSetStreamParameters(          void    *Parameters )
 {
     CODEC_ERROR("Not implemented\n");
     return CodecNoError;
@@ -820,13 +826,13 @@ CodecStatus_t   Codec_MmeAudioSpdifin_c::DumpSetStreamParameters(void    *Parame
 //      parameters from an mme command.
 //
 
-CodecStatus_t   Codec_MmeAudioSpdifin_c::DumpDecodeParameters(void    *Parameters)
+CodecStatus_t   Codec_MmeAudioSpdifin_c::DumpDecodeParameters(             void    *Parameters )
 {
     CODEC_ERROR("Not implemented\n");
     return CodecNoError;
 }
 
-CodecStatus_t  Codec_MmeAudioSpdifin_c::CreateAttributeEvents(void)
+CodecStatus_t  Codec_MmeAudioSpdifin_c::CreateAttributeEvents (void)
 {
     PlayerStatus_t            Status;
     PlayerEventRecord_t       Event;
@@ -839,170 +845,159 @@ CodecStatus_t  Codec_MmeAudioSpdifin_c::CreateAttributeEvents(void)
     Event.Value[0].Pointer  = this;
 
     Status = Codec_MmeAudio_c::CreateAttributeEvents();
-
     if (Status != PlayerNoError)
-        return  Status;
+	return  Status;
 
     Event.Code               = EventInputFormatCreated;
-    Status  = Player->SignalEvent(&Event);
-
-    if (Status != PlayerNoError)
+    Status  = Player->SignalEvent( &Event );
+    if( Status != PlayerNoError )
     {
-        CODEC_ERROR("Failed to signal event.\n");
-        return CodecError;
+    	CODEC_ERROR("Failed to signal event.\n");
+	return CodecError;
     }
 
     Event.Code              = EventSupportedInputFormatCreated;
-    Status  = Player->SignalEvent(&Event);
-
-    if (Status != PlayerNoError)
+    Status  = Player->SignalEvent( &Event );
+    if( Status != PlayerNoError )
     {
-        CODEC_ERROR("Failed to signal event.\n");
-        return CodecError;
+	CODEC_ERROR("Failed to signal event.\n" );
+	return CodecError;
     }
 
     Event.Code              = EventDecodeErrorsCreated;
-    Status  = Player->SignalEvent(&Event);
-
-    if (Status != PlayerNoError)
+    Status  = Player->SignalEvent( &Event );
+    if( Status != PlayerNoError )
     {
-        CODEC_ERROR("Failed to signal event.\n");
-        return CodecError;
+	CODEC_ERROR("Failed to signal event.\n" );
+	return CodecError;
     }
 
     Event.Code              = EventNumberOfSamplesProcessedCreated;
-    Status  = Player->SignalEvent(&Event);
-
-    if (Status != PlayerNoError)
+    Status  = Player->SignalEvent( &Event );
+    if( Status != PlayerNoError )
     {
-        CODEC_ERROR("Failed to signal event.\n");
-        return CodecError;
+	CODEC_ERROR("Failed to signal event.\n" );
+	return CodecError;
     }
 
     return  CodecNoError;
 }
 
-CodecStatus_t Codec_MmeAudioSpdifin_c::GetAttribute(const char *Attribute, PlayerAttributeDescriptor_t *Value)
+CodecStatus_t Codec_MmeAudioSpdifin_c::GetAttribute (const char *Attribute, PlayerAttributeDescriptor_t *Value)
 {
     //report( severity_error, "Codec_MmeAudioSpdifin_c::GetAttribute Enter\n");
     if (0 == strcmp(Attribute, "input_format"))
     {
-        Value->Id = SYSFS_ATTRIBUTE_ID_CONSTCHARPOINTER;
+	Value->Id = SYSFS_ATTRIBUTE_ID_CONSTCHARPOINTER;
 
-#define C(x) case SPDIFIN_ ## x: Value->u.ConstCharPointer = #x; return CodecNoError
+	#define C(x) case SPDIFIN_ ## x: Value->u.ConstCharPointer = #x; return CodecNoError
 
-        switch (SpdifStatus.StreamType)
-        {
-                C(NULL_DATA_BURST);
-                C(AC3);
-                C(PAUSE_BURST);
-                C(MP1L1);
-                C(MP1L2L3);
-                C(MP2MC);
-                C(MP2AAC);
-                C(MP2L1LSF);
-                C(MP2L2LSF);
-                C(MP2L3LSF);
-                C(DTS1);
-                C(DTS2);
-                C(DTS3);
-                C(ATRAC);
-                C(ATRAC2_3);
+	switch (SpdifStatus.StreamType)
+	{
+		C(NULL_DATA_BURST);
+		C(AC3);
+		C(PAUSE_BURST);
+		C(MP1L1);
+		C(MP1L2L3);
+		C(MP2MC);
+		C(MP2AAC);
+		C(MP2L1LSF);
+		C(MP2L2LSF);
+		C(MP2L3LSF);
+		C(DTS1);
+		C(DTS2);
+		C(DTS3);
+		C(ATRAC);
+		C(ATRAC2_3);
+		case SPDIFIN_IEC60958:
+		    Value->u.ConstCharPointer = "PCM";
+		    return CodecNoError;
+		C(IEC60958_DTS14);
+		C(IEC60958_DTS16);
+		default:
+		    CODEC_ERROR("This input_format does not exist.\n" );
+		    return CodecError;
+	}
 
-            case SPDIFIN_IEC60958:
-                Value->u.ConstCharPointer = "PCM";
-                return CodecNoError;
-                C(IEC60958_DTS14);
-                C(IEC60958_DTS16);
-
-            default:
-                CODEC_ERROR("This input_format does not exist.\n");
-                return CodecError;
-        }
-
-#undef C
+	#undef C
     }
     else if (0 == strcmp(Attribute, "decode_errors"))
     {
-        Value->Id   = SYSFS_ATTRIBUTE_ID_INTEGER;
-        Value->u.Int    = DecodeErrors;
-        return CodecNoError;
+	Value->Id 	= SYSFS_ATTRIBUTE_ID_INTEGER;
+	Value->u.Int    = DecodeErrors;
+	return CodecNoError;
     }
     else if (0 == strcmp(Attribute, "supported_input_format"))
     {
-        //report( severity_error, "%s %d\n", __FUNCTION__, __LINE__);
+	//report( severity_error, "%s %d\n", __FUNCTION__, __LINE__);
 
-        MME_LxAudioDecoderInfo_t &Capability = AudioDecoderTransformCapability;
-        Value->Id                = SYSFS_ATTRIBUTE_ID_BOOL;
+	MME_LxAudioDecoderInfo_t &Capability = AudioDecoderTransformCapability;
+	Value->Id 			     = SYSFS_ATTRIBUTE_ID_BOOL;
 
-        switch (SpdifStatus.StreamType)
-        {
-            case SPDIFIN_AC3:
-                Value->u.Bool = Capability.DecoderCapabilityExtFlags[0] & 0x8; // ACC_SPDIFIN_DD
-                return CodecNoError;
-
-            case SPDIFIN_DTS1:
-            case SPDIFIN_DTS2:
-            case SPDIFIN_DTS3:
-            case SPDIFIN_IEC60958_DTS14:
-            case SPDIFIN_IEC60958_DTS16:
-                Value->u.Bool = Capability.DecoderCapabilityExtFlags[0] & 0x10; // ACC_SPDIFIN_DTS
-                return CodecNoError;
-
-            case SPDIFIN_MP2AAC:
-                Value->u.Bool = Capability.DecoderCapabilityExtFlags[0] & 0x20; // ACC_SPDIFIN_MPG to be renamed ACC_SPDIFIN_AAC
-
-            case SPDIFIN_IEC60958:
-            case SPDIFIN_NULL_DATA_BURST:
-            case SPDIFIN_PAUSE_BURST:
-                Value->u.Bool = true;
-                return CodecNoError;
-
-            case SPDIFIN_MP1L1:
-            case SPDIFIN_MP1L2L3:
-            case SPDIFIN_MP2MC:
-            case SPDIFIN_MP2L1LSF:
-            case SPDIFIN_MP2L2LSF:
-            case SPDIFIN_MP2L3LSF:
-            case SPDIFIN_ATRAC:
-            case SPDIFIN_ATRAC2_3:
-            default:
-                Value->u.Bool = false;
-                return CodecNoError;
-        }
+	switch (SpdifStatus.StreamType)
+	{
+		case SPDIFIN_AC3:
+		    Value->u.Bool = Capability.DecoderCapabilityExtFlags[0] & 0x8; // ACC_SPDIFIN_DD
+		    return CodecNoError;
+		case SPDIFIN_DTS1:
+		case SPDIFIN_DTS2:
+		case SPDIFIN_DTS3:
+		case SPDIFIN_IEC60958_DTS14:
+		case SPDIFIN_IEC60958_DTS16:
+		    Value->u.Bool = Capability.DecoderCapabilityExtFlags[0] & 0x10; // ACC_SPDIFIN_DTS
+		    return CodecNoError;
+		case SPDIFIN_MP2AAC:
+		    Value->u.Bool = Capability.DecoderCapabilityExtFlags[0] & 0x20; // ACC_SPDIFIN_MPG to be renamed ACC_SPDIFIN_AAC
+                    return CodecNoError;
+		case SPDIFIN_IEC60958:
+		case SPDIFIN_NULL_DATA_BURST:
+		case SPDIFIN_PAUSE_BURST:
+		    Value->u.Bool = true;
+		    return CodecNoError;
+		case SPDIFIN_MP1L1:
+		case SPDIFIN_MP1L2L3:
+		case SPDIFIN_MP2MC:
+		case SPDIFIN_MP2L1LSF:
+		case SPDIFIN_MP2L2LSF:
+		case SPDIFIN_MP2L3LSF:
+		case SPDIFIN_ATRAC:
+		case SPDIFIN_ATRAC2_3:
+		default:
+		    Value->u.Bool = false;
+		    return CodecNoError;
+	}
     }
     else if (0 == strcmp(Attribute, "number_of_samples_processed"))
     {
-        Value->Id   = SYSFS_ATTRIBUTE_ID_UNSIGNEDLONGLONGINT;
-        Value->u.UnsignedLongLongInt = NumberOfSamplesProcessed;
-        return CodecNoError;
+	Value->Id 	= SYSFS_ATTRIBUTE_ID_UNSIGNEDLONGLONGINT;
+	Value->u.UnsignedLongLongInt = NumberOfSamplesProcessed;
+	return CodecNoError;
     }
     else
     {
-        CodecStatus_t Status;
-        Status = Codec_MmeAudio_c::GetAttribute(Attribute, Value);
-
-        if (Status != CodecNoError)
-        {
-            CODEC_ERROR("This attribute does not exist.\n");
+	CodecStatus_t Status;
+	Status = Codec_MmeAudio_c::GetAttribute (Attribute, Value);
+	if (Status != CodecNoError)
+	{
+	    CODEC_ERROR("This attribute does not exist.\n" );
             return CodecError;
-        }
+	}
     }
 
     return CodecNoError;
 }
 
-CodecStatus_t Codec_MmeAudioSpdifin_c::SetAttribute(const char *Attribute,  PlayerAttributeDescriptor_t *Value)
+CodecStatus_t Codec_MmeAudioSpdifin_c::SetAttribute (const char *Attribute,  PlayerAttributeDescriptor_t *Value)
 {
     if (0 == strcmp(Attribute, "decode_errors"))
     {
-        DecodeErrors    = Value->u.Int;
-        return CodecNoError;
+	DecodeErrors    = Value->u.Int;
+	return CodecNoError;
     }
     else
     {
-        CODEC_ERROR("This attribute cannot be set.\n");
-        return CodecError;
+	CODEC_ERROR("This attribute cannot be set.\n" );
+	return CodecError;
     }
 
     return CodecNoError;

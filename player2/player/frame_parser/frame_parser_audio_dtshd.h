@@ -36,7 +36,7 @@ Date        Modification                                    Name
 
 // /////////////////////////////////////////////////////////////////////
 //
-//  Include any component headers
+//	Include any component headers
 
 #include "dtshd.h"
 #include "frame_parser_audio.h"
@@ -53,95 +53,96 @@ Date        Modification                                    Name
 
 class FrameParser_AudioDtshd_c : public FrameParser_Audio_c
 {
-    private:
+private:
 
-        // Data
+    // Data
+    
+    DtshdAudioParsedFrameHeader_t ParsedFrameHeader;
+    
+    DtshdAudioStreamParameters_t	* StreamParameters;
+    DtshdAudioStreamParameters_t      CurrentStreamParameters;
+    DtshdAudioFrameParameters_t     * FrameParameters;
+    
+    bool FirstTime;
+    bool DecodeLowestExtensionId;      ///< in case of multiple extensions, decode the lower extension id (by default)
+    unsigned char DecodeExtensionId;   ///< if DecodeLowestExtensionId is false, decode the extension id indicated by this field
+    unsigned char SelectedAudioPresentation;   ///< if DecodeLowestExtensionId is false, decode the extension id indicated by this field
 
-        DtshdAudioParsedFrameHeader_t ParsedFrameHeader;
+    
 
-        DtshdAudioStreamParameters_t    * StreamParameters;
-        DtshdAudioStreamParameters_t      CurrentStreamParameters;
-        DtshdAudioFrameParameters_t     * FrameParameters;
+    // Functions
+public:
 
-        bool FirstTime;
-        bool DecodeLowestExtensionId;      ///< in case of multiple extensions, decode the lower extension id (by default)
-        unsigned char DecodeExtensionId;   ///< if DecodeLowestExtensionId is false, decode the extension id indicated by this field
-        unsigned char SelectedAudioPresentation;   ///< if DecodeLowestExtensionId is false, decode the extension id indicated by this field
+    //
+    // Constructor function
+    //
 
-        // Functions
+    FrameParser_AudioDtshd_c( void );
+    ~FrameParser_AudioDtshd_c( void );
 
-    public:
+    //
+    // Overrides for component base class functions
+    //
 
-        //
-        // Constructor function
-        //
+    FrameParserStatus_t   Reset(		void );
 
-        FrameParser_AudioDtshd_c(void);
-        ~FrameParser_AudioDtshd_c(void);
+    //
+    // FrameParser class functions
+    //
 
-        //
-        // Overrides for component base class functions
-        //
+    FrameParserStatus_t   RegisterOutputBufferRing(	Ring_t		Ring );
 
-        FrameParserStatus_t   Reset(void);
+    //
+    // Stream specific functions
+    //
 
-        //
-        // FrameParser class functions
-        //
+    FrameParserStatus_t   ReadHeaders( 					void );
+    FrameParserStatus_t   ResetReferenceFrameList(			void );
+    FrameParserStatus_t   PurgeQueuedPostDecodeParameterSettings(	void );
+    FrameParserStatus_t   PrepareReferenceFrameList(			void );
+    FrameParserStatus_t   ProcessQueuedPostDecodeParameterSettings(	void );
+    FrameParserStatus_t   GeneratePostDecodeParameterSettings(		void );
+    FrameParserStatus_t   UpdateReferenceFrameList(			void );
 
-        FrameParserStatus_t   RegisterOutputBufferRing(Ring_t       Ring);
+    FrameParserStatus_t   ProcessReverseDecodeUnsatisfiedReferenceStack(void );
+    FrameParserStatus_t   ProcessReverseDecodeStack(			void );
+    FrameParserStatus_t   PurgeReverseDecodeUnsatisfiedReferenceStack(	void );
+    FrameParserStatus_t   PurgeReverseDecodeStack(			void );
+    FrameParserStatus_t   TestForTrickModeFrameDrop(			void );
 
-        //
-        // Stream specific functions
-        //
+    FrameParserStatus_t ParseFrameHeader( unsigned char *FrameHeader, 
+                                          DtshdAudioParsedFrameHeader_t *ParsedFrameHeader,
+                                          int RemainingElementaryLength );
+    
+    static FrameParserStatus_t ParseSingleFrameHeader( unsigned char *FrameHeaderBytes, 
+                                                       DtshdAudioParsedFrameHeader_t *ParsedFrameHeader,  
+                                                       BitStreamClass_c *Bits,
+                                                       unsigned int FrameHeaderLength,
+                                                       unsigned char * OtherFrameHeaderBytes,
+                                                       unsigned int RemainingFrameHeaderBytes,
+                                                       DtshdParseModel_t Model,
+                                                       unsigned char SelectedAudioPresentation );
 
-        FrameParserStatus_t   ReadHeaders(void);
-        FrameParserStatus_t   ResetReferenceFrameList(void);
-        FrameParserStatus_t   PurgeQueuedPostDecodeParameterSettings(void);
-        FrameParserStatus_t   PrepareReferenceFrameList(void);
-        FrameParserStatus_t   ProcessQueuedPostDecodeParameterSettings(void);
-        FrameParserStatus_t   GeneratePostDecodeParameterSettings(void);
-        FrameParserStatus_t   UpdateReferenceFrameList(void);
+    static FrameParserStatus_t ParseCoreHeader( BitStreamClass_c * Bits, 
+                                                DtshdAudioParsedFrameHeader_t *ParsedFrameHeader,
+                                                unsigned int SyncWord );
 
-        FrameParserStatus_t   ProcessReverseDecodeUnsatisfiedReferenceStack(void);
-        FrameParserStatus_t   ProcessReverseDecodeStack(void);
-        FrameParserStatus_t   PurgeReverseDecodeUnsatisfiedReferenceStack(void);
-        FrameParserStatus_t   PurgeReverseDecodeStack(void);
-        FrameParserStatus_t   TestForTrickModeFrameDrop(void);
+    static void ParseExtensionSubstreamAssetHeader( BitStreamClass_c *Bits,
+                                                    unsigned int * SamplingFrequency,
+                                                    DtshdAudioParsedFrameHeader_t *ParsedFrameHeader,
+                                                    unsigned int nuBits4ExSSFsize,
+                                                    unsigned char SelectedAudioPresentation );
 
-        FrameParserStatus_t ParseFrameHeader(unsigned char *FrameHeader,
-                                             DtshdAudioParsedFrameHeader_t *ParsedFrameHeader,
-                                             int RemainingElementaryLength);
+    static unsigned short CrcUpdate4BitsFast( unsigned char val, unsigned short crc );
 
-        static FrameParserStatus_t ParseSingleFrameHeader(unsigned char *FrameHeaderBytes,
-                DtshdAudioParsedFrameHeader_t *ParsedFrameHeader,
-                BitStreamClass_c *Bits,
-                unsigned int FrameHeaderLength,
-                unsigned char * OtherFrameHeaderBytes,
-                unsigned int RemainingFrameHeaderBytes,
-                DtshdParseModel_t Model,
-                unsigned char SelectedAudioPresentation);
+    static unsigned int NumSpkrTableLookUp(unsigned int ChannelMask);
 
-        static FrameParserStatus_t ParseCoreHeader(BitStreamClass_c * Bits,
-                DtshdAudioParsedFrameHeader_t *ParsedFrameHeader,
-                unsigned int SyncWord);
+    static unsigned int CountBitsSet_to_1(unsigned int ChannelMask);
 
-        static void ParseExtensionSubstreamAssetHeader(BitStreamClass_c *Bits,
-                unsigned int * SamplingFrequency,
-                DtshdAudioParsedFrameHeader_t *ParsedFrameHeader,
-                unsigned int nuBits4ExSSFsize,
-                unsigned char SelectedAudioPresentation);
-
-        static unsigned short CrcUpdate4BitsFast(unsigned char val, unsigned short crc);
-
-        static unsigned int NumSpkrTableLookUp(unsigned int ChannelMask);
-
-        static unsigned int CountBitsSet_to_1(unsigned int ChannelMask);
-
-        static void GetSubstreamOnlyNumberOfSamples(BitStreamClass_c * Bits,
-                DtshdAudioParsedFrameHeader_t * ParsedFrameHeader,
-                unsigned char * FrameHeaderBytes);
-
+    static void GetSubstreamOnlyNumberOfSamples(BitStreamClass_c * Bits, 
+                                                DtshdAudioParsedFrameHeader_t * ParsedFrameHeader, 
+                                                unsigned char * FrameHeaderBytes);
+    
 };
 
 #endif /* H_FRAME_PARSER_AUDIO_DTSHD */

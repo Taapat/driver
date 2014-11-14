@@ -36,7 +36,7 @@ Date        Modification                                    Name
 
 // /////////////////////////////////////////////////////////////////////
 //
-//  Include any component headers
+//	Include any component headers
 
 #include "collator_base.h"
 
@@ -52,36 +52,36 @@ Date        Modification                                    Name
 
 class Collator_Packet_c : public Collator_Base_c
 {
-    protected:
+protected:
 
-        // Data
+    // Data
 
-        // Functions
+    // Functions
 
 //
 
-    public:
+public:
 
-        //
-        // Constructor/Destructor methods
-        //
+    //
+    // Constructor/Destructor methods
+    //
 
-        Collator_Packet_c(void);
+    Collator_Packet_c( 	void );
 
-        //
-        // Base class overrides
-        //
+    //
+    // Base class overrides
+    //
 
-        CollatorStatus_t   Reset(void);
+    CollatorStatus_t   Reset( void );
 
-        //
-        // Collator class functions
-        //
+    //
+    // Collator class functions
+    //
 
-        CollatorStatus_t   Input(PlayerInputDescriptor_t  *Input,
-                                 unsigned int          DataLength,
-                                 void                     *Data,
-                                 bool              NonBlocking = false);
+    CollatorStatus_t   Input(	PlayerInputDescriptor_t  *Input,
+				unsigned int		  DataLength,
+				void                     *Data,
+				bool			  NonBlocking = false );
 };
 
 #endif

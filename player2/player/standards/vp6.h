@@ -119,11 +119,11 @@ typedef struct Vp6FrameParameters_s
 /* The following structure is passed in by the application layer */
 typedef struct Vp6MetaData_s
 {
-    unsigned int         Codec;                  /* VP6, VP6A */
-    unsigned int         Width;
-    unsigned int         Height;
-    unsigned int         Duration;
-    unsigned int         FrameRate;              /* x1000000 */
+   unsigned int         Codec;                  /* VP6, VP6A */
+   unsigned int         Width;
+   unsigned int         Height;
+   unsigned int         Duration;
+   unsigned int         FrameRate;              /* x1000000 */
 } Vp6MetaData_t;
 
 #define CODEC_ID_VP6                            4

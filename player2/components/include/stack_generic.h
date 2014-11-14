@@ -41,21 +41,21 @@ Date        Modification                                    Name
 
 class StackGeneric_c : public Stack_c
 {
-    private:
+private:
 
-        OS_Mutex_t       Lock;
-        unsigned int     Limit;
-        unsigned int     Level;
-        unsigned int    *Storage;
+    OS_Mutex_t		 Lock;
+    unsigned int 	 Limit;
+    unsigned int 	 Level;
+    unsigned int	*Storage;
 
-    public:
+public:
 
-        StackGeneric_c(unsigned int MaxEntries = 16);
-        ~StackGeneric_c(void);
+    StackGeneric_c( unsigned int MaxEntries = 16 );
+    ~StackGeneric_c( void );
 
-        StackStatus_t Push(unsigned int  Value);
-        StackStatus_t Pop(unsigned int  *Value);
-        StackStatus_t Flush(void);
-        bool          NonEmpty(void);
+    StackStatus_t Push(	unsigned int	 Value );
+    StackStatus_t Pop( 	unsigned int	*Value );
+    StackStatus_t Flush( void );
+    bool          NonEmpty( void );
 };
 #endif

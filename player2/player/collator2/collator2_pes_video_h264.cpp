@@ -59,10 +59,10 @@ Date        Modification                                    Name
 // Initialize the class by resetting it.
 //
 
-Collator2_PesVideoH264_c::Collator2_PesVideoH264_c(void)
+Collator2_PesVideoH264_c::Collator2_PesVideoH264_c( void )
 {
-    if (InitializationStatus != CollatorNoError)
-        return;
+    if( InitializationStatus != CollatorNoError )
+	return;
 
     Collator2_PesVideoH264_c::Reset();
 }
@@ -72,30 +72,29 @@ Collator2_PesVideoH264_c::Collator2_PesVideoH264_c(void)
 // Resets and configures according to the requirements of this stream content
 //
 
-CollatorStatus_t Collator2_PesVideoH264_c::Reset(void)
+CollatorStatus_t Collator2_PesVideoH264_c::Reset( void )
 {
-    CollatorStatus_t Status;
+CollatorStatus_t Status;
 
 //
 
     Status = Collator2_PesVideo_c::Reset();
-
-    if (Status != CollatorNoError)
-        return Status;
+    if( Status != CollatorNoError )
+	return Status;
 
     Configuration.CollatorName               = "H264 Collator";
 
     Configuration.GenerateStartCodeList      = true;
-    Configuration.MaxStartCodes              = 300;                 // If someone inserts 32 SPS and 256 PPS
+    Configuration.MaxStartCodes              = 300;					// If someone inserts 32 SPS and 256 PPS  
 
     Configuration.StreamIdentifierMask       = PES_START_CODE_MASK;
     Configuration.StreamIdentifierCode       = PES_START_CODE_VIDEO;
 
-    Configuration.IgnoreCodesRangeStart      = 0xff;                    // Ignore nothing
-    Configuration.IgnoreCodesRangeEnd        = 0x00;
-    Configuration.InsertFrameTerminateCode   = true;                    // Insert a filler data code, to guarantee thatNo terminal code
-    Configuration.TerminalCode               = 0x0C;                    // picture parameter sets will always be followed by a zero byte
-    // (makes the MoreRsbpData implementation a lot simpler).
+    Configuration.IgnoreCodesRangeStart      = 0xff;					// Ignore nothing
+    Configuration.IgnoreCodesRangeEnd        = 0x00;	
+    Configuration.InsertFrameTerminateCode   = true;					// Insert a filler data code, to guarantee thatNo terminal code
+    Configuration.TerminalCode               = 0x0C;					// picture parameter sets will always be followed by a zero byte 
+											// (makes the MoreRsbpData implementation a lot simpler).
     Configuration.ExtendedHeaderLength       = 0;
 
     return CollatorNoError;

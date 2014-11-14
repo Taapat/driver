@@ -32,6 +32,7 @@ Date        Modification                                    Name
 #define H_MONITOR_DEVICE
 
 #include <linux/spinlock.h>
+#include <linux/smp_lock.h>
 
 #include "monitor_ioctls.h"
 #include "monitor_mme.h"
@@ -65,14 +66,14 @@ struct EventValue_s
 
 struct DeviceContext_s
 {
-    struct device*                      Device;
+    struct class_device*                ClassDevice;
     struct cdev                         CDev;
 
     unsigned int                        Id;
     unsigned int                        OpenCount;
     struct monitor_status_s             Status;
     struct EventQueue_s                 EventQueue;
-    struct EventValue_s                 StoredEventValues[MAX_MONITOR_EVENT_CODE + 1];
+    struct EventValue_s                 StoredEventValues[MAX_MONITOR_EVENT_CODE+1];
 
     struct MMEContext_s                 MMEContext[MONITOR_MAX_MME_DEVICES];
 
@@ -83,12 +84,12 @@ struct DeviceContext_s
 };
 
 
-struct file_operations*                 MonitorInit(struct DeviceContext_s*         Context);
+struct file_operations*                 MonitorInit            (struct DeviceContext_s*         Context);
 
-void                                    MonitorRecordEvent(struct DeviceContext_s*         Context,
-        unsigned int                    SourceId,
-        monitor_event_code_t            EventCode,
-        unsigned long long              TimeCode,
-        unsigned int                    Parameters[MONITOR_PARAMETER_COUNT],
-        const char*                     Description);
+void                                    MonitorRecordEvent     (struct DeviceContext_s*         Context,
+                                                                unsigned int                    SourceId,
+                                                                monitor_event_code_t            EventCode,
+                                                                unsigned long long              TimeCode,
+                                                                unsigned int                    Parameters[MONITOR_PARAMETER_COUNT],
+                                                                const char*                     Description);
 #endif

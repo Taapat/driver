@@ -188,7 +188,7 @@ pclean:
 obj-dirs := $(dir $(addprefix $(ODIR)/,$(filter-out /%,$(dir-y) $(targets))))
 _dummy := $(foreach d,$(obj-dirs), $(shell [ -d $(d) ] || mkdir -p $(d)))
 
-## Add this either to the beginning or end of the 'all' dependency rule
+## Add this either to the beggining or end of the 'all' dependency rule
 debug:
 	@echo NDIR:$(NDIR)
 	@echo NEWPATH:$(NEWPATH)
@@ -255,3 +255,4 @@ $(dir-y): .PHONY
 
 endif
  
+

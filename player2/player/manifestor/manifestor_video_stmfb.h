@@ -47,114 +47,114 @@ Date        Modification                                    Name
 /// Video manifestor based on the stgfb core driver API.
 class Manifestor_VideoStmfb_c : public Manifestor_Video_c
 {
-    private:
-        stm_display_device_t*       DisplayDevice;
-        stm_display_plane_t*        Plane;
-        stm_display_output_t*       Output;
+private:
+    stm_display_device_t*       DisplayDevice;
+    stm_display_plane_t*        Plane;
+    stm_display_output_t*       Output;
 
-        stm_plane_crop_t            srcRect;
-        stm_plane_crop_t            croppedRect;
-        stm_plane_crop_t            dstRect;
+    stm_plane_crop_t            srcRect;
+    stm_plane_crop_t            croppedRect;
+    stm_plane_crop_t            dstRect;
 
-        unsigned int                VideoBufferBase;
+    unsigned int                VideoBufferBase;
 
-        stm_display_buffer_t        DisplayBuffer[MAXIMUM_NUMBER_OF_DECODE_BUFFERS];
+    stm_display_buffer_t        DisplayBuffer[MAXIMUM_NUMBER_OF_DECODE_BUFFERS];
 
 #if defined (QUEUE_BUFFER_CAN_FAIL)
-        OS_Semaphore_t              DisplayAvailable;
-        bool                        DisplayAvailableValid;
-        unsigned int                DisplayHeadroom;
-        bool                        DisplayFlush;
-        bool                        WaitingForHeadroom;
+    OS_Semaphore_t              DisplayAvailable;
+    bool                        DisplayAvailableValid;
+    unsigned int                DisplayHeadroom;
+    bool                        DisplayFlush;
+    bool                        WaitingForHeadroom;
 #endif
 
-        unsigned char*              DisplayAddress;
-        unsigned int                DisplaySize;
+    unsigned char*              DisplayAddress;
+    unsigned int                DisplaySize;
 
-        int                         ClockRateAdjustment;
+    int                         ClockRateAdjustment;
 
-    public:
+public:
 
-        /* Constructor / Destructor */
-        Manifestor_VideoStmfb_c(void);
-        ~Manifestor_VideoStmfb_c(void);
+    /* Constructor / Destructor */
+    Manifestor_VideoStmfb_c                            (void);
+    ~Manifestor_VideoStmfb_c                           (void);
 
-        /* Overrides for component base class functions */
-        ManifestorStatus_t   Halt(void);
-        ManifestorStatus_t   Reset(void);
+    /* Overrides for component base class functions */
+    ManifestorStatus_t   Halt                          (void);
+    ManifestorStatus_t   Reset                         (void);
 
-        /* Manifestor video class functions */
-        ManifestorStatus_t  OpenOutputSurface(DeviceHandle_t          DisplayDevice,
-                                              unsigned int            PlaneId,
-                                              unsigned int            OutputId);
-        ManifestorStatus_t  CloseOutputSurface(void);
-        ManifestorStatus_t  UpdateOutputSurfaceDescriptor(void);
+    /* Manifestor video class functions */
+    ManifestorStatus_t  OpenOutputSurface              (DeviceHandle_t          DisplayDevice,
+                                                        unsigned int            PlaneId,
+                                                        unsigned int            OutputId);
+    ManifestorStatus_t  CloseOutputSurface             (void);
+    ManifestorStatus_t  UpdateOutputSurfaceDescriptor  (void);
 
-        ManifestorStatus_t  CreateDecodeBuffers(unsigned int            Count,
-                                                unsigned int            Width,
-                                                unsigned int            Height);
-        ManifestorStatus_t  DestroyDecodeBuffers(void);
+    ManifestorStatus_t  CreateDecodeBuffers            (unsigned int            Count,
+                                                        unsigned int            Width,
+                                                        unsigned int            Height);
+    ManifestorStatus_t  DestroyDecodeBuffers           (void);
 
-        ManifestorStatus_t  QueueBuffer(unsigned int                    BufferIndex,
-                                        struct ParsedFrameParameters_s* FrameParameters,
-                                        struct ParsedVideoParameters_s* VideoParameters,
-                                        struct VideoOutputTiming_s*     VideoOutputTiming,
-                                        struct BufferStructure_s*       BufferStructure);
-        ManifestorStatus_t  QueueInitialFrame(unsigned int                    BufferIndex,
-                                              struct ParsedVideoParameters_s* VideoParameters,
-                                              struct BufferStructure_s*       BufferStructure);
-        ManifestorStatus_t  QueueNullManifestation(void);
-        ManifestorStatus_t  FlushDisplayQueue(void);
+    ManifestorStatus_t  QueueBuffer                    (unsigned int                    BufferIndex,
+                                                        struct ParsedFrameParameters_s* FrameParameters,
+                                                        struct ParsedVideoParameters_s* VideoParameters,
+                                                        struct VideoOutputTiming_s*     VideoOutputTiming,
+                                                        struct BufferStructure_s*       BufferStructure );
+    ManifestorStatus_t  QueueInitialFrame              (unsigned int                    BufferIndex,
+                                                        struct ParsedVideoParameters_s* VideoParameters,
+                                                        struct BufferStructure_s*       BufferStructure);
+    ManifestorStatus_t  QueueNullManifestation         (void);
+    ManifestorStatus_t  FlushDisplayQueue              (void);
 
-        ManifestorStatus_t  Enable(void);
-        ManifestorStatus_t  Disable(void);
-        ManifestorStatus_t  UpdateDisplayWindows(void);
-        ManifestorStatus_t  CheckInputDimensions(unsigned int                    Width,
-                unsigned int                    Height);
+    ManifestorStatus_t  Enable                         (void);
+    ManifestorStatus_t  Disable                        (void);
+    ManifestorStatus_t  UpdateDisplayWindows           (void);
+    ManifestorStatus_t  CheckInputDimensions           (unsigned int                    Width,
+                                                        unsigned int                    Height);
 
-        ManifestorStatus_t   SynchronizeOutput(void);
+    ManifestorStatus_t   SynchronizeOutput(             void );
 
-        bool                 BufferAvailable(unsigned char*                  Address,
-                                             unsigned int                    Size);
+    bool                 BufferAvailable               (unsigned char*                  Address,
+                                                        unsigned int                    Size);
 
-        /* The following functions are public because they are accessed via C stub functions */
-        void                DisplayCallback(struct StreamBuffer_s*  Buffer,
-                                            TIME64                  VsyncTime);
-        void                InitialFrameDisplayCallback(struct StreamBuffer_s*  Buffer,
-                TIME64                  VsyncTime);
-        void                DoneCallback(struct StreamBuffer_s*  Buffer,
-                                         TIME64                  VsyncTime,
-                                         unsigned int            Status);
+    /* The following functions are public because they are accessed via C stub functions */
+    void                DisplayCallback                (struct StreamBuffer_s*  Buffer,
+                                                        TIME64                  VsyncTime);
+    void                InitialFrameDisplayCallback    (struct StreamBuffer_s*  Buffer,
+                                                        TIME64                  VsyncTime);
+    void                DoneCallback                   (struct StreamBuffer_s*  Buffer,
+                                                        TIME64                  VsyncTime,
+                                                        unsigned int            Status);
 #ifdef __TDT__
 #ifdef UFS922
-        int get_dei_fmd(char *page, char **start, off_t off, int count, int *eof);
-        int set_dei_fmd(struct file *file, const char __user *buf, unsigned long count);
+    int get_dei_fmd(char *page, char **start, off_t off, int count,int *eof);
+    int set_dei_fmd(struct file *file, const char __user *buf, unsigned long count);
 
-        int get_dei_mode(char *page, char **start, off_t off, int count, int *eof);
-        int set_dei_mode(struct file *file, const char __user *buf, unsigned long count);
+    int get_dei_mode(char *page, char **start, off_t off, int count,int *eof);
+    int set_dei_mode(struct file *file, const char __user *buf, unsigned long count);
 
-        int get_dei_ctrl(char *page, char **start, off_t off, int count, int *eof);
-        int set_dei_ctrl(struct file *file, const char __user *buf, unsigned long count);
+    int get_dei_ctrl(char *page, char **start, off_t off, int count,int *eof);
+    int set_dei_ctrl(struct file *file, const char __user *buf, unsigned long count);
 #endif
-        int get_psi_brightness(char *page, char **start, off_t off, int count, int *eof);
-        int set_psi_brightness(struct file *file, const char __user *buf, unsigned long count);
+    int get_psi_brightness(char *page, char **start, off_t off, int count,int *eof);
+    int set_psi_brightness(struct file *file, const char __user *buf, unsigned long count);
 
-        int get_psi_saturation(char *page, char **start, off_t off, int count, int *eof);
-        int set_psi_saturation(struct file *file, const char __user *buf, unsigned long count);
+    int get_psi_saturation(char *page, char **start, off_t off, int count,int *eof);
+    int set_psi_saturation(struct file *file, const char __user *buf, unsigned long count);
 
-        int get_psi_contrast(char *page, char **start, off_t off, int count, int *eof);
-        int set_psi_contrast(struct file *file, const char __user *buf, unsigned long count);
+    int get_psi_contrast(char *page, char **start, off_t off, int count,int *eof);
+    int set_psi_contrast(struct file *file, const char __user *buf, unsigned long count);
 
-        int get_psi_tint(char *page, char **start, off_t off, int count, int *eof);
-        int set_psi_tint(struct file *file, const char __user *buf, unsigned long count);
+    int get_psi_tint(char *page, char **start, off_t off, int count,int *eof);
+    int set_psi_tint(struct file *file, const char __user *buf, unsigned long count);
 #endif
-    protected:
-        void                SelectDisplayBufferPointers(struct BufferStructure_s*   BufferStructure,
-                struct StreamBuffer_s*       StreamBuff,
-                stm_display_buffer_t*       DisplayBuff);
+ protected:
+    void                SelectDisplayBufferPointers    (struct BufferStructure_s*   BufferStructure,
+                                                        struct StreamBuffer_s*       StreamBuff,
+                                                        stm_display_buffer_t*       DisplayBuff);
 
-        void                ApplyPixelAspectRatioCorrection(stm_display_buffer_t*       DisplayBuff,
-                struct ParsedVideoParameters_s* VideoParameters);
+    void                ApplyPixelAspectRatioCorrection( stm_display_buffer_t*       DisplayBuff,
+                                                         struct ParsedVideoParameters_s* VideoParameters);
 
 };
 

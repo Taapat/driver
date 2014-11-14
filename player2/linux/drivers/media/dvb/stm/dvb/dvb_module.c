@@ -37,12 +37,15 @@ Date        Modification                                    Name
 #include <linux/module.h>
 #include <linux/file.h>
 #include <linux/kthread.h>
-#include <linux/version.h>
+#include <linux/autoconf.h>
 #include <asm/uaccess.h>
 
 #include <linux/dvb/audio.h>
 #include <linux/dvb/video.h>
 #include <linux/dvb/version.h>
+#ifdef __TDT__
+#include <linux/version.h>
+#endif
 
 #include "dvb_demux.h"          /* provides kernel demux types */
 
@@ -62,19 +65,19 @@ extern void linuxdvb_v4l2_init(void);
 
 #ifdef __TDT__
 extern void init_e2_proc(struct DeviceContext_s* DC);
-extern void ptiInit(struct DeviceContext_s *pContext);
-extern int SetSource(struct dmx_demux* demux, const dmx_source_t *src);
+extern void ptiInit ( struct DeviceContext_s *pContext);
+extern int SetSource (struct dmx_demux* demux, const dmx_source_t *src);
 #endif
 
-/*static*/ int  __init      StmLoadModule(void);
-static void __exit      StmUnloadModule(void);
+/*static*/ int  __init      StmLoadModule (void);
+static void __exit      StmUnloadModule (void);
 
-module_init(StmLoadModule);
-module_exit(StmUnloadModule);
+module_init             (StmLoadModule);
+module_exit             (StmUnloadModule);
 
-MODULE_DESCRIPTION("Linux DVB video and audio driver for STM streaming architecture.");
-MODULE_AUTHOR("Julian Wilson");
-MODULE_LICENSE("GPL");
+MODULE_DESCRIPTION      ("Linux DVB video and audio driver for STM streaming architecture.");
+MODULE_AUTHOR           ("Julian Wilson");
+MODULE_LICENSE          ("GPL");
 
 #define MODULE_NAME     "STM Streamer"
 
@@ -101,21 +104,23 @@ MODULE_PARM_DESC(reset_tsm, "Reset the tsm when pti is idle? (default=0)\n");
 MODULE_PARM_DESC(reset_tsm, "Reset the tsm when pti is idle? (default=1)\n");
 #endif
 
-struct DvbContext_s *DvbContext;
+struct DvbContext_s*     DvbContext;
 
 long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long bar)
 {
     return dvb_generic_ioctl(NULL, file, foo, bar);
 }
 
-/*static*/ int __init StmLoadModule(void)
+/*static*/ int __init StmLoadModule (void)
 {
-    int Result;
-    int i;
-    short int AdapterNumbers[] = { -1 };
+    int                         Result;
+    int                         i;
+    short int                   AdapterNumbers[] = { -1 };
 
-    DvbContext = kzalloc(sizeof(struct DvbContext_s), GFP_KERNEL);
-
+    DvbContext  = kzalloc (sizeof (struct DvbContext_s),  GFP_KERNEL);
+#ifdef __TDT__
+    memset(DvbContext, 0, sizeof*DvbContext);
+#endif
     if (DvbContext == NULL)
     {
         DVB_ERROR("Unable to allocate device memory\n");
@@ -123,35 +128,32 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
     }
 
 #ifdef __TDT__
-    memset(DvbContext, 0, sizeof * DvbContext);
-#endif
-
-#ifdef __TDT__
-
     if (swts)
-        printk("swts ->routing streams from dvr0 to tsm to pti to player\n");
+      printk("swts ->routing streams from dvr0 to tsm to pti to player\n");
     else
-        printk("no swts ->routing streams from dvr0 direct to the player\n");
+      printk("no swts ->routing streams from dvr0 direct to the player\n");
 
 #endif
 
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17)
 #if DVB_API_VERSION < 5
-    Result = dvb_register_adapter(&DvbContext->DvbAdapter, MODULE_NAME, THIS_MODULE, NULL);
-#else
-    Result = dvb_register_adapter(&DvbContext->DvbAdapter, MODULE_NAME, THIS_MODULE, NULL, AdapterNumbers);
+    Result      = dvb_register_adapter (&DvbContext->DvbAdapter, MODULE_NAME, THIS_MODULE, NULL);
+#else   
+    Result      = dvb_register_adapter (&DvbContext->DvbAdapter, MODULE_NAME, THIS_MODULE, NULL, AdapterNumbers);
 #endif
-
+#else /* STLinux 2.2 kernel */
+    Result      = dvb_register_adapter (&DvbContext->DvbAdapter, MODULE_NAME, THIS_MODULE);
+#endif
     if (Result < 0)
     {
         DVB_ERROR("Failed to register adapter (%d)\n", Result);
         kfree(DvbContext);
-        DvbContext = NULL;
+        DvbContext      = NULL;
         return -ENOMEM;
     }
 
-    mutex_init(&(DvbContext->Lock));
-    mutex_lock(&(DvbContext->Lock));
-
+    mutex_init (&(DvbContext->Lock));
+    mutex_lock (&(DvbContext->Lock));
     /*{{{  Register devices*/
     for (i = 0; i < DVB_MAX_DEVICES_PER_ADAPTER; i++)
     {
@@ -161,113 +163,116 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
         struct dvb_device*      DvrDevice;
 
 #ifdef __TDT__
-        //sylvester: wenn der stream vom user kommt soll WriteToDecoder nix
-        //tun, da das ja hier schon passiert. keine ahnung wie man das ansonsten
-        //verhindern soll;-)
-        DeviceContext->dvr_write = 0;
+               //sylvester: wenn der stream vom user kommt soll WriteToDecoder nix
+                //tun, da das ja hier schon passiert. keine ahnung wie man das ansonsten
+                //verhindern soll;-)
+                DeviceContext->dvr_write = 0;
 #endif
 
-        DeviceContext->DvbContext = DvbContext;
-#if defined (USE_KERNEL_DEMUX)
-        memset(DvbDemux, 0, sizeof(struct dvb_demux));
+        DeviceContext->DvbContext               = DvbContext;
+    #if defined (USE_KERNEL_DEMUX)
+        memset (DvbDemux, 0, sizeof (struct dvb_demux));
 #ifdef __TDT__
-        DvbDemux->dmx.capabilities = DMX_TS_FILTERING | DMX_SECTION_FILTERING | DMX_MEMORY_BASED_FILTERING | DMX_TS_DESCRAMBLING;
+        DvbDemux->dmx.capabilities              = DMX_TS_FILTERING | DMX_SECTION_FILTERING | DMX_MEMORY_BASED_FILTERING | DMX_TS_DESCRAMBLING;
         /* currently only dummy to avoid EINVAL error. Later we need it for second frontend ?! */
-        DvbDemux->dmx.set_source = SetSource;
+        DvbDemux->dmx.set_source                   = SetSource;
 #else
-        DvbDemux->dmx.capabilities = DMX_TS_FILTERING | DMX_SECTION_FILTERING | DMX_MEMORY_BASED_FILTERING;
+        DvbDemux->dmx.capabilities              = DMX_TS_FILTERING | DMX_SECTION_FILTERING | DMX_MEMORY_BASED_FILTERING;
 #endif
-        DvbDemux->priv = DeviceContext;
-        DvbDemux->filternum = 32;
-        DvbDemux->feednum = 32;
-        DvbDemux->start_feed = StartFeed;
-        DvbDemux->stop_feed = StopFeed;
-#ifdef __TDT__
-        DvbDemux->write_to_decoder = WriteToDecoder;
+        DvbDemux->priv                          = DeviceContext;
+        DvbDemux->filternum                     = 32;
+        DvbDemux->feednum                       = 32;
+        DvbDemux->start_feed                    = StartFeed;
+        DvbDemux->stop_feed                     = StopFeed;
+#ifndef __TDT__
+	    DvbDemux->write_to_decoder              = NULL;
 #else
-        DvbDemux->write_to_decoder = NULL;
+        DvbDemux->write_to_decoder              = WriteToDecoder;
 #endif
-        Result = dvb_dmx_init(DvbDemux);
-
+        Result                                  = dvb_dmx_init (DvbDemux);
         if (Result < 0)
         {
-            DVB_ERROR("dvb_dmx_init failed (errno = %d)\n", Result);
+            DVB_ERROR ("dvb_dmx_init failed (errno = %d)\n", Result);
             return Result;
         }
 
-        memset(DmxDevice, 0, sizeof(struct dmxdev));
-        DmxDevice->filternum = DvbDemux->filternum;
-        DmxDevice->demux = &DvbDemux->dmx;
-        DmxDevice->capabilities = 0;
-        Result = dvb_dmxdev_init(DmxDevice, &DvbContext->DvbAdapter);
-
+        memset (DmxDevice, 0, sizeof (struct dmxdev));
+        DmxDevice->filternum                    = DvbDemux->filternum;
+        DmxDevice->demux                        = &DvbDemux->dmx;
+        DmxDevice->capabilities                 = 0;
+        Result                                  = dvb_dmxdev_init (DmxDevice, &DvbContext->DvbAdapter);
         if (Result < 0)
         {
             DVB_ERROR("dvb_dmxdev_init failed (errno = %d)\n", Result);
-            dvb_dmx_release(DvbDemux);
+            dvb_dmx_release (DvbDemux);
             return Result;
         }
-
-        DvrDevice = DvrInit(DmxDevice->dvr_dvbdev->fops);
+        DvrDevice                               = DvrInit (DmxDevice->dvr_dvbdev->fops);
 #ifdef __TDT__
         printk("%d: DeviceContext %p, DvbDemux %p, DmxDevice %p\n", i, DeviceContext, DvbDemux, DmxDevice);
 #endif
         /* Unregister the built-in dvr device and replace it with our own version */
-        dvb_unregister_device(DmxDevice->dvr_dvbdev);
-        dvb_register_device(&DvbContext->DvbAdapter,
-                            &DmxDevice->dvr_dvbdev,
-                            DvrDevice, DmxDevice, DVB_DEVICE_DVR);
+        dvb_unregister_device  (DmxDevice->dvr_dvbdev);
+        dvb_register_device (&DvbContext->DvbAdapter,
+                             &DmxDevice->dvr_dvbdev,
+                             DvrDevice,
+                             DmxDevice,
+                             DVB_DEVICE_DVR);
 
-        DeviceContext->MemoryFrontend.source = DMX_MEMORY_FE;
-        Result = DvbDemux->dmx.add_frontend(&DvbDemux->dmx, &DeviceContext->MemoryFrontend);
 
+        DeviceContext->MemoryFrontend.source    = DMX_MEMORY_FE;
+        Result                                  = DvbDemux->dmx.add_frontend (&DvbDemux->dmx, &DeviceContext->MemoryFrontend);
         if (Result < 0)
         {
-            DVB_ERROR("add_frontend failed (errno = %d)\n", Result);
-            dvb_dmxdev_release(DmxDevice);
-            dvb_dmx_release(DvbDemux);
+            DVB_ERROR ("add_frontend failed (errno = %d)\n", Result);
+            dvb_dmxdev_release (DmxDevice);
+            dvb_dmx_release    (DvbDemux);
             return Result;
         }
+    #else
+        dvb_register_device (&DvbContext->DvbAdapter,
+                             &DeviceContext->DemuxDevice,
+                             DemuxInit (DeviceContext),
+                             DeviceContext,
+                             DVB_DEVICE_DEMUX);
 
-#else
-        dvb_register_device(&DvbContext->DvbAdapter,
-                            &DeviceContext->DemuxDevice,
-                            DemuxInit(DeviceContext),
-                            DeviceContext, DVB_DEVICE_DEMUX);
+        dvb_register_device (&DvbContext->DvbAdapter,
+                             &DeviceContext->DvrDevice,
+                             DvrInit (DeviceContext),
+                             DeviceContext,
+                             DVB_DEVICE_DVR);
+        #endif
 
-        dvb_register_device(&DvbContext->DvbAdapter,
-                            &DeviceContext->DvrDevice,
-                            DvrInit(DeviceContext),
-                            DeviceContext, DVB_DEVICE_DVR);
-#endif
-
-        dvb_register_device(&DvbContext->DvbAdapter,
-                            &DeviceContext->AudioDevice,
-                            AudioInit(DeviceContext),
-                            DeviceContext, DVB_DEVICE_AUDIO);
+        dvb_register_device (&DvbContext->DvbAdapter,
+                             &DeviceContext->AudioDevice,
+                             AudioInit (DeviceContext),
+                             DeviceContext,
+                             DVB_DEVICE_AUDIO);
 
 #ifdef __TDT__
-
         /* register the CA device (e.g. CIMAX) */
-        if (i < 3)
+        if(i < 3)
 #ifndef VIP2_V1
-            dvb_register_device(&DvbContext->DvbAdapter,
-                                &DeviceContext->CaDevice,
-                                CaInit(DeviceContext),
-                                DeviceContext, DVB_DEVICE_CA);
-
+	       dvb_register_device (&DvbContext->DvbAdapter,
+			            &DeviceContext->CaDevice,
+			            CaInit (DeviceContext),
+			            DeviceContext,
+			            DVB_DEVICE_CA);
 #endif
+
 #else
-        dvb_register_device(&DvbContext->DvbAdapter,
-                            &DeviceContext->CaDevice,
-                            CaInit(DeviceContext),
-                            DeviceContext, DVB_DEVICE_CA);
+	    dvb_register_device (&DvbContext->DvbAdapter,
+			         &DeviceContext->CaDevice,
+			         CaInit (DeviceContext),
+			         DeviceContext,
+			         DVB_DEVICE_CA);
 #endif
 
-        dvb_register_device(&DvbContext->DvbAdapter,
-                            &DeviceContext->VideoDevice,
-                            VideoInit(DeviceContext),
-                            DeviceContext, DVB_DEVICE_VIDEO);
+        dvb_register_device (&DvbContext->DvbAdapter,
+                             &DeviceContext->VideoDevice,
+                             VideoInit (DeviceContext),
+                             DeviceContext,
+                             DVB_DEVICE_VIDEO);                             
 
         DeviceContext->Id                       = i;
         DeviceContext->numRunningFeeds          = 0;
@@ -280,38 +285,44 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
         DeviceContext->VideoStream              = NULL;
         DeviceContext->AudioStream              = NULL;
         DeviceContext->PlaySpeed                = DVB_SPEED_NORMAL_PLAY;
-        DeviceContext->dvr_in                   = kmalloc(65536, GFP_KERNEL); // 128Kbytes is quite a lot per device.
-        DeviceContext->dvr_out                  = kmalloc(65536, GFP_KERNEL); // However allocating on each write is expensive.
+        DeviceContext->dvr_in                   = kmalloc(65536,GFP_KERNEL); // 128Kbytes is quite a lot per device.
+        DeviceContext->dvr_out                  = kmalloc(65536,GFP_KERNEL); // However allocating on each write is expensive.
         DeviceContext->EncryptionOn             = 0;
 #ifdef __TDT__
         DeviceContext->VideoPlaySpeed           = DVB_SPEED_NORMAL_PLAY;
-        DeviceContext->provideToDecoder         = 0;
-        DeviceContext->feedPesType              = 0;
+        DeviceContext->provideToDecoder = 0;
+        DeviceContext->feedPesType = 0;
         mutex_init(&DeviceContext->injectMutex);
 
-        if (i < 4)
+        if(i < 4)
         {
-            ptiInit(DeviceContext);
+          ptiInit(DeviceContext);
         }
 
-        if (i < 1)
+        if(i < 1)
         {
-            init_e2_proc(DeviceContext);
+          init_e2_proc(DeviceContext);
         }
-
 #endif
+
     }
 
-    mutex_unlock(&(DvbContext->Lock));
+    mutex_unlock (&(DvbContext->Lock));
 
-    DvbBackendInit();
+    DvbBackendInit ();
+
+    /*}}}*/
+#if defined (CONFIG_CPU_SUBTYPE_STX7200)
+    avr_init();
+#endif 
 
 #ifndef __TDT__
+
 #if defined (CONFIG_CPU_SUBTYPE_STX7105) // || defined (CONFIG_CPU_SUBTYPE_STX7200)
     cap_init();
-#endif
-#endif
+#endif  
 
+#endif
     linuxdvb_v4l2_init();
 
     DVB_DEBUG("STM stream device loaded\n");
@@ -319,11 +330,11 @@ long DvbGenericUnlockedIoctl(struct file *file, unsigned int foo, unsigned long 
     return 0;
 }
 
-static void __exit StmUnloadModule(void)
+static void __exit StmUnloadModule (void)
 {
     int i;
 
-    DvbBackendDelete();
+    DvbBackendDelete ();
 
     for (i = 0; i < DVB_MAX_DEVICES_PER_ADAPTER; i++)
     {
@@ -331,51 +342,44 @@ static void __exit StmUnloadModule(void)
         struct dvb_demux*       DvbDemux        = &DeviceContext->DvbDemux;
         struct dmxdev*          DmxDevice       = &DeviceContext->DmxDevice;
 
-        device_unregister(&DeviceContext->AudioClassDevice);
-        device_unregister(&DeviceContext->VideoClassDevice);
-
 #if defined (USE_KERNEL_DEMUX)
-
         if (DmxDevice != NULL)
         {
             /* We don't need to unregister DmxDevice->dvr_dvbdev as this will be done by dvb_dmxdev_release */
-            dvb_dmxdev_release(DmxDevice);
+            dvb_dmxdev_release (DmxDevice);
         }
-
         if (DvbDemux != NULL)
         {
-            DvbDemux->dmx.remove_frontend(&DvbDemux->dmx, &DeviceContext->MemoryFrontend);
-            dvb_dmx_release(DvbDemux);
+            DvbDemux->dmx.remove_frontend (&DvbDemux->dmx, &DeviceContext->MemoryFrontend);
+            dvb_dmx_release    (DvbDemux);
         }
-
 #else
-        dvb_unregister_device(DeviceContext->DemuxDevice);
-        dvb_unregister_device(DeviceContext->DvrDevice);
+        dvb_unregister_device  (DeviceContext->DemuxDevice);
+        dvb_unregister_device  (DeviceContext->DvrDevice);
 #endif
-
         if (DeviceContext->AudioDevice != NULL)
-            dvb_unregister_device(DeviceContext->AudioDevice);
-
+            dvb_unregister_device  (DeviceContext->AudioDevice);
         if (DeviceContext->VideoDevice != NULL)
-            dvb_unregister_device(DeviceContext->VideoDevice);
+            dvb_unregister_device  (DeviceContext->VideoDevice);
 
-        DvbPlaybackDelete(DeviceContext->Playback);
-        DeviceContext->AudioStream           = NULL;
-        DeviceContext->VideoStream           = NULL;
-        DeviceContext->Playback              = NULL;
+        DvbPlaybackDelete (DeviceContext->Playback);
+        DeviceContext->AudioStream              = NULL;
+        DeviceContext->VideoStream              = NULL;
+        DeviceContext->Playback                 = NULL;
         kfree(DeviceContext->dvr_in);
         kfree(DeviceContext->dvr_out);
     }
 
+
     if (DvbContext != NULL)
     {
-        dvb_unregister_adapter(&DvbContext->DvbAdapter);
-        kfree(DvbContext);
+        dvb_unregister_adapter (&DvbContext->DvbAdapter);
+        kfree (DvbContext);
     }
-
     DvbContext  = NULL;
 
     DVB_DEBUG("STM stream device unloaded\n");
 
     return;
 }
+

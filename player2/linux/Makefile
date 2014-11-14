@@ -4,9 +4,6 @@ CONFIG_STGFB_PATH?=$(DRIVER_TOPDIR)/stgfb/stmfb
 ifdef UFS922
  PART1=1
 endif
-ifdef UFC960
- PART1=1
-endif
 ifdef TF7700
  PART1=1
 endif
@@ -68,25 +65,13 @@ endif
 ifdef ATEVIO7500
  PART2=1
 endif
-ifdef UFS913
- PART2=1
-endif
 ifdef HS7810A
  PART2=1
 endif
 ifdef HS7110
  PART2=1
 endif
-ifdef ATEMIO520
- PART2=1
-endif
-ifdef ATEMIO530
- PART2=1
-endif
-ifdef VITAMIN_HD5000
- PART2=1
-endif
-ifdef SAGEMCOM88
+ifdef WHITEBOX
  PART2=1
 endif
 
@@ -97,9 +82,9 @@ endif
 endif
 
 ifeq ($(CONFIG_MULTICOM324),y)
-CCFLAGSY += -DMULTICOM324
+CCFLAGSY+= -DMULTICOM324
 else ifeq ($(CONFIG_MULTICOM406),y)
-CCFLAGSY += -DMULTICOM406
+CCFLAGSY+= -DMULTICOM406
 endif
 
 ifdef PART1
@@ -115,8 +100,8 @@ CCFLAGSY+=-DPLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY=0x01B00000 \
 endif
 
 ifdef PART2
-#UFS912, SPARK, SPARK7162, atevio7500, hs7810a, hs7110, atemio520, atemio530
-CCFLAGSY += -DPLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY=0x02400000 \
+#UFS912, SPARK, SPARK7162, atevio7500, hs7810a, hs7110, whitebox
+CCFLAGSY+=-DPLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY=0x02400000 \
 	-DPLAYER2_SECONDARY_VIDEO_BUFFER_MEMORY=0x00900000 \
 	-DPLAYER2_AVR_VIDEO_BUFFER_MEMORY=0x00000000 \
 	-DPLAYER2_H264_MACROBLOCK_STRUCTURE_MEMORY=0xa00000 \
@@ -129,7 +114,7 @@ endif
 
 ifdef PART3
 #UFS910 and others
-CCFLAGSY += -DPLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY=0x01B00000 \
+CCFLAGSY+=-DPLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY=0x01B00000 \
         -DPLAYER2_SECONDARY_VIDEO_BUFFER_MEMORY=0x00000000 \
         -DPLAYER2_AVR_VIDEO_BUFFER_MEMORY=0x00000000 \
         -DPLAYER2_AVR_VIDEO_BUFFER_MEMORY=0x00000000 \
@@ -143,11 +128,11 @@ endif
 
 # workaround for stm24
 ifdef CONFIG_CPU_SUBTYPE_STX7100
-CCFLAGSY += -DCONFIG_CPU_SUBTYPE_STB7100
+CCFLAGSY+=-DCONFIG_CPU_SUBTYPE_STB7100
 endif
 
 
-CCFLAGSY += -I$(CONFIG_KERNEL_BUILD)/include2 \
+CCFLAGSY+=-I$(CONFIG_KERNEL_BUILD)/include2 \
 	-I$(CONFIG_KERNEL_BUILD)/include \
 	-include $(KERNEL_LOCATION)/include/linux/autoconf.h \
 	-I$(CONFIG_KERNEL_PATH)/include -D__KERNEL__ \
@@ -156,7 +141,7 @@ CCFLAGSY += -I$(CONFIG_KERNEL_BUILD)/include2 \
 	-I$(DRIVER_TOPDIR)/include/player2 \
 	-I$(DRIVER_TOPDIR)/include/multicom
 
-CCFLAGSY += -I$(TREE_ROOT)/linux/components/inline         \
+CCFLAGSY+=-I$(TREE_ROOT)/linux/components/inline         \
 	-I$(TREE_ROOT)/components/include              \
 	-I$(TREE_ROOT)/components/infrastructure       \
 	-I$(TREE_ROOT)/linux/drivers/media/dvb/stm/allocator \
@@ -165,7 +150,7 @@ CCFLAGSY += -I$(TREE_ROOT)/linux/components/inline         \
 	-I$(TREE_ROOT)/linux/drivers/sound/ksound \
 	-I$(TREE_ROOT)/linux/drivers/sound/pcm_transcoder
 
-CCFLAGSY += -I$(TREE_ROOT)/player/class_definitions        \
+CCFLAGSY+=-I$(TREE_ROOT)/player/class_definitions        \
 	-I$(TREE_ROOT)/player/buffer                   \
 	-I$(TREE_ROOT)/player/demultiplexor            \
 	-I$(TREE_ROOT)/player/collator                 \
@@ -178,30 +163,30 @@ CCFLAGSY += -I$(TREE_ROOT)/player/class_definitions        \
 	-I$(TREE_ROOT)/player/output_coordinator       \
 	-I$(TREE_ROOT)/player/output_timer
 
-CCFLAGSY += -I$(CONFIG_STGFB_PATH)/
-CCFLAGSY += -I$(CONFIG_STGFB_PATH)/linux/include/
+CCFLAGSY+=-I$(CONFIG_STGFB_PATH)/
+CCFLAGSY+=-I$(CONFIG_STGFB_PATH)/linux/include/
 
-CCFLAGSY += -I$(TREE_ROOT)/linux/include/
+CCFLAGSY+=-I$(TREE_ROOT)/linux/include/
 
 # promote CONFIG_RELAY to a CFLAGS define so that it can be observed by C++
 # code as well and appropriate inlining performed at the earliest possible
 # point.
 ifdef CONFIG_RELAY
-CCFLAGSY += -DCONFIG_RELAY=1
+CCFLAGSY+=-DCONFIG_RELAY=1
 endif
 
 # CONFIG_DUAL_DISPLAY is a temporary hack to convert the existing
 # picture-in-picture and speaker-in-speaker support into two
 # independant displays also used for the compositor capture now.
 ifdef CONFIG_DUAL_DISPLAY
-CCFLAGSY += -DCONFIG_DUAL_DISPLAY
+CCFLAGSY+=-DCONFIG_DUAL_DISPLAY
 endif
 
 # promote CONFIG_MONITOR to a CFLAGS define so that it can be observed by C++
 # code as well and appropriate inlining performed at the earliest possible
 # point.
 #ifdef CONFIG_MONITOR
-CCFLAGSY += -DCONFIG_MONITOR=1
+CCFLAGSY+=-DCONFIG_MONITOR=1
 #endif
 
 # Finally pick up the original system headers, these must be near the '

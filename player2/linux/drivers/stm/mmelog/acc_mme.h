@@ -3,19 +3,19 @@
 #ifndef _ACC_MME_H_
 #define _ACC_MME_H_
 
-#define _ACC_WRAPP_MME_ 0
+#define	_ACC_WRAPP_MME_	0
 
-#if _ACC_WRAPP_MME_
+#if _ACC_WRAPP_MME_ 
 
 #ifndef _ACC_MME_WRAPPER_C_
 
-// Abstract multicom calls
+// Abstract multicom calls 
 
-#define MME_InitTransformer         acc_MME_InitTransformer
-#define MME_SendCommand             acc_MME_SendCommand
-#define MME_AbortCommand            acc_MME_AbortCommand
-#define MME_TermTransformer         acc_MME_TermTransformer
-#define MME_GetTransformerCapability        acc_MME_GetTransformerCapability
+#define MME_InitTransformer			acc_MME_InitTransformer
+#define MME_SendCommand				acc_MME_SendCommand    
+#define MME_AbortCommand			acc_MME_AbortCommand    
+#define MME_TermTransformer			acc_MME_TermTransformer
+#define MME_GetTransformerCapability		acc_MME_GetTransformerCapability
 
 #endif // _ACC_MME_WRAPPER_C_
 

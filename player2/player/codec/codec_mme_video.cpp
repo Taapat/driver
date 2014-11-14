@@ -33,7 +33,7 @@ Date        Modification                                    Name
 
 // /////////////////////////////////////////////////////////////////////
 //
-//  Include any component headers
+//	Include any component headers
 
 #include "codec_mme_video.h"
 
@@ -42,8 +42,8 @@ Date        Modification                                    Name
 // Locally defined constants
 //
 
-#define DECODE_RATE_LOWER_LIMIT             Rational_t(3,4)     // Used to be 1, changed to trap failure to decode of divxhd
-#define DECODE_RATE_UPPER_LIMIT             6
+#define DECODE_RATE_LOWER_LIMIT				Rational_t(3,4)		// Used to be 1, changed to trap failure to decode of divxhd
+#define DECODE_RATE_UPPER_LIMIT				6
 
 // /////////////////////////////////////////////////////////////////////////
 //
@@ -52,15 +52,15 @@ Date        Modification                                    Name
 
 // /////////////////////////////////////////////////////////////////////////
 //
-//  The Halt function, give up access to any registered resources
+// 	The Halt function, give up access to any registered resources
 //
 
-CodecStatus_t   Codec_MmeVideo_c::Halt(void)
+CodecStatus_t   Codec_MmeVideo_c::Halt( 	void )
 {
 
-    VideoOutputSurface      = NULL;
-    ParsedVideoParameters   = NULL;
-    KnownLastSliceInFieldFrame  = false;
+    VideoOutputSurface		= NULL;
+    ParsedVideoParameters	= NULL;
+    KnownLastSliceInFieldFrame	= false;
 
     return Codec_MmeBase_c::Halt();
 }
@@ -68,15 +68,15 @@ CodecStatus_t   Codec_MmeVideo_c::Halt(void)
 
 // /////////////////////////////////////////////////////////////////////////
 //
-//  The Reset function release any resources, and reset all variables
+// 	The Reset function release any resources, and reset all variables
 //
 
-CodecStatus_t   Codec_MmeVideo_c::Reset(void)
+CodecStatus_t   Codec_MmeVideo_c::Reset( 	void )
 {
 
-    VideoOutputSurface      = NULL;
-    ParsedVideoParameters   = NULL;
-    KnownLastSliceInFieldFrame  = false;
+    VideoOutputSurface		= NULL;
+    ParsedVideoParameters	= NULL;
+    KnownLastSliceInFieldFrame	= false;
 
     return Codec_MmeBase_c::Reset();
 }
@@ -84,36 +84,34 @@ CodecStatus_t   Codec_MmeVideo_c::Reset(void)
 
 // /////////////////////////////////////////////////////////////////////////
 //
-//  The register output ring function function
+// 	The register output ring function function
 //
 
-CodecStatus_t   Codec_MmeVideo_c::RegisterOutputBufferRing(Ring_t     Ring)
+CodecStatus_t   Codec_MmeVideo_c::RegisterOutputBufferRing( Ring_t	  Ring )
 {
-    CodecStatus_t   Status;
+CodecStatus_t	Status;
 
     //
     // Perform the standard operations
     //
 
-    Status  = Codec_MmeBase_c::RegisterOutputBufferRing(Ring);
-
-    if (Status != CodecNoError)
-        return Status;
+    Status	= Codec_MmeBase_c::RegisterOutputBufferRing( Ring );
+    if( Status != CodecNoError )
+	return Status;
 
     //
     // Obtain from the manifestor, the surface parameters we will be dealing with
     //
 
-    if (Manifestor != NULL)
+    if( Manifestor != NULL )
     {
-        Status  = Manifestor->GetSurfaceParameters((void **)(&VideoOutputSurface));
-
-        if (Status != ManifestorNoError)
-        {
-            report(severity_error, "Codec_MmeVideo_c::RegisterOutputBufferRing(%s) - Failed to get output surface parameters.\n", Configuration.CodecName);
-            SetComponentState(ComponentInError);
-            return Status;
-        }
+	Status	= Manifestor->GetSurfaceParameters( (void **)(&VideoOutputSurface) );
+	if( Status != ManifestorNoError )
+	{
+	    report( severity_error, "Codec_MmeVideo_c::RegisterOutputBufferRing(%s) - Failed to get output surface parameters.\n", Configuration.CodecName );
+	    SetComponentState(ComponentInError);
+	    return Status;
+	}
     }
 
 //
@@ -124,209 +122,201 @@ CodecStatus_t   Codec_MmeVideo_c::RegisterOutputBufferRing(Ring_t     Ring)
 
 // /////////////////////////////////////////////////////////////////////////
 //
-//  The get coded frame buffer pool fn
+// 	The get coded frame buffer pool fn
 //
 
-CodecStatus_t   Codec_MmeVideo_c::Input(Buffer_t      CodedBuffer)
+CodecStatus_t   Codec_MmeVideo_c::Input(	Buffer_t	  CodedBuffer )
 {
-    unsigned int          i;
-    CodecStatus_t         Status;
-    ParsedVideoParameters_t  *PreviousFieldParameters;
-    bool              LastSlice;
-    bool              SeenBothFields;
-    bool              LastDecodeIntoThisBuffer;
-    CodecBufferState_t   *State;
+unsigned int		  i;
+CodecStatus_t		  Status;
+ParsedVideoParameters_t	 *PreviousFieldParameters;
+bool			  LastSlice;
+bool			  SeenBothFields;
+bool			  LastDecodeIntoThisBuffer;
+CodecBufferState_t	 *State;
 
     //
     // Are we allowed in here
     //
 
-    AssertComponentState("Codec_MmeVideo_c::Input", ComponentRunning);
+    AssertComponentState( "Codec_MmeVideo_c::Input", ComponentRunning );
 
     //
     // First perform base operations
     //
 
-    Status      = Codec_MmeBase_c::Input(CodedBuffer);
-
-    if (Status != CodecNoError)
+    Status      = Codec_MmeBase_c::Input( CodedBuffer );
+    if( Status != CodecNoError )
         return Status;
 
     //
     // Do we need to issue a new set of stream parameters
     //
 
-    if (ParsedFrameParameters->NewStreamParameters)
+    if( ParsedFrameParameters->NewStreamParameters )
     {
-        Status      = FillOutSetStreamParametersCommand();
+	Status		= FillOutSetStreamParametersCommand();
+	if( Status == CodecNoError )
+	    Status	= SendMMEStreamParameters();
+	if( Status != CodecNoError )
+	{
+	    report( severity_error, "Codec_MmeVideo_c::Input(%s) - Failed to fill out, and send, a set stream parameters command.\n", Configuration.CodecName );
+	    ForceStreamParameterReload		= true;
+	    StreamParameterContextBuffer->DecrementReferenceCount();
+	    StreamParameterContextBuffer	= NULL;
+	    StreamParameterContext		= NULL;
+	    return Status;
+	}
 
-        if (Status == CodecNoError)
-            Status  = SendMMEStreamParameters();
-
-        if (Status != CodecNoError)
-        {
-            report(severity_error, "Codec_MmeVideo_c::Input(%s) - Failed to fill out, and send, a set stream parameters command.\n", Configuration.CodecName);
-            ForceStreamParameterReload      = true;
-            StreamParameterContextBuffer->DecrementReferenceCount();
-            StreamParameterContextBuffer    = NULL;
-            StreamParameterContext      = NULL;
-            return Status;
-        }
-
-        StreamParameterContextBuffer    = NULL;
-        StreamParameterContext      = NULL;
+	StreamParameterContextBuffer	= NULL;
+	StreamParameterContext		= NULL;
     }
 
     //
     // If there is no frame to decode then exit now.
     //
 
-    if (!ParsedFrameParameters->NewFrameParameters)
-        return CodecNoError;
+    if( !ParsedFrameParameters->NewFrameParameters )
+	return CodecNoError;
 
     //
     // Test if this frame indicates completion of any previous decodes (for slice decoding)
     //
 
-    if (Configuration.SliceDecodePermitted &&
-            ParsedVideoParameters->FirstSlice &&
-            (CurrentDecodeBufferIndex != INVALID_INDEX) &&
-            (BufferState[CurrentDecodeBufferIndex].ParsedVideoParameters->PictureStructure == StructureFrame))
+    if( Configuration.SliceDecodePermitted &&
+	ParsedVideoParameters->FirstSlice &&
+	(CurrentDecodeBufferIndex != INVALID_INDEX) &&
+	(BufferState[CurrentDecodeBufferIndex].ParsedVideoParameters->PictureStructure == StructureFrame) )
     {
-        // Operation cannot fail
-        SetOutputOnDecodesComplete(CurrentDecodeBufferIndex, true);
-        CurrentDecodeBufferIndex    = INVALID_INDEX;
+	// Operation cannot fail
+	SetOutputOnDecodesComplete( CurrentDecodeBufferIndex, true );
+	CurrentDecodeBufferIndex	= INVALID_INDEX;
     }
 
     //
     // Check for a half buffer
     //
 
-    if ((CurrentDecodeBufferIndex != INVALID_INDEX) && ParsedFrameParameters->FirstParsedParametersForOutputFrame)
+    if( (CurrentDecodeBufferIndex != INVALID_INDEX) && ParsedFrameParameters->FirstParsedParametersForOutputFrame )
     {
-        report(severity_error, "Codec_MmeVideo_c::Input(%s) - New frame starts when we have one field in decode buffer.\n", Configuration.CodecName);
-        Codec_MmeVideo_c::OutputPartialDecodeBuffers();
+	report( severity_error, "Codec_MmeVideo_c::Input(%s) - New frame starts when we have one field in decode buffer.\n", Configuration.CodecName );
+	Codec_MmeVideo_c::OutputPartialDecodeBuffers();
     }
 
     //
     // Obtain a new buffer if needed
     //
 
-    if (CurrentDecodeBufferIndex == INVALID_INDEX)
+    if( CurrentDecodeBufferIndex == INVALID_INDEX )
     {
-        Status  = GetDecodeBuffer();
+	Status	= GetDecodeBuffer();
+	if( Status != CodecNoError )
+	{
+	    report( severity_error, "Codec_MmeVideo_c::Input(%s) - Failed to get decode buffer.\n", Configuration.CodecName );
+	    ReleaseDecodeContext( DecodeContext );
+	    return Status;
+	}
 
-        if (Status != CodecNoError)
-        {
-            report(severity_error, "Codec_MmeVideo_c::Input(%s) - Failed to get decode buffer.\n", Configuration.CodecName);
-            ReleaseDecodeContext(DecodeContext);
-            return Status;
-        }
+	//
+	// reset the buffer content to contain no data, and derive the chroma and luma pointers.
+	//
 
-        //
-        // reset the buffer content to contain no data, and derive the chroma and luma pointers.
-        //
+	State	= &BufferState[CurrentDecodeBufferIndex];
 
-        State   = &BufferState[CurrentDecodeBufferIndex];
+	State->ParsedVideoParameters->PictureStructure	= StructureEmpty;
+	State->FieldDecode				= ParsedVideoParameters->PictureStructure != StructureFrame;
 
-        State->ParsedVideoParameters->PictureStructure  = StructureEmpty;
-        State->FieldDecode              = ParsedVideoParameters->PictureStructure != StructureFrame;
-
-        if (Manifestor != NULL)
-        {
-            if (State->BufferStructure->ComponentCount == 1)
-            {
-                State->BufferLumaPointer    = NULL;
-                State->BufferChromaPointer  = NULL;
-                State->BufferRasterPointer  = State->BufferPointer + State->BufferStructure->ComponentOffset[0];
-            }
-            else if (State->BufferStructure->ComponentCount == 2)
-            {
-                State->BufferLumaPointer    = State->BufferPointer + State->BufferStructure->ComponentOffset[0];
-                State->BufferChromaPointer  = State->BufferPointer + State->BufferStructure->ComponentOffset[1];
-                State->BufferRasterPointer  = NULL;
-            }
-            else if (State->BufferStructure->ComponentCount == 4)
-            {
-
-                State->BufferLumaPointer         = State->BufferPointer + State->BufferStructure->ComponentOffset[0];
-                State->BufferChromaPointer   = State->BufferPointer + State->BufferStructure->ComponentOffset[1];
-
-                State->DecimatedLumaPointer  = State->BufferPointer + State->BufferStructure->ComponentOffset[2];
-                State->DecimatedChromaPointer    = State->BufferPointer + State->BufferStructure->ComponentOffset[3];
-
-                State->BufferRasterPointer       = NULL;
-            }
-            else
-                report(severity_fatal, "Codec_MmeVideo_c::Input(%s) - Decode buffer structure contains unsupported number of components (%d).\n", Configuration.CodecName, State->BufferStructure->ComponentCount);
-        }
+	if( Manifestor != NULL )
+	{
+	    if( State->BufferStructure->ComponentCount == 1 )
+	    {
+		State->BufferLumaPointer    = NULL;
+		State->BufferChromaPointer  = NULL;
+		State->BufferRasterPointer  = State->BufferPointer + State->BufferStructure->ComponentOffset[0];
+	    }
+	    else if( State->BufferStructure->ComponentCount == 2 )
+	    {
+	    State->BufferLumaPointer	= State->BufferPointer + State->BufferStructure->ComponentOffset[0];
+	    State->BufferChromaPointer	= State->BufferPointer + State->BufferStructure->ComponentOffset[1];
+		State->BufferRasterPointer  = NULL;
+	    }
+	    else if( State->BufferStructure->ComponentCount == 4 )
+	    {
+		      
+	       State->BufferLumaPointer	        = State->BufferPointer + State->BufferStructure->ComponentOffset[0];
+	       State->BufferChromaPointer	= State->BufferPointer + State->BufferStructure->ComponentOffset[1];
+	       
+	       State->DecimatedLumaPointer	= State->BufferPointer + State->BufferStructure->ComponentOffset[2];
+	       State->DecimatedChromaPointer	= State->BufferPointer + State->BufferStructure->ComponentOffset[3];
+	       
+	       State->BufferRasterPointer       = NULL;
+	    }	   
+	    else
+		report( severity_fatal, "Codec_MmeVideo_c::Input(%s) - Decode buffer structure contains unsupported number of components (%d).\n", Configuration.CodecName, State->BufferStructure->ComponentCount );
+	}
     }
 
     //
-    // If we are re-using the buffer, and this is the first slice
-    // (hence of a second field) we update the field counts in the
+    // If we are re-using the buffer, and this is the first slice 
+    // (hence of a second field) we update the field counts in the 
     // buffer record.
     //
 
-    else if (ParsedVideoParameters->FirstSlice)
+    else if( ParsedVideoParameters->FirstSlice )
     {
-        Status  = MapBufferToDecodeIndex(ParsedFrameParameters->DecodeFrameIndex, CurrentDecodeBufferIndex);
-
-        if (Status != CodecNoError)
-        {
-            report(severity_error, "Codec_MmeVideo_c::Input(%s) - Failed to map second field index to decode buffer - Implementation error.\n", Configuration.CodecName);
-            Codec_MmeVideo_c::OutputPartialDecodeBuffers();
-            return PlayerImplementationError;
-        }
-
-//
-
-        PreviousFieldParameters             = BufferState[CurrentDecodeBufferIndex].ParsedVideoParameters;
-
-        if (PreviousFieldParameters->DisplayCount[1] != 0)
-        {
-            report(severity_error, "Codec_MmeVideo_c::Input(%s) - DisplayCount for second field non-zero after decoding only first field - Implementation error.\n", Configuration.CodecName);
-            Codec_MmeVideo_c::OutputPartialDecodeBuffers();
-            return PlayerImplementationError;
-        }
-
-        PreviousFieldParameters->DisplayCount[1]    = ParsedVideoParameters->DisplayCount[0];
+	Status	= MapBufferToDecodeIndex( ParsedFrameParameters->DecodeFrameIndex, CurrentDecodeBufferIndex );
+	if( Status != CodecNoError )
+	{
+	    report( severity_error, "Codec_MmeVideo_c::Input(%s) - Failed to map second field index to decode buffer - Implementation error.\n", Configuration.CodecName );
+	    Codec_MmeVideo_c::OutputPartialDecodeBuffers();
+	    return PlayerImplementationError;
+	}
 
 //
 
-        if ((PreviousFieldParameters->PanScan.Count + ParsedVideoParameters->PanScan.Count) >
-                MAX_PAN_SCAN_VALUES)
-        {
-            report(severity_error, "Codec_MmeVideo_c::Input(%s) - Cumulative PanScanCount in two fields too great (%d + %d) - Implementation error.\n", Configuration.CodecName, PreviousFieldParameters->PanScan.Count, ParsedVideoParameters->PanScan.Count);
-            Codec_MmeVideo_c::OutputPartialDecodeBuffers();
-            return PlayerImplementationError;
-        }
+	PreviousFieldParameters				= BufferState[CurrentDecodeBufferIndex].ParsedVideoParameters;
+	if( PreviousFieldParameters->DisplayCount[1] != 0 )
+	{
+	    report( severity_error, "Codec_MmeVideo_c::Input(%s) - DisplayCount for second field non-zero after decoding only first field - Implementation error.\n", Configuration.CodecName );
+	    Codec_MmeVideo_c::OutputPartialDecodeBuffers();
+	    return PlayerImplementationError;
+	}
 
-        for (i = 0; i < ParsedVideoParameters->PanScan.Count; i++)
-        {
-            PreviousFieldParameters->PanScan.DisplayCount[i + PreviousFieldParameters->PanScan.Count]       = ParsedVideoParameters->PanScan.DisplayCount[i];
-            PreviousFieldParameters->PanScan.HorizontalOffset[i + PreviousFieldParameters->PanScan.Count]   = ParsedVideoParameters->PanScan.HorizontalOffset[i];
-            PreviousFieldParameters->PanScan.VerticalOffset[i + PreviousFieldParameters->PanScan.Count]     = ParsedVideoParameters->PanScan.VerticalOffset[i];
-        }
+	PreviousFieldParameters->DisplayCount[1]	= ParsedVideoParameters->DisplayCount[0];
 
-        PreviousFieldParameters->PanScan.Count  += ParsedVideoParameters->PanScan.Count;
+//
+
+	if( (PreviousFieldParameters->PanScan.Count + ParsedVideoParameters->PanScan.Count) >
+	    MAX_PAN_SCAN_VALUES )
+	{
+	    report( severity_error, "Codec_MmeVideo_c::Input(%s) - Cummulative PanScanCount in two fields too great (%d + %d) - Implementation error.\n", Configuration.CodecName, PreviousFieldParameters->PanScan.Count, ParsedVideoParameters->PanScan.Count );
+	    Codec_MmeVideo_c::OutputPartialDecodeBuffers();
+	    return PlayerImplementationError;
+	}
+
+	for( i=0; i<ParsedVideoParameters->PanScan.Count; i++ )
+	{
+	    PreviousFieldParameters->PanScan.DisplayCount[i + PreviousFieldParameters->PanScan.Count]		= ParsedVideoParameters->PanScan.DisplayCount[i];
+	    PreviousFieldParameters->PanScan.HorizontalOffset[i + PreviousFieldParameters->PanScan.Count]	= ParsedVideoParameters->PanScan.HorizontalOffset[i];
+	    PreviousFieldParameters->PanScan.VerticalOffset[i + PreviousFieldParameters->PanScan.Count]		= ParsedVideoParameters->PanScan.VerticalOffset[i];
+	}
+	PreviousFieldParameters->PanScan.Count	+= ParsedVideoParameters->PanScan.Count;
     }
 
     //
     // Record the buffer being used in the decode context
     //
 
-    DecodeContext->BufferIndex  = CurrentDecodeBufferIndex;
+    DecodeContext->BufferIndex	= CurrentDecodeBufferIndex;
 
     //
     // Translate reference lists, and Update the reference frame access counts
     //
 
-    Status  = TranslateReferenceFrameLists(ParsedVideoParameters->FirstSlice);
-
-    if (Status != CodecNoError)
+    Status	= TranslateReferenceFrameLists( ParsedVideoParameters->FirstSlice );
+    if( Status != CodecNoError )
     {
-        report(severity_error, "Codec_MmeVideo_c::Input(%s) - Failed to find all reference frames - Implementation error.\n", Configuration.CodecName);
+	report( severity_error, "Codec_MmeVideo_c::Input(%s) - Failed to find all reference frames - Implementation error.\n", Configuration.CodecName );
     }
 
     //
@@ -335,75 +325,73 @@ CodecStatus_t   Codec_MmeVideo_c::Input(Buffer_t      CodedBuffer)
     // Yes, this does violate the spec. but does nevertheless work on the current crop of systems.
     //
 
-    DecodeContext->MMECommand.NumberInputBuffers        = 0;
-    DecodeContext->MMECommand.NumberOutputBuffers       = 0;
-    DecodeContext->MMECommand.DataBuffers_p         = NULL;
-
+    DecodeContext->MMECommand.NumberInputBuffers		= 0;
+    DecodeContext->MMECommand.NumberOutputBuffers		= 0;
+    DecodeContext->MMECommand.DataBuffers_p			= NULL;
+    
     //
     // Load the parameters into MME command
     //
 
-    Status  = FillOutDecodeCommand();
-
-    if (Status != CodecNoError)
+    Status	= FillOutDecodeCommand();
+    if( Status != CodecNoError )
     {
-        report(severity_error, "Codec_MmeVideo_c::Input(%s) - Failed to fill out a decode command.\n", Configuration.CodecName);
-        ReleaseDecodeContext(DecodeContext);
+	report( severity_error, "Codec_MmeVideo_c::Input(%s) - Failed to fill out a decode command.\n", Configuration.CodecName );
+	ReleaseDecodeContext( DecodeContext );
 
-        return Status;
+	return Status;
     }
 
     //
     // Update ongoing decode count, and completion flags
     //
 
-    BufferState[CurrentDecodeBufferIndex].ParsedVideoParameters->PictureStructure   |= ParsedVideoParameters->PictureStructure;
+    BufferState[CurrentDecodeBufferIndex].ParsedVideoParameters->PictureStructure	|= ParsedVideoParameters->PictureStructure;
 
-    LastSlice           = Configuration.SliceDecodePermitted ? KnownLastSliceInFieldFrame : true;
-    SeenBothFields      = BufferState[CurrentDecodeBufferIndex].ParsedVideoParameters->PictureStructure == StructureFrame;
-    LastDecodeIntoThisBuffer    = SeenBothFields && LastSlice;
+    LastSlice			= Configuration.SliceDecodePermitted ? KnownLastSliceInFieldFrame : true;
+    SeenBothFields		= BufferState[CurrentDecodeBufferIndex].ParsedVideoParameters->PictureStructure == StructureFrame;
+    LastDecodeIntoThisBuffer	= SeenBothFields && LastSlice;
 
-    OS_LockMutex(&Lock);
+    OS_LockMutex( &Lock );
 
-    DecodeContext->DecodeInProgress = true;
+    DecodeContext->DecodeInProgress	= true;
     BufferState[CurrentDecodeBufferIndex].DecodesInProgress++;
-    BufferState[CurrentDecodeBufferIndex].OutputOnDecodesComplete   = LastDecodeIntoThisBuffer;
+    BufferState[CurrentDecodeBufferIndex].OutputOnDecodesComplete	= LastDecodeIntoThisBuffer;
 
-    OS_UnLockMutex(&Lock);
+    OS_UnLockMutex( &Lock );
 
     //
-    // Ensure that the coded frame will be available throughout the
-    // life of the decode by attaching the coded frame to the decode
+    // Ensure that the coded frame will be available throughout the 
+    // life of the decode by attaching the coded frame to the decode 
     // context prior to launching the decode.
     //
 
-    DecodeContextBuffer->AttachBuffer(CodedFrameBuffer);
+    DecodeContextBuffer->AttachBuffer( CodedFrameBuffer );
 
-    //! set up MME_TRANSFORM - SendMMEDecodeCommand no longer does this as we need to do
+    //! set up MME_TRANSFORM - SendMMEDecodeCommand no longer does this as we nned to do
     //! MME_SEND_BUFFERS instead for certain codecs, WMA being one, OGG Vorbis another
     DecodeContext->MMECommand.CmdCode = MME_TRANSFORM;
 
-    Status  = SendMMEDecodeCommand();
-
-    if (Status != CodecNoError)
+    Status	= SendMMEDecodeCommand();
+    if( Status != CodecNoError )
     {
-        report(severity_error, "Codec_MmeVideo_c::Input(%s) - Failed to send a decode command.\n", Configuration.CodecName);
-        ReleaseDecodeContext(DecodeContext);
-        return Status;
+	report( severity_error, "Codec_MmeVideo_c::Input(%s) - Failed to send a decode command.\n", Configuration.CodecName );
+	ReleaseDecodeContext( DecodeContext );
+	return Status;
     }
 
     //
     // have we finished decoding into this buffer
     //
-
-    if (LastDecodeIntoThisBuffer)
+	
+    if( LastDecodeIntoThisBuffer )
     {
-        CurrentDecodeBufferIndex    = INVALID_INDEX;
-        CurrentDecodeIndex      = INVALID_INDEX;
+	CurrentDecodeBufferIndex	= INVALID_INDEX;
+	CurrentDecodeIndex		= INVALID_INDEX;
     }
     else
     {
-        CurrentDecodeIndex      = ParsedFrameParameters->DecodeFrameIndex;
+	CurrentDecodeIndex		= ParsedFrameParameters->DecodeFrameIndex;
     }
 
 //
@@ -414,22 +402,22 @@ CodecStatus_t   Codec_MmeVideo_c::Input(Buffer_t      CodedBuffer)
 
 // /////////////////////////////////////////////////////////////////////////
 //
-//  The intercept to the initialise data types function, that
-//  ensures the video specific type is recorded in the configuration
-//  record.
+// 	The intercept to the initailize data types function, that 
+//	ensures the video specific type is recorded in the configuration 
+//	record.
 //
 
-CodecStatus_t   Codec_MmeVideo_c::InitializeDataTypes(void)
+CodecStatus_t   Codec_MmeVideo_c::InitializeDataTypes(	void )
 {
     //
-    // Add video specific types, and the address of
-    // parsed video parameters to the configuration
+    // Add video specific types, and the address of 
+    // parsed video parameters to the configuration 
     // record. Then pass on down to the base class
     //
 
-    Configuration.AudioVideoDataParsedParametersType    = Player->MetaDataParsedVideoParametersType;
-    Configuration.AudioVideoDataParsedParametersPointer = (void **)&ParsedVideoParameters;
-    Configuration.SizeOfAudioVideoDataParsedParameters  = sizeof(ParsedVideoParameters_t);
+    Configuration.AudioVideoDataParsedParametersType	= Player->MetaDataParsedVideoParametersType;
+    Configuration.AudioVideoDataParsedParametersPointer	= (void **)&ParsedVideoParameters;
+    Configuration.SizeOfAudioVideoDataParsedParameters	= sizeof(ParsedVideoParameters_t);
 
     return Codec_MmeBase_c::InitializeDataTypes();
 }
@@ -437,27 +425,27 @@ CodecStatus_t   Codec_MmeVideo_c::InitializeDataTypes(void)
 
 // /////////////////////////////////////////////////////////////////////////
 //
-//  The generic video function used to fill out a buffer structure
-//  request.
+// 	The generic video function used to fill out a buffer structure
+//	request.
 //
 
-CodecStatus_t   Codec_MmeVideo_c::FillOutDecodeBufferRequest(BufferStructure_t   *Request)
+CodecStatus_t   Codec_MmeVideo_c::FillOutDecodeBufferRequest(	BufferStructure_t	 *Request )
 {
-    memset(Request, 0x00, sizeof(BufferStructure_t));
+    memset( Request, 0x00, sizeof(BufferStructure_t) );
 
-    Request->Format     = Configuration.DecodeOutputFormat;
-
-    if (Configuration.DecimatedDecodePermitted &&
-            (Player->PolicyValue(Playback, Stream, PolicyDecimateDecoderOutput) != PolicyValueDecimateDecoderOutputDisabled))
-    {
-        Request->DimensionCount  = 4;
-        Request->DecimationRequired = true;
+    Request->Format		= Configuration.DecodeOutputFormat;
+   
+    if (Configuration.DecimatedDecodePermitted && 
+       (Player->PolicyValue (Playback, Stream, PolicyDecimateDecoderOutput) != PolicyValueDecimateDecoderOutputDisabled))
+    {        
+       Request->DimensionCount	= 4;
+       Request->DecimationRequired = true;
     }
     else
-        Request->DimensionCount  = 2;
-
-    Request->Dimension[0]   = ParsedVideoParameters->Content.Width;
-    Request->Dimension[1]   = ParsedVideoParameters->Content.Height;
+       Request->DimensionCount	= 2;
+     
+    Request->Dimension[0]	= ParsedVideoParameters->Content.Width;
+    Request->Dimension[1]	= ParsedVideoParameters->Content.Height;
 
     return CodecNoError;
 }

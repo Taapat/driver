@@ -19,14 +19,14 @@ Date        Modification                                    Name
 // ------------------------------------------------------------------------
 // Constructor function
 
-RingBlocking_c::RingBlocking_c(unsigned int MaxEntries)
+RingBlocking_c::RingBlocking_c( unsigned int MaxEntries )
 {
-    OS_InitializeEvent(&Signal);
+    OS_InitializeEvent( &Signal );
 
     Limit       = MaxEntries + 1;
     NextExtract = 0;
     NextInsert  = 0;
-    Storage     = new uintptr_t[Limit];
+    Storage     = new unsigned int[Limit];
 
     InitializationStatus = (Storage == NULL) ? RingNoMemory : RingNoError;
 }
@@ -34,82 +34,79 @@ RingBlocking_c::RingBlocking_c(unsigned int MaxEntries)
 // ------------------------------------------------------------------------
 // Destructor function
 
-RingBlocking_c::~RingBlocking_c(void)
+RingBlocking_c::~RingBlocking_c( void )
 {
-    OS_SetEvent(&Signal);
-    OS_TerminateEvent(&Signal);
+    OS_SetEvent( &Signal );
+    OS_TerminateEvent( &Signal );
 
-    if (Storage != NULL)
-        delete [] Storage;
+    if( Storage != NULL )
+	delete Storage;
 }
 
 // ------------------------------------------------------------------------
 // Insert function
 
-RingStatus_t   RingBlocking_c::Insert(uintptr_t         Value)
+RingStatus_t   RingBlocking_c::Insert( unsigned int      Value )
 {
-    unsigned int OldNextInsert;
+unsigned int OldNextInsert;
 
     OldNextInsert       = NextInsert;
     Storage[NextInsert] = Value;
 
     NextInsert++;
+    if( NextInsert == Limit )
+	NextInsert = 0;
 
-    if (NextInsert == Limit)
-        NextInsert = 0;
-
-    if (NextInsert == NextExtract)
+    if( NextInsert == NextExtract )
     {
-        NextInsert      = OldNextInsert;
-        return RingTooManyEntries;
+	NextInsert      = OldNextInsert;
+	return RingTooManyEntries;
     }
 
-    OS_SetEvent(&Signal);
+    OS_SetEvent( &Signal );
     return RingNoError;
 }
 
 // ------------------------------------------------------------------------
 // Extract function
 
-RingStatus_t   RingBlocking_c::Extract(uintptr_t       *Value)
+RingStatus_t   RingBlocking_c::Extract( unsigned int    *Value )
 {
 
-    while (true)
+    while( true )
     {
-        OS_ResetEvent(&Signal);
+	OS_ResetEvent( &Signal );
 
-        if (NextExtract != NextInsert)
-        {
-            *Value = Storage[NextExtract];
+	if( NextExtract != NextInsert )
+	{
+	    *Value = Storage[NextExtract];
 
-            NextExtract++;
+	    NextExtract++;
+	    if( NextExtract == Limit )
+		NextExtract = 0;
 
-            if (NextExtract == Limit)
-                NextExtract = 0;
+	    return RingNoError;
+	}
 
-            return RingNoError;
-        }
-
-        OS_WaitForEvent(&Signal, OS_INFINITE);
+	OS_WaitForEvent( &Signal, OS_INFINITE );
     }
-
     return RingNoError;
 }
 
 // ------------------------------------------------------------------------
 // Flush function
 
-RingStatus_t   RingBlocking_c::Flush(void)
+RingStatus_t   RingBlocking_c::Flush( void )
 {
-    NextExtract = 0;
-    NextInsert  = 0;
+    NextExtract	= 0;
+    NextInsert	= 0;
     return RingNoError;
 }
 
 // ------------------------------------------------------------------------
 // Non-empty function
 
-bool   RingBlocking_c::NonEmpty(void)
+bool   RingBlocking_c::NonEmpty( void )
 {
     return (NextExtract != NextInsert);
 }

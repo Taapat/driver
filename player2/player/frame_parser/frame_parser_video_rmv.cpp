@@ -55,18 +55,18 @@ static BufferDataDescriptor_t     RmvFrameParametersBuffer = BUFFER_RMV_FRAME_PA
 
 //
 
-static const unsigned int ReferenceFramesRequired[RMV_PICTURE_CODING_TYPE_B + 1]    = {0, 2, 1, 2};
+static const unsigned int ReferenceFramesRequired[RMV_PICTURE_CODING_TYPE_B+1]    = {0, 2, 1, 2};
 #define REFERENCE_FRAMES_NEEDED(CodingType)             ReferenceFramesRequired[CodingType]
 //#define REFERENCE_FRAMES_NEEDED(CodingType)             CodingType
 
 #define MAX_REFERENCE_FRAMES_FOR_FORWARD_DECODE         REFERENCE_FRAMES_NEEDED(RMV_PICTURE_CODING_TYPE_B)
 
 #define Assert(L)               if( !(L) )                                                                      \
-    {                                                                               \
-        report ( severity_error, "Assertion fail %s %d\n", __FUNCTION__, __LINE__ );\
-        Player->MarkStreamUnPlayable( Stream );                                     \
-        return FrameParserError;                                                    \
-    }
+                                {                                                                               \
+                                    report ( severity_error, "Assertion fail %s %d\n", __FUNCTION__, __LINE__ );\
+                                    Player->MarkStreamUnPlayable( Stream );                                     \
+                                    return FrameParserError;                                                    \
+                                }
 
 static unsigned int PCT_SIZES[] = {0, 1, 1, 2, 2, 3, 3, 3, 3};
 
@@ -78,7 +78,7 @@ static unsigned int PCT_SIZES[] = {0, 1, 1, 2, 2, 3, 3, 3, 3};
 //      Constructor
 //
 
-FrameParser_VideoRmv_c::FrameParser_VideoRmv_c(void)
+FrameParser_VideoRmv_c::FrameParser_VideoRmv_c (void)
 {
     Configuration.FrameParserName               = "VideoRmv";
 
@@ -92,7 +92,7 @@ FrameParser_VideoRmv_c::FrameParser_VideoRmv_c(void)
 
     StreamFormatInfoValid                       = false;
 
-    memset(&ReferenceFrameList, 0x00, sizeof(ReferenceFrameList_t));
+    memset (&ReferenceFrameList, 0x00, sizeof(ReferenceFrameList_t));
 
     Reset();
 
@@ -111,7 +111,7 @@ FrameParser_VideoRmv_c::FrameParser_VideoRmv_c(void)
 //      Destructor
 //
 
-FrameParser_VideoRmv_c::~FrameParser_VideoRmv_c(void)
+FrameParser_VideoRmv_c::~FrameParser_VideoRmv_c (void)
 {
     Halt();
     Reset();
@@ -125,10 +125,10 @@ FrameParser_VideoRmv_c::~FrameParser_VideoRmv_c(void)
 /// \brief      The Reset function release any resources, and reset all variable
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoRmv_c::Reset(void)
+FrameParserStatus_t   FrameParser_VideoRmv_c::Reset (void)
 {
-    memset(&CopyOfStreamParameters, 0x00, sizeof(RmvStreamParameters_t));
-    memset(&ReferenceFrameList, 0x00, sizeof(ReferenceFrameList_t));
+    memset (&CopyOfStreamParameters, 0x00, sizeof(RmvStreamParameters_t));
+    memset (&ReferenceFrameList, 0x00, sizeof(ReferenceFrameList_t));
 
     StreamParameters                            = NULL;
     FrameParameters                             = NULL;
@@ -146,7 +146,7 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::Reset(void)
 /// \brief      Register the output ring
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoRmv_c::RegisterOutputBufferRing(Ring_t          Ring)
+FrameParserStatus_t   FrameParser_VideoRmv_c::RegisterOutputBufferRing (Ring_t          Ring)
 {
     //
     // Clear our parameter pointers
@@ -161,7 +161,7 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::RegisterOutputBufferRing(Ring_t   
     // Pass the call on down (we need the frame parameters count obtained by the lower level function).
     //
 
-    return FrameParser_Video_c::RegisterOutputBufferRing(Ring);
+    return FrameParser_Video_c::RegisterOutputBufferRing (Ring);
 }
 //}}}
 
@@ -171,9 +171,9 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::RegisterOutputBufferRing(Ring_t   
 //      The reset reference frame list function
 //
 
-FrameParserStatus_t   FrameParser_VideoRmv_c::ResetReferenceFrameList(void)
+FrameParserStatus_t   FrameParser_VideoRmv_c::ResetReferenceFrameList( void )
 {
-    FrameParserStatus_t         Status  = FrameParser_Video_c::ResetReferenceFrameList();
+    FrameParserStatus_t         Status  = FrameParser_Video_c::ResetReferenceFrameList ();
 
     LastTemporalReference               = 0;
     TemporalReferenceBase               = 0;
@@ -191,7 +191,7 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::ResetReferenceFrameList(void)
 /// \brief      Stream specific function to prepare a reference frame list
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoRmv_c::PrepareReferenceFrameList(void)
+FrameParserStatus_t   FrameParser_VideoRmv_c::PrepareReferenceFrameList (void)
 {
     unsigned int        ReferenceFramesNeeded;
     unsigned int        ReferenceFramesAvailable;
@@ -202,7 +202,7 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::PrepareReferenceFrameList(void)
     //
     // Note we cannot use StreamParameters or FrameParameters to address data directly,
     // as these may no longer apply to the frame we are dealing with.
-    // Particularly if we have seen a sequence header or group of pictures
+    // Particularly if we have seen a sequenece header or group of pictures
     // header which belong to the next frame.
     //
 
@@ -224,13 +224,12 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::PrepareReferenceFrameList(void)
     if (ReferenceFramesAvailable > 0)
     {
         ParsedFrameParameters->ReferenceFrameList[0].EntryCount         = MAX_REFERENCE_FRAMES_FOR_FORWARD_DECODE;
-
-        for (i = 0; i < MAX_REFERENCE_FRAMES_FOR_FORWARD_DECODE; i++)
+        for(i=0; i<MAX_REFERENCE_FRAMES_FOR_FORWARD_DECODE; i++)
         {
             if (ReferenceFramesAvailable > i)
                 ParsedFrameParameters->ReferenceFrameList[0].EntryIndicies[i]   = ReferenceFrameList.EntryIndicies[ReferenceFramesAvailable - i - 1];
             else
-                ParsedFrameParameters->ReferenceFrameList[0].EntryIndicies[i]   = ParsedFrameParameters->ReferenceFrameList[0].EntryIndicies[i - 1];
+                ParsedFrameParameters->ReferenceFrameList[0].EntryIndicies[i]   = ParsedFrameParameters->ReferenceFrameList[0].EntryIndicies[i-1];
         }
     }
 
@@ -251,7 +250,7 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::PrepareReferenceFrameList(void)
 ///             codec is informed immediately of a release on the first field of a field picture.
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoRmv_c::ForPlayUpdateReferenceFrameList(void)
+FrameParserStatus_t   FrameParser_VideoRmv_c::ForPlayUpdateReferenceFrameList (void)
 {
     unsigned int        i;
     bool                LastField;
@@ -265,19 +264,18 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::ForPlayUpdateReferenceFrameList(vo
         {
             if (ReferenceFrameList.EntryCount >= MAX_REFERENCE_FRAMES_FOR_FORWARD_DECODE)
             {
-                Player->CallInSequence(Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, ReferenceFrameList.EntryIndicies[0]);
+                Player->CallInSequence (Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, ReferenceFrameList.EntryIndicies[0]);
 
                 ReferenceFrameList.EntryCount--;
-
-                for (i = 0; i < ReferenceFrameList.EntryCount; i++)
-                    ReferenceFrameList.EntryIndicies[i] = ReferenceFrameList.EntryIndicies[i + 1];
+                for (i=0; i<ReferenceFrameList.EntryCount; i++)
+                    ReferenceFrameList.EntryIndicies[i] = ReferenceFrameList.EntryIndicies[i+1];
             }
 
             ReferenceFrameList.EntryIndicies[ReferenceFrameList.EntryCount++] = ParsedFrameParameters->DecodeFrameIndex;
         }
         else
         {
-            Player->CallInSequence(Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, ParsedFrameParameters->DecodeFrameIndex);
+            Player->CallInSequence (Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, ParsedFrameParameters->DecodeFrameIndex);
         }
     }
 
@@ -288,12 +286,12 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::ForPlayUpdateReferenceFrameList(vo
 //{{{  RevPlayProcessDecodeStacks
 // /////////////////////////////////////////////////////////////////////////
 //
-//      Stream specific override function for processing decode stacks, this
-//      initializes the post decode ring before passing itno the real
+//      Stream specific override function for processing decode stacks, this 
+//      initializes the post decode ring before passing itno the real 
 //      implementation of this function.
 //
 
-FrameParserStatus_t   FrameParser_VideoRmv_c::RevPlayProcessDecodeStacks(void)
+FrameParserStatus_t   FrameParser_VideoRmv_c::RevPlayProcessDecodeStacks (void)
 {
     ReverseQueuedPostDecodeSettingsRing->Flush();
 
@@ -307,28 +305,25 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::RevPlayProcessDecodeStacks(void)
 /// \brief      Scan the start code list reading header specific information
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoRmv_c::ReadHeaders(void)
+FrameParserStatus_t   FrameParser_VideoRmv_c::ReadHeaders (void)
 {
     FrameParserStatus_t         Status;
 
 #if 0
     unsigned int                i;
-    report(severity_info, "First 32 bytes of %d :", BufferLength);
-
-    for (i = 0; i < 32; i++)
-        report(severity_info, " %02x", BufferData[i]);
-
-    report(severity_info, "\n");
+    report (severity_info, "First 32 bytes of %d :", BufferLength);
+    for (i=0; i<32; i++)
+        report (severity_info, " %02x", BufferData[i]);
+    report (severity_info, "\n");
 #endif
 
-    Bits.SetPointer(BufferData);
+    Bits.SetPointer (BufferData);
 
     if (!StreamFormatInfoValid)
         Status          = ReadStreamFormatInfo();
     else
     {
-        Status          = ReadPictureHeader();
-
+        Status          = ReadPictureHeader ();
         if (Status == FrameParserNoError)
             Status      = CommitFrameForDecode();
     }
@@ -344,7 +339,7 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::ReadHeaders(void)
 ///
 /// /////////////////////////////////////////////////////////////////////////
 
-FrameParserStatus_t   FrameParser_VideoRmv_c::ReadStreamFormatInfo(void)
+FrameParserStatus_t   FrameParser_VideoRmv_c::ReadStreamFormatInfo (void)
 {
 
     FrameParserStatus_t         Status;
@@ -356,53 +351,49 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::ReadStreamFormatInfo(void)
 
 #if 0
     unsigned int        Checksum = 0;
-    report(severity_info, "data %d :\n", BufferLength);
-
-    for (i = 0; i < BufferLength; i++)
+    report (severity_info, "data %d :\n", BufferLength);
+    for (i=0; i<BufferLength; i++)
     {
-        if ((i & 0x0f) == 0)
-            report(severity_info, "\n%06x", i);
-
-        report(severity_info, " %02x", BufferData[i]);
+        if ((i&0x0f)==0)
+            report (severity_info, "\n%06x", i);
+        report (severity_info, " %02x", BufferData[i]);
         Checksum       += BufferData[i];
     }
-
-    report(severity_info, "\nChecksum %08x\n", Checksum);
+    report (severity_info, "\nChecksum %08x\n", Checksum);
 #endif
 
     if ((StreamParameters != NULL) && (StreamParameters->SequenceHeaderPresent))
     {
-        report(severity_error, "%s: Received Stream FormatInfo after previous sequence data\n", __FUNCTION__);
+        report (severity_error, "%s: Received Stream FormatInfo after previous sequence data\n", __FUNCTION__);
         return FrameParserNoError;
     }
 
-    Status      = GetNewStreamParameters((void **)&StreamParameters);
-
+    Status      = GetNewStreamParameters ((void **)&StreamParameters);
     if (Status != FrameParserNoError)
         return Status;
 
     StreamParameters->SequenceHeaderPresent     = true;
     StreamParameters->UpdatedSinceLastFrame     = true;
     SequenceHeader                              = &StreamParameters->SequenceHeader;
-    memset(SequenceHeader, 0x00, sizeof(RmvVideoSequence_t));
+    memset (SequenceHeader, 0x00, sizeof(RmvVideoSequence_t));
 
-    SequenceHeader->Length                      = Bits.Get(32);
-    SequenceHeader->MOFTag                      = Bits.Get(32);
-    SequenceHeader->SubMOFTag                   = Bits.Get(32);
-    SequenceHeader->Width                       = Bits.Get(16);
-    SequenceHeader->Height                      = Bits.Get(16);
-    SequenceHeader->BitCount                    = Bits.Get(16);
-    SequenceHeader->PadWidth                    = Bits.Get(16);
-    SequenceHeader->PadHeight                   = Bits.Get(16);
-    SequenceHeader->FramesPerSecond             = Bits.Get(32);
+    SequenceHeader->Length                      = Bits.Get (32);
+    SequenceHeader->MOFTag                      = Bits.Get (32);
+    SequenceHeader->SubMOFTag                   = Bits.Get (32);
+    SequenceHeader->Width                       = Bits.Get (16);
+    SequenceHeader->Height                      = Bits.Get (16);
+    SequenceHeader->BitCount                    = Bits.Get (16);
+    SequenceHeader->PadWidth                    = Bits.Get (16);
+    SequenceHeader->PadHeight                   = Bits.Get (16);
+    SequenceHeader->FramesPerSecond             = Bits.Get (32);
     SequenceHeader->OpaqueDataSize              = SequenceHeader->Length - RMV_FORMAT_INFO_HEADER_SIZE;
 
     if ((SequenceHeader->Width > RMV_MAX_SUPPORTED_DECODE_WIDTH) || (SequenceHeader->Height > RMV_MAX_SUPPORTED_DECODE_HEIGHT))
     {
-        FRAME_ERROR("Content dimensions (%dx%d) greater than max supported (%dx%d)\n",
-                    SequenceHeader->Width, SequenceHeader->Height,
-                    RMV_MAX_SUPPORTED_DECODE_WIDTH, RMV_MAX_SUPPORTED_DECODE_HEIGHT);
-        Player->MarkStreamUnPlayable(Stream);
+        FRAME_ERROR ("Content dimensions (%dx%d) greater than max supported (%dx%d)\n",
+                        SequenceHeader->Width, SequenceHeader->Height,
+                        RMV_MAX_SUPPORTED_DECODE_WIDTH, RMV_MAX_SUPPORTED_DECODE_HEIGHT);
+        Player->MarkStreamUnPlayable (Stream);
         return FrameParserError;
     }
 
@@ -411,22 +402,21 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::ReadStreamFormatInfo(void)
     SequenceHeader->RPRSize[0]                  = SequenceHeader->Width;
     SequenceHeader->RPRSize[1]                  = SequenceHeader->Height;
     SequenceHeader->NumRPRSizes                 = 0;
-
     if (SequenceHeader->OpaqueDataSize > 0)
     {
         unsigned int    BitstreamVersionData;
 
-        SequenceHeader->SPOFlags                = Bits.Get(32);
+        SequenceHeader->SPOFlags                = Bits.Get (32);
 
-        BitstreamVersionData                    = Bits.Get(32);
+        BitstreamVersionData                    = Bits.Get (32);
         SequenceHeader->BitstreamVersion        = (BitstreamVersionData & RV89_BITSTREAM_VERSION_BITS) >>
-                RV89_BITSTREAM_VERSION_SHIFT;
+                                                                          RV89_BITSTREAM_VERSION_SHIFT;
         SequenceHeader->BitstreamMinorVersion   = (BitstreamVersionData & RV89_BITSTREAM_MINOR_BITS) >>
-                RV89_BITSTREAM_MINOR_SHIFT;
+                                                                          RV89_BITSTREAM_MINOR_SHIFT;
 
         if ((SequenceHeader->BitstreamVersion == RV9_BITSTREAM_VERSION) &&
-                ((SequenceHeader->BitstreamMinorVersion == RV9_BITSTREAM_MINOR_VERSION) ||
-                 (SequenceHeader->BitstreamMinorVersion == RV89_RAW_BITSTREAM_MINOR_VERSION)))
+            ((SequenceHeader->BitstreamMinorVersion == RV9_BITSTREAM_MINOR_VERSION) ||
+             (SequenceHeader->BitstreamMinorVersion == RV89_RAW_BITSTREAM_MINOR_VERSION)))
         {}
         else if ((SequenceHeader->BitstreamVersion == RV8_BITSTREAM_VERSION) &&
                  ((SequenceHeader->BitstreamMinorVersion == RV8_BITSTREAM_MINOR_VERSION) ||
@@ -434,84 +424,78 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::ReadStreamFormatInfo(void)
         {}
         else
         {
-            FRAME_ERROR("Unsupported bitstream versions (%d, %d)\n",
-                        SequenceHeader->BitstreamVersion, SequenceHeader->BitstreamMinorVersion);
-            Player->MarkStreamUnPlayable(Stream);
+            FRAME_ERROR ("Unsupported bitstream versions (%d, %d)\n",
+                          SequenceHeader->BitstreamVersion, SequenceHeader->BitstreamMinorVersion);
+            Player->MarkStreamUnPlayable (Stream);
             return FrameParserError;
         }
 
         if (SequenceHeader->BitstreamMinorVersion != RV89_RAW_BITSTREAM_MINOR_VERSION)
         {
             if ((SequenceHeader->BitstreamVersion == RV20_BITSTREAM_VERSION) ||
-                    (SequenceHeader->BitstreamVersion == RV30_BITSTREAM_VERSION))
+                (SequenceHeader->BitstreamVersion == RV30_BITSTREAM_VERSION))
             {
                 SequenceHeader->NumRPRSizes     = (SequenceHeader->SPOFlags & RV20_SPO_NUMRESAMPLE_IMAGES_BITS) >>
-                                                  RV20_SPO_NUMRESAMPLE_IMAGES_SHIFT;
-
-                for (i = 2; i <= (SequenceHeader->NumRPRSizes * 2); i += 2)
+                                                                              RV20_SPO_NUMRESAMPLE_IMAGES_SHIFT;
+                for (i = 2; i <= (SequenceHeader->NumRPRSizes*2); i+=2)
                 {
-                    SequenceHeader->RPRSize[i]          = Bits.Get(8) << 2;
-                    SequenceHeader->RPRSize[i + 1]        = Bits.Get(8) << 2;
+                    SequenceHeader->RPRSize[i]          = Bits.Get (8)<<2;
+                    SequenceHeader->RPRSize[i+1]        = Bits.Get (8)<<2;
                 }
             }
             else if (SequenceHeader->BitstreamVersion == RV40_BITSTREAM_VERSION)
             {
                 if (SequenceHeader->OpaqueDataSize >= 12)
-                    EncodedSize                 = Bits.Get(32);
+                    EncodedSize                 = Bits.Get (32);
             }
         }
 
     }
     else
     {
-        FRAME_ERROR("No opaque data present in format info\n");
+        FRAME_ERROR ("No opaque data present in format info\n");
         return FrameParserError;
     }
-
     SequenceHeader->NumRPRSizes++;
 
     SequenceHeader->MaxWidth                    = (EncodedSize & RV40_ENCODED_SIZE_WIDTH_BITS)  >> RV40_ENCODED_SIZE_WIDTH_SHIFT;
     SequenceHeader->MaxWidth                    = (EncodedSize & RV40_ENCODED_SIZE_HEIGHT_BITS) << RV40_ENCODED_SIZE_HEIGHT_SHIFT;
-
     if (SequenceHeader->MaxWidth == 0)
         SequenceHeader->MaxWidth                = SequenceHeader->Width;
-
     if (SequenceHeader->MaxHeight == 0)
         SequenceHeader->MaxHeight               = SequenceHeader->Height;
 
 
     // Max width and height must be multiples of 16 to be a whole number of macroblocks
-    SequenceHeader->MaxWidth                    = (SequenceHeader->MaxWidth + 0x0f) & 0xfffffff0;
-    SequenceHeader->MaxHeight                   = (SequenceHeader->MaxHeight + 0x0f) & 0xfffffff0;
+    SequenceHeader->MaxWidth                    = (SequenceHeader->MaxWidth +0x0f) & 0xfffffff0;
+    SequenceHeader->MaxHeight                   = (SequenceHeader->MaxHeight +0x0f) & 0xfffffff0;
 
     //if (SequenceHeader->MajorBitstreamVersion
 
 #ifdef DUMP_HEADERS
-    report(severity_info, "StreamFormatInfo :- \n");
-    report(severity_info, "Length                      %6u\n", SequenceHeader->Length);
-    report(severity_info, "MOFTag                        %.4s\n", (unsigned char*)&SequenceHeader->MOFTag);
-    report(severity_info, "SubMOFTag                     %.4s\n", (unsigned char*)&SequenceHeader->SubMOFTag);
-    report(severity_info, "Width                       %6u\n", SequenceHeader->Width);
-    report(severity_info, "Height                      %6u\n", SequenceHeader->Height);
-    report(severity_info, "BitCount                    %6u\n", SequenceHeader->BitCount);
-    report(severity_info, "PadWidth                    %6u\n", SequenceHeader->PadWidth);
-    report(severity_info, "PadHeight                   %6u\n", SequenceHeader->PadHeight);
-    report(severity_info, "FramesPerSecond           %8x\n", SequenceHeader->FramesPerSecond);
-    report(severity_info, "OpaqueDataSize              %6u\n", SequenceHeader->OpaqueDataSize);
-    report(severity_info, "SPOFlags                  %8x\n", SequenceHeader->SPOFlags);
-    report(severity_info, "Bitstream Version           %6u\n", SequenceHeader->BitstreamVersion);
-    report(severity_info, "Bitstream Minor Version     %6u\n", SequenceHeader->BitstreamMinorVersion);
-    report(severity_info, "NumRPRSizes                 %6u\n", SequenceHeader->NumRPRSizes);
-    report(severity_info, "Max Width                   %6u\n", SequenceHeader->MaxWidth);
-    report(severity_info, "Max Height                  %6u\n", SequenceHeader->MaxHeight);
-    report(severity_info, "FrameRate                 %d.%04d\n", FrameRate.IntegerPart(), FrameRate.RemainderDecimal());
-
-    for (i = 0; i <= (SequenceHeader->NumRPRSizes * 2); i += 2)
+    report (severity_info, "StreamFormatInfo :- \n");
+    report (severity_info, "Length                      %6u\n", SequenceHeader->Length);
+    report (severity_info, "MOFTag                        %.4s\n", (unsigned char*)&SequenceHeader->MOFTag);
+    report (severity_info, "SubMOFTag                     %.4s\n", (unsigned char*)&SequenceHeader->SubMOFTag);
+    report (severity_info, "Width                       %6u\n", SequenceHeader->Width);
+    report (severity_info, "Height                      %6u\n", SequenceHeader->Height);
+    report (severity_info, "BitCount                    %6u\n", SequenceHeader->BitCount);
+    report (severity_info, "PadWidth                    %6u\n", SequenceHeader->PadWidth);
+    report (severity_info, "PadHeight                   %6u\n", SequenceHeader->PadHeight);
+    report (severity_info, "FramesPerSecond           %8x\n", SequenceHeader->FramesPerSecond);
+    report (severity_info, "OpaqueDataSize              %6u\n", SequenceHeader->OpaqueDataSize);
+    report (severity_info, "SPOFlags                  %8x\n", SequenceHeader->SPOFlags);
+    report (severity_info, "Bitstream Version           %6u\n", SequenceHeader->BitstreamVersion);
+    report (severity_info, "Bitstream Minor Version     %6u\n", SequenceHeader->BitstreamMinorVersion);
+    report (severity_info, "NumRPRSizes                 %6u\n", SequenceHeader->NumRPRSizes);
+    report (severity_info, "Max Width                   %6u\n", SequenceHeader->MaxWidth);
+    report (severity_info, "Max Height                  %6u\n", SequenceHeader->MaxHeight);
+    report (severity_info, "FrameRate                 %d.%04d\n", FrameRate.IntegerPart(), FrameRate.RemainderDecimal());
+    for (i=0; i<=(SequenceHeader->NumRPRSizes*2); i+=2)
     {
-        report(severity_info, "RPRSize[%d]                 %6u\n", i, SequenceHeader->RPRSize[i]);
-        report(severity_info, "RPRSize[%d]                 %6u\n", i + 1, SequenceHeader->RPRSize[i + 1]);
+        report (severity_info, "RPRSize[%d]                 %6u\n", i, SequenceHeader->RPRSize[i]);
+        report (severity_info, "RPRSize[%d]                 %6u\n", i+1, SequenceHeader->RPRSize[i+1]);
     }
-
 #endif
 
     StreamFormatInfoValid         = true;
@@ -525,7 +509,7 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::ReadStreamFormatInfo(void)
 /// \brief      Read in a picture header
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoRmv_c::ReadPictureHeader(void)
+FrameParserStatus_t   FrameParser_VideoRmv_c::ReadPictureHeader (void)
 {
     FrameParserStatus_t         Status;
     RmvVideoPicture_t*          Header;
@@ -537,33 +521,29 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::ReadPictureHeader(void)
 
 #if 0
     unsigned int        Checksum = 0;
-    report(severity_info, "data %d :\n", BufferLength);
-
-    for (i = 0; i < BufferLength; i++)
+    report (severity_info, "data %d :\n", BufferLength);
+    for (i=0; i<BufferLength; i++)
     {
-        if ((i & 0x0f) == 0)
-            report(severity_info, "\n%06x", i);
-
-        report(severity_info, " %02x", BufferData[i]);
+        if ((i&0x0f)==0)
+            report (severity_info, "\n%06x", i);
+        report (severity_info, " %02x", BufferData[i]);
         Checksum       += BufferData[i];
     }
-
-    report(severity_info, "\nChecksum %08x\n", Checksum);
+    report (severity_info, "\nChecksum %08x\n", Checksum);
 #endif
 
     if (FrameParameters == NULL)
     {
-        Status  = GetNewFrameParameters((void **)&FrameParameters);
-
+        Status  = GetNewFrameParameters ((void **)&FrameParameters);
         if (Status != FrameParserNoError)
         {
-            report(severity_error, "FrameParser_VideoRmv_c::ReadPictureHeader - Failed to get new frame parameters.\n");
+            report (severity_error, "FrameParser_VideoRmv_c::ReadPictureHeader - Failed to get new frame parameters.\n");
             return Status;
         }
     }
 
     Header                              = &FrameParameters->PictureHeader;
-    memset(Header, 0x00, sizeof(RmvVideoPicture_t));
+    memset (Header, 0x00, sizeof(RmvVideoPicture_t));
 
     SequenceHeader                      = &StreamParameters->SequenceHeader;
 
@@ -571,35 +551,31 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::ReadPictureHeader(void)
     SegmentList                         = &FrameParameters->SegmentList;
     //memset (&SegmentList->Segment[0], 0, sizeof (RmvVideoSegment_t)*RMV_MAX_SEGMENTS);
     SegmentList->NumSegments            = StartCodeList->NumberOfStartCodes;
-
-    for (i = 0; i < StartCodeList->NumberOfStartCodes; i++)
+    for (i=0; i<StartCodeList->NumberOfStartCodes; i++)
     {
         SegmentList->Segment[i].Valid   =  1;
         SegmentList->Segment[i].Offset  =  ExtractStartCodeOffset(StartCodeList->StartCodes[i]);
     }
-
     FrameParameters->SegmentListPresent = true;
 
     //{{{  DEBUG
-#if 0
+    #if 0
     {
         static unsigned int         Segment = 0;
-
         if (Segment++ < 4)
         {
-            report(severity_info, "Segment list (%d):\n", StartCodeList->NumberOfStartCodes);
-
-            for (i = 0; i < StartCodeList->NumberOfStartCodes; i++)
+            report (severity_info, "Segment list (%d):\n", StartCodeList->NumberOfStartCodes);
+            for (i=0; i<StartCodeList->NumberOfStartCodes; i++)
             {
-                report(severity_info, "    %02x %02x %02x %02x %02x %02x %02x %02x\n",
-                       SegmentList->Segment[i].Valid & 0xff, (SegmentList->Segment[i].Valid >> 8) & 0xff,
-                       (SegmentList->Segment[i].Valid >> 16) & 0xff, (SegmentList->Segment[i].Valid >> 24) & 0xff,
-                       SegmentList->Segment[i].Offset & 0xff, (SegmentList->Segment[i].Offset >> 8) & 0xff,
-                       (SegmentList->Segment[i].Offset >> 16) & 0xff, (SegmentList->Segment[i].Offset >> 24) & 0xff);
+                report (severity_info, "    %02x %02x %02x %02x %02x %02x %02x %02x\n",
+                    SegmentList->Segment[i].Valid & 0xff, (SegmentList->Segment[i].Valid >> 8) & 0xff,
+                    (SegmentList->Segment[i].Valid >> 16) & 0xff, (SegmentList->Segment[i].Valid >> 24) & 0xff,
+                    SegmentList->Segment[i].Offset & 0xff, (SegmentList->Segment[i].Offset >> 8) & 0xff,
+                    (SegmentList->Segment[i].Offset >> 16) & 0xff, (SegmentList->Segment[i].Offset >> 24) & 0xff);
             }
         }
     }
-#endif
+    #endif
     //}}}
 
     switch (SequenceHeader->BitstreamVersion)
@@ -613,24 +589,23 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::ReadPictureHeader(void)
             Header->Deblock             = Bits.Get(1);
             Header->RvTr                = Bits.Get(13);
             Header->PctSize             = Bits.Get(PCT_SIZES[SequenceHeader->NumRPRSizes]);
-            NumMacroBlocks              = (((SequenceHeader->Width + 15) >> 4) * ((SequenceHeader->Height + 15) >> 4)) - 1;
+            NumMacroBlocks              = (((SequenceHeader->Width+15)>>4)*((SequenceHeader->Height+15)>>4))-1;
             MbaBits                     = (NumMacroBlocks & 0x2000) ? 14 :
-                                          (NumMacroBlocks & 0x1000) ? 13 :
-                                          (NumMacroBlocks & 0x800) ? 12 :
-                                          (NumMacroBlocks & 0x400) ? 11 :
-                                          (NumMacroBlocks & 0x200) ? 10 :
-                                          (NumMacroBlocks & 0x100) ? 9 :
-                                          (NumMacroBlocks & 0x80) ? 8 :
-                                          (NumMacroBlocks & 0x40) ? 7 :
-                                          (NumMacroBlocks & 0x20) ? 6 :
-                                          (NumMacroBlocks & 0x10) ? 5 :
-                                          (NumMacroBlocks & 0x08) ? 4 :
-                                          (NumMacroBlocks & 0x04) ? 3 :
-                                          (NumMacroBlocks & 0x02) ? 2 : 1;
+                                              (NumMacroBlocks & 0x1000) ? 13 :
+                                              (NumMacroBlocks & 0x800) ? 12 :
+                                              (NumMacroBlocks & 0x400) ? 11 :
+                                              (NumMacroBlocks & 0x200) ? 10 :
+                                              (NumMacroBlocks & 0x100) ? 9 :
+                                              (NumMacroBlocks & 0x80) ? 8 :
+                                              (NumMacroBlocks & 0x40) ? 7 :
+                                              (NumMacroBlocks & 0x20) ? 6 :
+                                              (NumMacroBlocks & 0x10) ? 5 :
+                                              (NumMacroBlocks & 0x08) ? 4 :
+                                              (NumMacroBlocks & 0x04) ? 3 :
+                                              (NumMacroBlocks & 0x02) ? 2 : 1;
             Header->Mba                 = Bits.Get(MbaBits);
             Header->RType               = Bits.Get(1);
             break;
-
         case RV40_BITSTREAM_VERSION:
             Header->ECC                 = Bits.Get(1);
             Header->PictureCodingType   = Bits.Get(2);
@@ -660,19 +635,19 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::ReadPictureHeader(void)
     FrameParameters->PictureHeaderPresent       = true;
 
 #ifdef DUMP_HEADERS
-    report(severity_info, "PictureHeader :- \n");
-    report(severity_info, "Picture Ptype %d\n", Header->PictureCodingType);
-    report(severity_info, "BitstreamVersion            %6u\n", Header->BitstreamVersion);
-    report(severity_info, "PictureCodingType           %6u\n", Header->PictureCodingType);
-    report(severity_info, "ECC                         %6u\n", Header->ECC);
-    report(severity_info, "Quant                       %6u\n", Header->Quant);
-    report(severity_info, "Deblock                     %6u\n", Header->Deblock);
-    report(severity_info, "RvTr                        %6u\n", Header->RvTr);
-    report(severity_info, "PctSize                     %6u\n", Header->PctSize);
-    report(severity_info, "Mba                         %8x\n", Header->Mba);
-    report(severity_info, "RType                       %6u\n", Header->RType);
-    report(severity_info, "NumMacroBlocks              %6u\n", NumMacroBlocks);
-    report(severity_info, "MbaBits                     %6u\n", MbaBits);
+    report (severity_info, "PictureHeader :- \n");
+    report (severity_info, "Picture Ptype %d\n", Header->PictureCodingType);
+    report (severity_info, "BitstreamVersion            %6u\n", Header->BitstreamVersion);
+    report (severity_info, "PictureCodingType           %6u\n", Header->PictureCodingType);
+    report (severity_info, "ECC                         %6u\n", Header->ECC);
+    report (severity_info, "Quant                       %6u\n", Header->Quant);
+    report (severity_info, "Deblock                     %6u\n", Header->Deblock);
+    report (severity_info, "RvTr                        %6u\n", Header->RvTr);
+    report (severity_info, "PctSize                     %6u\n", Header->PctSize);
+    report (severity_info, "Mba                         %8x\n", Header->Mba);
+    report (severity_info, "RType                       %6u\n", Header->RType);
+    report (severity_info, "NumMacroBlocks              %6u\n", NumMacroBlocks);
+    report (severity_info, "MbaBits                     %6u\n", MbaBits);
 #endif
 
     return FrameParserNoError;
@@ -687,7 +662,7 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::ReadPictureHeader(void)
 ///             we require we for a frame decode, this function records that fact.
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoRmv_c::CommitFrameForDecode(void)
+FrameParserStatus_t   FrameParser_VideoRmv_c::CommitFrameForDecode (void)
 {
     RmvVideoPicture_t*                  PictureHeader;
     RmvVideoSequence_t*                 SequenceHeader;
@@ -698,13 +673,13 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::CommitFrameForDecode(void)
 
     if ((StreamParameters == NULL) || !StreamParameters->SequenceHeaderPresent)
     {
-        report(severity_error, "FrameParser_VideoRmv_c::CommitFrameForDecode - Stream parameters unavailable for decode.\n");
+        report (severity_error, "FrameParser_VideoRmv_c::CommitFrameForDecode - Stream parameters unavailable for decode.\n");
         return FrameParserNoStreamParameters;
     }
 
     if ((FrameParameters == NULL) || !FrameParameters->PictureHeaderPresent)
     {
-        report(severity_error, "FrameParser_VideoRmv_c::CommitFrameForDecode - Frame parameters unavailable for decode (%p).\n", FrameParameters);
+        report (severity_error, "FrameParser_VideoRmv_c::CommitFrameForDecode - Frame parameters unavailable for decode (%p).\n", FrameParameters);
         return FrameParserPartialFrameParameters;
     }
 
@@ -726,7 +701,7 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::CommitFrameForDecode(void)
 
     ParsedFrameParameters->KeyFrame                             = PictureHeader->PictureCodingType == RMV_PICTURE_CODING_TYPE_I;
     ParsedFrameParameters->ReferenceFrame                       = (PictureHeader->PictureCodingType != RMV_PICTURE_CODING_TYPE_B);
-    //(PictureHeader->PictureCodingType == RMV_PICTURE_CODING_TYPE_P);
+                                                                  //(PictureHeader->PictureCodingType == RMV_PICTURE_CODING_TYPE_P);
     ParsedFrameParameters->IndependentFrame                     = ParsedFrameParameters->KeyFrame;
 
     ParsedFrameParameters->NewStreamParameters                  = NewStreamParametersCheck();
@@ -738,22 +713,19 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::CommitFrameForDecode(void)
     ParsedFrameParameters->FrameParameterStructure              = FrameParameters;
 
 #if defined (OVERRIDE_PTS)
-
     if ((int)PictureHeader->RvTr < (int)(LastTemporalReference - RMV_TEMPORAL_REF_HALF_RANGE))
         TemporalReferenceBase                                  += RMV_TEMPORAL_REF_RANGE;
     else if (PictureHeader->RvTr > (LastTemporalReference + RMV_TEMPORAL_REF_HALF_RANGE))
         TemporalReferenceBase                                  -= RMV_TEMPORAL_REF_RANGE;
-
     LastTemporalReference                                       = PictureHeader->RvTr;
     FramePTS                                                    = (LastTemporalReference + TemporalReferenceBase) * 90;
 
     FRAME_DEBUG("Frame %d, Pic type %d, TRef %d(%d), PTS from TRef %llu, PTS from PES %llu(%d)\n",
-                FrameNumber, PictureHeader->PictureCodingType, LastTemporalReference, TemporalReferenceBase, FramePTS,
-                CodedFrameParameters->PlaybackTime,  CodedFrameParameters->PlaybackTimeValid);
+                 FrameNumber, PictureHeader->PictureCodingType, LastTemporalReference, TemporalReferenceBase, FramePTS,
+                 CodedFrameParameters->PlaybackTime,  CodedFrameParameters->PlaybackTimeValid);
 #endif
 
 #if defined (RECALCULATE_FRAMERATE)
-
     if (FrameNumber == 0)
     {
         CalculatedFrameRate             = FrameRate;
@@ -761,18 +733,17 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::CommitFrameForDecode(void)
     }
     else if (PictureHeader->PictureCodingType == RMV_PICTURE_CODING_TYPE_I)
     {
-        CalculatedFrameRate             = Rational_t (FrameNumber * 1000, (LastTemporalReference + TemporalReferenceBase) - InitialTemporalReference);
+        CalculatedFrameRate             = Rational_t (FrameNumber*1000, (LastTemporalReference+TemporalReferenceBase)-InitialTemporalReference);
         PCount                          = 0;
     }
     else if (PictureHeader->PictureCodingType == RMV_PICTURE_CODING_TYPE_B)
     {
-        CalculatedFrameRate             = Rational_t ((FrameNumber - PCount) * 1000, (LastTemporalReference + TemporalReferenceBase) - InitialTemporalReference);
+        CalculatedFrameRate             = Rational_t ((FrameNumber-PCount)*1000, (LastTemporalReference+TemporalReferenceBase)-InitialTemporalReference);
     }
     else
     {
         PCount                          = 1;
     }
-
     FRAME_DEBUG("CalculatedFrameRate(%d) %d.%04d\n", PictureHeader->PictureCodingType, CalculatedFrameRate.IntegerPart(), CalculatedFrameRate.RemainderDecimal());
 #endif
     FrameNumber++;
@@ -815,18 +786,18 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::CommitFrameForDecode(void)
     ParsedVideoParameters->PanScan.Count                        = 0;
 
     // Record our claim on both the frame and stream parameters
-    Buffer->AttachBuffer(StreamParametersBuffer);
-    Buffer->AttachBuffer(FrameParametersBuffer);
+    Buffer->AttachBuffer (StreamParametersBuffer);
+    Buffer->AttachBuffer (FrameParametersBuffer);
 
     // We clear the FrameParameters pointer, a new one will be obtained
-    // before/if we read in headers pertaining to the next frame. This
-    // will generate an error should I accidentally write code that
+    // before/if we read in headers pertaining to the next frame. This 
+    // will generate an error should I accidentally write code that 
     // accesses this data when it should not.
     FrameParameters                                             = NULL;
 
     // Finally set the appropriate flag and return
     FrameToDecode
-        = true;
+                                              = true;
     return FrameParserNoError;
 }
 //}}}
@@ -837,7 +808,7 @@ FrameParserStatus_t   FrameParser_VideoRmv_c::CommitFrameForDecode(void)
 ///             parameters are new.
 ///
 /// /////////////////////////////////////////////////////////////////////////
-bool   FrameParser_VideoRmv_c::NewStreamParametersCheck(void)
+bool   FrameParser_VideoRmv_c::NewStreamParametersCheck (void)
 {
     bool            Different;
 
@@ -856,11 +827,10 @@ bool   FrameParser_VideoRmv_c::NewStreamParametersCheck(void)
     // memcmp should be sufficient).
     //
 
-    Different   = memcmp(&CopyOfStreamParameters, StreamParameters, sizeof(RmvStreamParameters_t)) != 0;
-
+    Different   = memcmp (&CopyOfStreamParameters, StreamParameters, sizeof(RmvStreamParameters_t)) != 0;
     if (Different)
     {
-        memcpy(&CopyOfStreamParameters, StreamParameters, sizeof(RmvStreamParameters_t));
+        memcpy (&CopyOfStreamParameters, StreamParameters, sizeof(RmvStreamParameters_t));
         return true;
     }
 

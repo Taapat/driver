@@ -61,7 +61,7 @@ struct ModuleContext_s
 
 };
 
-struct DeviceContext_s* GetDeviceContext(unsigned int    DeviceId);
+struct DeviceContext_s* GetDeviceContext       (unsigned int    DeviceId);
 
 
 #endif

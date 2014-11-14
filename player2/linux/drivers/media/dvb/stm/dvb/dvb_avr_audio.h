@@ -27,24 +27,22 @@ license from ST.
 #include "dvb_avr.h"
 #include "dvb_avr_audio_internals.h"
 
-typedef enum
-{
-    AVR_HDMI_LAYOUT0 = 2,
-    AVR_HDMI_LAYOUT1 = 8,
-    AVR_HDMI_HBRA    = 3
+typedef enum {
+  AVR_HDMI_LAYOUT0 = 2, 
+  AVR_HDMI_LAYOUT1 = 8, 
+  AVR_HDMI_HBRA    = 3
 } avr_hdmi_layout_t;
 
 
-typedef enum
-{
-    EMERGENCY_MUTE_REASON_NONE,
-    EMERGENCY_MUTE_REASON_USER,
-    EMERGENCY_MUTE_REASON_ACCELERATED,
-    EMERGENCY_MUTE_REASON_SAMPLE_RATE_CHANGE,
-    EMERGENCY_MUTE_REASON_ERROR
+typedef enum {
+	EMERGENCY_MUTE_REASON_NONE,
+	EMERGENCY_MUTE_REASON_USER,
+	EMERGENCY_MUTE_REASON_ACCELERATED,
+	EMERGENCY_MUTE_REASON_SAMPLE_RATE_CHANGE,
+	EMERGENCY_MUTE_REASON_ERROR
 } avr_audio_emergency_mute_reason_t;
 
-typedef enum
+typedef enum 
 {
     AVR_LATENCY_MODE_DEFAULT, // default latency mode, will result into a 100ms latency
     AVR_LATENCY_MODE_SPDIF,   // SPDIF-restricted mode (AC3 and some DTS modes), will result into a 60ms latency
@@ -52,23 +50,22 @@ typedef enum
     AVR_LATENCY_MODE_MAX
 } avr_audio_latency_mode_t;
 
-typedef enum
-{
-    AVR_AUDIO_DISCRETE_SAMPLE_RATE_44100 = 0,
-    AVR_AUDIO_DISCRETE_SAMPLE_RATE_48000 = 1,
-    AVR_AUDIO_DISCRETE_SAMPLE_RATE_88200 = 2,
-    AVR_AUDIO_DISCRETE_SAMPLE_RATE_176400 = 3,
-    AVR_AUDIO_DISCRETE_SAMPLE_RATE_96000 = 4,
-    AVR_AUDIO_DISCRETE_SAMPLE_RATE_192000 = 5,
-    AVR_AUDIO_DISCRETE_SAMPLE_RATE_32000 = 6,
-    AVR_AUDIO_DISCRETE_SAMPLE_RATE_16000 = 7,
-    AVR_AUDIO_DISCRETE_SAMPLE_RATE_22050 = 8,
-    AVR_AUDIO_DISCRETE_SAMPLE_RATE_24000 = 9,
-    AVR_AUDIO_DISCRETE_SAMPLE_RATE_64000 = 10,
-    AVR_AUDIO_DISCRETE_SAMPLE_RATE_128000 = 11
+typedef enum {
+	AVR_AUDIO_DISCRETE_SAMPLE_RATE_44100 = 0,
+	AVR_AUDIO_DISCRETE_SAMPLE_RATE_48000 = 1,
+	AVR_AUDIO_DISCRETE_SAMPLE_RATE_88200 = 2,
+	AVR_AUDIO_DISCRETE_SAMPLE_RATE_176400 = 3,
+	AVR_AUDIO_DISCRETE_SAMPLE_RATE_96000 = 4,
+	AVR_AUDIO_DISCRETE_SAMPLE_RATE_192000 = 5,
+	AVR_AUDIO_DISCRETE_SAMPLE_RATE_32000 = 6,
+	AVR_AUDIO_DISCRETE_SAMPLE_RATE_16000 = 7,
+	AVR_AUDIO_DISCRETE_SAMPLE_RATE_22050 = 8,
+	AVR_AUDIO_DISCRETE_SAMPLE_RATE_24000 = 9,
+	AVR_AUDIO_DISCRETE_SAMPLE_RATE_64000 = 10,
+	AVR_AUDIO_DISCRETE_SAMPLE_RATE_128000 = 11
 } avr_audio_discrete_sample_rate_t;
 
-typedef struct dvp_v4l2_audio_handle_s
+typedef struct dvp_v4l2_audio_handle_s 
 {
     avr_v4l2_shared_handle_t *SharedContext;
     struct DeviceContext_s *DeviceContext;
@@ -132,19 +129,19 @@ typedef struct dvp_v4l2_audio_handle_s
     MME_DataBuffer_t   DataBuffers[AVR_LOW_LATENCY_MAX_TOTAL_SEND_BUFFERS];
     MME_DataBuffer_t  * DataBufferList[AVR_LOW_LATENCY_MAX_TOTAL_SEND_BUFFERS];
     MME_ScatterPage_t  ScatterPages[AVR_LOW_LATENCY_MAX_TOTAL_SEND_BUFFERS];
-
+ 
     // this block of data is protected by the DecoderStatusSemaphore semaphore
     LLDecoderStatus_t LLDecoderStatus;
     // end of this block of data is protected
 
-    struct
+    struct 
     {
         BufferPool_t  Pool;
         BufferEntry_t Entries[AVR_LOW_LATENCY_MAX_LOG_INPUT_SEND_BUFFERS];
         //        bool          IsInitalized;
     } InputPool;
-
-    struct
+    
+    struct 
     {
         BufferPool_t  Pool;
         BufferEntry_t Entries[AVR_LOW_LATENCY_MAX_LOG_OUTPUT_SEND_BUFFERS];
@@ -178,17 +175,17 @@ void AvrAudioSetFormatRecogniserEnable(avr_v4l2_audio_handle_t *AudioContext, bo
 int  AvrAudioGetInput(avr_v4l2_audio_handle_t *AudioContext);
 void AvrAudioSetInput(avr_v4l2_audio_handle_t *AudioContext, unsigned int InputId);
 
-void AvrAudioSetHdmiLayout(avr_v4l2_audio_handle_t *AudioContext, int layout);
-int  AvrAudioGetHdmiLayout(avr_v4l2_audio_handle_t *AudioContext);
+void AvrAudioSetHdmiLayout   (avr_v4l2_audio_handle_t *AudioContext, int layout);
+int  AvrAudioGetHdmiLayout   (avr_v4l2_audio_handle_t *AudioContext);
 
 void AvrAudioSetHdmiAudioMode(avr_v4l2_audio_handle_t *AudioContext, int audio_mode);
 int  AvrAudioGetHdmiAudioMode(avr_v4l2_audio_handle_t *AudioContext);
 
-void AvrAudioSetEmphasis(avr_v4l2_audio_handle_t *AudioContext, bool Emphasis);
-bool AvrAudioGetEmphasis(avr_v4l2_audio_handle_t *AudioContext);
+void AvrAudioSetEmphasis     (avr_v4l2_audio_handle_t *AudioContext, bool Emphasis);
+bool AvrAudioGetEmphasis     (avr_v4l2_audio_handle_t *AudioContext);
 
 void AvrAudioSetChannelSelect(avr_v4l2_audio_handle_t *AudioContext,
-                              enum v4l2_avr_audio_channel_select ChannelSelect);
+			      enum v4l2_avr_audio_channel_select ChannelSelect);
 enum v4l2_avr_audio_channel_select AvrAudioGetChannelSelect(avr_v4l2_audio_handle_t *AudioContext);
 
 void AvrAudioSetSilenceThreshold(avr_v4l2_audio_handle_t *AudioContext, int Threshold);

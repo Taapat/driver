@@ -45,66 +45,65 @@ Date        Modification                                    Name
 //
 
 #ifdef __TDT__
-#define AssertNonZeroReferenceCount( s )        do { if( ReferenceCount == 0 ) {report( severity_fatal, "%s - Attempt to act on a buffer that has a reference count of zero.\n", s ); /*dagobert try this->Dump(); Manager->Dump();*/}/*return BufferError;*/ } while(0)
+#define AssertNonZeroReferenceCount( s )                do { if( ReferenceCount == 0 ) {report( severity_fatal, "%s - Attempt to act on a buffer that has a reference count of zero.\n", s ); /*dagobert try this->Dump(); Manager->Dump();*/}/*return BufferError;*/ } while(0)
 #else
-#define AssertNonZeroReferenceCount( s )        do { if( ReferenceCount == 0 ) {this->Dump(); report( severity_fatal, "%s - Attempt to act on a buffer that has a reference count of zero.\n", s ); Manager->Dump();}/*return BufferError;*/ } while(0)
+#define AssertNonZeroReferenceCount( s )		do { if( ReferenceCount == 0 ) {this->Dump(); report( severity_fatal, "%s - Attempt to act on a buffer that has a reference count of zero.\n", s ); Manager->Dump();}/*return BufferError;*/ } while(0)
 #endif
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//      Constructor function - Initialize our data
+//      Contructor function - Initialize our data
 //
 
-Buffer_Generic_c::Buffer_Generic_c(BufferManager_Generic_t    Manager,
-                                   BufferPool_Generic_t      Pool,
-                                   BufferDataDescriptor_t   *Descriptor)
+Buffer_Generic_c::Buffer_Generic_c( 	BufferManager_Generic_t	  Manager,
+					BufferPool_Generic_t	  Pool,
+					BufferDataDescriptor_t	 *Descriptor )
 {
 //
 
-    InitializationStatus    = BufferError;
+    InitializationStatus	= BufferError;
 
     //
     // Initialize class data
     //
 
-    this->Manager       = Manager;
-    this->Pool          = Pool;
+    this->Manager		= Manager;
+    this->Pool			= Pool;
 
-    Next            = NULL;
-    ReferenceCount      = 0;
-    BufferBlock         = NULL;
-    ListOfMetaData      = 0;
-    DataSize            = 0;
+    Next			= NULL;
+    ReferenceCount		= 0;
+    BufferBlock			= NULL;
+    ListOfMetaData		= 0;
+    DataSize			= 0;
 
-    memset(OwnerIdentifier, 0x00, MAX_BUFFER_OWNER_IDENTIFIERS * sizeof(unsigned int));
-    memset(AttachedBuffers, 0x00, MAX_ATTACHED_BUFFERS * sizeof(Buffer_t));
+    memset( OwnerIdentifier, 0x00, MAX_BUFFER_OWNER_IDENTIFIERS * sizeof(unsigned int) );
+    memset( AttachedBuffers, 0x00, MAX_ATTACHED_BUFFERS * sizeof(Buffer_t) );
 
-    OS_InitializeMutex(&Lock);
+    OS_InitializeMutex( &Lock );
 
     //
     // Get a memory block descriptor, and initialize it
     //
 
-    BufferBlock = new struct BlockDescriptor_s;
-
-    if (BufferBlock == NULL)
+    BufferBlock	= new struct BlockDescriptor_s;
+    if( BufferBlock == NULL )
     {
-        report(severity_error, "Buffer_Generic_c::Buffer_Generic_c - Unable to create a block descriptor record.\n");
+        report( severity_error, "Buffer_Generic_c::Buffer_Generic_c - Unable to create a block descriptor record.\n" );
         return;
     }
 
-    BufferBlock->Next               = NULL;
-    BufferBlock->Descriptor         = Descriptor;
-    BufferBlock->AttachedToPool         = false;
-    BufferBlock->Size               = 0;
-    BufferBlock->Address[CachedAddress]     = NULL;
-    BufferBlock->Address[UnCachedAddress]   = NULL;
-    BufferBlock->Address[PhysicalAddress]   = NULL;
-    BufferBlock->MemoryAllocatorDevice      = ALLOCATOR_INVALID_DEVICE;
+    BufferBlock->Next				= NULL;
+    BufferBlock->Descriptor			= Descriptor;
+    BufferBlock->AttachedToPool			= false;
+    BufferBlock->Size				= 0;
+    BufferBlock->Address[CachedAddress]		= NULL;
+    BufferBlock->Address[UnCachedAddress]	= NULL;
+    BufferBlock->Address[PhysicalAddress]	= NULL;
+    BufferBlock->MemoryAllocatorDevice		= ALLOCATOR_INVALID_DEVICE;
 
 //
 
-    InitializationStatus    = BufferNoError;
+    InitializationStatus	= BufferNoError;
 }
 
 
@@ -113,102 +112,97 @@ Buffer_Generic_c::Buffer_Generic_c(BufferManager_Generic_t    Manager,
 //      Destructor function - close down
 //
 
-Buffer_Generic_c::~Buffer_Generic_c(void)
+Buffer_Generic_c::~Buffer_Generic_c( void )
 {
     if (BufferBlock != NULL)
     {
         delete BufferBlock;
-        BufferBlock = NULL;
+	BufferBlock = NULL;
     }
     else
-        report(severity_error, "Maybe not such a bug!\n");
-
-    OS_TerminateMutex(&Lock);
+	report(severity_error,"Maybe not such a bug!\n");	
+    OS_TerminateMutex( &Lock );
 }
 
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Attach meta data structure
+//	Attach meta data structure
 //
 
 BufferStatus_t   Buffer_Generic_c::AttachMetaData(
-    MetaDataType_t    Type,
-    unsigned int      Size,
-    void         *MemoryBlock,
-    char         *DeviceMemoryPartitionName)
+						MetaDataType_t	  Type,
+						unsigned int	  Size,
+						void		 *MemoryBlock,
+						char		 *DeviceMemoryPartitionName )
 {
-    BufferStatus_t       Status;
-    BufferDataDescriptor_t  *Descriptor;
-    unsigned int         ItemSize;
-    BlockDescriptor_t    Block;
+BufferStatus_t		 Status;
+BufferDataDescriptor_t	*Descriptor;
+unsigned int		 ItemSize;
+BlockDescriptor_t	 Block;
 
     //
     // Get the descriptor
     //
 
-    AssertNonZeroReferenceCount("Buffer_Generic_c::AttachMetaData");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::AttachMetaData" );
 
-    Status      = Manager->GetDescriptor(Type, MetaDataTypeBase, &Descriptor);
-
-    if (Status != BufferNoError)
+    Status      = Manager->GetDescriptor( Type, MetaDataTypeBase, &Descriptor );
+    if( Status != BufferNoError )
         return Status;
 
     //
     // Check the parameters and associated information to see if we can do this
     //
 
-    if (Descriptor->AllocationSource != NoAllocation)
+    if( Descriptor->AllocationSource != NoAllocation )
     {
-        Status  = Pool->CheckMemoryParameters(Descriptor, false, Size, MemoryBlock, NULL, DeviceMemoryPartitionName,
-                                              "Buffer_Generic_c::AttachMetaData", &ItemSize);
-
-        if (Status != BufferNoError)
-            return Status;
+	Status	= Pool->CheckMemoryParameters( Descriptor, false, Size, MemoryBlock, NULL, DeviceMemoryPartitionName,
+						 "Buffer_Generic_c::AttachMetaData", &ItemSize );
+	if( Status != BufferNoError )
+	    return Status;
     }
-    else if (MemoryBlock == NULL)
+    else if( MemoryBlock == NULL )
     {
-        report(severity_error, "Buffer_Generic_c::AttachMetaData - Pointer not supplied for NoAllocation meta data.\n");
-        return BufferParametersIncompatibleWithAllocationSource;
+	report( severity_error, "Buffer_Generic_c::AttachMetaData - Pointer not supplied for NoAllocation meta data.\n" );
+	return BufferParametersIncompatibleWithAllocationSource;
     }
 
     //
     // Create a new block descriptor record
     //
 
-    Block   = new struct BlockDescriptor_s;
-
-    if (Block == NULL)
+    Block	= new struct BlockDescriptor_s;
+    if( Block == NULL )
     {
-        report(severity_error, "Buffer_Generic_c::AttachMetaData - Unable to create a block descriptor record.\n");
+        report( severity_error, "Buffer_Generic_c::AttachMetaData - Unable to create a block descriptor record.\n" );
         return BufferInsufficientMemoryForMetaData;
     }
 
-    Block->Descriptor           = Descriptor;
-    Block->AttachedToPool       = false;
-    Block->Size             = ItemSize;
+    Block->Descriptor			= Descriptor;
+    Block->AttachedToPool		= false;
+    Block->Size				= ItemSize;
 
-    OS_LockMutex(&Lock);
-    Block->Next             = ListOfMetaData;
-    ListOfMetaData          = Block;
-    OS_UnLockMutex(&Lock);
+    OS_LockMutex( &Lock );
+    Block->Next				= ListOfMetaData;
+    ListOfMetaData			= Block;
+    OS_UnLockMutex( &Lock );
 
     //
     // Associate the memory
     //
 
-    if (Descriptor->AllocationSource != NoAllocation)
+    if( Descriptor->AllocationSource != NoAllocation )
     {
-        Status  = Pool->AllocateMemoryBlock(Block, false, 0, NULL, MemoryBlock, NULL, DeviceMemoryPartitionName,
-                                            "Buffer_Generic_c::AttachMetaData");
-
-        if (Status != BufferNoError)
-            return Status;
+	Status	= Pool->AllocateMemoryBlock( Block, false, 0, NULL, MemoryBlock, NULL, DeviceMemoryPartitionName,
+					"Buffer_Generic_c::AttachMetaData" );
+	if( Status != BufferNoError )
+	    return Status;
     }
     else
     {
-        Block->Size         = Size;
-        Block->Address[CachedAddress]   = MemoryBlock;
+    	Block->Size			= Size;
+	Block->Address[CachedAddress]	= MemoryBlock;
     }
 
 //
@@ -219,95 +213,95 @@ BufferStatus_t   Buffer_Generic_c::AttachMetaData(
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Detach meta data
+//	Detach meta data
 //
 
-BufferStatus_t   Buffer_Generic_c::DetachMetaData(
-    MetaDataType_t    Type)
+BufferStatus_t   Buffer_Generic_c::DetachMetaData(	
+						MetaDataType_t	  Type )
 {
-    BlockDescriptor_t   *LocationOfBlockPointer;
-    BlockDescriptor_t    Block;
+BlockDescriptor_t	*LocationOfBlockPointer;
+BlockDescriptor_t	 Block;
 
     //
     // First find the descriptor block in the buffer
     //
 
-    AssertNonZeroReferenceCount("Buffer_Generic_c::DetachMetaData");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::DetachMetaData" );
 
-    OS_LockMutex(&Lock);
+    OS_LockMutex( &Lock );
+    
+    for( LocationOfBlockPointer	  = &ListOfMetaData;
+	 *LocationOfBlockPointer != NULL;
+	 LocationOfBlockPointer	  = &((*LocationOfBlockPointer)->Next) )
+	if( ((*LocationOfBlockPointer)->Descriptor->Type == Type) && !((*LocationOfBlockPointer)->AttachedToPool) )
+	    break;
 
-    for (LocationOfBlockPointer    = &ListOfMetaData;
-            *LocationOfBlockPointer != NULL;
-            LocationOfBlockPointer   = &((*LocationOfBlockPointer)->Next))
-        if (((*LocationOfBlockPointer)->Descriptor->Type == Type) && !((*LocationOfBlockPointer)->AttachedToPool))
-            break;
-
-    if (*LocationOfBlockPointer == NULL)
+    if( *LocationOfBlockPointer == NULL )
     {
-        report(severity_error, "Buffer_Generic_c::DetachMetaData - No meta data of the specified type is attached to the buffer.\n");
-        OS_UnLockMutex(&Lock);
-        return BufferMetaDataTypeNotFound;
+	report( severity_error, "Buffer_Generic_c::DetachMetaData - No meta data of the specified type is attached to the buffer.\n" );
+	OS_UnLockMutex( &Lock );
+	return BufferMetaDataTypeNotFound;
     }
 
     //
     // Get a local block pointer, and unthread the block from the list
     //
 
-    Block           = *LocationOfBlockPointer;
-    *LocationOfBlockPointer = Block->Next;
+    Block			= *LocationOfBlockPointer;
+    *LocationOfBlockPointer	= Block->Next;
 
     //
     // Free up the memory, and delete the block record.
     //
 
-    Pool->DeAllocateMemoryBlock(Block);
+    Pool->DeAllocateMemoryBlock( Block );
     delete Block;
 
 //
 
-    OS_UnLockMutex(&Lock);
+    OS_UnLockMutex( &Lock );
     return BufferNoError;
 }
 
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Obtain a meta data reference
+//	Obtain a meta data reference 
 //
 
-BufferStatus_t   Buffer_Generic_c::ObtainMetaDataReference(
-    MetaDataType_t    Type,
-    void        **Pointer)
+BufferStatus_t	 Buffer_Generic_c::ObtainMetaDataReference(
+						MetaDataType_t	  Type,
+						void		**Pointer )
 {
-    BlockDescriptor_t    Block;
+BlockDescriptor_t	 Block;
 
     //
-    // Find the descriptor block
+    // Find the descriptor block 
     //
+    
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::ObtainMetaDataReference " );
 
-    AssertNonZeroReferenceCount("Buffer_Generic_c::ObtainMetaDataReference ");
+    OS_LockMutex( &Lock );
+    
+    for( Block  = ListOfMetaData;
+	 Block != NULL;
+	 Block  = Block->Next )
+	if( Block->Descriptor->Type == Type )
+	    break;
 
-    OS_LockMutex(&Lock);
-
-    for (Block  = ListOfMetaData;
-            Block != NULL;
-            Block  = Block->Next)
-        if (Block->Descriptor->Type == Type)
-            break;
-
-    if (Block == NULL)
+    if( Block == NULL )
     {
-        report(severity_error, "Buffer_Generic_c::ObtainMetaDataReference - No meta data of the specified type is attached to the buffer.\n");
-        OS_UnLockMutex(&Lock);
-        return BufferMetaDataTypeNotFound;
+	report( severity_error, "Buffer_Generic_c::ObtainMetaDataReference - No meta data of the specified type is attached to the buffer.\n" );
+	OS_UnLockMutex( &Lock );
+	return BufferMetaDataTypeNotFound;
     }
 
     //
     // Return the appropriate value
     //
 
-    *Pointer    = Block->Address[CachedAddress];
-    OS_UnLockMutex(&Lock);
+    *Pointer	= Block->Address[CachedAddress];
+    OS_UnLockMutex( &Lock );
 
 //
 
@@ -317,32 +311,32 @@ BufferStatus_t   Buffer_Generic_c::ObtainMetaDataReference(
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Set the amount of the buffer that is used.
+//	Set the amount of the buffer that is used.
 //
 
-BufferStatus_t   Buffer_Generic_c::SetUsedDataSize(unsigned int   DataSize)
+BufferStatus_t	 Buffer_Generic_c::SetUsedDataSize( unsigned int	  DataSize )
 {
 
-    AssertNonZeroReferenceCount("Buffer_Generic_c::SetUsedDataSize");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::SetUsedDataSize" );
 
-    if ((BufferBlock == NULL) && (DataSize != 0))
+    if( (BufferBlock == NULL) && (DataSize != 0) )
     {
-        report(severity_error, "Buffer_Generic_c::SetUsedDataSize - Attempt to set none zero DataSize when buffer has no associated memory.\n");
-        return BufferError;
+	report( severity_error, "Buffer_Generic_c::SetUsedDataSize - Attempt to set none zero DataSize when buffer has no associated memory.\n" );
+	return BufferError;
     }
 
 //
 
-    if ((BufferBlock != NULL) && (DataSize > BufferBlock->Size))
+    if( (BufferBlock != NULL) && (DataSize > BufferBlock->Size) )
     {
-        report(severity_error, "Buffer_Generic_c::SetUsedDataSize - Attempt to set DataSize larger than Buffer size.\n");
-        return BufferError;
+	report( severity_error, "Buffer_Generic_c::SetUsedDataSize - Attempt to set DataSize larger than Buffer size.\n" );
+	return BufferError;
     }
 
 //
 
-    Pool->TotalUsedMemory   = Pool->TotalUsedMemory - this->DataSize + DataSize;
-    this->DataSize      = DataSize;
+    Pool->TotalUsedMemory	= Pool->TotalUsedMemory - this->DataSize + DataSize;
+    this->DataSize		= DataSize;
 
     return BufferNoError;
 }
@@ -350,181 +344,171 @@ BufferStatus_t   Buffer_Generic_c::SetUsedDataSize(unsigned int   DataSize)
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Shrink the buffer
+//	Shrink the buffer
 //
 
-BufferStatus_t   Buffer_Generic_c::ShrinkBuffer(unsigned int      NewSize)
+BufferStatus_t	 Buffer_Generic_c::ShrinkBuffer( unsigned int	  NewSize )
 {
-    AssertNonZeroReferenceCount("Buffer_Generic_c::ShrinkBuffer");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::ShrinkBuffer" );
 
-    if (NewSize < DataSize)
+    if( NewSize < DataSize )
     {
-        report(severity_error, "Buffer_Generic_c::ShrinkBuffer - The new buffer size will be less than the content size.\n");
-        return BufferError;
+	report( severity_error, "Buffer_Generic_c::ShrinkBuffer - The new buffer size will be less than the content size.\n" );
+	return BufferError;
     }
 
-    return Pool->ShrinkMemoryBlock(BufferBlock, NewSize);
+    return Pool->ShrinkMemoryBlock( BufferBlock, NewSize );
 }
 
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Expand the buffer
+//	Expand the buffer
 //
 
-BufferStatus_t   Buffer_Generic_c::ExtendBuffer(unsigned int     *NewSize,
-        bool          ExtendUpwards)
+BufferStatus_t	 Buffer_Generic_c::ExtendBuffer(unsigned int	 *NewSize,
+						bool		  ExtendUpwards )
 {
-    AssertNonZeroReferenceCount("Buffer_Generic_c::ExtendBuffer");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::ExtendBuffer" );
 
-    return Pool->ExtendMemoryBlock(BufferBlock, NewSize, ExtendUpwards);
+    return Pool->ExtendMemoryBlock( BufferBlock, NewSize, ExtendUpwards );
 }
 
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Partition a buffer into separate buffers
+//	Partition a buffer into sepearate buffers
 //
 
 BufferStatus_t   Buffer_Generic_c::PartitionBuffer(
-    unsigned int      LeaveInFirstPartitionSize,
-    bool          DuplicateMetaData,
-    Buffer_t     *SecondPartition,
-    unsigned int      SecondOwnerIdentifier,
-    bool          NonBlocking)
+						unsigned int	  LeaveInFirstPartitionSize,
+						bool		  DuplicateMetaData,
+						Buffer_t	 *SecondPartition,
+						unsigned int	  SecondOwnerIdentifier,
+						bool		  NonBlocking )
 {
-    unsigned int          i;
-    BufferStatus_t        Status;
-    BufferDataDescriptor_t   *Descriptor;
-    Buffer_Generic_c     *NewBuffer;
-    BlockDescriptor_t     Block;
-    BlockDescriptor_t     Datum;
-    MetaDataType_t        Type;
-    unsigned int          Size;
-    void             *MemoryBlock;
+unsigned int		  i;
+BufferStatus_t		  Status;
+BufferDataDescriptor_t	 *Descriptor;
+Buffer_Generic_c	 *NewBuffer;
+BlockDescriptor_t	  Block;
+BlockDescriptor_t	  Datum;
+MetaDataType_t		  Type;
+unsigned int		  Size;
+void			 *MemoryBlock;
 
     //
     // Can we partition this buffer
     //
 
-    AssertNonZeroReferenceCount("Buffer_Generic_c::PartitionBuffer");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::PartitionBuffer" );
 
-    Descriptor  = BufferBlock->Descriptor;
+    Descriptor	= BufferBlock->Descriptor;
 
-    if (Descriptor->AllocateOnPoolCreation)
+    if( Descriptor->AllocateOnPoolCreation )
     {
-        report(severity_error, "Buffer_Generic_c::PartitionBuffer - All buffer memory allocated on pool creation, partitioning not supported.\n");
-        return BufferOperationNotSupportedByThisDescriptor;
+	report( severity_error, "Buffer_Generic_c::PartitionBuffer - All buffer memory allocated on pool creation, partitioning not supported.\n" );
+	return BufferOperationNotSupportedByThisDescriptor;
     }
 
-    switch (Descriptor->AllocationSource)
+    switch( Descriptor->AllocationSource )
     {
-        case AllocateFromOSMemory:
-        case AllocateFromNamedDeviceMemory:
-        case AllocateFromDeviceVideoLMIMemory:
-        case AllocateFromDeviceMemory:
-        case AllocateIndividualSuppliedBlocks:
-            report(severity_error, "Buffer_Generic_c::PartitionBuffer - Partitioning not supported for this allocation source (%d).\n", Descriptor->AllocationSource);
-            return BufferOperationNotSupportedByThisDescriptor;
-            break;
+	case AllocateFromOSMemory:
+	case AllocateFromNamedDeviceMemory:
+	case AllocateFromDeviceVideoLMIMemory:
+	case AllocateFromDeviceMemory:
+	case AllocateIndividualSuppliedBlocks:
+		report( severity_error, "Buffer_Generic_c::PartitionBuffer - Partitioning not supported for this allocation source (%d).\n", Descriptor->AllocationSource );
+		return BufferOperationNotSupportedByThisDescriptor;
+		break;
 
-        case AllocateFromSuppliedBlock:
+	case AllocateFromSuppliedBlock:
 #if 0
-
 // If partitioning, then we allow partitions of any size
-            if ((LeaveInFirstPartitionSize % Descriptor->AllocationUnitSize) != 0)
-            {
-                report(severity_error, "Buffer_Generic_c::PartitionBuffer - Can only partition in 'AllocationUnitSize; chunks (%d %% %d != 0).\n", LeaveInFirstPartitionSize, Descriptor->AllocationUnitSize);
-                return BufferOperationNotSupportedByThisDescriptor;
-            }
-
+		if( (LeaveInFirstPartitionSize % Descriptor->AllocationUnitSize) != 0 )
+		{
+		    report( severity_error, "Buffer_Generic_c::PartitionBuffer - Can only partition in 'AllocationUnitSize; chunks (%d %% %d != 0).\n", LeaveInFirstPartitionSize, Descriptor->AllocationUnitSize );
+		    return BufferOperationNotSupportedByThisDescriptor;
+		}
 #endif
-            break;
+		break;
 
-        case NoAllocation:
-            break;
+	case NoAllocation:
+		break;
     }
 
     //
     // Get a new buffer of zero size (specially forces no allocation)
     //
 
-    Status  = Pool->GetBuffer(SecondPartition, SecondOwnerIdentifier, 0, NonBlocking);
+    Status	= Pool->GetBuffer( SecondPartition, SecondOwnerIdentifier, 0, NonBlocking );
+    if( Status != BufferNoError )
+	return Status;
 
-    if (Status != BufferNoError)
-        return Status;
-
-    NewBuffer   = (Buffer_Generic_t)(*SecondPartition);
+    NewBuffer	= (Buffer_Generic_t)(*SecondPartition);
 
     //
     // Copy first buffer block into new one, and adjust memory pointers
     //
 
-    Block               = NewBuffer->BufferBlock;
-    memcpy(Block, BufferBlock, sizeof(struct BlockDescriptor_s));
+    Block				= NewBuffer->BufferBlock;
+    memcpy( Block, BufferBlock, sizeof(struct BlockDescriptor_s) );
 
-    for (i = 0; i < 3; i++)
-        if (Block->Address[i] != NULL)
-            Block->Address[i]   = (unsigned char *)BufferBlock->Address[i] + LeaveInFirstPartitionSize;
+    for( i=0; i<3; i++ )
+	if( Block->Address[i] != NULL )
+	    Block->Address[i]	= (unsigned char *)BufferBlock->Address[i] + LeaveInFirstPartitionSize;
 
-    Block->PoolAllocatedOffset      = BufferBlock->PoolAllocatedOffset + LeaveInFirstPartitionSize;
+    Block->PoolAllocatedOffset		= BufferBlock->PoolAllocatedOffset + LeaveInFirstPartitionSize;
 
-    Block->Size             = BufferBlock->Size - LeaveInFirstPartitionSize;
-    NewBuffer->DataSize         = DataSize - LeaveInFirstPartitionSize;
+    Block->Size				= BufferBlock->Size - LeaveInFirstPartitionSize;
+    NewBuffer->DataSize			= DataSize - LeaveInFirstPartitionSize;
 
-    BufferBlock->Size           = LeaveInFirstPartitionSize;
-    DataSize                = LeaveInFirstPartitionSize;
+    BufferBlock->Size			= LeaveInFirstPartitionSize;
+    DataSize				= LeaveInFirstPartitionSize;
 
     //
-    // Do we need to copy the metadata
+    // Do we need to copy the metadata 
     //
 
-    if (DuplicateMetaData)
-        for (Datum  = ListOfMetaData;
-                Datum != NULL;
-                Datum  = Datum->Next)
-        {
-            Type    = Datum->Descriptor->Type;
-            Size    = Datum->Size;
+    if( DuplicateMetaData )
+	for( Datum  = ListOfMetaData;
+	     Datum != NULL;
+	     Datum  = Datum->Next )
+	{
+	    Type	= Datum->Descriptor->Type;
+	    Size	= Datum->Size;
 
-            switch (Datum->Descriptor->AllocationSource)
-            {
-                case AllocateFromOSMemory:          MemoryBlock = NULL;                 break;
+	    switch( Datum->Descriptor->AllocationSource )
+	    {
+		case AllocateFromOSMemory:			MemoryBlock	= NULL;					break;
+		case AllocateFromNamedDeviceMemory:		MemoryBlock	= NULL;					break;
+		case AllocateFromDeviceVideoLMIMemory:		MemoryBlock	= NULL;					break;
+		case AllocateFromDeviceMemory:			MemoryBlock	= NULL;					break;
+		case AllocateFromSuppliedBlock:			MemoryBlock	= NULL;					break;
+		case NoAllocation:				MemoryBlock	= Datum->Address[CachedAddress];	break;
 
-                case AllocateFromNamedDeviceMemory:     MemoryBlock = NULL;                 break;
+		default:					break;	// No Action, already returned error
+	    }
 
-                case AllocateFromDeviceVideoLMIMemory:      MemoryBlock = NULL;                 break;
+	    Status	= NewBuffer->AttachMetaData( Type, Size, MemoryBlock );
+	    if( Status != BufferNoError )
+	    {
+		report( severity_error, "BufferPool_Generic_c::PartitionBuffer - Unable to duplicate meta data block.\n" );
+		return BufferInsufficientMemoryForMetaData;
+	    }
 
-                case AllocateFromDeviceMemory:          MemoryBlock = NULL;                 break;
+	    if( MemoryBlock == NULL )
+	    {
+		Status = NewBuffer->ObtainMetaDataReference( Type, &MemoryBlock );
+		if( Status != BufferNoError )
+		{
+		    report( severity_error, "BufferPool_Generic_c::PartitionBuffer - Unable to reference attached meta data block.\n" );
+		    return BufferInsufficientMemoryForMetaData;
+		}
 
-                case AllocateFromSuppliedBlock:         MemoryBlock = NULL;                 break;
-
-                case NoAllocation:              MemoryBlock = Datum->Address[CachedAddress];    break;
-
-                default:                    break;  // No Action, already returned error
-            }
-
-            Status  = NewBuffer->AttachMetaData(Type, Size, MemoryBlock);
-
-            if (Status != BufferNoError)
-            {
-                report(severity_error, "BufferPool_Generic_c::PartitionBuffer - Unable to duplicate meta data block.\n");
-                return BufferInsufficientMemoryForMetaData;
-            }
-
-            if (MemoryBlock == NULL)
-            {
-                Status = NewBuffer->ObtainMetaDataReference(Type, &MemoryBlock);
-
-                if (Status != BufferNoError)
-                {
-                    report(severity_error, "BufferPool_Generic_c::PartitionBuffer - Unable to reference attached meta data block.\n");
-                    return BufferInsufficientMemoryForMetaData;
-                }
-
-                memcpy(MemoryBlock, Datum->Address[CachedAddress], Size);
-            }
-        }
+		memcpy( MemoryBlock, Datum->Address[CachedAddress], Size );
+	    }
+	}
 
 //
 
@@ -534,51 +518,51 @@ BufferStatus_t   Buffer_Generic_c::PartitionBuffer(
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Register data reference functions
+//	Register data reference functions
 //
 
 BufferStatus_t   Buffer_Generic_c::RegisterDataReference(
-    unsigned int      BlockSize,
-    void         *Pointer,
-    AddressType_t     AddressType)
+						unsigned int	  BlockSize,
+						void		 *Pointer,
+						AddressType_t	  AddressType )
 {
-    void    *Pointers[3];
+void	*Pointers[3];
 
-    AssertNonZeroReferenceCount("Buffer_Generic_c::RegisterDataReference");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::RegisterDataReference" );
 
-    Pointers[0]         = NULL;
-    Pointers[1]         = NULL;
-    Pointers[2]         = NULL;
-    Pointers[AddressType]   = Pointer;
+    Pointers[0]			= NULL;
+    Pointers[1]			= NULL;
+    Pointers[2]			= NULL;
+    Pointers[AddressType]	= Pointer;
 
-    return RegisterDataReference(BlockSize, Pointers);
+    return RegisterDataReference( BlockSize, Pointers );
 }
 
 // -------------------------------------
 
 BufferStatus_t   Buffer_Generic_c::RegisterDataReference(
-    unsigned int      BlockSize,
-    void         *Pointers[3])
+						unsigned int	  BlockSize,
+						void		 *Pointers[3] )
 {
     //
     // We can only specify the buffer address when the no-allocation method is used
     //
 
-    AssertNonZeroReferenceCount("Buffer_Generic_c::RegisterDataReference");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::RegisterDataReference" );
 
-    if (BufferBlock->Descriptor->AllocationSource != NoAllocation)
+    if( BufferBlock->Descriptor->AllocationSource != NoAllocation )
     {
-        report(severity_error, "Buffer_Generic_c::RegisterDataReference - Attempt to register a data reference pointer on an allocated buffer.\n");
-        return BufferOperationNotSupportedByThisDescriptor;
+	report( severity_error, "Buffer_Generic_c::RegisterDataReference - Attempt to register a data reference pointer on an allocated buffer.\n" ); 
+	return BufferOperationNotSupportedByThisDescriptor;
     }
 
 //
 
-    BufferBlock->Size       = BlockSize;
-    BufferBlock->Address[0] = Pointers[0];
-    BufferBlock->Address[1] = Pointers[1];
-    BufferBlock->Address[2] = Pointers[2];
-    DataSize            = 0;
+    BufferBlock->Size		= BlockSize;
+    BufferBlock->Address[0]	= Pointers[0];
+    BufferBlock->Address[1]	= Pointers[1];
+    BufferBlock->Address[2]	= Pointers[2];
+    DataSize			= 0;
 
 //
 
@@ -588,48 +572,48 @@ BufferStatus_t   Buffer_Generic_c::RegisterDataReference(
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//
+//	
 //
 
-BufferStatus_t   Buffer_Generic_c::ObtainDataReference(
-    unsigned int     *BlockSize,
-    unsigned int     *UsedDataSize,
-    void        **Pointer,
-    AddressType_t     AddressType)
+BufferStatus_t   Buffer_Generic_c::ObtainDataReference(	
+						unsigned int	 *BlockSize,
+						unsigned int	 *UsedDataSize,
+						void		**Pointer,
+						AddressType_t	  AddressType )
 
 {
-    AssertNonZeroReferenceCount("Buffer_Generic_c::ObtainDataReference");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::ObtainDataReference" );
 
-#ifdef VIRTULISATION
+    #ifdef VIRTULISATION
     AddressType = (AddressType_t)0;
-#endif
+    #endif
 
-    if (BufferBlock->Size == 0)
+    if( BufferBlock->Size == 0 )
     {
         // This is not an exceptional behaviour (we call this from the audio compressed data bypass code
         // to discover if the buffer *has* compressed data attached in the first place). Since we do this
-        // every frame we could really do not to report each occasion this happens.
-        //report( severity_error, "Buffer_Generic_c::ObtainDataReference - Attempt to obtain a data reference pointer on a buffer with no data.\n" );
-        return BufferNoDataAttached;
+        // every frame we could really do not to report each occassion this happens.
+	//report( severity_error, "Buffer_Generic_c::ObtainDataReference - Attempt to obtain a data reference pointer on a buffer with no data.\n" ); 
+	return BufferNoDataAttached;
     }
 
-    if (BufferBlock->Address[AddressType] == NULL)
+    if( BufferBlock->Address[AddressType] == NULL )
     {
-        report(severity_error, "Buffer_Generic_c::ObtainDataReference - Attempt to obtain a data reference pointer in an address type that is unavailable for the buffer - Address translation not supported.\n");
-        *Pointer = NULL;
-        return BufferError;
+        report( severity_error, "Buffer_Generic_c::ObtainDataReference - Attempt to obtain a data reference pointer in an address type that is unavailable for the buffer - Address translation not supported.\n" );
+	*Pointer = NULL;
+	return BufferError;
     }
 
 //
 
-    if (BlockSize != NULL)
-        *BlockSize  = BufferBlock->Size;
+    if( BlockSize != NULL )
+	*BlockSize	= BufferBlock->Size;
 
-    if (UsedDataSize != NULL)
-        *UsedDataSize   = DataSize;
+    if( UsedDataSize != NULL )
+	*UsedDataSize	= DataSize;
 
-    if (Pointer != NULL)
-        *Pointer    = BufferBlock->Address[AddressType];
+    if( Pointer != NULL )
+	*Pointer	= BufferBlock->Address[AddressType];
 
 //
 
@@ -639,117 +623,118 @@ BufferStatus_t   Buffer_Generic_c::ObtainDataReference(
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//
+//	
 //
 
 BufferStatus_t   Buffer_Generic_c::TransferOwnership(
-    unsigned int      OwnerIdentifier0,
-    unsigned int      OwnerIdentifier1)
+						unsigned int	  OwnerIdentifier0,
+						unsigned int	  OwnerIdentifier1 )
 {
-    unsigned int      i;
+unsigned int	  i;
 
 //
 
-    AssertNonZeroReferenceCount("Buffer_Generic_c::TransferOwnership");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::TransferOwnership" );
 
-    if (OwnerIdentifier1 != UNSPECIFIED_OWNER)
+    if( OwnerIdentifier1 != UNSPECIFIED_OWNER )
     {
-        for (i = 0; i < MAX_BUFFER_OWNER_IDENTIFIERS; i++)
-            if (OwnerIdentifier[i] == OwnerIdentifier0)
-            {
-                OwnerIdentifier[i]  = OwnerIdentifier1;
-                return BufferNoError;
-            }
+	for( i=0; i<MAX_BUFFER_OWNER_IDENTIFIERS; i++ )
+            if( OwnerIdentifier[i] == OwnerIdentifier0 )
+	    {
+	        OwnerIdentifier[i]	= OwnerIdentifier1;
+		return BufferNoError;
+	    }
 
-        report(severity_note, "Buffer_Generic_c::TransferOwnership - specified current owner not found.\n");
+	report( severity_note, "Buffer_Generic_c::TransferOwnership - specified current owner not found.\n" );
     }
     else
     {
-        OwnerIdentifier[0]  = OwnerIdentifier0;
+	OwnerIdentifier[0]	= OwnerIdentifier0;
     }
 
 //
+
     return BufferNoError;
 }
 
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//
+//	
 //
 
-BufferStatus_t   Buffer_Generic_c::IncrementReferenceCount(unsigned int  NewOwnerIdentifier)
+BufferStatus_t   Buffer_Generic_c::IncrementReferenceCount( unsigned int  NewOwnerIdentifier )
 {
-    unsigned int      i;
+unsigned int	  i;
 
 //
 
-    AssertNonZeroReferenceCount("Buffer_Generic_c::IncrementReferenceCount");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::IncrementReferenceCount" );
 
-    OS_LockMutex(&Pool->Lock);
+    OS_LockMutex( &Pool->Lock );
     Pool->ReferenceCount++;
-    OS_UnLockMutex(&Pool->Lock);
+    OS_UnLockMutex( &Pool->Lock );
 
-    OS_LockMutex(&Lock);
+    OS_LockMutex( &Lock );
     ReferenceCount++;
 
-    if (NewOwnerIdentifier != UNSPECIFIED_OWNER)
+    if( NewOwnerIdentifier != UNSPECIFIED_OWNER )
     {
-        for (i = 0; i < MAX_BUFFER_OWNER_IDENTIFIERS; i++)
-            if (OwnerIdentifier[i] == UNSPECIFIED_OWNER)
-            {
-                OwnerIdentifier[i]  = NewOwnerIdentifier;
-                break;
-            }
+    	for( i=0; i<MAX_BUFFER_OWNER_IDENTIFIERS; i++ )
+	    if( OwnerIdentifier[i] == UNSPECIFIED_OWNER )
+	    {
+	    	OwnerIdentifier[i]	= NewOwnerIdentifier;
+	    	break;
+	    }
 
-        if (i >= MAX_BUFFER_OWNER_IDENTIFIERS)
-            report(severity_note, "Buffer_Generic_c::IncrementReferenceCount - More than expected references, new owner not recorded.\n");
+	if( i >= MAX_BUFFER_OWNER_IDENTIFIERS )
+	    report( severity_note, "Buffer_Generic_c::IncrementReferenceCount - More than expected references, new owner not recorded.\n" );
     }
 
-    OS_UnLockMutex(&Lock);
+    OS_UnLockMutex( &Lock );
     return BufferNoError;
 }
 
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Decrement a reference count, and release the buffer if we get to zero.
-//  We take a copy (during the locked period) of the reference to ensure
-//  that if two processes are decrementing the count, only one will do the
-//  actual release (without having to extend the period of locking).
+//	Decrement a reference count, and release the buffer if we get to zero.
+//	We take a copy (during the locked period) of the reference to ensure 
+//	that if two processes are decrementing the count, only one will do the
+//	actual release (without having to extend the period of locking).
 //
 
-BufferStatus_t   Buffer_Generic_c::DecrementReferenceCount(unsigned int  OldOwnerIdentifier)
+BufferStatus_t   Buffer_Generic_c::DecrementReferenceCount( unsigned int  OldOwnerIdentifier )
 {
-    unsigned int      i;
-    unsigned int      ReferenceCountAfterDecrement;
+unsigned int	  i;
+unsigned int	  ReferenceCountAfterDecrement;
 
 //
 
-    AssertNonZeroReferenceCount("Buffer_Generic_c::DecrementReferenceCount");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::DecrementReferenceCount" );
 
-    OS_LockMutex(&Pool->Lock);
+    OS_LockMutex( &Pool->Lock );
     Pool->ReferenceCount--;
-    OS_UnLockMutex(&Pool->Lock);
+    OS_UnLockMutex( &Pool->Lock );
 
-    OS_LockMutex(&Lock);
-    ReferenceCountAfterDecrement    = --ReferenceCount;
-    OS_UnLockMutex(&Lock);
+    OS_LockMutex( &Lock );
+    ReferenceCountAfterDecrement	= --ReferenceCount;
+    OS_UnLockMutex( &Lock );
 
-    if (OldOwnerIdentifier != UNSPECIFIED_OWNER)
+    if( OldOwnerIdentifier != UNSPECIFIED_OWNER )
     {
-        for (i = 0; i < MAX_BUFFER_OWNER_IDENTIFIERS; i++)
-            if (OwnerIdentifier[i] == OldOwnerIdentifier)
-            {
-                OwnerIdentifier[i]  = UNSPECIFIED_OWNER;
-                break;
-            }
+    	for( i=0; i<MAX_BUFFER_OWNER_IDENTIFIERS; i++ )
+	    if( OwnerIdentifier[i] == OldOwnerIdentifier )
+	    {
+	    	OwnerIdentifier[i]	= UNSPECIFIED_OWNER;
+	    	break;
+	    }
     }
 
 //
 
-    if (ReferenceCountAfterDecrement == 0)
-        return Pool->ReleaseBuffer(this);
+    if( ReferenceCountAfterDecrement == 0 )
+	return Pool->ReleaseBuffer( this );
 
 //
 
@@ -759,91 +744,88 @@ BufferStatus_t   Buffer_Generic_c::DecrementReferenceCount(unsigned int  OldOwne
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Attach a buffer to this one
+//	Attach a buffer to this one
 //
 
-BufferStatus_t   Buffer_Generic_c::AttachBuffer(Buffer_t      Buffer)
+BufferStatus_t   Buffer_Generic_c::AttachBuffer( Buffer_t	  Buffer )
 {
-    unsigned int    i;
+unsigned int	i;
 
 //
 
-    AssertNonZeroReferenceCount("Buffer_Generic_c::AttachBuffer");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::AttachBuffer" );
 
-    OS_LockMutex(&Lock);
+    OS_LockMutex( &Lock );
+    for( i=0; i<MAX_ATTACHED_BUFFERS; i++ )
+	if( AttachedBuffers[i] == NULL )
+	{
+	    AttachedBuffers[i]	= Buffer;
+	    OS_UnLockMutex( &Lock );
+	    Buffer->IncrementReferenceCount();
+	    return BufferNoError;
+	}
 
-    for (i = 0; i < MAX_ATTACHED_BUFFERS; i++)
-        if (AttachedBuffers[i] == NULL)
-        {
-            AttachedBuffers[i]  = Buffer;
-            OS_UnLockMutex(&Lock);
-            Buffer->IncrementReferenceCount();
-            return BufferNoError;
-        }
-
-    report(severity_error, "Buffer_Generic_c::AttachBuffer - Too many buffers attached to this one.\n");
-    OS_UnLockMutex(&Lock);
+    report( severity_error, "Buffer_Generic_c::AttachBuffer - Too many buffers attached to this one.\n" );
+    OS_UnLockMutex( &Lock );
     return BufferTooManyAttachments;
 }
 
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Detach a buffer from this one
+//	Detach a buffer from this one
 //
 
-BufferStatus_t   Buffer_Generic_c::DetachBuffer(Buffer_t      Buffer)
+BufferStatus_t   Buffer_Generic_c::DetachBuffer( Buffer_t	  Buffer )
 {
-    unsigned int    i;
+unsigned int	i;
 
 //
 
-    AssertNonZeroReferenceCount("Buffer_Generic_c::DetachBuffer");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::DetachBuffer" );
 
-    OS_LockMutex(&Lock);
+    OS_LockMutex( &Lock );
+    for( i=0; i<MAX_ATTACHED_BUFFERS; i++ )
+	if( AttachedBuffers[i] == Buffer )
+	{
+	    AttachedBuffers[i]	= NULL;
+	    OS_UnLockMutex( &Lock );
+	    Buffer->DecrementReferenceCount( IdentifierAttachedToOtherBuffer );
+	    return BufferNoError;
+	}
 
-    for (i = 0; i < MAX_ATTACHED_BUFFERS; i++)
-        if (AttachedBuffers[i] == Buffer)
-        {
-            AttachedBuffers[i]  = NULL;
-            OS_UnLockMutex(&Lock);
-            Buffer->DecrementReferenceCount(IdentifierAttachedToOtherBuffer);
-            return BufferNoError;
-        }
-
-    report(severity_error, "Buffer_Generic_c::DetachBuffer - Attached buffer not found.\n");
-    OS_UnLockMutex(&Lock);
+    report( severity_error, "Buffer_Generic_c::DetachBuffer - Attached buffer not found.\n" );
+    OS_UnLockMutex( &Lock );
     return BufferAttachmentNotFound;
 }
 
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Obtain a meta data reference
+//	Obtain a meta data reference 
 //
 
-BufferStatus_t   Buffer_Generic_c::ObtainAttachedBufferReference(
-    BufferType_t      Type,
-    Buffer_t     *Buffer)
+BufferStatus_t	 Buffer_Generic_c::ObtainAttachedBufferReference(
+						BufferType_t	  Type,
+						Buffer_t	 *Buffer )
 {
-    unsigned int    i;
-    BufferType_t    AttachedType;
+unsigned int	i;
+BufferType_t	AttachedType;
 
 //
 
-    AssertNonZeroReferenceCount("Buffer_Generic_c::ObtainAttachedBufferReference");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::ObtainAttachedBufferReference" );
 
-    for (i = 0; i < MAX_ATTACHED_BUFFERS; i++)
-        if (AttachedBuffers[i] != NULL)
-        {
-            AttachedBuffers[i]->GetType(&AttachedType);
-
-            if (AttachedType == Type)
-            {
-                *Buffer = AttachedBuffers[i];
-                return BufferNoError;
-            }
-        }
+    for( i=0; i<MAX_ATTACHED_BUFFERS; i++ )
+	if( AttachedBuffers[i] != NULL )
+	{
+	    AttachedBuffers[i]->GetType( &AttachedType );
+	    if( AttachedType == Type )
+	    {
+		*Buffer	= AttachedBuffers[i];
+		return BufferNoError;
+	    }
+	}
 
     return BufferAttachmentNotFound;
 }
@@ -851,50 +833,49 @@ BufferStatus_t   Buffer_Generic_c::ObtainAttachedBufferReference(
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Discover the type of buffer supported by the pool
+//	Discover the type of buffer supported by the pool
 //
 
-BufferStatus_t   Buffer_Generic_c::GetType(BufferType_t  *Type)
+BufferStatus_t   Buffer_Generic_c::GetType(	BufferType_t	 *Type )
 {
     if (this)
-        AssertNonZeroReferenceCount("Buffer_Generic_c::GetType");
+        AssertNonZeroReferenceCount( "Buffer_Generic_c::GetType" );
 
-    *Type   = BufferBlock->Descriptor->Type;
+    *Type	= BufferBlock->Descriptor->Type;
     return BufferNoError;
 }
 
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Discover the type of buffer supported by the pool
+//	Discover the type of buffer supported nby the pool
 //
 
-BufferStatus_t   Buffer_Generic_c::GetIndex(unsigned int     *Index)
+BufferStatus_t   Buffer_Generic_c::GetIndex(	unsigned int	 *Index )
 {
-    AssertNonZeroReferenceCount("Buffer_Generic_c::GetIndex");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::GetIndex" );
 
-    *Index  = this->Index;
+    *Index	= this->Index;
     return BufferNoError;
 }
 
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//
+//	
 //
 
-BufferStatus_t   Buffer_Generic_c::GetMetaDataCount(unsigned int     *Count)
+BufferStatus_t   Buffer_Generic_c::GetMetaDataCount( 	unsigned int	 *Count )
 {
-    BlockDescriptor_t     Block;
+BlockDescriptor_t	  Block;
 
-    AssertNonZeroReferenceCount("Buffer_Generic_c::GetMetaDataCount");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::GetMetaDataCount" );
 
-    *Count  = 0;
-
-    for (Block    = ListOfMetaData;
-            Block  != NULL;
-            Block   = Block->Next)
-        (*Count)++;
+    *Count	= 0;
+    for( Block	 = ListOfMetaData;
+	 Block	!= NULL;
+	 Block	 = Block->Next )
+	(*Count)++;
 
     return BufferNoError;
 }
@@ -902,32 +883,31 @@ BufferStatus_t   Buffer_Generic_c::GetMetaDataCount(unsigned int     *Count)
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//
+//	
 //
 
-BufferStatus_t   Buffer_Generic_c::GetMetaDataList(unsigned int   ArraySize,
-        unsigned int     *ArrayOfMetaDataTypes)
+BufferStatus_t   Buffer_Generic_c::GetMetaDataList(	unsigned int	  ArraySize,
+							unsigned int	 *ArrayOfMetaDataTypes )
 {
-    unsigned int          i;
-    BlockDescriptor_t     Block;
+unsigned int		  i;
+BlockDescriptor_t	  Block;
 
 //
 
-    AssertNonZeroReferenceCount("Buffer_Generic_c::GetMetaDataList");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::GetMetaDataList" );
 
-    i   = 0;
-
-    for (Block    = ListOfMetaData;
-            (Block != NULL) && (i < ArraySize);
-            Block   = Block->Next)
-        ArrayOfMetaDataTypes[i++]   = Block->Descriptor->Type;
+    i 	= 0;
+    for( Block	 = ListOfMetaData;
+	 (Block	!= NULL) && (i<ArraySize);
+	 Block	 = Block->Next )
+	ArrayOfMetaDataTypes[i++]	= Block->Descriptor->Type;
 
 //
 
-    if (Block != NULL)
+    if( Block != NULL )
     {
-        report(severity_error, "Buffer_Generic_c::GetMetaDataList - Too many meta data types for array.\n");
-        return BufferError;
+	report( severity_error, "Buffer_Generic_c::GetMetaDataList - Too many meta data types for array.\n" );
+	return BufferError;
     }
 
 //
@@ -937,49 +917,48 @@ BufferStatus_t   Buffer_Generic_c::GetMetaDataList(unsigned int   ArraySize,
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//
+//	
 //
 
-BufferStatus_t   Buffer_Generic_c::GetOwnerCount(unsigned int    *Count)
+BufferStatus_t   Buffer_Generic_c::GetOwnerCount( 	unsigned int	 *Count )
 {
-    AssertNonZeroReferenceCount("Buffer_Generic_c::GetOwnerCount");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::GetOwnerCount" );
 
-    *Count  = ReferenceCount;
+    *Count	= ReferenceCount;
     return BufferNoError;
 }
 
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//
+//	
 //
 
-BufferStatus_t   Buffer_Generic_c::GetOwnerList(unsigned int      ArraySize,
-        unsigned int     *ArrayOfOwnerIdentifiers)
+BufferStatus_t   Buffer_Generic_c::GetOwnerList(	unsigned int	  ArraySize,
+							unsigned int	 *ArrayOfOwnerIdentifiers )
 {
-    unsigned int          i, j;
+unsigned int		  i,j;
 
 //
 
-    AssertNonZeroReferenceCount("Buffer_Generic_c::GetOwnerList");
+    AssertNonZeroReferenceCount( "Buffer_Generic_c::GetOwnerList" );
 
-    i   = 0;
+    i 	= 0;
+    for( j=0; j<MAX_BUFFER_OWNER_IDENTIFIERS; j++ )
+	if( OwnerIdentifier[j] != UNSPECIFIED_OWNER )
+	{
+	    if( i >= ArraySize )
+		break;
 
-    for (j = 0; j < MAX_BUFFER_OWNER_IDENTIFIERS; j++)
-        if (OwnerIdentifier[j] != UNSPECIFIED_OWNER)
-        {
-            if (i >= ArraySize)
-                break;
-
-            ArrayOfOwnerIdentifiers[i++]    = OwnerIdentifier[j];
-        }
+	    ArrayOfOwnerIdentifiers[i++]	= OwnerIdentifier[j];
+	}
 
 //
 
-    if (j < MAX_BUFFER_OWNER_IDENTIFIERS)
+    if( j < MAX_BUFFER_OWNER_IDENTIFIERS )
     {
-        report(severity_error, "Buffer_Generic_c::GetOwnerList - Too many owner identifiers for array.\n");
-        return BufferError;
+	report( severity_error, "Buffer_Generic_c::GetOwnerList - Too many owner identifiers for array.\n" );
+	return BufferError;
     }
 
 //
@@ -990,152 +969,145 @@ BufferStatus_t   Buffer_Generic_c::GetOwnerList(unsigned int      ArraySize,
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//
+//	
 //
 
-BufferStatus_t       Buffer_Generic_c::FlushCache(void)
+BufferStatus_t		 Buffer_Generic_c::FlushCache( void )
 {
 
-    OSDEV_FlushCacheRange((void*)BufferBlock->Address[CachedAddress], DataSize);
+	OSDEV_FlushCacheRange((void*)BufferBlock->Address[CachedAddress],DataSize);
 
-    return BufferNoError;
+	return BufferNoError;
 }
 
 
-BufferStatus_t       Buffer_Generic_c::PurgeCache(void)
+BufferStatus_t		 Buffer_Generic_c::PurgeCache( void )
 {
 
-    OSDEV_PurgeCacheRange((void*)BufferBlock->Address[CachedAddress], DataSize);
+	OSDEV_PurgeCacheRange((void*)BufferBlock->Address[CachedAddress],DataSize);
 
-    return BufferNoError;
+	return BufferNoError;
 }
 
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//
+//	
 //
 
-void         Buffer_Generic_c::Dump(unsigned int      Flags)
+void		 Buffer_Generic_c::Dump( unsigned int	  Flags )
 {
-    unsigned int          i;
-    unsigned int          LocalMetaCount;
-    BlockDescriptor_t     MetaData;
-    BufferDataDescriptor_t   *Descriptor;
+unsigned int		  i;
+unsigned int		  LocalMetaCount;
+BlockDescriptor_t	  MetaData;
+BufferDataDescriptor_t	 *Descriptor;
 
 //
 
-    if ((Flags & DumpBufferStates) != 0)
+    if( (Flags & DumpBufferStates) != 0 )
     {
-        report(severity_info, "\tBuffer (index %2d) of type %04x - '%s'\n", Index, BufferBlock->Descriptor->Type,
-               (BufferBlock->Descriptor->TypeName == NULL) ? "Unnamed" : BufferBlock->Descriptor->TypeName);
+	report( severity_info, "\tBuffer (index %2d) of type %04x - '%s'\n", Index, BufferBlock->Descriptor->Type, 
+			(BufferBlock->Descriptor->TypeName == NULL) ? "Unnamed" : BufferBlock->Descriptor->TypeName );
 
 //
 
-        report(severity_info, "\t    Current values  Size %06x, Occupied %06x, References %d\n",
-               BufferBlock->Size, DataSize, ReferenceCount);
+	report( severity_info, "\t    Current values  Size %06x, Occupied %06x, References %d\n",
+			BufferBlock->Size, DataSize, ReferenceCount );
 
-        if (ReferenceCount != 0)
-        {
-            report(severity_info, "\t    Current owners   ");
-
-            for (i = 0; i < MAX_BUFFER_OWNER_IDENTIFIERS; i++)
-                if (OwnerIdentifier[i] != UNSPECIFIED_OWNER)
-                    report(severity_info, " - %08x", OwnerIdentifier[i]);
-
-            report(severity_info, "\n");
-        }
+	if( ReferenceCount != 0 )
+	{
+	    report( severity_info, "\t    Current owners   " );
+	    for( i=0; i<MAX_BUFFER_OWNER_IDENTIFIERS; i++ )
+	        if( OwnerIdentifier[i] != UNSPECIFIED_OWNER )
+		    report( severity_info, " - %08x", OwnerIdentifier[i] );
+	    report( severity_info, "\n" );
+	}
 
 //
 
-        LocalMetaCount  = 0;
+	LocalMetaCount	= 0;
+	for( MetaData  = ListOfMetaData;
+	     MetaData != NULL;
+	     MetaData  = MetaData->Next )
+	    if( !MetaData->AttachedToPool )
+		LocalMetaCount++;
 
-        for (MetaData  = ListOfMetaData;
-                MetaData != NULL;
-                MetaData  = MetaData->Next)
-            if (!MetaData->AttachedToPool)
-                LocalMetaCount++;
+	report( severity_info, "\t    %s specifically attached to this buffer.\n", 
+		(LocalMetaCount == 0) ? "There are no Meta data items" : "The following meta data items are" );
 
-        report(severity_info, "\t    %s specifically attached to this buffer.\n",
-               (LocalMetaCount == 0) ? "There are no Meta data items" : "The following meta data items are");
+	for( MetaData  = ListOfMetaData;
+	     MetaData != NULL;
+	     MetaData  = MetaData->Next )
+	    if( !MetaData->AttachedToPool )
+		report( severity_info, "\t\t%04x - %s\n", MetaData->Descriptor->Type, 
+			(MetaData->Descriptor->TypeName == NULL) ? "Unnamed" : MetaData->Descriptor->TypeName );
 
-        for (MetaData  = ListOfMetaData;
-                MetaData != NULL;
-                MetaData  = MetaData->Next)
-            if (!MetaData->AttachedToPool)
-                report(severity_info, "\t\t%04x - %s\n", MetaData->Descriptor->Type,
-                       (MetaData->Descriptor->TypeName == NULL) ? "Unnamed" : MetaData->Descriptor->TypeName);
-
-        for (i = 0; i < MAX_ATTACHED_BUFFERS; i++)
-            if (AttachedBuffers[i] != NULL)
-            {
-                Descriptor  = ((Buffer_Generic_c *)AttachedBuffers[i])->Pool->BufferDescriptor;
-                report(severity_info, "\t    Buffer of type %04x - %s attached\n", Descriptor->Type,
-                       (Descriptor->TypeName == NULL) ? "Unnamed" : Descriptor->TypeName);
-            }
+	for( i=0; i<MAX_ATTACHED_BUFFERS; i++ )
+	    if( AttachedBuffers[i] != NULL )
+	    {
+		Descriptor	= ((Buffer_Generic_c *)AttachedBuffers[i])->Pool->BufferDescriptor;
+		report( severity_info, "\t    Buffer of type %04x - %s attached\n", Descriptor->Type,
+			(Descriptor->TypeName == NULL) ? "Unnamed" : Descriptor->TypeName );
+	    }
     }
 
 }
 
 //will need to pass in Player ref, or the type.. and what about the struct def too...
-void Buffer_Generic_c::DumpToRelayFS(unsigned int id, unsigned int source, void *param)
+void Buffer_Generic_c::DumpToRelayFS( unsigned int id, unsigned int source, void *param )
 {
 
-    BufferStatus_t          BufferStatus;
-    ParsedAudioParameters_t *TheAudioParameters;
-    struct ParsedVideoParameters_s* TheVideoParameters;
-    Player_Generic_t Player = (Player_Generic_t) param;
+	BufferStatus_t          BufferStatus;
+	ParsedAudioParameters_t *TheAudioParameters;
+    	struct ParsedVideoParameters_s* TheVideoParameters;
+	Player_Generic_t Player = (Player_Generic_t) param;
 
-    switch (id)
-    {
+	switch(id) {
 
-        case ST_RELAY_TYPE_DECODED_AUDIO_BUFFER:
-            BufferStatus = ObtainMetaDataReference(Player->MetaDataParsedAudioParametersType, (void**) &TheAudioParameters);
+	case ST_RELAY_TYPE_DECODED_AUDIO_BUFFER:
+		BufferStatus = ObtainMetaDataReference (Player->MetaDataParsedAudioParametersType, (void**) &TheAudioParameters);
+		if (BufferStatus == BufferNoError)
+		{
+			if(BufferBlock->Address[UnCachedAddress]) {
+			if(TheAudioParameters->SampleCount>0)
+				st_relayfs_write(id, source, (unsigned char *)BufferBlock->Address[UnCachedAddress],
+					(unsigned int)(TheAudioParameters->SampleCount *
+							TheAudioParameters->Source.ChannelCount *
+							(TheAudioParameters->Source.BitsPerSample / 8)),
+					0
+				);
+			}
+		}
+		break;
 
-            if (BufferStatus == BufferNoError)
-            {
-                if (BufferBlock->Address[UnCachedAddress])
-                {
-                    if (TheAudioParameters->SampleCount > 0)
-                        st_relayfs_write(id, source, (unsigned char *)BufferBlock->Address[UnCachedAddress],
-                                         (unsigned int)(TheAudioParameters->SampleCount *
-                                                        TheAudioParameters->Source.ChannelCount *
-                                                        (TheAudioParameters->Source.BitsPerSample / 8)),
-                                         0
-                                        );
-                }
-            }
+	case ST_RELAY_TYPE_DECODED_VIDEO_BUFFER:
+		BufferStatus = ObtainMetaDataReference (Player->MetaDataParsedVideoParametersType, (void**)&TheVideoParameters);
+		if (BufferStatus == BufferNoError)
+		{
+			struct relay_video_frame_info_s info;
 
-            break;
+			info.width         = TheVideoParameters->Content.Width;
+			info.height        = TheVideoParameters->Content.Height;
+			info.type          = 0;                              //TODO: just ASSUMING SURF_YCBCR420MB for now
+			info.luma_offset   = 0; //SurfaceDescriptor.LumaOffset;
+			info.chroma_offset = ((BufferBlock->Size*2)/3); //SurfaceDescriptor.ChromaOffset;
 
-        case ST_RELAY_TYPE_DECODED_VIDEO_BUFFER:
-            BufferStatus = ObtainMetaDataReference(Player->MetaDataParsedVideoParametersType, (void**)&TheVideoParameters);
+			if(BufferBlock->Address[CachedAddress]) {
+				st_relayfs_write(id, source, (unsigned char *)BufferBlock->Address[CachedAddress],
+					(unsigned int)((TheVideoParameters->Content.Width *
+							TheVideoParameters->Content.Height *
+							4)/3), //TODO: just ASSUMING SURF_YCBCR420MB for now
+					&info
+				);
+			}
+		}
+		break;
 
-            if (BufferStatus == BufferNoError)
-            {
-                struct relay_video_frame_info_s info;
+	default:
+		break;
+	}
 
-                info.width         = TheVideoParameters->Content.Width;
-                info.height        = TheVideoParameters->Content.Height;
-                info.type          = 0;                              //TODO: just ASSUMING SURF_YCBCR420MB for now
-                info.luma_offset   = 0; //SurfaceDescriptor.LumaOffset;
-                info.chroma_offset = ((BufferBlock->Size * 2) / 3); //SurfaceDescriptor.ChromaOffset;
-
-                if (BufferBlock->Address[CachedAddress])
-                {
-                    st_relayfs_write(id, source, (unsigned char *)BufferBlock->Address[CachedAddress],
-                                     (unsigned int)((TheVideoParameters->Content.Width *
-                                                     TheVideoParameters->Content.Height *
-                                                     4) / 3), //TODO: just ASSUMING SURF_YCBCR420MB for now
-                                     &info
-                                    );
-                }
-            }
-
-            break;
-
-        default:
-            break;
-    }
 }
+
+
 

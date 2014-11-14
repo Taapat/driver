@@ -110,7 +110,7 @@ typedef struct H264ReferenceFrameData_s
     unsigned int        FrameNum;                       // H264 value
 
     int                 FrameNumWrap;                   // H264 derived every time we prepare a ref list
-    int                 PicNum;                         // H264
+    int                 PicNum;                         // H264 
 
     unsigned int        LongTermPicNum;                 // H264 value
 
@@ -150,224 +150,224 @@ typedef struct PanScanState_s
 
 class FrameParser_VideoH264_c : public FrameParser_Video_c
 {
-    private:
+private:
 
-        // Data
+    // Data
 
-        bool                                          ReadNewSPS;
-        bool                                          ReadNewSPSExtension;
-        bool                                          ReadNewPPS;
+    bool                                          ReadNewSPS;
+    bool                                          ReadNewSPSExtension;
+    bool                                          ReadNewPPS;
 
-        BufferType_t                                  SequenceParameterSetType;
-        BufferPool_t                                  SequenceParameterSetPool;
-        SequenceParameterSetEntry_t                   SequenceParameterSetTable[H264_STANDARD_MAX_SEQUENCE_PARAMETER_SETS];
+    BufferType_t                                  SequenceParameterSetType;
+    BufferPool_t                                  SequenceParameterSetPool;
+    SequenceParameterSetEntry_t                   SequenceParameterSetTable[H264_STANDARD_MAX_SEQUENCE_PARAMETER_SETS];
 
-        BufferType_t                                  PictureParameterSetType;
-        BufferPool_t                                  PictureParameterSetPool;
-        PictureParameterSetEntry_t                    PictureParameterSetTable[H264_STANDARD_MAX_PICTURE_PARAMETER_SETS];
+    BufferType_t                                  PictureParameterSetType;
+    BufferPool_t                                  PictureParameterSetPool;
+    PictureParameterSetEntry_t                    PictureParameterSetTable[H264_STANDARD_MAX_PICTURE_PARAMETER_SETS];
 
-        H264SequenceParameterSetHeader_t              CopyOfSequenceParameterSet;           // Copies of last set stream parameters components
-        H264SequenceParameterSetExtensionHeader_t     CopyOfSequenceParameterSetExtension;
-        H264PictureParameterSetHeader_t               CopyOfPictureParameterSet;
+    H264SequenceParameterSetHeader_t              CopyOfSequenceParameterSet;           // Copies of last set stream parameters components
+    H264SequenceParameterSetExtensionHeader_t     CopyOfSequenceParameterSetExtension;
+    H264PictureParameterSetHeader_t               CopyOfPictureParameterSet;
 
-        H264StreamParameters_t                       *StreamParameters;
-        H264FrameParameters_t                        *FrameParameters;
+    H264StreamParameters_t                       *StreamParameters;
+    H264FrameParameters_t                        *FrameParameters;
 
-        bool                                          UserSpecifiedDefaultFrameRate;
-        Rational_t                                    DefaultFrameRate;
-        Rational_t                                    DefaultPixelAspectRatio;
+    bool					  UserSpecifiedDefaultFrameRate;
+    Rational_t                                    DefaultFrameRate;
+    Rational_t                                    DefaultPixelAspectRatio;
 
-        bool                                          SeenAnIDR;
-        bool                                          BehaveAsIfSeenAnIDR;          // for use in IDR free streams (broadcast BBC)
-        H264SliceHeader_t                *SliceHeader;
-        H264SEIPictureTiming_t                        SEIPictureTiming;
-        H264SEIPanScanRectangle_t                     SEIPanScanRectangle;
-        // otherwise just re-use the last established list.
+    bool                                          SeenAnIDR;
+    bool                                          BehaveAsIfSeenAnIDR;			// for use in IDR free streams (broadcast BBC)
+    H264SliceHeader_t				 *SliceHeader;
+    H264SEIPictureTiming_t                        SEIPictureTiming;
+    H264SEIPanScanRectangle_t                     SEIPanScanRectangle;
+    // otherwise just re-use the last established list.
 
-        unsigned int                                  AccumulatedFrameNumber;
-        bool                                          AccumulatedReferenceField;
-        ParsedVideoParameters_t                      *AccumulatedParsedVideoParameters;
+    unsigned int                                  AccumulatedFrameNumber;
+    bool                                          AccumulatedReferenceField;
+    ParsedVideoParameters_t                      *AccumulatedParsedVideoParameters;
 
-        unsigned int                  FrameSliceType;           // Slice type of first slice in frame
-        bool                      FrameSliceTypeVaries;         // indicator that slice type varies over the slices in a frame
+    unsigned int				  FrameSliceType;			// Slice type of first slice in frame
+    bool					  FrameSliceTypeVaries;			// indicator that slice type varies over the slices in a frame
 
-        bool                      SeenProbableReversalPoint;
+    bool					  SeenProbableReversalPoint;
 
-        //
-        // Reference Frames
-        //    Thats N frames
-        //    +1 for adding one before performing selection process for deletion
-        //
+    //
+    // Reference Frames
+    //    Thats N frames
+    //    +1 for adding one before performing selection process for deletion
+    //
 
-        unsigned int                                  NumReferenceFrames;
+    unsigned int                                  NumReferenceFrames;
 
-        unsigned int                                  MaxLongTermFrameIdx;
-        unsigned int                                  NumLongTerm;
-        unsigned int                                  NumShortTerm;
+    unsigned int                                  MaxLongTermFrameIdx;
+    unsigned int                                  NumLongTerm;
+    unsigned int                                  NumShortTerm;
 
-        ReferenceFrameList_t                          ReferenceFrameList[H264_NUM_REF_FRAME_LISTS];
-        ReferenceFrameList_t                          ReferenceFrameListShortTerm[2];
-        ReferenceFrameList_t                          ReferenceFrameListLongTerm;
+    ReferenceFrameList_t                          ReferenceFrameList[H264_NUM_REF_FRAME_LISTS];
+    ReferenceFrameList_t                          ReferenceFrameListShortTerm[2];
+    ReferenceFrameList_t                          ReferenceFrameListLongTerm;
 
-        H264ReferenceFrameData_t                      ReferenceFrames[H264_MAX_REFERENCE_FRAMES + 1];
+    H264ReferenceFrameData_t                      ReferenceFrames[H264_MAX_REFERENCE_FRAMES + 1];
 
-        H264DeferredDFIandPTSList_t                   DeferredList[H264_CODED_FRAME_COUNT];
-        unsigned int                                  DeferredListEntries;
-        unsigned int                                  OrderedDeferredList[H264_CODED_FRAME_COUNT];
+    H264DeferredDFIandPTSList_t                   DeferredList[H264_CODED_FRAME_COUNT];
+    unsigned int                                  DeferredListEntries;
+    unsigned int                                  OrderedDeferredList[H264_CODED_FRAME_COUNT];
 
-        bool                                          FirstFieldSeen;                       // Deductions about interlaced and topfield first flags
-        bool                                          FixDeducedFlags;
-        unsigned long long                            LastFieldExtendedPicOrderCnt;
-        bool                                          DeducedInterlacedFlag;
-        bool                                          DeducedTopFieldFirst;
+    bool                                          FirstFieldSeen;                       // Deductions about interlaced and topfield first flags
+    bool                                          FixDeducedFlags;
+    unsigned long long                            LastFieldExtendedPicOrderCnt;
+    bool                                          DeducedInterlacedFlag;
+    bool                                          DeducedTopFieldFirst;
 
-        bool                      ForceInterlacedProgressive;
-        bool                      ForcedInterlacedFlag;
+    bool					  ForceInterlacedProgressive;
+    bool					  ForcedInterlacedFlag;
 
-        PanScanState_t                                PanScanState;
+    PanScanState_t                                PanScanState;
 
-        //
-        // H264 context variables
-        //
+    //
+    // H264 context variables
+    //
 
-        unsigned int                                  nal_ref_idc;                          // Part of Nal header
-        unsigned int                                  nal_unit_type;                        // Part of Nal header
+    unsigned int                                  nal_ref_idc;                          // Part of Nal header
+    unsigned int                                  nal_unit_type;                        // Part of Nal header
 
-        unsigned int                                  CpbDpbDelaysPresentFlag;
-        unsigned int                                  CpbRemovalDelayLength;
-        unsigned int                                  DpbOutputDelayLength;
-        unsigned int                                  PicStructPresentFlag;
-        unsigned int                                  TimeOffsetLength;
+    unsigned int                                  CpbDpbDelaysPresentFlag;
+    unsigned int                                  CpbRemovalDelayLength;
+    unsigned int                                  DpbOutputDelayLength;
+    unsigned int                                  PicStructPresentFlag;
+    unsigned int                                  TimeOffsetLength;
 
-        int                                           PrevPicOrderCntMsb;                   // Set for use on the next pass through
-        unsigned int                                  PrevPicOrderCntLsb;
-        unsigned int                                  PrevFrameNum;
-        unsigned int                                  PrevFrameNumOffset;
-        unsigned long long                            PicOrderCntOffset;                    // Offset increased every IDR to allow Displayframe indices to be derived
-        unsigned long long                            PicOrderCntOffsetAdjust;
-        bool                                          SeenDpbValue;
-        unsigned int                                  BaseDpbValue;
-        unsigned int                                  LastCpbDpbDelaysPresentFlag;
+    int                                           PrevPicOrderCntMsb;                   // Set for use on the next pass through
+    unsigned int                                  PrevPicOrderCntLsb;
+    unsigned int                                  PrevFrameNum;
+    unsigned int                                  PrevFrameNumOffset;
+    unsigned long long                            PicOrderCntOffset;                    // Offset increased every IDR to allow Displayframe indices to be derived
+    unsigned long long				  PicOrderCntOffsetAdjust;
+    bool                                          SeenDpbValue;
+    unsigned int                                  BaseDpbValue;
+    unsigned int                                  LastCpbDpbDelaysPresentFlag;
 
-        bool                                          DisplayOrderByDpbValues;
-        bool                                          DpbValuesInvalidatedByPTS;
+    bool					  DisplayOrderByDpbValues;
+    bool					  DpbValuesInvalidatedByPTS;
 
-        //
-        // Copies of context variables that are used when we
-        // are trying to handle reverse decode
-        //
+    //
+    // Copies of context variables that are used when we 
+    // are trying to handle reverse decode
+    //
 
-        unsigned int                  LastExitPicOrderCntMsb;       // Last msb actually seen by calculate pic order cnts
+    unsigned int				  LastExitPicOrderCntMsb;		// Last msb actually seen by calculate pic order cnts
 
-        // Functions
+    // Functions
 
-        bool                  NewStreamParametersCheck(void);
-        FrameParserStatus_t   PrepareNewStreamParameters(void);
-        FrameParserStatus_t   CommitFrameForDecode(void);
+    bool                  NewStreamParametersCheck(     void );
+    FrameParserStatus_t   PrepareNewStreamParameters(   void );
+    FrameParserStatus_t   CommitFrameForDecode(         void );
 
-        FrameParserStatus_t   SetDefaultSequenceParameterSet(H264SequenceParameterSetHeader_t *Header);
-        FrameParserStatus_t   SetDefaultSliceHeader(H264SliceHeader_t        *Header);
+    FrameParserStatus_t   SetDefaultSequenceParameterSet( H264SequenceParameterSetHeader_t *Header );
+    FrameParserStatus_t   SetDefaultSliceHeader( 	H264SliceHeader_t		 *Header );
 
-        void                  PrepareScannedScalingLists(void);
-        FrameParserStatus_t   ReadScalingList(bool                              ScalingListPresent,
-                                              unsigned int                     *ScalingList,
-                                              unsigned int                     *Default,
-                                              unsigned int                     *Fallback,
-                                              unsigned int                      SizeOfScalingList,
-                                              unsigned int                     *UseDefaultScalingMatrixFlag);
-        FrameParserStatus_t   ReadHrdParameters(H264HrdParameters_t              *Header);
-        FrameParserStatus_t   ReadVUISequenceParameters(H264VUISequenceParameters_t      *Header);
-        FrameParserStatus_t   ReadNalSequenceParameterSet(void);
-        FrameParserStatus_t   ReadNalSequenceParameterSetExtension(void);
-        FrameParserStatus_t   ReadNalPictureParameterSet(void);
-        FrameParserStatus_t   ReadRefPicListReordering(void);
-        FrameParserStatus_t   ReadPredWeightTable(void);
-        FrameParserStatus_t   ReadDecRefPicMarking(void);
-        FrameParserStatus_t   ReadNalSliceHeader(void);
-        FrameParserStatus_t   ReadSeiPictureTimingMessage(void);
-        FrameParserStatus_t   ReadSeiPanScanMessage(void);
-        FrameParserStatus_t   ReadSeiPayload(unsigned int                      PayloadType,
-                                             unsigned int                      PayloadSize);
-        FrameParserStatus_t   ReadNalSupplementalEnhancementInformation(unsigned int      UnitLength);
-        FrameParserStatus_t   ReadPlayer2ContainerParameters(void);
+    void                  PrepareScannedScalingLists(   void );
+    FrameParserStatus_t   ReadScalingList(              bool                              ScalingListPresent,
+							unsigned int                     *ScalingList,
+							unsigned int                     *Default,
+							unsigned int                     *Fallback,
+							unsigned int                      SizeOfScalingList,
+							unsigned int                     *UseDefaultScalingMatrixFlag );
+    FrameParserStatus_t   ReadHrdParameters(            H264HrdParameters_t              *Header );
+    FrameParserStatus_t   ReadVUISequenceParameters(    H264VUISequenceParameters_t      *Header );
+    FrameParserStatus_t   ReadNalSequenceParameterSet(  void );
+    FrameParserStatus_t   ReadNalSequenceParameterSetExtension( void );
+    FrameParserStatus_t   ReadNalPictureParameterSet(   void );
+    FrameParserStatus_t   ReadRefPicListReordering(     void );
+    FrameParserStatus_t   ReadPredWeightTable(          void );
+    FrameParserStatus_t   ReadDecRefPicMarking(         void );
+    FrameParserStatus_t   ReadNalSliceHeader(           void );
+    FrameParserStatus_t   ReadSeiPictureTimingMessage(  void );
+    FrameParserStatus_t   ReadSeiPanScanMessage(        void );
+    FrameParserStatus_t   ReadSeiPayload(               unsigned int                      PayloadType,
+							unsigned int                      PayloadSize );
+    FrameParserStatus_t   ReadNalSupplementalEnhancementInformation( unsigned int	  UnitLength );
+    FrameParserStatus_t   ReadPlayer2ContainerParameters( void );
 
-        FrameParserStatus_t   CalculatePicOrderCnts(void);
+    FrameParserStatus_t   CalculatePicOrderCnts(        void );
 
-        FrameParserStatus_t   CalculateReferencePictureListsFrame(void);
-        FrameParserStatus_t   CalculateReferencePictureListsField(void);
-        FrameParserStatus_t   InitializePSliceReferencePictureListFrame(void);
-        FrameParserStatus_t   InitializePSliceReferencePictureListField(void);
-        FrameParserStatus_t   InitializeBSliceReferencePictureListsFrame(void);
-        FrameParserStatus_t   InitializeBSliceReferencePictureListsField(void);
-        FrameParserStatus_t   InitializeReferencePictureListField(ReferenceFrameList_t     *ShortTermList,
-                ReferenceFrameList_t     *LongTermList,
-                unsigned int              MaxListEntries,
-                ReferenceFrameList_t     *List);
+    FrameParserStatus_t   CalculateReferencePictureListsFrame(          void );
+    FrameParserStatus_t   CalculateReferencePictureListsField(          void );
+    FrameParserStatus_t   InitializePSliceReferencePictureListFrame(    void );
+    FrameParserStatus_t   InitializePSliceReferencePictureListField(    void );
+    FrameParserStatus_t   InitializeBSliceReferencePictureListsFrame(   void );
+    FrameParserStatus_t   InitializeBSliceReferencePictureListsField(   void );
+    FrameParserStatus_t   InitializeReferencePictureListField(          ReferenceFrameList_t     *ShortTermList,
+									ReferenceFrameList_t     *LongTermList,
+									unsigned int              MaxListEntries,
+									ReferenceFrameList_t     *List );
 
-        FrameParserStatus_t   ReleaseReference(bool                      ActuallyRelease,
-                                               unsigned int              Entry,
-                                               unsigned int              ReleaseUsage);
+    FrameParserStatus_t   ReleaseReference(                             bool                      ActuallyRelease,
+									unsigned int              Entry,
+									unsigned int              ReleaseUsage );
 
-        FrameParserStatus_t   MarkReferencePictures(bool                      ActuallyReleaseReferenceFrames);
+    FrameParserStatus_t   MarkReferencePictures(                        bool                      ActuallyReleaseReferenceFrames );
 
-        void                  ProcessDeferredDFIandPTSUpto(unsigned long long        ExtendedPicOrderCnt);
-        void                  ProcessDeferredDFIandPTSDownto(unsigned long long        ExtendedPicOrderCnt);
-        void                  DeferDFIandPTSGeneration(Buffer_t                  Buffer,
-                ParsedFrameParameters_t  *ParsedFrameParameters,
-                ParsedVideoParameters_t  *ParsedVideoParameters,
-                unsigned long long        ExtendedPicOrderCnt);
+    void                  ProcessDeferredDFIandPTSUpto(                 unsigned long long        ExtendedPicOrderCnt );
+    void                  ProcessDeferredDFIandPTSDownto(               unsigned long long        ExtendedPicOrderCnt );
+    void                  DeferDFIandPTSGeneration(                     Buffer_t                  Buffer,
+									ParsedFrameParameters_t  *ParsedFrameParameters,
+									ParsedVideoParameters_t  *ParsedVideoParameters,
+									unsigned long long        ExtendedPicOrderCnt );
 
-        void                  SetupPanScanValues(ParsedFrameParameters_t  *ParsedFrameParameters,
-                ParsedVideoParameters_t  *ParsedVideoParameters);
-        void                  CalculateCropUnits(void);
-    public:
+    void                  SetupPanScanValues(                           ParsedFrameParameters_t  *ParsedFrameParameters,
+									ParsedVideoParameters_t  *ParsedVideoParameters );
+    void                  CalculateCropUnits(                           void );
+public:
 
-        //
-        // Constructor function
-        //
+    //
+    // Constructor function
+    //
 
-        FrameParser_VideoH264_c(void);
-        ~FrameParser_VideoH264_c(void);
+    FrameParser_VideoH264_c( void );
+    ~FrameParser_VideoH264_c( void );
 
-        //
-        // Overrides for component base class functions
-        //
+    //
+    // Overrides for component base class functions
+    //
 
-        FrameParserStatus_t   Reset(void);
+    FrameParserStatus_t   Reset(                void );
 
-        //
-        // FrameParser class functions
-        //
+    //
+    // FrameParser class functions
+    //
 
-        FrameParserStatus_t   RegisterOutputBufferRing(Ring_t          Ring);
+    FrameParserStatus_t   RegisterOutputBufferRing(     Ring_t          Ring );
 
-        FrameParserStatus_t   ResetCollatedHeaderState(void);
-        unsigned int      RequiredPresentationLength(unsigned char        StartCode);
-        FrameParserStatus_t   PresentCollatedHeader(unsigned char         StartCode,
-                unsigned char        *HeaderBytes,
-                FrameParserHeaderFlag_t  *Flags);
+    FrameParserStatus_t   ResetCollatedHeaderState(	void );
+    unsigned int	  RequiredPresentationLength(	unsigned char		  StartCode );
+    FrameParserStatus_t   PresentCollatedHeader(	unsigned char		  StartCode,
+							unsigned char		 *HeaderBytes,
+							FrameParserHeaderFlag_t	 *Flags );
 
-        //
-        // Stream specific functions
-        //
+    //
+    // Stream specific functions
+    //
 
-        FrameParserStatus_t   ReadHeaders(void);
-        FrameParserStatus_t   ResetReferenceFrameList(void);
-        FrameParserStatus_t   PrepareReferenceFrameList(void);
+    FrameParserStatus_t   ReadHeaders(                                          void );
+    FrameParserStatus_t   ResetReferenceFrameList(                              void );
+    FrameParserStatus_t   PrepareReferenceFrameList(                            void );
 
-        FrameParserStatus_t   ForPlayUpdateReferenceFrameList(void);
-        FrameParserStatus_t   ForPlayProcessQueuedPostDecodeParameterSettings(void);
-        FrameParserStatus_t   ForPlayGeneratePostDecodeParameterSettings(void);
-        FrameParserStatus_t   ForPlayPurgeQueuedPostDecodeParameterSettings(void);
+    FrameParserStatus_t   ForPlayUpdateReferenceFrameList(                      void );
+    FrameParserStatus_t   ForPlayProcessQueuedPostDecodeParameterSettings(      void );
+    FrameParserStatus_t   ForPlayGeneratePostDecodeParameterSettings(           void );
+    FrameParserStatus_t   ForPlayPurgeQueuedPostDecodeParameterSettings(        void );
 
-        FrameParserStatus_t   RevPlayQueueFrameForDecode(void);
-        FrameParserStatus_t   RevPlayProcessDecodeStacks(void);
-        FrameParserStatus_t   RevPlayGeneratePostDecodeParameterSettings(void);
-        FrameParserStatus_t   RevPlayPurgeQueuedPostDecodeParameterSettings(void);
-        FrameParserStatus_t   RevPlayAppendToReferenceFrameList(void);
-        FrameParserStatus_t   RevPlayRemoveReferenceFrameFromList(void);
-        FrameParserStatus_t   RevPlayJunkReferenceFrameList(void);
-        FrameParserStatus_t   RevPlayNextSequenceFrameProcess(void);
+    FrameParserStatus_t   RevPlayQueueFrameForDecode( 				void );
+    FrameParserStatus_t   RevPlayProcessDecodeStacks(                           void );
+    FrameParserStatus_t   RevPlayGeneratePostDecodeParameterSettings(           void );
+    FrameParserStatus_t   RevPlayPurgeQueuedPostDecodeParameterSettings(        void );
+    FrameParserStatus_t   RevPlayAppendToReferenceFrameList(                    void );
+    FrameParserStatus_t   RevPlayRemoveReferenceFrameFromList(                  void );
+    FrameParserStatus_t   RevPlayJunkReferenceFrameList(                        void );
+    FrameParserStatus_t   RevPlayNextSequenceFrameProcess(                      void );
 };
 
 #endif

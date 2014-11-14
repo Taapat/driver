@@ -55,12 +55,12 @@ static unsigned int              RegisterBase;
 #define VIDEO_REGISTER_SIZE     0x1000
 
 static void inline MapRegisters(void)
-{
-    RegisterBase = (unsigned int)OSDEV_IOReMap(VIDEO_REGISTER_BASE, VIDEO_REGISTER_SIZE);
+{    
+    RegisterBase = (unsigned int)OSDEV_IOReMap( VIDEO_REGISTER_BASE, VIDEO_REGISTER_SIZE);
 }
 static void inline UnMapRegisters(void)
 {
-    OSDEV_IOUnMap(RegisterBase);
+    OSDEV_IOUnMap( RegisterBase );
 }
 
 

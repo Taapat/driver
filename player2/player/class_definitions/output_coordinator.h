@@ -43,23 +43,23 @@ Date        Modification                                    Name
 
 enum
 {
-    OutputCoordinatorNoError                = PlayerNoError,
-    OutputCoordinatorError              = PlayerError,
+    OutputCoordinatorNoError				= PlayerNoError,
+    OutputCoordinatorError				= PlayerError,
 
 //
 
-    OutputCoordinatorMappingNotEstablished      = BASE_OUTPUT_COORDINATOR,
+    OutputCoordinatorMappingNotEstablished		= BASE_OUTPUT_COORDINATOR,
     OutputCoordinatorAbandonedWait,
     OutputCoordinatorMappingAdjusted
 };
 
-typedef PlayerStatus_t  OutputCoordinatorStatus_t;
+typedef PlayerStatus_t	OutputCoordinatorStatus_t;
 
 //
 
 enum
 {
-    OutputCoordinatorFnRegisterStream           = BASE_OUTPUT_COORDINATOR,
+    OutputCoordinatorFnRegisterStream			= BASE_OUTPUT_COORDINATOR,
     OutputCoordinatorFnDeRegisterStream,
     OutputCoordinatorFnSetPlaybackSpeed,
     OutputCoordinatorFnResetTimeMapping,
@@ -78,13 +78,13 @@ enum
 
 // ---------------------------------------------------------------------
 //
-// Context definition - Note this is an obfuscated
+// Context definition - Note this is an obfuscated 
 // type you are not supposed to know what it is.
 //
 
 typedef struct OutputCoordinatorContext_s           *OutputCoordinatorContext_t;
 
-#define PlaybackContext     NULL
+#define PlaybackContext		NULL
 
 // ---------------------------------------------------------------------
 //
@@ -93,82 +93,82 @@ typedef struct OutputCoordinatorContext_s           *OutputCoordinatorContext_t;
 
 class OutputCoordinator_c : public BaseComponentClass_c
 {
-    public:
+public:
 
-        virtual OutputCoordinatorStatus_t   RegisterStream(PlayerStream_t             Stream,
-                PlayerStreamType_t        StreamType,
-                OutputCoordinatorContext_t   *Context) = 0;
+    virtual OutputCoordinatorStatus_t   RegisterStream(		PlayerStream_t			  Stream,
+								PlayerStreamType_t		  StreamType,
+								OutputCoordinatorContext_t	 *Context ) = 0;
 
-        virtual OutputCoordinatorStatus_t   DeRegisterStream(OutputCoordinatorContext_t   Context) = 0;
+    virtual OutputCoordinatorStatus_t   DeRegisterStream(	OutputCoordinatorContext_t	  Context ) = 0;
 
-        virtual OutputCoordinatorStatus_t   SetPlaybackSpeed(OutputCoordinatorContext_t   Context,
-                Rational_t            Speed,
-                PlayDirection_t           Direction) = 0;
+    virtual OutputCoordinatorStatus_t   SetPlaybackSpeed(	OutputCoordinatorContext_t	  Context,
+								Rational_t			  Speed,
+								PlayDirection_t			  Direction ) = 0;
 
-        virtual OutputCoordinatorStatus_t   ResetTimeMapping(OutputCoordinatorContext_t   Context) = 0;
+    virtual OutputCoordinatorStatus_t   ResetTimeMapping(	OutputCoordinatorContext_t	  Context ) = 0;
 
-        virtual OutputCoordinatorStatus_t   EstablishTimeMapping(OutputCoordinatorContext_t   Context,
-                unsigned long long        NormalizedPlaybackTime,
-                unsigned long long        SystemTime = INVALID_TIME) = 0;
+    virtual OutputCoordinatorStatus_t   EstablishTimeMapping(	OutputCoordinatorContext_t	  Context,
+								unsigned long long		  NormalizedPlaybackTime,
+								unsigned long long		  SystemTime = INVALID_TIME ) = 0;
 
-        virtual OutputCoordinatorStatus_t   TranslatePlaybackTimeToSystem(
-            OutputCoordinatorContext_t    Context,
-            unsigned long long        NormalizedPlaybackTime,
-            unsigned long long       *SystemTime) = 0;
+    virtual OutputCoordinatorStatus_t   TranslatePlaybackTimeToSystem(
+								OutputCoordinatorContext_t	  Context,
+								unsigned long long		  NormalizedPlaybackTime,
+								unsigned long long		 *SystemTime ) = 0;
 
-        virtual OutputCoordinatorStatus_t   TranslateSystemTimeToPlayback(
-            OutputCoordinatorContext_t    Context,
-            unsigned long long        SystemTime,
-            unsigned long long       *NormalizedPlaybackTime) = 0;
+    virtual OutputCoordinatorStatus_t   TranslateSystemTimeToPlayback(
+								OutputCoordinatorContext_t	  Context,
+								unsigned long long		  SystemTime,
+								unsigned long long		 *NormalizedPlaybackTime ) = 0;
 
-        virtual OutputCoordinatorStatus_t   SynchronizeStreams(OutputCoordinatorContext_t     Context,
-                unsigned long long        NormalizedPlaybackTime,
-                unsigned long long        NormalizedDecodeTime,
-                unsigned long long       *SystemTime) = 0;
+    virtual OutputCoordinatorStatus_t   SynchronizeStreams(	OutputCoordinatorContext_t	  Context,
+								unsigned long long		  NormalizedPlaybackTime,
+								unsigned long long		  NormalizedDecodeTime,
+								unsigned long long		 *SystemTime ) = 0;
 
-        virtual OutputCoordinatorStatus_t   PerformEntryIntoDecodeWindowWait(
-            OutputCoordinatorContext_t    Context,
-            unsigned long long        NormalizedDecodeTime,
-            unsigned long long        DecodeWindowPorch,
-            unsigned long long        MaximumAllowedSleepTime) = 0;
+    virtual OutputCoordinatorStatus_t   PerformEntryIntoDecodeWindowWait(
+								OutputCoordinatorContext_t	  Context,
+								unsigned long long		  NormalizedDecodeTime,
+								unsigned long long		  DecodeWindowPorch,
+								unsigned long long		  MaximumAllowedSleepTime ) = 0;
 
-        virtual OutputCoordinatorStatus_t   HandlePlaybackTimeDeltas(
-            OutputCoordinatorContext_t    Context,
-            bool                  KnownJump,
-            unsigned long long        ExpectedPlaybackTime,
-            unsigned long long        ActualPlaybackTime) = 0;
+    virtual OutputCoordinatorStatus_t   HandlePlaybackTimeDeltas(
+								OutputCoordinatorContext_t	  Context,
+								bool				  KnownJump,
+								unsigned long long		  ExpectedPlaybackTime,
+								unsigned long long		  ActualPlaybackTime ) = 0;
 
-        virtual OutputCoordinatorStatus_t   CalculateOutputRateAdjustment(
-            OutputCoordinatorContext_t    Context,
-            unsigned long long        ExpectedDuration,
-            unsigned long long        ActualDuration,
-            long long             CurrentError,
-            Rational_t           *OutputRateAdjustment,
-            Rational_t           *SystemClockAdjustment) = 0;
+    virtual OutputCoordinatorStatus_t   CalculateOutputRateAdjustment(
+								OutputCoordinatorContext_t	  Context,
+								unsigned long long		  ExpectedDuration,
+								unsigned long long		  ActualDuration,
+								long long			  CurrentError,
+								Rational_t			 *OutputRateAdjustment,
+								Rational_t			 *SystemClockAdjustment ) = 0;
 
-        virtual OutputCoordinatorStatus_t   RestartOutputRateIntegration(
-            OutputCoordinatorContext_t    Context) = 0;
+    virtual OutputCoordinatorStatus_t   RestartOutputRateIntegration(
+								OutputCoordinatorContext_t	  Context ) = 0;
 
-        virtual OutputCoordinatorStatus_t   AdjustMappingBase(OutputCoordinatorContext_t      Context,
-                long long             Adjustment) = 0;
+    virtual OutputCoordinatorStatus_t   AdjustMappingBase( 	OutputCoordinatorContext_t	  Context,
+								long long			  Adjustment ) = 0;
 
-        virtual OutputCoordinatorStatus_t   MappingBaseAdjustmentApplied(
-            OutputCoordinatorContext_t    Context) = 0;
+    virtual OutputCoordinatorStatus_t   MappingBaseAdjustmentApplied( 
+								OutputCoordinatorContext_t	  Context ) = 0;
 
-        virtual OutputCoordinatorStatus_t   GetStreamStartDelay(OutputCoordinatorContext_t    Context,
-                unsigned long long       *Delay) = 0;
+    virtual OutputCoordinatorStatus_t   GetStreamStartDelay(	OutputCoordinatorContext_t	  Context,
+								unsigned long long		 *Delay ) = 0;
 
-        virtual OutputCoordinatorStatus_t   MonitorVsyncOffset(OutputCoordinatorContext_t     Context,
-                unsigned long long        RequestedOutputTime,
-                unsigned long long        ActualOutputTime) = 0;
+    virtual OutputCoordinatorStatus_t   MonitorVsyncOffset( 	OutputCoordinatorContext_t	  Context, 
+								unsigned long long		  RequestedOutputTime, 
+								unsigned long long 		  ActualOutputTime ) = 0;
 
-        virtual OutputCoordinatorStatus_t   ClockRecoveryInitialize(PlayerTimeFormat_t        SourceTimeFormat) = 0;
+    virtual OutputCoordinatorStatus_t   ClockRecoveryInitialize(PlayerTimeFormat_t		  SourceTimeFormat ) = 0;
 
-        virtual OutputCoordinatorStatus_t   ClockRecoveryDataPoint(unsigned long long         SourceTime,
-                unsigned long long        LocalTime) = 0;
+    virtual OutputCoordinatorStatus_t   ClockRecoveryDataPoint(	unsigned long long		  SourceTime,
+								unsigned long long		  LocalTime ) = 0;
 
-        virtual OutputCoordinatorStatus_t   ClockRecoveryEstimate(unsigned long long         *SourceTime,
-                unsigned long long       *LocalTime) = 0;
+    virtual OutputCoordinatorStatus_t   ClockRecoveryEstimate(	unsigned long long		 *SourceTime,
+								unsigned long long		 *LocalTime ) = 0;
 
 };
 
@@ -179,8 +179,8 @@ class OutputCoordinator_c : public BaseComponentClass_c
 
 /*! \class OutputCoordinator_c
     \brief The OutputCoordinator class is responsible for coordinating the output timing of streams in a playback
-
-    This class is used to tie together the mappings between system time and playback time for the
+    
+    This class is used to tie together the mappings between system time and playback time for the 
     streams that make up a playback. It handles the establishment of that mapping whether by an imposed
     external setting (application level), or by synchronizing the start of a number of streams.
 
@@ -190,27 +190,27 @@ class OutputCoordinator_c : public BaseComponentClass_c
 
     Some notes on time mappings.
 
-    Time mappings global mappings for a playback, but have local, stream specific, aspects. A playback will move
-    from one time mapping to another one when a discontinuity is encountered within a playback. Since different
-    streams within a playback will have the discontinuity pass through timing functions at different (though closely
-    spaced) times, different streams will transition between time mappings at different times. Through careful management
-    of the context associated with a stream, and the implementation of the synchronize function, the output coordinator
+    Time mappings global mappings for a playback, but have local, stream specific, aspects. A playback will move 
+    from one time mnapping to another one when a discontinuity is encounterred within a playback. Since different 
+    streams within a playback will have the discontinuity pass thorugh timing functions at different (though closely 
+    spaced) times, different streams will transition between time mappings at different times. Through careful mangement 
+    of the context associated with a stream, and the implementation of the synchronize function, the output coordinator 
     must manage these phased transitions. In addition it is necessary for the functions that translate between time domains
-    to know which stream the translation is for (since the same playback time may generate completely different system
+    to know which stream the translation is for (since the same playback time may generate completely different system 
     times, depending on which mapping is in force).
-
+    
 */
 
-/*! \fn OutputCoordinatorStatus_t OutputCoordinator_c::RegisterStream(  PlayerStream_t            Stream,
-                                    PlayerStreamType_t        StreamType,
-                                                                    OutputCoordinatorContext_t       *Context );
+/*! \fn OutputCoordinatorStatus_t OutputCoordinator_c::RegisterStream( 	PlayerStream_t			  Stream,
+									PlayerStreamType_t		  StreamType,
+                                                                	OutputCoordinatorContext_t       *Context );
     \brief Register a stream to the OutputCoordinator.
 
-    This call informs the coordinator of a stream that is to be coordinated, and of the nature of that
-    stream, and obtains a context used to identify stream specific coordination information.
+    This call informs the coordinator of a stream that is to be coordinated, and of the nature of that 
+    stream, and obtains a context used to identify stream specific coordination information. 
 
-    Different policies, that may be in force in the player, affect the way in which different stream types
-    (audio/video/data) are handled in terms of synchronization etc... It is important then that the coordinator
+    Different policies, that may be in force in the player, affect the way in which different stream types 
+    (audio/video/data) are handled in terms of synchronization etc... It is important then that the coordinator 
     is aware of the type of a stream.
 
     \param Stream The stream to be coordinated.
@@ -220,7 +220,7 @@ class OutputCoordinator_c : public BaseComponentClass_c
     \return OutputCoordinator status code, OutputCoordinatorNoError indicates success.
 */
 
-/*! \fn OutputCoordinatorStatus_t OutputCoordinator_c::DeRegisterStream(OutputCoordinatorContext_t  Context );
+/*! \fn OutputCoordinatorStatus_t OutputCoordinator_c::DeRegisterStream(OutputCoordinatorContext_t	Context );
     \brief Remove a stream from consideration by the OutputCoordinator.
 
     Calling this function will remove the specified stream, identified by Context,  from consideration by the OutputCoordinator.
@@ -230,16 +230,16 @@ class OutputCoordinator_c : public BaseComponentClass_c
     \return OutputCoordinator status code, OutputCoordinatorNoError indicates success.
 */
 
-/*! \fn OutputCoordinatorStatus_t OutputCoordinator_c::SetPlaybackSpeed(OutputCoordinatorContext_t  Context,
-                                    Rational_t          Speed,
-                                    PlayDirection_t             Direction );
+/*! \fn OutputCoordinatorStatus_t OutputCoordinator_c::SetPlaybackSpeed(OutputCoordinatorContext_t	Context,
+									Rational_t			Speed,
+									PlayDirection_t         	Direction );
     \brief Inform the OutputCoordinator of a new playback speed and direction.
 
-    The playback speed affects the relative rate at which playback time passes with respect
-    to system time, and directly affects the mapping of playback times to system times. In
-    addition the setting of a new playback speed will abort any attempt to synchronize streams
-    for startup. Initially only the PlaybackContext will be allowed as the Context identifier,
-    if we ever get to understand the meaning of having different speeds for different streams we may allow
+    The playback speed affects the relative rate at which playback time passes with respect 
+    to system time, and directly affects the mapping of playback times to system times. In 
+    addition the setting of a new playback speed will abort any attempt to synchronize streams 
+    for startup. Initially only the PlaybackContext will be allowed as the Context identifier, 
+    if we ever get to understand the meaning of having different speeds for different streams we may allow 
     stream specific speed setting.
 
     \param Context Identifier for the context of the stream.
@@ -249,14 +249,14 @@ class OutputCoordinator_c : public BaseComponentClass_c
     \return OutputCoordinator status code, OutputCoordinatorNoError indicates success.
 */
 
-/*! \fn OutputCoordinatorStatus_t OutputCoordinator_c::ResetTimeMapping( OutputCoordinatorContext_t Context )
+/*! \fn OutputCoordinatorStatus_t OutputCoordinator_c::ResetTimeMapping( OutputCoordinatorContext_t	Context )
     \brief Invalidate the playback/system time mapping.
 
-    This function invalidates the mapping between system and playback times, for one stream, or for the whole playback.
-    It makes it impossible
-    to obtain translations between system and playback times until a new mapping has been established.
+    This function invalidates the mapping between system and playback times, for one stream, or for thew whole playback. 
+    It makes it impossible 
+    to obtain translations between system and playback times until a new mapping has beeen established.
 
-    A new mapping may be established by synchronizing the streams of a playback, or by
+    A new mapping may be established by synchronizing the streams of a playback, or by 
     imposing a mapping from the application.
 
     \param Context Stream context identifier.
@@ -268,18 +268,18 @@ class OutputCoordinator_c : public BaseComponentClass_c
                                                                 unsigned long long                NormalizedPlaybackTime,
                                                                 unsigned long long                SystemTime = INVALID_TIME );
     \brief Impose a playback/system time mapping.
-
-    This function allows the external application to impose a system/playback time mapping by
-    identifying a system time and playback time that are synchronous. If the system time is
+    
+    This function allows the external application to impose a system/playback time mapping by 
+    identifying a system time and playback time that are synchronous. If the system time is 
     specified as 'INVALID_TIME', then the current system time is used.
 
     It is anticipated that Context will be PlaybackContext.
 
-    It should be noted that the specification of a synchronous point forms only one part of
+    It should be noted that the specification of a synchronous point forms only one part of 
     the mapping, the complete mapping is specified by the identification of a synchronous point,
     plus a scaling factor which is the Speed of playback (or its' inverse).
 
-    Due to the nature of elapsing time, in order to guarantee a specific mapping it is important
+    Due to the nature of elapsing time, in order to guarantee a specific mapping it is important 
     to specify the speed before specifying the synchronous point.
 
     \param Context Stream context identifier.
@@ -290,53 +290,53 @@ class OutputCoordinator_c : public BaseComponentClass_c
 */
 
 /*! \fn OutputCoordinatorStatus_t OutputCoordinator_c::TranslatePlaybackTimeToSystem(
-                                OutputCoordinatorContext_t        Context,
+								OutputCoordinatorContext_t        Context,
                                                                 unsigned long long                NormalizedPlaybackTime,
                                                                 unsigned long long               *SystemTime );
     \brief Translate a playback time to a system time.
-
+    
     Apply the playback to system time mapping to the specified playback time.
 
     \param Context Stream context identifier.
     \param NormalizedPlaybackTime A playback time.
     \param SystemTime A pointer to a variable to hold the mapped playback time.
 
-    \return OutputCoordinator status code, OutputCoordinatorNoError indicates success,
-        OutputCoordinatorMappingNotEstablished indicates that no mapping has yet been established.
+    \return OutputCoordinator status code, OutputCoordinatorNoError indicates success, 
+	    OutputCoordinatorMappingNotEstablished indicates that no mapping has yet been established.
 */
 
 /*! \fn OutputCoordinatorStatus_t OutputCoordinator_c::TranslateSystemTimeToPlayback(
-                                OutputCoordinatorContext_t        Context,
+								OutputCoordinatorContext_t        Context,
                                                                 unsigned long long                SystemTime,
                                                                 unsigned long long               *NormalizedPlaybackTime );
     \brief Translate a system time to a playback time.
-
+    
     Apply the inverse of playback to system time mapping to the specified system time.
 
     \param Context Stream context identifier.
     \param SystemTime A system time.
     \param NormalizedPlaybackTime A pointer to a variable to hold the mapped system time.
 
-    \return OutputCoordinator status code, OutputCoordinatorNoError indicates success,
-        OutputCoordinatorMappingNotEstablished indicates that no mapping has yet been established.
+    \return OutputCoordinator status code, OutputCoordinatorNoError indicates success, 
+	    OutputCoordinatorMappingNotEstablished indicates that no mapping has yet been established.
 */
 
-/*! \fn OutputCoordinatorStatus_t OutputCoordinator_c::SynchronizeStreams(  OutputCoordinatorContext_t    Context,
-                                        unsigned long long        NormalizedPlaybackTime,
-                                        unsigned long long        NormalizedDecodeTime,
-                                        unsigned long long       *SystemTime );
+/*! \fn OutputCoordinatorStatus_t OutputCoordinator_c::SynchronizeStreams( 	OutputCoordinatorContext_t	  Context,
+										unsigned long long		  NormalizedPlaybackTime,
+										unsigned long long		  NormalizedDecodeTime,
+										unsigned long long		 *SystemTime );
     \brief Establish a time mapping based on stream content.
+    
+    This function is responsible for establishing a time mapping and performing startup 
+    synchronization for all of the currently registered streams. It waits until all the 
+    streams have enterred this function before establishing a mapping based on the stream 
+    with the earliest playback time. 
 
-    This function is responsible for establishing a time mapping and performing startup
-    synchronization for all of the currently registered streams. It waits until all the
-    streams have entered this function before establishing a mapping based on the stream
-    with the earliest playback time.
-
-    Also on entry each stream is delayed to allow sufficient frames to be decoded to allow
+    Also on entry each stream is delayed to allow sufficient frames to be decoded to allow 
     smooth playback on return from this function.
 
-    The function can establish a mapping based on a subset of the streams, if not all
-    streams have entered the function within a reasonable time period, currently
+    The function can establish a mapping based on a subset of the streams, if not all 
+    streams have eneterred the function within a reasonable time period, currently 
     defined as a constant.
 
     \param Context Stream context identifier.
@@ -348,13 +348,13 @@ class OutputCoordinator_c : public BaseComponentClass_c
 */
 
 /*! \fn OutputCoordinatorStatus_t   OutputCoordinator_c::PerformEntryIntoDecodeWindowWait(
-                                OutputCoordinatorContext_t    Context,
-                                unsigned long long        NormalizedDecodeTime,
-                                unsigned long long        DecodeWindowPorch,
-                                unsigned long long        MaximumAllowedSleepTime );
+								OutputCoordinatorContext_t	  Context,
+								unsigned long long		  NormalizedDecodeTime,
+								unsigned long long		  DecodeWindowPorch,
+								unsigned long long		  MaximumAllowedSleepTime );
     \brief Wait until we enter the decode window for a frame.
-
-    This function is responsible for performing the wait until entry into the decode
+    
+    This function is responsible for performing the wait until entry into the decode 
     window, this will commence
     a time 'DecodeWindowPorch' micro seconds before the system time
     associated with the 'NormalizedDecodeTime', applying a sensible maximum
@@ -373,15 +373,15 @@ class OutputCoordinator_c : public BaseComponentClass_c
 */
 
 /*! \fn OutputCoordinatorStatus_t   OutputCoordinator_c::HandlePlaybackTimeDeltas(
-                                OutputCoordinatorContext_t    Context,
-                                bool                  KnownJump,
-                                unsigned long long        ExpectedPlaybackTime,
-                                unsigned long long        ActualPlaybackTime );
+								OutputCoordinatorContext_t	  Context,
+								bool				  KnownJump,
+								unsigned long long		  ExpectedPlaybackTime,
+								unsigned long long		  ActualPlaybackTime );
     \brief Spot, and handle, jumps in PTS values.
-
+    
     This function is responsible for monitoring the playback times, and detecting large jumps in them.
-    It will adjust the system time base when a jump is detected in a stream, and check that all other
-    streams also replicate the jump at an appropriate point. If a stream fails to replicate the jump,
+    It will adjust the system time base when a jump is detected in a stream, and check that all other 
+    streams also replicate the jump at an appropriate point. If a stream fails to replicate the jump, 
     then synchronization will be invalidated, and all streams will be invited to re-synchronize.
 
     \param Context Stream context identifier.
@@ -393,22 +393,22 @@ class OutputCoordinator_c : public BaseComponentClass_c
 */
 
 /*! \fn OutputCoordinatorStatus_t   OutputCoordinator_c::CalculateOutputRateAdjustment(
-                                OutputCoordinatorContext_t    Context,
-                                unsigned long long        ExpectedDuration,
-                                unsigned long long        ActualDuration,
-                                long long             CurrentError,
-                                Rational_t           *OutputRateAdjustment,
-                                Rational_t           *SystemClockAdjustment );
-    \brief Calculate output rate adjustments.
-
-    This function is responsible for calculating the necessary adjustments to the output rates
-    to keep the output in synchronization with master clock. If this is context refers to the master
+								OutputCoordinatorContext_t	  Context,
+								unsigned long long		  ExpectedDuration,
+								unsigned long long		  ActualDuration,
+								long long			  CurrentError,
+								Rational_t			 *OutputRateAdjustment,
+								Rational_t			 *SystemClockAdjustment );
+    \brief Calculate output rate adjustment.
+    
+    This function is responsible for calculating the necessary adjustments to the output rate
+    to keep the output in synchronization with master clock. If this is context refers to the master 
     clock, this function also calculates the internally held adjustment to the system clock to
     keep it synchronized with the master output device.
 
-    This function will (within the supplied context) maintain a history of expected durations and
-    actual durations and will generate clock adjustments that are meant to lead to these being zero
-    on an ongoing basis. Large differences relating to jitter or avsync issues will be ignored for
+    This function will (within the supplied context) maintain a history of expected durations and 
+    actual durations and will generate clock adjustments that are meant to lead to these being zero 
+    on an ongoing basis. Large differences relating to jitter or avsync issues will be ignored for 
     this purpose.
 
     \param Context Stream context identifier.
@@ -421,10 +421,10 @@ class OutputCoordinator_c : public BaseComponentClass_c
     \return OutputCoordinator status code, OutputCoordinatorNoError indicates success.
 */
 
-/*! \fn OutputCoordinatorStatus_t   RestartOutputRateIntegration( OutputCoordinatorContext_t      Context );
+/*! \fn OutputCoordinatorStatus_t   RestartOutputRateIntegration( OutputCoordinatorContext_t	  Context );
     \brief Restart the output rate integration.
-
-    Restart the output rate integration, with an ignore period first. This function is provided
+    
+    Restart the output rate integration, with an ignore period first. This function is provided 
     to reset the integration when an avsync operation is performed.
 
     \param Context Stream context identifier.
@@ -432,13 +432,13 @@ class OutputCoordinator_c : public BaseComponentClass_c
     \return OutputCoordinator status code, OutputCoordinatorNoError indicates success.
 */
 
-/*! \fn     OutputCoordinatorStatus_t   OutputCoordinator_c::AdjustMappingBase(     OutputCoordinatorContext_t    Context,
-                                long long             Adjustment );
+/*! \fn     OutputCoordinatorStatus_t   OutputCoordinator_c::AdjustMappingBase( 	OutputCoordinatorContext_t	  Context,
+								long long			  Adjustment );
     \brief Adjust the base system time for playback/system time mappings.
-
-    This function is provided to support audio/video synchronization, in order to hone the sync to
-    within 3 ms (a period well inside the limit of control for a video display), it is necessary
-    for a video stream to adjust the base system time, to force the audio to apply its finer grained
+    
+    This function is provided to support audio/video synchronization, in order to hone the sync to 
+    within 3 ms (a period well inside the limit of control for a video display), it is necessary 
+    for a video stream to adjust the base system time, to force the audio to apply its finer grained 
     controls to close sub field/frame synchronization gaps.
 
     \param Context Stream context identifier.
@@ -447,23 +447,23 @@ class OutputCoordinator_c : public BaseComponentClass_c
     \return OutputCoordinator status code, OutputCoordinatorNoError indicates success.
 */
 
-/*! \fn     OutputCoordinatorStatus_t   OutputCoordinator_c::MappingBaseAdjustmentApplied(  OutputCoordinatorContext_t    Context );
+/*! \fn     OutputCoordinatorStatus_t   OutputCoordinator_c::MappingBaseAdjustmentApplied( 	OutputCoordinatorContext_t	  Context );
     \brief Check if the base system time for playback/system time mappings has been modified.
-
-    This function is provided to support audio/video synchronization, allowing an
-    output timer to find out if any adjustments to the base system time have been
+    
+    This function is provided to support audio/video synchronization, allowing an 
+    output timer to find out if any adjustments to the base system time have been 
     applied since the last call to this function.
 
     \param Context Stream context identifier.
 
     \return OutputCoordinator status code, OutputCoordinatorNoError indicates no adjustment has been applied,
-    OutputCoordinatorMappingAdjusted indicates that a change has occurred.
+	OutputCoordinatorMappingAdjusted indicates that a change has occurred.
 */
 
-/*! \fn     OutputCoordinatorStatus_t   OutputCoordinator_c::GetStreamStartDelay(   OutputCoordinatorContext_t    Context,
-                                            unsigned long long       *Delay );
+/*! \fn     OutputCoordinatorStatus_t   OutputCoordinator_c::GetStreamStartDelay( 	OutputCoordinatorContext_t	  Context,
+											unsigned long long		 *Delay );
     \brief Find the delay between the start of this stream and the earliest starting stream in the playback.
-
+    
     This function is provided to support throttling of data injection into the player.
 
     \param Context Stream context identifier.
@@ -472,12 +472,12 @@ class OutputCoordinator_c : public BaseComponentClass_c
     \return OutputCoordinator status code, OutputCoordinatorNoError should be returned if the delay value is valid.
 */
 
-/*! \fn     OutputCoordinatorStatus_t   OutputCoordinator_c::MonitorVsyncOffset(    OutputCoordinatorContext_t    Context,
-                                            unsigned long long        RequestedOutputTime,
-                                            unsigned long long        ActualOutputTime );
+/*! \fn     OutputCoordinatorStatus_t   OutputCoordinator_c::MonitorVsyncOffset( 	OutputCoordinatorContext_t	  Context, 
+											unsigned long long		  RequestedOutputTime, 
+											unsigned long long 		  ActualOutputTime );
     \brief Monitor vsync offset for reporting via event signal.
-
-    This function is provided to support dvp control when not using vsync locking, in addition to
+    
+    This function is provided to support dvp control when not using vsync locking, in addition to 
     monitoring the vsync offset, the function will adjust the time mapping to eliminate it.
 
     \param Context Stream context identifier.
@@ -488,7 +488,7 @@ class OutputCoordinator_c : public BaseComponentClass_c
 */
 
 /*! \fn OutputCoordinatorStatus_t   OutputCoordinator_c::ClockRecoveryInitialize(
-                            OutputCoordinatorTimeFormat_t     SourceTimeFormat )
+							OutputCoordinatorTimeFormat_t	  SourceTimeFormat )
 \brief Initialize clock recovery
 
 \param SourceTimeFormat the format of source times
@@ -497,13 +497,13 @@ class OutputCoordinator_c : public BaseComponentClass_c
 */
 
 /*! \fn OutputCoordinatorStatus_t   OutputCoordinator_c::ClockRecoveryDataPoint(
-                            unsigned long long    SourceTime,
-                            unsigned long long    LocalTime )
+							unsigned long long	  SourceTime,
+							unsigned long long	  LocalTime )
 \brief Specify a clock recovery data point
 
-A function used to mark a clock recovery data point, specifies a source clock value,
-and a local time (monotonic local time), at which the packet transmitted at source
-time arrived at the box.
+A function used to mark a clock recovery data point, specifies a source clock value, 
+and a local time (monotonic local time), at which the packet transmitted at source 
+time arrived at the box. 
 
 \param SourceTime The clock value at the source
 \param LocalTime Arrival time of the packet containing the source clock value
@@ -511,9 +511,9 @@ time arrived at the box.
 \return OutputCoordinator status code, OutputCoordinatorNoError should be returned.
 */
 
-/*! \fn OutputCoordinatorStatus_t   OutputCoordinator_c::ClockRecoveryEstimate(
-                            unsigned long long   *SourceTime,
-                            unsigned long long   *LocalTime )
+/*! \fn OutputCoordinatorStatus_t   OutputCoordinator_c::ClockRecoveryEstimate(	
+							unsigned long long	 *SourceTime,
+							unsigned long long	 *LocalTime )
 \brief Request a clock recovery estimate
 
 \param SourceTime The value of source time (in the appropriate format) when the function is called.

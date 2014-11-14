@@ -57,9 +57,9 @@ static struct Count_s
     unsigned int        PanScanCountValue;
     unsigned int        DisplayCount0Value;
     unsigned int        DisplayCount1Value;
-} Counts[] =
+} Counts[] = 
 {
-    // ProgSeq  Frame   TFF   RFF
+                                // ProgSeq  Frame   TFF   RFF
     { true,  1, 1, 0 },         //    0       0      0     0
     { false, 0, 0, 0 },         //    0       0      0     1
     { true,  1, 1, 0 },         //    0       0      1     0
@@ -128,8 +128,8 @@ static SliceType_t SliceTypeTranslation[]  = { SliceTypeI, SliceTypeP, SliceType
 // Locally defined macros
 //
 
-static const unsigned int ReferenceFramesMinimum[AVS_PICTURE_CODING_TYPE_B + 1]   = {0, 1, 2};
-static const unsigned int ReferenceFramesMaximum[AVS_PICTURE_CODING_TYPE_B + 1]   = {0, 2, 2};
+static const unsigned int ReferenceFramesMinimum[AVS_PICTURE_CODING_TYPE_B+1]   = {0, 1, 2};
+static const unsigned int ReferenceFramesMaximum[AVS_PICTURE_CODING_TYPE_B+1]   = {0, 2, 2};
 //#define REFERENCE_FRAMES_NEEDED( CodingType )           (CodingType)
 #define REFERENCE_FRAMES_REQUIRED(CodingType)                                   ReferenceFramesMinimum[CodingType]
 #define REFERENCE_FRAMES_DESIRED(CodingType)                                    ReferenceFramesMaximum[CodingType]
@@ -148,7 +148,7 @@ static const unsigned int ReferenceFramesMaximum[AVS_PICTURE_CODING_TYPE_B + 1] 
 //      Constructor
 //
 
-FrameParser_VideoAvs_c::FrameParser_VideoAvs_c(void)
+FrameParser_VideoAvs_c::FrameParser_VideoAvs_c( void )
 {
     Configuration.FrameParserName               = "VideoAvs";
 
@@ -167,7 +167,7 @@ FrameParser_VideoAvs_c::FrameParser_VideoAvs_c(void)
 //      Destructor
 //
 
-FrameParser_VideoAvs_c::~FrameParser_VideoAvs_c(void)
+FrameParser_VideoAvs_c::~FrameParser_VideoAvs_c( void )
 {
     Halt();
     Reset();
@@ -179,13 +179,13 @@ FrameParser_VideoAvs_c::~FrameParser_VideoAvs_c(void)
 //      The Reset function release any resources, and reset all variable
 //
 
-FrameParserStatus_t   FrameParser_VideoAvs_c::Reset(void)
+FrameParserStatus_t   FrameParser_VideoAvs_c::Reset(  void )
 {
 
     Configuration.SupportSmoothReversePlay      = true;
 
-    memset(&CopyOfStreamParameters, 0x00, sizeof(AvsStreamParameters_t));
-    memset(&ReferenceFrameList, 0x00, sizeof(ReferenceFrameList_t));
+    memset( &CopyOfStreamParameters, 0x00, sizeof(AvsStreamParameters_t) );
+    memset( &ReferenceFrameList, 0x00, sizeof(ReferenceFrameList_t) );
 
     StreamParameters                            = NULL;
     FrameParameters                             = NULL;
@@ -221,7 +221,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::Reset(void)
 //      The register output ring function
 //
 
-FrameParserStatus_t   FrameParser_VideoAvs_c::RegisterOutputBufferRing(Ring_t Ring)
+FrameParserStatus_t   FrameParser_VideoAvs_c::RegisterOutputBufferRing( Ring_t Ring )
 {
     //
     // Clear our parameter pointers
@@ -236,7 +236,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::RegisterOutputBufferRing(Ring_t Ri
     // Pass the call on down (we need the frame parameters count obtained by the lower level function).
     //
 
-    return FrameParser_Video_c::RegisterOutputBufferRing(Ring);
+    return FrameParser_Video_c::RegisterOutputBufferRing( Ring );
 }
 //}}}
 //{{{  ReadHeaders
@@ -245,7 +245,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::RegisterOutputBufferRing(Ring_t Ri
 //      The read headers stream specific function
 //
 
-FrameParserStatus_t   FrameParser_VideoAvs_c::ReadHeaders(void)
+FrameParserStatus_t   FrameParser_VideoAvs_c::ReadHeaders( void )
 {
     unsigned int                Code;
     unsigned int                ExtensionCode;
@@ -255,28 +255,23 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadHeaders(void)
 
 #if 0
     unsigned int                i;
-    report(severity_info, "First 32 bytes of %d :", BufferLength);
-
-    for (i = 0; i < 32; i++)
-        report(severity_info, " %02x", BufferData[i]);
-
-    report(severity_info, "\n");
+    report (severity_info, "First 32 bytes of %d :", BufferLength);
+    for (i=0; i<32; i++)
+        report (severity_info, " %02x", BufferData[i]);
+    report (severity_info, "\n");
 #endif
 #if 0
-    report(severity_info, "Start codes (%d):", StartCodeList->NumberOfStartCodes);
-
-    for (int i = 0; i < StartCodeList->NumberOfStartCodes; i++)
-        report(severity_info, " %02x(%d)", ExtractStartCodeCode(StartCodeList->StartCodes[i]), ExtractStartCodeOffset(StartCodeList->StartCodes[i]));
-
-    report(severity_info, "\n");
+    report (severity_info, "Start codes (%d):", StartCodeList->NumberOfStartCodes);
+    for (int i=0; i<StartCodeList->NumberOfStartCodes; i++)
+        report (severity_info, " %02x(%d)", ExtractStartCodeCode(StartCodeList->StartCodes[i]), ExtractStartCodeOffset(StartCodeList->StartCodes[i]));
+    report (severity_info, "\n");
 #endif
 
     ParsedFrameParameters->DataOffset                   = 0;
-
-    for (unsigned int i = 0; i < StartCodeList->NumberOfStartCodes; i++)
+    for (unsigned int i=0; i<StartCodeList->NumberOfStartCodes; i++)
     {
         Code                    = StartCodeList->StartCodes[i];
-        Bits.SetPointer(BufferData + ExtractStartCodeOffset(Code));
+        Bits.SetPointer (BufferData + ExtractStartCodeOffset(Code));
         Bits.FlushUnseen(32);
 
         Status                  = FrameParserNoError;
@@ -303,7 +298,6 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadHeaders(void)
 
             case  AVS_EXTENSION_START_CODE:
                 ExtensionCode                           = Bits.Get(4);
-
                 switch (ExtensionCode)
                 {
                     case  AVS_SEQUENCE_DISPLAY_EXTENSION_ID:
@@ -351,15 +345,15 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadHeaders(void)
                     if (!FrameReadyForDecode)
                         break;
 
-#if 0
-                    Status                              = CalculateFieldOffsets(i);
-                    Status                              = CommitFrameForDecode();
+                #if 0
+                    Status                              = CalculateFieldOffsets (i);
+                    Status                              = CommitFrameForDecode ();
                     FreameReadyForDecode                = false;
-#else
+                #else
                     // Build a list of the slices in this frame, recording an entry for each
                     // SLICE_START_CODE as needed by the AVS decoder.
                     Status                              = ReadSliceHeader(i);
-#endif
+                #endif
 
                     break;
                 }
@@ -371,7 +365,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadHeaders(void)
                 }
         }
 
-        if ((Status != FrameParserNoError) && (Status != FrameParserUnhandledHeader))
+        if( (Status != FrameParserNoError) && (Status != FrameParserUnhandledHeader) )
         {
             StreamDataValid             = false;
             FrameReadyForDecode         = false;
@@ -392,21 +386,20 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadHeaders(void)
 //      Private - Read in a sequence header 7.1.2.1
 //
 
-FrameParserStatus_t   FrameParser_VideoAvs_c::ReadSequenceHeader(void)
+FrameParserStatus_t   FrameParser_VideoAvs_c::ReadSequenceHeader( void )
 {
     FrameParserStatus_t                 Status  = FrameParserNoError;
     AvsVideoSequence_t*                 Header;
 
-    FRAME_DEBUG("%s\n", __FUNCTION__);
-    Status      = GetNewStreamParameters((void **)&StreamParameters);
-
-    if (Status != FrameParserNoError)
+    FRAME_DEBUG ("%s\n", __FUNCTION__);
+    Status      = GetNewStreamParameters( (void **)&StreamParameters );
+    if( Status != FrameParserNoError )
         return Status;
 
     StreamParameters->UpdatedSinceLastFrame = true;
 
     Header = &StreamParameters->SequenceHeader;
-    memset(Header, 0x00, sizeof(AvsVideoSequence_t));
+    memset( Header, 0x00, sizeof(AvsVideoSequence_t) );
 
     Header->profile_id                  = Bits.Get(8);
     Header->level_id                    = Bits.Get(8);
@@ -425,13 +418,12 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadSequenceHeader(void)
     Header->bbv_buffer_size             = Bits.Get(18);
 
     Status              =  FrameParserHeaderSyntaxError;
-
     if (!inrange(Header->chroma_format, AVS_MIN_LEGAL_CHROMA_FORMAT_CODE, AVS_MAX_LEGAL_CHROMA_FORMAT_CODE))
         FRAME_ERROR("%s - Illegal chroma format code (%02x).\n", __FUNCTION__, Header->chroma_format);
     else if (!inrange(Header->aspect_ratio, AVS_MIN_LEGAL_ASPECT_RATIO_CODE, AVS_MAX_LEGAL_ASPECT_RATIO_CODE))
         FRAME_ERROR("%s - Illegal aspect ratio code (%02x).\n", __FUNCTION__, Header->aspect_ratio);
     else if (!inrange(Header->frame_rate_code, AVS_MIN_LEGAL_FRAME_RATE_CODE, AVS_MAX_LEGAL_FRAME_RATE_CODE))
-        FRAME_ERROR("%s - Illegal frame rate code (%02x).\n", __FUNCTION__, Header->frame_rate_code);
+        FRAME_ERROR("%s - Illegal frame rate code (%02x).\n", __FUNCTION__, Header->frame_rate_code );
     else
     {
         Status                                  =  FrameParserNoError;
@@ -439,7 +431,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadSequenceHeader(void)
     }
 
 #ifdef DUMP_HEADERS
-    FRAME_TRACE("Sequence header :- \n");
+    FRAME_TRACE("Sequence header :- \n" );
     FRAME_TRACE("    profile_id                      : %6d\n", Header->profile_id);
     FRAME_TRACE("    level_id                        : %6d\n", Header->level_id);
     FRAME_TRACE("    progressive_sequence            : %6d\n", Header->progressive_sequence);
@@ -465,32 +457,29 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadSequenceHeader(void)
 //      Private - Read in a sequence display extension header 7.1.2.3
 //
 
-FrameParserStatus_t   FrameParser_VideoAvs_c::ReadSequenceDisplayExtensionHeader(void)
+FrameParserStatus_t   FrameParser_VideoAvs_c::ReadSequenceDisplayExtensionHeader( void )
 {
     AvsVideoSequenceDisplayExtension_t    *Header;
 
-    FRAME_DEBUG("%s\n", __FUNCTION__);
-
-    if ((StreamParameters == NULL) || !StreamParameters->SequenceHeaderPresent)
+    FRAME_DEBUG ("%s\n", __FUNCTION__);
+    if( (StreamParameters == NULL) || !StreamParameters->SequenceHeaderPresent )
     {
         FRAME_ERROR("%s - Appropriate sequence header not found.\n", __FUNCTION__);
         return FrameParserNoStreamParameters;
     }
 
     Header      = &StreamParameters->SequenceDisplayExtensionHeader;
-    memset(Header, 0x00, sizeof(AvsVideoSequenceDisplayExtension_t));
+    memset( Header, 0x00, sizeof(AvsVideoSequenceDisplayExtension_t) );
 
     Header->video_format                        = Bits.Get(3);
     Header->sample_range                        = Bits.Get(1);
     Header->color_description                   = Bits.Get(1);
-
-    if (Header->color_description != 0)
+    if( Header->color_description != 0 )
     {
         Header->color_primaries                 = Bits.Get(8);
         Header->transfer_characteristics        = Bits.Get(8);
         Header->matrix_coefficients             = Bits.Get(8);
     }
-
     Header->display_horizontal_size             = Bits.Get(14);
     MarkerBit(1);
     Header->display_vertical_size               = Bits.Get(14);
@@ -498,18 +487,16 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadSequenceDisplayExtensionHeader
     StreamParameters->SequenceDisplayExtensionHeaderPresent     = true;
 
 #ifdef DUMP_HEADERS
-    FRAME_TRACE("Sequence Display Extension header :- \n");
-    FRAME_TRACE("    video_format                 : %6d\n", Header->video_format);
-
-    if (Header->color_description != 0)
+    FRAME_TRACE("Sequence Display Extension header :- \n" );
+    FRAME_TRACE("    video_format                 : %6d\n", Header->video_format );
+    if( Header->color_description != 0 )
     {
-        FRAME_TRACE("    color_primaries              : %6d\n", Header->color_primaries);
-        FRAME_TRACE("    transfer_characteristics     : %6d\n", Header->transfer_characteristics);
-        FRAME_TRACE("    matrix_coefficients          : %6d\n", Header->matrix_coefficients);
+        FRAME_TRACE("    color_primaries              : %6d\n", Header->color_primaries );
+        FRAME_TRACE("    transfer_characteristics     : %6d\n", Header->transfer_characteristics );
+        FRAME_TRACE("    matrix_coefficients          : %6d\n", Header->matrix_coefficients );
     }
-
-    FRAME_TRACE("    display_horizontal_size      : %6d\n", Header->display_horizontal_size);
-    FRAME_TRACE("    display_vertical_size        : %6d\n", Header->display_vertical_size);
+    FRAME_TRACE("    display_horizontal_size      : %6d\n", Header->display_horizontal_size );
+    FRAME_TRACE("    display_vertical_size        : %6d\n", Header->display_vertical_size );
 #endif
 
     return FrameParserNoError;
@@ -521,20 +508,19 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadSequenceDisplayExtensionHeader
 //      Private - Read in extension data 7.1.2.4
 //
 
-FrameParserStatus_t   FrameParser_VideoAvs_c::ReadCopyrightExtensionHeader(void)
+FrameParserStatus_t   FrameParser_VideoAvs_c::ReadCopyrightExtensionHeader( void )
 {
     AvsVideoCopyrightExtension_t   *Header;
 
-    FRAME_DEBUG("%s\n", __FUNCTION__);
-
-    if ((StreamParameters == NULL) || !StreamParameters->SequenceHeaderPresent)
+    FRAME_DEBUG ("%s\n", __FUNCTION__);
+    if( (StreamParameters == NULL) || !StreamParameters->SequenceHeaderPresent )
     {
         FRAME_ERROR("%s - Appropriate sequence header not found.\n", __FUNCTION__);
         return FrameParserNoStreamParameters;
     }
 
     Header      = &StreamParameters->CopyrightExtensionHeader;
-    memset(Header, 0x00, sizeof(AvsVideoCopyrightExtension_t));
+    memset( Header, 0x00, sizeof(AvsVideoCopyrightExtension_t) );
 
     Header->copyright_flag                      = Bits.Get(1);
     Header->copyright_id                        = Bits.Get(8);
@@ -567,20 +553,19 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadCopyrightExtensionHeader(void)
 //      Private - Read in extension data
 //
 
-FrameParserStatus_t   FrameParser_VideoAvs_c::ReadCameraParametersExtensionHeader(void)
+FrameParserStatus_t   FrameParser_VideoAvs_c::ReadCameraParametersExtensionHeader( void )
 {
     AvsVideoCameraParametersExtension_t*        Header;
 
-    FRAME_DEBUG("%s\n", __FUNCTION__);
-
-    if ((StreamParameters == NULL) || !StreamParameters->SequenceHeaderPresent)
+    FRAME_DEBUG ("%s\n", __FUNCTION__);
+    if( (StreamParameters == NULL) || !StreamParameters->SequenceHeaderPresent )
     {
         FRAME_ERROR("%s - Appropriate sequence header not found.\n", __FUNCTION__);
         return FrameParserNoStreamParameters;
     }
 
     Header      = &StreamParameters->CameraParametersExtensionHeader;
-    memset(Header, 0x00, sizeof(AvsVideoCameraParametersExtension_t));
+    memset( Header, 0x00, sizeof(AvsVideoCameraParametersExtension_t) );
 
     Bits.Get(1);                        // reserved bits
     Header->camera_id                           = Bits.Get(7);
@@ -654,39 +639,35 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadCameraParametersExtensionHeade
 //      Private - Read in a picture header
 //
 
-FrameParserStatus_t   FrameParser_VideoAvs_c::ReadPictureHeader(unsigned int PictureStartCode)
+FrameParserStatus_t   FrameParser_VideoAvs_c::ReadPictureHeader (unsigned int PictureStartCode)
 {
     FrameParserStatus_t         Status;
     AvsVideoPictureHeader_t*    Header;
     AvsVideoSequence_t*         SequenceHeader;
 
-    FRAME_DEBUG("%s\n", __FUNCTION__);
-
-    if ((StreamParameters == NULL) || !StreamParameters->SequenceHeaderPresent)
+    FRAME_DEBUG ("%s\n", __FUNCTION__);
+    if( (StreamParameters == NULL) || !StreamParameters->SequenceHeaderPresent )
     {
         FRAME_ERROR("%s - Appropriate sequence header not found.\n", __FUNCTION__);
         return FrameParserNoStreamParameters;
     }
-
     SequenceHeader                              = &StreamParameters->SequenceHeader;
 
-    if (FrameParameters == NULL)
+    if( FrameParameters == NULL )
     {
-        Status  = GetNewFrameParameters((void **)&FrameParameters);
-
-        if (Status != FrameParserNoError)
+        Status  = GetNewFrameParameters( (void **)&FrameParameters );
+        if( Status != FrameParserNoError )
             return Status;
     }
 
     Header                                      = &FrameParameters->PictureHeader;
-    memset(Header, 0x00, sizeof(AvsVideoPictureHeader_t));
+    memset( Header, 0x00, sizeof(AvsVideoPictureHeader_t) );
 
     Header->bbv_delay                           = Bits.Get(16);
 
     if (PictureStartCode == AVS_I_PICTURE_START_CODE)
     {
         Header->picture_coding_type             = AVS_PICTURE_CODING_TYPE_I;
-
         if (Bits.Get(1) == 1)
             Header->time_code                   = Bits.Get(24);
 
@@ -701,14 +682,11 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadPictureHeader(unsigned int Pic
         Header->bbv_check_times                 = Bits.GetUe();
 
     Header->progressive_frame                   = Bits.Get(1);
-
     if (Header->progressive_frame == 0)
     {
         Header->picture_structure               = Bits.Get(1);
-
         if ((PictureStartCode != AVS_I_PICTURE_START_CODE) && (Header->picture_structure == 0))
             Header->advanced_pred_mode_disable  = Bits.Get(1);
-
         //if (SequenceHeader->progressive_sequence == 1)
         //    Header->picture_structure           = 1;
     }
@@ -725,7 +703,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadPictureHeader(unsigned int Pic
 
     if (PictureStartCode == AVS_I_PICTURE_START_CODE)
     {
-        if ((Header->progressive_frame == 0) && (Header->picture_structure == 0))
+        if ((Header->progressive_frame == 0) && ( Header->picture_structure == 0))
             Header->skip_mode_flag              = Bits.Get(1);
 
         Bits.Get(4);
@@ -741,11 +719,9 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadPictureHeader(unsigned int Pic
     }
 
     Header->loop_filter_disable                 = Bits.Get(1);
-
     if (!Header->loop_filter_disable)
     {
         Header->loop_filter_parameter_flag      = Bits.Get(1);
-
         if (Header->loop_filter_parameter_flag)
         {
             Header->alpha_c_offset              = Bits.GetSe();
@@ -757,7 +733,6 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadPictureHeader(unsigned int Pic
         PictureDistanceBase                    += AVS_PICTURE_DISTANCE_RANGE;
     else if (Header->picture_distance > (LastPictureDistance + AVS_PICTURE_DISTANCE_HALF_RANGE))
         PictureDistanceBase                    -= AVS_PICTURE_DISTANCE_RANGE;
-
     LastPictureDistance                         = Header->picture_distance;
 
     Header->picture_order_count                 = PictureDistanceBase + Header->picture_distance;
@@ -784,7 +759,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadPictureHeader(unsigned int Pic
     FrameParameters->PictureHeaderPresent       = true;
 
 #ifdef DUMP_HEADERS
-    FRAME_TRACE("Picture header :- \n");
+    FRAME_TRACE("Picture header :- \n" );
     FRAME_TRACE("    bbv_delay                       : %6d\n", Header->bbv_delay);
     FRAME_TRACE("    picture_coding_type             : %6d\n", Header->picture_coding_type);
     FRAME_TRACE("    time_code_flag                  : %6d\n", Header->time_code_flag);
@@ -821,28 +796,27 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadPictureHeader(unsigned int Pic
 //      Private - Read in a picture display extension
 //
 
-FrameParserStatus_t   FrameParser_VideoAvs_c::ReadPictureDisplayExtensionHeader(void)
+FrameParserStatus_t   FrameParser_VideoAvs_c::ReadPictureDisplayExtensionHeader( void )
 {
     AvsVideoPictureDisplayExtension_t*  Header;
     AvsVideoSequence_t*                 SequenceHeader;
     AvsVideoPictureHeader_t*            PictureHeader;
 
-    FRAME_DEBUG("%s\n", __FUNCTION__);
-
-    if ((StreamParameters == NULL) || !StreamParameters->SequenceHeaderPresent)
+    FRAME_DEBUG ("%s\n", __FUNCTION__);
+    if( (StreamParameters == NULL) || !StreamParameters->SequenceHeaderPresent )
     {
         FRAME_ERROR("%s - Appropriate sequence header not found.\n", __FUNCTION__);
         return FrameParserNoStreamParameters;
     }
 
-    if ((FrameParameters == NULL) || !FrameParameters->PictureHeaderPresent)
+    if( (FrameParameters == NULL) || !FrameParameters->PictureHeaderPresent )
     {
         FRAME_ERROR("%s - Appropriate picture header not found.\n", __FUNCTION__);
         return FrameParserNoStreamParameters;
     }
 
     Header                                      = &FrameParameters->PictureDisplayExtensionHeader;
-    memset(Header, 0x00, sizeof(AvsVideoPictureDisplayExtension_t));
+    memset( Header, 0x00, sizeof(AvsVideoPictureDisplayExtension_t) );
 
     SequenceHeader                              = &StreamParameters->SequenceHeader;
     PictureHeader                               = &FrameParameters->PictureHeader;
@@ -872,10 +846,9 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadPictureDisplayExtensionHeader(
                 Header->number_of_frame_centre_offsets          = 2;
         }
     }
-
     //}}}
 
-    for (unsigned int i = 0; i < Header->number_of_frame_centre_offsets; i++)
+    for (unsigned int i=0; i<Header->number_of_frame_centre_offsets; i++)
     {
         Header->frame_centre[i].horizontal_offset               = Bits.Get(16);
         MarkerBit(1);
@@ -886,13 +859,11 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadPictureDisplayExtensionHeader(
 #ifdef DUMP_HEADERS
     FRAME_TRACE("Picture display extension header :\n");
     FRAME_TRACE("    number_of_frame_centre_offsets                     : %6d\n", Header->number_of_frame_centre_offsets);
-
-    for (unsigned int i = 0; i < Header->number_of_frame_centre_offsets; i++)
+    for (unsigned int i=0; i<Header->number_of_frame_centre_offsets; i++)
     {
         FRAME_TRACE("    frame_centre[%d].horizontal_offset                  : %6d\n", i, Header->frame_centre[i].horizontal_offset);
         FRAME_TRACE("    frame_centre[%d].vertical_offset                    : %6d\n", i, Header->frame_centre[i].vertical_offset);
     }
-
 #endif
 
     return FrameParserNoError;
@@ -905,7 +876,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadPictureDisplayExtensionHeader(
 /// \brief      Read in a slice header
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoAvs_c::ReadSliceHeader(unsigned int StartCodeIndex)
+FrameParserStatus_t   FrameParser_VideoAvs_c::ReadSliceHeader (unsigned int StartCodeIndex)
 {
     AvsVideoPictureHeader_t*    PictureHeader;
     AvsVideoSequence_t*         SequenceHeader;
@@ -916,7 +887,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadSliceHeader(unsigned int Start
     unsigned int                SliceOffset;
     unsigned int                MacroblockRows;
 
-    FRAME_DEBUG("%s\n", __FUNCTION__);
+    FRAME_DEBUG ("%s\n", __FUNCTION__);
 
     if ((StreamParameters == NULL) || !StreamParameters->SequenceHeaderPresent)
     {
@@ -941,7 +912,6 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadSliceHeader(unsigned int Start
 
     SequenceHeader                      = &StreamParameters->SequenceHeader;
     PictureHeader                       = &FrameParameters->PictureHeader;
-
     if (SliceCount == 0)
     {
         PictureHeader->top_field_offset         = SliceOffset;// - ParsedFrameParameters->DataOffset;      // As an offset from the picture start
@@ -949,12 +919,11 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadSliceHeader(unsigned int Start
     }
 
     MacroblockRows                      = ((SequenceHeader->vertical_size + 15) / 16) >> 1;
-
     if ((SliceCode >= MacroblockRows) && (PictureHeader->bottom_field_offset == 0))
         PictureHeader->bottom_field_offset      = SliceOffset;// - ParsedFrameParameters->DataOffset;
 
 #ifdef DUMP_HEADERS
-    FRAME_TRACE("Slice header :- \n");
+    FRAME_TRACE("Slice header :- \n" );
     FRAME_TRACE("Slice start code               %6d\n", SliceCode);
     FRAME_TRACE("Slice offset                   %6d\n", SliceOffset);
 #endif
@@ -970,7 +939,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ReadSliceHeader(unsigned int Start
 ///             we require we for a frame decode, this function records that fact.
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoAvs_c::CommitFrameForDecode(void)
+FrameParserStatus_t   FrameParser_VideoAvs_c::CommitFrameForDecode (void)
 {
     AvsVideoPictureHeader_t*            PictureHeader;
     AvsVideoSequence_t*                 SequenceHeader;
@@ -983,8 +952,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::CommitFrameForDecode(void)
     unsigned int                        PanAndScanCount;
     MatrixCoefficientsType_t            MatrixCoefficients;
 
-    FRAME_DEBUG("%s\n", __FUNCTION__);
-
+    FRAME_DEBUG ("%s\n", __FUNCTION__);
     // Check we have the headers we need
     if ((StreamParameters == NULL) || !StreamParameters->SequenceHeaderPresent)
     {
@@ -1006,34 +974,31 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::CommitFrameForDecode(void)
 
     // All pictures are frame pictures picture
 #if 0
-
     if ((SequenceHeader->progressive_sequence == 1) || (PictureHeader->progressive_frame == 1))
         PictureStructure        = StructureFrame;
     else if (PictureHeader->picture_structure == 0)
         PictureStructure        = StructureTopField;
     else
         PictureStructure        = StructureBottomField;
-
 #else
     PictureStructure            = StructureFrame;
 #endif
     Frame                       = PictureStructure == StructureFrame;
     RepeatFirstField            = PictureHeader->repeat_first_field;
     TopFieldFirst               = PictureHeader->top_field_first;
-
     if (FrameParameters->PictureDisplayExtensionHeaderPresent)
         PanAndScanCount         = FrameParameters->PictureDisplayExtensionHeader.number_of_frame_centre_offsets;
-    else
+     else
         PanAndScanCount         = 0;
 
 
     if (!Legal(ProgressiveSequence, Frame, TopFieldFirst, RepeatFirstField))
     {
         FRAME_ERROR("%s - Illegal combination (%c %c %c %c).\n", __FUNCTION__,
-                    (ProgressiveSequence    ? 'T' : 'F'),
-                    (Frame                  ? 'T' : 'F'),
-                    (RepeatFirstField       ? 'T' : 'F'),
-                    (TopFieldFirst          ? 'T' : 'F'));
+                (ProgressiveSequence    ? 'T' : 'F'),
+                (Frame                  ? 'T' : 'F'),
+                (RepeatFirstField       ? 'T' : 'F'),
+                (TopFieldFirst          ? 'T' : 'F'));
         return FrameParserHeaderSyntaxError;
     }
 
@@ -1049,12 +1014,11 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::CommitFrameForDecode(void)
     FirstDecodeOfFrame          = FieldSequenceError || (AccumulatedPictureStructure == StructureEmpty);
     AccumulatedPictureStructure = (FirstDecodeOfFrame && !Frame) ? PictureStructure : StructureEmpty;
 
-    if (FieldSequenceError)
+    if( FieldSequenceError )
     {
         FRAME_ERROR("%s - Field sequence error detected.\n", __FUNCTION__);
-        Player->CallInSequence(Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnOutputPartialDecodeBuffers);
+        Player->CallInSequence (Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnOutputPartialDecodeBuffers);
     }
-
 #endif
 
     // Deduce the matrix coefficients for colour conversions.
@@ -1063,13 +1027,9 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::CommitFrameForDecode(void)
         switch (StreamParameters->SequenceDisplayExtensionHeader.matrix_coefficients)
         {
             case AVS_MATRIX_COEFFICIENTS_BT709:         MatrixCoefficients      = MatrixCoefficients_ITU_R_BT709;       break;
-
             case AVS_MATRIX_COEFFICIENTS_FCC:           MatrixCoefficients      = MatrixCoefficients_FCC;               break;
-
             case AVS_MATRIX_COEFFICIENTS_BT470_BGI:     MatrixCoefficients      = MatrixCoefficients_ITU_R_BT470_2_BG;  break;
-
             case AVS_MATRIX_COEFFICIENTS_SMPTE_170M:    MatrixCoefficients      = MatrixCoefficients_SMPTE_170M;        break;
-
             case AVS_MATRIX_COEFFICIENTS_SMPTE_240M:    MatrixCoefficients      = MatrixCoefficients_SMPTE_240M;        break;
 
             default:
@@ -1116,14 +1076,12 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::CommitFrameForDecode(void)
         ParsedVideoParameters->Content.DisplayWidth             = StreamParameters->SequenceDisplayExtensionHeader.display_horizontal_size;
         ParsedVideoParameters->Content.DisplayHeight            = StreamParameters->SequenceDisplayExtensionHeader.display_vertical_size;
     }
-
 #if 0
     else
     {
         ParsedVideoParameters->Content.DisplayWidth             = ParsedVideoParameters->Content.Width;
         ParsedVideoParameters->Content.DisplayHeight            = ParsedVideoParameters->Content.Height;
     }
-
 #endif
 
     ParsedVideoParameters->Content.FrameRate                    = AvsFrameRates(StreamParameters->SequenceHeader.frame_rate_code);
@@ -1145,18 +1103,17 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::CommitFrameForDecode(void)
     ParsedVideoParameters->DisplayCount[1]                      = DisplayCount1(ProgressiveSequence, Frame, TopFieldFirst, RepeatFirstField);
 
 #if 0
-    report(severity_info, "%s:%d (%d, %d, %d, %d) - CountsIndex %d Legal %d PanScanCount %d \n", __FUNCTION__, __LINE__,
-           ProgressiveSequence, Frame, TopFieldFirst, RepeatFirstField,
-           CountsIndex(ProgressiveSequence, Frame, TopFieldFirst, RepeatFirstField),
-           Legal(ProgressiveSequence, Frame, TopFieldFirst, RepeatFirstField),
-           PanScanCount(ProgressiveSequence, Frame, TopFieldFirst, RepeatFirstField));
+    report (severity_info, "%s:%d (%d, %d, %d, %d) - CountsIndex %d Legal %d PanScanCount %d \n", __FUNCTION__, __LINE__,
+            ProgressiveSequence, Frame, TopFieldFirst, RepeatFirstField,
+            CountsIndex(ProgressiveSequence, Frame, TopFieldFirst, RepeatFirstField),
+            Legal(ProgressiveSequence, Frame, TopFieldFirst, RepeatFirstField),
+            PanScanCount(ProgressiveSequence, Frame, TopFieldFirst, RepeatFirstField));
 
-    report(severity_info, "%s:%d - DisplayCount0 %d DisplayCount1 %d\n", __FUNCTION__, __LINE__, ParsedVideoParameters->DisplayCount[0], ParsedVideoParameters->DisplayCount[1]);
+    report (severity_info, "%s:%d - DisplayCount0 %d DisplayCount1 %d\n", __FUNCTION__, __LINE__, ParsedVideoParameters->DisplayCount[0], ParsedVideoParameters->DisplayCount[1]);
 #endif
 
     ParsedVideoParameters->PanScan.Count                        = PanAndScanCount;
-
-    for (unsigned int i = 0; i < PanAndScanCount; i++)
+    for (unsigned int i=0; i<PanAndScanCount; i++)
     {
         ParsedVideoParameters->PanScan.DisplayCount[i]          = 1;
         ParsedVideoParameters->PanScan.HorizontalOffset[i]      = FrameParameters->PictureDisplayExtensionHeader.frame_centre[i].horizontal_offset;
@@ -1167,13 +1124,13 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::CommitFrameForDecode(void)
     // Record our claim on both the frame and stream parameters
     //
 
-    Buffer->AttachBuffer(StreamParametersBuffer);
-    Buffer->AttachBuffer(FrameParametersBuffer);
+    Buffer->AttachBuffer (StreamParametersBuffer);
+    Buffer->AttachBuffer (FrameParametersBuffer);
 
     //
     // We clear the FrameParameters pointer, a new one will be obtained
     // before/if we read in headers pertaining to the next frame. This
-    // will generate an error should I accidentally write code that
+    // will generate an error should I accidentally write code that 
     // accesses this data when it should not.
     //
 
@@ -1196,7 +1153,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::CommitFrameForDecode(void)
 ///             parameters are new.
 ///
 /// /////////////////////////////////////////////////////////////////////////
-bool   FrameParser_VideoAvs_c::NewStreamParametersCheck(void)
+bool   FrameParser_VideoAvs_c::NewStreamParametersCheck (void)
 {
     bool            Different;
 
@@ -1215,11 +1172,10 @@ bool   FrameParser_VideoAvs_c::NewStreamParametersCheck(void)
     // memcmp should be sufficient).
     //
 
-    Different   = memcmp(&CopyOfStreamParameters, StreamParameters, sizeof(AvsStreamParameters_t)) != 0;
-
+    Different   = memcmp (&CopyOfStreamParameters, StreamParameters, sizeof(AvsStreamParameters_t)) != 0;
     if (Different)
     {
-        memcpy(&CopyOfStreamParameters, StreamParameters, sizeof(AvsStreamParameters_t));
+        memcpy (&CopyOfStreamParameters, StreamParameters, sizeof(AvsStreamParameters_t));
         return true;
     }
 
@@ -1235,7 +1191,7 @@ bool   FrameParser_VideoAvs_c::NewStreamParametersCheck(void)
 /// \brief      Stream specific function to prepare a reference frame list
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoAvs_c::PrepareReferenceFrameList(void)
+FrameParserStatus_t   FrameParser_VideoAvs_c::PrepareReferenceFrameList (void)
 {
     unsigned int                        i;
     unsigned int                        ReferenceFramesRequired;
@@ -1245,7 +1201,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::PrepareReferenceFrameList(void)
 
     // Note we cannot use StreamParameters or FrameParameters to address data directly,
     // as these may no longer apply to the frame we are dealing with.
-    // Particularly if we have seen a sequence header or group of pictures
+    // Particularly if we have seen a sequenece header or group of pictures
     // header which belong to the next frame.
 
     PictureHeader               = &(((AvsFrameParameters_t *)(ParsedFrameParameters->FrameParameterStructure))->PictureHeader);
@@ -1253,7 +1209,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::PrepareReferenceFrameList(void)
     ReferenceFramesRequired     = REFERENCE_FRAMES_REQUIRED(PictureCodingType);
     ReferenceFramesDesired      = REFERENCE_FRAMES_DESIRED(PictureCodingType);
 
-    FRAME_DEBUG("%s: ReferenceFrameList.EntryCount %d, Picture type = %d\n", __FUNCTION__, ReferenceFrameList.EntryCount, PictureCodingType);
+    FRAME_DEBUG ("%s: ReferenceFrameList.EntryCount %d, Picture type = %d\n", __FUNCTION__, ReferenceFrameList.EntryCount, PictureCodingType);
 
     // Check for sufficient reference frames.  We cannot decode otherwise
     if (ReferenceFrameList.EntryCount < ReferenceFramesRequired)
@@ -1263,25 +1219,22 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::PrepareReferenceFrameList(void)
     ParsedFrameParameters->ReferenceFrameList[0].EntryCount             = ReferenceFramesDesired;
 
     if ((PictureCodingType == AVS_PICTURE_CODING_TYPE_P) && (LastReferenceFramePictureCodingType == AVS_PICTURE_CODING_TYPE_I))
-    {
-        // We must use the previous I frame for both entries in the reference frame list
-        for (i = 0; i < ReferenceFramesDesired; i++)
-            ParsedFrameParameters->ReferenceFrameList[0].EntryIndicies[i]   = ReferenceFrameList.EntryIndicies[ReferenceFrameList.EntryCount - 1];
+    {   // We must use the previous I frame for both entries in the reference frame list
+        for (i=0; i<ReferenceFramesDesired; i++)
+            ParsedFrameParameters->ReferenceFrameList[0].EntryIndicies[i]   = ReferenceFrameList.EntryIndicies[ReferenceFrameList.EntryCount-1];
     }
     else if (ReferenceFrameList.EntryCount < ReferenceFramesDesired)    // this should always be covered by previous case
     {
-        for (i = 0; i < ReferenceFrameList.EntryCount; i++)
+        for (i=0; i<ReferenceFrameList.EntryCount; i++)
             ParsedFrameParameters->ReferenceFrameList[0].EntryIndicies[i]   = ReferenceFrameList.EntryIndicies[i];
-
-        for (i = ReferenceFrameList.EntryCount; i < ReferenceFramesDesired; i++)
-            ParsedFrameParameters->ReferenceFrameList[0].EntryIndicies[i]   = ReferenceFrameList.EntryIndicies[ReferenceFrameList.EntryCount - 1];
+        for (i=ReferenceFrameList.EntryCount; i<ReferenceFramesDesired; i++)
+            ParsedFrameParameters->ReferenceFrameList[0].EntryIndicies[i]   = ReferenceFrameList.EntryIndicies[ReferenceFrameList.EntryCount-1];
     }
     else
     {
-        for (i = 0; i < ReferenceFramesDesired; i++)
+        for (i=0; i<ReferenceFramesDesired; i++)
             ParsedFrameParameters->ReferenceFrameList[0].EntryIndicies[i]   = ReferenceFrameList.EntryIndicies[ReferenceFrameList.EntryCount - ReferenceFramesDesired + i];
     }
-
     //FRAME_TRACE("Prepare Ref list %d %d - %d %d - %d %d %d\n", ParsedFrameParameters->ReferenceFrameList[0].EntryIndicies[0], ParsedFrameParameters->ReferenceFrameList[0].EntryIndicies[1],
     //        ReferenceFrameList.EntryIndicies[0], ReferenceFrameList.EntryIndicies[1],
     //        ReferenceFramesDesired, ReferenceFrameList.EntryCount, ReferenceFrameList.EntryCount - ReferenceFramesDesired);
@@ -1301,7 +1254,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::PrepareReferenceFrameList(void)
 ///             codec is informed immediately of a release on the first field of a field picture.
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoAvs_c::ForPlayUpdateReferenceFrameList(void)
+FrameParserStatus_t   FrameParser_VideoAvs_c::ForPlayUpdateReferenceFrameList (void)
 {
     unsigned int        i;
     bool                LastField;
@@ -1315,19 +1268,18 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ForPlayUpdateReferenceFrameList(vo
         {
             if (ReferenceFrameList.EntryCount >= MAX_REFERENCE_FRAMES_FOR_FORWARD_DECODE)
             {
-                Player->CallInSequence(Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, ReferenceFrameList.EntryIndicies[0]);
+                Player->CallInSequence (Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, ReferenceFrameList.EntryIndicies[0]);
 
                 ReferenceFrameList.EntryCount--;
-
-                for (i = 0; i < ReferenceFrameList.EntryCount; i++)
-                    ReferenceFrameList.EntryIndicies[i] = ReferenceFrameList.EntryIndicies[i + 1];
+                for (i=0; i<ReferenceFrameList.EntryCount; i++)
+                    ReferenceFrameList.EntryIndicies[i] = ReferenceFrameList.EntryIndicies[i+1];
             }
 
             ReferenceFrameList.EntryIndicies[ReferenceFrameList.EntryCount++] = ParsedFrameParameters->DecodeFrameIndex;
         }
         else
         {
-            Player->CallInSequence(Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, ParsedFrameParameters->DecodeFrameIndex);
+            Player->CallInSequence (Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, ParsedFrameParameters->DecodeFrameIndex);
         }
     }
 
@@ -1338,12 +1290,12 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::ForPlayUpdateReferenceFrameList(vo
 //{{{  RevPlayProcessDecodeStacks
 // /////////////////////////////////////////////////////////////////////////
 //
-//      Stream specific override function for processing decode stacks, this
-//      initializes the post decode ring before passing itno the real
+//      Stream specific override function for processing decode stacks, this 
+//      initializes the post decode ring before passing itno the real 
 //      implementation of this function.
 //
 
-FrameParserStatus_t   FrameParser_VideoAvs_c::RevPlayProcessDecodeStacks(void)
+FrameParserStatus_t   FrameParser_VideoAvs_c::RevPlayProcessDecodeStacks (void)
 {
     ReverseQueuedPostDecodeSettingsRing->Flush();
 
@@ -1357,7 +1309,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::RevPlayProcessDecodeStacks(void)
 //      Private - Calculate picture distance
 //
 
-FrameParserStatus_t   FrameParser_VideoAvs_c::CalculateFieldOffsets(unsigned int FirstSliceCodeIndex)
+FrameParserStatus_t   FrameParser_VideoAvs_c::CalculateFieldOffsets (unsigned int FirstSliceCodeIndex)
 {
     AvsVideoPictureHeader_t*            PictureHeader;
     AvsVideoSequence_t*                 SequenceHeader;
@@ -1369,7 +1321,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::CalculateFieldOffsets(unsigned int
     AvsVideoSlice_t*                    Slice;
     bool                                BottomFieldSlice        = false;
 
-    FRAME_DEBUG("%s\n", __FUNCTION__);
+    FRAME_DEBUG ("%s\n", __FUNCTION__);
 
     // Check we have the headers we need
     if ((StreamParameters == NULL) || !StreamParameters->SequenceHeaderPresent)
@@ -1377,7 +1329,6 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::CalculateFieldOffsets(unsigned int
         FRAME_ERROR("%s - Stream parameters unavailable for decode.\n", __FUNCTION__);
         return FrameParserNoStreamParameters;
     }
-
     if ((FrameParameters == NULL) || !FrameParameters->PictureHeaderPresent)
     {
         FRAME_ERROR("%s - Frame parameters unavailable for decode.\n", __FUNCTION__);
@@ -1400,9 +1351,8 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::CalculateFieldOffsets(unsigned int
     FRAME_DEBUG("%s top slice %d at %d\n", __FUNCTION__, ExtractStartCodeCode(Code), ExtractStartCodeOffset(Code));
 
     SliceCount                          = 0;
-    FRAME_TRACE("Slice headers :- \n");
-
-    for (unsigned int i = FirstSliceCodeIndex; i < StartCodeList->NumberOfStartCodes; i++)
+    FRAME_TRACE("Slice headers :- \n" );
+    for (unsigned int i=FirstSliceCodeIndex; i<StartCodeList->NumberOfStartCodes; i++)
     {
         Slice                           = &FrameParameters->SliceHeaderList.slice_array[SliceCount];
         Code                            = StartCodeList->StartCodes[i];
@@ -1419,7 +1369,6 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::CalculateFieldOffsets(unsigned int
             BottomFieldSlice                    = true;
         }
     }
-
     FrameParameters->SliceHeaderList.no_slice_headers   = SliceCount;
     return FrameParserNoError;
 }
@@ -1427,7 +1376,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::CalculateFieldOffsets(unsigned int
 //{{{  RevPlayGeneratePostDecodeParameterSettings
 // /////////////////////////////////////////////////////////////////////////
 //
-//      Stream specific function to generate the post decode parameter
+//      Stream specific function to generate the post decode parameter 
 //      settings for reverse play, these consist of the display frame index,
 //      and presentation time, both of which may be deferred if the information
 //      is unavailable.
@@ -1440,7 +1389,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::CalculateFieldOffsets(unsigned int
 //      and then process what is on the ring.
 //
 
-FrameParserStatus_t   FrameParser_VideoAvs_c::RevPlayGeneratePostDecodeParameterSettings(void)
+FrameParserStatus_t   FrameParser_VideoAvs_c::RevPlayGeneratePostDecodeParameterSettings (void)
 {
     //
     // If this is the first decode of a frame then we need display frame indices and presentation timnes
@@ -1454,23 +1403,23 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::RevPlayGeneratePostDecodeParameter
 
         if (!ParsedFrameParameters->ReferenceFrame)
         {
-            ReverseQueuedPostDecodeSettingsRing->Insert((unsigned int)ParsedFrameParameters);
-            ReverseQueuedPostDecodeSettingsRing->Insert((unsigned int)ParsedVideoParameters);
+            ReverseQueuedPostDecodeSettingsRing->Insert ((unsigned int)ParsedFrameParameters);
+            ReverseQueuedPostDecodeSettingsRing->Insert ((unsigned int)ParsedVideoParameters);
         }
         else
 
-            //
-            // If this is a reference frame then first process it, then process the frames on the ring
-            //
+        //
+        // If this is a reference frame then first process it, then process the frames on the ring
+        //
 
         {
-            CalculateFrameIndexAndPts(ParsedFrameParameters, ParsedVideoParameters);
+            CalculateFrameIndexAndPts (ParsedFrameParameters, ParsedVideoParameters);
 
             while (ReverseQueuedPostDecodeSettingsRing->NonEmpty())
             {
-                ReverseQueuedPostDecodeSettingsRing->Extract((unsigned int *)&DeferredParsedFrameParameters);
-                ReverseQueuedPostDecodeSettingsRing->Extract((unsigned int *)&DeferredParsedVideoParameters);
-                CalculateFrameIndexAndPts(DeferredParsedFrameParameters, DeferredParsedVideoParameters);
+                ReverseQueuedPostDecodeSettingsRing->Extract ((unsigned int *)&DeferredParsedFrameParameters);
+                ReverseQueuedPostDecodeSettingsRing->Extract ((unsigned int *)&DeferredParsedVideoParameters);
+                CalculateFrameIndexAndPts (DeferredParsedFrameParameters, DeferredParsedVideoParameters);
             }
         }
     }
@@ -1491,7 +1440,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::RevPlayGeneratePostDecodeParameter
 //      fields (for field pictures).
 //
 
-FrameParserStatus_t   FrameParser_VideoAvs_c::RevPlayRemoveReferenceFrameFromList(void)
+FrameParserStatus_t   FrameParser_VideoAvs_c::RevPlayRemoveReferenceFrameFromList (void)
 {
     bool        LastField;
 
@@ -1500,7 +1449,7 @@ FrameParserStatus_t   FrameParser_VideoAvs_c::RevPlayRemoveReferenceFrameFromLis
 
     if ((ReferenceFrameList.EntryCount != 0) && LastField)
     {
-        Player->CallInSequence(Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, ParsedFrameParameters->DecodeFrameIndex);
+        Player->CallInSequence (Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, ParsedFrameParameters->DecodeFrameIndex);
 
         if (LastField)
             ReferenceFrameList.EntryCount--;

@@ -23,7 +23,7 @@ Date        Modification                                    Name
 #include "display.h"
 
 //{{{  HavanaDemux_c
-HavanaDemux_c::HavanaDemux_c(void)
+HavanaDemux_c::HavanaDemux_c (void)
 {
     DEMUX_DEBUG("\n");
 
@@ -31,9 +31,9 @@ HavanaDemux_c::HavanaDemux_c(void)
     PlayerPlayback      = NULL;
     DemuxContext        = NULL;
 }
-//}}}
+//}}}  
 //{{{  ~HavanaDemux_c
-HavanaDemux_c::~HavanaDemux_c(void)
+HavanaDemux_c::~HavanaDemux_c (void)
 {
     DEMUX_DEBUG("\n");
 
@@ -41,9 +41,9 @@ HavanaDemux_c::~HavanaDemux_c(void)
     PlayerPlayback      = NULL;
     DemuxContext        = NULL;
 
-    OS_TerminateMutex(&InputLock);
+    OS_TerminateMutex (&InputLock);
 }
-//}}}
+//}}}  
 //{{{  Init
 //{{{  doxynote
 /// \brief Create and initialise all of the necessary player components for a new player stream
@@ -51,10 +51,10 @@ HavanaDemux_c::~HavanaDemux_c(void)
 /// \param PlayerPlayback       The player playback to which the stream will be added
 /// \param DemultiplexorContext Context variable used to manipulate the demultiplexor (TS).
 /// \return                     Havana status code, HavanaNoError indicates success.
-//}}}
-HavanaStatus_t HavanaDemux_c::Init(class Player_c*         Player,
-                                   PlayerPlayback_t        PlayerPlayback,
-                                   DemultiplexorContext_t  DemultiplexorContext)
+//}}}  
+HavanaStatus_t HavanaDemux_c::Init     (class Player_c*         Player,
+                                        PlayerPlayback_t        PlayerPlayback,
+                                        DemultiplexorContext_t  DemultiplexorContext)
 {
     DEMUX_DEBUG("\n");
 
@@ -62,39 +62,40 @@ HavanaStatus_t HavanaDemux_c::Init(class Player_c*         Player,
     this->PlayerPlayback        = PlayerPlayback;
     this->DemuxContext          = DemultiplexorContext;
 
-    if (OS_InitializeMutex(&InputLock) != OS_NO_ERROR)
+    if (OS_InitializeMutex (&InputLock) != OS_NO_ERROR)
     {
-        DEMUX_ERROR("Failed to initialize InputLock mutex\n");
+        DEMUX_ERROR ("Failed to initialize InputLock mutex\n");
         return HavanaNoMemory;
     }
 
     return HavanaNoError;
 }
-//}}}
+//}}}  
 //{{{  InjectData
-HavanaStatus_t HavanaDemux_c::InjectData(const unsigned char*            Data,
-        unsigned int                    DataLength)
+HavanaStatus_t HavanaDemux_c::InjectData       (const unsigned char*            Data,
+                                                unsigned int                    DataLength)
 {
     Buffer_t                    Buffer;
     PlayerInputDescriptor_t*    InputDescriptor;
 
     //OS_LockMutex (&InputLock);
-    Player->GetInjectBuffer(&Buffer);
-    Buffer->ObtainMetaDataReference(Player->MetaDataInputDescriptorType, (void**)&InputDescriptor);
+    Player->GetInjectBuffer (&Buffer);
+    Buffer->ObtainMetaDataReference (Player->MetaDataInputDescriptorType, (void**)&InputDescriptor);
 
     InputDescriptor->MuxType                    = MuxTypeTransportStream;
     InputDescriptor->DemultiplexorContext       = DemuxContext;
+
     InputDescriptor->PlaybackTimeValid          = false;
     InputDescriptor->DecodeTimeValid            = false;
     InputDescriptor->DataSpecificFlags          = 0;
 
-    Buffer->RegisterDataReference(DataLength, (void*)Data);
-    Buffer->SetUsedDataSize(DataLength);
+    Buffer->RegisterDataReference (DataLength, (void*)Data);
+    Buffer->SetUsedDataSize (DataLength);
 
-    Player->InjectData(PlayerPlayback, Buffer);
+    Player->InjectData (PlayerPlayback, Buffer);
     //OS_UnLockMutex (&InputLock);
 
     return HavanaNoError;
 }
-//}}}
+//}}}  
 

@@ -33,6 +33,6 @@ Date        Modification                                    Name
 
 #include "dvb_module.h"
 
-struct dvb_device *DvrInit(const struct file_operations *KernelDvrFops);
+struct dvb_device*      DvrInit        (struct file_operations*         KernelDvrFops);
 
 #endif

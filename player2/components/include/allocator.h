@@ -49,32 +49,32 @@ typedef enum
 
 class Allocator_c
 {
-    public:
+public:
 
-        AllocatorStatus_t   InitializationStatus;
+    AllocatorStatus_t   InitializationStatus;
 
-        virtual ~Allocator_c(void) {};
+    virtual ~Allocator_c( void ) {};
 
-        virtual AllocatorStatus_t Allocate(unsigned int      Size,
-                                           unsigned char   **Block,
-                                           bool              NonBlocking   = false) = 0;
+    virtual AllocatorStatus_t Allocate( unsigned int      Size,
+					unsigned char   **Block,
+					bool              NonBlocking   = false ) = 0;
 
-        virtual AllocatorStatus_t AllocateLargest(
-            unsigned int     *Size,
-            unsigned char   **Block,
-            bool              NonBlocking   = false) = 0;
+    virtual AllocatorStatus_t AllocateLargest( 
+					unsigned int	 *Size,
+					unsigned char	**Block,
+					bool              NonBlocking   = false ) = 0;
 
-        virtual AllocatorStatus_t ExtendToLargest(
-            unsigned int     *Size,
-            unsigned char   **Block,
-            bool          ExtendUpwards = true) = 0;
+    virtual AllocatorStatus_t ExtendToLargest( 
+					unsigned int	 *Size,
+					unsigned char	**Block,
+					bool		  ExtendUpwards	= true ) = 0;
 
-        virtual AllocatorStatus_t Free(void) = 0;
+    virtual AllocatorStatus_t Free(     void ) = 0;
 
-        virtual AllocatorStatus_t Free(unsigned int      Size,
-                                       unsigned char    *Block) = 0;
+    virtual AllocatorStatus_t Free(     unsigned int      Size,
+					unsigned char    *Block ) = 0;
 
-        virtual AllocatorStatus_t LargestFreeBlock(unsigned int  *Size) = 0;
+    virtual AllocatorStatus_t LargestFreeBlock( 	unsigned int	 *Size ) = 0;
 };
 #endif
 

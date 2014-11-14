@@ -184,14 +184,14 @@ typedef struct RmvStreamParameters_s
 #define RMV_MAX_SEGMENTS                        128
 typedef struct RmvVideoSegment_s
 {
-    unsigned int    Valid;
-    unsigned int    Offset;
+        unsigned int    Valid;
+        unsigned int    Offset;
 } RmvVideoSegment_t;
 
 typedef struct RmvVideoSegmentList_s
 {
-    unsigned int            NumSegments;
-    RmvVideoSegment_t       Segment[RMV_MAX_SEGMENTS];
+        unsigned int            NumSegments;
+        RmvVideoSegment_t       Segment[RMV_MAX_SEGMENTS];
 } RmvVideoSegmentList_t;
 
 

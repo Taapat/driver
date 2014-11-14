@@ -66,72 +66,72 @@ Date        Modification                                    Name
 //
 //      The Constructor function
 //
-FrameParser_Base_c::FrameParser_Base_c(void)
+FrameParser_Base_c::FrameParser_Base_c( void )
 {
     InitializationStatus        = FrameParserError;
 
 //
 
-    OS_InitializeMutex(&Lock);
+    OS_InitializeMutex( &Lock );
 
-    CodedFrameBufferPool    = NULL;
-    FrameBufferCount        = 0;
-    DecodeBufferPool        = NULL;
-    DecodeBufferCount       = 0;
-    OutputRing          = NULL;
+    CodedFrameBufferPool	= NULL;
+    FrameBufferCount		= 0;
+    DecodeBufferPool		= NULL;
+    DecodeBufferCount		= 0;
+    OutputRing			= NULL;
 
-    BufferManager       = NULL;
+    BufferManager		= NULL;
 
-    StreamParametersDescriptor  = NULL;
-    StreamParametersType    = NOT_SPECIFIED;
-    StreamParametersPool    = NULL;
-    StreamParametersBuffer  = NULL;
+    StreamParametersDescriptor	= NULL;
+    StreamParametersType	= NOT_SPECIFIED;
+    StreamParametersPool	= NULL;
+    StreamParametersBuffer	= NULL;
 
-    FrameParametersDescriptor   = NULL;
-    FrameParametersType     = NOT_SPECIFIED;
-    FrameParametersPool     = NULL;
-    FrameParametersBuffer   = NULL;
+    FrameParametersDescriptor	= NULL;
+    FrameParametersType		= NOT_SPECIFIED;
+    FrameParametersPool		= NULL;
+    FrameParametersBuffer	= NULL;
 
-    Buffer          = NULL;
-    BufferLength        = 0;
-    BufferData          = NULL;
-    CodedFrameParameters    = NULL;
-    ParsedFrameParameters   = NULL;
-    StartCodeList       = NULL;
+    Buffer			= NULL;
+    BufferLength		= 0;
+    BufferData			= NULL;
+    CodedFrameParameters	= NULL;
+    ParsedFrameParameters	= NULL;
+    StartCodeList		= NULL;
 
-    FirstDecodeAfterInputJump   = true;
-    SurplusDataInjected     = false;
-    ContinuousReverseJump   = false;
+    FirstDecodeAfterInputJump	= true;
+    SurplusDataInjected		= false;
+    ContinuousReverseJump	= false;
 
-    NextDecodeFrameIndex    = 0;
-    NextDisplayFrameIndex   = 0;
+    NextDecodeFrameIndex	= 0;
+    NextDisplayFrameIndex	= 0;
 
-    NativeTimeBaseLine      = INVALID_TIME;
-    LastNativeTimeUsedInBaseline = INVALID_TIME;
+    NativeTimeBaseLine		= INVALID_TIME;
+    LastNativeTimeUsedInBaseline= INVALID_TIME;
 
-    FrameToDecode       = false;
+    FrameToDecode		= false;
 
-    PlaybackSpeed       = 1;
-    PlaybackDirection       = PlayForward;
+    PlaybackSpeed		= 1;
+    PlaybackDirection		= PlayForward;
 
     //
     // Fill out default values for the configuration record
     //
 
-    memset(&Configuration, 0x00, sizeof(FrameParserConfiguration_t));
+    memset( &Configuration, 0x00, sizeof(FrameParserConfiguration_t) );
 
-    Configuration.FrameParserName       = "Unspecified";
+    Configuration.FrameParserName		= "Unspecified";
 
-    Configuration.StreamParametersCount     = 32;
-    Configuration.StreamParametersDescriptor    = NULL;
+    Configuration.StreamParametersCount		= 32;
+    Configuration.StreamParametersDescriptor	= NULL;
 
-    Configuration.FrameParametersCount      = 32;
-    Configuration.FrameParametersDescriptor = NULL;
+    Configuration.FrameParametersCount		= 32;
+    Configuration.FrameParametersDescriptor	= NULL;
 
-    Configuration.MaxReferenceFrameCount    = 32;       // Only need limiting for specific codecs (IE h264)
+    Configuration.MaxReferenceFrameCount	= 32;		// Only need limiting for specific codecs (IE h264)
 
-    Configuration.SupportSmoothReversePlay  = false;
-    Configuration.InitializeStartCodeList   = false;
+    Configuration.SupportSmoothReversePlay	= false;
+    Configuration.InitializeStartCodeList	= false;
 
 //
 
@@ -144,9 +144,9 @@ FrameParser_Base_c::FrameParser_Base_c(void)
 //      The Destructor function
 //
 
-FrameParser_Base_c::~FrameParser_Base_c(void)
+FrameParser_Base_c::~FrameParser_Base_c(        void )
 {
-    OS_TerminateMutex(&Lock);
+    OS_TerminateMutex( &Lock );
 }
 
 
@@ -155,7 +155,7 @@ FrameParser_Base_c::~FrameParser_Base_c(void)
 //      The Halt function, give up access to any registered resources
 //
 
-FrameParserStatus_t   FrameParser_Base_c::Halt(void)
+FrameParserStatus_t   FrameParser_Base_c::Halt(         void )
 {
     PurgeQueuedPostDecodeParameterSettings();
 
@@ -168,7 +168,7 @@ FrameParserStatus_t   FrameParser_Base_c::Halt(void)
 //      The Reset function release any resources, and reset all variable
 //
 
-FrameParserStatus_t   FrameParser_Base_c::Reset(void)
+FrameParserStatus_t   FrameParser_Base_c::Reset(        void )
 {
     NextDecodeFrameIndex                = 0;
     NextDisplayFrameIndex               = 0;
@@ -180,32 +180,32 @@ FrameParserStatus_t   FrameParser_Base_c::Reset(void)
     SurplusDataInjected                 = false;
     ContinuousReverseJump               = false;
 
-    StartCodeList               = NULL;
+    StartCodeList 		      	= NULL;
 
 //
 
-    if (StreamParametersPool != NULL)
+    if( StreamParametersPool != NULL )
     {
-        if (StreamParametersBuffer != NULL)
-        {
-            StreamParametersBuffer->DecrementReferenceCount(IdentifierFrameParser);
-            StreamParametersBuffer  = NULL;
-        }
+	if( StreamParametersBuffer != NULL )
+	{
+	    StreamParametersBuffer->DecrementReferenceCount( IdentifierFrameParser );
+	    StreamParametersBuffer	= NULL;
+	}
 
-        BufferManager->DestroyPool(StreamParametersPool);
-        StreamParametersPool                    = NULL;
+	BufferManager->DestroyPool( StreamParametersPool );
+	StreamParametersPool                    = NULL;
     }
 
-    if (FrameParametersPool != NULL)
+    if( FrameParametersPool != NULL )
     {
-        if (FrameParametersBuffer != NULL)
-        {
-            FrameParametersBuffer->DecrementReferenceCount(IdentifierFrameParser);
-            FrameParametersBuffer   = NULL;
-        }
+	if( FrameParametersBuffer != NULL )
+	{
+	    FrameParametersBuffer->DecrementReferenceCount( IdentifierFrameParser );
+	    FrameParametersBuffer	= NULL;
+	}
 
-        BufferManager->DestroyPool(FrameParametersPool);
-        FrameParametersPool                     = NULL;
+	BufferManager->DestroyPool( FrameParametersPool );
+	FrameParametersPool                     = NULL;
     }
 
 //
@@ -219,9 +219,9 @@ FrameParserStatus_t   FrameParser_Base_c::Reset(void)
 //      The register output ring function function
 //
 
-FrameParserStatus_t   FrameParser_Base_c::RegisterOutputBufferRing(Ring_t        Ring)
+FrameParserStatus_t   FrameParser_Base_c::RegisterOutputBufferRing( Ring_t        Ring )
 {
-    PlayerStatus_t  Status;
+PlayerStatus_t  Status;
 
 //
 
@@ -231,64 +231,60 @@ FrameParserStatus_t   FrameParser_Base_c::RegisterOutputBufferRing(Ring_t       
     // Obtain the class list, and the coded frame buffer pool
     //
 
-    Player->GetCodedFrameBufferPool(Stream, &CodedFrameBufferPool, NULL);
-    Player->GetDecodeBufferPool(Stream, &DecodeBufferPool);
+    Player->GetCodedFrameBufferPool( Stream, &CodedFrameBufferPool, NULL );
+    Player->GetDecodeBufferPool( Stream, &DecodeBufferPool );
 
     //
     // Obtain Buffer counts
     //
 
-    CodedFrameBufferPool->GetPoolUsage(&FrameBufferCount, NULL, NULL, NULL, NULL);
+    CodedFrameBufferPool->GetPoolUsage( &FrameBufferCount, NULL, NULL, NULL, NULL );
 
-    if (DecodeBufferPool != NULL)
-        Manifestor->GetDecodeBufferCount(&DecodeBufferCount);
+    if( DecodeBufferPool != NULL )
+	Manifestor->GetDecodeBufferCount( &DecodeBufferCount );
     else
-        DecodeBufferCount       = DEFAULT_DECODE_BUFFER_COUNT;
+	DecodeBufferCount       = DEFAULT_DECODE_BUFFER_COUNT;
 
     //
     // Attach the generic parsed frame parameters to every element of the pool.
     //
 
-    Status      = CodedFrameBufferPool->AttachMetaData(Player->MetaDataParsedFrameParametersType);
-
-    if (Status != BufferNoError)
+    Status      = CodedFrameBufferPool->AttachMetaData( Player->MetaDataParsedFrameParametersType );
+    if( Status != BufferNoError )
     {
-        report(severity_error, "FrameParser_Base_c::RegisterOutputBufferRing - Failed to attach parsed frame parameters to all coded frame buffers.\n");
-        SetComponentState(ComponentInError);
-        return Status;
+	report( severity_error, "FrameParser_Base_c::RegisterOutputBufferRing - Failed to attach parsed frame parameters to all coded frame buffers.\n" );
+	SetComponentState(ComponentInError);
+	return Status;
     }
 
     //
     // Now create the frame and stream parameter buffers
     //
 
-    Status  = RegisterStreamAndFrameDescriptors();
-
-    if (Status != FrameParserNoError)
+    Status	= RegisterStreamAndFrameDescriptors();
+    if( Status != FrameParserNoError )
     {
-        report(severity_error, "FrameParser_Base_c::RegisterOutputBufferRing - Failed to register the parameter buffer types.\n");
-        SetComponentState(ComponentInError);
-        return Status;
+	report( severity_error, "FrameParser_Base_c::RegisterOutputBufferRing - Failed to register the parameter buffer types.\n" );
+	SetComponentState(ComponentInError);
+	return Status;
     }
 
 //
 
-    Status      = BufferManager->CreatePool(&StreamParametersPool, StreamParametersType, Configuration.StreamParametersCount);
-
-    if (Status != BufferNoError)
+    Status      = BufferManager->CreatePool( &StreamParametersPool, StreamParametersType, Configuration.StreamParametersCount );
+    if( Status != BufferNoError )
     {
-        report(severity_error, "FrameParser_Base_c::RegisterOutputBufferRing - Failed to create a pool of stream parameter buffers.\n");
-        SetComponentState(ComponentInError);
-        return Status;
+	report( severity_error, "FrameParser_Base_c::RegisterOutputBufferRing - Failed to create a pool of stream parameter buffers.\n" );
+	SetComponentState(ComponentInError);
+	return Status;
     }
 
-    Status      = BufferManager->CreatePool(&FrameParametersPool, FrameParametersType, Configuration.FrameParametersCount);
-
-    if (Status != BufferNoError)
+    Status      = BufferManager->CreatePool( &FrameParametersPool, FrameParametersType, Configuration.FrameParametersCount );
+    if( Status != BufferNoError )
     {
-        report(severity_error, "FrameParser_Base_c::RegisterOutputBufferRing - Failed to create a pool of frame parameter buffers.\n");
-        SetComponentState(ComponentInError);
-        return Status;
+	report( severity_error, "FrameParser_Base_c::RegisterOutputBufferRing - Failed to create a pool of frame parameter buffers.\n" );
+	SetComponentState(ComponentInError);
+	return Status;
     }
 
 //
@@ -300,8 +296,8 @@ FrameParserStatus_t   FrameParser_Base_c::RegisterOutputBufferRing(Ring_t       
     // Go live
     //
 
-//    report (severity_error, "Setting component state to running\n");
-    SetComponentState(ComponentRunning);
+//    report (severity_error, "Setting component state to running\n");  
+    SetComponentState( ComponentRunning );
 
     return FrameParserNoError;
 }
@@ -312,20 +308,20 @@ FrameParserStatus_t   FrameParser_Base_c::RegisterOutputBufferRing(Ring_t       
 //      The input function perform base operations
 //
 
-FrameParserStatus_t   FrameParser_Base_c::Input(Buffer_t                  CodedBuffer)
+FrameParserStatus_t   FrameParser_Base_c::Input(        Buffer_t                  CodedBuffer )
 {
-    FrameParserStatus_t       Status;
+FrameParserStatus_t       Status;
 
     //
     // Initialize context pointers
     //
 
     Buffer                              = NULL;
-    BufferLength            = 0;
+    BufferLength			= 0;
     BufferData                          = NULL;
     CodedFrameParameters                = NULL;
     ParsedFrameParameters               = NULL;
-    StartCodeList           = NULL;
+    StartCodeList 			= NULL;
 
     //
     // Obtain pointers to data associated with the buffer.
@@ -333,65 +329,61 @@ FrameParserStatus_t   FrameParser_Base_c::Input(Buffer_t                  CodedB
 
     Buffer      = CodedBuffer;
 
-    Status      = Buffer->ObtainDataReference(NULL, &BufferLength, (void **)(&BufferData));
-
-    if ((Status != PlayerNoError) && (Status != BufferNoDataAttached))
+    Status      = Buffer->ObtainDataReference( NULL, &BufferLength, (void **)(&BufferData) );
+    if( (Status != PlayerNoError) && (Status != BufferNoDataAttached) )
     {
-        report(severity_error, "FrameParser_Base_c::Input - Unable to obtain data reference.\n");
-        return Status;
+	report( severity_error, "FrameParser_Base_c::Input - Unable to obtain data reference.\n" );
+	return Status;
     }
 
 //
 
-    Status      = Buffer->ObtainMetaDataReference(Player->MetaDataCodedFrameParametersType, (void **)(&CodedFrameParameters));
-
-    if (Status != PlayerNoError)
+    Status      = Buffer->ObtainMetaDataReference( Player->MetaDataCodedFrameParametersType, (void **)(&CodedFrameParameters) );
+    if( Status != PlayerNoError )
     {
-        report(severity_error, "FrameParser_Base_c::Input - Unable to obtain the meta data \"CodedFrameParameters\".\n");
-        return Status;
+	report( severity_error, "FrameParser_Base_c::Input - Unable to obtain the meta data \"CodedFrameParameters\".\n" );
+	return Status;
     }
 
 //
 
-    Status      = Buffer->ObtainMetaDataReference(Player->MetaDataParsedFrameParametersType, (void **)(&ParsedFrameParameters));
-
-    if (Status != PlayerNoError)
+    Status      = Buffer->ObtainMetaDataReference( Player->MetaDataParsedFrameParametersType, (void **)(&ParsedFrameParameters) );
+    if( Status != PlayerNoError )
     {
-        report(severity_error, "FrameParser_Base_c::Input - Unable to obtain the meta data \"ParsedFrameParameters\".\n");
-        return Status;
+	report( severity_error, "FrameParser_Base_c::Input - Unable to obtain the meta data \"ParsedFrameParameters\".\n" );
+	return Status;
     }
 
 //
 
-    if (Configuration.InitializeStartCodeList)
+    if( Configuration.InitializeStartCodeList )
     {
-        Status  = Buffer->ObtainMetaDataReference(Player->MetaDataStartCodeListType, (void **)(&StartCodeList));
-
-        if (Status != PlayerNoError)
-        {
-            report(severity_error, "FrameParser_Base_c::Input - Unable to obtain the meta data \"StartCodeList\".\n");
-            return Status;
-        }
+	Status	= Buffer->ObtainMetaDataReference( Player->MetaDataStartCodeListType, (void **)(&StartCodeList) );
+	if( Status != PlayerNoError )
+	{
+	    report( severity_error, "FrameParser_Base_c::Input - Unable to obtain the meta data \"StartCodeList\".\n" );
+	    return Status;
+	}
     }
 
 //
 
-    memset(ParsedFrameParameters, 0x00, sizeof(ParsedFrameParameters_t));
+    memset( ParsedFrameParameters, 0x00, sizeof(ParsedFrameParameters_t) );
     ParsedFrameParameters->DecodeFrameIndex             = INVALID_INDEX;
     ParsedFrameParameters->DisplayFrameIndex            = INVALID_INDEX;
     ParsedFrameParameters->NativePlaybackTime           = INVALID_TIME;
     ParsedFrameParameters->NormalizedPlaybackTime       = INVALID_TIME;
     ParsedFrameParameters->NativeDecodeTime             = INVALID_TIME;
     ParsedFrameParameters->NormalizedDecodeTime         = INVALID_TIME;
-    ParsedFrameParameters->IndependentFrame     = true;         // Default a frame to being independent
-    // to allow video decoders to mark single
-    // I fields as non-independent.
+    ParsedFrameParameters->IndependentFrame		= true;			// Default a frame to being independent
+										// to allow video decoders to mark single 
+										// I fields as non-independent.
 
     //
     // Gather any useful information about the policies in force
     //
 
-    Player->GetPlaybackSpeed(Playback, &PlaybackSpeed, &PlaybackDirection);
+    Player->GetPlaybackSpeed( Playback, &PlaybackSpeed, &PlaybackDirection );
 
 //
 
@@ -402,56 +394,56 @@ FrameParserStatus_t   FrameParser_Base_c::Input(Buffer_t                  CodedB
 // /////////////////////////////////////////////////////////////////////////
 //
 //      Translate times from a 90Khz native time to a microsecond
-//      normalized time. We will move the implementation of this
+//      normalized time. We will move the implementation of this 
 //      if we see any codecs using non-90Khz times.
 //
-//      In my arithmetic I pop briefly into a 27Mhz timebase, there
-//      is no real reason for this, it's just that historically our
+//      In my arithmetic I pop briefly into a 27Mhz timebase, there 
+//      is no real reason for this, it's just that historically our 
 //      chips extended the 90Khz to a 27Mhz wossname.
 //
 
 FrameParserStatus_t   FrameParser_Base_c::TranslatePlaybackTimeNativeToNormalized(
-    unsigned long long        NativeTime,
-    unsigned long long       *NormalizedTime)
+							unsigned long long        NativeTime,
+							unsigned long long       *NormalizedTime )
 {
-    unsigned long long      WrapMask;
-    unsigned long long      WrapOffset;
-    unsigned long long  LastSetNativeTime;
+unsigned long long      WrapMask;
+unsigned long long      WrapOffset;
+unsigned long long 	LastSetNativeTime;
 
     //
     // There is a fudge here, native time is actually only 33 bits long,
-    // whereas normalized time is 64 bits long. We maintain a normalized
-    // baseline that handles the affects of wrapping, which we use to
-    // adjust the calculated value.
+    // whereas normalized time is 64 bits long. We maintain a normalized 
+    // baseline that handles the affects of wrapping, which we use to 
+    // adjust the calculated value. 
     //
     //
 
-    if (LastNativeTimeUsedInBaseline == INVALID_TIME)
+    if( LastNativeTimeUsedInBaseline == INVALID_TIME )
     {
-        LastSetNativeTime       = Player->GetLastNativeTime(Playback);
+	LastSetNativeTime		= Player->GetLastNativeTime( Playback );
 
-        NativeTimeBaseLine      = ValidTime(LastSetNativeTime) ?
-                                  ((LastSetNativeTime - NativeTime + 0x0000000100000000ULL) & 0xfffffffe00000000ULL) :
-                                  0;
+	NativeTimeBaseLine		= ValidTime(LastSetNativeTime) ?
+						((LastSetNativeTime - NativeTime + 0x0000000100000000ULL) & 0xfffffffe00000000ULL) : 
+						0;
 
-        LastNativeTimeUsedInBaseline    = NativeTime;
+	LastNativeTimeUsedInBaseline    = NativeTime;
     }
 
     //
-    // Adjust the baseline if there is any wrap.
+    // Adjust the baseline if there is any wrap. 
     // First check for forward wrap, then reverse wrap.
     //
 
     WrapMask    = 0x0000000180000000ULL;
     WrapOffset  = 0x0000000200000000ULL;
 
-    if (((LastNativeTimeUsedInBaseline & WrapMask) == WrapMask) &&
-            ((NativeTime                   & WrapMask) == 0))
-        NativeTimeBaseLine      += WrapOffset;
+    if( ((LastNativeTimeUsedInBaseline & WrapMask) == WrapMask) &&
+	((NativeTime                   & WrapMask) == 0) )
+	NativeTimeBaseLine      += WrapOffset;
 
-    else if (((LastNativeTimeUsedInBaseline & WrapMask) == 0) &&
-             ((NativeTime                   & WrapMask) == WrapMask))
-        NativeTimeBaseLine      -= WrapOffset;
+    else if( ((LastNativeTimeUsedInBaseline & WrapMask) == 0) &&
+	     ((NativeTime                   & WrapMask) == WrapMask) )
+	NativeTimeBaseLine      -= WrapOffset;
 
     LastNativeTimeUsedInBaseline        = NativeTime;
 
@@ -461,23 +453,23 @@ FrameParserStatus_t   FrameParser_Base_c::TranslatePlaybackTimeNativeToNormalize
 
     *NormalizedTime     = (((NativeTimeBaseLine + NativeTime) * 300) + 13) / 27;
 
-    Player->SetLastNativeTime(Playback, (NativeTimeBaseLine + NativeTime));
+    Player->SetLastNativeTime( Playback, (NativeTimeBaseLine + NativeTime) );
     return FrameParserNoError;
 }
 
 // /////////////////////////////////////////////////////////////////////////
 //
-//      Translate times from a 1 microsecond normalized time to a 90Khz
+//      Translate times from a 1 microsecond normalized time to a 90Khz 
 //      native time, assumes that the native time is only 33 bits.
 //
-//      In my arithmetic I pop briefly into a 27Mhz timebase, there
-//      is no real reason for this, it's just that historically our
+//      In my arithmetic I pop briefly into a 27Mhz timebase, there 
+//      is no real reason for this, it's just that historically our 
 //      chips extended the 90Khz to a 27Mhz wossname.
 //
 
 FrameParserStatus_t   FrameParser_Base_c::TranslatePlaybackTimeNormalizedToNative(
-    unsigned long long        NormalizedTime,
-    unsigned long long       *NativeTime)
+							unsigned long long        NormalizedTime, 
+							unsigned long long       *NativeTime )
 {
     *NativeTime = (((NormalizedTime * 27) + 150) / 300) & 0x00000001ffffffffULL;
 
@@ -489,18 +481,18 @@ FrameParserStatus_t   FrameParser_Base_c::TranslatePlaybackTimeNormalizedToNativ
 //
 //      Apply a corrective baseline wrap.
 //
-//      A nasty situation occurs when the first native times for
-//      multiple streams have different wrap states, IE first video
+//      A nasty situation occurs when the first native times for 
+//      multiple streams have different wrap states, IE first video 
 //      pts at 0x1ffffffff , first audio at 0x000000001. In this case
-//      the video will wrap almost immediately, and the two native
+//      the video will wrap almost immediately, and the two native 
 //      times will differ wildly. Only the output timer (external to
-//      both streams) will know this has occurred, it can correct the
+//      both streams) will know this has occurred, it can correct the 
 //      situation by applying a corrective native time baseline wrap to
-//      the non-wrapping native time (audio in the example). This
+//      the non-wrapping native time (audio in the example). This 
 //      function allows it to do this.
 //
 
-FrameParserStatus_t   FrameParser_Base_c::ApplyCorrectiveNativeTimeWrap(void)
+FrameParserStatus_t   FrameParser_Base_c::ApplyCorrectiveNativeTimeWrap( void )
 {
     NativeTimeBaseLine  += 0x0000000200000000ULL;
     return FrameParserNoError;
@@ -514,43 +506,43 @@ FrameParserStatus_t   FrameParser_Base_c::ApplyCorrectiveNativeTimeWrap(void)
 ///      Process buffer forms the heart of the framework to assist with implementing a
 ///      frame parser. This is the method that will call the protected virtual methods
 ///      of this class.
+///                               
+///      \return Frame parser status code, FrameParserNoError indicates success.        
 ///
-///      \return Frame parser status code, FrameParserNoError indicates success.
-///
-FrameParserStatus_t   FrameParser_Base_c::ProcessBuffer(void)
+FrameParserStatus_t   FrameParser_Base_c::ProcessBuffer( void )
 {
-    FrameParserStatus_t     Status;
+FrameParserStatus_t     Status;
 
     //
     // Handle discontinuity in input stream
     //
 
-    if (CodedFrameParameters->StreamDiscontinuity)
+    if( CodedFrameParameters->StreamDiscontinuity )
     {
-        PurgeQueuedPostDecodeParameterSettings();
-        FirstDecodeAfterInputJump       = true;
-        SurplusDataInjected             = CodedFrameParameters->FlushBeforeDiscontinuity;
-        ContinuousReverseJump           = CodedFrameParameters->ContinuousReverseJump;
-        Player->CallInSequence(Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnOutputPartialDecodeBuffers);
+	PurgeQueuedPostDecodeParameterSettings();
+	FirstDecodeAfterInputJump       = true;
+	SurplusDataInjected             = CodedFrameParameters->FlushBeforeDiscontinuity;
+	ContinuousReverseJump           = CodedFrameParameters->ContinuousReverseJump;
+	Player->CallInSequence( Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnOutputPartialDecodeBuffers );
     }
 
     //
     // Do we have something to do with this buffer
     //
 
-    if (BufferLength == 0)
+    if( BufferLength == 0 )
     {
-        //
-        // Check for a marker frame, identified by no flags and no data
-        //
+	//
+	// Check for a marker frame, identified by no flags and no data
+	//
 
-        if (!CodedFrameParameters->StreamDiscontinuity)
-        {
-            Buffer->IncrementReferenceCount(IdentifierProcessParseToDecode);
-            OutputRing->Insert((unsigned int)Buffer);
-        }
+	if( !CodedFrameParameters->StreamDiscontinuity )
+	{
+	    Buffer->IncrementReferenceCount( IdentifierProcessParseToDecode );
+	    OutputRing->Insert( (unsigned int )Buffer );
+	}
 
-        return FrameParserNoError;
+	return FrameParserNoError;
     }
 
     //
@@ -560,43 +552,39 @@ FrameParserStatus_t   FrameParser_Base_c::ProcessBuffer(void)
     FrameToDecode                       = false;
 
     Status      = ReadHeaders();
-
-    if (Status != FrameParserNoError)
-        return Status;
+    if( Status != FrameParserNoError )
+	return Status;
 
     //
     // Do we still have something to do
     //
 
-    if (!FrameToDecode)
-        return FrameParserNoError;
+    if( !FrameToDecode )
+	return FrameParserNoError;
 
     //
     // Can we generate any queued index and pts values based on what we have seen
     //
 
     Status      = ProcessQueuedPostDecodeParameterSettings();
-
-    if (Status != FrameParserNoError)
-        return Status;
+    if( Status != FrameParserNoError )
+	return Status;
 
     //
     // Calculate the display index/PTS values
     //
 
     Status      = GeneratePostDecodeParameterSettings();
-
-    if (Status != FrameParserNoError)
-        return Status;
+    if( Status != FrameParserNoError )
+	return Status;
 
     //
     // Queue the frame for decode
     //
 
     Status      = QueueFrameForDecode();
-
-    if (Status != FrameParserNoError)
-        return Status;
+    if( Status != FrameParserNoError )
+	return Status;
 
     FirstDecodeAfterInputJump           = false;
     SurplusDataInjected                 = false;
@@ -613,59 +601,59 @@ FrameParserStatus_t   FrameParser_Base_c::ProcessBuffer(void)
 ///
 ///      Take the currently active buffer, FrameParser_Base_c::Buffer and queue it for
 ///      decode.
-///
+///        
 ///      This implementation provided by the FrameParser_Base_c supports simple forward
 ///      play by taking the active buffer and placing it directly on the output ring,
 ///      FrameParser_Base_c::OutputRing
-///
+///        
 ///      During reverse play this method is much more complex. Typically buffers must be
 ///      dispatched to the output ring in a different order during reverse playback. This means
 ///      that the implementation must squirrel the buffers away (and record their original order)
 ///      until FrameParser_Base_c::ProcessReverseDecodeStack (and
 ///      FrameParser_Base_c::ProcessReverseDecodeUnsatisfiedReferenceStack) are called.
-///
-///      \return Frame parser status code, FrameParserNoError indicates success.
+///                               
+///      \return Frame parser status code, FrameParserNoError indicates success.        
 ///
 
-FrameParserStatus_t   FrameParser_Base_c::QueueFrameForDecode(void)
+FrameParserStatus_t   FrameParser_Base_c::QueueFrameForDecode( void )
 {
-    unsigned int    i;
+unsigned int	i;
 
     //
-    // Adjust the independent frame flag from it's default value,
+    // Adjust the independent frame flag from it's default value, 
     // or the value set in the specific frame parser.
     //
 
-    if (ParsedFrameParameters->IndependentFrame)
+    if( ParsedFrameParameters->IndependentFrame )
     {
-        for (i = 0; i < ParsedFrameParameters->NumberOfReferenceFrameLists; i++)
-            if (ParsedFrameParameters->ReferenceFrameList[i].EntryCount != 0)
-            {
-                ParsedFrameParameters->IndependentFrame = false;
-                break;
-            }
+	for( i=0; i<ParsedFrameParameters->NumberOfReferenceFrameLists; i++ )
+	    if( ParsedFrameParameters->ReferenceFrameList[i].EntryCount != 0 )
+	    {
+		ParsedFrameParameters->IndependentFrame	= false;
+		break;
+	    }
     }
 
     //
-    // Base implementation derives the decode index,
+    // Base implementation derives the decode index, 
     // then queues the frame on the output ring.
     //
 
     ParsedFrameParameters->DecodeFrameIndex     = NextDecodeFrameIndex++;
 
 #if 0
-    report(severity_info, "Q %d (F = %d, K = %d, I = %d, R = %d)\n",
-           ParsedFrameParameters->DecodeFrameIndex,
-           ParsedFrameParameters->FirstParsedParametersForOutputFrame,
-           ParsedFrameParameters->KeyFrame,
-           ParsedFrameParameters->IndependentFrame,
-           ParsedFrameParameters->ReferenceFrame);
+    report( severity_info, "Q %d (F = %d, K = %d, I = %d, R = %d)\n",
+                ParsedFrameParameters->DecodeFrameIndex,
+                ParsedFrameParameters->FirstParsedParametersForOutputFrame,
+                ParsedFrameParameters->KeyFrame,
+                ParsedFrameParameters->IndependentFrame,
+                ParsedFrameParameters->ReferenceFrame );
 #endif
 
 //
 
-    Buffer->IncrementReferenceCount(IdentifierProcessParseToDecode);
-    OutputRing->Insert((unsigned int)Buffer);
+    Buffer->IncrementReferenceCount( IdentifierProcessParseToDecode );
+    OutputRing->Insert( (unsigned int )Buffer );
 
 //OS_SleepMilliSeconds( 4000 );
 
@@ -675,57 +663,53 @@ FrameParserStatus_t   FrameParser_Base_c::QueueFrameForDecode(void)
 
 // /////////////////////////////////////////////////////////////////////////
 ///
-///     \brief Internal function to register the stream/frame parameter
+///     \brief Internal function to register the stream/frame parameter 
 ///            meta data descriptors with the buffer manager.
 ///
 ///     Metadata generated by the frame parser and attached to buffers can, itself,
 ///     managed by the buffer manager to ensure that its lifetime is properly managed.
 ///     This method is used to register the metadata types used by a specific
 ///     frame parser.
-///
+///                               
 ///     \return Frame parser status code, FrameParserNoError indicates success.
 
-FrameParserStatus_t   FrameParser_Base_c::RegisterStreamAndFrameDescriptors(void)
+FrameParserStatus_t   FrameParser_Base_c::RegisterStreamAndFrameDescriptors( void )
 {
-    PlayerStatus_t  Status;
+PlayerStatus_t  Status;
 
 //
 
-    Player->GetBufferManager(&BufferManager);
+    Player->GetBufferManager( &BufferManager );
 
 //
 
-    Status      = BufferManager->FindBufferDataType(Configuration.StreamParametersDescriptor->TypeName, &StreamParametersType);
-
-    if (Status != BufferNoError)
+    Status      = BufferManager->FindBufferDataType( Configuration.StreamParametersDescriptor->TypeName, &StreamParametersType );
+    if( Status != BufferNoError )
     {
-        Status  = BufferManager->CreateBufferDataType(Configuration.StreamParametersDescriptor, &StreamParametersType);
-
-        if (Status != BufferNoError)
-        {
-            report(severity_error, "FrameParser_Base_c::RegisterStreamAndFrameDescriptors - Failed to create the stream parameters buffer type.\n");
-            return FrameParserError;
-        }
+	Status  = BufferManager->CreateBufferDataType( Configuration.StreamParametersDescriptor, &StreamParametersType );
+	if( Status != BufferNoError )
+	{
+	    report( severity_error, "FrameParser_Base_c::RegisterStreamAndFrameDescriptors - Failed to create the stream parameters buffer type.\n" );
+	    return FrameParserError;
+	}
     }
 
-    BufferManager->GetDescriptor(StreamParametersType, BufferDataTypeBase, &StreamParametersDescriptor);
+    BufferManager->GetDescriptor( StreamParametersType, BufferDataTypeBase, &StreamParametersDescriptor );
 
 //
 
-    Status      = BufferManager->FindBufferDataType(Configuration.FrameParametersDescriptor->TypeName, &FrameParametersType);
-
-    if (Status != BufferNoError)
+    Status      = BufferManager->FindBufferDataType( Configuration.FrameParametersDescriptor->TypeName, &FrameParametersType );
+    if( Status != BufferNoError )
     {
-        Status  = BufferManager->CreateBufferDataType(Configuration.FrameParametersDescriptor, &FrameParametersType);
-
-        if (Status != BufferNoError)
-        {
-            report(severity_error, "FrameParser_Base_c::RegisterFrameAndFrameDescriptors - Failed to create the Frame parameters buffer type.\n");
-            return FrameParserError;
-        }
+	Status  = BufferManager->CreateBufferDataType( Configuration.FrameParametersDescriptor, &FrameParametersType );
+	if( Status != BufferNoError )
+	{
+	    report( severity_error, "FrameParser_Base_c::RegisterFrameAndFrameDescriptors - Failed to create the Frame parameters buffer type.\n" );
+	    return FrameParserError;
+	}
     }
 
-    BufferManager->GetDescriptor(FrameParametersType, BufferDataTypeBase, &FrameParametersDescriptor);
+    BufferManager->GetDescriptor( FrameParametersType, BufferDataTypeBase, &FrameParametersDescriptor );
 
 //
 
@@ -736,44 +720,42 @@ FrameParserStatus_t   FrameParser_Base_c::RegisterStreamAndFrameDescriptors(void
 // /////////////////////////////////////////////////////////////////////////
 ///
 ///     \brief Get a new stream parameters buffer.
-///
+///       
 ///     Allocate, initialize with zeros and return a pointer to a block of data in which to store the stream
 ///     parameters. As a side effect the existing buffer, referenced via
 ///     FrameParser_Base_c::StreamParametersBuffer,
 ///     will have its reference count decreased, potentially causing it to be freed. It is the responsibility
 ///     of derived classes to make a claim on the existing buffer if they must refer to it later (or pass
 ///     it to another component that must refer to it later.
-///
+///                               
 ///     \return Frame parser status code, FrameParserNoError indicates success.
 ///
-FrameParserStatus_t   FrameParser_Base_c::GetNewStreamParameters(void  **Pointer)
+FrameParserStatus_t   FrameParser_Base_c::GetNewStreamParameters( void  **Pointer )
 {
-    FrameParserStatus_t     Status;
+FrameParserStatus_t     Status;
 
 //
 
-    if (StreamParametersBuffer != NULL)
+    if( StreamParametersBuffer != NULL )
     {
-        StreamParametersBuffer->DecrementReferenceCount(IdentifierFrameParser);
-        StreamParametersBuffer  = NULL;
+	StreamParametersBuffer->DecrementReferenceCount( IdentifierFrameParser );
+	StreamParametersBuffer  = NULL;
     }
 
 //
 
-    Status      = StreamParametersPool->GetBuffer(&StreamParametersBuffer, IdentifierFrameParser);
-
-    if (Status != BufferNoError)
+    Status      = StreamParametersPool->GetBuffer( &StreamParametersBuffer, IdentifierFrameParser );
+    if( Status != BufferNoError )
     {
-        report(severity_error, "FrameParser_Base_c::GetNewStreamParameters - Failed to allocate a buffer for the stream parameters.\n");
-        return FrameParserFailedToAllocateBuffer;
+	report( severity_error, "FrameParser_Base_c::GetNewStreamParameters - Failed to allocate a buffer for the stream parameters.\n" );
+	return FrameParserFailedToAllocateBuffer;
     }
 
 //
 
-    Status      = StreamParametersBuffer->ObtainDataReference(NULL, NULL, Pointer);
-
-    if (Status == BufferNoError)
-        memset(*Pointer, 0x00, StreamParametersDescriptor->FixedSize);
+    Status      = StreamParametersBuffer->ObtainDataReference( NULL, NULL, Pointer );
+    if( Status == BufferNoError )
+	memset( *Pointer, 0x00, StreamParametersDescriptor->FixedSize );
 
 //
 
@@ -784,44 +766,42 @@ FrameParserStatus_t   FrameParser_Base_c::GetNewStreamParameters(void  **Pointer
 // /////////////////////////////////////////////////////////////////////////
 ///
 ///     \brief Get a new frame parameters buffer.
-///
+///       
 ///     Allocate, initialise with zeros and return a pointer to a block of data in which to store the
-///     frame parameters.
+///     frane parameters.
 ///     As a side effect the existing buffer, referenced via FrameParser_Base_c::FrameParametersBuffer,
 ///     will have its reference count decreased, potentially causing it to be freed. It is the responsibility
 ///     of derived classes to make a claim on the existing buffer if they must refer to it later (or pass
 ///     it to another component that must refer to it later.
-///
+///                             
 ///     \return Frame parser status code, FrameParserNoError indicates success.
 ///
-FrameParserStatus_t   FrameParser_Base_c::GetNewFrameParameters(void   **Pointer)
+FrameParserStatus_t   FrameParser_Base_c::GetNewFrameParameters( void   **Pointer )
 {
-    FrameParserStatus_t     Status;
+FrameParserStatus_t     Status;
 
 //
 
-    if (FrameParametersBuffer != NULL)
+    if( FrameParametersBuffer != NULL )
     {
-        FrameParametersBuffer->DecrementReferenceCount(IdentifierFrameParser);
-        FrameParametersBuffer   = NULL;
+	FrameParametersBuffer->DecrementReferenceCount( IdentifierFrameParser );
+	FrameParametersBuffer   = NULL;
     }
 
 //
 
-    Status      = FrameParametersPool->GetBuffer(&FrameParametersBuffer, IdentifierFrameParser);
-
-    if (Status != BufferNoError)
+    Status      = FrameParametersPool->GetBuffer( &FrameParametersBuffer, IdentifierFrameParser );
+    if( Status != BufferNoError )
     {
-        report(severity_error, "FrameParser_Base_c::GetNewFrameParameters - Failed to allocate a buffer to hold frame parameters.\n");
-        return FrameParserFailedToAllocateBuffer;
+	report( severity_error, "FrameParser_Base_c::GetNewFrameParameters - Failed to allocate a buffer to hold frame parameters.\n" );
+	return FrameParserFailedToAllocateBuffer;
     }
 
 //
 
-    Status      = FrameParametersBuffer->ObtainDataReference(NULL, NULL, Pointer);
-
-    if (Status == BufferNoError)
-        memset(*Pointer, 0x00, FrameParametersDescriptor->FixedSize);
+    Status      = FrameParametersBuffer->ObtainDataReference( NULL, NULL, Pointer );
+    if( Status == BufferNoError )
+	memset( *Pointer, 0x00, FrameParametersDescriptor->FixedSize );
 
 //
 
@@ -838,7 +818,7 @@ FrameParserStatus_t   FrameParser_Base_c::GetNewFrameParameters(void   **Pointer
 ///     If a valid frame is found this method must also set ::FrameToDecode to true.
 ///
 ///     \return Frame parser status code, FrameParserNoError indicates success.
-///
+///       
 
 // /////////////////////////////////////////////////////////////////////////
 ///     \fn FrameParserStatus_t   FrameParser_Base_c::ProcessQueuedPostDecodeParameterSettings( void )
@@ -849,7 +829,7 @@ FrameParserStatus_t   FrameParser_Base_c::GetNewFrameParameters(void   **Pointer
 ///     cannot be determined until the B-frame to P-frame transition within the stream.
 ///
 ///     \return Frame parser status code, FrameParserNoError indicates success.
-///
+///       
 
 // /////////////////////////////////////////////////////////////////////////
 ///     \fn FrameParserStatus_t   FrameParser_Base_c::PurgeQueuedPostDecodeParameterSettings(   void )
@@ -859,15 +839,15 @@ FrameParserStatus_t   FrameParser_Base_c::GetNewFrameParameters(void   **Pointer
 ///     parameters) during analysis. Examples include I-frames within video streams where the display index
 ///     cannot be determined until the B-frame to P-frame transition within the stream.
 ///     \return Frame parser status code, FrameParserNoError indicates success.
-///
+///       
 
 // /////////////////////////////////////////////////////////////////////////
 ///     \fn FrameParserStatus_t   FrameParser_Base_c::GeneratePostDecodeParameterSettings(              void )
 ///     \brief Populate the post decode parameter block.
-///
+///     
 ///     Populate FrameParser_Base_c::ParsedFrameParameters with the frame parameters (as they will be after
 ///     decode has taken place).
 ///
 ///     \return Frame parser status code, FrameParserNoError indicates success.
-///
+///       
 

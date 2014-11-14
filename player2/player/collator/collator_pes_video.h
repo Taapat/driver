@@ -52,42 +52,39 @@ Date        Modification                                    Name
 
 class Collator_PesVideo_c : public Collator_Pes_c
 {
-    public:
+public:
 
-        //
-        // Collator class functions
-        //
+    //
+    // Collator class functions
+    //
 
-        virtual CollatorStatus_t   Input(PlayerInputDescriptor_t     *Input,
-                                         unsigned int          DataLength,
-                                         void             *Data,
-                                         bool              NonBlocking = false,
-                                         unsigned int         *DataLengthRemaining = NULL);
+    virtual CollatorStatus_t   Input(	PlayerInputDescriptor_t	 *Input,
+                                        unsigned int		  DataLength,
+                                        void			 *Data,
+					bool			  NonBlocking = false,
+					unsigned int		 *DataLengthRemaining = NULL );
 
-        CollatorStatus_t   InternalFrameFlush(void);
+    CollatorStatus_t   InternalFrameFlush(      void );
 
-        //
-        // A frame flush overload that allows the specific setting of a flushed by terminate flag.
-        // This allows such things as the frame parser to know that it can give display indices to
-        // all frames including this one, because any frames that follow will be part of what is
-        // strictly a new stream. This ensures that last framnes will be seen.
-        //
+    //
+    // A frame flush overload that allows the specific setting of a flushed by terminate flag.
+    // This allows such things as the frame parser to know that it can give display indices to 
+    // all frames including this one, because any frames that follow will be part of what is 
+    // strictly a new stream. This ensures that last framnes will be seen.
+    //
 
-        CollatorStatus_t   InternalFrameFlush(bool                    FlushedByStreamTerminate);
+    CollatorStatus_t   InternalFrameFlush(      bool                    FlushedByStreamTerminate );
 
-        //
-        // Some strange additions by someone
-        //
+    //
+    // Some strange additions by someone
+    //
 
-    protected:
+protected:
 
-        bool TerminationFlagIsSet;
+     bool TerminationFlagIsSet;
 
-    public:
-        Collator_PesVideo_c()
-        {
-            TerminationFlagIsSet = false;
-        }
+public:
+	Collator_PesVideo_c() { TerminationFlagIsSet = false; }
 
 };
 

@@ -47,10 +47,10 @@ Date        Modification                                    Name
 #define H264_CODED_FRAME_COUNT                          1024
 #define H264_MAXIMUM_FRAME_SIZE                         0x100000
 
-#define H264_FRAME_MEMORY_SIZE                          PLAYER2_H264_FRAME_MEMORY_SIZE           /* 0x800000 */
-#define H264_STREAM_PARAMETERS_COUNT                    PLAYER2_H264_STREAM_PARAMETERS_COUNT     /* 64 */
-#define H264_FRAME_PARAMETERS_COUNT                     PLAYER2_H264_FRAME_PARAMETERS_COUNT      /* 64 */
-#define H264_MACROBLOCK_STRUCTURE_MEMORY                PLAYER2_H264_MACROBLOCK_STRUCTURE_MEMORY /* 0.5mb per 1920x1088 frame */
+#define H264_FRAME_MEMORY_SIZE                          PLAYER2_H264_FRAME_MEMORY_SIZE /* 0x800000 */
+#define H264_STREAM_PARAMETERS_COUNT			PLAYER2_H264_STREAM_PARAMETERS_COUNT /* 64 */
+#define H264_FRAME_PARAMETERS_COUNT			PLAYER2_H264_FRAME_PARAMETERS_COUNT /* 64 */
+#define H264_MACROBLOCK_STRUCTURE_MEMORY                PLAYER2_H264_MACROBLOCK_STRUCTURE_MEMORY        /* 0.5mb per 1920x1088 frame */
 
 #define H264_STANDARD_MAX_SEQUENCE_PARAMETER_SETS       32
 #define H264_MAX_SEQUENCE_PARAMETER_SETS                32              /* Standard says 32 */
@@ -222,18 +222,18 @@ Date        Modification                                    Name
 #define NO_LONG_TERM_FRAME_INDICES                                      0xffffffff
 
 //
-// Colour matrix coefficient codes
+// Colour matrix coeffient codes
 //
 
-#define  H264_MATRIX_COEFFICIENTS_IDENTITY      0       // already in RGB
-#define  H264_MATRIX_COEFFICIENTS_BT709         1
-#define  H264_MATRIX_COEFFICIENTS_UNSPECIFIED       2
-#define  H264_MATRIX_COEFFICIENTS_RESERVED      3
-#define  H264_MATRIX_COEFFICIENTS_FCC           4
-#define  H264_MATRIX_COEFFICIENTS_BT470_BGI     5
-#define  H264_MATRIX_COEFFICIENTS_SMPTE_170M        6
-#define  H264_MATRIX_COEFFICIENTS_SMPTE_240M        7
-#define  H264_MATRIX_COEFFICIENTS_YCGCO         8
+#define  H264_MATRIX_COEFFICIENTS_IDENTITY		0		// already in RGB
+#define  H264_MATRIX_COEFFICIENTS_BT709			1
+#define  H264_MATRIX_COEFFICIENTS_UNSPECIFIED		2
+#define  H264_MATRIX_COEFFICIENTS_RESERVED		3
+#define  H264_MATRIX_COEFFICIENTS_FCC			4
+#define  H264_MATRIX_COEFFICIENTS_BT470_BGI		5
+#define  H264_MATRIX_COEFFICIENTS_SMPTE_170M		6
+#define  H264_MATRIX_COEFFICIENTS_SMPTE_240M		7
+#define  H264_MATRIX_COEFFICIENTS_YCGCO			8
 
 // ////////////////////////////////////////////////////////////////////////////
 //
@@ -552,7 +552,7 @@ typedef struct H264SliceHeader_s
     // Supplementary data
     //
 
-    unsigned int                nal_unit_type;                                  // Nal header fields, relevant to slice header content
+    unsigned int                nal_unit_type;                                  // Nal header fields, relevent to slice header content
     unsigned int                nal_ref_idc;
 
     H264SequenceParameterSetHeader_t            *SequenceParameterSet;          // Pointer to the appropriate sequence parameter set.
@@ -566,8 +566,8 @@ typedef struct H264SliceHeader_s
     int                         PicOrderCntTop;
     int                         PicOrderCntBot;
     int                         PicOrderCnt;
-    unsigned long long          ExtendedPicOrderCnt;                            // Pic order count adjusted to be monotonically increasing
-    // over multiples sequeneces.
+    unsigned long long          ExtendedPicOrderCnt;                            // Pic order count adjusted to be monotonically increasing 
+										// over multiples sequeneces.
 
     unsigned int                EntryPicOrderCntMsb;                            // Values used in the derivation
     unsigned int                ExitPicOrderCntMsb;

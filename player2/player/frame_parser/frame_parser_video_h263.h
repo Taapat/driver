@@ -58,51 +58,51 @@ Date        Modification                                    Name
 /// Frame parser for H263
 class FrameParser_VideoH263_c : public FrameParser_Video_c
 {
-    private:
+private:
 
-        FrameParserStatus_t         H263ReadPictureHeader(void);
+    FrameParserStatus_t         H263ReadPictureHeader(          void );
 
-        bool                        NewStreamParametersCheck(void);
+    bool                        NewStreamParametersCheck(       void );
 
-    protected:
+protected:
 
-        H263StreamParameters_t*     StreamParameters;
-        H263FrameParameters_t*      FrameParameters;
-        H263StreamParameters_t      CopyOfStreamParameters;
+    H263StreamParameters_t*     StreamParameters;
+    H263FrameParameters_t*      FrameParameters;
+    H263StreamParameters_t      CopyOfStreamParameters;
 
-        unsigned int                TemporalReference;
+    unsigned int                TemporalReference;
 
-        FrameParserStatus_t         CommitFrameForDecode(void);
+    FrameParserStatus_t         CommitFrameForDecode(           void );
 
-    public:
+public:
 
-        FrameParser_VideoH263_c(void);
-        ~FrameParser_VideoH263_c(void);
+    FrameParser_VideoH263_c(                                    void );
+    ~FrameParser_VideoH263_c(                                   void );
 
-        //
-        // Overrides for component base class functions
-        //
+    //
+    // Overrides for component base class functions
+    //
 
-        FrameParserStatus_t   Reset(void);
+    FrameParserStatus_t   Reset(                                void );
 
-        //
-        // FrameParser class functions
-        //
+    //
+    // FrameParser class functions
+    //
 
-        FrameParserStatus_t   RegisterOutputBufferRing(Ring_t          Ring);
+    FrameParserStatus_t   RegisterOutputBufferRing(             Ring_t          Ring );
 
-        //
-        // Stream specific functions
-        //
+    //
+    // Stream specific functions
+    //
 
-        FrameParserStatus_t   ReadHeaders(void);
+    FrameParserStatus_t   ReadHeaders(                                          void );
 
-        FrameParserStatus_t   ResetReferenceFrameList(void);
-        FrameParserStatus_t   PrepareReferenceFrameList(void);
+    FrameParserStatus_t   ResetReferenceFrameList(                              void );
+    FrameParserStatus_t   PrepareReferenceFrameList(                            void );
 
-        FrameParserStatus_t   ForPlayUpdateReferenceFrameList(void);
+    FrameParserStatus_t   ForPlayUpdateReferenceFrameList(                      void );
 
-        FrameParserStatus_t   RevPlayProcessDecodeStacks(void);
+    FrameParserStatus_t   RevPlayProcessDecodeStacks(                           void );
 };
 
 #endif

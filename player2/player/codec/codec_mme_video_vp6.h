@@ -72,47 +72,47 @@ Date        Modification                                    Name
 /// The Vp6 video codec proxy.
 class Codec_MmeVideoVp6_c : public Codec_MmeVideo_c
 {
-    private:
+private:
 
-        // Data
+    // Data
 
-        VP6_CapabilityParams_t              Vp6TransformCapability;
-        VP6_InitTransformerParam_t          Vp6InitializationParameters;
+    VP6_CapabilityParams_t              Vp6TransformCapability;
+    VP6_InitTransformerParam_t          Vp6InitializationParameters;
 
-        bool                                RestartTransformer;
-        unsigned int                        DecodingWidth;
-        unsigned int                        DecodingHeight;
+    bool                                RestartTransformer;
+    unsigned int                        DecodingWidth;
+    unsigned int                        DecodingHeight;
 
-        // Functions
+    // Functions
 
-    public:
+public:
 
-        //
-        // Constructor/Destructor methods
-        //
+    //
+    // Constructor/Destructor methods
+    //
 
-        Codec_MmeVideoVp6_c(void);
-        ~Codec_MmeVideoVp6_c(void);
+    Codec_MmeVideoVp6_c(                void );
+    ~Codec_MmeVideoVp6_c(               void );
 
-        //
-        // Stream specific functions
-        //
+    //
+    // Stream specific functions
+    //
 
-    protected:
+protected:
 
-        CodecStatus_t   Reset(void);
-        CodecStatus_t   HandleCapabilities(void);
+    CodecStatus_t   Reset(                                      void );
+    CodecStatus_t   HandleCapabilities(                         void );
 
-        CodecStatus_t   FillOutTransformerInitializationParameters(void);
-        CodecStatus_t   FillOutSetStreamParametersCommand(void);
-        CodecStatus_t   FillOutDecodeCommand(void);
-        CodecStatus_t   FillOutDecodeBufferRequest(BufferStructure_t              *Request);
+    CodecStatus_t   FillOutTransformerInitializationParameters( void );
+    CodecStatus_t   FillOutSetStreamParametersCommand(          void );
+    CodecStatus_t   FillOutDecodeCommand(                       void );
+    CodecStatus_t   FillOutDecodeBufferRequest(                 BufferStructure_t              *Request );
 
-        CodecStatus_t   ValidateDecodeContext(CodecBaseDecodeContext_t       *Context);
-        CodecStatus_t   DumpSetStreamParameters(void                           *Parameters);
-        CodecStatus_t   DumpDecodeParameters(void                           *Parameters);
+    CodecStatus_t   ValidateDecodeContext(                      CodecBaseDecodeContext_t       *Context );
+    CodecStatus_t   DumpSetStreamParameters(                    void                           *Parameters );
+    CodecStatus_t   DumpDecodeParameters(                       void                           *Parameters );
 
-        CodecStatus_t   SendMMEStreamParameters(void);
+    CodecStatus_t   SendMMEStreamParameters(                    void );
 
 
 };

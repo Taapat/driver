@@ -72,50 +72,50 @@ Date        Modification                                    Name
 /// The MJPEG video codec proxy.
 class Codec_MmeVideoMjpeg_c : public Codec_MmeVideo_c
 {
-    private:
+private:
 
-        // Data
+    // Data
 
 #if defined (USE_JPEG_HW_TRANSFORMER)
-        JPEGDECHW_VideoDecodeCapabilityParams_t     MjpegTransformCapability;
-        JPEGDECHW_VideoDecodeInitParams_t           MjpegInitializationParameters;
+    JPEGDECHW_VideoDecodeCapabilityParams_t     MjpegTransformCapability;
+    JPEGDECHW_VideoDecodeInitParams_t           MjpegInitializationParameters;
 #else
-        JPEGDEC_Capability_t                        MjpegTransformCapability;
+    JPEGDEC_Capability_t                        MjpegTransformCapability;
 #endif
 
-        unsigned int                                MaxBytesPerFrame;
+    unsigned int                                MaxBytesPerFrame;
 
-        // Functions
+    // Functions
 
-    public:
+public:
 
-        //
-        // Constructor/Destructor methods
-        //
+    //
+    // Constructor/Destructor methods
+    //
 
-        Codec_MmeVideoMjpeg_c(void);
-        ~Codec_MmeVideoMjpeg_c(void);
+    Codec_MmeVideoMjpeg_c(                void );
+    ~Codec_MmeVideoMjpeg_c(               void );
 
-        //
-        // Stream specific functions
-        //
+    //
+    // Stream specific functions
+    //
 
-    protected:
+protected:
 
-        CodecStatus_t   Reset(void);
-        CodecStatus_t   HandleCapabilities(void);
+    CodecStatus_t   Reset(                                      void );
+    CodecStatus_t   HandleCapabilities(                         void );
 
-        CodecStatus_t   FillOutTransformerInitializationParameters(void);
-        CodecStatus_t   FillOutSetStreamParametersCommand(void);
+    CodecStatus_t   FillOutTransformerInitializationParameters( void );
+    CodecStatus_t   FillOutSetStreamParametersCommand(          void );
 
 #if !defined (USE_JPEG_HW_TRANSFORMER) && !defined (USE_JPEG_FRAME_TRANSFORMER)
-        CodecStatus_t   FillOutTransformCommand(void);
-        CodecStatus_t   SendMMEDecodeCommand(void);
+    CodecStatus_t   FillOutTransformCommand(                    void );
+    CodecStatus_t   SendMMEDecodeCommand(                       void );
 #endif
-        CodecStatus_t   FillOutDecodeCommand(void);
+    CodecStatus_t   FillOutDecodeCommand(                       void );
 
-        CodecStatus_t   ValidateDecodeContext(CodecBaseDecodeContext_t       *Context);
-        CodecStatus_t   DumpSetStreamParameters(void                           *Parameters);
-        CodecStatus_t   DumpDecodeParameters(void                           *Parameters);
+    CodecStatus_t   ValidateDecodeContext(                      CodecBaseDecodeContext_t       *Context );
+    CodecStatus_t   DumpSetStreamParameters(                    void                           *Parameters );
+    CodecStatus_t   DumpDecodeParameters(                       void                           *Parameters ); 
 };
 #endif

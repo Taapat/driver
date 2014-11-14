@@ -33,6 +33,6 @@ Date        Modification                                    Name
 
 #include "dvbdev.h"
 
-struct dvb_device*      CaInit(struct DeviceContext_s*        DeviceContext);
+struct dvb_device*      CaInit         (struct DeviceContext_s*        DeviceContext);
 
 #endif

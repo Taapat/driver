@@ -43,44 +43,43 @@ Date        Modification                                    Name
 #include "sysfs_module.h"
 #include "player_interface.h"
 
-static int  __init      SysfsLoadModule(void);
-static void __exit      SysfsUnloadModule(void);
+static int  __init      SysfsLoadModule (void);
+static void __exit      SysfsUnloadModule (void);
 
-module_init(SysfsLoadModule);
-module_exit(SysfsUnloadModule);
+module_init             (SysfsLoadModule);
+module_exit             (SysfsUnloadModule);
 
-MODULE_DESCRIPTION("Sysfs driver for accessing STM streaming architecture.");
-MODULE_AUTHOR("Julian Wilson");
-MODULE_LICENSE("GPL");
+MODULE_DESCRIPTION      ("Sysfs driver for accessing STM streaming architecture.");
+MODULE_AUTHOR           ("Julian Wilson");
+MODULE_LICENSE          ("GPL");
 
 #define MODULE_NAME     "Player sysfs"
 
 
 struct SysfsContext_s*   SysfsContext;
 
-static int __init SysfsLoadModule(void)
+static int __init SysfsLoadModule (void)
 {
-    SysfsContext        = kmalloc(sizeof(struct SysfsContext_s),  GFP_KERNEL);
-
+    SysfsContext        = kmalloc (sizeof (struct SysfsContext_s),  GFP_KERNEL);
     if (SysfsContext == NULL)
     {
         SYSFS_ERROR("Unable to allocate device memory\n");
         return -ENOMEM;
     }
 
-    PlayerInterfaceInit();
+    PlayerInterfaceInit ();
 
     SYSFS_DEBUG("sysfs interface to stream device loaded\n");
 
     return 0;
 }
 
-static void __exit SysfsUnloadModule(void)
+static void __exit SysfsUnloadModule (void)
 {
-    PlayerInterfaceDelete();
+    PlayerInterfaceDelete ();
 
     if (SysfsContext != NULL)
-        kfree(SysfsContext);
+        kfree (SysfsContext);
 
     SysfsContext        = NULL;
 

@@ -34,25 +34,25 @@ Date        Modification                                    Name
 #define H_MONITOR_INLINE
 
 
-#include "linux/stm/monitor_types.h"
+#include "monitor_types.h"
 
 #if defined (CONFIG_MONITOR)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-void                    MonitorSignalEvent(monitor_event_code_t            EventCode,
-        unsigned int                    Parameters[MONITOR_PARAMETER_COUNT],
-        const char*                     Description);
+void                    MonitorSignalEvent     (monitor_event_code_t            EventCode,
+                                                unsigned int                    Parameters[MONITOR_PARAMETER_COUNT],
+                                                const char*                     Description);
 #ifdef __cplusplus
 }
 #endif
 
 #else
 
-static inline void      MonitorSignalEvent(monitor_event_code_t            EventCode,
-        unsigned int                    Parameters[MONITOR_PARAMETER_COUNT],
-        const char*                     Description) {}
+static inline void      MonitorSignalEvent     (monitor_event_code_t            EventCode,
+                                                unsigned int                    Parameters[MONITOR_PARAMETER_COUNT],
+                                                const char*                     Description) {}
 
 #endif
 

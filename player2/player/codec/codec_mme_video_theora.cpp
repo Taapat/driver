@@ -34,7 +34,6 @@ Date        Modification                                    Name
 //
 //      Include any component headers
 
-#include "osdev_device.h"
 #include "theora.h"
 #include "codec_mme_video_theora.h"
 #include "allocinline.h"
@@ -73,17 +72,17 @@ static BufferDataDescriptor_t                   TheoraCodecDecodeContextDescript
 //      C wrapper for the MME callback
 //
 
-typedef void (*MME_GenericCallback_t)(MME_Event_t Event, MME_Command_t * CallbackData, void *UserData);
+typedef void (*MME_GenericCallback_t) (MME_Event_t Event, MME_Command_t * CallbackData, void *UserData);
 
-static void MMECallbackStub(MME_Event_t      Event,
-                            MME_Command_t   *CallbackData,
-                            void            *UserData)
+static void MMECallbackStub(    MME_Event_t      Event,
+                                MME_Command_t   *CallbackData,
+                                void            *UserData )
 {
-    Codec_MmeBase_c         *Self = (Codec_MmeBase_c *)UserData;
+Codec_MmeBase_c         *Self = (Codec_MmeBase_c *)UserData;
 
-    CODEC_DEBUG("%s\n", __FUNCTION__);
+    CODEC_DEBUG("%s\n",__FUNCTION__);
 
-    Self->CallbackFromMME(Event, CallbackData);
+    Self->CallbackFromMME( Event, CallbackData );
     return;
 }
 
@@ -93,10 +92,10 @@ static void MMECallbackStub(MME_Event_t      Event,
 //{{{  Constructor
 // /////////////////////////////////////////////////////////////////////////
 //
-//      Constructor function, fills in the codec specific parameter values
+//      Cosntructor function, fills in the codec specific parameter values
 //
 
-Codec_MmeVideoTheora_c::Codec_MmeVideoTheora_c(void)
+Codec_MmeVideoTheora_c::Codec_MmeVideoTheora_c( void )
 {
     Configuration.CodecName                             = "Theora video";
 
@@ -154,7 +153,7 @@ Codec_MmeVideoTheora_c::Codec_MmeVideoTheora_c(void)
 //      are executed for all levels of the class.
 //
 
-Codec_MmeVideoTheora_c::~Codec_MmeVideoTheora_c(void)
+Codec_MmeVideoTheora_c::~Codec_MmeVideoTheora_c( void )
 {
     Halt();
     Reset();
@@ -164,32 +163,29 @@ Codec_MmeVideoTheora_c::~Codec_MmeVideoTheora_c(void)
 // /////////////////////////////////////////////////////////////////////////
 //
 //      Reset function for Theora specific members.
-//
+//      
 //
 
-CodecStatus_t   Codec_MmeVideoTheora_c::Reset(void)
+CodecStatus_t   Codec_MmeVideoTheora_c::Reset( void )
 {
     if (InfoHeaderMemoryDevice != NULL)
     {
-        AllocatorClose(InfoHeaderMemoryDevice);
+        AllocatorClose (InfoHeaderMemoryDevice);
         InfoHeaderMemoryDevice          = NULL;
     }
-
     if (CommentHeaderMemoryDevice != NULL)
     {
-        AllocatorClose(CommentHeaderMemoryDevice);
+        AllocatorClose (CommentHeaderMemoryDevice);
         CommentHeaderMemoryDevice       = NULL;
     }
-
     if (SetupHeaderMemoryDevice != NULL)
     {
-        AllocatorClose(SetupHeaderMemoryDevice);
+        AllocatorClose (SetupHeaderMemoryDevice);
         SetupHeaderMemoryDevice         = NULL;
     }
-
     if (BufferMemoryDevice != NULL)
     {
-        AllocatorClose(BufferMemoryDevice);
+        AllocatorClose (BufferMemoryDevice);
         BufferMemoryDevice              = NULL;
     }
 
@@ -203,9 +199,9 @@ CodecStatus_t   Codec_MmeVideoTheora_c::Reset(void)
 //      Function to deal with the returned capabilities
 //      structure for an Theora mme transformer.
 //
-CodecStatus_t   Codec_MmeVideoTheora_c::HandleCapabilities(void)
+CodecStatus_t   Codec_MmeVideoTheora_c::HandleCapabilities( void )
 {
-    CODEC_TRACE("MME Transformer '%s' capabilities are :-\n", THEORADEC_MME_TRANSFORMER_NAME);
+    CODEC_TRACE ("MME Transformer '%s' capabilities are :-\n", THEORADEC_MME_TRANSFORMER_NAME);
     CODEC_TRACE("    display_buffer_size       %d\n", TheoraTransformCapability.display_buffer_size);
     CODEC_TRACE("    packed_buffer_size        %d\n", TheoraTransformCapability.packed_buffer_size);
     CODEC_TRACE("    packed_buffer_total       %d\n", TheoraTransformCapability.packed_buffer_total);
@@ -218,31 +214,29 @@ CodecStatus_t   Codec_MmeVideoTheora_c::HandleCapabilities(void)
 ///
 /// Verify that the transformer exists
 ///
-CodecStatus_t   Codec_MmeVideoTheora_c::InitializeMMETransformer(void)
+CodecStatus_t   Codec_MmeVideoTheora_c::InitializeMMETransformer(      void )
 {
     MME_ERROR                        MMEStatus;
     MME_TransformerCapability_t      Capability;
 
-    memset(&Capability, 0, sizeof(MME_TransformerCapability_t));
-    memset(Configuration.TransformCapabilityStructurePointer, 0x00, Configuration.SizeOfTransformCapabilityStructure);
+    memset( &Capability, 0, sizeof(MME_TransformerCapability_t) );
+    memset( Configuration.TransformCapabilityStructurePointer, 0x00, Configuration.SizeOfTransformCapabilityStructure );
 
     Capability.StructSize           = sizeof(MME_TransformerCapability_t);
     Capability.TransformerInfoSize  = Configuration.SizeOfTransformCapabilityStructure;
     Capability.TransformerInfo_p    = Configuration.TransformCapabilityStructurePointer;
 
-    MMEStatus                       = MME_GetTransformerCapability(Configuration.TransformName[SelectedTransformer], &Capability);
-
+    MMEStatus                       = MME_GetTransformerCapability( Configuration.TransformName[SelectedTransformer], &Capability );
     if (MMEStatus != MME_SUCCESS)
     {
         if (MMEStatus == MME_UNKNOWN_TRANSFORMER)
             CODEC_ERROR("(%s) - Transformer %s not found.\n", Configuration.CodecName, Configuration.TransformName[SelectedTransformer]);
         else
             CODEC_ERROR("(%s:%s) - Unable to read capabilities (%08x).\n", Configuration.CodecName, Configuration.TransformName[SelectedTransformer], MMEStatus);
-
         return CodecError;
     }
 
-    return HandleCapabilities();
+    return HandleCapabilities ();
 }
 //}}}
 
@@ -252,18 +246,18 @@ CodecStatus_t   Codec_MmeVideoTheora_c::InitializeMMETransformer(void)
 //      Function to deal with the returned capabilities
 //      structure for an Theora mme transformer.
 //
-CodecStatus_t   Codec_MmeVideoTheora_c::FillOutTransformerInitializationParameters(void)
+CodecStatus_t   Codec_MmeVideoTheora_c::FillOutTransformerInitializationParameters( void )
 {
     // The command parameters
 
-    CODEC_TRACE("%s\n", __FUNCTION__);
+    CODEC_TRACE ("%s\n", __FUNCTION__);
     CODEC_TRACE("  CodedWidth           %6u\n", CodedWidth);
     CODEC_TRACE("  CodedHeight          %6u\n", CodedHeight);
 #if (THEORADEC_MME_VERSION < 20)
     CODEC_TRACE("  CodecVersion         %6x\n", TheoraInitializationParameters.CodecVersion);
 #endif
 
-    // Fill out the actual command
+    // Fillout the actual command
     MMEInitializationParameters.TransformerInitParamsSize       = sizeof(THEORA_InitTransformerParam_t);
     MMEInitializationParameters.TransformerInitParams_p         = (MME_GenericParams_t)(&TheoraInitializationParameters);
 
@@ -272,7 +266,7 @@ CodecStatus_t   Codec_MmeVideoTheora_c::FillOutTransformerInitializationParamete
 }
 //}}}
 //{{{  SendMMEStreamParameters
-CodecStatus_t Codec_MmeVideoTheora_c::SendMMEStreamParameters(void)
+CodecStatus_t Codec_MmeVideoTheora_c::SendMMEStreamParameters (void)
 {
     CodecStatus_t       CodecStatus     = CodecNoError;
     unsigned int        MMEStatus       = MME_SUCCESS;
@@ -286,19 +280,19 @@ CodecStatus_t Codec_MmeVideoTheora_c::SendMMEStreamParameters(void)
     {
         TerminateMMETransformer();
 
-        memset(&MMEInitializationParameters, 0x00, sizeof(MME_TransformerInitParams_t));
+        memset (&MMEInitializationParameters, 0x00, sizeof(MME_TransformerInitParams_t));
 
         MMEInitializationParameters.Priority                    = MME_PRIORITY_NORMAL;
         MMEInitializationParameters.StructSize                  = sizeof(MME_TransformerInitParams_t);
         MMEInitializationParameters.Callback                    = &MMECallbackStub;
         MMEInitializationParameters.CallbackUserData            = this;
 
-        FillOutTransformerInitializationParameters();
+        FillOutTransformerInitializationParameters ();
 
-        CODEC_TRACE("%s: Initilising Theora transformer %s\n", __FUNCTION__, Configuration.TransformName[SelectedTransformer]);
+        CODEC_TRACE("%s: Initilising Theora transformer %s\n",__FUNCTION__, Configuration.TransformName[SelectedTransformer]);
 
-        MMEStatus               = MME_InitTransformer(Configuration.TransformName[SelectedTransformer],
-                                  &MMEInitializationParameters, &MMEHandle);
+        MMEStatus               = MME_InitTransformer (Configuration.TransformName[SelectedTransformer],
+                                                       &MMEInitializationParameters, &MMEHandle);
 
         if (MMEStatus ==  MME_SUCCESS)
         {
@@ -318,7 +312,7 @@ CodecStatus_t Codec_MmeVideoTheora_c::SendMMEStreamParameters(void)
     //
 
     if (CodecStatus == CodecNoError)
-        StreamParameterContextBuffer->DecrementReferenceCount();
+        StreamParameterContextBuffer->DecrementReferenceCount ();
 
 //
 
@@ -333,7 +327,7 @@ CodecStatus_t Codec_MmeVideoTheora_c::SendMMEStreamParameters(void)
 //      Function to fill out the stream parameters
 //      structure for an Theora mme transformer.
 //
-CodecStatus_t   Codec_MmeVideoTheora_c::FillOutSetStreamParametersCommand(void)
+CodecStatus_t   Codec_MmeVideoTheora_c::FillOutSetStreamParametersCommand( void )
 {
 
     TheoraStreamParameters_t*   Parsed                  = (TheoraStreamParameters_t*)ParsedFrameParameters->StreamParameterStructure;
@@ -351,140 +345,111 @@ CodecStatus_t   Codec_MmeVideoTheora_c::FillOutSetStreamParametersCommand(void)
     TheoraInitializationParameters.CodecVersion         = SequenceHeader->Version;
 
     TheoraInitializationParameters.theora_tables        = 1;
-    memcpy(TheoraInitializationParameters.filter_limit_values,    SequenceHeader->LoopFilterLimit, sizeof(TheoraInitializationParameters.filter_limit_values));
-    memcpy(TheoraInitializationParameters.coded_ac_scale_factor,  SequenceHeader->AcScale,         sizeof(TheoraInitializationParameters.coded_ac_scale_factor));
-    memcpy(TheoraInitializationParameters.coded_dc_scale_factor,  SequenceHeader->DcScale,         sizeof(TheoraInitializationParameters.coded_ac_scale_factor));
+    memcpy (TheoraInitializationParameters.filter_limit_values,    SequenceHeader->LoopFilterLimit, sizeof(TheoraInitializationParameters.filter_limit_values));
+    memcpy (TheoraInitializationParameters.coded_ac_scale_factor,  SequenceHeader->AcScale,         sizeof(TheoraInitializationParameters.coded_ac_scale_factor));
+    memcpy (TheoraInitializationParameters.coded_dc_scale_factor,  SequenceHeader->DcScale,         sizeof(TheoraInitializationParameters.coded_ac_scale_factor));
 
-    memcpy(TheoraInitializationParameters.base_matrix,            SequenceHeader->BaseMatrix,      sizeof(TheoraInitializationParameters.base_matrix));
-    memcpy(TheoraInitializationParameters.qr_count,               SequenceHeader->QRCount,         sizeof(TheoraInitializationParameters.qr_count));
-    memcpy(TheoraInitializationParameters.qr_size,                SequenceHeader->QRSize,          sizeof(TheoraInitializationParameters.qr_size));
-    memcpy(TheoraInitializationParameters.qr_base,                SequenceHeader->QRBase,          sizeof(TheoraInitializationParameters.qr_base));
+    memcpy (TheoraInitializationParameters.base_matrix,            SequenceHeader->BaseMatrix,      sizeof(TheoraInitializationParameters.base_matrix));
+    memcpy (TheoraInitializationParameters.qr_count,               SequenceHeader->QRCount,         sizeof(TheoraInitializationParameters.qr_count));
+    memcpy (TheoraInitializationParameters.qr_size,                SequenceHeader->QRSize,          sizeof(TheoraInitializationParameters.qr_size));
+    memcpy (TheoraInitializationParameters.qr_base,                SequenceHeader->QRBase,          sizeof(TheoraInitializationParameters.qr_base));
 
     TheoraInitializationParameters.hti                  = SequenceHeader->hti;
     TheoraInitializationParameters.hbits                = SequenceHeader->HBits;
     TheoraInitializationParameters.entries              = SequenceHeader->Entries;
     TheoraInitializationParameters.huff_code_size       = SequenceHeader->HuffmanCodeSize;
-    memcpy(TheoraInitializationParameters.huffman_table,          SequenceHeader->HuffmanTable,    sizeof(TheoraInitializationParameters.huffman_table));
+    memcpy (TheoraInitializationParameters.huffman_table,          SequenceHeader->HuffmanTable,    sizeof(TheoraInitializationParameters.huffman_table));
 
     //{{{  Trace
-#if 0
+    #if 0
     {
         int qi, bmi, qti, pli, ci;
-        report(severity_info, "Filter Limit values:\n");
-
-        for (qi = 0; qi < 64; qi++)
+        report (severity_info, "Filter Limit values:\n");
+        for (qi=0; qi<64; qi++)
         {
-            report(severity_info, "%02x ", TheoraInitializationParameters.filter_limit_values[qi]);
-
-            if (((qi + 1) & 0x1f) == 0)
-                report(severity_info, "\n");
+            report (severity_info, "%02x ", TheoraInitializationParameters.filter_limit_values[qi]);
+            if (((qi+1)&0x1f)== 0)
+                report (severity_info, "\n");
         }
-
-        report(severity_info, "\nAC Scale:\n");
-
-        for (qi = 0; qi < 64; qi++)
+        report (severity_info, "\nAC Scale:\n");
+        for (qi=0; qi<64; qi++)
         {
-            report(severity_info, "%08x ", TheoraInitializationParameters.coded_ac_scale_factor[qi]);
-
-            if (((qi + 1) & 0x07) == 0)
-                report(severity_info, "\n");
+            report (severity_info, "%08x ", TheoraInitializationParameters.coded_ac_scale_factor[qi]);
+            if (((qi+1)&0x07)== 0)
+                report (severity_info, "\n");
         }
-
-        report(severity_info, "\nDC Scale:\n");
-
-        for (qi = 0; qi < 64; qi++)
+        report (severity_info, "\nDC Scale:\n");
+        for (qi=0; qi<64; qi++)
         {
-            report(severity_info, "%04x ", TheoraInitializationParameters.coded_dc_scale_factor[qi]);
-
-            if (((qi + 1) & 0x0f) == 0)
-                report(severity_info, "\n");
+            report (severity_info, "%04x ", TheoraInitializationParameters.coded_dc_scale_factor[qi]);
+            if (((qi+1)&0x0f)== 0)
+                report (severity_info, "\n");
         }
-
-        report(severity_info, "\nBm Indexes %d\n", 3);
-
-        for (bmi = 0; bmi < 3; bmi++)
+        report (severity_info, "\nBm Indexes %d\n", 3);
+        for (bmi=0; bmi<3; bmi++)
         {
-            report(severity_info, "%d:\n", bmi);
-
-            for (ci = 0; ci < 64; ci++)
+            report (severity_info, "%d:\n", bmi);
+            for (ci=0; ci<64; ci++)
             {
-                report(severity_info, "%02x ", TheoraInitializationParameters.base_matrix[bmi][ci]);
-
-                if (((ci + 1) & 0x1f) == 0)
-                    report(severity_info, "\n");
+                report (severity_info, "%02x ", TheoraInitializationParameters.base_matrix[bmi][ci]);
+                if (((ci+1)&0x1f)== 0)
+                    report (severity_info, "\n");
             }
         }
-
-        report(severity_info, "\nQR Counts\n");
-
-        for (qti = 0; qti <= 1; qti++)
+        report (severity_info, "\nQR Counts\n");
+        for (qti=0; qti<=1; qti++)
         {
-            report(severity_info, "%d:\n", qti);
-
-            for (pli = 0; pli <= 2; pli++)
-                report(severity_info, "%02x ", TheoraInitializationParameters.qr_count[qti][pli]);
+            report (severity_info, "%d:\n", qti);
+            for (pli=0; pli<=2; pli++)
+                report (severity_info, "%02x ", TheoraInitializationParameters.qr_count[qti][pli]);
         }
-
-        if (((ci + 1) & 0x1f) == 0)
-            report(severity_info, "\n");
-
-        {
-        }
-        report(severity_info, "\nQR Size\n");
-
-        for (qti = 0; qti <= 1; qti++)
-        {
-            for (pli = 0; pli <= 2; pli++)
+                if (((ci+1)&0x1f)== 0)
+                    report (severity_info, "\n");
             {
-                report(severity_info, "%d:%d:\n", qti, pli);
-
-                for (qi = 0; qi < 64; qi++)
+            }
+        report (severity_info, "\nQR Size\n");
+        for (qti=0; qti<=1; qti++)
+        {
+            for (pli=0; pli<=2; pli++)
+            {
+                report (severity_info, "%d:%d:\n", qti, pli);
+                for (qi=0; qi<64; qi++)
                 {
-                    report(severity_info, "%02x ", TheoraInitializationParameters.qr_size[qti][pli][qi]);
-
-                    if (((qi + 1) & 0x1f) == 0)
-                        report(severity_info, "\n");
+                    report (severity_info, "%02x ", TheoraInitializationParameters.qr_size[qti][pli][qi]);
+                    if (((qi+1)&0x1f)== 0)
+                        report (severity_info, "\n");
                 }
             }
         }
-
-        report(severity_info, "\nQR Base\n");
-
-        for (qti = 0; qti <= 1; qti++)
+        report (severity_info, "\nQR Base\n");
+        for (qti=0; qti<=1; qti++)
         {
-            for (pli = 0; pli <= 2; pli++)
+            for (pli=0; pli<=2; pli++)
             {
-                report(severity_info, "%d:%d:\n", qti, pli);
-
-                for (qi = 0; qi < 64; qi++)
+                report (severity_info, "%d:%d:\n", qti, pli);
+                for (qi=0; qi<64; qi++)
                 {
-                    report(severity_info, "%04x ", TheoraInitializationParameters.qr_base[qti][pli][qi]);
-
-                    if (((qi + 1) & 0x0f) == 0)
-                        report(severity_info, "\n");
+                    report (severity_info, "%04x ", TheoraInitializationParameters.qr_base[qti][pli][qi]);
+                    if (((qi+1)&0x0f)== 0)
+                        report (severity_info, "\n");
                 }
             }
         }
-
-        report(severity_info, "\nHuffman table hti %d, hbits %d, entries %d, huffman_code_size %d\n", TheoraInitializationParameters.hti,
-               TheoraInitializationParameters.hbits, TheoraInitializationParameters.entries, TheoraInitializationParameters.huff_code_size);
-
-        for (qti = 0; qti < 80; qti++)
+        report (severity_info, "\nHuffman table hti %d, hbits %d, entries %d, huffman_code_size %d\n", TheoraInitializationParameters.hti,
+                 TheoraInitializationParameters.hbits, TheoraInitializationParameters.entries, TheoraInitializationParameters.huff_code_size);
+        for (qti=0; qti<80; qti++)
         {
-            report(severity_info, "%d:\n", qti);
-
-            for (pli = 0; pli < 32; pli++)
+            report (severity_info, "%d:\n", qti);
+            for (pli=0; pli<32; pli++)
             {
-                report(severity_info, "(%04x %04x)", TheoraInitializationParameters.huffman_table[qti][pli][0], TheoraInitializationParameters.huffman_table[qti][pli][1]);
-
-                if (((pli + 1) & 0x07) == 0)
-                    report(severity_info, "\n");
+                report (severity_info, "(%04x %04x)", TheoraInitializationParameters.huffman_table[qti][pli][0],TheoraInitializationParameters.huffman_table[qti][pli][1]);
+                if (((pli+1)&0x07)== 0)
+                    report (severity_info, "\n");
             }
-
-            report(severity_info, "\n");
+            report (severity_info, "\n");
         }
     }
-#endif
+    #endif
     //}}}
 
 #else
@@ -504,66 +469,59 @@ CodecStatus_t   Codec_MmeVideoTheora_c::FillOutSetStreamParametersCommand(void)
 
         if (InfoHeaderMemoryDevice != NULL)
         {
-            AllocatorClose(InfoHeaderMemoryDevice);
+            AllocatorClose (InfoHeaderMemoryDevice);
             InfoHeaderMemoryDevice                      = NULL;
         }
-
         if (CommentHeaderMemoryDevice != NULL)
         {
-            AllocatorClose(CommentHeaderMemoryDevice);
+            AllocatorClose (CommentHeaderMemoryDevice);
             CommentHeaderMemoryDevice                   = NULL;
         }
-
         if (SetupHeaderMemoryDevice != NULL)
         {
-            AllocatorClose(SetupHeaderMemoryDevice);
+            AllocatorClose (SetupHeaderMemoryDevice);
             SetupHeaderMemoryDevice                     = NULL;
         }
 
         if (BufferMemoryDevice != NULL)
         {
-            AllocatorClose(BufferMemoryDevice);
+            AllocatorClose (BufferMemoryDevice);
             BufferMemoryDevice                          = NULL;
         }
 
         CODEC_TRACE("Allocating %d bytes for info header:\n", SequenceHeader->InfoHeaderSize);
-        AStatus                                         = LmiAllocatorOpen(&InfoHeaderMemoryDevice, SequenceHeader->InfoHeaderSize, true);
-
-        if (AStatus != allocator_ok)
+        AStatus                                         = LmiAllocatorOpen (&InfoHeaderMemoryDevice, SequenceHeader->InfoHeaderSize, true);
+        if( AStatus != allocator_ok )
         {
-            CODEC_ERROR("Failed to allocate info header memory\n");
+            CODEC_ERROR ("Failed to allocate info header memory\n" );
             return CodecError;
         }
-
         CODEC_TRACE("Allocating %d bytes for comment header\n", SequenceHeader->CommentHeaderSize);
-        AStatus                                         = LmiAllocatorOpen(&CommentHeaderMemoryDevice, SequenceHeader->CommentHeaderSize, true);
-
-        if (AStatus != allocator_ok)
+        AStatus                                         = LmiAllocatorOpen (&CommentHeaderMemoryDevice, SequenceHeader->CommentHeaderSize, true);
+        if( AStatus != allocator_ok )
         {
-            CODEC_ERROR("Failed to allocate comment header memory\n");
+            CODEC_ERROR ("Failed to allocate comment header memory\n" );
             return CodecError;
         }
-
         CODEC_TRACE("Allocating %d bytes for setup header\n", SequenceHeader->SetupHeaderSize);
-        AStatus                                         = LmiAllocatorOpen(&SetupHeaderMemoryDevice, SequenceHeader->SetupHeaderSize, true);
-
-        if (AStatus != allocator_ok)
+        AStatus                                         = LmiAllocatorOpen (&SetupHeaderMemoryDevice, SequenceHeader->SetupHeaderSize, true);
+        if( AStatus != allocator_ok )
         {
-            CODEC_ERROR("Failed to allocate setup header memory\n");
+            CODEC_ERROR ("Failed to allocate setup header memory\n" );
             return CodecError;
         }
 
-        TheoraInitializationParameters.InfoHeader.Data          = (U32)AllocatorPhysicalAddress(InfoHeaderMemoryDevice);
+        TheoraInitializationParameters.InfoHeader.Data          = (U32)AllocatorPhysicalAddress (InfoHeaderMemoryDevice);
         TheoraInitializationParameters.InfoHeader.Size          = SequenceHeader->InfoHeaderSize;;
-        memcpy(AllocatorUncachedUserAddress(InfoHeaderMemoryDevice), SequenceHeader->InfoHeaderBuffer, SequenceHeader->InfoHeaderSize);
+        memcpy (AllocatorUncachedUserAddress (InfoHeaderMemoryDevice), SequenceHeader->InfoHeaderBuffer, SequenceHeader->InfoHeaderSize);
 
-        TheoraInitializationParameters.CommentHeader.Data       = (U32)AllocatorPhysicalAddress(CommentHeaderMemoryDevice);
+        TheoraInitializationParameters.CommentHeader.Data       = (U32)AllocatorPhysicalAddress (CommentHeaderMemoryDevice);
         TheoraInitializationParameters.CommentHeader.Size       = SequenceHeader->CommentHeaderSize;;
-        memcpy(AllocatorUncachedUserAddress(CommentHeaderMemoryDevice), SequenceHeader->CommentHeaderBuffer, SequenceHeader->CommentHeaderSize);
+        memcpy (AllocatorUncachedUserAddress (CommentHeaderMemoryDevice), SequenceHeader->CommentHeaderBuffer, SequenceHeader->CommentHeaderSize);
 
-        TheoraInitializationParameters.SetUpHeader.Data         = (U32)AllocatorPhysicalAddress(SetupHeaderMemoryDevice);
+        TheoraInitializationParameters.SetUpHeader.Data         = (U32)AllocatorPhysicalAddress (SetupHeaderMemoryDevice);
         TheoraInitializationParameters.SetUpHeader.Size         = SequenceHeader->SetupHeaderSize;;
-        memcpy(AllocatorUncachedUserAddress(SetupHeaderMemoryDevice), SequenceHeader->SetupHeaderBuffer, SequenceHeader->SetupHeaderSize);
+        memcpy (AllocatorUncachedUserAddress (SetupHeaderMemoryDevice), SequenceHeader->SetupHeaderBuffer, SequenceHeader->SetupHeaderSize);
 
 #if (THEORADEC_MME_VERSION >= 30)
         {
@@ -579,49 +537,39 @@ CodecStatus_t   Codec_MmeVideoTheora_c::FillOutSetStreamParametersCommand(void)
             unsigned int        CoefficientBufferSize   = (64 * 3 * num_8x8_blocks) + 512;
 
             CODEC_TRACE("Allocating %d bytes for buffer memory\n", CoefficientBufferSize);
-            AStatus                                         = LmiAllocatorOpen(&BufferMemoryDevice, CoefficientBufferSize, true);
-
+            AStatus                                         = LmiAllocatorOpen (&BufferMemoryDevice, CoefficientBufferSize, true);
             if (AStatus != allocator_ok)
             {
-                CODEC_ERROR("Failed to allocate buffer memory\n");
+                CODEC_ERROR ("Failed to allocate buffer memory\n" );
                 return CodecError;
             }
-
-            TheoraInitializationParameters.CoefficientBuffer = (U32)AllocatorPhysicalAddress(BufferMemoryDevice);
+            TheoraInitializationParameters.CoefficientBuffer        = (U32)AllocatorPhysicalAddress (BufferMemoryDevice);
         }
 #else
         CODEC_TRACE("Allocating %d bytes for buffer memory\n", THEORA_BUFFER_SIZE);
-        AStatus                                         = LmiAllocatorOpen(&BufferMemoryDevice, THEORA_BUFFER_SIZE, true);
-
-        if (AStatus != allocator_ok)
+        AStatus                                         = LmiAllocatorOpen (&BufferMemoryDevice, THEORA_BUFFER_SIZE, true);
+        if( AStatus != allocator_ok )
         {
-            CODEC_ERROR("Failed to allocate buffer memory\n");
+            CODEC_ERROR ("Failed to allocate buffer memory\n" );
             return CodecError;
         }
-
-        TheoraInitializationParameters.Buffer.Data              = (U32)AllocatorPhysicalAddress(BufferMemoryDevice);
+        TheoraInitializationParameters.Buffer.Data              = (U32)AllocatorPhysicalAddress (BufferMemoryDevice);
         TheoraInitializationParameters.Buffer.Size              = THEORA_BUFFER_SIZE;
 #endif
 #if 0
         unsigned char*  Buff;
-        Buff    = (unsigned char*)AllocatorUncachedUserAddress(InfoHeaderMemoryDevice);
-
-        for (int i = 0; i < 32; i++)
-            report(severity_info, "%02x ", Buff[i]);
-
-        report(severity_info, "\n");
-        Buff    = (unsigned char*)AllocatorUncachedUserAddress(CommentHeaderMemoryDevice);
-
-        for (int i = 0; i < 32; i++)
-            report(severity_info, "%02x ", Buff[i]);
-
-        report(severity_info, "\n");
-        Buff    = (unsigned char*)AllocatorUncachedUserAddress(SetupHeaderMemoryDevice);
-
-        for (int i = 0; i < 32; i++)
-            report(severity_info, "%02x ", Buff[i]);
-
-        report(severity_info, "\n");
+        Buff    = (unsigned char*)AllocatorUncachedUserAddress (InfoHeaderMemoryDevice);
+        for (int i=0;i<32; i++)
+            report (severity_info, "%02x ", Buff[i]);
+        report (severity_info, "\n");
+        Buff    = (unsigned char*)AllocatorUncachedUserAddress (CommentHeaderMemoryDevice);
+        for (int i=0;i<32; i++)
+            report (severity_info, "%02x ", Buff[i]);
+        report (severity_info, "\n");
+        Buff    = (unsigned char*)AllocatorUncachedUserAddress (SetupHeaderMemoryDevice);
+        for (int i=0;i<32; i++)
+            report (severity_info, "%02x ", Buff[i]);
+        report (severity_info, "\n");
 #endif
     }
 #endif
@@ -639,7 +587,7 @@ CodecStatus_t   Codec_MmeVideoTheora_c::FillOutSetStreamParametersCommand(void)
 //      structure for an Theora mme transformer.
 //
 
-CodecStatus_t   Codec_MmeVideoTheora_c::FillOutDecodeCommand(void)
+CodecStatus_t   Codec_MmeVideoTheora_c::FillOutDecodeCommand(       void )
 {
     TheoraCodecDecodeContext_t*         Context        = (TheoraCodecDecodeContext_t*)DecodeContext;
     //TheoraFrameParameters_t*            Frame          = (TheoraFrameParameters_t*)ParsedFrameParameters->FrameParameterStructure;
@@ -657,25 +605,25 @@ CodecStatus_t   Codec_MmeVideoTheora_c::FillOutDecodeCommand(void)
     KnownLastSliceInFieldFrame                  = true;
 
     //
-    // Fill out the straight forward command parameters
+    // Fillout the straight forward command parameters
     //
 
     Param                                       = &Context->DecodeParameters;
     Picture                                     = &Param->PictureParameters;
 
-    Picture->StructSize                         = sizeof(THEORA_ParamPicture_t);
+    Picture->StructSize                         = sizeof (THEORA_ParamPicture_t);
     Picture->PictureStartOffset                 = 0;                    // Picture starts at beginning of buffer
     Picture->PictureStopOffset                  = CodedDataLength;
 
     //
-    // Fill out the actual command
+    // Fillout the actual command
     //
 
-    memset(&DecodeContext->MMECommand, 0x00, sizeof(MME_Command_t));
+    memset (&DecodeContext->MMECommand, 0x00, sizeof(MME_Command_t));
 
     DecodeContext->MMECommand.CmdStatus.AdditionalInfoSize      = sizeof(THEORA_ReturnParams_t);
     DecodeContext->MMECommand.CmdStatus.AdditionalInfo_p        = (MME_GenericParams_t*)&Context->DecodeStatus;
-    DecodeContext->MMECommand.StructSize                        = sizeof(MME_Command_t);
+    DecodeContext->MMECommand.StructSize                        = sizeof (MME_Command_t);
     DecodeContext->MMECommand.CmdCode                           = MME_TRANSFORM;
     DecodeContext->MMECommand.CmdEnd                            = MME_COMMAND_END_RETURN_NOTIFY;
     DecodeContext->MMECommand.DueTime                           = (MME_Time_t)0;
@@ -691,7 +639,7 @@ CodecStatus_t   Codec_MmeVideoTheora_c::FillOutDecodeCommand(void)
     for (i = 0; i < THEORA_NUM_MME_BUFFERS; i++)
     {
         DecodeContext->MMEBufferList[i]                             = &DecodeContext->MMEBuffers[i];
-        DecodeContext->MMEBuffers[i].StructSize                     = sizeof(MME_DataBuffer_t);
+        DecodeContext->MMEBuffers[i].StructSize                     = sizeof (MME_DataBuffer_t);
         DecodeContext->MMEBuffers[i].UserData_p                     = NULL;
         DecodeContext->MMEBuffers[i].Flags                          = 0;
         DecodeContext->MMEBuffers[i].StreamNumber                   = 0;
@@ -699,27 +647,24 @@ CodecStatus_t   Codec_MmeVideoTheora_c::FillOutDecodeCommand(void)
         DecodeContext->MMEBuffers[i].ScatterPages_p                 = &DecodeContext->MMEPages[i];
         DecodeContext->MMEBuffers[i].StartOffset                    = 0;
     }
-
     //}}}
 
     // Then overwrite bits specific to other buffers
     //{{{  Input compressed data buffer - need pointer to coded data and its length
     DecodeContext->MMEBuffers[THEORA_MME_CODED_DATA_BUFFER].ScatterPages_p[0].Page_p            = (void*)CodedData;
     DecodeContext->MMEBuffers[THEORA_MME_CODED_DATA_BUFFER].TotalSize                           = CodedDataLength;
-#if 0
-    report(severity_info, "Picture (%d)\n", CodedDataLength);
-    OS_FlushCacheAll();
-
-    for (i = 0; i < 32; i++)
-        report(severity_info, "%02x ", CodedData[i]);
-
-    report(severity_info, "\n");
-#endif
+    #if 0
+    report (severity_info, "Picture (%d)\n", CodedDataLength);
+    extern "C"{void flush_cache_all();};
+    flush_cache_all();
+    for (i=0; i<32; i++)
+        report (severity_info, "%02x ", CodedData[i]);
+    report (severity_info, "\n");
+    #endif
     //}}}
     //{{{  Current output decoded buffer
     DecodeContext->MMEBuffers[THEORA_MME_CURRENT_FRAME_BUFFER].ScatterPages_p[0].Page_p         = (void*)(void*)BufferState[CurrentDecodeBufferIndex].BufferLumaPointer;
-    DecodeContext->MMEBuffers[THEORA_MME_CURRENT_FRAME_BUFFER].TotalSize                        = (CodedWidth * CodedHeight * 3) / 2;
-
+    DecodeContext->MMEBuffers[THEORA_MME_CURRENT_FRAME_BUFFER].TotalSize                        = (CodedWidth * CodedHeight * 3)/2;
     //}}}
     //{{{  Previous decoded buffer - get its planar buffer
     if (DecodeContext->ReferenceFrameList[0].EntryCount > 0)
@@ -727,9 +672,8 @@ CodecStatus_t   Codec_MmeVideoTheora_c::FillOutDecodeCommand(void)
         unsigned int    Entry   = DecodeContext->ReferenceFrameList[0].EntryIndicies[0];
 
         DecodeContext->MMEBuffers[THEORA_MME_REFERENCE_FRAME_BUFFER].ScatterPages_p[0].Page_p   = (void*)(void*)BufferState[Entry].BufferLumaPointer;
-        DecodeContext->MMEBuffers[THEORA_MME_REFERENCE_FRAME_BUFFER].TotalSize                  = (CodedWidth * CodedHeight * 3) / 2;
+        DecodeContext->MMEBuffers[THEORA_MME_REFERENCE_FRAME_BUFFER].TotalSize                  = (CodedWidth * CodedHeight * 3)/2;
     }
-
     //}}}
     //{{{  Golden frame decoded buffer - get its planar buffer
     if (DecodeContext->ReferenceFrameList[0].EntryCount == 2)
@@ -737,53 +681,49 @@ CodecStatus_t   Codec_MmeVideoTheora_c::FillOutDecodeCommand(void)
         unsigned int    Entry   = DecodeContext->ReferenceFrameList[0].EntryIndicies[1];
 
         DecodeContext->MMEBuffers[THEORA_MME_GOLDEN_FRAME_BUFFER].ScatterPages_p[0].Page_p      = (void*)(void*)BufferState[Entry].BufferLumaPointer;
-        DecodeContext->MMEBuffers[THEORA_MME_GOLDEN_FRAME_BUFFER].TotalSize                     = (CodedWidth * CodedHeight * 3) / 2;
+        DecodeContext->MMEBuffers[THEORA_MME_GOLDEN_FRAME_BUFFER].TotalSize                     = (CodedWidth * CodedHeight * 3)/2;
     }
-
     //}}}
 
     //{{{  Initialise remaining scatter page values
     for (i = 0; i < THEORA_NUM_MME_BUFFERS; i++)
-    {
-        // Only one scatterpage, so size = totalsize
+    {                                                                 // Only one scatterpage, so size = totalsize
         DecodeContext->MMEBuffers[i].ScatterPages_p[0].Size         = DecodeContext->MMEBuffers[i].TotalSize;
         DecodeContext->MMEBuffers[i].ScatterPages_p[0].BytesUsed    = 0;
         DecodeContext->MMEBuffers[i].ScatterPages_p[0].FlagsIn      = 0;
         DecodeContext->MMEBuffers[i].ScatterPages_p[0].FlagsOut     = 0;
     }
-
     //}}}
 
 #if 0
     // Initialise decode buffers to bright pink
-    unsigned int        LumaSize        = (DecodingWidth + 32) * (DecodingHeight + 32);
+    unsigned int        LumaSize        = (DecodingWidth+32)*(DecodingHeight+32);
     unsigned char*      LumaBuffer      = (unsigned char*)DecodeContext->MMEBuffers[THEORA_MME_CURRENT_FRAME_BUFFER].ScatterPages_p[0].Page_p;
     unsigned char*      ChromaBuffer    = &LumaBuffer[LumaSize];
-    memset(LumaBuffer,   0xff, LumaSize);
-    memset(ChromaBuffer, 0xff, LumaSize / 2);
+    memset (LumaBuffer,   0xff, LumaSize);
+    memset (ChromaBuffer, 0xff, LumaSize/2);
 #endif
 
 #if 0
-
     for (i = 0; i < (THEORA_NUM_MME_BUFFERS); i++)
     {
 #if 0
-        CODEC_TRACE("Buffer List      (%d)  %x\n", i, DecodeContext->MMEBufferList[i]);
-        CODEC_TRACE("Struct Size      (%d)  %x\n", i, DecodeContext->MMEBuffers[i].StructSize);
-        CODEC_TRACE("User Data p      (%d)  %x\n", i, DecodeContext->MMEBuffers[i].UserData_p);
-        CODEC_TRACE("Flags            (%d)  %x\n", i, DecodeContext->MMEBuffers[i].Flags);
-        CODEC_TRACE("Stream Number    (%d)  %x\n", i, DecodeContext->MMEBuffers[i].StreamNumber);
-        CODEC_TRACE("No Scatter Pages (%d)  %x\n", i, DecodeContext->MMEBuffers[i].NumberOfScatterPages);
+        CODEC_TRACE ("Buffer List      (%d)  %x\n",i,DecodeContext->MMEBufferList[i]);
+        CODEC_TRACE ("Struct Size      (%d)  %x\n",i,DecodeContext->MMEBuffers[i].StructSize);
+        CODEC_TRACE ("User Data p      (%d)  %x\n",i,DecodeContext->MMEBuffers[i].UserData_p);
+        CODEC_TRACE ("Flags            (%d)  %x\n",i,DecodeContext->MMEBuffers[i].Flags);
+        CODEC_TRACE ("Stream Number    (%d)  %x\n",i,DecodeContext->MMEBuffers[i].StreamNumber);
+        CODEC_TRACE ("No Scatter Pages (%d)  %x\n",i,DecodeContext->MMEBuffers[i].NumberOfScatterPages);
 #endif
-        CODEC_TRACE("Scatter Pages p  (%d)  %x\n", i, DecodeContext->MMEBuffers[i].ScatterPages_p[0].Page_p);
-        CODEC_TRACE("Start Offset     (%d)  %d\n", i, DecodeContext->MMEBuffers[i].StartOffset);
-        CODEC_TRACE("Size             (%d)  %d\n\n", i, DecodeContext->MMEBuffers[i].ScatterPages_p[0].Size);
+        CODEC_TRACE ("Scatter Pages p  (%d)  %x\n",i,DecodeContext->MMEBuffers[i].ScatterPages_p[0].Page_p);
+        CODEC_TRACE ("Start Offset     (%d)  %d\n",i,DecodeContext->MMEBuffers[i].StartOffset);
+        CODEC_TRACE ("Size             (%d)  %d\n\n",i,DecodeContext->MMEBuffers[i].ScatterPages_p[0].Size);
     }
 
-    CODEC_TRACE("Additional Size  %x\n", DecodeContext->MMECommand.CmdStatus.AdditionalInfoSize);
-    CODEC_TRACE("Additional p     %x\n", DecodeContext->MMECommand.CmdStatus.AdditionalInfo_p);
-    CODEC_TRACE("Param Size       %x\n", DecodeContext->MMECommand.ParamSize);
-    CODEC_TRACE("Param p          %x\n", DecodeContext->MMECommand.Param_p);
+    CODEC_TRACE ("Additional Size  %x\n",DecodeContext->MMECommand.CmdStatus.AdditionalInfoSize);
+    CODEC_TRACE ("Additional p     %x\n",DecodeContext->MMECommand.CmdStatus.AdditionalInfo_p);
+    CODEC_TRACE ("Param Size       %x\n",DecodeContext->MMECommand.ParamSize);
+    CODEC_TRACE ("Param p          %x\n",DecodeContext->MMECommand.Param_p);
 #endif
 
     return CodecNoError;
@@ -797,7 +737,7 @@ CodecStatus_t   Codec_MmeVideoTheora_c::FillOutDecodeCommand(void)
 //      request.
 //
 
-CodecStatus_t   Codec_MmeVideoTheora_c::FillOutDecodeBufferRequest(BufferStructure_t        *Request)
+CodecStatus_t   Codec_MmeVideoTheora_c::FillOutDecodeBufferRequest(   BufferStructure_t        *Request )
 {
     CODEC_DEBUG("%s\n", __FUNCTION__);
 
@@ -814,14 +754,14 @@ CodecStatus_t   Codec_MmeVideoTheora_c::FillOutDecodeBufferRequest(BufferStructu
 ////////////////////////////////////////////////////////////////////////////
 ///
 /// Unconditionally return success.
-///
+/// 
 /// Success and failure codes are located entirely in the generic MME structures
 /// allowing the super-class to determine whether the decode was successful. This
 /// means that we have no work to do here.
 ///
 /// \return CodecNoError
 ///
-CodecStatus_t   Codec_MmeVideoTheora_c::ValidateDecodeContext(CodecBaseDecodeContext_t *Context)
+CodecStatus_t   Codec_MmeVideoTheora_c::ValidateDecodeContext( CodecBaseDecodeContext_t *Context )
 {
     CODEC_DEBUG("%s\n", __FUNCTION__);
     return CodecNoError;
@@ -833,9 +773,9 @@ CodecStatus_t   Codec_MmeVideoTheora_c::ValidateDecodeContext(CodecBaseDecodeCon
 //      Function to dump out the set stream
 //      parameters from an mme command.
 //
-CodecStatus_t   Codec_MmeVideoTheora_c::DumpSetStreamParameters(void    *Parameters)
+CodecStatus_t   Codec_MmeVideoTheora_c::DumpSetStreamParameters(         void    *Parameters )
 {
-    CODEC_TRACE("%s\n", __FUNCTION__);
+    CODEC_TRACE ("%s\n", __FUNCTION__);
     return CodecNoError;
 }
 //}}}
@@ -847,13 +787,13 @@ CodecStatus_t   Codec_MmeVideoTheora_c::DumpSetStreamParameters(void    *Paramet
 //
 
 unsigned int TheoraStaticPicture;
-CodecStatus_t   Codec_MmeVideoTheora_c::DumpDecodeParameters(void    *Parameters)
+CodecStatus_t   Codec_MmeVideoTheora_c::DumpDecodeParameters(            void    *Parameters )
 {
     THEORA_TransformParam_t*            FrameParams;
 
     FrameParams      = (THEORA_TransformParam_t *)Parameters;
 
-    CODEC_TRACE("********** Picture %d *********\n", TheoraStaticPicture++);
+    CODEC_TRACE ("********** Picture %d *********\n", TheoraStaticPicture++);
 
     return CodecNoError;
 }

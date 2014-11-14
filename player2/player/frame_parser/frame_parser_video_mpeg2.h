@@ -36,7 +36,7 @@ Date        Modification                                    Name
 
 // /////////////////////////////////////////////////////////////////////
 //
-//  Include any component headers
+//	Include any component headers
 
 #include "mpeg2.h"
 #include "frame_parser_video.h"
@@ -53,75 +53,75 @@ Date        Modification                                    Name
 
 class FrameParser_VideoMpeg2_c : public FrameParser_Video_c
 {
-    private:
+private:
 
-        // Data
+    // Data
 
-        Mpeg2StreamParameters_t       CopyOfStreamParameters;
+    Mpeg2StreamParameters_t		  CopyOfStreamParameters;
 
-        Mpeg2StreamParameters_t      *StreamParameters;
-        Mpeg2FrameParameters_t       *FrameParameters;
+    Mpeg2StreamParameters_t		 *StreamParameters;
+    Mpeg2FrameParameters_t		 *FrameParameters;
 
-        int                   LastPanScanHorizontalOffset;
-        int                   LastPanScanVerticalOffset;
+    int					  LastPanScanHorizontalOffset;
+    int					  LastPanScanVerticalOffset;
 
-        bool                  EverSeenRepeatFirstField;     // Support for PolicyMPEG2DoNotHonourProgressiveFrameFlag
+    bool				  EverSeenRepeatFirstField;		// Support for PolicyMPEG2DoNotHonourProgressiveFrameFlag
 
-        bool                  LastFirstFieldWasAnI;         // Support for self referencing IP field pairs
+    bool				  LastFirstFieldWasAnI;			// Support for self referencing IP field pairs
 
-        // Functions
+    // Functions
 
-        FrameParserStatus_t   ReadSequenceHeader(void);
-        FrameParserStatus_t   ReadSequenceExtensionHeader(void);
-        FrameParserStatus_t   ReadSequenceDisplayExtensionHeader(void);
-        FrameParserStatus_t   ReadSequenceScalableExtensionHeader(void);
-        FrameParserStatus_t   ReadGroupOfPicturesHeader(void);
-        FrameParserStatus_t   ReadPictureHeader(void);
-        FrameParserStatus_t   ReadPictureCodingExtensionHeader(void);
-        FrameParserStatus_t   ReadQuantMatrixExtensionHeader(void);
-        FrameParserStatus_t   ReadPictureDisplayExtensionHeader(void);
-        FrameParserStatus_t   ReadPictureTemporalScalableExtensionHeader(void);
-        FrameParserStatus_t   ReadPictureSpatialScalableExtensionHeader(void);
+    FrameParserStatus_t   ReadSequenceHeader(				void );
+    FrameParserStatus_t   ReadSequenceExtensionHeader(			void );
+    FrameParserStatus_t   ReadSequenceDisplayExtensionHeader(		void );
+    FrameParserStatus_t   ReadSequenceScalableExtensionHeader(		void );
+    FrameParserStatus_t   ReadGroupOfPicturesHeader(			void );
+    FrameParserStatus_t   ReadPictureHeader(				void );
+    FrameParserStatus_t   ReadPictureCodingExtensionHeader(		void );
+    FrameParserStatus_t   ReadQuantMatrixExtensionHeader(		void );
+    FrameParserStatus_t   ReadPictureDisplayExtensionHeader(		void );
+    FrameParserStatus_t   ReadPictureTemporalScalableExtensionHeader(	void );
+    FrameParserStatus_t   ReadPictureSpatialScalableExtensionHeader(	void );
 
-        bool          NewStreamParametersCheck(void);
-        FrameParserStatus_t   CommitFrameForDecode(void);
+    bool		  NewStreamParametersCheck(			void );
+    FrameParserStatus_t   CommitFrameForDecode(				void );
 
-    public:
+public:
 
-        //
-        // Constructor function
-        //
+    //
+    // Constructor function
+    //
 
-        FrameParser_VideoMpeg2_c(void);
-        ~FrameParser_VideoMpeg2_c(void);
+    FrameParser_VideoMpeg2_c( void );
+    ~FrameParser_VideoMpeg2_c( void );
 
-        //
-        // Overrides for component base class functions
-        //
+    //
+    // Overrides for component base class functions
+    //
 
-        FrameParserStatus_t   Reset(void);
+    FrameParserStatus_t   Reset(		void );
 
-        //
-        // FrameParser class functions
-        //
+    //
+    // FrameParser class functions
+    //
 
-        FrameParserStatus_t   RegisterOutputBufferRing(Ring_t       Ring);
+    FrameParserStatus_t   RegisterOutputBufferRing(	Ring_t		Ring );
 
-        //
-        // Stream specific functions
-        //
+    //
+    // Stream specific functions
+    //
 
-        FrameParserStatus_t   ReadHeaders(void);
-        FrameParserStatus_t   ResetReferenceFrameList(void);
-        FrameParserStatus_t   PrepareReferenceFrameList(void);
+    FrameParserStatus_t   ReadHeaders( 						void );
+    FrameParserStatus_t   ResetReferenceFrameList(				void );
+    FrameParserStatus_t   PrepareReferenceFrameList(				void );
 
-        FrameParserStatus_t   ForPlayUpdateReferenceFrameList(void);
+    FrameParserStatus_t   ForPlayUpdateReferenceFrameList(			void );
 
-        FrameParserStatus_t   RevPlayProcessDecodeStacks(void);
-        FrameParserStatus_t   RevPlayGeneratePostDecodeParameterSettings(void);
-        FrameParserStatus_t   RevPlayAppendToReferenceFrameList(void);
-        FrameParserStatus_t   RevPlayRemoveReferenceFrameFromList(void);
-        FrameParserStatus_t   RevPlayJunkReferenceFrameList(void);
+    FrameParserStatus_t   RevPlayProcessDecodeStacks(				void );
+    FrameParserStatus_t   RevPlayGeneratePostDecodeParameterSettings(		void );
+    FrameParserStatus_t   RevPlayAppendToReferenceFrameList(			void );
+    FrameParserStatus_t   RevPlayRemoveReferenceFrameFromList(			void );
+    FrameParserStatus_t   RevPlayJunkReferenceFrameList(			void );
 };
 
 #endif

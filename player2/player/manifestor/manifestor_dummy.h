@@ -48,219 +48,199 @@ Date        Modification                                    Name
 
 class Manifestor_Dummy_c : public Manifestor_c
 {
-        BufferManager_t          BufferManager;
-        BufferPool_t             BufferPool;
+    BufferManager_t			 BufferManager;
+    BufferPool_t			 BufferPool;
 
-        unsigned char            Memory[8 * 1024 * 1024];
-        void                *MemoryPointers[3];
+    unsigned char			 Memory[8*1024*1024];
+    void				*MemoryPointers[3];
 
-        VideoOutputSurfaceDescriptor_t   OutputSurfaceDescriptor;
+    VideoOutputSurfaceDescriptor_t	 OutputSurfaceDescriptor;
 
-        bool                 GotEventRecord;
-        PlayerEventRecord_t          EventRecord;
+    bool				 GotEventRecord;
+    PlayerEventRecord_t			 EventRecord;
 
-        ParsedFrameParameters_t     *ParsedFrameParameters;
+    ParsedFrameParameters_t		*ParsedFrameParameters;
 
-        Ring_t               OutputRing;
+    Ring_t				 OutputRing;
 
-    public:
+public:
 
-        Manifestor_Dummy_c(void)
-        {
-            report(severity_info, "Manifestor_Dummy_c - Called\n");
-        }
+    Manifestor_Dummy_c(	void )
+    { report( severity_info, "Manifestor_Dummy_c - Called\n" ); }
 
-        ~Manifestor_Dummy_c(void)
-        {
-            report(severity_info, "~Manifestor_Dummy_c - Called\n");
-        }
+    ~Manifestor_Dummy_c(	void )
+    { report( severity_info, "~Manifestor_Dummy_c - Called\n" ); }
 
 
-        ManifestorStatus_t   GetDecodeBufferPool(BufferPool_t        *Pool)
-        {
-#define BUFFER_DECODE_BUFFER             "DecodeBuffer"
-#define BUFFER_DECODE_BUFFER_TYPE        {BUFFER_DECODE_BUFFER, BufferDataTypeBase, AllocateFromSuppliedBlock, 256, 0x1000, false, false, 0}
-            static BufferDataDescriptor_t        InitialDecodeBufferDescriptor = BUFFER_DECODE_BUFFER_TYPE;
-            BufferDataDescriptor_t          *DecodeBufferDescriptor;
-            BufferType_t                 DecodeBufferType;
-            BufferStatus_t               Status;
+    ManifestorStatus_t   GetDecodeBufferPool(		BufferPool_t		 *Pool )
+	    {
+		#define BUFFER_DECODE_BUFFER             "DecodeBuffer"
+		#define BUFFER_DECODE_BUFFER_TYPE   	 {BUFFER_DECODE_BUFFER, BufferDataTypeBase, AllocateFromSuppliedBlock, 256, 0x1000, false, false, 0}
+		static BufferDataDescriptor_t     	 InitialDecodeBufferDescriptor = BUFFER_DECODE_BUFFER_TYPE;
+		BufferDataDescriptor_t			*DecodeBufferDescriptor;
+		BufferType_t				 DecodeBufferType;
+		BufferStatus_t				 Status;
 //
 
-            report(severity_info, "Manifestor_Dummy_c::GetDecodeBufferPool - Called\n");
+		report( severity_info, "Manifestor_Dummy_c::GetDecodeBufferPool - Called\n" ); 
 
-            Player->GetBufferManager(&BufferManager);
-            Status  = BufferManager->CreateBufferDataType(&InitialDecodeBufferDescriptor, &DecodeBufferType);
-
-            if (Status != BufferNoError)
-            {
-                report(severity_error, "Manifestor_Dummy_c::GetDecodeBufferPool - Failed to create the decode buffer data type.\n");
-                return ManifestorError;
-            }
-
-            BufferManager->GetDescriptor(DecodeBufferType, BufferDataTypeBase, &DecodeBufferDescriptor);
+		Player->GetBufferManager( &BufferManager );
+	        Status  = BufferManager->CreateBufferDataType( &InitialDecodeBufferDescriptor, &DecodeBufferType );
+        	if( Status != BufferNoError )
+	        {
+        	    report( severity_error, "Manifestor_Dummy_c::GetDecodeBufferPool - Failed to create the decode buffer data type.\n" );
+	            return ManifestorError;
+        	}
+		BufferManager->GetDescriptor( DecodeBufferType, BufferDataTypeBase, &DecodeBufferDescriptor );
 
 //
 
-            MemoryPointers[CachedAddress]   = Memory;
-            MemoryPointers[UnCachedAddress] = Memory;
-            MemoryPointers[PhysicalAddress] = Memory;
-            Status     = BufferManager->CreatePool(Pool, DecodeBufferType, 32, 8 * 1024 * 1024, MemoryPointers);
-
-            if (Status != BufferNoError)
-            {
-                report(severity_error, "Manifestor_Dummy_c::GetDecodeBufferPool - Failed to create the pool.\n");
-                return ManifestorError;
-            }
-
-//
-
-            BufferPool      = *Pool;
+		MemoryPointers[CachedAddress]	= Memory;
+		MemoryPointers[UnCachedAddress]	= Memory;
+		MemoryPointers[PhysicalAddress]	= Memory;
+		Status     = BufferManager->CreatePool( Pool, DecodeBufferType, 32, 8*1024*1024, MemoryPointers );
+        	if( Status != BufferNoError )
+	        {
+        	    report( severity_error, "Manifestor_Dummy_c::GetDecodeBufferPool - Failed to create the pool.\n" );
+	            return ManifestorError;
+        	}
 
 //
 
-            BufferPool->AttachMetaData(Player->MetaDataBufferStructureType);
+		BufferPool		= *Pool;
 
 //
 
-            return ManifestorNoError;
-        }
-
-
-        ManifestorStatus_t   RegisterOutputBufferRing(Ring_t              Ring)
-        {
-            OutputRing  = Ring;
-            return ManifestorNoError;
-        }
+		BufferPool->AttachMetaData( Player->MetaDataBufferStructureType );
 
 //
 
-        ManifestorStatus_t   GetSurfaceParameters(void          **SurfaceParameters)
-        {
-            // Display information
-            OutputSurfaceDescriptor.DisplayWidth    = 720;
-            OutputSurfaceDescriptor.DisplayHeight   = 576;
-            OutputSurfaceDescriptor.Progressive = true;
-            OutputSurfaceDescriptor.FrameRate   = 50;
+		return ManifestorNoError; 
+	    }
 
-            *SurfaceParameters  = &OutputSurfaceDescriptor;
-            return ManifestorNoError;
-        }
+
+    ManifestorStatus_t   RegisterOutputBufferRing(	Ring_t			  Ring )
+	    { 
+		OutputRing	= Ring;
+		return ManifestorNoError;
+	    }
 
 //
 
-        ManifestorStatus_t   GetNextQueuedManifestationTime(unsigned long long   *Time)
-        {
-            report(severity_info, "Manifestor_Dummy_c::GetNextQueuedManifestationTime - Called\n");
-            return ManifestorNoError;
-        }
+    ManifestorStatus_t   GetSurfaceParameters(		void			**SurfaceParameters )
+	    { 
+		// Display information
+		OutputSurfaceDescriptor.DisplayWidth	= 720;
+		OutputSurfaceDescriptor.DisplayHeight	= 576;
+		OutputSurfaceDescriptor.Progressive	= true;
+		OutputSurfaceDescriptor.FrameRate	= 50;
 
-        ManifestorStatus_t   ReleaseQueuedDecodeBuffers(void)
-        {
-            report(severity_info, "Manifestor_Dummy_c::ReleaseQueuedDecodeBuffers - Called\n");
-            return ManifestorNoError;
-        }
-
-        ManifestorStatus_t   InitialFrame(Buffer_t        Buffer)
-        {
-            report(severity_info, "Manifestor_Dummy_c::InitialFrame - Called\n");
-            return ManifestorNoError;
-        }
+		*SurfaceParameters	= &OutputSurfaceDescriptor;
+		return ManifestorNoError;
+	    }
 
 //
 
-        ManifestorStatus_t   QueueDecodeBuffer(Buffer_t       Buffer)
-        {
-            ManifestorStatus_t  Status;
+    ManifestorStatus_t   GetNextQueuedManifestationTime(unsigned long long	 *Time)
+		{ report( severity_info, "Manifestor_Dummy_c::GetNextQueuedManifestationTime - Called\n" ); return ManifestorNoError; }
 
-            Status  = Buffer->ObtainMetaDataReference(Player->MetaDataParsedFrameParametersReferenceType, (void **)(&ParsedFrameParameters));
+    ManifestorStatus_t   ReleaseQueuedDecodeBuffers(	void )
+		{ report( severity_info, "Manifestor_Dummy_c::ReleaseQueuedDecodeBuffers - Called\n" ); return ManifestorNoError; }
 
-            if (Status != PlayerNoError)
-            {
-                report(severity_error, "Manifestor_Dummy_c::QueueDecodeBuffer - Unable to obtain the meta data \"ParsedFrameParameters\".\n");
-                return ManifestorError;
-            }
-
-            if (GotEventRecord)
-            {
-                if (EventRecord.PlaybackTime == INVALID_TIME)
-                    EventRecord.PlaybackTime    = ParsedFrameParameters->NativePlaybackTime;
-
-                Player->SignalEvent(&EventRecord);
-                GotEventRecord  = false;
-            }
-
-            report(severity_info, "Manifestor_Dummy_c::QueueDecodeBuffer - Queueing %3d - Native playback time %016llx\n", ParsedFrameParameters->DisplayFrameIndex, ParsedFrameParameters->NativePlaybackTime);
-            OutputRing->Insert((unsigned int)Buffer);
-            return ManifestorNoError;
-        }
+    ManifestorStatus_t   InitialFrame(		Buffer_t		  Buffer )
+		{ report( severity_info, "Manifestor_Dummy_c::InitialFrame - Called\n" ); return ManifestorNoError; }
 
 //
 
-        ManifestorStatus_t   QueueNullManifestation(void)
-        {
-            report(severity_info, "Manifestor_Dummy_c::QueueNullManifestation - Called\n");
-            return ManifestorNoError;
-        }
+    ManifestorStatus_t   QueueDecodeBuffer(		Buffer_t		  Buffer )
+	    {
+		ManifestorStatus_t	Status;
 
-        ManifestorStatus_t   QueueEventSignal(PlayerEventRecord_t    *Event)
-        {
-            GotEventRecord  = true;
-            memcpy(&EventRecord, Event, sizeof(PlayerEventRecord_t));
-            return ManifestorNoError;
-        }
+		Status	= Buffer->ObtainMetaDataReference( Player->MetaDataParsedFrameParametersReferenceType, (void **)(&ParsedFrameParameters) );
+		if( Status != PlayerNoError )
+                {
+		    report( severity_error, "Manifestor_Dummy_c::QueueDecodeBuffer - Unable to obtain the meta data \"ParsedFrameParameters\".\n" );
+		    return ManifestorError;
+		}
+
+		if( GotEventRecord )
+		{
+		    if( EventRecord.PlaybackTime == INVALID_TIME )
+			EventRecord.PlaybackTime	= ParsedFrameParameters->NativePlaybackTime;
+
+		    Player->SignalEvent( &EventRecord );
+		    GotEventRecord	= false;
+		}
+
+		report( severity_info, "Manifestor_Dummy_c::QueueDecodeBuffer - Queueing %3d - Native playback time %016llx\n", ParsedFrameParameters->DisplayFrameIndex, ParsedFrameParameters->NativePlaybackTime );
+		OutputRing->Insert( (unsigned int)Buffer );
+		return ManifestorNoError;
+	    }
 
 //
 
-        ManifestorStatus_t   GetDecodeBuffer(
-            BufferStructure_t        *RequestedStructure,
-            Buffer_t                 *Buffer)
-        {
-            ManifestorStatus_t   Status;
-            BufferStructure_t   *AttachedRequestStructure;
+    ManifestorStatus_t   QueueNullManifestation(	void )
+		{ report( severity_info, "Manifestor_Dummy_c::QueueNullManifestation - Called\n" ); return ManifestorNoError; }
 
-            RequestedStructure->Dimension[0]    = ((RequestedStructure->Dimension[0] + 31) / 32) * 32;
-            RequestedStructure->Dimension[1]    = ((RequestedStructure->Dimension[1] + 31) / 32) * 32;
+    ManifestorStatus_t   QueueEventSignal(		PlayerEventRecord_t	 *Event )
+	    {
+		GotEventRecord	= true;
+		memcpy( &EventRecord, Event, sizeof(PlayerEventRecord_t) );
+	        return ManifestorNoError;
+	    }
 
-            RequestedStructure->ComponentCount  = 2;
-            RequestedStructure->ComponentOffset[0]  = 0;
-            RequestedStructure->ComponentOffset[1]  = RequestedStructure->Dimension[0] * RequestedStructure->Dimension[1];
+//
 
-            RequestedStructure->Strides[0][0]   = RequestedStructure->Dimension[0];
-            RequestedStructure->Strides[0][1]   = RequestedStructure->Dimension[0];
+    ManifestorStatus_t   GetDecodeBuffer(
+					               BufferStructure_t        *RequestedStructure,
+                                                       Buffer_t                 *Buffer )
+    {
+	ManifestorStatus_t	 Status;
+	BufferStructure_t	*AttachedRequestStructure;
 
-            RequestedStructure->Size        = (RequestedStructure->Dimension[0] * RequestedStructure->Dimension[1] * 3) / 2;
+	RequestedStructure->Dimension[0]	= ((RequestedStructure->Dimension[0] + 31) / 32) * 32;
+	RequestedStructure->Dimension[1]	= ((RequestedStructure->Dimension[1] + 31) / 32) * 32;
 
-            Status  = BufferPool->GetBuffer(Buffer, IdentifierManifestor, RequestedStructure->Size);
+	RequestedStructure->ComponentCount	= 2;
+	RequestedStructure->ComponentOffset[0]	= 0;
+	RequestedStructure->ComponentOffset[1]	= RequestedStructure->Dimension[0] * RequestedStructure->Dimension[1];
 
-            if (Status == BufferNoError)
-            {
-                (*Buffer)->ObtainMetaDataReference(Player->MetaDataBufferStructureType,
-                                                   (void **)(&AttachedRequestStructure));
-                memcpy(AttachedRequestStructure, RequestedStructure, sizeof(BufferStructure_t));
-            }
+	RequestedStructure->Strides[0][0]	= RequestedStructure->Dimension[0];
+	RequestedStructure->Strides[0][1]	= RequestedStructure->Dimension[0];
 
-            return Status;
-        }
+	RequestedStructure->Size		= (RequestedStructure->Dimension[0] * RequestedStructure->Dimension[1] * 3)/2;
 
-        ManifestorStatus_t   GetDecodeBufferCount(
-            BufferStructure_t        *RequestedStructure,
-            unsigned int             *Count)
-        {
-            RequestedStructure->Dimension[0]    = ((RequestedStructure->Dimension[0] + 31) / 32) * 32;
-            RequestedStructure->Dimension[1]    = ((RequestedStructure->Dimension[1] + 31) / 32) * 32;
+	Status	= BufferPool->GetBuffer( Buffer, IdentifierManifestor, RequestedStructure->Size );
 
-            RequestedStructure->ComponentCount  = 2;
-            RequestedStructure->ComponentOffset[0]  = 0;
-            RequestedStructure->ComponentOffset[1]  = RequestedStructure->Dimension[0] * RequestedStructure->Dimension[1];
+	if( Status == BufferNoError )
+	{
+	    (*Buffer)->ObtainMetaDataReference( Player->MetaDataBufferStructureType,
+                                                (void **)(&AttachedRequestStructure) );
+             memcpy( AttachedRequestStructure, RequestedStructure, sizeof(BufferStructure_t) );
+	}
 
-            RequestedStructure->Strides[0][0]   = RequestedStructure->Dimension[0];
-            RequestedStructure->Strides[0][1]   = RequestedStructure->Dimension[0];
+	return Status;
+    }
 
-            RequestedStructure->Size        = (RequestedStructure->Dimension[0] * RequestedStructure->Dimension[1] * 3) / 2;
+    ManifestorStatus_t   GetDecodeBufferCount(
+						        BufferStructure_t        *RequestedStructure,
+                                                        unsigned int             *Count )
+    {
+	RequestedStructure->Dimension[0]	= ((RequestedStructure->Dimension[0] + 31) / 32) * 32;
+	RequestedStructure->Dimension[1]	= ((RequestedStructure->Dimension[1] + 31) / 32) * 32;
 
-            *Count  = (8 * 1024 * 1024) / RequestedStructure->Size;
-            return ManifestorNoError;
-        }
+	RequestedStructure->ComponentCount	= 2;
+	RequestedStructure->ComponentOffset[0]	= 0;
+	RequestedStructure->ComponentOffset[1]	= RequestedStructure->Dimension[0] * RequestedStructure->Dimension[1];
+
+	RequestedStructure->Strides[0][0]	= RequestedStructure->Dimension[0];
+	RequestedStructure->Strides[0][1]	= RequestedStructure->Dimension[0];
+
+	RequestedStructure->Size		= (RequestedStructure->Dimension[0] * RequestedStructure->Dimension[1] * 3)/2;
+
+	*Count	= (8*1024*1024) / RequestedStructure->Size;
+	return ManifestorNoError;
+    }
 
 };
 #endif

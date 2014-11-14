@@ -61,49 +61,49 @@ Date        Modification                                    Name
 /// The RMV video codec proxy.
 class Codec_MmeVideoRmv_c : public Codec_MmeVideo_c
 {
-    private:
+private:
 
-        // Data
+    // Data
 
-        RV89Dec_InitTransformerParam_t      InitializationParameters;
+    RV89Dec_InitTransformerParam_t      InitializationParameters;
 
-        bool                                RestartTransformer;
+    bool                                RestartTransformer;
 
-        BufferDataDescriptor_t*             SegmentListDescriptor;
-        BufferType_t                        SegmentListType;
-        BufferPool_t                        SegmentListPool;
+    BufferDataDescriptor_t*             SegmentListDescriptor;
+    BufferType_t                        SegmentListType;
+    BufferPool_t                        SegmentListPool;
 
-        // Functions
+    // Functions
 
 
-    public:
+public:
 
-        //
-        // Constructor/Destructor methods
-        //
+    //
+    // Constructor/Destructor methods
+    //
 
-        Codec_MmeVideoRmv_c(void);
-        ~Codec_MmeVideoRmv_c(void);
+    Codec_MmeVideoRmv_c(                void );
+    ~Codec_MmeVideoRmv_c(               void );
 
-        //
-        // Stream specific functions
-        //
+    //
+    // Stream specific functions
+    //
 
-    protected:
+protected:
 
-        CodecStatus_t   Reset(void);
-        CodecStatus_t   RegisterOutputBufferRing(Ring_t                          Ring);
-        CodecStatus_t   HandleCapabilities(void);
-        CodecStatus_t   FillOutTransformerInitializationParameters(void);
-        CodecStatus_t   FillOutSetStreamParametersCommand(void);
-        CodecStatus_t   FillOutDecodeCommand(void);
-        CodecStatus_t   FillOutDecodeBufferRequest(BufferStructure_t              *Request);
-        CodecStatus_t   ValidateDecodeContext(CodecBaseDecodeContext_t       *Context);
-        CodecStatus_t   DumpSetStreamParameters(void                           *Parameters);
-        CodecStatus_t   DumpDecodeParameters(void                           *Parameters);
-
-        CodecStatus_t   SendMMEStreamParameters(void);
-        CodecStatus_t   CheckCodecReturnParameters(CodecBaseDecodeContext_t *Context);
-
+    CodecStatus_t   Reset(                                      void );
+    CodecStatus_t   RegisterOutputBufferRing(                   Ring_t                          Ring );
+    CodecStatus_t   HandleCapabilities(                         void );
+    CodecStatus_t   FillOutTransformerInitializationParameters( void );
+    CodecStatus_t   FillOutSetStreamParametersCommand(          void );
+    CodecStatus_t   FillOutDecodeCommand(                       void );
+    CodecStatus_t   FillOutDecodeBufferRequest(                 BufferStructure_t              *Request );
+    CodecStatus_t   ValidateDecodeContext(                      CodecBaseDecodeContext_t       *Context );
+    CodecStatus_t   DumpSetStreamParameters(                    void                           *Parameters );
+    CodecStatus_t   DumpDecodeParameters(                       void                           *Parameters );
+   
+    CodecStatus_t   SendMMEStreamParameters(                    void );
+    CodecStatus_t   CheckCodecReturnParameters( CodecBaseDecodeContext_t *Context );
+    
 };
 #endif

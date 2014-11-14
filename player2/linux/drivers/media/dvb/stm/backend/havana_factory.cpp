@@ -17,21 +17,21 @@ Date        Modification                                    Name
 #include "havana_player.h"
 #include "havana_factory.h"
 
-HavanaFactory_c::HavanaFactory_c(void)
+HavanaFactory_c::HavanaFactory_c (void)
 {
     //HAVANA_DEBUG("\n");
 }
-HavanaFactory_c::~HavanaFactory_c(void)
+HavanaFactory_c::~HavanaFactory_c (void)
 {
     //HAVANA_DEBUG("\n");
 }
-HavanaStatus_t HavanaFactory_c::Init(class HavanaFactory_c*  FactoryList,
-                                     const char*             Id,
-                                     const char*             SubId,
-                                     PlayerStreamType_t      StreamType,
-                                     PlayerComponent_t       Component,
-                                     unsigned int            Version,
-                                     void * (*NewFactory)(void))
+HavanaStatus_t HavanaFactory_c::Init   (class HavanaFactory_c*  FactoryList,
+                                        const char*             Id,
+                                        const char*             SubId,
+                                        PlayerStreamType_t      StreamType,
+                                        PlayerComponent_t       Component,
+                                        unsigned int            Version,
+                                        void*                  (*NewFactory)     (void))
 {
     //HAVANA_DEBUG("\n");
 
@@ -45,7 +45,7 @@ HavanaStatus_t HavanaFactory_c::Init(class HavanaFactory_c*  FactoryList,
 
     return HavanaNoError;
 }
-HavanaStatus_t HavanaFactory_c::ReLink(class HavanaFactory_c*  Next)
+HavanaStatus_t HavanaFactory_c::ReLink (class HavanaFactory_c*  Next)
 {
     HAVANA_DEBUG("\n");
     NextFactory         = Next;
@@ -59,41 +59,43 @@ HavanaStatus_t HavanaFactory_c::ReLink(class HavanaFactory_c*  Next)
 ///                     e.g. mpeg2 for an audio pes collator from an lpcm audio pes collator
 /// \param StreamType   Player type to indicate audio or video
 /// \param Component    Player class to be constructed
-/// \return             true if can build the component, false if not
-//}}}
-bool HavanaFactory_c::CanBuild(const char*             Id,
-                               const char*             SubId,
-                               PlayerStreamType_t      StreamType,
-                               PlayerComponent_t       Component)
+/// \return             true if can build the componenet, false if not
+//}}}  
+bool HavanaFactory_c::CanBuild         (const char*             Id,
+                                        const char*             SubId,
+                                        PlayerStreamType_t      StreamType,
+                                        PlayerComponent_t       Component)
 {
 //    HAVANA_ERROR("I am %s, %s, %x, %x - Looking for %s, %s, %x, %x\n", this->Id, this->SubId, PlayerStreamType, PlayerComponent,
 //                                                                       Id, SubId, StreamType, Component);
 
-    if ((StreamType == PlayerStreamType) && (Component == PlayerComponent) && (strcmp(Id, this->Id) == 0))
-        return ((strcmp(SubId, this->SubId) == 0) ||
-                (strcmp(SubId, FACTORY_ANY_ID) == 0) ||
-                (strcmp(FACTORY_ANY_ID, this->SubId) == 0));
+    if ((StreamType == PlayerStreamType) && (Component == PlayerComponent) && (strcmp (Id, this->Id) == 0))
+        return ((strcmp (SubId, this->SubId) == 0) ||
+                (strcmp (SubId, FACTORY_ANY_ID) == 0) ||
+                (strcmp (FACTORY_ANY_ID, this->SubId) == 0));
     else
         return false;
 }
-HavanaStatus_t HavanaFactory_c::Build(void**  Class)
+HavanaStatus_t HavanaFactory_c::Build  (void**  Class)
 {
     //HAVANA_DEBUG("\n");
-    *Class     = Factory();
 
+    *Class     = Factory ();
     if (*Class == NULL)
         return HavanaNoMemory;
 
     return HavanaNoError;
 }
-class HavanaFactory_c* HavanaFactory_c::Next(void)
+class HavanaFactory_c* HavanaFactory_c::Next   (void)
 {
-        //HAVANA_DEBUG("\n");
-        return NextFactory;
+    //HAVANA_DEBUG("\n");
+
+    return NextFactory;
 }
-unsigned int HavanaFactory_c::Version(void)
+unsigned int HavanaFactory_c::Version  (void)
 {
     HAVANA_DEBUG("\n");
+
     return FactoryVersion;
 }
 

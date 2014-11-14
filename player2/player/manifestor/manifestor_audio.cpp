@@ -45,50 +45,50 @@ Date        Modification                                    Name
 #undef  MANIFESTOR_TAG
 #define MANIFESTOR_TAG          "Manifestor_Audio_c::"
 
-#define BUFFER_DECODE_BUFFER            "AudioDecodeBuffer"
-#define BUFFER_DECODE_BUFFER_TYPE       {BUFFER_DECODE_BUFFER, BufferDataTypeBase, AllocateFromSuppliedBlock, 32, 32, false, false, 0}
-static BufferDataDescriptor_t           InitialDecodeBufferDescriptor = BUFFER_DECODE_BUFFER_TYPE;
+#define BUFFER_DECODE_BUFFER			"AudioDecodeBuffer"
+#define BUFFER_DECODE_BUFFER_TYPE		{BUFFER_DECODE_BUFFER, BufferDataTypeBase, AllocateFromSuppliedBlock, 32, 32, false, false, 0}
+static BufferDataDescriptor_t			InitialDecodeBufferDescriptor = BUFFER_DECODE_BUFFER_TYPE;
 
 ////////////////////////////////////////////////////////////////////////////
 ///
 ///
 ///
-Manifestor_Audio_c::Manifestor_Audio_c(void)
+Manifestor_Audio_c::Manifestor_Audio_c  (void)
     : DestroySyncrhonizationPrimatives(false)
 {
-    MANIFESTOR_DEBUG(">><<\n");
+    MANIFESTOR_DEBUG (">><<\n");
 
-    Configuration.ManifestorName    = "Audio";
-    Configuration.StreamType        = StreamTypeAudio;
-    Configuration.DecodeBufferDescriptor = &InitialDecodeBufferDescriptor;
-    Configuration.PostProcessControlBufferCount = 16;
+    Configuration.ManifestorName	= "Audio";
+    Configuration.StreamType		= StreamTypeAudio;
+    Configuration.DecodeBufferDescriptor= &InitialDecodeBufferDescriptor;
+    Configuration.PostProcessControlBufferCount	= 16;
 
     if (InitializationStatus != ManifestorNoError)
     {
-        MANIFESTOR_ERROR("Initialization status not valid - aborting init\n");
-        return;
+	MANIFESTOR_ERROR ("Initialization status not valid - aborting init\n");
+	return;
     }
 
-    if (OS_InitializeMutex(&BufferQueueLock) != OS_NO_ERROR)
+    if (OS_InitializeMutex (&BufferQueueLock) != OS_NO_ERROR)
     {
-        MANIFESTOR_ERROR("Unable to create the buffer queue lock\n");
-        InitializationStatus = ManifestorError;
-        return;
+	MANIFESTOR_ERROR ("Unable to create the buffer queue lock\n");
+	InitializationStatus = ManifestorError;
+	return;
     }
 
-    if (OS_InitializeEvent(&BufferQueueUpdated) != OS_NO_ERROR)
+    if (OS_InitializeEvent (&BufferQueueUpdated) != OS_NO_ERROR)
     {
-        MANIFESTOR_ERROR("Unable to create the buffer queue update event\n");
-        OS_TerminateMutex(&BufferQueueLock);
-        InitializationStatus = ManifestorError;
-        return;
+	MANIFESTOR_ERROR("Unable to create the buffer queue update event\n");
+	OS_TerminateMutex( &BufferQueueLock );
+	InitializationStatus = ManifestorError;
+	return;
     }
 
     DestroySyncrhonizationPrimatives = true;
 
     RelayfsIndex = st_relayfs_getindex(ST_RELAY_SOURCE_AUDIO_MANIFESTOR);
 
-    Manifestor_Audio_c::Reset();
+    Manifestor_Audio_c::Reset ();
 }
 
 
@@ -96,18 +96,18 @@ Manifestor_Audio_c::Manifestor_Audio_c(void)
 ///
 ///
 ///
-Manifestor_Audio_c::~Manifestor_Audio_c(void)
+Manifestor_Audio_c::~Manifestor_Audio_c   (void)
 {
-    MANIFESTOR_DEBUG(">><<\n");
+    MANIFESTOR_DEBUG (">><<\n");
 
-    Manifestor_Audio_c::Halt();
+    Manifestor_Audio_c::Halt ();
 
-    st_relayfs_freeindex(ST_RELAY_SOURCE_AUDIO_MANIFESTOR, RelayfsIndex);
+    st_relayfs_freeindex(ST_RELAY_SOURCE_AUDIO_MANIFESTOR,RelayfsIndex);
 
-    if (DestroySyncrhonizationPrimatives)
+    if( DestroySyncrhonizationPrimatives )
     {
-        OS_TerminateMutex(&BufferQueueLock);
-        OS_TerminateEvent(&BufferQueueUpdated);
+	OS_TerminateMutex(&BufferQueueLock);
+	OS_TerminateEvent(&BufferQueueUpdated);
     }
 }
 
@@ -115,9 +115,9 @@ Manifestor_Audio_c::~Manifestor_Audio_c(void)
 ///
 ///
 ///
-ManifestorStatus_t      Manifestor_Audio_c::Halt(void)
+ManifestorStatus_t      Manifestor_Audio_c::Halt (void)
 {
-    MANIFESTOR_DEBUG(">><<\n");
+    MANIFESTOR_DEBUG (">><<\n");
 
     //
     // It is unlikely that we have any decode buffers queued at this point but if we do we
@@ -126,11 +126,11 @@ ManifestorStatus_t      Manifestor_Audio_c::Halt(void)
     //
 
     ReleaseQueuedDecodeBuffers();
-
+    
     MANIFESTOR_ASSERT(0 == QueuedBufferCount);
     MANIFESTOR_ASSERT(0 == NotQueuedBufferCount);
 
-    return Manifestor_Base_c::Halt();
+    return Manifestor_Base_c::Halt ();
 }
 
 
@@ -138,12 +138,12 @@ ManifestorStatus_t      Manifestor_Audio_c::Halt(void)
 ///
 ///
 ///
-ManifestorStatus_t Manifestor_Audio_c::Reset(void)
+ManifestorStatus_t Manifestor_Audio_c::Reset (void)
 {
-    MANIFESTOR_DEBUG(">><<\n");
+    MANIFESTOR_DEBUG (">><<\n");
 
-    if (TestComponentState(ComponentRunning))
-        Halt();
+    if (TestComponentState (ComponentRunning))
+	Halt ();
 
     BufferQueueHead             = INVALID_BUFFER_ID;
     BufferQueueTail             = ANY_BUFFER_ID;
@@ -154,38 +154,37 @@ ManifestorStatus_t Manifestor_Audio_c::Reset(void)
 
     memset(&LastSeenAudioParameters, 0, sizeof(LastSeenAudioParameters));
 
-    return Manifestor_Base_c::Reset();
+    return Manifestor_Base_c::Reset ();
 }
 
 ////////////////////////////////////////////////////////////////////////////
 ///
 /// Allocate and initialize the decode buffer if required, and pass them to the caller.
-///
+/// 
 /// \param Pool         Pointer to location for buffer pool pointer to hold
 ///                     details of the buffer pool holding the decode buffers.
 /// \return             Succes or failure
 ///
-ManifestorStatus_t      Manifestor_Audio_c::GetDecodeBufferPool(class BufferPool_c**   Pool)
+ManifestorStatus_t      Manifestor_Audio_c::GetDecodeBufferPool         (class BufferPool_c**   Pool)
 {
     unsigned int                        i;
-    ManifestorStatus_t          Status;
+    ManifestorStatus_t			Status;
 
-    MANIFESTOR_DEBUG(">><<\n");
+    MANIFESTOR_DEBUG (">><<\n");
 
     // Only create the pool if it doesn't exist and buffers have been created
     if (DecodeBufferPool != NULL)
     {
-        *Pool   = DecodeBufferPool;
-        return ManifestorNoError;
+	*Pool   = DecodeBufferPool;
+	return ManifestorNoError;
     }
 
-    Status      = Manifestor_Base_c::GetDecodeBufferPool(Pool);
-
-    if (Status != ManifestorNoError)
+    Status      = Manifestor_Base_c::GetDecodeBufferPool( Pool );
+    if( Status != ManifestorNoError )
     {
-        MANIFESTOR_ERROR("Failed to create a pool of decode buffers.\n");
-        DecodeBufferPool        = NULL;
-        return ManifestorError;
+	MANIFESTOR_ERROR ("Failed to create a pool of decode buffers.\n");
+	DecodeBufferPool        = NULL;
+	return ManifestorError;
     }
 
     // Fill in surface descriptor details with our assumed defaults
@@ -195,10 +194,10 @@ ManifestorStatus_t      Manifestor_Audio_c::GetDecodeBufferPool(class BufferPool
 
     for (i = 0; i < BufferConfiguration.MaxBufferCount; i++)
     {
-        StreamBuffer[i].BufferIndex                     = i;
-        StreamBuffer[i].QueueCount                      = 0;
-        StreamBuffer[i].TimeOfGoingOnDisplay            = 0;
-        StreamBuffer[i].BufferState                     = AudioBufferStateAvailable;
+	StreamBuffer[i].BufferIndex                     = i;
+	StreamBuffer[i].QueueCount                      = 0;
+	StreamBuffer[i].TimeOfGoingOnDisplay            = 0;
+	StreamBuffer[i].BufferState                     = AudioBufferStateAvailable;
     }
 
     BufferQueueHead                     = INVALID_BUFFER_ID;
@@ -208,7 +207,7 @@ ManifestorStatus_t      Manifestor_Audio_c::GetDecodeBufferPool(class BufferPool
 
     // Let outside world know about the created pool
     *Pool   = DecodeBufferPool;
-    SetComponentState(ComponentRunning);
+    SetComponentState (ComponentRunning);
 
     return ManifestorNoError;
 }
@@ -218,10 +217,10 @@ ManifestorStatus_t      Manifestor_Audio_c::GetDecodeBufferPool(class BufferPool
 /// Fill in private structure with timing details of display surface.
 ///
 /// \param      SurfaceParameters pointer to structure to complete
-///
-ManifestorStatus_t      Manifestor_Audio_c::GetSurfaceParameters(void** SurfaceParameters)
+/// 
+ManifestorStatus_t      Manifestor_Audio_c::GetSurfaceParameters (void** SurfaceParameters )
 {
-    MANIFESTOR_DEBUG(">><<\n");
+    MANIFESTOR_DEBUG (">><<\n");
     *SurfaceParameters  = (void*)&SurfaceDescriptor;
     return ManifestorNoError;
 }
@@ -231,7 +230,7 @@ ManifestorStatus_t      Manifestor_Audio_c::GetSurfaceParameters(void** SurfaceP
 ///
 ///
 ///
-ManifestorStatus_t      Manifestor_Audio_c::GetNextQueuedManifestationTime(unsigned long long*    Time)
+ManifestorStatus_t      Manifestor_Audio_c::GetNextQueuedManifestationTime   (unsigned long long*    Time)
 {
     MANIFESTOR_DEBUG(">><<\n");
 
@@ -252,7 +251,7 @@ ManifestorStatus_t      Manifestor_Audio_c::GetNextQueuedManifestationTime(unsig
 ///
 /// The super-class will tidy up an queued events.
 ///
-ManifestorStatus_t      Manifestor_Audio_c::ReleaseQueuedDecodeBuffers()
+ManifestorStatus_t      Manifestor_Audio_c::ReleaseQueuedDecodeBuffers   ()
 {
     ManifestorStatus_t Status;
     MANIFESTOR_DEBUG(">><<\n");
@@ -263,21 +262,17 @@ ManifestorStatus_t      Manifestor_Audio_c::ReleaseQueuedDecodeBuffers()
     // Emit all the queued buffers
     //
 
-    for (unsigned int i = BufferQueueHead; i != INVALID_BUFFER_ID; i = StreamBuffer[i].NextIndex)
+    for (unsigned int i=BufferQueueHead; i!=INVALID_BUFFER_ID; i=StreamBuffer[i].NextIndex)
     {
-        Status = ReleaseBuffer(i);
-
-        if (Status != ManifestorNoError)
-        {
-            MANIFESTOR_ERROR("Sub-class got cross when we tried to release a buffer - ignoring them\n");
-        }
-
+	Status = ReleaseBuffer(i);
+	if( Status != ManifestorNoError )
+	{
+	    MANIFESTOR_ERROR("Sub-class got cross when we tried to release a buffer - ignoring them\n");
+	}
         QueuedBufferCount--;
-
-        if (StreamBuffer[i].EventPending)
-            ServiceEventQueue(i);
-
-        OutputRing->Insert((unsigned int) StreamBuffer[i].Buffer);
+	if( StreamBuffer[i].EventPending )
+		ServiceEventQueue( i );
+	OutputRing->Insert( (unsigned int) StreamBuffer[i].Buffer );
     }
 
     BufferQueueHead = INVALID_BUFFER_ID;
@@ -293,9 +288,9 @@ ManifestorStatus_t      Manifestor_Audio_c::ReleaseQueuedDecodeBuffers()
 ///
 ///
 ///
-ManifestorStatus_t      Manifestor_Audio_c::InitialFrame(class Buffer_c*         Buffer)
+ManifestorStatus_t      Manifestor_Audio_c::InitialFrame       (class Buffer_c*         Buffer)
 {
-    MANIFESTOR_DEBUG(">><<\n");
+    MANIFESTOR_DEBUG (">><<\n");
     return ManifestorNoError;
 }
 
@@ -304,67 +299,62 @@ ManifestorStatus_t      Manifestor_Audio_c::InitialFrame(class Buffer_c*        
 ///
 ///
 ///
-ManifestorStatus_t      Manifestor_Audio_c::QueueDecodeBuffer(class Buffer_c*        Buffer)
+ManifestorStatus_t      Manifestor_Audio_c::QueueDecodeBuffer   (class Buffer_c*        Buffer)
 {
     ManifestorStatus_t                  Status;
     BufferStatus_t                      BufferStatus;
     unsigned int                        BufferIndex;
 
     //MANIFESTOR_DEBUG(">><<\n");
-    AssertComponentState("Manifestor_Audio_c::QueueDecodeBuffer", ComponentRunning);
+    AssertComponentState ("Manifestor_Audio_c::QueueDecodeBuffer", ComponentRunning);
 
     //
     // Obtain the index for the buffer and populate the parameter data.
     //
 
-    BufferStatus = Buffer->GetIndex(&BufferIndex);
-
+    BufferStatus = Buffer->GetIndex (&BufferIndex);
     if (BufferStatus != BufferNoError)
     {
-        MANIFESTOR_ERROR("Unable to lookup buffer index %x.\n", BufferStatus);
-        return ManifestorError;
+	MANIFESTOR_ERROR ("Unable to lookup buffer index %x.\n", BufferStatus);
+	return ManifestorError;
     }
 
     StreamBuffer[BufferIndex].Buffer = Buffer;
     StreamBuffer[BufferIndex].EventPending = EventPending;
     EventPending = false;
 
-    BufferStatus = Buffer->ObtainMetaDataReference(Player->MetaDataParsedFrameParametersReferenceType,
-                   (void**) &StreamBuffer[BufferIndex].FrameParameters);
-
+    BufferStatus = Buffer->ObtainMetaDataReference (Player->MetaDataParsedFrameParametersReferenceType,
+						    (void**) &StreamBuffer[BufferIndex].FrameParameters);
     if (BufferStatus != BufferNoError)
     {
-        MANIFESTOR_ERROR("Unable to access buffer parsed frame parameters %x.\n", BufferStatus);
-        return ManifestorError;
+	MANIFESTOR_ERROR ("Unable to access buffer parsed frame parameters %x.\n", BufferStatus);
+	return ManifestorError;
     }
 
-    BufferStatus = Buffer->ObtainMetaDataReference(Player->MetaDataParsedAudioParametersType,
-                   (void**) &StreamBuffer[BufferIndex].AudioParameters);
-
+    BufferStatus = Buffer->ObtainMetaDataReference (Player->MetaDataParsedAudioParametersType,
+						    (void**) &StreamBuffer[BufferIndex].AudioParameters);
     if (BufferStatus != BufferNoError)
     {
-        MANIFESTOR_ERROR("Unable to access buffer parsed audio parameters %x.\n", BufferStatus);
-        return ManifestorError;
+	MANIFESTOR_ERROR ("Unable to access buffer parsed audio parameters %x.\n", BufferStatus);
+	return ManifestorError;
     }
 
     Buffer->DumpToRelayFS(ST_RELAY_TYPE_DECODED_AUDIO_BUFFER, ST_RELAY_SOURCE_AUDIO_MANIFESTOR + RelayfsIndex, (void*)Player);
 
-    BufferStatus = Buffer->ObtainMetaDataReference(Player->MetaDataAudioOutputTimingType,
-                   (void**) &StreamBuffer[BufferIndex].AudioOutputTiming);
-
+    BufferStatus = Buffer->ObtainMetaDataReference (Player->MetaDataAudioOutputTimingType,
+						    (void**) &StreamBuffer[BufferIndex].AudioOutputTiming);
     if (BufferStatus != BufferNoError)
     {
-        MANIFESTOR_ERROR("Unable to access buffer audio output timing parameters %x.\n", BufferStatus);
-        return ManifestorError;
+	MANIFESTOR_ERROR ("Unable to access buffer audio output timing parameters %x.\n", BufferStatus);
+	return ManifestorError;
     }
 
-    BufferStatus = Buffer->ObtainDataReference(NULL, NULL,
-                   (void**)(&StreamBuffer[BufferIndex].Data), UnCachedAddress);
-
+    BufferStatus = Buffer->ObtainDataReference( NULL, NULL,
+						(void**)(&StreamBuffer[BufferIndex].Data), UnCachedAddress );
     if (BufferStatus != BufferNoError)
     {
-        MANIFESTOR_ERROR("Unable to obtain buffer's data reference %x.\n", BufferStatus);
-        return ManifestorError;
+	MANIFESTOR_ERROR ("Unable to obtain buffer's data reference %x.\n", BufferStatus);
+	return ManifestorError;
 
     }
 
@@ -374,74 +364,73 @@ ManifestorStatus_t      Manifestor_Audio_c::QueueDecodeBuffer(class Buffer_c*   
     // Check if there are new audio parameters (i.e. change of sample rate etc.) and note this
     //
 
-    if (0 == memcmp(&LastSeenAudioParameters, StreamBuffer[BufferIndex].AudioParameters,
-                    sizeof(LastSeenAudioParameters)))
+    if( 0 == memcmp( &LastSeenAudioParameters, StreamBuffer[BufferIndex].AudioParameters,
+		     sizeof(LastSeenAudioParameters ) ) )
     {
-        StreamBuffer[BufferIndex].UpdateAudioParameters = false;
+	StreamBuffer[BufferIndex].UpdateAudioParameters = false;
     }
     else
     {
-        StreamBuffer[BufferIndex].UpdateAudioParameters = true;
-        memcpy(&LastSeenAudioParameters, StreamBuffer[BufferIndex].AudioParameters,
-               sizeof(LastSeenAudioParameters));
+	StreamBuffer[BufferIndex].UpdateAudioParameters = true;
+	memcpy( &LastSeenAudioParameters, StreamBuffer[BufferIndex].AudioParameters,
+		sizeof(LastSeenAudioParameters ) );
     }
 
     //
     // Allow the sub-class to have a peek at the buffer before we queue it for display
     //
 
-    Status = QueueBuffer(BufferIndex);
-
+    Status = QueueBuffer (BufferIndex);
     if (Status != ManifestorNoError)
     {
-        MANIFESTOR_ERROR("Unable to queue buffer %x.\n", Status);
-        return Status;
+	MANIFESTOR_ERROR("Unable to queue buffer %x.\n", Status);
+	return Status;
     }
 
     //
     // Enqueue the buffer for display within the playback thread
     //
 
-    OS_LockMutex(&BufferQueueLock);
-
+    OS_LockMutex( &BufferQueueLock );
+    
     QueuedBufferCount++;
 
-    StreamBuffer[BufferIndex].NextIndex = INVALID_BUFFER_ID; // end marker
+    StreamBuffer[BufferIndex].NextIndex = INVALID_BUFFER_ID; // end marker    
 
-    if (BufferQueueHead == INVALID_BUFFER_ID)
+    if( BufferQueueHead == INVALID_BUFFER_ID )
     {
-        BufferQueueHead = BufferIndex;
+	BufferQueueHead = BufferIndex;
     }
     else
     {
-        StreamBuffer[BufferQueueTail].NextIndex = BufferIndex;
+	StreamBuffer[BufferQueueTail].NextIndex = BufferIndex;
     }
 
     BufferQueueTail = BufferIndex;
 
-    OS_UnLockMutex(&BufferQueueLock);
+    OS_UnLockMutex( &BufferQueueLock );
 
-    OS_SetEvent(&BufferQueueUpdated);
+    OS_SetEvent( &BufferQueueUpdated );
 
     return ManifestorNoError;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////
-///
+/// 
 /// Retrieve buffer index of last buffer queued.
 ///
 /// If no buffers yet queued returns ANY_BUFFER_ID
 ///
 /// \return     Buffer index of last buffer sent for display
 ///
-unsigned int    Manifestor_Audio_c::GetBufferId(void)
+unsigned int    Manifestor_Audio_c::GetBufferId    (void)
 {
     return BufferQueueTail;
 }
 
 ////////////////////////////////////////////////////////////////////////////
-///
+/// 
 /// Get original PTS of currently visible buffer
 ///
 /// \param Pts          Pointer to Pts variable
@@ -453,33 +442,32 @@ ManifestorStatus_t Manifestor_Audio_c::GetNativeTimeOfCurrentlyManifestedFrame(u
     BufferStatus_t                      BufferStatus;
     struct ParsedFrameParameters_s*     FrameParameters;
 
-    MANIFESTOR_DEBUG("\n");
+    MANIFESTOR_DEBUG ("\n");
 
     *Time      = INVALID_TIME;
-
-    OS_AutoLockMutex AutoLock(&BufferQueueLock);
+    
+    OS_AutoLockMutex AutoLock( &BufferQueueLock );
 
     if (BufferQueueHead == INVALID_BUFFER_ID)
     {
-        MANIFESTOR_DEBUG("No buffer on display.\n");
-        return ManifestorError;
+	MANIFESTOR_DEBUG( "No buffer on display.\n" );
+	return ManifestorError;
     }
-
-    BufferStatus = StreamBuffer[BufferQueueHead].Buffer->ObtainMetaDataReference(
-                       Player->MetaDataParsedFrameParametersReferenceType, (void**)&FrameParameters);
-
+    
+    BufferStatus = StreamBuffer[BufferQueueHead].Buffer->ObtainMetaDataReference (
+		    Player->MetaDataParsedFrameParametersReferenceType, (void**)&FrameParameters);
     if (BufferStatus != BufferNoError)
     {
-        MANIFESTOR_ERROR("Unable to access buffer parsed frame parameters %x.\n", BufferStatus);
-        return ManifestorError;
+	MANIFESTOR_ERROR( "Unable to access buffer parsed frame parameters %x.\n", BufferStatus );
+	return ManifestorError;
     }
 
-    if (!ValidTime(FrameParameters->NativePlaybackTime))
+    if( !ValidTime( FrameParameters->NativePlaybackTime ) )
     {
-        MANIFESTOR_ERROR("Buffer on display does not have a valid native playback time\n");
-        return ManifestorError;
+	MANIFESTOR_ERROR( "Buffer on display does not have a valid native playback time\n" );
+	return ManifestorError;
     }
-
+    
     MANIFESTOR_DEBUG("%lld\n", FrameParameters->NativePlaybackTime);
     *Time       = FrameParameters->NativePlaybackTime;
 
@@ -493,7 +481,7 @@ ManifestorStatus_t Manifestor_Audio_c::GetNativeTimeOfCurrentlyManifestedFrame(u
 /// \param Framecount   Pointer to FrameCount variable
 /// \return             Success
 ///
-ManifestorStatus_t Manifestor_Audio_c::GetFrameCount(unsigned long long* FrameCount)
+ManifestorStatus_t Manifestor_Audio_c::GetFrameCount (unsigned long long* FrameCount)
 {
     //MANIFESTOR_DEBUG ("\n");
 
@@ -504,7 +492,7 @@ ManifestorStatus_t Manifestor_Audio_c::GetFrameCount(unsigned long long* FrameCo
 
 
 ////////////////////////////////////////////////////////////////////////////
-///
+/// 
 /// Dequeue a buffer from the queue of buffers ready for display.
 ///
 /// Must be called only from the mixer playback thread.
@@ -519,54 +507,48 @@ int inject_silent_count = 0;
 
 ManifestorStatus_t Manifestor_Audio_c::DequeueBuffer(unsigned int *BufferIndexPtr, bool NonBlock)
 {
-    unsigned int BufferIndex;
+unsigned int BufferIndex;
 
-    while (!ForcedUnblock)
+    while( !ForcedUnblock )
     {
-        //
-        // Dequeue the buffer
-        //
+	//
+	// Dequeue the buffer
+	//
 
-        OS_LockMutex(&BufferQueueLock);
-
-        if (BufferQueueHead != INVALID_BUFFER_ID)
-        {
+	OS_LockMutex(&BufferQueueLock);
+	if( BufferQueueHead != INVALID_BUFFER_ID )
+	{
 #ifdef __TDT__
-
-            if (QueuedBufferCount < 3)
-                inject_silent_count = 3;
-
-            if (inject_silent_count > 0)
-            {
-                OS_UnLockMutex(&BufferQueueLock);
-                inject_silent_count--;
-                return ManifestorWouldBlock;
-            }
-
+                        if(QueuedBufferCount < 3) inject_silent_count = 3;
+                        if(inject_silent_count > 0)
+                        {
+                                OS_UnLockMutex(&BufferQueueLock);
+                                inject_silent_count--;
+                                return ManifestorWouldBlock;
+                        }
 #endif
-            BufferIndex = BufferQueueHead;
-            BufferQueueHead = StreamBuffer[BufferIndex].NextIndex;
-
+	    BufferIndex = BufferQueueHead;
+	    BufferQueueHead = StreamBuffer[BufferIndex].NextIndex;
+            
             QueuedBufferCount--;
             NotQueuedBufferCount++;
+            
+	    OS_UnLockMutex(&BufferQueueLock);
 
-            OS_UnLockMutex(&BufferQueueLock);
+	    *BufferIndexPtr = BufferIndex;
+	    return ManifestorNoError;
+	}
+	OS_UnLockMutex(&BufferQueueLock);
 
-            *BufferIndexPtr = BufferIndex;
-            return ManifestorNoError;
-        }
+	//
+	// Block if no buffer is available.
+	//
 
-        OS_UnLockMutex(&BufferQueueLock);
+	if( NonBlock )
+	    return ManifestorWouldBlock;
 
-        //
-        // Block if no buffer is available.
-        //
-
-        if (NonBlock)
-            return ManifestorWouldBlock;
-
-        OS_WaitForEvent(&BufferQueueUpdated, OS_INFINITE);
-        OS_ResetEvent(&BufferQueueUpdated);
+	OS_WaitForEvent(&BufferQueueUpdated, OS_INFINITE);
+	OS_ResetEvent(&BufferQueueUpdated);     
     }
 
     return ManifestorError;
@@ -574,7 +556,7 @@ ManifestorStatus_t Manifestor_Audio_c::DequeueBuffer(unsigned int *BufferIndexPt
 
 
 ////////////////////////////////////////////////////////////////////////////
-///
+/// 
 /// Push a previously dequeued buffer back to the head of the buffer queue.
 ///
 /// Must be called only from the mixer playback thread.
@@ -585,10 +567,8 @@ void Manifestor_Audio_c::PushBackBuffer(unsigned int BufferIndex)
 {
     OS_LockMutex(&BufferQueueLock);
     StreamBuffer[BufferIndex].NextIndex = BufferQueueHead;
-
-    if (BufferQueueHead == INVALID_BUFFER_ID)
-        BufferQueueTail = BufferIndex;
-
+    if( BufferQueueHead == INVALID_BUFFER_ID )
+	BufferQueueTail = BufferIndex;
     BufferQueueHead = BufferIndex;
     QueuedBufferCount++;
     NotQueuedBufferCount--;
@@ -600,29 +580,29 @@ void Manifestor_Audio_c::PushBackBuffer(unsigned int BufferIndex)
 //
 //      Function to flesh out a buffer request structure
 
-ManifestorStatus_t   Manifestor_Audio_c::FillOutBufferStructure(BufferStructure_t    *RequestedStructure)
+ManifestorStatus_t   Manifestor_Audio_c::FillOutBufferStructure( BufferStructure_t	 *RequestedStructure )
 {
     //
     // Check that the format type is compatible
     //
 
-    if (RequestedStructure->Format != FormatAudio)
+    if( RequestedStructure->Format != FormatAudio )
     {
-        report(severity_error, "Manifestor_Audio_c::FillOutBufferStructure - Unsupported buffer format (%d)\n", RequestedStructure->Format);
-        return ManifestorError;
+	report( severity_error, "Manifestor_Audio_c::FillOutBufferStructure - Unsupported buffer format (%d)\n", RequestedStructure->Format );
+	return ManifestorError;
     }
 
     //
     // Calculate the appropriate fields
     //
 
-    RequestedStructure->ComponentCount      = 1;
-    RequestedStructure->ComponentOffset[0]  = 0;
+    RequestedStructure->ComponentCount		= 1;
+    RequestedStructure->ComponentOffset[0]	= 0;
 
-    RequestedStructure->Strides[0][0]       = RequestedStructure->Dimension[0] / 8;
-    RequestedStructure->Strides[1][0]       = RequestedStructure->Dimension[1] * RequestedStructure->Strides[0][0];
+    RequestedStructure->Strides[0][0]		= RequestedStructure->Dimension[0] / 8;
+    RequestedStructure->Strides[1][0]		= RequestedStructure->Dimension[1] * RequestedStructure->Strides[0][0];
 
-    RequestedStructure->Size            = (RequestedStructure->Dimension[0] * RequestedStructure->Dimension[1] * RequestedStructure->Dimension[2]) / 8;
+    RequestedStructure->Size			= (RequestedStructure->Dimension[0] * RequestedStructure->Dimension[1] * RequestedStructure->Dimension[2]) / 8;
 
     return ManifestorNoError;
 }

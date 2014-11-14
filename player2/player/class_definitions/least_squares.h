@@ -25,7 +25,7 @@ Author :           Nick
 Definition of the class supporting least squares approximation in player 2.
 The algorithm used is detailed in :-
 
-    http://en.wikipedia.org/wiki/Linear_least_squares
+	http://en.wikipedia.org/wiki/Linear_least_squares
 
 
 NOTE the individual points here are delta's from the last point pair
@@ -47,145 +47,145 @@ Date        Modification                                    Name
 
 class LeastSquares_c
 {
-    private:
-        unsigned int        Count;
+private:
+	unsigned int		Count;
 
-        long long       CumulativeX;
-        long long       CumulativeY;
+	long long		CumulativeX;
+	long long		CumulativeY;
 
-        LongLongLong_t      SigmaXSquared;
-        LongLongLong_t      SigmaX;
-        LongLongLong_t      SigmaY;
-        LongLongLong_t      SigmaYX;
+        LongLongLong_t		SigmaXSquared;
+	LongLongLong_t		SigmaX;
+	LongLongLong_t		SigmaY;
+	LongLongLong_t		SigmaYX;
 
-    public:
+public:
 
-        //
-        // Constructor just resets the accumulation
-        //
+    //
+    // Constructor just resets the accumulation
+    //
 
-        LeastSquares_c()
-        {
-            Reset();
-        }
+    LeastSquares_c()
+    {
+	Reset();
+    }
 
-        //
-        // Reset the accumulation
-        //
+    //
+    // Reset the accumulation
+    //
 
-        void   Reset(void)
-        {
-            Count       = 0;
-            CumulativeX = 0;
-            CumulativeY = 0;
-            SigmaXSquared   = 0;
-            SigmaX      = 0;
-            SigmaY      = 0;
-            SigmaYX     = 0;
-        }
+    void   Reset( void )
+    {
+	Count		= 0;
+	CumulativeX	= 0;
+	CumulativeY	= 0;
+        SigmaXSquared	= 0;
+	SigmaX		= 0;
+	SigmaY		= 0;
+	SigmaYX		= 0;
+    }
 
-        //
-        // Read out functions for X and Y
-        //
+    //
+    // Read out functions for X and Y
+    //
 
-        long long   Y(void)
-        {
-            return CumulativeY;
-        }
+    long long   Y( void )
+    {
+	return CumulativeY;
+    }
 
-        long long   X(void)
-        {
-            return CumulativeX;
-        }
+    long long   X( void )
+    {
+	return CumulativeX;
+    }
 
-        //
-        // Add a new pair of values
-        //
+    //
+    // Add a new pair of values
+    //
 
-        void   Add(long long    DeltaY,
-                   long long   DeltaX)
-        {
-            CumulativeY += DeltaY;
-            CumulativeX += DeltaX;
+    void   Add(	long long	DeltaY,
+		long long	DeltaX )
+    {
+	CumulativeY	+= DeltaY;
+	CumulativeX	+= DeltaX;
 
-            SigmaY      += CumulativeY;
-            SigmaYX     += CumulativeY * CumulativeX;
-            SigmaXSquared   += CumulativeX * CumulativeX;
-            SigmaX      += CumulativeX;
-            Count++;
-        }
+	SigmaY		+= CumulativeY;
+	SigmaYX		+= CumulativeY * CumulativeX;
+	SigmaXSquared	+= CumulativeX * CumulativeX;
+	SigmaX		+= CumulativeX;
+	Count++;
+    }
 
-        //
-        // Read out the Gradient
-        //
+    //
+    // Read out the Gradient
+    //
 
-        Rational_t   Gradient(void)
-        {
-            LongLongLong_t  Top;
-            LongLongLong_t  Bottom;
-            long long   TopLong;
-            long long   BottomLong;
-            unsigned int    TopShift;
-            unsigned int    BottomShift;
+    Rational_t   Gradient( void )
+    {
+	LongLongLong_t	Top;
+	LongLongLong_t	Bottom;
+	long long	TopLong;
+	long long	BottomLong;
+	unsigned int	TopShift;
+	unsigned int	BottomShift;
 
-            if (Count < 2)
-            {
-                report(severity_error, "LeastSquares_c::Gradient - Attepmpt to obtain least squares fit with less than 2 values\n");
-                return 0;
-            }
+	if( Count < 2 )
+	{
+	    report( severity_error, "LeastSquares_c::Gradient - Attepmpt to obtain least squares fit with less than 2 values\n" );
+	    return 0;
+	}
 
-            Top = ((SigmaY * SigmaX) - (Count * SigmaYX));
-            Bottom  = ((SigmaX * SigmaX) - (Count * SigmaXSquared));
+	Top	= ((SigmaY * SigmaX) - (Count * SigmaYX));
+	Bottom	= ((SigmaX*SigmaX) - (Count * SigmaXSquared));
 
-            Top.Get(&TopLong, &TopShift);
-            Bottom.Get(&BottomLong, &BottomShift);
+	Top.Get( &TopLong, &TopShift );
+	Bottom.Get( &BottomLong, &BottomShift );
 
-            if (TopShift != BottomShift)
-            {
-                if (TopShift > BottomShift)
-                    BottomLong  /= (1 << (TopShift - BottomShift));
-                else
-                    TopLong     /= (1 << (BottomShift - TopShift));
-            }
+	if( TopShift != BottomShift )
+	{
+	    if( TopShift > BottomShift )
+		BottomLong	/= (1<<(TopShift - BottomShift));
+	    else
+		TopLong		/= (1<<(BottomShift - TopShift));
+	}
 
-            return Rational_t(TopLong, BottomLong);
-        }
+	return Rational_t( TopLong, BottomLong );
+    }
 
-        //
-        // Read out the intercept
-        //
+    //
+    // Read out the intercept
+    //
 
-        Rational_t   Intercept(void)
-        {
-            LongLongLong_t  Top;
-            LongLongLong_t  Bottom;
-            long long   TopLong;
-            long long   BottomLong;
-            unsigned int    TopShift;
-            unsigned int    BottomShift;
+    Rational_t   Intercept( void )
+    {
+	LongLongLong_t	Top;
+	LongLongLong_t	Bottom;
+	long long	TopLong;
+	long long	BottomLong;
+	unsigned int	TopShift;
+	unsigned int	BottomShift;
 
-            if (Count < 2)
-            {
-                report(severity_error, "LeastSquares_c::Intercept - Attepmpt to obtain least squares fit with less than 2 values\n");
-                return 0;
-            }
+	if( Count < 2 )
+	{
+	    report( severity_error, "LeastSquares_c::Intercept - Attepmpt to obtain least squares fit with less than 2 values\n" );
+	    return 0;
+	}
 
-            Top = ((SigmaX * SigmaYX) - (SigmaY * SigmaXSquared));
-            Bottom  = ((SigmaX * SigmaX) - (Count * SigmaXSquared));
+	Top	= ((SigmaX * SigmaYX) - (SigmaY * SigmaXSquared));
+	Bottom	= ((SigmaX*SigmaX) - (Count * SigmaXSquared));
 
-            Top.Get(&TopLong, &TopShift);
-            Bottom.Get(&BottomLong, &BottomShift);
+	Top.Get( &TopLong, &TopShift );
+	Bottom.Get( &BottomLong, &BottomShift );
 
-            if (TopShift != BottomShift)
-            {
-                if (TopShift > BottomShift)
-                    BottomLong  /= (1 << (TopShift - BottomShift));
-                else
-                    TopLong /= (1 << (BottomShift - TopShift));
-            }
+	if( TopShift != BottomShift )
+	{
+	    if( TopShift > BottomShift )
+		BottomLong	/= (1<<(TopShift - BottomShift));
+	    else
+		TopLong		/= (1<<(BottomShift - TopShift));
+	}
 
-            return Rational_t(TopLong, BottomLong);
-        }
+	return Rational_t( TopLong, BottomLong );
+    }
 };
 
 //

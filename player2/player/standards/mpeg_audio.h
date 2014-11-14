@@ -22,7 +22,7 @@ license from ST.
 Source file name : mpeg_audio.h
 Author :           Nick
 
-Definition of the constants/macros that define useful things associated with
+Definition of the constants/macros that define useful things associated with 
 MPEG audio streams.
 
 
@@ -45,7 +45,7 @@ Date        Modification                                    Name
 
 // Elementary stream constants
 
-#define MPEG_AUDIO_PARTIAL_FRAME_HEADER_SIZE       4
+#define MPEG_AUDIO_PARTIAL_FRAME_HEADER_SIZE	   4
 #define MPEG_AUDIO_FRAME_HEADER_SIZE               8
 
 #define MPEG_AUDIO_START_CODE_MASK                 0xffe00000
@@ -86,11 +86,11 @@ typedef struct MpegAudioParsedFrameHeader_s
 
     // Directly interpretted values
     unsigned char Layer; ///< MPEG audio layer. Either 1, 2 or 3.
-    unsigned char MpegStandard; ///< MPEG standard (sample rate grouping). Either 1, 2 or 25 (unofficial MPEG 2.5 standard)
+    unsigned char MpegStandard; ///< MPEG standard (sample rate grouping). Either 1, 2 or 25 (unofficial MPEG 2.5 standard) 
     unsigned short BitRate; ///< MPEG bit rate in kbits/sec.
     unsigned int SamplingFrequency; ///< Sampling frequency in Hz.
     bool PaddedFrame; ///< True if the padding bit is set.
-
+	
     // Derived values
     unsigned int NumberOfSamples; ///< Number of samples per channel within the frame.
     unsigned int Length; ///< Length of frame in bytes (including header).
@@ -125,7 +125,7 @@ typedef struct MpegAudioFrameParameters_s
 {
     /// The bit rate of the frame
     unsigned int BitRate;
-
+    
     /// Size of the compressed frame (in bytes)
     unsigned int FrameSize;
 } MpegAudioFrameParameters_t;

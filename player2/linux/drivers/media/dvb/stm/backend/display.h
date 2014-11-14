@@ -48,12 +48,12 @@ typedef enum
 extern "C" {
 #endif
 
-int             DisplayInit(void);
-int             GetDisplayInfo(unsigned int           Id,
-                               DeviceHandle_t*        DisplayDevice,
-                               unsigned int*          PlaneId,
-                               unsigned int*          OutputId,
-                               BufferLocation_t*      BufferLocation);
+int             DisplayInit             (void);
+int             GetDisplayInfo          (unsigned int           Id,
+                                         DeviceHandle_t*        DisplayDevice,
+                                         unsigned int*          PlaneId,
+                                         unsigned int*          OutputId,
+                                         BufferLocation_t*      BufferLocation);
 
 #ifdef __cplusplus
 }

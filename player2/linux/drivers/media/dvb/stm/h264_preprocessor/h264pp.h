@@ -24,20 +24,20 @@ license from ST.
 
 //
 
-#define H264_PP_MAX_SLICES      256                 // Need 137 in principle
-#define H264_PP_SESB_SIZE       (8 * H264_PP_MAX_SLICES)        // 2 words per slice
-#define H264_PP_OUTPUT_SIZE     (0x00180000 - H264_PP_SESB_SIZE)    // 1.5 Mb - SESB data
+#define H264_PP_MAX_SLICES	256					// Need 137 in principle
+#define H264_PP_SESB_SIZE       (8 * H264_PP_MAX_SLICES)		// 2 words per slice
+#define H264_PP_OUTPUT_SIZE     (0x00180000 - H264_PP_SESB_SIZE)	// 1.5 Mb - SESB data
 #define H264_PP_BUFFER_SIZE     (H264_PP_SESB_SIZE + H264_PP_OUTPUT_SIZE)
 
-#define H264_PP_RESET_TIME_LIMIT    100
+#define H264_PP_RESET_TIME_LIMIT	100
 
 //
 
-#define H264_PP_MAX_SUPPORTED_PRE_PROCESSORS    4
-#define H264_PP_REGISTER_SIZE                   256
+#define H264_PP_MAX_SUPPORTED_PRE_PROCESSORS	4
+#define H264_PP_REGISTER_SIZE			256
 
-#define H264_PP_MAX_SUPPORTED_BUFFERS_PER_OPEN  8
-#define H264_PP_VIRTUAL_PP_PER_OPEN             2
+#define H264_PP_MAX_SUPPORTED_BUFFERS_PER_OPEN	8
+#define H264_PP_VIRTUAL_PP_PER_OPEN		2
 
 //
 
@@ -93,19 +93,16 @@ license from ST.
 #define PP_PICWIDTH__MBINPIC_SHIFT              16
 #define PP_PICWIDTH__PICWIDTH_SHIFT             0
 
-#define PP_ITM__WRITE_ERROR                     0x00000100  // error has been detected when writing the pre-processing result in external memory.
-#define PP_ITM__READ_ERROR                      0x00000080  // error has been detected when reading the compressed data from external memory.
-#define PP_ITM__BIT_BUFFER_OVERFLOW             0x00000040  //
-#define PP_ITM__BIT_BUFFER_UNDERFLOW            0x00000020  // Read stop address reached (PP_BBS), picture decoding not finished
-#define PP_ITM__INT_BUFFER_OVERFLOW             0x00000010  // Write address for intermediate buffer reached PP_IBS
-#define PP_ITM__ERROR_BIT_INSERTED              0x00000008  // Error bit has been inserted in Slice Error Status Buffer
-#define PP_ITM__ERROR_SC_DETECTED               0x00000004  // Error Start Code has been detected
-#define PP_ITM__SRS_COMP                        0x00000002  // Soft reset is completed
-#define PP_ITM__DMA_CMP                         0x00000001  // Write DMA is completed
+#define PP_ITM__WRITE_ERROR                     0x00000100	// error has been detected when writing the pre-processing result in external memory.
+#define PP_ITM__READ_ERROR                      0x00000080	// error has been detected when reading the compressed data from external memory.
+#define PP_ITM__BIT_BUFFER_OVERFLOW             0x00000040	//
+#define PP_ITM__BIT_BUFFER_UNDERFLOW            0x00000020	// Read stop address reached (PP_BBS), picture decoding not finished
+#define PP_ITM__INT_BUFFER_OVERFLOW             0x00000010	// Write address for intermediate buffer reached PP_IBS
+#define PP_ITM__ERROR_BIT_INSERTED              0x00000008	// Error bit has been inserted in Slice Error Status Buffer
+#define PP_ITM__ERROR_SC_DETECTED               0x00000004	// Error Start Code has been detected
+#define PP_ITM__SRS_COMP                        0x00000002	// Soft reset is completed
+#define PP_ITM__DMA_CMP                         0x00000001	// Write DMA is completed
 
-struct h264pp_platform_data
-{
-    unsigned int ApplyWorkAroundForGnbvd42331;
-};
+//
 
-#endif // _H264PP_H_
+#endif

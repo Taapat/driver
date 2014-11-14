@@ -22,7 +22,7 @@ license from ST.
 Source file name : rma_audio.h
 Author :           Julian
 
-Definition of the constants/macros that define useful things associated with
+Definition of the constants/macros that define useful things associated with 
 Real Media Rma audio streams.
 
 

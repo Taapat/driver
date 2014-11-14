@@ -42,11 +42,9 @@ Date        Modification                                    Name
 //      External types
 //
 
-#ifdef __cplusplus
 #include "ring.h"
 #include "stack.h"
 #include "rational.h"
-#endif // __cplusplus
 
 // /////////////////////////////////////////////////////////////////////////
 //
@@ -54,9 +52,9 @@ Date        Modification                                    Name
 //
 
 #define PLAYER_MINIMUM_NUMBER_OF_WORKING_CODED_BUFFERS  24      // Absolute minimum number of working coded buffers free in a playback.
-// To support reverse play, you need at least enough for one sequence
-// plus whatever is need for the open group nature of the sequence ie
-// an I and up to 3 Bs on the next sequence
+								// To support reverse play, you need at least enough for one sequence
+								// plus whatever is need for the open group nature of the sequence ie
+								// an I and upto 3 Bs on the next sequence
 
 #define PLAYER_MINIMUM_NUMBER_OF_WORKING_DECODE_BUFFERS 3       // Absolute minimum number of working decode buffers free in a playback
 
@@ -80,21 +78,21 @@ Date        Modification                                    Name
 //      The enumerated types, and associated wrapping mask types
 //
 
-//
-// Status values specific to the player, component classes may
-// add their own here we define the base values for each component.
-//
+    //
+    // Status values specific to the player, component classes may
+    // add their own here we define the base values for each component.
+    //
 
-#define BASE_PLAYER                 0x0001
-#define BASE_BUFFER                 0x1000
-#define BASE_DEMULTIPLEXOR          0x2000
-#define BASE_COLLATOR               0x3000
-#define BASE_FRAME_PARSER           0x4000
-#define BASE_CODEC                  0x5000
-#define BASE_MANIFESTOR             0x6000
-#define BASE_OUTPUT_TIMER           0x7000
-#define BASE_OUTPUT_COORDINATOR     0x8000
-#define BASE_EXTERNAL               0xf000
+#define BASE_PLAYER             0x0001
+#define BASE_BUFFER             0x1000
+#define BASE_DEMULTIPLEXOR      0x2000
+#define BASE_COLLATOR           0x3000
+#define BASE_FRAME_PARSER       0x4000
+#define BASE_CODEC              0x5000
+#define BASE_MANIFESTOR         0x6000
+#define BASE_OUTPUT_TIMER       0x7000
+#define BASE_OUTPUT_COORDINATOR 0x8000
+#define BASE_EXTERNAL           0xf000
 
 enum
 {
@@ -113,9 +111,9 @@ enum
 
 typedef unsigned int    PlayerStatus_t;
 
-//
-// enumeration of the player components - used in parameter block addressing
-//
+    //
+    // enumeration of the player components - used in parameter block addressing
+    //
 
 typedef enum
 {
@@ -130,9 +128,9 @@ typedef enum
     ComponentExternal           = BASE_EXTERNAL
 } PlayerComponent_t;
 
-//
-// player component functions - used in in-sequence calling
-//
+    //
+    // player component functions - used in in-sequence calling
+    //
 
 enum
 {
@@ -177,12 +175,12 @@ enum
 
 typedef unsigned int PlayerComponentFunction_t;
 
-//
-// The player policies
-//
-//      NOTE when setting up, 0 will always be the
-//           default initialization value for any policy.
-//
+    //
+    // The player policies
+    //
+    //      NOTE when setting up, 0 will always be the
+    //           default initialization value for any policy.
+    //
 
 #define PolicyValueDisapply                     0
 #define PolicyValueApply                        1
@@ -212,7 +210,7 @@ typedef enum
     //
 
     PolicyExternalTimeMapping,                          // Apply/Disapply
-    PolicyExternalTimeMappingVsyncLocked,               // Apply/Disapply - only relevant if external mapping applied
+    PolicyExternalTimeMappingVsyncLocked,               // Apply/Disapply - only relevent if external mapping applied
 
     //
     // Enable/disable stream synchronization
@@ -318,8 +316,8 @@ typedef enum
     // the basis of starting at the first video frame and
     // letting audio join in appropriately. this has particular
     // effect in some transport streams where there may be a
-    // lead in time of up to 1 second of audio. Should only be set
-    // if using the aggressive "PolicyDiscardLateFrames" policy.
+    // lead in time of upto 1 second of audio. Should only be set
+    // if using the agressive "PolicyDiscardLateFrames" policy.
     //
 
     PolicyVideoStartImmediate,
@@ -334,7 +332,7 @@ typedef enum
 
     //
     // Policy controlling the allowed H264 streams. Standard
-    // streams contain IDR frames as re-synchronization points
+    // streams contauin IDR frames as re-synchronization points
     // jumps need to be to an IDR to guarantee reference frame
     // integrity. BBC broadcasts do not incorporate IDRs and use
     // I frames to indicate re-synchronization points.
@@ -378,13 +376,13 @@ typedef enum
     PolicyLimitInputInjectAhead,
 
     //
-    // Specify the application for mpeg2 decoding, this affects default values for
-    // colour matrices.
+    // Specify the application for mpeg2 decoding, this affects default values for 
+    // colour matrices. 
     //
 
-#define PolicyValueMPEG2ApplicationMpeg2                        0
-#define PolicyValueMPEG2ApplicationAtsc                         1
-#define PolicyValueMPEG2ApplicationDvb                          2
+#define PolicyValueMPEG2ApplicationMpeg2		                0
+#define PolicyValueMPEG2ApplicationAtsc			                1
+#define PolicyValueMPEG2ApplicationDvb			                2
 
     PolicyMPEG2ApplicationType,
 
@@ -396,7 +394,7 @@ typedef enum
 #define PolicyValueDecimateDecoderOutputDisabled                        0
 #define PolicyValueDecimateDecoderOutputHalf                            1
 #define PolicyValueDecimateDecoderOutputQuarter                         2
-
+     
     PolicyDecimateDecoderOutput,
 
     //
@@ -405,7 +403,7 @@ typedef enum
 
     PolicySymmetricJumpDetection,
     PolicyPtsForwardJumpDetectionThreshold,
-
+     
     //
     // Policies enabling workarounds for badly coded dpb values
     //
@@ -423,21 +421,21 @@ typedef enum
     //
     // Allow the manifestor to know which is the pixel aspect ratio correction requested
     //
-
+    
 #define PolicyValuePixelAspectRatioCorrectionDisabled   100
-
+    
     PolicyPixelAspectRatioCorrection,
 
     //
     // Allow the discard of B frames when running at normal speed, if the decode cannot keep up.
     //
-
+    
     PolicyAllowFrameDiscardAtNormalSpeed,
 
     //
     // Operate collator 2 in reversible mode
     //
-
+    
     PolicyOperateCollator2InReversibleMode,
 
     //
@@ -456,7 +454,7 @@ typedef enum
     //
     // Policy to allow the use (as a default) of video frame rates deduced from incoming PTS values
     // NOTE any specified frame rate will override the deduced values.
-    //      Implementation of this policy is done only by H264 at the
+    //      Implementation of this policy is done only by H264 at the 
     //      time of writing.
     //
 
@@ -467,14 +465,14 @@ typedef enum
     PolicyMaxPolicy
 } PlayerPolicy_t;
 
-//
-// The event codes, and their enveloping mask
-//
+    //
+    // The event codes, and their enveloping mask
+    //
 
 #define EventIllegalIdentifier                  0x0000000000000000ull
 #define EventAllEvents                          0xffffffffffffffffull
 
-// One-shot events
+    // One-shot events
 #define EventFirstFrameManifested               0x0000000000000001ull
 #define EventPlaybackTerminated                 0x0000000000000002ull
 #define EventStreamTerminated                   0x0000000000000004ull
@@ -494,10 +492,10 @@ typedef enum
 #define EventNumberChannelsCreated              0x0000000000008000ull
 #define EventNumberOfSamplesProcessedCreated    0x0000000000010000ull
 
-#define EventVsyncOffsetMeasured        0x0000000000020000ull
-#define EventFatalHardwareFailure       0x0000000000040000ull
+#define EventVsyncOffsetMeasured		0x0000000000020000ull
+#define EventFatalHardwareFailure		0x0000000000040000ull
 
-// Ongoing events
+    // Ongoing events
 #define EventSizeChangeParse                    0x0000000100000000ull
 #define EventSourceSizeChangeManifest           0x0000000200000000ull
 #define EventOutputSizeChangeManifest           0x0000000400000000ull
@@ -522,9 +520,9 @@ typedef enum
 typedef unsigned long long                      PlayerEventIdentifier_t;
 typedef unsigned long long                      PlayerEventMask_t;
 
-//
-// The stream type
-//
+    //
+    // The stream type
+    //
 
 typedef enum
 {
@@ -536,9 +534,9 @@ typedef enum
 
 const char *ToString(PlayerStreamType_t StreamType);
 
-//
-// Play direction
-//
+    //
+    // Play direction
+    //
 
 typedef enum
 {
@@ -546,9 +544,9 @@ typedef enum
     PlayBackward
 } PlayDirection_t;
 
-//
-// Specifiers for in sequence calling
-//
+    //
+    // Specifiers for in sequence calling
+    //
 
 typedef enum
 {
@@ -561,16 +559,17 @@ typedef enum
 
 typedef unsigned long long PlayerSequenceValue_t;
 
-//
-// Enumeration of time formats
-//
+    //
+    // Enumeration of time formats
+    //
 
 typedef enum
 {
-    TimeFormatUs            = 0,
+    TimeFormatUs			= 0,
     TimeFormatPts
 } PlayerTimeFormat_t;
 
+//
 
 typedef enum
 {
@@ -585,7 +584,7 @@ typedef enum
 //
 // The wrapper pointer types, here before the structures to
 // allow for those self referential structures (such as lists),
-// and incestuous references.
+// and incestous references.
 //
 
 typedef struct DemultiplexorContext_s   *DemultiplexorContext_t;
@@ -614,7 +613,6 @@ typedef struct PlayerStream_s           *PlayerStream_t;
 // The event record
 //
 
-#ifdef __cplusplus
 typedef struct PlayerEventRecord_s
 {
     PlayerEventIdentifier_t        Code;
@@ -624,9 +622,9 @@ typedef struct PlayerEventRecord_s
 
     union
     {
-        unsigned int               UnsignedInt;
-        unsigned long long         LongLong;
-        void                      *Pointer;
+	unsigned int               UnsignedInt;
+	unsigned long long         LongLong;
+	void                      *Pointer;
     } Value[4];
 
     //
@@ -637,7 +635,6 @@ typedef struct PlayerEventRecord_s
 
     void                          *UserData;
 } PlayerEventRecord_t;
-#endif //cplusplus
 
 //
 
@@ -656,10 +653,10 @@ typedef struct PlayerAttributeDescriptor_s
 
     union
     {
-        const char                     *ConstCharPointer;
-        int                             Int;
-        unsigned long long int          UnsignedLongLongInt;
-        bool                            Bool;
+	const char                     *ConstCharPointer;
+	int                             Int;
+	unsigned long long int          UnsignedLongLongInt;
+	bool                            Bool;
     } u;
 
 } PlayerAttributeDescriptor_t;

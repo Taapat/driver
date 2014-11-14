@@ -40,7 +40,7 @@ Date        Modification                                    Name
 //      Input type for the player input
 //
 
-typedef enum
+typedef enum 
 {
     MuxTypeUnMuxed           = 0,
     MuxTypeTransportStream
@@ -166,12 +166,12 @@ typedef struct ParsedFrameParameters_s
     void                   *FrameParameterStructure;
 } ParsedFrameParameters_t;
 
-static inline void DumpParsedFrameParameters(ParsedFrameParameters_t *ParsedFrameParameters, const char *tag)
+static inline void DumpParsedFrameParameters( ParsedFrameParameters_t *ParsedFrameParameters, const char *tag )
 {
-    report(severity_note, "%s: ParsedFrameParameters @ %p\n", tag, ParsedFrameParameters);
-    report(severity_note, "\tDisplayFrameIndex                      %d\n", (int) ParsedFrameParameters->DisplayFrameIndex);
-    report(severity_note, "\tNewStreamParameters                    %s\n", ParsedFrameParameters->NewStreamParameters ? "true" : "false");
-    report(severity_note, "\tNewFrameParameters                     %s\n", ParsedFrameParameters->NewFrameParameters ? "true" : "false");
+    report( severity_note, "%s: ParsedFrameParameters @ %p\n", tag, ParsedFrameParameters );
+    report( severity_note, "\tDisplayFrameIndex                      %d\n", (int) ParsedFrameParameters->DisplayFrameIndex );
+    report( severity_note, "\tNewStreamParameters                    %s\n", ParsedFrameParameters->NewStreamParameters ? "true" : "false" );
+    report( severity_note, "\tNewFrameParameters                     %s\n", ParsedFrameParameters->NewFrameParameters ? "true" : "false" );
 }
 
 //
@@ -243,7 +243,7 @@ typedef struct PanScan_s
     unsigned int                DisplayCount[MAX_PAN_SCAN_VALUES];      // In fields or frames depending on the progressive nature of the sequence
     int                         HorizontalOffset[MAX_PAN_SCAN_VALUES];
     int                         VerticalOffset[MAX_PAN_SCAN_VALUES];
-} PanScan_t;
+}PanScan_t;
 
 //
 
@@ -254,7 +254,7 @@ typedef struct ParsedVideoParameters_s
     PictureStructure_t          PictureStructure;
     bool                        FirstSlice;             // Always true for a non-slice based decode
     bool                        InterlacedFrame;        // Note can have non-interlaced frame from a non-progressive source
-    bool                        TopFieldFirst;          // Interlaced frames only
+    bool                        TopFieldFirst;          // Interlaced frames only 
     unsigned int                DisplayCount[2];        // First/second field count or frame count for progressive content
     PanScan_t                   PanScan;
 } ParsedVideoParameters_t;
@@ -303,20 +303,20 @@ typedef struct StreamMetadata_s
 // The following structures shall be used if the decoded audio stream contains some mixing metadata (Blu Ray case)
 typedef struct MixingOutputConfiguration_s
 {
-    int                 AudioMode;                                    //< Primary Channel Audio Mode
-    unsigned short      PrimaryAudioGain[MAX_NB_CHANNEL_COEFF];        //< unsigned Q3.13 gain to be applied to each channel of primary stream
-    unsigned short      SecondaryAudioPanCoeff[MAX_NB_CHANNEL_COEFF]; //< unsigned Q3.13 panning coefficients to be applied to secondary mono stream
+	int                 AudioMode;                                    //< Primary Channel Audio Mode
+	unsigned short      PrimaryAudioGain[MAX_NB_CHANNEL_COEFF];        //< unsigned Q3.13 gain to be applied to each channel of primary stream
+	unsigned short      SecondaryAudioPanCoeff[MAX_NB_CHANNEL_COEFF]; //< unsigned Q3.13 panning coefficients to be applied to secondary mono stream
 } MixingOutputConfiguration_t;
 
 typedef struct MixingMetadata_s
 {
     bool                               IsMixingMetadataPresent;                       //< does the stream embedd some mixing metadata?
-    unsigned short                     PostMixGain;                                   //< unsigned Q3.13 gain to be applied to output of mixed primary and secondary
-    unsigned short                     NbOutMixConfig;                                //< Number of mix output configurations
-    MixingOutputConfiguration_t        MixOutConfig[MAX_MIXING_OUTPUT_CONFIGURATION];//< This array is extensible according to NbOutMixConfig
+	unsigned short                     PostMixGain;                                   //< unsigned Q3.13 gain to be applied to output of mixed primary and secondary
+	unsigned short                     NbOutMixConfig;                                //< Number of mix output configurations  
+	MixingOutputConfiguration_t        MixOutConfig[MAX_MIXING_OUTPUT_CONFIGURATION];//< This array is extensible according to NbOutMixConfig
 } MixingMetadata_t;
 
-typedef enum
+typedef enum 
 {
     AudioOriginalEncodingUnknown = 0,
     AudioOriginalEncodingAc3,     ///< Indicates AC3 is present in CodedDataBuffer
@@ -343,7 +343,7 @@ typedef struct ParsedAudioParameters_s
     unsigned int                   SampleCount;
     int                            Organisation;     ///< Indicates the organisation of the channels (e.g. 5.1, 2.0)
     AudioOriginalEncoding_t        OriginalEncoding;
-    StreamMetadata_t               StreamMetadata;   ///< Stream metadata mainly used by fatpipe
+    StreamMetadata_t               StreamMetadata;   ///< Stream metadata mainly used by fatpipe 
     MixingMetadata_t               MixingMetadata;   ///< Mixing metadata used by BD Mixer (present in secondary streams)
     BackwardCompatibleProperties_t BackwardCompatibleProperties; // Properties of the backaward compatible part of a stream
 } ParsedAudioParameters_t;
@@ -355,26 +355,28 @@ typedef struct ParsedAudioParameters_s
 
 // //////////////////////////////////////////////////////////////////////
 //
-//      Output timing information specific to video -
+//      Output timing information specific to video - 
 //      generated by timing module, and fed back from manifestor.
 //
 
 #define OUTPUT_TIMING_COMMON                                    \
-    unsigned long long      SystemPlaybackTime;             \
-    unsigned long long      ExpectedDurationTime;           \
-    unsigned long long      ActualSystemPlaybackTime;       \
-    \
-    Rational_t              OutputRateAdjustment;           \
-    Rational_t              SystemClockAdjustment;          \
-    \
-    bool                    TimingGenerated;
+	unsigned long long      SystemPlaybackTime;             \
+	unsigned long long      ExpectedDurationTime;           \
+	unsigned long long      ActualSystemPlaybackTime;       \
+								\
+	Rational_t              OutputRateAdjustment;           \
+	Rational_t              SystemClockAdjustment;          \
+								\
+	bool                    TimingGenerated;
+
+
 
 typedef struct VideoOutputTiming_s
 {
     OUTPUT_TIMING_COMMON
 
     bool                        Interlaced;
-    bool                        TopFieldFirst;     // Interlaced frames only
+    bool                        TopFieldFirst;     // Interlaced frames only 
     unsigned int                DisplayCount[2];     // Non-interlaced use [0] only
     PanScan_t                   PanScan;
 } VideoOutputTiming_t;
@@ -386,7 +388,7 @@ typedef struct VideoOutputTiming_s
 
 // //////////////////////////////////////////////////////////////////////
 //
-//      Output timing information specific to Audio -
+//      Output timing information specific to Audio - 
 //      generated by timing module, and fed back from manifestor.
 //
 
@@ -502,7 +504,7 @@ typedef struct CodecTrickModeParameters_s
     Rational_t                  SubstandardDecodeRateIncrease;
 
     unsigned int                DefaultGroupSize;
-    unsigned int                DefaultGroupReferenceFrameCount;        // Including the key frame
+    unsigned int                DefaultGroupReferenceFrameCount;        // Including the key frame 
 
 } CodecTrickModeParameters_t;
 

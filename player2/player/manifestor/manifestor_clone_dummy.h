@@ -48,119 +48,62 @@ Date        Modification                                    Name
 
 class Manifestor_CloneDummy_c : public Manifestor_c
 {
-        Ring_t               OutputRing;
+    Ring_t				 OutputRing;
 
-    public:
+public:
 
-        Manifestor_CloneDummy_c(void)
-        {
-            report(severity_info, "Manifestor_CloneDummy_c - Called\n");
-            OutputRing = NULL;
-        }
+    Manifestor_CloneDummy_c(	void )
+    { report( severity_info, "Manifestor_CloneDummy_c - Called\n" ); OutputRing = NULL;}
 
-        ~Manifestor_CloneDummy_c(void)
-        {
-            report(severity_info, "~Manifestor_CloneDummy_c - Called\n");
-        }
+    ~Manifestor_CloneDummy_c(	void )
+    { report( severity_info, "~Manifestor_CloneDummy_c - Called\n" ); }
 
 
-        ManifestorStatus_t   GetDecodeBufferPool(BufferPool_t             *Pool)
-        {
-            report(severity_fatal, "GetDecodeBufferPool - Called\n");
-            return ManifestorNoError;
-        }
+    ManifestorStatus_t   GetDecodeBufferPool(           BufferPool_t             *Pool )
+    { report( severity_fatal, "GetDecodeBufferPool - Called\n" ); return ManifestorNoError; }
 
-        ManifestorStatus_t   GetPostProcessControlBufferPool(BufferPool_t            *Pool)
-        {
-            report(severity_fatal, "GetPostProcessControlBufferPool - Called\n");
-            return ManifestorNoError;
-        }
+    ManifestorStatus_t   GetPostProcessControlBufferPool( BufferPool_t            *Pool )
+    { report( severity_fatal, "GetPostProcessControlBufferPool - Called\n" ); return ManifestorNoError; }
 
-        ManifestorStatus_t   RegisterOutputBufferRing(Ring_t                    Ring)
-        {
-            report(severity_info, "RegisterOutputBufferRing - Called\n");
-            OutputRing = Ring;
-            return ManifestorNoError;
-        }
+    ManifestorStatus_t   RegisterOutputBufferRing(      Ring_t                    Ring )
+    { report( severity_info, "RegisterOutputBufferRing - Called\n" ); OutputRing = Ring; return ManifestorNoError; }
 
-        ManifestorStatus_t   GetSurfaceParameters(void                    **SurfaceParameters)
-        {
-            report(severity_fatal, "GetSurfaceParameters - Called\n");
-            return ManifestorNoError;
-        }
+    ManifestorStatus_t   GetSurfaceParameters(          void                    **SurfaceParameters )
+    { report( severity_fatal, "GetSurfaceParameters - Called\n" ); return ManifestorNoError; }
 
-        ManifestorStatus_t   GetNextQueuedManifestationTime(unsigned long long   *Time)
-        {
-            report(severity_fatal, "GetNextQueuedManifestationTime - Called\n");
-            return ManifestorNoError;
-        }
+    ManifestorStatus_t   GetNextQueuedManifestationTime( unsigned long long	 *Time)
+    { report( severity_fatal, "GetNextQueuedManifestationTime - Called\n" ); return ManifestorNoError; }
 
-        ManifestorStatus_t   ReleaseQueuedDecodeBuffers(void)
-        {
-            report(severity_info, "ReleaseQueuedDecodeBuffers - Called\n");
-            return ManifestorNoError;
-        }
+    ManifestorStatus_t   ReleaseQueuedDecodeBuffers(    void )
+    { report( severity_info, "ReleaseQueuedDecodeBuffers - Called\n" ); return ManifestorNoError; }
 
-        ManifestorStatus_t   InitialFrame(Buffer_t                  Buffer)
-        {
-            report(severity_info, "InitialFrame - Called\n");
+    ManifestorStatus_t   InitialFrame(                  Buffer_t                  Buffer )
+    { report( severity_info, "InitialFrame - Called\n" ); if( OutputRing != NULL ) OutputRing->Insert( (unsigned int)Buffer ); return ManifestorNoError; }
 
-            if (OutputRing != NULL) OutputRing->Insert((unsigned int)Buffer);
+    ManifestorStatus_t   QueueDecodeBuffer(             Buffer_t                  Buffer )
+    { report( severity_info, "QueueDecodeBuffer - Called\n" ); if( OutputRing != NULL ) OutputRing->Insert( (unsigned int)Buffer ); return ManifestorNoError; }
 
-            return ManifestorNoError;
-        }
+    ManifestorStatus_t   QueueNullManifestation(        void )
+    { report( severity_info, "QueueNullManifestation - Called\n" ); return ManifestorNoError; }
 
-        ManifestorStatus_t   QueueDecodeBuffer(Buffer_t                  Buffer)
-        {
-            report(severity_info, "QueueDecodeBuffer - Called\n");
+    ManifestorStatus_t   QueueEventSignal(              PlayerEventRecord_t      *Event )
+    { report( severity_fatal, "QueueEventSignal - Called\n" ); return ManifestorNoError; }
 
-            if (OutputRing != NULL) OutputRing->Insert((unsigned int)Buffer);
+    ManifestorStatus_t   GetNativeTimeOfCurrentlyManifestedFrame( unsigned long long *Time )
+    { report( severity_fatal, "GetNativeTimeOfCurrentlyManifestedFrame - Called\n" ); return ManifestorNoError; }
 
-            return ManifestorNoError;
-        }
+    ManifestorStatus_t   GetDecodeBuffer(               BufferStructure_t        *RequestedStructure,
+							Buffer_t                 *Buffer )
+    { report( severity_fatal, "GetDecodeBuffer - Called\n" ); return ManifestorNoError; }
 
-        ManifestorStatus_t   QueueNullManifestation(void)
-        {
-            report(severity_info, "QueueNullManifestation - Called\n");
-            return ManifestorNoError;
-        }
+    ManifestorStatus_t   GetDecodeBufferCount(          unsigned int             *Count )
+    { report( severity_fatal, "GetDecodeBufferCount - Called\n" ); return ManifestorNoError; }
 
-        ManifestorStatus_t   QueueEventSignal(PlayerEventRecord_t      *Event)
-        {
-            report(severity_fatal, "QueueEventSignal - Called\n");
-            return ManifestorNoError;
-        }
+    ManifestorStatus_t   SynchronizeOutput(             void )
+    { report( severity_info, "SynchronizeOutput - Called\n" ); return ManifestorNoError; }
 
-        ManifestorStatus_t   GetNativeTimeOfCurrentlyManifestedFrame(unsigned long long *Time)
-        {
-            report(severity_fatal, "GetNativeTimeOfCurrentlyManifestedFrame - Called\n");
-            return ManifestorNoError;
-        }
-
-        ManifestorStatus_t   GetDecodeBuffer(BufferStructure_t        *RequestedStructure,
-                                             Buffer_t                 *Buffer)
-        {
-            report(severity_fatal, "GetDecodeBuffer - Called\n");
-            return ManifestorNoError;
-        }
-
-        ManifestorStatus_t   GetDecodeBufferCount(unsigned int             *Count)
-        {
-            report(severity_fatal, "GetDecodeBufferCount - Called\n");
-            return ManifestorNoError;
-        }
-
-        ManifestorStatus_t   SynchronizeOutput(void)
-        {
-            report(severity_info, "SynchronizeOutput - Called\n");
-            return ManifestorNoError;
-        }
-
-        ManifestorStatus_t   GetFrameCount(unsigned long long       *FrameCount)
-        {
-            report(severity_fatal, "GetFrameCount - Called\n");
-            return ManifestorNoError;
-        }
+    ManifestorStatus_t   GetFrameCount(                 unsigned long long       *FrameCount )
+    { report( severity_fatal, "GetFrameCount - Called\n" ); return ManifestorNoError; }
 
 };
 #endif

@@ -69,39 +69,39 @@ Date        Modification                                    Name
 /// The H263 video codec proxy.
 class Codec_MmeVideoH263_c : public Codec_MmeVideo_c
 {
-    private:
+private:
 
-        // Data
+    // Data
 
-        H263D_Capability_t                  H263TransformerCapability;
-        H263D_GlobalParams_t                H263InitializationParameters;
+    H263D_Capability_t                  H263TransformerCapability;
+    H263D_GlobalParams_t                H263InitializationParameters;
 
-        // Functions
+    // Functions
 
-    public:
+public:
 
-        //
-        // Constructor/Destructor methods
-        //
+    //
+    // Constructor/Destructor methods
+    //
 
-        Codec_MmeVideoH263_c(void);
-        ~Codec_MmeVideoH263_c(void);
+    Codec_MmeVideoH263_c(                void );
+    ~Codec_MmeVideoH263_c(               void );
 
-        //
-        // Stream specific functions
-        //
+    //
+    // Stream specific functions
+    //
 
-    protected:
+protected:
 
-        CodecStatus_t   Reset(void);
-        CodecStatus_t   HandleCapabilities(void);
+    CodecStatus_t   Reset( void );
+    CodecStatus_t   HandleCapabilities(                         void );
 
-        CodecStatus_t   FillOutTransformerInitializationParameters(void);
-        CodecStatus_t   FillOutSetStreamParametersCommand(void);
-        CodecStatus_t   FillOutDecodeCommand(void);
+    CodecStatus_t   FillOutTransformerInitializationParameters( void );
+    CodecStatus_t   FillOutSetStreamParametersCommand(          void );
+    CodecStatus_t   FillOutDecodeCommand(                       void );
 
-        CodecStatus_t   ValidateDecodeContext(CodecBaseDecodeContext_t *Context);
-        CodecStatus_t   DumpSetStreamParameters(void    *Parameters);
-        CodecStatus_t   DumpDecodeParameters(void    *Parameters);
+    CodecStatus_t   ValidateDecodeContext( CodecBaseDecodeContext_t *Context );
+    CodecStatus_t   DumpSetStreamParameters(                    void    *Parameters );
+    CodecStatus_t   DumpDecodeParameters(                       void    *Parameters );
 };
 #endif

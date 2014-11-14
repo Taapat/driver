@@ -36,7 +36,7 @@ Date        Modification                                    Name
 
 // /////////////////////////////////////////////////////////////////////
 //
-//  Include any component headers
+//	Include any component headers
 
 #include "dvp.h"
 #include "frame_parser_video.h"
@@ -48,12 +48,12 @@ Date        Modification                                    Name
 
 typedef struct DvpStreamParameters_s
 {
-    int dummy;
+    int dummy;    
 } DvpStreamParameters_t;
 
 typedef struct DvpFrameParameters_s
 {
-    int dummy;
+    int dummy;    
 } DvpFrameParameters_t;
 
 // /////////////////////////////////////////////////////////////////////////
@@ -63,61 +63,61 @@ typedef struct DvpFrameParameters_s
 
 class FrameParser_VideoDvp_c : public FrameParser_Video_c
 {
-    protected:
+protected:
 
-        // Data
+    // Data
 
-        DvpStreamParameters_t    *StreamParameters;
-        DvpFrameParameters_t     *FrameParameters;
-        DvpRectangle_t        InputWindow;
-        DvpRectangle_t        OutputWindow;
+    DvpStreamParameters_t	 *StreamParameters;
+    DvpFrameParameters_t	 *FrameParameters;
+    DvpRectangle_t		  InputWindow;
+    DvpRectangle_t		  OutputWindow;
 
-    public:
+public:
 
-        //
-        // Constructor/Destructor methods
-        //
+    //
+    // Constructor/Destructor methods
+    //
 
-        FrameParser_VideoDvp_c(void);
-        ~FrameParser_VideoDvp_c(void);
+    FrameParser_VideoDvp_c ( void );
+    ~FrameParser_VideoDvp_c( void );
 
-        //
-        // Overrides for component base class functions
-        //
+    //
+    // Overrides for component base class functions
+    //
 
-        FrameParserStatus_t   Reset(void);
+    FrameParserStatus_t   Reset( void );
 
-        //
-        // FrameParser class functions
-        //
+    //
+    // FrameParser class functions
+    //
 
-        FrameParserStatus_t   RegisterOutputBufferRing(Ring_t Ring);
+    FrameParserStatus_t   RegisterOutputBufferRing( Ring_t Ring );
 
-        //
-        // Extensions to the class overriding the base implementations
-        // NOTE in order to keep the names reasonably short, in the following
-        // functions specifically for forward playback will be prefixed with
-        // ForPlay and functions specific to reverse playback will be prefixed with
-        // RevPlay.
-        //
+    //
+    // Extensions to the class overriding the base implementations
+    // NOTE in order to keep the names reasonably short, in the following
+    // functions specifically for forward playback will be prefixed with 
+    // ForPlay and functions specific to reverse playback will be prefixed with 
+    // RevPlay.
+    //
 
-        virtual FrameParserStatus_t   ForPlayProcessFrame(void);
-        virtual FrameParserStatus_t   ForPlayQueueFrameForDecode(void);
+    virtual FrameParserStatus_t   ForPlayProcessFrame( void );
+    virtual FrameParserStatus_t   ForPlayQueueFrameForDecode( void );
 
-        virtual FrameParserStatus_t   RevPlayProcessFrame(void);
-        virtual FrameParserStatus_t   RevPlayQueueFrameForDecode(void);
-        virtual FrameParserStatus_t   RevPlayProcessDecodeStacks(void);
-        virtual FrameParserStatus_t   RevPlayPurgeDecodeStacks(void);
+    virtual FrameParserStatus_t   RevPlayProcessFrame( void );
+    virtual FrameParserStatus_t   RevPlayQueueFrameForDecode( void );
+    virtual FrameParserStatus_t   RevPlayProcessDecodeStacks( void );
+    virtual FrameParserStatus_t   RevPlayPurgeDecodeStacks( void );
 
-        //
-        // Extensions to the class to be fulfilled by my inheritors,
-        // these are required to support the process buffer override
-        //
+    //
+    // Extensions to the class to be fulfilled by my inheritors, 
+    // these are required to support the process buffer override
+    //
 
-        FrameParserStatus_t   ReadHeaders(void);
-
-        FrameParserStatus_t   PrepareReferenceFrameList(void);
-        FrameParserStatus_t   ForPlayUpdateReferenceFrameList(void);
+    FrameParserStatus_t   ReadHeaders( void );
+	
+    FrameParserStatus_t   PrepareReferenceFrameList( void );
+    FrameParserStatus_t   ForPlayUpdateReferenceFrameList( void );
 
 };
 

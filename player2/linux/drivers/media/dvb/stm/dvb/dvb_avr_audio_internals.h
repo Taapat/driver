@@ -38,24 +38,21 @@ license from ST.
 
 /* Extract the four extended capability bits for a given codec */
 #define ACC_DECODER_CAPABILITY_EXT_FLAGS(hdinfo, decoder) \
-    (((hdinfo)->DecoderCapabilityExtFlags[((int) (decoder)) >> 3] >> (4 * ((decoder) & 7))) & 0xf)
+	(((hdinfo)->DecoderCapabilityExtFlags[((int) (decoder)) >> 3] >> (4 * ((decoder) & 7))) & 0xf)
 
 /* Keep working against BL025_10 until we can retire it */
 #ifndef DRV_MULTICOM_PERFLOG_VERSION
 #define DRV_MULTICOM_PERFLOG_VERSION 0
 typedef enum
 {
-    POSTMORTEM_RUNNING,
-    POSTMORTEM_CRASH,
-    POSTMORTEM_LIVELOCK,
-    POSTMORTEM_DEADLOCK,
+       POSTMORTEM_RUNNING,
+       POSTMORTEM_CRASH,
+       POSTMORTEM_LIVELOCK,
+       POSTMORTEM_DEADLOCK,
 
-    POSTMORTEM_TRAPPED, //!< Transient state to ensure we catch exceptions within the exception handler.
+       POSTMORTEM_TRAPPED, //!< Transient state to ensure we catch exceptions within the exception handler.
 } MME_TimeLogPostMortemStatus_t;
-typedef struct
-{
-    MME_TimeLogPostMortemStatus_t Status;
-} MME_TimeLogPostMortem_t;
+typedef struct { MME_TimeLogPostMortemStatus_t Status; } MME_TimeLogPostMortem_t;
 #endif
 
 #define AVR_LOW_LATENCY_MAX_OUTPUT_CARDS 4
@@ -73,15 +70,15 @@ typedef struct
 #define AVR_LOW_LATENCY_BUFFER_INPUT_SIZE  (64 * 1024)
 #define AVR_LOW_LATENCY_BUFFER_OUTPUT_SIZE (64 * 1024)
 
-typedef struct
+typedef struct 
 {
     void       * Ptr; // Pointer to the buffer start
     unsigned int Size;      // This entry size
-    unsigned int BytesUsed; // Amount of data present in this entry
+    unsigned int BytesUsed; // Amount of data present in this entry 
     bool         IsFree;    // Is this buffer free for being sent
 } BufferEntry_t;
 
-typedef struct
+typedef struct 
 {
     void       * CachedPtr;// Buffer pool address
     void       * PhysPtr;  // Buffer pool address
@@ -105,8 +102,8 @@ typedef struct
     MME_Resamplex2GlobalParams_t Resamplex2;
     MME_CMCGlobalParams_t       CMC;
     MME_DMixGlobalParams_t      Dmix;
-    MME_FatpipeGlobalParams_t   FatPipeOrSpdifOut;
-    MME_LimiterGlobalParams_t   Limiter;
+    MME_FatpipeGlobalParams_t	FatPipeOrSpdifOut;
+    MME_LimiterGlobalParams_t	Limiter;
 } MME_LLChainPcmProcessingGlobalParams_t;
 
 typedef struct
@@ -125,7 +122,7 @@ typedef struct
     MME_LowlatencySpecializedGlobalParams_t    GlobalInitParams;
 } MME_LowlatencySpecializedInitParams_t;
 
-typedef struct
+typedef struct 
 {
     MME_LxAudioDecoderFrameStatus_t         DecoderFrameStatus;
     U32                                     BytesUsed;  // Amount of this structure already filled
@@ -137,20 +134,20 @@ typedef struct
 #if DRV_MULTICOM_AUDIO_DECODER_VERSION < 0x090128
 typedef struct
 {
-    U32                    State        : 2; //!< LIMITER_MUTE = 0 / LIMITER_PLAY = 2
-    U32                    Chains       : 4; //!< applies to chain[bit_n]
-    U32                    Override     : 1; //!< Forces the State independently of the Id
-    U32                    AutoUnmute   : 1; //!< If set then let the FW UnMute while restarting the IOs
-    U32                    MuteId       : 24; //!< reference ID to match to disable Emergency Mute.
+	U32                    State        : 2; //!< LIMITER_MUTE = 0 / LIMITER_PLAY = 2
+	U32                    Chains       : 4; //!< applies to chain[bit_n]
+	U32                    Override     : 1; //!< Forces the State independently of the Id
+	U32                    AutoUnmute   : 1; //!< If set then let the FW UnMute while restarting the IOs
+	U32                    MuteId       :24; //!< reference ID to match to disable Emergency Mute.
 } tEmergencyMute;
 #endif
 
-typedef struct
+typedef struct 
 {
     tMMESpdifinStatus CurrentSpdifStatus;
     enum eAccFsCode   CurrentDecoderFrequency;
-    enum eAccAcMode   CurrentDecoderAudioMode;
-    tEmergencyMute    CurrentMuteStatus;
+    enum eAccAcMode   CurrentDecoderAudioMode;  
+    tEmergencyMute    CurrentMuteStatus;        
     int               DecodeErrorCount;
     long long int     NumberOfProcessedSamples;
 } LLDecoderStatus_t;

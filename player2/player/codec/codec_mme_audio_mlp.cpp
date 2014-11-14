@@ -66,8 +66,14 @@ typedef struct MlpAudioCodecStreamParameterContext_s
     MME_LxAudioDecoderGlobalParams_t StreamParameters;
 } MlpAudioCodecStreamParameterContext_t;
 
+//#if __KERNEL__
+#if 0
+#define BUFFER_MLP_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT        "MlpAudioCodecStreamParameterContext"
+#define BUFFER_MLP_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT_TYPE   {BUFFER_MLP_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT, BufferDataTypeBase, AllocateFromDeviceMemory, 32, 0, true, true, sizeof(MlpAudioCodecStreamParameterContext_t)}
+#else
 #define BUFFER_MLP_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT        "MlpAudioCodecStreamParameterContext"
 #define BUFFER_MLP_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT_TYPE   {BUFFER_MLP_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT, BufferDataTypeBase, AllocateFromOSMemory, 32, 0, true, true, sizeof(MlpAudioCodecStreamParameterContext_t)}
+#endif
 
 static BufferDataDescriptor_t            MlpAudioCodecStreamParameterContextDescriptor = BUFFER_MLP_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT_TYPE;
 
@@ -81,8 +87,14 @@ typedef struct MlpAudioCodecDecodeContext_s
     MME_LxAudioDecoderFrameStatus_t     DecodeStatus;
 } MlpAudioCodecDecodeContext_t;
 
+//#if __KERNEL__
+#if 0
+#define BUFFER_MLP_AUDIO_CODEC_DECODE_CONTEXT          "MlpAudioCodecDecodeContext"
+#define BUFFER_MLP_AUDIO_CODEC_DECODE_CONTEXT_TYPE     {BUFFER_MLP_AUDIO_CODEC_DECODE_CONTEXT, BufferDataTypeBase, AllocateFromDeviceMemory, 32, 0, true, true, sizeof(MlpAudioCodecDecodeContext_t)}
+#else
 #define BUFFER_MLP_AUDIO_CODEC_DECODE_CONTEXT          "MlpAudioCodecDecodeContext"
 #define BUFFER_MLP_AUDIO_CODEC_DECODE_CONTEXT_TYPE     {BUFFER_MLP_AUDIO_CODEC_DECODE_CONTEXT, BufferDataTypeBase, AllocateFromOSMemory, 32, 0, true, true, sizeof(MlpAudioCodecDecodeContext_t)}
+#endif
 
 static BufferDataDescriptor_t            MlpAudioCodecDecodeContextDescriptor = BUFFER_MLP_AUDIO_CODEC_DECODE_CONTEXT_TYPE;
 
@@ -92,7 +104,7 @@ static BufferDataDescriptor_t            MlpAudioCodecDecodeContextDescriptor = 
 ///
 /// Fill in the configuration parameters used by the super-class and reset everything.
 ///
-Codec_MmeAudioMlp_c::Codec_MmeAudioMlp_c(void)
+Codec_MmeAudioMlp_c::Codec_MmeAudioMlp_c( void )
 {
     Configuration.CodecName                             = "MLP audio";
 
@@ -113,10 +125,10 @@ Codec_MmeAudioMlp_c::Codec_MmeAudioMlp_c(void)
 
 ////////////////////////////////////////////////////////////////////////////
 ///
-///     Destructor function, ensures a full halt and reset
+///     Destructor function, ensures a full halt and reset 
 ///     are executed for all levels of the class.
 ///
-Codec_MmeAudioMlp_c::~Codec_MmeAudioMlp_c(void)
+Codec_MmeAudioMlp_c::~Codec_MmeAudioMlp_c( void )
 {
     Halt();
     Reset();
@@ -127,7 +139,7 @@ Codec_MmeAudioMlp_c::~Codec_MmeAudioMlp_c(void)
 /// Populate the supplied structure with parameters for MLP audio.
 ///
 ///
-CodecStatus_t Codec_MmeAudioMlp_c::FillOutTransformerGlobalParameters(MME_LxAudioDecoderGlobalParams_t *GlobalParams_p)
+CodecStatus_t Codec_MmeAudioMlp_c::FillOutTransformerGlobalParameters( MME_LxAudioDecoderGlobalParams_t *GlobalParams_p )
 {
 
 //
@@ -141,8 +153,8 @@ CodecStatus_t Codec_MmeAudioMlp_c::FillOutTransformerGlobalParameters(MME_LxAudi
 
     if (ParsedFrameParameters != NULL)
     {
-        MlpAudioStreamParameters_t *Parsed = (MlpAudioStreamParameters_t *)ParsedFrameParameters->StreamParameterStructure;
-        NbAccessUnits = Parsed->AccumulatedFrameNumber;
+      MlpAudioStreamParameters_t *Parsed = (MlpAudioStreamParameters_t *)ParsedFrameParameters->StreamParameterStructure;
+      NbAccessUnits = Parsed->AccumulatedFrameNumber;
     }
 
     GlobalParams.StructSize = sizeof(MME_LxAudioDecoderGlobalParams_t);
@@ -162,7 +174,7 @@ CodecStatus_t Codec_MmeAudioMlp_c::FillOutTransformerGlobalParameters(MME_LxAudi
 
 //
 
-    return Codec_MmeAudio_c::FillOutTransformerGlobalParameters(GlobalParams_p);
+    return Codec_MmeAudio_c::FillOutTransformerGlobalParameters( GlobalParams_p );
 }
 
 
@@ -175,10 +187,10 @@ CodecStatus_t Codec_MmeAudioMlp_c::FillOutTransformerGlobalParameters(MME_LxAudi
 /// MLP audio decoder (defaults to MLP Layer II but can be updated by new
 /// stream parameters).
 ///
-CodecStatus_t   Codec_MmeAudioMlp_c::FillOutTransformerInitializationParameters(void)
+CodecStatus_t   Codec_MmeAudioMlp_c::FillOutTransformerInitializationParameters( void )
 {
-    CodecStatus_t Status;
-    MME_LxAudioDecoderInitParams_t &Params = AudioDecoderInitializationParameters;
+CodecStatus_t Status;
+MME_LxAudioDecoderInitParams_t &Params = AudioDecoderInitializationParameters;
 
 //
 
@@ -188,13 +200,12 @@ CodecStatus_t   Codec_MmeAudioMlp_c::FillOutTransformerInitializationParameters(
 //
 
     Status = Codec_MmeAudio_c::FillOutTransformerInitializationParameters();
-
     if (Status != CodecNoError)
-        return Status;
+	return Status;
 
 //
 
-    return FillOutTransformerGlobalParameters(&Params.GlobalParams);
+    return FillOutTransformerGlobalParameters( &Params.GlobalParams );
 }
 
 
@@ -202,10 +213,10 @@ CodecStatus_t   Codec_MmeAudioMlp_c::FillOutTransformerInitializationParameters(
 ///
 /// Populate the AUDIO_DECODER's MME_SET_GLOBAL_TRANSFORMER_PARAMS parameters for MLP audio.
 ///
-CodecStatus_t   Codec_MmeAudioMlp_c::FillOutSetStreamParametersCommand(void)
+CodecStatus_t   Codec_MmeAudioMlp_c::FillOutSetStreamParametersCommand( void )
 {
-    CodecStatus_t Status;
-    MlpAudioCodecStreamParameterContext_t  *Context = (MlpAudioCodecStreamParameterContext_t *)StreamParameterContext;
+CodecStatus_t Status;
+MlpAudioCodecStreamParameterContext_t  *Context = (MlpAudioCodecStreamParameterContext_t *)StreamParameterContext;
 
     //
     // Examine the parsed stream parameters and determine what type of codec to instanciate
@@ -214,16 +225,15 @@ CodecStatus_t   Codec_MmeAudioMlp_c::FillOutSetStreamParametersCommand(void)
 
     //
     // Now fill out the actual structure
+    //     
+
+    memset( &(Context->StreamParameters), 0, sizeof(Context->StreamParameters) );
+    Status = FillOutTransformerGlobalParameters( &(Context->StreamParameters) );
+    if( Status != CodecNoError )
+	return Status;
+
     //
-
-    memset(&(Context->StreamParameters), 0, sizeof(Context->StreamParameters));
-    Status = FillOutTransformerGlobalParameters(&(Context->StreamParameters));
-
-    if (Status != CodecNoError)
-        return Status;
-
-    //
-    // Fill out the actual command
+    // Fillout the actual command
     //
 
     Context->BaseContext.MMECommand.CmdStatus.AdditionalInfoSize        = 0;
@@ -240,25 +250,25 @@ CodecStatus_t   Codec_MmeAudioMlp_c::FillOutSetStreamParametersCommand(void)
 ///
 /// Populate the AUDIO_DECODER's MME_TRANSFORM parameters for MLP audio.
 ///
-CodecStatus_t   Codec_MmeAudioMlp_c::FillOutDecodeCommand(void)
+CodecStatus_t   Codec_MmeAudioMlp_c::FillOutDecodeCommand(       void )
 {
-    MlpAudioCodecDecodeContext_t   *Context        = (MlpAudioCodecDecodeContext_t *)DecodeContext;
+MlpAudioCodecDecodeContext_t   *Context        = (MlpAudioCodecDecodeContext_t *)DecodeContext;
 //MlpAudioFrameParameters_t    *Parsed         = (MlpAudioFrameParameters_t *)ParsedFrameParameters->FrameParameterStructure;
 
     //
     // Initialize the frame parameters (we don't actually have much to say here)
     //
 
-    memset(&Context->DecodeParameters, 0, sizeof(Context->DecodeParameters));
+    memset( &Context->DecodeParameters, 0, sizeof(Context->DecodeParameters) );
 
     //
     // Zero the reply structure
     //
 
-    memset(&Context->DecodeStatus, 0, sizeof(Context->DecodeStatus));
+    memset( &Context->DecodeStatus, 0, sizeof(Context->DecodeStatus) );
 
     //
-    // Fill out the actual command
+    // Fillout the actual command
     //
 
     Context->BaseContext.MMECommand.CmdStatus.AdditionalInfoSize        = sizeof(Context->DecodeStatus);
@@ -272,28 +282,28 @@ CodecStatus_t   Codec_MmeAudioMlp_c::FillOutDecodeCommand(void)
 ////////////////////////////////////////////////////////////////////////////
 ///
 /// Validate the ACC status structure and squawk loudly if problems are found.
-///
+/// 
 /// Dispite the squawking this method unconditionally returns success. This is
 /// because the firmware will already have concealed the decode problems by
 /// performing a soft mute.
 ///
 /// \return CodecSuccess
 ///
-CodecStatus_t   Codec_MmeAudioMlp_c::ValidateDecodeContext(CodecBaseDecodeContext_t *Context)
+CodecStatus_t   Codec_MmeAudioMlp_c::ValidateDecodeContext( CodecBaseDecodeContext_t *Context )
 {
-    MlpAudioCodecDecodeContext_t *DecodeContext = (MlpAudioCodecDecodeContext_t *) Context;
-    MME_LxAudioDecoderFrameStatus_t &Status = DecodeContext->DecodeStatus;
-    ParsedAudioParameters_t *AudioParameters;
+MlpAudioCodecDecodeContext_t *DecodeContext = (MlpAudioCodecDecodeContext_t *) Context;
+MME_LxAudioDecoderFrameStatus_t &Status = DecodeContext->DecodeStatus;
+ParsedAudioParameters_t *AudioParameters;
 
 
     CODEC_DEBUG(">><<\n");
 
-    if (ENABLE_CODEC_DEBUG)
+    if (ENABLE_CODEC_DEBUG) 
     {
         //DumpCommand(bufferIndex);
     }
 
-    if (Status.DecStatus)
+    if (Status.DecStatus) 
     {
         CODEC_ERROR("MLP audio decode error (muted frame): 0x%x\n", Status.DecStatus);
         //DumpCommand(bufferIndex);
@@ -311,7 +321,7 @@ CodecStatus_t   Codec_MmeAudioMlp_c::ValidateDecodeContext(CodecBaseDecodeContex
 
     AudioParameters = BufferState[DecodeContext->BaseContext.BufferIndex].ParsedAudioParameters;
 
-    AudioParameters->Source.BitsPerSample = ((AUDIODEC_GET_OUTPUT_WS((&AudioDecoderInitializationParameters)) == ACC_WS32) ? 32 : 16);
+    AudioParameters->Source.BitsPerSample = ((AUDIODEC_GET_OUTPUT_WS((&AudioDecoderInitializationParameters))== ACC_WS32)?32:16);
     //AudioParameters->Source.BitsPerSample = AudioOutputSurface->BitsPerSample;
     AudioParameters->Source.ChannelCount =  AudioOutputSurface->ChannelCount;
     //AudioParameters->Source.ChannelCount =  Codec_MmeAudio_c::GetNumberOfChannelsFromAudioConfiguration((enum eAccAcMode) Status.AudioMode);
@@ -319,15 +329,14 @@ CodecStatus_t   Codec_MmeAudioMlp_c::ValidateDecodeContext(CodecBaseDecodeContex
     AudioParameters->SampleCount = Status.NbOutSamples;
 
     enum eAccFsCode SamplingFreqCode = (enum eAccFsCode) Status.SamplingFreq;
-
     if (SamplingFreqCode < ACC_FS_reserved)
     {
-        AudioParameters->Source.SampleRateHz = Codec_MmeAudio_c::ConvertCodecSamplingFreq(SamplingFreqCode);
+      AudioParameters->Source.SampleRateHz = Codec_MmeAudio_c::ConvertCodecSamplingFreq(SamplingFreqCode);
     }
     else
     {
-        AudioParameters->Source.SampleRateHz = 0;
-        CODEC_ERROR("LPCM audio decode bad sampling freq returned: 0x%x\n", SamplingFreqCode);
+      AudioParameters->Source.SampleRateHz = 0;
+      CODEC_ERROR("LPCM audio decode bad sampling freq returned: 0x%x\n", SamplingFreqCode);
     }
 
     return CodecNoError;
@@ -335,13 +344,13 @@ CodecStatus_t   Codec_MmeAudioMlp_c::ValidateDecodeContext(CodecBaseDecodeContex
 
 // /////////////////////////////////////////////////////////////////////////
 //
-//      Function to dump out the set stream
+//      Function to dump out the set stream 
 //      parameters from an mme command.
 //
 
-CodecStatus_t   Codec_MmeAudioMlp_c::DumpSetStreamParameters(void    *Parameters)
+CodecStatus_t   Codec_MmeAudioMlp_c::DumpSetStreamParameters(          void    *Parameters )
 {
-    CODEC_ERROR("Not implemented\n");
+    CODEC_ERROR("Not implemented\n");  
     return CodecNoError;
 }
 
@@ -352,8 +361,8 @@ CodecStatus_t   Codec_MmeAudioMlp_c::DumpSetStreamParameters(void    *Parameters
 //      parameters from an mme command.
 //
 
-CodecStatus_t   Codec_MmeAudioMlp_c::DumpDecodeParameters(void    *Parameters)
+CodecStatus_t   Codec_MmeAudioMlp_c::DumpDecodeParameters(             void    *Parameters )
 {
-    CODEC_ERROR("Not implemented\n");
+    CODEC_ERROR("Not implemented\n");  
     return CodecNoError;
 }

@@ -62,41 +62,41 @@ Date        Modification                                    Name
 
 class Codec_MmeAudioVorbis_c : public Codec_MmeAudioStream_c
 {
-    protected:
+protected:
 
-        // Data
+    // Data
 
-        // Functions
+    // Functions
 
-    public:
+public:
 
-        // Constructor/Destructor methods
+    // Constructor/Destructor methods
 
-        Codec_MmeAudioVorbis_c(void);
-        ~Codec_MmeAudioVorbis_c(void);
+    Codec_MmeAudioVorbis_c(                void );
+    ~Codec_MmeAudioVorbis_c(               void );
 
-        // Stream specific functions
+    // Stream specific functions
 
-    protected:
+protected:
 
-        CodecStatus_t   FillOutTransformerGlobalParameters(MME_LxAudioDecoderGlobalParams_t *GlobalParams);
+    CodecStatus_t   FillOutTransformerGlobalParameters        ( MME_LxAudioDecoderGlobalParams_t *GlobalParams );
 
 #if 0
-        CodecStatus_t   FillOutTransformerInitializationParameters(void);
-        CodecStatus_t   FillOutSetStreamParametersCommand(void);
+    CodecStatus_t   FillOutTransformerInitializationParameters( void );
+    CodecStatus_t   FillOutSetStreamParametersCommand(          void );
 
 
-        CodecStatus_t   FillOutDecodeCommand(void);
-        CodecStatus_t   FillOutSendBuffersCommand(void);
-        CodecStatus_t   FillOutDecodeContext(void);
+    CodecStatus_t   FillOutDecodeCommand(                       void );
+    CodecStatus_t   FillOutSendBuffersCommand(                  void );
+    CodecStatus_t   FillOutDecodeContext(                       void );
 
-        CodecStatus_t   SendMMEDecodeCommand(void);
+    CodecStatus_t   SendMMEDecodeCommand(                       void );
 
-        CodecStatus_t   ValidateDecodeContext(CodecBaseDecodeContext_t *Context);
-        CodecStatus_t   DumpSetStreamParameters(void    *Parameters);
-        CodecStatus_t   DumpDecodeParameters(void    *Parameters);
-        void            CallbackFromMME(MME_Event_t     Event,
-                                        MME_Command_t  *CallbackData);
+    CodecStatus_t   ValidateDecodeContext( CodecBaseDecodeContext_t *Context );
+    CodecStatus_t   DumpSetStreamParameters(                    void    *Parameters );
+    CodecStatus_t   DumpDecodeParameters(                       void    *Parameters );
+    void            CallbackFromMME(                            MME_Event_t     Event,
+                                                                MME_Command_t  *CallbackData);
 #endif
 
 };

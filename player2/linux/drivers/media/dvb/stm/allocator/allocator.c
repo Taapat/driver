@@ -15,7 +15,6 @@
 #if defined(MULTICOM406)
 #include "ics.h"
 #endif
-
 /* --- */
 
 #include "allocatorio.h"
@@ -24,39 +23,39 @@
 //
 //
 
-static OSDEV_OpenEntrypoint(AllocatorOpen);
-static OSDEV_CloseEntrypoint(AllocatorClose);
-static OSDEV_IoctlEntrypoint(AllocatorIoctl);
-static OSDEV_MmapEntrypoint(AllocatorMmap);
+static OSDEV_OpenEntrypoint(  AllocatorOpen );
+static OSDEV_CloseEntrypoint( AllocatorClose );
+static OSDEV_IoctlEntrypoint( AllocatorIoctl );
+static OSDEV_MmapEntrypoint(  AllocatorMmap );
 
 static OSDEV_Descriptor_t AllocatorDeviceDescriptor =
 {
-Name:           "AllocatorModule",
-MajorNumber:    MAJOR_NUMBER,
+	Name:           "AllocatorModule",
+	MajorNumber:    MAJOR_NUMBER,
 
-OpenFn:         AllocatorOpen,
-CloseFn:        AllocatorClose,
-IoctlFn:        AllocatorIoctl,
-MmapFn:         AllocatorMmap
+	OpenFn:         AllocatorOpen,
+	CloseFn:        AllocatorClose,
+	IoctlFn:        AllocatorIoctl,
+	MmapFn:         AllocatorMmap
 };
 
 /* --- External entrypoints --- */
 
-OSDEV_LoadEntrypoint(AllocatorLoadModule);
-OSDEV_UnloadEntrypoint(AllocatorUnloadModule);
+OSDEV_LoadEntrypoint( AllocatorLoadModule );
+OSDEV_UnloadEntrypoint( AllocatorUnloadModule );
 
-OSDEV_RegisterDeviceLoadFn(AllocatorLoadModule);
-OSDEV_RegisterDeviceUnloadFn(AllocatorUnloadModule);
+OSDEV_RegisterDeviceLoadFn( AllocatorLoadModule );
+OSDEV_RegisterDeviceUnloadFn( AllocatorUnloadModule );
 
 /* --- The context for an opening of the device --- */
 
 typedef struct AllocatorContext_s
 {
     unsigned int         Size;
-    unsigned char    PartitionName[ALLOCATOR_MAX_PARTITION_NAME_SIZE];
+    unsigned char	 PartitionName[ALLOCATOR_MAX_PARTITION_NAME_SIZE];
     unsigned char       *Memory;
-    unsigned char   *CachedAddress;
-    unsigned char   *UnCachedAddress;
+    unsigned char	*CachedAddress;
+    unsigned char	*UnCachedAddress;
     unsigned char       *PhysicalAddress;
 #if defined(MULTICOM406)
     ICS_REGION           CachedRegion;
@@ -68,9 +67,9 @@ typedef struct AllocatorContext_s
 //
 //    The Initialize module function
 
-OSDEV_LoadEntrypoint(AllocatorLoadModule)
+OSDEV_LoadEntrypoint( AllocatorLoadModule )
 {
-    OSDEV_Status_t  Status;
+OSDEV_Status_t  Status;
 
 //
 
@@ -80,20 +79,19 @@ OSDEV_LoadEntrypoint(AllocatorLoadModule)
     // Register our device
     //
 
-    Status = OSDEV_RegisterDevice(&AllocatorDeviceDescriptor);
-
-    if (Status != OSDEV_NoError)
+    Status = OSDEV_RegisterDevice( &AllocatorDeviceDescriptor );
+    if( Status != OSDEV_NoError )
     {
-        OSDEV_Print("AllocatorLoadModule : Unable to get major %d\n", MAJOR_NUMBER);
-        OSDEV_LoadExit(OSDEV_Error);
+	OSDEV_Print( "AllocatorLoadModule : Unable to get major %d\n", MAJOR_NUMBER );
+	OSDEV_LoadExit( OSDEV_Error );
     }
 
-    OSDEV_LinkDevice(ALLOCATOR_DEVICE, MAJOR_NUMBER, MINOR_NUMBER);
+    OSDEV_LinkDevice(  ALLOCATOR_DEVICE, MAJOR_NUMBER, MINOR_NUMBER );
 
 //
 
-    OSDEV_Print("AllocatorLoadModule : Allocator device loaded\n");
-    OSDEV_LoadExit(OSDEV_NoError);
+    OSDEV_Print( "AllocatorLoadModule : Allocator device loaded\n" );
+    OSDEV_LoadExit( OSDEV_NoError );
 }
 
 
@@ -101,25 +99,24 @@ OSDEV_LoadEntrypoint(AllocatorLoadModule)
 //
 //    The Terminate module function
 
-OSDEV_UnloadEntrypoint(AllocatorUnloadModule)
+OSDEV_UnloadEntrypoint( AllocatorUnloadModule )
 {
-    OSDEV_Status_t          Status;
+OSDEV_Status_t          Status;
 
-    /* --- */
+/* --- */
 
     OSDEV_UnloadEntry();
 
 
-    /* --- */
+/* --- */
 
-    Status = OSDEV_DeRegisterDevice(&AllocatorDeviceDescriptor);
+    Status = OSDEV_DeRegisterDevice( &AllocatorDeviceDescriptor );
+    if( Status != OSDEV_NoError )
+	OSDEV_Print( "AllocatorUnloadModule : Unregister of device failed\n");
 
-    if (Status != OSDEV_NoError)
-        OSDEV_Print("AllocatorUnloadModule : Unregister of device failed\n");
+/* --- */
 
-    /* --- */
-
-    OSDEV_Print("Allocator device unloaded\n");
+    OSDEV_Print( "Allocator device unloaded\n" );
     OSDEV_UnloadExit(OSDEV_NoError);
 }
 
@@ -128,9 +125,9 @@ OSDEV_UnloadEntrypoint(AllocatorUnloadModule)
 //
 //    The Open function
 
-static OSDEV_OpenEntrypoint(AllocatorOpen)
+static OSDEV_OpenEntrypoint(  AllocatorOpen )
 {
-    AllocatorContext_t      *AllocatorContext;
+AllocatorContext_t      *AllocatorContext;
 
     //
     // Entry
@@ -142,25 +139,25 @@ static OSDEV_OpenEntrypoint(AllocatorOpen)
     // Allocate and initialize the private data structure.
     //
 
-    AllocatorContext    = (AllocatorContext_t *)OSDEV_Malloc(sizeof(AllocatorContext_t));
+    AllocatorContext    = (AllocatorContext_t *)OSDEV_Malloc( sizeof(AllocatorContext_t) );
     OSDEV_PrivateData   = (void *)AllocatorContext;
 
-    if (AllocatorContext == NULL)
+    if( AllocatorContext == NULL )
     {
-        OSDEV_Print("AllocatorOpen - Unable to allocate memory for open context.\n");
-        OSDEV_OpenExit(OSDEV_Error);
+	OSDEV_Print( "AllocatorOpen - Unable to allocate memory for open context.\n" );
+	OSDEV_OpenExit( OSDEV_Error );
     }
 
 //
 
-    memset(AllocatorContext, 0x00, sizeof(AllocatorContext_t));
+    memset( AllocatorContext, 0x00, sizeof(AllocatorContext_t) );
 
     AllocatorContext->Size      = 0;
     AllocatorContext->Memory    = NULL;
 
 //
 
-    OSDEV_OpenExit(OSDEV_NoError);
+    OSDEV_OpenExit( OSDEV_NoError );
 }
 
 
@@ -168,9 +165,9 @@ static OSDEV_OpenEntrypoint(AllocatorOpen)
 //
 //    The Release function
 
-static OSDEV_CloseEntrypoint(AllocatorClose)
+static OSDEV_CloseEntrypoint(  AllocatorClose )
 {
-    AllocatorContext_t      *AllocatorContext;
+AllocatorContext_t      *AllocatorContext;
 
 //
 
@@ -181,50 +178,47 @@ static OSDEV_CloseEntrypoint(AllocatorClose)
     // Perform the release activity
     //
 
-    if (AllocatorContext->Memory != NULL)
+    if( AllocatorContext->Memory != NULL )
     {
         // Do what is necessary to free up any mapping here
-
+        
 //        OSDEV_Print( "Freeing up bpa 2 partition - phys %p - C %p - UC %p\n", AllocatorContext->PhysicalAddress,AllocatorContext->CachedAddress,AllocatorContext->UnCachedAddress);
 #if defined(MULTICOM406)
         ICS_ERROR IcsErr;
 
         IcsErr = ICS_region_remove(AllocatorContext->CachedRegion, 0);
-
-        if (IcsErr != ICS_SUCCESS)
+        if( IcsErr != ICS_SUCCESS )
         {
-            OSDEV_Print("Close Entry Point - Unable to remove Cached ICS region.\n");
-        }
+            OSDEV_Print( "Close Entry Point - Unable to remove Cached ICS region.\n" );
+       }
 
         IcsErr = ICS_region_remove(AllocatorContext->UnCachedRegion, 0);
-
-        if (IcsErr != ICS_SUCCESS)
+        if( IcsErr != ICS_SUCCESS )
         {
-            OSDEV_Print("Close Entry Point - Unable to remove Uncached ICS region.\n");
+            OSDEV_Print( "Close Entry Point - Unable to remove Uncached ICS region.\n" );
         }
-
 #endif
-        OSDEV_IOUnMap((unsigned int)AllocatorContext->UnCachedAddress);
-        OSDEV_IOUnMap((unsigned int)AllocatorContext->CachedAddress);
-        OSDEV_FreePartitioned(AllocatorContext->PartitionName, AllocatorContext->PhysicalAddress);
-
+        OSDEV_IOUnMap( (unsigned int)AllocatorContext->UnCachedAddress );
+        OSDEV_IOUnMap( (unsigned int)AllocatorContext->CachedAddress );
+        OSDEV_FreePartitioned( AllocatorContext->PartitionName, AllocatorContext->PhysicalAddress );
+        
     }
 
-    OSDEV_Free(AllocatorContext);
+    OSDEV_Free( AllocatorContext );
 
 //
 
-    OSDEV_CloseExit(OSDEV_NoError);
+    OSDEV_CloseExit( OSDEV_NoError );
 }
 
 // ////////////////////////////////////////////////////////////////////////////////
 //
 //    The mmap function to make the Allocator buffers available to the user for writing
 
-static OSDEV_MmapEntrypoint(AllocatorMmap)
+static OSDEV_MmapEntrypoint( AllocatorMmap )
 {
-    AllocatorContext_t      *AllocatorContext;
-    OSDEV_Status_t           MappingStatus;
+AllocatorContext_t      *AllocatorContext;
+OSDEV_Status_t           MappingStatus;
 
 //
 
@@ -233,91 +227,89 @@ static OSDEV_MmapEntrypoint(AllocatorMmap)
 
 //
 
-    OSDEV_MmapPerformMap(AllocatorContext->Memory, MappingStatus);
+    OSDEV_MmapPerformMap( AllocatorContext->Memory, MappingStatus );
 
 //
 
-    OSDEV_MmapExit(MappingStatus);
+    OSDEV_MmapExit( MappingStatus );
 }
 
 // ////////////////////////////////////////////////////////////////////////////////
 //
 //    The ioctl function to handle allocating the memory
 
-static OSDEV_Status_t AllocatorIoctlAllocateData(AllocatorContext_t    *AllocatorContext,
-        unsigned int           ParameterAddress)
+static OSDEV_Status_t AllocatorIoctlAllocateData( AllocatorContext_t    *AllocatorContext,
+						  unsigned int           ParameterAddress )
 {
-    allocator_ioctl_allocate_t      params;
+allocator_ioctl_allocate_t      params;
 #if defined(MULTICOM406)
-    ICS_ERROR IcsErr;
+ICS_ERROR IcsErr;
 #endif
 
 //
 
-    OSDEV_CopyToDeviceSpace(&params, ParameterAddress, sizeof(allocator_ioctl_allocate_t));
+    OSDEV_CopyToDeviceSpace( &params, ParameterAddress, sizeof(allocator_ioctl_allocate_t) );
 
 //
 
     AllocatorContext->Size              = params.RequiredSize;
-    memcpy(AllocatorContext->PartitionName, params.PartitionName, ALLOCATOR_MAX_PARTITION_NAME_SIZE);
+    memcpy( AllocatorContext->PartitionName, params.PartitionName, ALLOCATOR_MAX_PARTITION_NAME_SIZE );
 
 //
 
-    AllocatorContext->Memory        = OSDEV_MallocPartitioned(AllocatorContext->PartitionName,
-                                      AllocatorContext->Size);
+    AllocatorContext->Memory        = OSDEV_MallocPartitioned( 	AllocatorContext->PartitionName, 
+								AllocatorContext->Size );
 
-    if (AllocatorContext->Memory == NULL)
+    if( AllocatorContext->Memory == NULL )
     {
-        OSDEV_Print("AllocatorIoctlAllocateData : Unable to allocate memory\n");
-        return OSDEV_Error;
+	OSDEV_Print( "AllocatorIoctlAllocateData : Unable to allocate memory\n" );
+	return OSDEV_Error;
     }
 
     //
     // The memory supplied by BPA2 is physical, get the necessary mappings
     //
 
-    AllocatorContext->CachedAddress = NULL;
-    AllocatorContext->UnCachedAddress   = NULL;
-    AllocatorContext->PhysicalAddress   = NULL;
+    AllocatorContext->CachedAddress	= NULL;
+    AllocatorContext->UnCachedAddress	= NULL;
+    AllocatorContext->PhysicalAddress	= NULL;
 
-    AllocatorContext->CachedAddress = ioremap_cache((unsigned int)AllocatorContext->Memory, AllocatorContext->Size);
-    AllocatorContext->PhysicalAddress   = AllocatorContext->Memory ;
-    AllocatorContext->UnCachedAddress   = (unsigned char *)OSDEV_IOReMap((unsigned int)AllocatorContext->PhysicalAddress, AllocatorContext->Size);
+        
+    AllocatorContext->CachedAddress	= ioremap_cache((unsigned int)AllocatorContext->Memory,AllocatorContext->Size);
+    AllocatorContext->PhysicalAddress	= AllocatorContext->Memory ;
+    AllocatorContext->UnCachedAddress	= (unsigned char *)OSDEV_IOReMap( (unsigned int)AllocatorContext->PhysicalAddress, AllocatorContext->Size );
 
 #if defined(MULTICOM406)
     IcsErr = ICS_region_add(AllocatorContext->CachedAddress, AllocatorContext->PhysicalAddress, AllocatorContext->Size,
-                            ICS_CACHED, ics_cpu_mask(), &AllocatorContext->CachedRegion);
-
-    if (IcsErr != ICS_SUCCESS)
+                         ICS_CACHED, ics_cpu_mask(), &AllocatorContext->CachedRegion);
+    if( IcsErr != ICS_SUCCESS )
     {
-        OSDEV_Print("AllocatorIoctlAllocateData : - Unable to allocate Cached ICS region.\n");
+        OSDEV_Print( "AllocatorIoctlAllocateData : - Unable to allocate Cached ICS region.\n" );
         return OSDEV_Error;
     }
 
     IcsErr = ICS_region_add(AllocatorContext->UnCachedAddress, AllocatorContext->PhysicalAddress, AllocatorContext->Size,
                             ICS_UNCACHED, ics_cpu_mask(), &AllocatorContext->UnCachedRegion);
-
-    if (IcsErr != ICS_SUCCESS)
+    if( IcsErr != ICS_SUCCESS )
     {
-        OSDEV_Print("AllocatorIoctlAllocateData : - Unable to allocate Uncached ICS region.\n");
+        OSDEV_Print( "AllocatorIoctlAllocateData : - Unable to allocate Uncached ICS region.\n" );
         return OSDEV_Error;
     }
-
 #endif
 
-    /*
-        OSDEV_Print("Alloc - Phys %p - C %p - UC %p  -- Size 0x%x\n",AllocatorContext->PhysicalAddress,
-                    AllocatorContext->CachedAddress, AllocatorContext->UnCachedAddress,AllocatorContext->Size);
-    */
+/*    
+    OSDEV_Print("Alloc - Phys %p - C %p - UC %p  -- Size 0x%x\n",AllocatorContext->PhysicalAddress,
+                AllocatorContext->CachedAddress, AllocatorContext->UnCachedAddress,AllocatorContext->Size);
+*/    
     //
-    // Copy the data into the parameters and pass back
+    // Copy the data into the parameters and pass back 
     //
 
-    params.CachedAddress    = AllocatorContext->CachedAddress;
-    params.UnCachedAddress  = AllocatorContext->UnCachedAddress;
-    params.PhysicalAddress  = AllocatorContext->PhysicalAddress;
+    params.CachedAddress	= AllocatorContext->CachedAddress;
+    params.UnCachedAddress	= AllocatorContext->UnCachedAddress;
+    params.PhysicalAddress	= AllocatorContext->PhysicalAddress;
 
-    OSDEV_CopyToUserSpace(ParameterAddress, &params, sizeof(allocator_ioctl_allocate_t));
+    OSDEV_CopyToUserSpace( ParameterAddress, &params, sizeof(allocator_ioctl_allocate_t) );
 
 //
 
@@ -329,27 +321,27 @@ static OSDEV_Status_t AllocatorIoctlAllocateData(AllocatorContext_t    *Allocato
 //
 //    The ioctl function
 
-static OSDEV_IoctlEntrypoint(AllocatorIoctl)
+static OSDEV_IoctlEntrypoint( AllocatorIoctl )
 {
-    OSDEV_Status_t           Status;
-    AllocatorContext_t      *AllocatorContext;
+OSDEV_Status_t           Status;
+AllocatorContext_t      *AllocatorContext;
 
-    /* --- */
+/* --- */
 
     OSDEV_IoctlEntry();
     AllocatorContext    = (AllocatorContext_t  *)OSDEV_PrivateData;
 
-    switch (OSDEV_IoctlCode)
+    switch( OSDEV_IoctlCode )
     {
-        case    ALLOCATOR_IOCTL_ALLOCATE_DATA:  Status = AllocatorIoctlAllocateData(AllocatorContext, OSDEV_ParameterAddress);             break;
+	case    ALLOCATOR_IOCTL_ALLOCATE_DATA:  Status = AllocatorIoctlAllocateData(    AllocatorContext, OSDEV_ParameterAddress );             break;
 
-        default:        OSDEV_Print("AllocatorIoctl : Invalid ioctl %08x\n", OSDEV_IoctlCode);
-            Status = OSDEV_Error;
+	default:        OSDEV_Print( "AllocatorIoctl : Invalid ioctl %08x\n", OSDEV_IoctlCode );
+			Status = OSDEV_Error;
     }
 
-    /* --- */
+/* --- */
 
-    OSDEV_IoctlExit(Status);
+    OSDEV_IoctlExit( Status );
 }
 
 

@@ -12,6 +12,7 @@
 #include <linux/kernel.h>
 #include <linux/string.h>
 #include <linux/mempolicy.h>
+#include <asm/cacheflush.h>
 #else
 #include <string.h>
 #endif
@@ -19,7 +20,6 @@
 #include <mme.h>
 #include "pcm_transcoder.h"
 #include "Pcm_TranscoderTypes.h"
-#include "osdev_device.h"
 
 #define PCM_INPUT_BUFFER                0
 #define PCM_OUTPUT_BUFFER               1
@@ -47,7 +47,7 @@ struct PcmContext_s
 /*}}}*/
 
 /*{{{  InitializeContext*/
-static MME_ERROR InitializeContext(struct PcmContext_s* PcmContext, MME_LxPcmAudioConfig_t* Config)
+static MME_ERROR InitializeContext (struct PcmContext_s* PcmContext, MME_LxPcmAudioConfig_t* Config)
 {
     PCM_TRACE("Config.SampleRate          %d (%x)\n", Config->SampleRate, Config->SampleRate);
     PCM_TRACE("Config.BytesPerSecond      %d (%x)\n", Config->BytesPerSecond, Config->BytesPerSecond);
@@ -65,58 +65,41 @@ static MME_ERROR InitializeContext(struct PcmContext_s* PcmContext, MME_LxPcmAud
     switch (PcmContext->ChannelCount)
     {
         case 1:         PcmContext->AudioMode   = ACC_MODE10;           break;          /* Mono */
-
         case 2:         PcmContext->AudioMode   = ACC_MODE20;           break;          /* Stereo */
-
         case 6:         PcmContext->AudioMode   = ACC_MODE32_LFE;       break;          /* 5,1 */
-
         default:
             PCM_ERROR("%d Channels not supported - treating as stereo.\n", PcmContext->ChannelCount);
             PcmContext->AudioMode               = ACC_MODE20;           break;          /* Stereo */
     }
-
     PCM_TRACE("PcmContext->AudioMode        %d (%x)\n", PcmContext->AudioMode, PcmContext->AudioMode);
 
     switch (PcmContext->SampleRate)
     {
         case  8000:     PcmContext->SamplingFrequency   = ACC_FS8k;        break;
-
         case 11025:     PcmContext->SamplingFrequency   = ACC_FS11k;       break;
-
         case 12000:     PcmContext->SamplingFrequency   = ACC_FS12k;       break;
-
         case 16000:     PcmContext->SamplingFrequency   = ACC_FS16k;       break;
-
         case 22050:     PcmContext->SamplingFrequency   = ACC_FS22k;       break;
-
         case 24000:     PcmContext->SamplingFrequency   = ACC_FS24k;       break;
-
         case 32000:     PcmContext->SamplingFrequency   = ACC_FS32k;       break;
-
         case 44100:     PcmContext->SamplingFrequency   = ACC_FS44k;       break;
-
         case 48000:     PcmContext->SamplingFrequency   = ACC_FS48k;       break;
-
         case 88200:     PcmContext->SamplingFrequency   = ACC_FS88k;       break;
-
         case 96000:     PcmContext->SamplingFrequency   = ACC_FS96k;       break;
-
         case 192000:    PcmContext->SamplingFrequency   = ACC_FS192k;      break;
-
         default:
             PCM_ERROR("Frequency %d not supported - treating as 44k.\n", PcmContext->SampleRate);
             PcmContext->SamplingFrequency               = ACC_FS44k;       break;
     }
-
     PCM_TRACE("PcmContext->SamplingFrequency   %d (%x)\n", PcmContext->SamplingFrequency, PcmContext->SamplingFrequency);
 
     return MME_SUCCESS;
 }
 /*}}}*/
 /*{{{  PcmTranscoder_AbortCommand*/
-static MME_ERROR PcmTranscoder_AbortCommand(void* Context, MME_CommandId_t CommandId)
+static MME_ERROR PcmTranscoder_AbortCommand (void* Context, MME_CommandId_t CommandId)
 {
-    /* This transformer supports neither aborting the currently executing
+    /* This transformer supports neither aborting the currently executing 
      * transform nor does it utilize deferred transforms. For this reason
      * there is nothing useful it can do here.
      */
@@ -125,14 +108,14 @@ static MME_ERROR PcmTranscoder_AbortCommand(void* Context, MME_CommandId_t Comma
 }
 /*}}}*/
 /*{{{  PcmTranscoder_GetTransformerCapability*/
-static MME_ERROR PcmTranscoder_GetTransformerCapability(MME_TransformerCapability_t* Capability)
+static MME_ERROR PcmTranscoder_GetTransformerCapability (MME_TransformerCapability_t* Capability)
 {
     Capability->Version = 0x010000;
     return MME_SUCCESS;
 }
 /*}}}*/
 /*{{{  PcmTranscoder_InitTransformer*/
-static MME_ERROR PcmTranscoder_InitTransformer(MME_UINT ParamsSize, MME_GenericParams_t Params, void** ContextPointer)
+static MME_ERROR PcmTranscoder_InitTransformer (MME_UINT ParamsSize, MME_GenericParams_t Params, void** ContextPointer)
 {
     struct PcmContext_s*                        PcmContext;
     MME_LxAudioDecoderInitParams_t*             InitParams      = (MME_LxAudioDecoderInitParams_t*)Params;
@@ -141,21 +124,19 @@ static MME_ERROR PcmTranscoder_InitTransformer(MME_UINT ParamsSize, MME_GenericP
     MME_ERROR                                   Status;
 
     *ContextPointer             = NULL;
-    PcmContext                  = kmalloc(sizeof(struct PcmContext_s), GFP_KERNEL);
-
+    PcmContext                  = kmalloc (sizeof (struct PcmContext_s), GFP_KERNEL);
     if (PcmContext == NULL)
     {
         PCM_ERROR("Unable to allocate memory for context\n");
         return MME_NOMEM;
     }
 
-    Status                      = InitializeContext(PcmContext, Config);
-
+    Status                      = InitializeContext (PcmContext, Config);
     if (Status == MME_SUCCESS)
         *ContextPointer         = PcmContext;
     else
     {
-        kfree(PcmContext);
+        kfree (PcmContext);
         PCM_ERROR("Failed to initialize decode context\n");
     }
 
@@ -163,7 +144,7 @@ static MME_ERROR PcmTranscoder_InitTransformer(MME_UINT ParamsSize, MME_GenericP
 }
 /*}}}*/
 /*{{{  PcmTranscoder_Transform*/
-static MME_ERROR PcmTranscoder_Transform(void* Context, MME_Command_t* Command)
+static MME_ERROR PcmTranscoder_Transform (void* Context, MME_Command_t* Command)
 {
     unsigned int                        i;
     unsigned int                        Sample;
@@ -178,25 +159,23 @@ static MME_ERROR PcmTranscoder_Transform(void* Context, MME_Command_t* Command)
     MME_ScatterPage_t*                  OutputScatterPage       = &OutputDataBuffer->ScatterPages_p[0];
     unsigned char*                      Input                   = InputScatterPage->Page_p;
     unsigned int                        SampleSize              = PcmContext->BitsPerSample / 8;
-    unsigned int                        SampleCount             = InputScatterPage->Size / PcmContext->BlockAlign;
+    unsigned int                        SampleCount             = InputScatterPage->Size/PcmContext->BlockAlign;
     unsigned int                        OutputOffset            = 0;
 
-    PCM_DEBUG("Samples %d SampleSize %d\n", SampleCount, SampleSize);
-
+    PCM_DEBUG("Samples %d SampleSize %d\n",SampleCount, SampleSize);
     if (PcmContext->ChannelCount == 1)
         OutputOffset                    = PCM_OUTPUT_MONO_OFFSET;
 
-    memset((unsigned char*)OutputScatterPage->Page_p, 0, SampleCount * PCM_OUTPUT_BYTES_PER_SAMPLE);
-
+    memset ((unsigned char*)OutputScatterPage->Page_p, 0, SampleCount*PCM_OUTPUT_BYTES_PER_SAMPLE);
     if (PcmContext->DataEndianness == PCM_LITTLE_ENDIAN)
     {
-        for (Sample = 0; Sample < (InputScatterPage->Size / PcmContext->BlockAlign); Sample++)
+        for (Sample=0;Sample<(InputScatterPage->Size/PcmContext->BlockAlign); Sample++)
         {
             unsigned char*      Output          = ((unsigned char*)OutputScatterPage->Page_p) + (Sample * PCM_OUTPUT_BYTES_PER_SAMPLE) + OutputOffset;
 
-            for (Channel = 0; Channel < PcmContext->ChannelCount; Channel++)
+            for (Channel=0; Channel<PcmContext->ChannelCount; Channel++)
             {
-                memcpy(Output + 4 - SampleSize, Input, SampleSize);   /* Put values into most significant bytes in a little endian way */
+                memcpy (Output+4-SampleSize, Input, SampleSize);      /* Put values into most significant bytes in a little endian way */
                 Output                 += PCM_OUTPUT_SAMPLE_SIZE;
                 Input                  += SampleSize;
             }
@@ -204,59 +183,53 @@ static MME_ERROR PcmTranscoder_Transform(void* Context, MME_Command_t* Command)
     }
     else
     {
-        for (Sample = 0; Sample < (InputScatterPage->Size / PcmContext->BlockAlign); Sample++)
+        for (Sample=0;Sample<(InputScatterPage->Size/PcmContext->BlockAlign); Sample++)
         {
             unsigned char*      Output          = ((unsigned char*)OutputScatterPage->Page_p) + (Sample * PCM_OUTPUT_BYTES_PER_SAMPLE) + OutputOffset;
 
-            for (Channel = 0; Channel < PcmContext->ChannelCount; Channel++)
+            for (Channel=0; Channel<PcmContext->ChannelCount; Channel++)
             {
-                for (i = 0; i < SampleSize; i++)
-                    Output[i + 4 - SampleSize]      = Input[SampleSize - i - 1]; /* Put values into most significant bytes in a little endian way */
-
+                for (i=0; i<SampleSize; i++)
+                    Output[i+4-SampleSize]      = Input[SampleSize-i-1];        /* Put values into most significant bytes in a little endian way */
                 Output                         += PCM_OUTPUT_SAMPLE_SIZE;
                 Input                          += SampleSize;
             }
         }
     }
-
     /*{{{  trace*/
-#if 0
+    #if 0
     {
         unsigned char*  P       = (unsigned char*)InputScatterPage->Page_p;
         printk("\n%08x:  ",  0);
-
-        for (i = 0; i < 512; i++)
+        for (i=0; i<512; i++)
         {
             printk("%02x ",  P[i]);
-
-            if (((i + 1) & 0x1f) == 0)
+            if (((i+1)&0x1f)==0)
                 printk("\n%08x:  ",  i);
         }
     }
     {
         unsigned char*  P       = (unsigned char*)OutputScatterPage->Page_p;
         printk("\n%08x:  ",  0);
-
-        for (i = 0; i < 512; i++)
+        for (i=0; i<512; i++)
         {
             printk("%02x ",  P[i]);
-
-            if (((i + 1) & 0x1f) == 0)
+            if (((i+1)&0x1f)==0)
                 printk("\n%08x:  ",  i);
         }
     }
-#endif
+    #endif
     /*}}}*/
 
     OutputScatterPage->Size             = Sample * PCM_OUTPUT_BYTES_PER_SAMPLE;
     //OutputScatterPage->Flags            = PAGE_VALID;
 
-    PCM_DEBUG("Output %d bytes\n", OutputScatterPage->Size);
+    PCM_DEBUG("Output %d bytes\n",OutputScatterPage->Size);
 
 #ifdef __KERNEL__
     // TODO: most of the Linux cache flush functions "don't do what you think they do". We take a
     //       conservative approach here.
-    OSDEV_FlushCacheAll();
+    flush_cache_all();
 #endif
 
     CommandStatus->Error                = MME_SUCCESS;
@@ -278,24 +251,23 @@ static MME_ERROR PcmTranscoder_SetGlobalParams(void* Context, MME_Command_t* Com
     MME_CommandStatus_t*                CommandStatus   = &Command->CmdStatus;
     MME_LxPcmAudioConfig_t*             Config          = (MME_LxPcmAudioConfig_t*)GlobalParams->DecConfig;
 
-    CommandStatus->Error        = InitializeContext(PcmContext, Config);
+    CommandStatus->Error        = InitializeContext (PcmContext, Config);
     CommandStatus->State        = MME_COMMAND_COMPLETED;
 
     return CommandStatus->Error;
 }
 /*}}}*/
-/*{{{  PcmTranscoder_ProcessCommand*/
-static MME_ERROR PcmTranscoder_ProcessCommand(void* Context, MME_Command_t* Command)
+
+static MME_ERROR PcmTranscoder_ProcessCommand (void* Context, MME_Command_t* Command)
 {
     PCM_DEBUG("\n");
-
     switch (Command->CmdCode)
     {
         case MME_TRANSFORM:
-            return PcmTranscoder_Transform(Context, Command);
+            return PcmTranscoder_Transform (Context, Command);
 
         case MME_SET_GLOBAL_TRANSFORM_PARAMS:
-            return PcmTranscoder_SetGlobalParams(Context, Command);
+            return PcmTranscoder_SetGlobalParams (Context, Command);
             break;
 
         case MME_SEND_BUFFERS: /* not supported by this transformer */
@@ -305,22 +277,20 @@ static MME_ERROR PcmTranscoder_ProcessCommand(void* Context, MME_Command_t* Comm
 
     return MME_INVALID_ARGUMENT;
 }
-/*}}}*/
-/*{{{  PcmTranscoder_TermTransformer*/
-static MME_ERROR PcmTranscoder_TermTransformer(void* Context)
+
+static MME_ERROR PcmTranscoder_TermTransformer (void* Context)
 {
-    kfree(Context);
+    kfree (Context);
     return MME_SUCCESS;
 }
-/*}}}*/
-/*{{{  PcmTranscoder_RegisterTransformer*/
-MME_ERROR PcmTranscoder_RegisterTransformer(const char* Name)
+
+
+MME_ERROR PcmTranscoder_RegisterTransformer (const char* Name)
 {
-    return MME_RegisterTransformer(Name,
-                                   PcmTranscoder_AbortCommand,
-                                   PcmTranscoder_GetTransformerCapability,
-                                   PcmTranscoder_InitTransformer,
-                                   PcmTranscoder_ProcessCommand,
-                                   PcmTranscoder_TermTransformer);
+    return MME_RegisterTransformer     (Name,
+                                        PcmTranscoder_AbortCommand,
+                                        PcmTranscoder_GetTransformerCapability,
+                                        PcmTranscoder_InitTransformer,
+                                        PcmTranscoder_ProcessCommand,
+                                        PcmTranscoder_TermTransformer);
 }
-/*}}}*/

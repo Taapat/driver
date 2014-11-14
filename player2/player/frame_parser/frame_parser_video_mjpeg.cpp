@@ -61,7 +61,7 @@ static BufferDataDescriptor_t   MjpegFrameParametersBuffer        = BUFFER_MJPEG
 //      Constructor
 //
 
-FrameParser_VideoMjpeg_c::FrameParser_VideoMjpeg_c(void)
+FrameParser_VideoMjpeg_c::FrameParser_VideoMjpeg_c( void )
 {
     Configuration.FrameParserName               = "VideoMjpeg";
 
@@ -80,7 +80,7 @@ FrameParser_VideoMjpeg_c::FrameParser_VideoMjpeg_c(void)
 //      Destructor
 //
 
-FrameParser_VideoMjpeg_c::~FrameParser_VideoMjpeg_c(void)
+FrameParser_VideoMjpeg_c::~FrameParser_VideoMjpeg_c( void )
 {
     Halt();
     Reset();
@@ -92,10 +92,10 @@ FrameParser_VideoMjpeg_c::~FrameParser_VideoMjpeg_c(void)
 //      The Reset function release any resources, and reset all variable
 //
 
-FrameParserStatus_t   FrameParser_VideoMjpeg_c::Reset(void)
+FrameParserStatus_t   FrameParser_VideoMjpeg_c::Reset(  void )
 {
-    memset(&CopyOfStreamParameters, 0x00, sizeof(MjpegStreamParameters_t));
-    memset(&ReferenceFrameList, 0x00, sizeof(ReferenceFrameList_t));
+    memset( &CopyOfStreamParameters, 0x00, sizeof(MjpegStreamParameters_t) );
+    memset( &ReferenceFrameList, 0x00, sizeof(ReferenceFrameList_t) );
 
     StreamParameters                            = NULL;
     FrameParameters                             = NULL;
@@ -112,7 +112,7 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::Reset(void)
 //      The register output ring function
 //
 
-FrameParserStatus_t   FrameParser_VideoMjpeg_c::RegisterOutputBufferRing(Ring_t Ring)
+FrameParserStatus_t   FrameParser_VideoMjpeg_c::RegisterOutputBufferRing( Ring_t Ring )
 {
     //
     // Clear our parameter pointers
@@ -127,7 +127,7 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::RegisterOutputBufferRing(Ring_t 
     // Pass the call on down (we need the frame parameters count obtained by the lower level function).
     //
 
-    return FrameParser_Video_c::RegisterOutputBufferRing(Ring);
+    return FrameParser_Video_c::RegisterOutputBufferRing( Ring );
 }
 //}}}
 //{{{  ReadHeaders
@@ -136,7 +136,7 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::RegisterOutputBufferRing(Ring_t 
 //      The read headers stream specific function
 //
 
-FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadHeaders(void)
+FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadHeaders( void )
 {
     FrameParserStatus_t         Status          = FrameParserNoError;
     unsigned int                Code;
@@ -144,39 +144,32 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadHeaders(void)
 
 #if 0
     unsigned int                i;
-    report(severity_info, "First 40 bytes of %d :", BufferLength);
-
-    for (unsigned int i = 0; i < 40; i++)
-        report(severity_info, " %02x", BufferData[i]);
-
-    report(severity_info, "\n");
+    report (severity_info, "First 40 bytes of %d :", BufferLength);
+    for (unsigned int i=0; i<40; i++)
+        report (severity_info, " %02x", BufferData[i]);
+    report (severity_info, "\n");
 #endif
 #if 0
-    report(severity_info, "Start codes (%d):", StartCodeList->NumberOfStartCodes);
-
-    for (unsigned int i = 0; i < StartCodeList->NumberOfStartCodes; i++)
-        report(severity_info, " %02x(%d)", ExtractStartCodeCode(StartCodeList->StartCodes[i]), ExtractStartCodeOffset(StartCodeList->StartCodes[i]));
-
-    report(severity_info, "\n");
+    report (severity_info, "Start codes (%d):", StartCodeList->NumberOfStartCodes);
+    for (unsigned int i=0; i<StartCodeList->NumberOfStartCodes; i++)
+        report (severity_info, " %02x(%d)", ExtractStartCodeCode(StartCodeList->StartCodes[i]), ExtractStartCodeOffset(StartCodeList->StartCodes[i]));
+    report (severity_info, "\n");
 #endif
 
     ParsedFrameParameters->DataOffset   = 0;
     StartOfImageSeen                    = false;
-
-    for (unsigned int i = 0; i < StartCodeList->NumberOfStartCodes; i++)
+    for (unsigned int i=0; i<StartCodeList->NumberOfStartCodes; i++)
     {
         Code                            = StartCodeList->StartCodes[i];
-        Bits.SetPointer(BufferData + ExtractStartCodeOffset(Code));
+        Bits.SetPointer (BufferData + ExtractStartCodeOffset(Code));
         Bits.FlushUnseen(16);
         Status                          = FrameParserNoError;
-
         switch (ExtractStartCodeCode(Code))
         {
             case MJPEG_SOI:
                 ParsedFrameParameters->DataOffset       = ExtractStartCodeOffset(Code);
                 StartOfImageSeen                        = true;
                 break;
-
             case  MJPEG_SOF_0:               // Read the start of frame header
             case  MJPEG_SOF_1:
                 if (!StartOfImageSeen)
@@ -186,16 +179,12 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadHeaders(void)
                 }
 
                 Status                  = ReadStartOfFrame();
-
                 if (Status == FrameParserNoError)
                     return CommitFrameForDecode();
-
                 break;
-
             case MJPEG_APP_15:
                 Status                  = ReadStreamMetadata();
                 break;
-
             default:
                 break;
         }
@@ -211,34 +200,30 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadHeaders(void)
 /// \brief      Read in stream generic information
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadStreamMetadata(void)
+FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadStreamMetadata (void)
 {
     MjpegVideoSequence_t*       Header;
     char                        VendorId[64];
     FrameParserStatus_t         Status          = FrameParserNoError;
 
-    for (unsigned int i = 0; i < sizeof(VendorId); i++)
+    for (unsigned int i=0; i<sizeof (VendorId); i++)
     {
         VendorId[i]             = Bits.Get(8);
-
         if (VendorId[i] == 0)
             break;
     }
-
-    if (strcmp(VendorId, "STMicroelectronics") != 0)
+    if (strcmp (VendorId, "STMicroelectronics") != 0)
     {
         FRAME_TRACE("    VendorId          : %s\n", VendorId);
         return FrameParserNoError;
     }
-
-    Status                      = GetNewStreamParameters((void**)&StreamParameters);
-
+    Status                      = GetNewStreamParameters ((void**)&StreamParameters);
     if (Status != FrameParserNoError)
         return Status;
 
     StreamParameters->UpdatedSinceLastFrame     = true;
     Header                      = &StreamParameters->SequenceHeader;
-    memset(Header, 0x00, sizeof(MjpegVideoSequence_t));
+    memset (Header, 0x00, sizeof(MjpegVideoSequence_t));
 
     Header->time_scale          = Bits.Get(32);
     Header->time_delta          = Bits.Get(32);
@@ -261,21 +246,20 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadStreamMetadata(void)
 //      Private - Read the start of frame header
 //
 
-FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadStartOfFrame(void)
+FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadStartOfFrame( void )
 {
     FrameParserStatus_t         Status;
     MjpegVideoPictureHeader_t*  Header;
 
-    if (FrameParameters == NULL)
+    if( FrameParameters == NULL )
     {
-        Status  = GetNewFrameParameters((void **)&FrameParameters);
-
-        if (Status != FrameParserNoError)
+        Status  = GetNewFrameParameters( (void **)&FrameParameters );
+        if( Status != FrameParserNoError )
             return Status;
     }
 
     Header                                      = &FrameParameters->PictureHeader;
-    memset(Header, 0x00, sizeof(MjpegVideoPictureHeader_t));
+    memset( Header, 0x00, sizeof(MjpegVideoPictureHeader_t) );
 
     Header->length                              = Bits.Get(16);
 
@@ -290,7 +274,7 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadStartOfFrame(void)
         return FrameParserError;
     }
 
-    for (unsigned int i = 0; i < Header->number_of_components; i++)
+    for (unsigned int i=0; i<Header->number_of_components; i++)
     {
         Header->components[i].id                                = Bits.Get(8);
         Header->components[i].vertical_sampling_factor          = Bits.Get(4);
@@ -301,20 +285,18 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadStartOfFrame(void)
     FrameParameters->PictureHeaderPresent       = true;
 
 #ifdef DUMP_HEADERS
-    FRAME_TRACE("Start of frame header:\n");
-    FRAME_TRACE("        Length              %d\n", Header->length);
-    FRAME_TRACE("        Precision           %d\n", Header->sample_precision);
-    FRAME_TRACE("        FrameHeight         %d\n", Header->frame_height);
-    FRAME_TRACE("        FrameWidth          %d\n", Header->frame_width);
-    FRAME_TRACE("        NumberOfComponents  %d\n", Header->number_of_components);
-
-    for (unsigned int i = 0; i < Header->number_of_components; i++)
-        FRAME_TRACE("            Id = %d, HSF = %d, VSF = %d, QTI = %d\n",
-                    Header->components[i].id,
-                    Header->components[i].horizontal_sampling_factor,
-                    Header->components[i].vertical_sampling_factor,
-                    Header->components[i].quantization_table_index);
-
+    FRAME_TRACE( "Start of frame header:\n" );
+    FRAME_TRACE( "        Length              %d\n", Header->length);
+    FRAME_TRACE( "        Precision           %d\n", Header->sample_precision);
+    FRAME_TRACE( "        FrameHeight         %d\n", Header->frame_height);
+    FRAME_TRACE( "        FrameWidth          %d\n", Header->frame_width);
+    FRAME_TRACE( "        NumberOfComponents  %d\n", Header->number_of_components);
+    for (unsigned int i=0; i<Header->number_of_components; i++)
+        FRAME_TRACE( "            Id = %d, HSF = %d, VSF = %d, QTI = %d\n",
+                Header->components[i].id,
+                Header->components[i].horizontal_sampling_factor,
+                Header->components[i].vertical_sampling_factor,
+                Header->components[i].quantization_table_index);
 #endif
 
     return FrameParserNoError;
@@ -328,7 +310,7 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadStartOfFrame(void)
 //
 //      Private - Read the quantization matrices.
 //
-FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadQuantizationMatrices(void)
+FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadQuantizationMatrices( void )
 {
     int                 DataSize;
     unsigned char       Temporary;
@@ -336,7 +318,6 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadQuantizationMatrices(void)
     unsigned int        Precision;
 
     DataSize            = (int)GetShort() - 2;
-
     while (DataSize > 0)
     {
         Temporary       = GetByte();
@@ -351,28 +332,28 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadQuantizationMatrices(void)
 
         if (Precision != 0)
         {
-            for (int i = 0; i < QUANTIZATION_MATRIX_SIZE; i++)
+            for(int i=0; i<QUANTIZATION_MATRIX_SIZE; i++)
                 QuantizationMatrices[Table][MjpegCoefficientMatrixNaturalOrder[i]]      = GetShort();
 
-            DataSize   -= 1 + (QUANTIZATION_MATRIX_SIZE * sizeof(unsigned short int));
+            DataSize   -= 1 + (QUANTIZATION_MATRIX_SIZE*sizeof(unsigned short int));
         }
         else
         {
-            for (int i = 0; i < QUANTIZATION_MATRIX_SIZE; i++)
+            for(int i=0; i<QUANTIZATION_MATRIX_SIZE; i++)
                 QuantizationMatrices[Table][MjpegCoefficientMatrixNaturalOrder[i]]      = (unsigned short int)GetByte();
 
-            DataSize   -= 1 + (QUANTIZATION_MATRIX_SIZE * sizeof(unsigned char));
+            DataSize   -= 1 + (QUANTIZATION_MATRIX_SIZE*sizeof(unsigned char));
         }
     }
 
 
 #ifdef DUMP_HEADERS
-    FRAME_TRACE("    MJPEG_DQT  (Quantization tables)\n");
-    FRAME_TRACE("        %04x %04x %04x %04x - %04x %04x %04x %04x - %04x %04x %04x %04x - %04x %04x %04x %04x\n",
+    FRAME_TRACE( "    MJPEG_DQT  (Quantization tables)\n" );
+    FRAME_TRACE( "        %04x %04x %04x %04x - %04x %04x %04x %04x - %04x %04x %04x %04x - %04x %04x %04x %04x\n",
                 QuantizationMatrices[0][0], QuantizationMatrices[0][1], QuantizationMatrices[0][2], QuantizationMatrices[0][3],
-                QuantizationMatrices[1][0], QuantizationMatrices[1][1], QuantizationMatrices[1][2], QuantizationMatrices[1][3],
-                QuantizationMatrices[2][0], QuantizationMatrices[2][1], QuantizationMatrices[2][2], QuantizationMatrices[2][3],
-                QuantizationMatrices[3][0], QuantizationMatrices[3][1], QuantizationMatrices[3][2], QuantizationMatrices[3][3]);
+                QuantizationMatrices[1][0], QuantizationMatrices[1][1], QuantizationMatrices[1][2], QuantizationMatrices[1][3], 
+                QuantizationMatrices[2][0], QuantizationMatrices[2][1], QuantizationMatrices[2][2], QuantizationMatrices[2][3], 
+                QuantizationMatrices[3][0], QuantizationMatrices[3][1], QuantizationMatrices[3][2], QuantizationMatrices[3][3] );
 #endif
 
     return FrameParserNoError;
@@ -385,7 +366,7 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadQuantizationMatrices(void)
 //      Private - Read the restart interval
 //
 
-FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadRestartInterval(void)
+FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadRestartInterval( void )
 {
     int         DataSize;
 
@@ -394,8 +375,8 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadRestartInterval(void)
     CodecStreamParameters.RestartInterval       = GetShort();
 
 #ifdef DUMP_HEADERS
-    FRAME_TRACE("    MJPEG_DRI (Restart interval)\n");
-    FRAME_TRACE("        %04x\n", CodecStreamParameters.RestartInterval);
+    FRAME_TRACE( "    MJPEG_DRI (Restart interval)\n" );
+    FRAME_TRACE( "        %04x\n", CodecStreamParameters.RestartInterval );
 #endif
 
     return FrameParserNoError;
@@ -407,42 +388,39 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadRestartInterval(void)
 //
 //      Private - Read the huffman encoding tables
 //
-FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadHuffmanTables(void)
+FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadHuffmanTables( void )
 {
     int                 DataSize;
     unsigned int        TableSize;
 
     DataSize            = (int)GetShort() - 2;
 
-    for (int Index = 0; (DataSize >= (SIZEOF_HUFFMAN_BITS_FIELD + 1)); Index++)
+    for (int Index=0; (DataSize >= (SIZEOF_HUFFMAN_BITS_FIELD+1)); Index++)
     {
         if (Index >= MAX_SUPPORTED_HUFFMAN_TABLES)
         {
-            FRAME_ERROR("%s - Found more than supported number of Huffman tables (%d)\n", __FUNCTION__, Index);
+            FRAME_ERROR("%s - Found more than supported number of Huffman tables (%d)\n", __FUNCTION__, Index );
             BufferPointer      += DataSize;
             return FrameParserError;
         }
 
         HuffmanTables[Index].Id         = GetByte();
-        ReadArray(HuffmanTables[Index].BitsTable, SIZEOF_HUFFMAN_BITS_FIELD);
+        ReadArray( HuffmanTables[Index].BitsTable, SIZEOF_HUFFMAN_BITS_FIELD );
         DataSize                       -= SIZEOF_HUFFMAN_BITS_FIELD;
 
         TableSize                       = 0;
-
-        for (int i = 0; i < SIZEOF_HUFFMAN_BITS_FIELD; i++)
+        for (int i=0; i<SIZEOF_HUFFMAN_BITS_FIELD; i++)
             TableSize                  += HuffmanTables[Index].BitsTable[i];
 
         HuffmanTables[Index].DataSize   = TableSize;
-        ReadArray(HuffmanTables[Index].DataTable, TableSize);
+        ReadArray( HuffmanTables[Index].DataTable, TableSize );
         DataSize                       -= TableSize;
     }
 
 #ifdef DUMP_HEADERS
-    FRAME_TRACE("    MJPEG_DHT  (Huffman tables)\n");
-
-    for (int i = 0; i < MAX_SUPPORTED_HUFFMAN_TABLES; i++)
-        FRAME_TRACE("        Id = %d, DataSize = %d\n", HuffmanTables[i].Id, HuffmanTables[i].DataSize);
-
+        FRAME_TRACE( "    MJPEG_DHT  (Huffman tables)\n" );
+        for (int i=0; i<MAX_SUPPORTED_HUFFMAN_TABLES; i++)
+            FRAME_TRACE( "        Id = %d, DataSize = %d\n", HuffmanTables[i].Id, HuffmanTables[i].DataSize );
 #endif
 
     return FrameParserNoError;
@@ -453,7 +431,7 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadHuffmanTables(void)
 //
 //      Private - Read the start of scan header
 //
-FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadStartOfScan(void)
+FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadStartOfScan( void )
 {
     int                 DataSize;
     unsigned char       Temporary;
@@ -468,7 +446,7 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadStartOfScan(void)
         return FrameParserError;
     }
 
-    for (int i = 0; i < StartOfScan.NumberOfComponents; i++)
+    for (int i=0; i<StartOfScan.NumberOfComponents; i++)
     {
         StartOfScan.Components[i].Id                    = GetByte();
         Temporary                                       = GetByte();
@@ -483,19 +461,17 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadStartOfScan(void)
     StartOfScan.ApproximationBitPositionHigh            = Temporary >> 4;
 
 #ifdef DUMP_HEADERS
-    FRAME_TRACE("    MJPEG_SOS  (Start of scan)\n");
-    FRAME_TRACE("        NumberOfComponents  %d\n", StartOfScan.NumberOfComponents);
-
-    for (int i = 0; i < StartOfScan.NumberOfComponents; i++)
-        FRAME_TRACE("            Id = %d, Huffman DC table = %d, AC table = %d\n",
-                    StartOfScan.Components[i].Id,
-                    StartOfScan.Components[i].HuffmanDCIndex,
-                    StartOfScan.Components[i].HuffmanACIndex);
-
-    FRAME_TRACE("        StartSpectral       %02x\n", StartOfScan.StartOfSpectralSelection);
-    FRAME_TRACE("        EndSpectral         %02x\n", StartOfScan.EndOfSpectralSelection);
-    FRAME_TRACE("        ApproximationHigh   %d\n", StartOfScan.ApproximationBitPositionHigh);
-    FRAME_TRACE("        ApproximationHigh   %d\n", StartOfScan.ApproximationBitPositionLow);
+    FRAME_TRACE( "    MJPEG_SOS  (Start of scan)\n" );
+    FRAME_TRACE( "        NumberOfComponents  %d\n", StartOfScan.NumberOfComponents );
+    for (int i=0; i<StartOfScan.NumberOfComponents; i++)
+        FRAME_TRACE( "            Id = %d, Huffman DC table = %d, AC table = %d\n",
+                        StartOfScan.Components[i].Id,
+                        StartOfScan.Components[i].HuffmanDCIndex,
+                        StartOfScan.Components[i].HuffmanACIndex );
+    FRAME_TRACE( "        StartSpectral       %02x\n", StartOfScan.StartOfSpectralSelection );
+    FRAME_TRACE( "        EndSpectral         %02x\n", StartOfScan.EndOfSpectralSelection );
+    FRAME_TRACE( "        ApproximationHigh   %d\n", StartOfScan.ApproximationBitPositionHigh );
+    FRAME_TRACE( "        ApproximationHigh   %d\n", StartOfScan.ApproximationBitPositionLow );
 #endif
 
     return FrameParserNoError;
@@ -513,13 +489,12 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::ReadStartOfScan(void)
 ///             we require we for a frame decode, this function records that fact.
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_VideoMjpeg_c::CommitFrameForDecode(void)
+FrameParserStatus_t   FrameParser_VideoMjpeg_c::CommitFrameForDecode (void)
 {
     MjpegVideoPictureHeader_t*          PictureHeader;
     MjpegVideoSequence_t*               SequenceHeader;
 
-    FRAME_DEBUG("%s\n", __FUNCTION__);
-
+    FRAME_DEBUG ("%s\n", __FUNCTION__);
     // Check we have the headers we need
     if ((StreamParameters == NULL) || !StreamParameters->SequenceHeaderPresent)
     {
@@ -584,13 +559,13 @@ FrameParserStatus_t   FrameParser_VideoMjpeg_c::CommitFrameForDecode(void)
     // Record our claim on both the frame and stream parameters
     //
 
-    Buffer->AttachBuffer(StreamParametersBuffer);
-    Buffer->AttachBuffer(FrameParametersBuffer);
+    Buffer->AttachBuffer (StreamParametersBuffer);
+    Buffer->AttachBuffer (FrameParametersBuffer);
 
     //
     // We clear the FrameParameters pointer, a new one will be obtained
     // before/if we read in headers pertaining to the next frame. This
-    // will generate an error should I accidentally write code that
+    // will generate an error should I accidentally write code that 
     // accesses this data when it should not.
     //
 

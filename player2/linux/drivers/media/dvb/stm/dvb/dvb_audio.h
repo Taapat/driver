@@ -33,12 +33,12 @@ Date        Modification                                    Name
 
 #include "dvbdev.h"
 
-struct dvb_device*  AudioInit(struct DeviceContext_s*        Context);
-int                 AudioIoctlPlay(struct DeviceContext_s*        Context);
-int                 AudioIoctlStop(struct DeviceContext_s*        Context);
-int                 AudioIoctlSetId(struct DeviceContext_s*        Context,
-                                    int                            Id);
-int                 AudioIoctlSetPlayInterval(struct DeviceContext_s*        Context,
-        audio_play_interval_t*         PlayInterval);
+struct dvb_device*  AudioInit                          (struct DeviceContext_s*        Context);
+int                 AudioIoctlPlay                     (struct DeviceContext_s*        Context);
+int                 AudioIoctlStop                     (struct DeviceContext_s*        Context);
+int                 AudioIoctlSetId                    (struct DeviceContext_s*        Context,
+                                                        int                            Id);
+int                 AudioIoctlSetPlayInterval          (struct DeviceContext_s*        Context,
+                                                        audio_play_interval_t*         PlayInterval);
 
 #endif

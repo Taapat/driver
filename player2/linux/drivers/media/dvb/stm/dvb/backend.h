@@ -71,7 +71,7 @@ Date        Modification                                    Name
 #endif
 
 #define BACKEND_DEBUG(fmt, args...)  ((void) (ENABLE_BACKEND_DEBUG && \
-                                      (printk("LinuxDvb:%s: " fmt, __FUNCTION__, ##args), 0)))
+                                            (printk("LinuxDvb:%s: " fmt, __FUNCTION__, ##args), 0)))
 
 /* Output trace information off the critical path */
 #define BACKEND_TRACE(fmt, args...)  (printk("LinuxDvb:%s: " fmt, __FUNCTION__, ##args))
@@ -86,16 +86,16 @@ struct StreamContext_s
 
     stream_handle_t             Handle;                 /* Opaque handle to access backend actions */
     /* Stream functions */
-    int (*Inject)(stream_handle_t         Stream,
-                  const unsigned char*    Data,
-                  unsigned int            DataLength);
-    int (*InjectPacket)(stream_handle_t         Stream,
-                        const unsigned char*    Data,
-                        unsigned int            DataLength,
-                        bool                    PresentationTimeValid,
-                        unsigned long long      PresentationTime);
-    int (*Delete)(playback_handle_t       Playback,
-                  stream_handle_t         Stream);
+    int                       (*Inject)        (stream_handle_t         Stream,
+                                                const unsigned char*    Data,
+                                                unsigned int            DataLength);
+    int                       (*InjectPacket)  (stream_handle_t         Stream,
+                                                const unsigned char*    Data,
+                                                unsigned int            DataLength,
+                                                bool                    PresentationTimeValid,
+                                                unsigned long long      PresentationTime);
+    int                       (*Delete)        (playback_handle_t       Playback,
+                                                stream_handle_t         Stream);
 
 
     unsigned int                BufferLength;
@@ -124,144 +124,144 @@ struct PlaybackContext_s
 };
 
 
-static inline int StreamBufferFree(struct StreamContext_s*         Stream)
+static inline int StreamBufferFree   (struct StreamContext_s*         Stream)
 {
     return (Stream->DataToWrite == 0);
 }
 
 /* Entry point list */
 
-int DvbBackendInit(void);
-int DvbBackendDelete(void);
+int DvbBackendInit                         (void);
+int DvbBackendDelete                       (void);
 
-int DvbPlaybackCreate(struct PlaybackContext_s**      PlaybackContext);
-int DvbPlaybackDelete(struct PlaybackContext_s*       Playback);
-int DvbPlaybackAddStream(struct PlaybackContext_s*       Playback,
-                         char*                           Media,
-                         char*                           Format,
-                         char*                           Encoding,
-                         unsigned int                    DemuxId,
-                         unsigned int                    SurfaceId,
-                         struct StreamContext_s**        Stream);
-int DvbPlaybackRemoveStream(struct PlaybackContext_s*       Playback,
-                            struct StreamContext_s*         Stream);
-int DvbPlaybackSetSpeed(struct PlaybackContext_s*       Playback,
-                        unsigned int                    Speed);
-int DvbPlaybackGetSpeed(struct PlaybackContext_s*       Playback,
-                        unsigned int*                   Speed);
-int DvbPlaybackSetNativePlaybackTime(struct PlaybackContext_s*       Playback,
-                                     unsigned long long              NativeTime,
-                                     unsigned long long              SystemTime);
-int DvbPlaybackSetOption(struct PlaybackContext_s*       Playback,
-                         play_option_t                   Option,
-                         unsigned int                    Value);
-int DvbPlaybackGetPlayerEnvironment(struct PlaybackContext_s*       Playback,
-                                    playback_handle_t*              playerplayback);
-int DvbPlaybackSetClockDataPoint(struct PlaybackContext_s*       Playback,
-                                 dvb_clock_data_point_t*         ClockData);
+int DvbPlaybackCreate                      (struct PlaybackContext_s**      PlaybackContext);
+int DvbPlaybackDelete                      (struct PlaybackContext_s*       Playback);
+int DvbPlaybackAddStream                   (struct PlaybackContext_s*       Playback,
+                                            char*                           Media,
+                                            char*                           Format,
+                                            char*                           Encoding,
+                                            unsigned int                    DemuxId,
+                                            unsigned int                    SurfaceId,
+                                            struct StreamContext_s**        Stream);
+int DvbPlaybackRemoveStream                (struct PlaybackContext_s*       Playback,
+                                            struct StreamContext_s*         Stream);
+int DvbPlaybackSetSpeed                    (struct PlaybackContext_s*       Playback,
+                                            unsigned int                    Speed);
+int DvbPlaybackGetSpeed                    (struct PlaybackContext_s*       Playback,
+                                            unsigned int*                   Speed);
+int DvbPlaybackSetNativePlaybackTime       (struct PlaybackContext_s*       Playback,
+                                            unsigned long long              NativeTime,
+                                            unsigned long long              SystemTime);
+int DvbPlaybackSetOption                   (struct PlaybackContext_s*       Playback,
+                                            play_option_t                   Option,
+                                            unsigned int                    Value);
+int DvbPlaybackGetPlayerEnvironment        (struct PlaybackContext_s*       Playback,
+                                            playback_handle_t*              playerplayback);
+int DvbPlaybackSetClockDataPoint           (struct PlaybackContext_s*       Playback,
+                                            dvb_clock_data_point_t*         ClockData);
 
-int DvbStreamEnable(struct StreamContext_s*         Stream,
-                    unsigned int                    Enable);
-int DvbStreamSetId(struct StreamContext_s*         Stream,
-                   unsigned int                    DemuxId,
-                   unsigned int                    Id);
-int DvbStreamChannelSelect(struct StreamContext_s*         Stream,
-                           channel_select_t                Channel);
-int DvbStreamSetOption(struct StreamContext_s*         Stream,
-                       play_option_t                   Option,
-                       unsigned int                    Value);
-int DvbStreamGetOption(struct StreamContext_s*         Stream,
-                       play_option_t                   Option,
-                       unsigned int*                   Value);
-int DvbStreamGetPlayInfo(struct StreamContext_s*         Stream,
-                         struct play_info_s*             PlayInfo);
-int DvbStreamDrain(struct StreamContext_s*         Stream,
-                   unsigned int                    Discard);
-int DvbStreamDrain2(struct StreamContext_s*         Stream,
-                    unsigned int                    Discard,
-                    unsigned int                    NonBlock);
-int DvbStreamCheckDrained(struct StreamContext_s*         Stream);
-int DvbStreamDiscontinuity(struct StreamContext_s*         Stream,
-                           discontinuity_t                 Discontinuity);
-int DvbStreamStep(struct StreamContext_s*         Stream);
-int DvbStreamSwitch(struct StreamContext_s*         Stream,
-                    char*                           Format,
-                    char*                           Encoding);
-int DvbStreamGetDecodeBuffer(struct StreamContext_s*         Stream,
-                             buffer_handle_t*                Buffer,
-                             unsigned char**                 Data,
-                             unsigned int                    Format,
-                             unsigned int                    DimensionCount,
-                             unsigned int                    Dimensions[],
-                             unsigned int*                   Index,
-                             unsigned int*                   Stride);
-int DvbStreamReturnDecodeBuffer(struct StreamContext_s*         Stream,
-                                buffer_handle_t*                Buffer);
-int DvbStreamGetDecodeBufferPoolStatus(struct StreamContext_s*         Stream,
-                                       unsigned int*                   BuffersInPool,
-                                       unsigned int*                   BuffersWithNonZeroReferenceCount);
+int DvbStreamEnable                        (struct StreamContext_s*         Stream,
+                                            unsigned int                    Enable);
+int DvbStreamSetId                         (struct StreamContext_s*         Stream,
+                                            unsigned int                    DemuxId,
+                                            unsigned int                    Id);
+int DvbStreamChannelSelect                 (struct StreamContext_s*         Stream,
+                                            channel_select_t                Channel);
+int DvbStreamSetOption                     (struct StreamContext_s*         Stream,
+                                            play_option_t                   Option,
+                                            unsigned int                    Value);
+int DvbStreamGetOption                     (struct StreamContext_s*         Stream,
+                                            play_option_t                   Option,
+                                            unsigned int*                   Value);
+int DvbStreamGetPlayInfo                   (struct StreamContext_s*         Stream,
+                                            struct play_info_s*             PlayInfo);
+int DvbStreamDrain                         (struct StreamContext_s*         Stream,
+                                            unsigned int                    Discard);
+int DvbStreamDrain2                        (struct StreamContext_s*         Stream,
+                                            unsigned int                    Discard,
+                                            unsigned int                    NonBlock);
+int DvbStreamCheckDrained                  (struct StreamContext_s*         Stream);
+int DvbStreamDiscontinuity                 (struct StreamContext_s*         Stream,
+                                            discontinuity_t                 Discontinuity);
+int DvbStreamStep                          (struct StreamContext_s*         Stream);
+int DvbStreamSwitch                        (struct StreamContext_s*         Stream,
+                                            char*                           Format,
+                                            char*                           Encoding);
+int DvbStreamGetDecodeBuffer               (struct StreamContext_s*         Stream,
+                                            buffer_handle_t*                Buffer,
+                                            unsigned char**                 Data,
+                                            unsigned int                    Format,
+                                            unsigned int                    DimensionCount,
+                                            unsigned int                    Dimensions[],
+                                            unsigned int*                   Index,
+                                            unsigned int*                   Stride);
+int DvbStreamReturnDecodeBuffer            (struct StreamContext_s*         Stream,
+                                            buffer_handle_t*                Buffer);
+int DvbStreamGetDecodeBufferPoolStatus     (struct StreamContext_s*         Stream,
+                                            unsigned int*                   BuffersInPool,
+                                            unsigned int*                   BuffersWithNonZeroReferenceCount);
 #ifdef __TDT__
-int DvbStreamGetOutputWindow(struct StreamContext_s*         Stream,
-                             unsigned int*                    X,
-                             unsigned int*                    Y,
-                             unsigned int*                    Width,
-                             unsigned int*                    Height);
+int DvbStreamGetOutputWindow               (struct StreamContext_s*         Stream,
+                                            unsigned int*                    X,
+                                            unsigned int*                    Y,
+                                            unsigned int*                    Width,
+                                            unsigned int*                    Height);
 #endif
-int DvbStreamSetOutputWindow(struct StreamContext_s*         Stream,
-                             unsigned int                    X,
-                             unsigned int                    Y,
-                             unsigned int                    Width,
-                             unsigned int                    Height);
-int DvbStreamSetInputWindow(struct StreamContext_s*         Stream,
-                            unsigned int                    X,
-                            unsigned int                    Y,
-                            unsigned int                    Width,
-                            unsigned int                    Height);
-int DvbStreamSetPlayInterval(struct StreamContext_s*         Stream,
-                             dvb_play_interval_t*            PlayInterval);
+int DvbStreamSetOutputWindow               (struct StreamContext_s*         Stream,
+                                            unsigned int                    X,
+                                            unsigned int                    Y,
+                                            unsigned int                    Width,
+                                            unsigned int                    Height);
+int DvbStreamSetInputWindow                (struct StreamContext_s*         Stream,
+                                            unsigned int                    X,
+                                            unsigned int                    Y,
+                                            unsigned int                    Width,
+                                            unsigned int                    Height);
+int DvbStreamSetPlayInterval               (struct StreamContext_s*         Stream,
+                                            dvb_play_interval_t*            PlayInterval);
 
-int DvbStreamInject(struct StreamContext_s*         Stream,
-                    const unsigned char*            Buffer,
-                    unsigned int                    Length);
+int DvbStreamInject                        (struct StreamContext_s*         Stream,
+                                            const unsigned char*            Buffer,
+                                            unsigned int                    Length);
 
-int DvbStreamInjectPacket(struct StreamContext_s*         Stream,
-                          const unsigned char*            Buffer,
-                          unsigned int                    Length,
-                          bool                            PresentationTimeValid,
-                          unsigned long long              PresentationTime);
+int DvbStreamInjectPacket                  (struct StreamContext_s*         Stream,
+                                            const unsigned char*            Buffer,
+                                            unsigned int                    Length,
+                                            bool                            PresentationTimeValid,
+                                            unsigned long long              PresentationTime);
 
-int DvbStreamGetFirstBuffer(struct StreamContext_s*         Stream,
-                            const char __user*              Buffer,
-                            unsigned int                    Length);
-int DvbStreamIdentifyAudio(struct StreamContext_s*         Stream,
-                           unsigned int*                   Id);
-int DvbStreamIdentifyVideo(struct StreamContext_s*         Stream,
-                           unsigned int*                   Id);
-int DvbStreamGetPlayerEnvironment(struct StreamContext_s*         Stream,
-                                  playback_handle_t*              playerplayback,
-                                  stream_handle_t*                playerstream);
-static inline int DvbPlaybackAddDemux(struct PlaybackContext_s*       Playback,
-                                      unsigned int                    DemuxId,
-                                      struct StreamContext_s**        Demux)
+int DvbStreamGetFirstBuffer                (struct StreamContext_s*         Stream,
+                                            const char __user*              Buffer,
+                                            unsigned int                    Length);
+int DvbStreamIdentifyAudio                (struct StreamContext_s*         Stream,
+                                            unsigned int*                   Id);
+int DvbStreamIdentifyVideo                 (struct StreamContext_s*         Stream,
+                                            unsigned int*                   Id);
+int DvbStreamGetPlayerEnvironment          (struct StreamContext_s*         Stream,
+                                            playback_handle_t*              playerplayback,
+                                            stream_handle_t*                playerstream);
+static inline int DvbPlaybackAddDemux      (struct PlaybackContext_s*       Playback,
+                                            unsigned int                    DemuxId,
+                                            struct StreamContext_s**        Demux)
 {
-    return DvbPlaybackAddStream(Playback, NULL, NULL, NULL, DemuxId, DemuxId, Demux);
+    return DvbPlaybackAddStream (Playback, NULL, NULL, NULL, DemuxId, DemuxId, Demux);
 }
 
-static inline int DvbPlaybackRemoveDemux(struct PlaybackContext_s*       Playback,
-        struct StreamContext_s*         Demux)
+static inline int DvbPlaybackRemoveDemux   (struct PlaybackContext_s*       Playback,
+                                            struct StreamContext_s*         Demux)
 {
-    return DvbPlaybackRemoveStream(Playback, Demux);
+    return DvbPlaybackRemoveStream (Playback, Demux);
 }
 
 
 
-stream_event_signal_callback   DvbStreamRegisterEventSignalCallback(struct StreamContext_s*         Stream,
-        struct DeviceContext_s*         Context,
-        stream_event_signal_callback    CallBack);
-int DvbDisplayDelete(char*                           Media,
-                     unsigned int                    SurfaceId);
+stream_event_signal_callback   DvbStreamRegisterEventSignalCallback    (struct StreamContext_s*         Stream,
+                                                                        struct DeviceContext_s*         Context,
+                                                                        stream_event_signal_callback    CallBack);
+int DvbDisplayDelete                       (char*                           Media,
+                                            unsigned int                    SurfaceId);
 
-int DvbDisplaySynchronize(char*                           Media,
-                          unsigned int                    SurfaceId);
+int DvbDisplaySynchronize                  (char*                           Media,
+                                            unsigned int                    SurfaceId);
 
 #endif

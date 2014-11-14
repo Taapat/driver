@@ -53,7 +53,7 @@ system all of which must be mixed.
    This stream is time stamped and while subject to
    synchronization should
    not have any sync. 'tension' versus the primary stream. In other words any output rate adjustment (a.k.a. clock pulling) applied to the primary stream is applicable to the secondary stream. If this invariant is violated then percussive adjustments are acceptable.
- - Up to 8 interactive monaural streams, delivered as LPCM from outside of
+ - Up to 8 interactive monaural streams, delivered as LPCM from outside of 
    Player2 (via the ALSA playback interface). The final two monaural streams may be
    combined to form a single stereo stream. These streams are not time stamped nor subject to syncrhonization
    and must simply be presented with minimal latency.
@@ -83,7 +83,7 @@ For profile 1 the following simplifying assumptions are made:
 
  - The SPDIF re-encoding is limited to codecs supporting 5.1 speaker organisation.
  - All outputs are limited to no more than 48KHz.
-
+ 
 For all profiles the audio output system must assume responsibility for preventing pops and clicks and that, for everything except alterations to the nominal output sample rate, this must be realized using software muting. This requirement stems from the relatively slow reaction of typical consumer amplifiers to a hard mute request.
 
 \section quirks_sec Quirks
@@ -158,7 +158,7 @@ The comination of non-blocking dequeue and automatic mute on starvation does
 make startup more difficult than might otherwise be the case. During startup
 decoded buffers will be rapidly consume as the ALSA playback buffers can be
 filled without any blocking due to ALSAs playback speed. In this circumstance
-underflow of mixer input is inevitable since no underflow
+underflow of mixer input is inevitable since no underflow 
 would indicate that there is too much buffering seperating the decoder and the
 mixer.
 
@@ -174,7 +174,7 @@ TODO
 
 \section output_mgt_sec Output buffer management
 
-Profile 1 requires four outputs to be run simulatenously however these are controlled in agregate
+Profile 1 requires four outputs to be run simulatenously however these are controlled in agregate 
 
 \section sychronization_sec Synchronization
 
@@ -193,7 +193,7 @@ not drift relative to one another. The SPDIF and HDMI audio outputs are served
 by another frequency synthesiser which must be kept in sync with the first via
 a secondary process. The inflexibility of the frequency synthesisers does imply
 that if second room audio if connected to a real-time source then the only means
-of clock recovery available to us is sample rate conversion.
+of clock recovery available to us is sample rate conversion. 
 
 \subsection fsynth_equations_subsec Frequency Synthesizer Equations
 
@@ -225,7 +225,7 @@ Fout = ----------------------------------
 \section audio_todo_sec Development Plan
 
  - [COMPLETE] Stereo playback via internal DAC (STx7109).
- - [COMPLETE] Stereo playback with mixer firmware transferring samples (STx7109).
+ - [COMPLETE] Stereo playback with mixer firmware transfering samples (STx7109).
  - [https://bugzilla.stlinux.com/show_bug.cgi?id=1760] Migrate downmix from decoder to mixer (STx7109).
  - Dynamic switching of output mode (sampling frequency) based on stream parameters (STx7109).
  - [https://bugzilla.stlinux.com/show_bug.cgi?id=1759] Silence stuffing when input is not present (STx7109).
@@ -242,14 +242,14 @@ Fout = ----------------------------------
  - Primary and interactive decode and mix (STx7109).
  - Multiple outputs (STx7109).
     - Manage output buffers to external DAC/HDMI and SPDIF.
-    - Arrange appropriate clock recovery and startup
+    - Arrange appropriate clock recovery and startup 
  - Port to production device (STm7200).
     - Implement ALSA devices for STm7200.
     - Adapt the clock recovery and A/V sync management for STm7200.
  - Audio stable notification: https://bugzilla.stlinux.com/show_bug.cgi?id=1405
-
+ 
 Last updated: 11-Jun-2007
-
+ 
 */
 
 

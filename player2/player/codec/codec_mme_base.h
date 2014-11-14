@@ -60,7 +60,7 @@ Date        Modification                                    Name
 
 /* Output debug information (which may be on the critical path) but is usually turned off */
 #define CODEC_DEBUG(fmt, args...) ((void)(ENABLE_CODEC_DEBUG && \
-                                   (report(severity_note, "%s: " fmt, CODEC_FUNCTION, ##args), 0)))
+					  (report(severity_note, "%s: " fmt, CODEC_FUNCTION, ##args), 0)))
 
 /* Output trace information off the critical path */
 #define CODEC_TRACE(fmt, args...) (report(severity_note, "%s: " fmt, CODEC_FUNCTION, ##args))
@@ -68,7 +68,7 @@ Date        Modification                                    Name
 #define CODEC_ERROR(fmt, args...) (report(severity_error, "%s: " fmt, CODEC_FUNCTION, ##args))
 
 #define CODEC_ASSERT(x) do if(!(x)) report(severity_error, "%s: Assertion '%s' failed at %s:%d\n", \
-                CODEC_FUNCTION, #x, __FILE__, __LINE__); while(0)
+					       CODEC_FUNCTION, #x, __FILE__, __LINE__); while(0)
 
 // /////////////////////////////////////////////////////////////////////////
 //
@@ -171,16 +171,16 @@ typedef struct CodecParameterBlock_s
 
     union
     {
-        unsigned int               Transformer;
-        char                       PartitionName[ALLOCATOR_MAX_PARTITION_NAME_SIZE];
-        PlayerChannelSelect_t      Channel;
-        struct
-        {
-            unsigned int           Transformer;
-            char                   PostFix;
-        }                          TransformerPostFix;
-        DRCParams_t                DRC;
-        DownmixParams_t            Downmix;
+	unsigned int               Transformer;
+	char                       PartitionName[ALLOCATOR_MAX_PARTITION_NAME_SIZE];
+	PlayerChannelSelect_t      Channel;
+	struct
+	{
+	    unsigned int           Transformer;
+	    char                   PostFix;
+	}                          TransformerPostFix;
+	DRCParams_t                DRC;
+	DownmixParams_t            Downmix;
     };
 } CodecParameterBlock_t;
 
@@ -202,14 +202,14 @@ typedef struct CodecBufferState_s
     unsigned int                  BufferLength;
 
     bool                          OutputOnDecodesComplete;      // Copy to output ring when decodes in progress reaches zero
-    unsigned int                  DecodesInProgress;            // For video fields/slices may be several
+    unsigned int                  DecodesInProgress;            // For video fields/slices may be several 
 
-    unsigned int                  ReferenceFrameCount;          // Number of reference frames in this buffer for
-    // video field/slice decodes this could be 2 or more
+    unsigned int                  ReferenceFrameCount;          // Number of reference frames in this buffer for 
+								// video field/slice decodes this could be 2 or more
 
     BufferStructure_t            *BufferStructure;
 
-    bool              FieldDecode;          // false by default, used in calculating frame decode time
+    bool			  FieldDecode;			// false by default, used in calculating frame decode time
 
     //
     // Stream specific union
@@ -217,9 +217,9 @@ typedef struct CodecBufferState_s
 
     union
     {
-        void                     *AudioVideoDataParsedParameters;
-        ParsedVideoParameters_t  *ParsedVideoParameters;
-        ParsedAudioParameters_t  *ParsedAudioParameters;
+	void                     *AudioVideoDataParsedParameters;
+	ParsedVideoParameters_t  *ParsedVideoParameters;
+	ParsedAudioParameters_t  *ParsedAudioParameters;
     };
 
     //
@@ -230,8 +230,8 @@ typedef struct CodecBufferState_s
     unsigned char                *BufferChromaPointer;
     unsigned char                *BufferRasterPointer;
 
-    bool              MacroblockStructurePresent;       // Only for some types of video, currently only h264 uses the first 2 fields,
-    Buffer_t              BufferMacroblockStructure;        // because only h264 allocates a buffer separate from the decode buffer.
+    bool			  MacroblockStructurePresent;    	// Only for some types of video, currently only h264 uses the first 2 fields, 
+    Buffer_t			  BufferMacroblockStructure;		// because only h264 allocates a buffer separate from the decode buffer.
     unsigned char                *BufferMacroblockStructurePointer;
     unsigned int                  PictureSyntax;                        // Used by VC1
     CodecIntensityCompensation_t  AppliedIntensityCompensation;
@@ -295,191 +295,185 @@ typedef struct CodecBaseDecodeContext_s
 /// Provides a buffer and MME context management framework to assist codec implementation.
 class Codec_MmeBase_c : public Codec_c
 {
-    protected:
+protected:
 
-        // Data
+    // Data
 
-        OS_Mutex_t                            Lock;
-        CodecConfiguration_t                  Configuration;
-        unsigned int                          SelectedTransformer;
-        bool                                  ForceStreamParameterReload;
+    OS_Mutex_t                            Lock;
+    CodecConfiguration_t                  Configuration;
+    unsigned int                          SelectedTransformer;
+    bool                                  ForceStreamParameterReload;
 
-        BufferManager_t                       BufferManager;
-        bool                                  DataTypesInitialized;
+    BufferManager_t                       BufferManager;
+    bool                                  DataTypesInitialized;
 
-        bool                                  MMEInitialized;
-        MME_TransformerHandle_t               MMEHandle;
-        MME_TransformerInitParams_t           MMEInitializationParameters;
-        unsigned int                          MMECommandPreparedCount;              // Mme command counts
-        unsigned int                          MMECommandAbortedCount;
-        unsigned int                          MMECommandCompletedCount;
-        bool                                  MMECallbackPriorityBoosted;
+    bool                                  MMEInitialized;
+    MME_TransformerHandle_t               MMEHandle;
+    MME_TransformerInitParams_t           MMEInitializationParameters;
+    unsigned int                          MMECommandPreparedCount;              // Mme command counts
+    unsigned int                          MMECommandAbortedCount;
+    unsigned int                          MMECommandCompletedCount;
+    bool                                  MMECallbackPriorityBoosted;
 
-        BufferPool_t                          CodedFrameBufferPool;
-        BufferType_t                          CodedFrameBufferType;
+    BufferPool_t                          CodedFrameBufferPool;
+    BufferType_t                          CodedFrameBufferType;
 
-        BufferPool_t                          DecodeBufferPool;
-        unsigned int                          DecodeBufferCount;
-        Ring_t                                OutputRing;
+    BufferPool_t                          DecodeBufferPool;
+    unsigned int                          DecodeBufferCount;
+    Ring_t                                OutputRing;
 
-        BufferPool_t                          PostProcessControlBufferPool;
+    BufferPool_t                          PostProcessControlBufferPool;
 
-        BufferPool_t                          StreamParameterContextPool;
-        BufferDataDescriptor_t               *StreamParameterContextDescriptor;
-        BufferType_t                          StreamParameterContextType;
-        Buffer_t                              StreamParameterContextBuffer;
+    BufferPool_t                          StreamParameterContextPool;
+    BufferDataDescriptor_t               *StreamParameterContextDescriptor;
+    BufferType_t                          StreamParameterContextType;
+    Buffer_t                              StreamParameterContextBuffer;
 
-        BufferPool_t                          DecodeContextPool;
-        BufferDataDescriptor_t               *DecodeContextDescriptor;
-        BufferType_t                          DecodeContextType;
-        Buffer_t                              DecodeContextBuffer;
+    BufferPool_t                          DecodeContextPool;
+    BufferDataDescriptor_t               *DecodeContextDescriptor;
+    BufferType_t                          DecodeContextType;
+    Buffer_t                              DecodeContextBuffer;
 
-        unsigned int                          IndexBufferMapSize;
-        CodecIndexBufferMap_t                *IndexBufferMap;
+    unsigned int                          IndexBufferMapSize;
+    CodecIndexBufferMap_t                *IndexBufferMap;
 
-        Buffer_t                              CodedFrameBuffer;
-        unsigned int                          CodedDataLength;
-        unsigned char                        *CodedData;
-        ParsedFrameParameters_t              *ParsedFrameParameters;
+    Buffer_t                              CodedFrameBuffer;
+    unsigned int                          CodedDataLength;
+    unsigned char                        *CodedData;
+    ParsedFrameParameters_t              *ParsedFrameParameters;
 
-        CodecBufferState_t                    BufferState[CODEC_MAX_DECODE_BUFFERS];
+    CodecBufferState_t                    BufferState[CODEC_MAX_DECODE_BUFFERS];
 
-        unsigned int                          CurrentDecodeBufferIndex;
-        Buffer_t                              CurrentDecodeBuffer;
-        unsigned int                          CurrentDecodeIndex;
-        CodecBaseStreamParameterContext_t    *StreamParameterContext;
-        CodecBaseDecodeContext_t             *DecodeContext;
+    unsigned int                          CurrentDecodeBufferIndex;
+    Buffer_t                              CurrentDecodeBuffer;
+    unsigned int                          CurrentDecodeIndex;
+    CodecBaseStreamParameterContext_t    *StreamParameterContext;
+    CodecBaseDecodeContext_t             *DecodeContext;
 
-        Buffer_t                              MarkerBuffer;
-        unsigned int                          PassOnMarkerBufferAt;
+    Buffer_t                              MarkerBuffer;
+    unsigned int                          PassOnMarkerBufferAt;
 
-        unsigned int                          DiscardDecodesUntil;
+    unsigned int                          DiscardDecodesUntil;
 
-        unsigned int              DecodeTimeShortIntegrationPeriod;
-        unsigned int              DecodeTimeLongIntegrationPeriod;
-        unsigned int              NextDecodeTime;
-        unsigned long long            LastDecodeCompletionTime;
-        unsigned long long            DecodeTimes[16 * CODEC_MAX_DECODE_BUFFERS];
-        unsigned long long            ShortTotalDecodeTime;
-        unsigned long long            LongTotalDecodeTime;
+    unsigned int			  DecodeTimeShortIntegrationPeriod;
+    unsigned int			  DecodeTimeLongIntegrationPeriod;
+    unsigned int			  NextDecodeTime;
+    unsigned long long			  LastDecodeCompletionTime;
+    unsigned long long			  DecodeTimes[16 * CODEC_MAX_DECODE_BUFFERS];
+    unsigned long long			  ShortTotalDecodeTime;
+    unsigned long long			  LongTotalDecodeTime;
 
-        // Functions
+    // Functions
 
-        CodecStatus_t   InitializeDataType(BufferDataDescriptor_t   *InitialDescriptor,
-                                           BufferType_t             *Type,
-                                           BufferDataDescriptor_t  **ManagedDescriptor);
+    CodecStatus_t   InitializeDataType(         BufferDataDescriptor_t   *InitialDescriptor,
+						BufferType_t             *Type,
+						BufferDataDescriptor_t  **ManagedDescriptor );
 
-        CodecStatus_t   DecrementReferenceCount(unsigned int              BufferIndex);
-        CodecStatus_t   CalculateMaximumFrameRate(CodecBaseDecodeContext_t *DecodeContext);
+    CodecStatus_t   DecrementReferenceCount(    unsigned int              BufferIndex );
+    CodecStatus_t   CalculateMaximumFrameRate(	CodecBaseDecodeContext_t *DecodeContext );
 
-        CodecStatus_t           VerifyMMECapabilities(unsigned int ActualTransformer);
-        CodecStatus_t           VerifyMMECapabilities()
-        {
-            return VerifyMMECapabilities(SelectedTransformer);
-        }
-        CodecStatus_t           GloballyVerifyMMECapabilities(void);
-        virtual CodecStatus_t   InitializeMMETransformer(void);
-        virtual CodecStatus_t   TerminateMMETransformer(void);      // Required by StreamBase audio decoder classes to flush buffer queues
-        Buffer_t                TakeMarkerBuffer(void);
+    CodecStatus_t           VerifyMMECapabilities( unsigned int ActualTransformer );
+    CodecStatus_t           VerifyMMECapabilities() { return VerifyMMECapabilities( SelectedTransformer ); }
+    CodecStatus_t           GloballyVerifyMMECapabilities( void );
+    virtual CodecStatus_t   InitializeMMETransformer(   void );
+    virtual CodecStatus_t   TerminateMMETransformer(    void ); // Required by StreamBase audio decoder classes to flush buffer queues
+    Buffer_t                TakeMarkerBuffer(           void );
 
 
-        void   DumpMMECommand(MME_Command_t *CmdInfo_p);
+    void   DumpMMECommand(                      MME_Command_t *CmdInfo_p );
 
-    public:
-        virtual void   CallbackFromMME(MME_Event_t               Event,
-                                       MME_Command_t            *Command);
+public:
+    virtual void   CallbackFromMME(             MME_Event_t               Event,
+						MME_Command_t            *Command );
 
-    public:
+public:
 
-        //
-        // Constructor/Destructor methods
-        //
+    //
+    // Constructor/Destructor methods
+    //
 
-        Codec_MmeBase_c(void);
-        ~Codec_MmeBase_c(void);
+    Codec_MmeBase_c(            void );
+    ~Codec_MmeBase_c(           void );
 
-        //
-        // Overrides for component base class functions
-        //
+    //
+    // Overrides for component base class functions
+    //
 
-        CodecStatus_t   Halt(void);
+    CodecStatus_t   Halt(       void );
 
-        CodecStatus_t   Reset(void);
+    CodecStatus_t   Reset(      void );
 
-        CodecStatus_t   SetModuleParameters(unsigned int      ParameterBlockSize,
-                                            void             *ParameterBlock);
+    CodecStatus_t   SetModuleParameters(        unsigned int      ParameterBlockSize,
+						void             *ParameterBlock );
 
-        //
-        // Codec class functions
-        //
+    //
+    // Codec class functions
+    //
 
-        CodecStatus_t   GetTrickModeParameters(CodecTrickModeParameters_t      *TrickModeParameters);
+    CodecStatus_t   GetTrickModeParameters(     CodecTrickModeParameters_t      *TrickModeParameters );
 
-        CodecStatus_t   RegisterOutputBufferRing(Ring_t                    Ring);
+    CodecStatus_t   RegisterOutputBufferRing(   Ring_t                    Ring );
 
-        CodecStatus_t   OutputPartialDecodeBuffers(void);
+    CodecStatus_t   OutputPartialDecodeBuffers( void );
 
-        CodecStatus_t   DiscardQueuedDecodes(void);
+    CodecStatus_t   DiscardQueuedDecodes(       void );
 
-        CodecStatus_t   ReleaseReferenceFrame(unsigned int              ReferenceFrameDecodeIndex);
+    CodecStatus_t   ReleaseReferenceFrame(      unsigned int              ReferenceFrameDecodeIndex );
 
-        CodecStatus_t   CheckReferenceFrameList(unsigned int              NumberOfReferenceFrameLists,
-                                                ReferenceFrameList_t      ReferenceFrameList[]);
+    CodecStatus_t   CheckReferenceFrameList(    unsigned int              NumberOfReferenceFrameLists,
+						ReferenceFrameList_t      ReferenceFrameList[] );
 
-        CodecStatus_t   ReleaseDecodeBuffer(Buffer_t                  Buffer);
+    CodecStatus_t   ReleaseDecodeBuffer(        Buffer_t                  Buffer );
 
-        CodecStatus_t   Input(Buffer_t                  CodedBuffer);
+    CodecStatus_t   Input(                      Buffer_t                  CodedBuffer );
 
-        //
-        // Extensions to the class to support my inheritors
-        //
+    //
+    // Extensions to the class to support my inheritors
+    //
 
-    protected:
+protected:
 
-        CodecStatus_t   MapBufferToDecodeIndex(unsigned int              DecodeIndex,
-                                               unsigned int              BufferIndex);
+    CodecStatus_t   MapBufferToDecodeIndex(             unsigned int              DecodeIndex,
+							unsigned int              BufferIndex );
 
-        CodecStatus_t   UnMapBufferIndex(unsigned int              BufferIndex);
+    CodecStatus_t   UnMapBufferIndex(                   unsigned int              BufferIndex );
 
-        CodecStatus_t   TranslateDecodeIndex(unsigned int              DecodeIndex,
-                                             unsigned int             *BufferIndex);
+    CodecStatus_t   TranslateDecodeIndex(               unsigned int              DecodeIndex,
+							unsigned int             *BufferIndex );
 
-        CodecStatus_t   GetDecodeBuffer(void);
+    CodecStatus_t   GetDecodeBuffer(                    void );
 
-        CodecStatus_t   ReleaseDecodeContext(CodecBaseDecodeContext_t *Context);
+    CodecStatus_t   ReleaseDecodeContext(               CodecBaseDecodeContext_t *Context );
 
-        CodecStatus_t   TranslateReferenceFrameLists(bool                      IncrementUseCountForReferenceFrame);
+    CodecStatus_t   TranslateReferenceFrameLists(       bool                      IncrementUseCountForReferenceFrame );
 
-        CodecStatus_t   SetOutputOnDecodesComplete(unsigned int              BufferIndex,
-                bool                      TestForImmediateOutput);
+    CodecStatus_t   SetOutputOnDecodesComplete(         unsigned int              BufferIndex,
+							bool                      TestForImmediateOutput );
 
-        virtual CodecStatus_t   SendMMEStreamParameters(void);              // DivX needs its own version
-        virtual CodecStatus_t   SendMMEDecodeCommand(void);                 // WMA/OGG need to enhance
+    virtual CodecStatus_t   SendMMEStreamParameters(            void ); // DivX needs its own version
+    virtual CodecStatus_t   SendMMEDecodeCommand(               void ); // WMA/OGG need to enhance
 
-        //
-        // Virtual functions that can be extended by my inheritors
-        //
+    //
+    // Virtual functions that can be extended by my inheritors
+    //
 
-        virtual CodecStatus_t   InitializeDataTypes(void);
-        virtual CodecStatus_t   FillOutSendBufferCommand(void);     // This function may only implemented for stream base inheritors.
-        virtual CodecStatus_t   TestMarkerFramePassOn(void);
-        virtual CodecStatus_t   CheckCodecReturnParameters(CodecBaseDecodeContext_t *Context)
-        {
-            return CodecNoError;
-        }
+    virtual CodecStatus_t   InitializeDataTypes(        void );
+    virtual CodecStatus_t   FillOutSendBufferCommand(   void ); // This function may only implemented for stream base inheritors.
+    virtual CodecStatus_t   TestMarkerFramePassOn(      void );
+    virtual CodecStatus_t   CheckCodecReturnParameters(       CodecBaseDecodeContext_t *Context ){ return CodecNoError; }
 
-        //
-        // Virtual functions that should be implemented by my inheritors
-        //
+    //
+    // Virtual functions that should be implemented by my inheritors
+    //
 
-        virtual CodecStatus_t   HandleCapabilities(void) = 0;
-        virtual CodecStatus_t   FillOutDecodeBufferRequest(BufferStructure_t       *Request) = 0;
-        virtual CodecStatus_t   FillOutTransformerInitializationParameters(void) = 0;
-        virtual CodecStatus_t   FillOutSetStreamParametersCommand(void) = 0;
-        virtual CodecStatus_t   FillOutDecodeCommand(void) = 0;
-        virtual CodecStatus_t   ValidateDecodeContext(CodecBaseDecodeContext_t *Context) = 0;
+    virtual CodecStatus_t   HandleCapabilities(         void ) = 0;
+    virtual CodecStatus_t   FillOutDecodeBufferRequest( BufferStructure_t       *Request ) = 0;
+    virtual CodecStatus_t   FillOutTransformerInitializationParameters( void ) = 0;
+    virtual CodecStatus_t   FillOutSetStreamParametersCommand( void ) = 0;
+    virtual CodecStatus_t   FillOutDecodeCommand(       void ) = 0;
+    virtual CodecStatus_t   ValidateDecodeContext( CodecBaseDecodeContext_t *Context ) = 0;
 
-        virtual CodecStatus_t   DumpSetStreamParameters(void    *Parameters) = 0;
-        virtual CodecStatus_t   DumpDecodeParameters(void    *Parameters) = 0;
+    virtual CodecStatus_t   DumpSetStreamParameters(    void    *Parameters ) = 0;
+    virtual CodecStatus_t   DumpDecodeParameters(       void    *Parameters ) = 0;
 };
 #endif

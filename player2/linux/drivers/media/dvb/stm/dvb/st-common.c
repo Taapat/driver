@@ -52,114 +52,106 @@ int debug = 0;
 
 struct stfe_channel *stfe_channel_allocate(struct stfe *stfe)
 {
-    int i;
+	int i;
 
-    if (down_interruptible(&stfe->sem))
-        return NULL;
+	if (down_interruptible(&stfe->sem))
+		return NULL;
 
-    /* lock! */
-    for (i = 0; i < STFE_MAXCHANNEL; ++i)
-    {
-        if (!stfe->channel[i].active)
-        {
-            stfe->channel[i].active = 1;
-            up(&stfe->sem);
-            return stfe->channel + i;
-        }
-    }
+	/* lock! */
+	for (i = 0; i < STFE_MAXCHANNEL; ++i) {
+		if (!stfe->channel[i].active) {
+			stfe->channel[i].active = 1;
+			up(&stfe->sem);
+			return stfe->channel + i;
+		}
+	}
 
-    up(&stfe->sem);
+	up(&stfe->sem);
 
-    return NULL;
+	return NULL;
 }
 
-struct stfe *stfe_create(void *private_data, void *start_feed, void *stop_feed)
+struct stfe *stfe_create( void *private_data, void *start_feed, void *stop_feed )
 {
-    struct stfe *stfe;
-    int channel;
-    int result;
+ struct stfe *stfe;
+ int channel;
+ int result;
 
-    if (!(stfe = kmalloc(sizeof(struct stfe), GFP_KERNEL)))
-        return NULL;
+ if (!(stfe = kmalloc(sizeof(struct stfe), GFP_KERNEL)))
+   return NULL;
 
-    printk("%s: Allocated stfe @ 0x%p\n", __FUNCTION__, stfe);
-    memset(stfe, 0, sizeof(struct stfe));
+ printk("%s: Allocated stfe @ 0x%p\n",__FUNCTION__,stfe);
+ memset(stfe, 0, sizeof(struct stfe));
 
-    sema_init(&stfe->sem, 0);
-    up(&stfe->sem);
+ sema_init(&stfe->sem, 0);
+ up(&stfe->sem);
 
-    for (channel = 0; channel < STFE_MAXCHANNEL; ++channel)
-    {
-        stfe->channel[channel].id        = channel;
-        stfe->channel[channel].stfe      = stfe;
-        stfe->channel[channel].havana_id = private_data;
-    }
+ for (channel = 0; channel < STFE_MAXCHANNEL; ++channel) {
+   stfe->channel[channel].id        = channel;
+   stfe->channel[channel].stfe      = stfe;
+   stfe->channel[channel].havana_id = private_data;
+ }
 
 #if (DVB_API_VERSION > 3)
-    dvb_register_adapter(&stfe->adapter, "ST Generic Front End Driver", THIS_MODULE, NULL, adapter_nr);
+ dvb_register_adapter(&stfe->adapter, "ST Generic Front End Driver", THIS_MODULE, NULL, adapter_nr);
 #else
-    dvb_register_adapter(&stfe->adapter, "ST Generic Front End Driver", THIS_MODULE, NULL);
+ dvb_register_adapter(&stfe->adapter, "ST Generic Front End Driver", THIS_MODULE, NULL);
 #endif
 
-    stfe->adapter.priv = stfe;
+ stfe->adapter.priv = stfe;
 
-    memset(&stfe->dvb_demux, 0, sizeof(stfe->dvb_demux));
+ memset(&stfe->dvb_demux, 0, sizeof(stfe->dvb_demux));
 
-    stfe->dvb_demux.dmx.capabilities =
-        DMX_TS_FILTERING | DMX_SECTION_FILTERING | DMX_MEMORY_BASED_FILTERING;
-    stfe->dvb_demux.priv = private_data;
+ stfe->dvb_demux.dmx.capabilities =
+   DMX_TS_FILTERING | DMX_SECTION_FILTERING | DMX_MEMORY_BASED_FILTERING;
+ stfe->dvb_demux.priv = private_data;
 
-    stfe->dvb_demux.filternum = 40;
+ stfe->dvb_demux.filternum = 40;
 
-    stfe->dvb_demux.feednum = STFE_MAXCHANNEL;
+ stfe->dvb_demux.feednum = STFE_MAXCHANNEL;
 
-    stfe->dvb_demux.start_feed       = start_feed;
-    stfe->dvb_demux.stop_feed        = stop_feed;
-    stfe->dvb_demux.write_to_decoder = NULL;        /* write_to_decoder;*/
+ stfe->dvb_demux.start_feed       = start_feed;
+ stfe->dvb_demux.stop_feed        = stop_feed;
+ stfe->dvb_demux.write_to_decoder = NULL;		 /* write_to_decoder;*/
 
-    if ((result = dvb_dmx_init(&stfe->dvb_demux)) < 0)
-    {
-        printk("stfe_init: dvb_dmx_init failed (errno = %d)\n",
-               result);
-        goto err;
-    }
+ if ((result = dvb_dmx_init(&stfe->dvb_demux)) < 0) {
+   printk("stfe_init: dvb_dmx_init failed (errno = %d)\n",
+	  result);
+   goto err;
+ }
 
-    stfe->dmxdev.filternum = stfe->dvb_demux.filternum;
-    stfe->dmxdev.demux = &stfe->dvb_demux.dmx;
-    stfe->dmxdev.capabilities = 0;
+ stfe->dmxdev.filternum = stfe->dvb_demux.filternum;
+ stfe->dmxdev.demux = &stfe->dvb_demux.dmx;
+ stfe->dmxdev.capabilities = 0;
 
-    if ((result = dvb_dmxdev_init(&stfe->dmxdev, &stfe->adapter)) < 0)
-    {
-        printk("stfe_init: dvb_dmxdev_init failed (errno = %d)\n",
-               result);
-        dvb_dmx_release(&stfe->dvb_demux);
-        goto err;
-    }
+ if ((result = dvb_dmxdev_init(&stfe->dmxdev, &stfe->adapter)) < 0) {
+   printk("stfe_init: dvb_dmxdev_init failed (errno = %d)\n",
+	  result);
+   dvb_dmx_release(&stfe->dvb_demux);
+   goto err;
+ }
 
-    stfe->hw_frontend.source = DMX_FRONTEND_0;
+ stfe->hw_frontend.source = DMX_FRONTEND_0;
 
-    result = stfe->dvb_demux.dmx.add_frontend(&stfe->dvb_demux.dmx, &stfe->hw_frontend);
+ result = stfe->dvb_demux.dmx.add_frontend(&stfe->dvb_demux.dmx, &stfe->hw_frontend);
+ if (result < 0)
+   return NULL;
 
-    if (result < 0)
-        return NULL;
+ stfe->mem_frontend.source = DMX_MEMORY_FE;
+ result = stfe->dvb_demux.dmx.add_frontend(&stfe->dvb_demux.dmx, &stfe->mem_frontend);
+ if (result<0)
+   return NULL;
 
-    stfe->mem_frontend.source = DMX_MEMORY_FE;
-    result = stfe->dvb_demux.dmx.add_frontend(&stfe->dvb_demux.dmx, &stfe->mem_frontend);
+ result = stfe->dvb_demux.dmx.connect_frontend(&stfe->dvb_demux.dmx, &stfe->hw_frontend);
+ if (result < 0)
+   return NULL;
 
-    if (result < 0)
-        return NULL;
+ stfe->driver_data = private_data;
+ //i2c_add_driver(&st_tuner_i2c_driver);
 
-    result = stfe->dvb_demux.dmx.connect_frontend(&stfe->dvb_demux.dmx, &stfe->hw_frontend);
+ return stfe;
 
-    if (result < 0)
-        return NULL;
-
-    stfe->driver_data = private_data;
-//i2c_add_driver(&st_tuner_i2c_driver);
-
-    return stfe;
-
-err:
-    return NULL;
+ err:
+ return NULL;
 }
 

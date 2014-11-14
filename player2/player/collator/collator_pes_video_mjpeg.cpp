@@ -64,11 +64,10 @@ Date        Modification                                    Name
 /// ::Reset again because the calls made by the sub-constructors will not have called
 /// our reset method.
 ///
-Collator_PesVideoMjpeg_c::Collator_PesVideoMjpeg_c(void)
+Collator_PesVideoMjpeg_c::Collator_PesVideoMjpeg_c( void )
 {
     COLLATOR_TRACE("%s\n", __FUNCTION__);
-
-    if (InitializationStatus != CollatorNoError)
+    if( InitializationStatus != CollatorNoError )
         return;
 
     Collator_PesVideoMjpeg_c::Reset();
@@ -81,15 +80,14 @@ Collator_PesVideoMjpeg_c::Collator_PesVideoMjpeg_c(void)
 ///
 /// \return void
 ///
-CollatorStatus_t Collator_PesVideoMjpeg_c::Reset(void)
+CollatorStatus_t Collator_PesVideoMjpeg_c::Reset( void )
 {
     CollatorStatus_t Status;
 
     COLLATOR_TRACE("%s\n", __FUNCTION__);
 
     Status = Collator_PesVideo_c::Reset();
-
-    if (Status != CollatorNoError)
+    if( Status != CollatorNoError )
         return Status;
 
     Configuration.GenerateStartCodeList         = true;
@@ -119,7 +117,7 @@ CollatorStatus_t Collator_PesVideoMjpeg_c::Reset(void)
 //      Protected - Find the next start code (apart from any one at offset 0)
 //      start codes are of the form "ff xx"
 
-CollatorStatus_t   Collator_PesVideoMjpeg_c::FindNextStartCode(unsigned int             *CodeOffset)
+CollatorStatus_t   Collator_PesVideoMjpeg_c::FindNextStartCode(unsigned int             *CodeOffset )
 {
     unsigned char       IgnoreLower;
     unsigned char       IgnoreUpper;
@@ -128,16 +126,16 @@ CollatorStatus_t   Collator_PesVideoMjpeg_c::FindNextStartCode(unsigned int     
     // If less than 2 bytes we do not bother
     //
 
-    if (RemainingLength < 2)
+    if( RemainingLength < 2 )
         return CollatorError;
 
     IgnoreLower                 = Configuration.IgnoreCodesRangeStart;
     IgnoreUpper                 = Configuration.IgnoreCodesRangeEnd;
 
-    for (unsigned int i = 0; i < (RemainingLength - 2); i++)
+    for (unsigned int i=0; i<(RemainingLength-2); i++)
         if (RemainingData[i] == 0xff)
         {
-            if (inrange(RemainingData[i + 1], IgnoreLower, IgnoreUpper) || (RemainingData[i + 1] == 0xff))
+            if (inrange(RemainingData[i+1], IgnoreLower, IgnoreUpper) || (RemainingData[i+1]==0xff) )
                 continue;
 
             *CodeOffset         = i;
@@ -154,11 +152,11 @@ CollatorStatus_t   Collator_PesVideoMjpeg_c::FindNextStartCode(unsigned int     
 ///
 /// \return Collator status code, CollatorNoError indicates success.
 ///
-CollatorStatus_t   Collator_PesVideoMjpeg_c::Input(PlayerInputDescriptor_t*        Input,
-        unsigned int                    DataLength,
-        void*                           Data,
-        bool                              NonBlocking,
-        unsigned int                     *DataLengthRemaining)
+CollatorStatus_t   Collator_PesVideoMjpeg_c::Input     (PlayerInputDescriptor_t*        Input,
+                                                        unsigned int                    DataLength,
+                                                        void*                           Data,
+                                                        bool                              NonBlocking,
+                                                        unsigned int                     *DataLengthRemaining)
 {
     CollatorStatus_t    Status                  = CollatorNoError;
     unsigned char*      DataBlock               = (unsigned char*)Data;
@@ -169,9 +167,9 @@ CollatorStatus_t   Collator_PesVideoMjpeg_c::Input(PlayerInputDescriptor_t*     
     unsigned int        CodeOffset;
     unsigned int        Code;
 
-    AssertComponentState("Collator_PacketPes_c::Input", ComponentRunning);
-    COLLATOR_ASSERT(!NonBlocking);
-    InputEntry(Input, DataLength, Data, NonBlocking);
+    AssertComponentState( "Collator_PacketPes_c::Input", ComponentRunning );
+    COLLATOR_ASSERT( !NonBlocking );
+    InputEntry( Input, DataLength, Data, NonBlocking );
 
     Offset                      = 0;
     RemainingData               = (unsigned char *)Data;
@@ -179,25 +177,21 @@ CollatorStatus_t   Collator_PesVideoMjpeg_c::Input(PlayerInputDescriptor_t*     
     TerminationFlagIsSet        = false;
 
     Offset                      = 0;
-
     while (Offset < DataLength)
     {
         // Read the length of the payload
         PesHeader               = DataBlock + Offset;
         PesLength               = (PesHeader[4] << 8) + PesHeader[5];
-
         if (PesLength != 0)
             PayloadLength       = PesLength - PesHeader[8] - 3;
         else
             PayloadLength       = 0;
-
         COLLATOR_DEBUG("DataLength %d, PesLength %d; PayloadLength %d, Offset %d\n", DataLength, PesLength, PayloadLength, Offset);
         Offset                 += PesLength + 6;        // PES packet is PesLength + 6 bytes long
 
-        Bits.SetPointer(PesHeader + 9);                 // Set bits pointer ready to process optional fields
-
+        Bits.SetPointer (PesHeader + 9);                // Set bits pointer ready to process optional fields
         if ((PesHeader[7] & 0x80) == 0x80)              // PTS present?
-            //{{{  read PTS
+        //{{{  read PTS
         {
             Bits.FlushUnseen(4);
             PlaybackTime        = (unsigned long long)(Bits.Get(3)) << 30;
@@ -207,12 +201,11 @@ CollatorStatus_t   Collator_PesVideoMjpeg_c::Input(PlayerInputDescriptor_t*     
             PlaybackTime       |= Bits.Get(15);
             Bits.FlushUnseen(1);
             PlaybackTimeValid   = true;
-            COLLATOR_DEBUG("PTS %llu.\n", PlaybackTime);
+            COLLATOR_DEBUG("PTS %llu.\n", PlaybackTime );
         }
-
         //}}}
         if ((PesHeader[7] & 0xC0) == 0xC0)              // DTS present?
-            //{{{  read DTS
+        //{{{  read DTS
         {
             Bits.FlushUnseen(4);
             DecodeTime          = (unsigned long long)(Bits.Get(3)) << 30;
@@ -227,23 +220,20 @@ CollatorStatus_t   Collator_PesVideoMjpeg_c::Input(PlayerInputDescriptor_t*     
         //}}}
         else if ((PesHeader[7] & 0xC0) == 0x40)
         {
-            COLLATOR_ERROR("Malformed pes header contains DTS without PTS.\n");
+            COLLATOR_ERROR("Malformed pes header contains DTS without PTS.\n" );
             DiscardAccumulatedData();                   // throw away previous frame as incomplete
-            InputExit();
+	    InputExit();
             return CollatorError;
         }
 
         RemainingData           = PesHeader + (PesLength + 6 - PayloadLength);
         RemainingLength         = PayloadLength;
-
         while (RemainingLength > 0)
         {
-            Status              = FindNextStartCode(&CodeOffset);
-
+            Status              = FindNextStartCode (&CodeOffset);
             if (Status != CollatorNoError)              // Error indicates no start code found
             {
-                Status          = AccumulateData(RemainingLength, RemainingData);
-
+                Status          = AccumulateData (RemainingLength, RemainingData);
                 if (Status != CollatorNoError)
                     DiscardAccumulatedData();
 
@@ -251,26 +241,24 @@ CollatorStatus_t   Collator_PesVideoMjpeg_c::Input(PlayerInputDescriptor_t*     
                 break;
             }
 
-            // Got one accumulate up to and including it
-            Status              = AccumulateData(CodeOffset + 2, RemainingData);
-
-            if (Status != CollatorNoError)
+            // Got one accumulate upto and including it
+            Status              = AccumulateData (CodeOffset+2, RemainingData);
+            if (Status != CollatorNoError )
             {
                 DiscardAccumulatedData();
                 break;
             }
 
-            Code                        = RemainingData[CodeOffset + 1];
-            RemainingLength            -= CodeOffset + 2;
-            RemainingData              += CodeOffset + 2;
+            Code                        = RemainingData[CodeOffset+1];
+            RemainingLength            -= CodeOffset+2;
+            RemainingData              += CodeOffset+2;
 
             // Is it a block terminate code
             if ((Code == Configuration.BlockTerminateCode) && (AccumulatedDataSize > 2))
             {
                 AccumulatedDataSize    -= 2;
 
-                Status          = InternalFrameFlush((Configuration.StreamTerminateFlushesFrame && (Code == Configuration.StreamTerminationCode)));
-
+                Status          = InternalFrameFlush ((Configuration.StreamTerminateFlushesFrame && (Code == Configuration.StreamTerminationCode)));
                 if (Status != CollatorNoError)
                     break;
 
@@ -280,12 +268,11 @@ CollatorStatus_t   Collator_PesVideoMjpeg_c::Input(PlayerInputDescriptor_t*     
             }
 
             // Accumulate the start code
-            Status                      = AccumulateStartCode(PackStartCode(AccumulatedDataSize - 2, Code));
-
-            if (Status != CollatorNoError)
+            Status                      = AccumulateStartCode (PackStartCode(AccumulatedDataSize-2,Code));
+            if( Status != CollatorNoError )
             {
                 DiscardAccumulatedData();
-                InputExit();
+		InputExit();
                 return Status;
             }
         }

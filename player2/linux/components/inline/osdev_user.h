@@ -82,34 +82,34 @@ typedef struct OSDEV_PollDevice_s
 #ifdef __cplusplus
 extern "C" {
 #endif
-OSDEV_Status_t   OSDEV_Stat(const char                      *Name);
-OSDEV_Status_t   OSDEV_Open(const char                      *Name,
-                            OSDEV_DeviceIdentifier_t        *Handle);
-OSDEV_Status_t   OSDEV_Close(OSDEV_DeviceIdentifier_t         Handle);
-OSDEV_Status_t   OSDEV_Read(OSDEV_DeviceIdentifier_t         Handle,
-                            void                            *Buffer,
-                            unsigned int                     SizeToRead,
-                            unsigned int                    *SizeRead);
-OSDEV_Status_t   OSDEV_Write(OSDEV_DeviceIdentifier_t         Handle,
-                             void                            *Buffer,
-                             unsigned int                     SizeToWrite,
-                             unsigned int                    *SizeWritten);
-OSDEV_Status_t   OSDEV_Ioctl(OSDEV_DeviceIdentifier_t         Handle,
-                             unsigned int                     Command,
-                             void                            *Argument,
-                             unsigned int                     ArgumentSize);
-OSDEV_Status_t   OSDEV_Poll(OSDEV_PollDevice_t*              Handles,
-                            unsigned int                     Count,
-                            unsigned int*                    NumberReady,
-                            unsigned int                     Timeout);
-OSDEV_Status_t   OSDEV_Map(OSDEV_DeviceIdentifier_t         Handle,
-                           unsigned int                     Offset,
-                           unsigned int                     Length,
-                           void                           **MapAddress,
-                           unsigned int                     Flags);
-OSDEV_Status_t   OSDEV_UnMap(OSDEV_DeviceIdentifier_t         Handle,
-                             void                            *MapAddress,
-                             unsigned int                     Length);
+OSDEV_Status_t   OSDEV_Stat(      const char                      *Name );
+OSDEV_Status_t   OSDEV_Open(      const char                      *Name,
+				  OSDEV_DeviceIdentifier_t        *Handle );
+OSDEV_Status_t   OSDEV_Close(     OSDEV_DeviceIdentifier_t         Handle );
+OSDEV_Status_t   OSDEV_Read(      OSDEV_DeviceIdentifier_t         Handle,
+				  void                            *Buffer,
+				  unsigned int                     SizeToRead,
+				  unsigned int                    *SizeRead );
+OSDEV_Status_t   OSDEV_Write(     OSDEV_DeviceIdentifier_t         Handle,
+				  void                            *Buffer,
+				  unsigned int                     SizeToWrite,
+				  unsigned int                    *SizeWritten );
+OSDEV_Status_t   OSDEV_Ioctl(     OSDEV_DeviceIdentifier_t         Handle,
+				  unsigned int                     Command,
+				  void                            *Argument,
+				  unsigned int                     ArgumentSize );
+OSDEV_Status_t   OSDEV_Poll(      OSDEV_PollDevice_t*              Handles,
+				  unsigned int                     Count,
+				  unsigned int*                    NumberReady,
+				  unsigned int                     Timeout );
+OSDEV_Status_t   OSDEV_Map(       OSDEV_DeviceIdentifier_t         Handle,
+				  unsigned int                     Offset,
+				  unsigned int                     Length,
+				  void                           **MapAddress,
+				  unsigned int                     Flags );
+OSDEV_Status_t   OSDEV_UnMap(     OSDEV_DeviceIdentifier_t         Handle,
+				  void                            *MapAddress,
+				  unsigned int                     Length );
 #ifdef __cplusplus
 }
 #endif

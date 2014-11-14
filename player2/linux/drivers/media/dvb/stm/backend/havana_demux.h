@@ -45,7 +45,7 @@ Date        Modification                                    Name
 #endif
 
 #define DEMUX_DEBUG(fmt, args...)      ((void) (ENABLE_DEMUX_DEBUG && \
-                                        (report(severity_note, "HavanaDemux_c::%s: " fmt, __FUNCTION__, ##args), 0)))
+                                            (report(severity_note, "HavanaDemux_c::%s: " fmt, __FUNCTION__, ##args), 0)))
 
 /* Output trace information off the critical path */
 #define DEMUX_TRACE(fmt, args...)      (report(severity_note, "HavanaDemux_c::%s: " fmt, __FUNCTION__, ##args))
@@ -56,24 +56,24 @@ Date        Modification                                    Name
 /// Player wrapper component to manage demultiplexing.
 class HavanaDemux_c
 {
-    private:
-        OS_Mutex_t                  InputLock;
+private:
+    OS_Mutex_t                  InputLock;
 
-        class Player_c*             Player;
-        PlayerPlayback_t            PlayerPlayback;
+    class Player_c*             Player;
+    PlayerPlayback_t            PlayerPlayback;
 
-        DemultiplexorContext_t      DemuxContext;
+    DemultiplexorContext_t      DemuxContext;
 
-    public:
+public:
 
-        HavanaDemux_c(void);
-        ~HavanaDemux_c(void);
+                                HavanaDemux_c                  (void);
+                               ~HavanaDemux_c                  (void);
 
-        HavanaStatus_t              Init(class Player_c*                 Player,
-                                         PlayerPlayback_t                PlayerPlayback,
-                                         DemultiplexorContext_t          DemultiplexorContext);
-        HavanaStatus_t              InjectData(const unsigned char*            Data,
-                                               unsigned int                    DataLength);
+    HavanaStatus_t              Init                           (class Player_c*                 Player,
+                                                                PlayerPlayback_t                PlayerPlayback,
+                                                                DemultiplexorContext_t          DemultiplexorContext);
+    HavanaStatus_t              InjectData                     (const unsigned char*            Data,
+                                                                unsigned int                    DataLength);
 };
 
 #endif

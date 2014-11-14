@@ -54,18 +54,18 @@ Date        Modification                                    Name
 /// Frame parser for VC1 main/simple profile video.
 class FrameParser_VideoWmv_c : public FrameParser_VideoVc1_c
 {
-    private:
-        unsigned int                RoundingControl;
+private:
+    unsigned int                RoundingControl;
 
-        FrameParserStatus_t         ReadPictureHeaderSimpleMainProfile(void);
+    FrameParserStatus_t         ReadPictureHeaderSimpleMainProfile(     void );
 
-        unsigned int                RangeReduction;
+    unsigned int                RangeReduction;
 
-    public:
+public:
 
-        FrameParser_VideoWmv_c(void);
+    FrameParser_VideoWmv_c( void );
 
-        FrameParserStatus_t         ReadHeaders(void);
+    FrameParserStatus_t         ReadHeaders(                            void );
 
 };
 

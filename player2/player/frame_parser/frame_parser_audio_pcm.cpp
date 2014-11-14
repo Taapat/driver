@@ -49,9 +49,9 @@ static BufferDataDescriptor_t     PcmAudioFrameParametersBuffer        = BUFFER_
 
 #define CodeToInteger(a,b,c,d)          ((a << 0) | (b << 8) | (c << 16) | (d << 24))
 
-static inline unsigned int BE2LE(unsigned int Value)
+static inline unsigned int BE2LE (unsigned int Value)
 {
-    return (((Value & 0xff) << 24) | ((Value & 0xff00) << 8) | ((Value >> 8) & 0xff00) | ((Value >> 24) & 0xff));
+    return (((Value&0xff)<<24) | ((Value&0xff00)<<8) | ((Value>>8)&0xff00) | ((Value>>24)&0xff));
 }
 //}}}
 
@@ -61,7 +61,7 @@ static inline unsigned int BE2LE(unsigned int Value)
 //      Constructor
 //
 
-FrameParser_AudioPcm_c::FrameParser_AudioPcm_c(void)
+FrameParser_AudioPcm_c::FrameParser_AudioPcm_c( void )
 {
     Configuration.FrameParserName               = "AudioPcm";
 
@@ -82,7 +82,7 @@ FrameParser_AudioPcm_c::FrameParser_AudioPcm_c(void)
 //      Destructor
 //
 
-FrameParser_AudioPcm_c::~FrameParser_AudioPcm_c(void)
+FrameParser_AudioPcm_c::~FrameParser_AudioPcm_c (void)
 {
     Halt();
     Reset();
@@ -96,7 +96,7 @@ FrameParser_AudioPcm_c::~FrameParser_AudioPcm_c(void)
 ///
 /// /////////////////////////////////////////////////////////////////////////
 
-FrameParserStatus_t   FrameParser_AudioPcm_c::Reset(void)
+FrameParserStatus_t   FrameParser_AudioPcm_c::Reset (void )
 {
     return FrameParser_Audio_c::Reset();
 }
@@ -106,7 +106,7 @@ FrameParserStatus_t   FrameParser_AudioPcm_c::Reset(void)
 ///
 /// \brief      Register the output ring
 ///
-FrameParserStatus_t   FrameParser_AudioPcm_c::RegisterOutputBufferRing(Ring_t          Ring)
+FrameParserStatus_t   FrameParser_AudioPcm_c::RegisterOutputBufferRing (Ring_t          Ring)
 {
     // Clear our parameter pointers
     StreamParameters                    = NULL;
@@ -114,10 +114,10 @@ FrameParserStatus_t   FrameParser_AudioPcm_c::RegisterOutputBufferRing(Ring_t   
     StreamDataValid                     = false;
 
     // Set illegal state forcing a parameter update on the first frame
-    memset(&CurrentStreamParameters, 0, sizeof(CurrentStreamParameters));
+    memset (&CurrentStreamParameters, 0, sizeof(CurrentStreamParameters));
 
     // Pass the call down the line
-    return FrameParser_Audio_c::RegisterOutputBufferRing(Ring);
+    return FrameParser_Audio_c::RegisterOutputBufferRing( Ring );
 }
 //}}}
 
@@ -126,9 +126,9 @@ FrameParserStatus_t   FrameParser_AudioPcm_c::RegisterOutputBufferRing(Ring_t   
 //
 //      The reset reference frame list function
 //
-FrameParserStatus_t   FrameParser_AudioPcm_c::ResetReferenceFrameList(void)
+FrameParserStatus_t   FrameParser_AudioPcm_c::ResetReferenceFrameList( void )
 {
-    Player->CallInSequence(Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, CODEC_RELEASE_ALL);
+    Player->CallInSequence( Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, CODEC_RELEASE_ALL );
 
     return FrameParserNoError;
 }
@@ -138,7 +138,7 @@ FrameParserStatus_t   FrameParser_AudioPcm_c::ResetReferenceFrameList(void)
 ///
 /// \brief      Not required for Pcm audio
 ///
-FrameParserStatus_t   FrameParser_AudioPcm_c::PrepareReferenceFrameList(void)
+FrameParserStatus_t   FrameParser_AudioPcm_c::PrepareReferenceFrameList (void)
 {
     return FrameParserNoError;
 }
@@ -148,7 +148,7 @@ FrameParserStatus_t   FrameParser_AudioPcm_c::PrepareReferenceFrameList(void)
 ///
 /// \brief      Not required for Pcm audio
 ///
-FrameParserStatus_t   FrameParser_AudioPcm_c::UpdateReferenceFrameList(void)
+FrameParserStatus_t   FrameParser_AudioPcm_c::UpdateReferenceFrameList (void)
 {
     return FrameParserNoError;
 }
@@ -160,7 +160,7 @@ FrameParserStatus_t   FrameParser_AudioPcm_c::UpdateReferenceFrameList(void)
 /// \brief      Not required for Pcm audio
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_AudioPcm_c::ProcessReverseDecodeStack(void)
+FrameParserStatus_t   FrameParser_AudioPcm_c::ProcessReverseDecodeStack (void)
 {
     return FrameParserNoError;
 }
@@ -170,7 +170,7 @@ FrameParserStatus_t   FrameParser_AudioPcm_c::ProcessReverseDecodeStack(void)
 ///
 /// \brief      Not required for Pcm audio
 ///
-FrameParserStatus_t   FrameParser_AudioPcm_c::ProcessReverseDecodeUnsatisfiedReferenceStack(void)
+FrameParserStatus_t   FrameParser_AudioPcm_c::ProcessReverseDecodeUnsatisfiedReferenceStack (void)
 {
     return FrameParserNoError;
 }
@@ -180,7 +180,7 @@ FrameParserStatus_t   FrameParser_AudioPcm_c::ProcessReverseDecodeUnsatisfiedRef
 ///
 /// \brief      Not required for Pcm audio
 ///
-FrameParserStatus_t   FrameParser_AudioPcm_c::PurgeReverseDecodeUnsatisfiedReferenceStack(void)
+FrameParserStatus_t   FrameParser_AudioPcm_c::PurgeReverseDecodeUnsatisfiedReferenceStack(     void )
 {
 
     return FrameParserNoError;
@@ -191,7 +191,7 @@ FrameParserStatus_t   FrameParser_AudioPcm_c::PurgeReverseDecodeUnsatisfiedRefer
 ///
 /// \brief      Not required for Pcm audio
 ///
-FrameParserStatus_t   FrameParser_AudioPcm_c::PurgeReverseDecodeStack(void)
+FrameParserStatus_t   FrameParser_AudioPcm_c::PurgeReverseDecodeStack (void)
 {
 
     return FrameParserNoError;
@@ -205,7 +205,7 @@ FrameParserStatus_t   FrameParser_AudioPcm_c::PurgeReverseDecodeStack(void)
 ///
 /// \copydoc FrameParser_Audio_c::PurgeQueuedPostDecodeParameterSettings()
 ///
-FrameParserStatus_t   FrameParser_AudioPcm_c::PurgeQueuedPostDecodeParameterSettings(void)
+FrameParserStatus_t   FrameParser_AudioPcm_c::PurgeQueuedPostDecodeParameterSettings( void )
 {
     return FrameParserNoError;
 }
@@ -217,7 +217,7 @@ FrameParserStatus_t   FrameParser_AudioPcm_c::PurgeQueuedPostDecodeParameterSett
 ///
 /// \copydoc FrameParser_Audio_c::ProcessQueuedPostDecodeParameterSettings()
 ///
-FrameParserStatus_t   FrameParser_AudioPcm_c::ProcessQueuedPostDecodeParameterSettings(void)
+FrameParserStatus_t   FrameParser_AudioPcm_c::ProcessQueuedPostDecodeParameterSettings( void )
 {
     return FrameParserNoError;
 }
@@ -228,7 +228,7 @@ FrameParserStatus_t   FrameParser_AudioPcm_c::ProcessQueuedPostDecodeParameterSe
 /// Determine the display frame index and presentation time of the decoded frame.
 ///
 ///
-FrameParserStatus_t   FrameParser_AudioPcm_c::GeneratePostDecodeParameterSettings(void)
+FrameParserStatus_t   FrameParser_AudioPcm_c::GeneratePostDecodeParameterSettings( void )
 {
     FrameParserStatus_t Status;
 
@@ -246,22 +246,21 @@ FrameParserStatus_t   FrameParser_AudioPcm_c::GeneratePostDecodeParameterSetting
     // Record in the structure the decode and presentation times if specified
     //
 
-    if (CodedFrameParameters->PlaybackTimeValid)
+    if( CodedFrameParameters->PlaybackTimeValid )
     {
         ParsedFrameParameters->NativePlaybackTime       = CodedFrameParameters->PlaybackTime;
-        TranslatePlaybackTimeNativeToNormalized(CodedFrameParameters->PlaybackTime, &ParsedFrameParameters->NormalizedPlaybackTime);
+        TranslatePlaybackTimeNativeToNormalized( CodedFrameParameters->PlaybackTime, &ParsedFrameParameters->NormalizedPlaybackTime );
     }
 
-    if (CodedFrameParameters->DecodeTimeValid)
+    if( CodedFrameParameters->DecodeTimeValid )
     {
         ParsedFrameParameters->NativeDecodeTime         = CodedFrameParameters->DecodeTime;
-        TranslatePlaybackTimeNativeToNormalized(CodedFrameParameters->DecodeTime, &ParsedFrameParameters->NormalizedDecodeTime);
+        TranslatePlaybackTimeNativeToNormalized( CodedFrameParameters->DecodeTime, &ParsedFrameParameters->NormalizedDecodeTime );
     }
 
     //FRAME_TRACE("%s:%llx, %llx\n", __FUNCTION__, ParsedFrameParameters->NormalizedPlaybackTime, ParsedFrameParameters->NativePlaybackTime);
-    // Synthesize the presentation time if required
+    // Sythesize the presentation time if required
     Status                                              = HandleCurrentFrameNormalizedPlaybackTime();
-
     if (Status != FrameParserNoError)
         return Status;
 
@@ -270,7 +269,7 @@ FrameParserStatus_t   FrameParser_AudioPcm_c::GeneratePostDecodeParameterSetting
 
     // Use the super-class utilities to complete our housekeeping chores
     HandleUpdateStreamParameters();
-    GenerateNextFrameNormalizedPlaybackTime(ParsedAudioParameters->SampleCount,  CurrentStreamParameters.SampleRate);
+    GenerateNextFrameNormalizedPlaybackTime (ParsedAudioParameters->SampleCount,  CurrentStreamParameters.SampleRate);
 
     return FrameParserNoError;
 }
@@ -281,7 +280,7 @@ FrameParserStatus_t   FrameParser_AudioPcm_c::GeneratePostDecodeParameterSetting
 ///
 /// \brief      Not required for Pcm audio
 ///
-FrameParserStatus_t   FrameParser_AudioPcm_c::TestForTrickModeFrameDrop(void)
+FrameParserStatus_t   FrameParser_AudioPcm_c::TestForTrickModeFrameDrop (void)
 {
 
     return FrameParserNoError;
@@ -294,58 +293,52 @@ FrameParserStatus_t   FrameParser_AudioPcm_c::TestForTrickModeFrameDrop(void)
 /// \brief      Scan the start code list reading header specific information
 ///
 /// /////////////////////////////////////////////////////////////////////////
-FrameParserStatus_t   FrameParser_AudioPcm_c::ReadHeaders(void)
+FrameParserStatus_t   FrameParser_AudioPcm_c::ReadHeaders (void)
 {
     FrameParserStatus_t         Status;
 
 #if 0
     unsigned int                i;
-    report(severity_info, "Buffer (%d) :", BufferLength);
-
-    for (i = 0; i < BufferLength; i++)
+    report (severity_info, "Buffer (%d) :", BufferLength);
+    for (i=0; i<BufferLength; i++)
     {
-        report(severity_info, "%02x ", BufferData[i]);
-
-        if (((i + 1) & 0x1f) == 0)
-            report(severity_info, "\n");
+        report (severity_info, "%02x ", BufferData[i]);
+        if (((i+1)&0x1f)==0)
+            report (severity_info, "\n");
     }
-
-    report(severity_info, "\n");
+    report (severity_info, "\n");
 #endif
 
-    Bits.SetPointer(BufferData);
+    Bits.SetPointer (BufferData);
 
     // Perform the common portion of the read headers function
     FrameParser_Audio_c::ReadHeaders();
 
     if (!StreamDataValid)
     {
-        Status                  = GetNewStreamParameters((void **)&StreamParameters);
-
+        Status                  = GetNewStreamParameters ((void **)&StreamParameters);
         if (Status != FrameParserNoError)
         {
-            FRAME_ERROR("Cannot get new stream parameters\n");
+            FRAME_ERROR ("Cannot get new stream parameters\n");
             return Status;
         }
 
         Status                  = ReadStreamHeader();
-
         if (Status != FrameParserNoError)
         {
-            FRAME_ERROR("Failed to parse stream parameters\n");
+            FRAME_ERROR ("Failed to parse stream parameters\n" );
             return Status;
         }
 
-        memcpy(&CurrentStreamParameters, StreamParameters, sizeof(CurrentStreamParameters));
+        memcpy (&CurrentStreamParameters, StreamParameters, sizeof(CurrentStreamParameters));
         StreamDataValid         = true;
         return Status;
     }
 
-    Status = GetNewFrameParameters((void**)&FrameParameters);
-
+    Status = GetNewFrameParameters ((void**)&FrameParameters);
     if (Status != FrameParserNoError)
     {
-        FRAME_ERROR("Cannot get new frame parameters\n");
+        FRAME_ERROR ("Cannot get new frame parameters\n");
         return Status;
     }
 
@@ -385,7 +378,7 @@ FrameParserStatus_t   FrameParser_AudioPcm_c::ReadHeaders(void)
 ///
 /// /////////////////////////////////////////////////////////////////////////
 
-FrameParserStatus_t   FrameParser_AudioPcm_c::ReadStreamHeader(void)
+FrameParserStatus_t   FrameParser_AudioPcm_c::ReadStreamHeader (void)
 {
     unsigned int                HeaderSize;
     char                        HeaderId[8];
@@ -397,79 +390,69 @@ FrameParserStatus_t   FrameParser_AudioPcm_c::ReadStreamHeader(void)
     FRAME_TRACE("BufferLength %d :\n", BufferLength);
 #if 1
     unsigned int               Checksum = 0;
-
-    for (i = 0; i < BufferLength; i++)
+    for (i=0; i<BufferLength; i++)
     {
-        if ((i & 0x0f) == 0)
-            report(severity_info, "\n%06x", i);
-
-        report(severity_info, " %02x", BufferData[i]);
+        if ((i&0x0f)==0)
+            report (severity_info, "\n%06x", i);
+        report (severity_info, " %02x", BufferData[i]);
         Checksum       += BufferData[i];
     }
-
-    report(severity_info, "\nChecksum %08x\n", Checksum);
+    report (severity_info, "\nChecksum %08x\n", Checksum);
 #endif
 
     if (StreamParameters == NULL)
     {
-        Status                                          = GetNewStreamParameters((void **)&StreamParameters);
-
+        Status                                          = GetNewStreamParameters ((void **)&StreamParameters);
         if (Status != FrameParserNoError)
             return Status;
     }
 
-    memset(HeaderId, 0, sizeof(HeaderId));
-
-    for (i = 0; i < 4; i++)
+    memset (HeaderId, 0, sizeof(HeaderId));
+    for (i=0; i<4; i++)
         HeaderId[i]                     = Bits.Get(8);
-
-    if (strcmp(HeaderId, "fmt ") != 0)
+    if (strcmp (HeaderId, "fmt ") != 0)
     {
-        if (strcmp(HeaderId, " tmf") != 0)
+        if (strcmp (HeaderId, " tmf") != 0)
         {
-            FRAME_ERROR("Stream is not a valid Pcm stream (%s)\n", HeaderId);
-            Player->MarkStreamUnPlayable(Stream);
+            FRAME_ERROR ("Stream is not a valid Pcm stream\n");
+            Player->MarkStreamUnPlayable (Stream);
             return FrameParserError;
         }
-
         StreamParameters->DataEndianness        = PCM_ENDIAN_BIG;
     }
     else
         StreamParameters->DataEndianness        = PCM_ENDIAN_LITTLE;
 
     HeaderSize                                  = BE2LE(Bits.Get(32));
-    StreamParameters->CompressionCode           = Bits.Get(8) | (Bits.Get(8) << 8);
-
+    StreamParameters->CompressionCode           = Bits.Get(8) | (Bits.Get(8)<<8);
     if (StreamParameters->CompressionCode != PCM_COMPRESSION_CODE_PCM)
     {
-        FRAME_ERROR("Invalid compression code %x - should be 1 (pcm)\n", StreamParameters->CompressionCode);
-        Player->MarkStreamUnPlayable(Stream);
+        FRAME_ERROR ("Invalid compression code %x - should be 1 (pcm)\n", StreamParameters->CompressionCode);
+        Player->MarkStreamUnPlayable (Stream);
         return FrameParserError;
     }
 
-    StreamParameters->ChannelCount              = Bits.Get(8) | (Bits.Get(8) << 8);
+    StreamParameters->ChannelCount              = Bits.Get(8) | (Bits.Get(8)<<8);
     StreamParameters->SampleRate                = BE2LE(Bits.Get(32));
-
     if ((StreamParameters->ChannelCount == 0) || (StreamParameters->SampleRate == 0))
     {
-        FRAME_ERROR("Invalid Pcm channel count %d or Sample Rate %d \n", StreamParameters->ChannelCount, StreamParameters->SampleRate);
-        Player->MarkStreamUnPlayable(Stream);
+        FRAME_ERROR ("Invalid Pcm channel count %d or Sample Rate %d \n", StreamParameters->ChannelCount, StreamParameters->SampleRate);
+        Player->MarkStreamUnPlayable (Stream);
         return FrameParserError;
     }
-
     StreamParameters->BytesPerSecond            = BE2LE(Bits.Get(32));
-    StreamParameters->BlockAlign                = Bits.Get(8) | (Bits.Get(8) << 8);
-    StreamParameters->BitsPerSample             = Bits.Get(8) | (Bits.Get(8) << 8);
+    StreamParameters->BlockAlign                = Bits.Get(8) | (Bits.Get(8)<<8);
+    StreamParameters->BitsPerSample             = Bits.Get(8) | (Bits.Get(8)<<8);
 
 #ifdef DUMP_HEADERS
-    report(severity_info, "StreamFormatInfo :- \n");
-    report(severity_info, "DataEndianness              %6u\n", StreamParameters->DataEndianness);
-    report(severity_info, "CompressionCode             %6u\n", StreamParameters->CompressionCode);
-    report(severity_info, "ChannelCount                %6u\n", StreamParameters->ChannelCount);
-    report(severity_info, "SampleRate                  %6u\n", StreamParameters->SampleRate);
-    report(severity_info, "BytesPerSecond              %6u\n", StreamParameters->BytesPerSecond);
-    report(severity_info, "BlockAlign                  %6u\n", StreamParameters->BlockAlign);
-    report(severity_info, "BitsPerSample               %6u\n", StreamParameters->BitsPerSample);
+    report (severity_info, "StreamFormatInfo :- \n");
+    report (severity_info, "DataEndianness              %6u\n", StreamParameters->DataEndianness);
+    report (severity_info, "CompressionCode             %6u\n", StreamParameters->CompressionCode);
+    report (severity_info, "ChannelCount                %6u\n", StreamParameters->ChannelCount);
+    report (severity_info, "SampleRate                  %6u\n", StreamParameters->SampleRate);
+    report (severity_info, "BytesPerSecond              %6u\n", StreamParameters->BytesPerSecond);
+    report (severity_info, "BlockAlign                  %6u\n", StreamParameters->BlockAlign);
+    report (severity_info, "BitsPerSample               %6u\n", StreamParameters->BitsPerSample);
 
 #endif
 

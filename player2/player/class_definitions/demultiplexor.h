@@ -43,17 +43,17 @@ Date        Modification                                    Name
 
 enum
 {
-    DemultiplexorNoError            = PlayerNoError,
-    DemultiplexorError              = PlayerError,
+    DemultiplexorNoError			= PlayerNoError,
+    DemultiplexorError				= PlayerError,
 #ifdef __TDT__
     DemultiplexorBufferOverflow,
 #endif
 
-    // GetBuffer
-//    Demultiplexor...              = BASE_DEMULTIPLEXOR
+						// GetBuffer
+//    Demultiplexor...				= BASE_DEMULTIPLEXOR
 };
 
-typedef PlayerStatus_t  DemultiplexorStatus_t;
+typedef PlayerStatus_t	DemultiplexorStatus_t;
 
 // ---------------------------------------------------------------------
 //
@@ -62,44 +62,44 @@ typedef PlayerStatus_t  DemultiplexorStatus_t;
 
 class Demultiplexor_c : public BaseComponentClass_c
 {
-    public:
+public:
 
-        virtual DemultiplexorStatus_t    GetHandledMuxType(PlayerInputMuxType_t  *HandledType) = 0;
+    virtual DemultiplexorStatus_t    GetHandledMuxType(	PlayerInputMuxType_t	 *HandledType ) = 0;
 
-        virtual DemultiplexorStatus_t    CreateContext(DemultiplexorContext_t    *Context) = 0;
+    virtual DemultiplexorStatus_t    CreateContext(	DemultiplexorContext_t	 *Context ) = 0;
 
-        virtual DemultiplexorStatus_t    DestroyContext(DemultiplexorContext_t    Context) = 0;
+    virtual DemultiplexorStatus_t    DestroyContext(	DemultiplexorContext_t	  Context ) = 0;
 
-        virtual DemultiplexorStatus_t    AddStream(DemultiplexorContext_t     Context,
-                PlayerStream_t        Stream,
-                unsigned int          StreamIdentifier) = 0;
+    virtual DemultiplexorStatus_t    AddStream(		DemultiplexorContext_t	  Context,
+							PlayerStream_t		  Stream,
+							unsigned int		  StreamIdentifier ) = 0;
 
-        virtual DemultiplexorStatus_t    RemoveStream(DemultiplexorContext_t      Context,
-                unsigned int          StreamIdentifier) = 0;
+    virtual DemultiplexorStatus_t    RemoveStream(	DemultiplexorContext_t	  Context,
+							unsigned int		  StreamIdentifier ) = 0;
 
-        virtual DemultiplexorStatus_t    SwitchStream(DemultiplexorContext_t      Context,
-                PlayerStream_t        Stream) = 0;
+    virtual DemultiplexorStatus_t    SwitchStream(	DemultiplexorContext_t	  Context,
+							PlayerStream_t		  Stream ) = 0;
 
-        virtual DemultiplexorStatus_t    InputJump(DemultiplexorContext_t     Context) = 0;
+    virtual DemultiplexorStatus_t    InputJump(		DemultiplexorContext_t	  Context ) = 0;
 
-        virtual DemultiplexorStatus_t    Demux(PlayerPlayback_t   Playback,
-                                               DemultiplexorContext_t    Context,
-                                               Buffer_t          Buffer) = 0;
+    virtual DemultiplexorStatus_t    Demux(		PlayerPlayback_t	  Playback,
+							DemultiplexorContext_t	  Context,
+							Buffer_t		  Buffer ) = 0;
 };
 
 // ---------------------------------------------------------------------
 //
-// Documentation
+// Docuentation
 //
 
 /*! \class Demultiplexor_c
 \brief Responsible for taking as input a block of multiplexed data and splitting this into stream specific data.
 
-The demultiplexor class is responsible for taking as input a block of
-multiplexed data and splitting this into stream specific data. This is
-a list of its entrypoints, and a partial list of the calls it makes,
-and the data structures it accesses, these are in addition to the
-standard class entrypointsm, and the complete list of support
+The demultiplexor class is responsible for taking as input a block of 
+multiplexed data and splitting this into stream specific data. This is 
+a list of its entrypoints, and a partial list of the calls it makes, 
+and the data structures it accesses, these are in addition to the 
+standard class entrypointsm, and the complete list of support 
 entrypoints in the Player class.
 
 The partial list of entrypoints used by this class:
@@ -154,7 +154,7 @@ The partial list of meta data types used by this class:
 
 \return Demultiplexor status code, DemultiplexorNoError indicates success.
 */
-
+	
 /*! \fn DemultiplexorStatus_t Demultiplexor_c::RemoveStream(DemultiplexorContext_t Context, unsigned int StreamIdentifier)
 \brief Remove a demultiplexor stream.
 
@@ -175,7 +175,7 @@ it has regarding the component classes of the stream is now out of date and shou
 
 \return Demultiplexor status code, DemultiplexorNoError indicates success.
 */
-
+	
 /*! \fn DemultiplexorStatus_t Demultiplexor_c::InputJump( DemultiplexorContext_t Context )
 \brief Inform the demultiplxor that a jump has occurred.
 
@@ -187,8 +187,8 @@ it has regarding the component classes of the stream is now out of date and shou
 /*! \fn DemultiplexorStatus_t Demultiplexor_c::Demux(PlayerPlayback_t Playback, DemultiplexorContext_t Context, Buffer_t Buffer)
 \brief Demultiplex the supplied data buffer.
 
-This is the workhorse function of this class, when it returns, the
-input block will have been demultiplexed, and all components sent to
+This is the workhorse function of this class, when it returns, the 
+input block will have been demultiplexed, and all components sent to 
 the appropriate collator functions.
 
 \param Playback         Playback identifier.

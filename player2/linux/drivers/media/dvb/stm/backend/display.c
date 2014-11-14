@@ -53,30 +53,28 @@ static struct stmcore_display_pipeline_data     PipelineData[STMCORE_MAX_PLANES]
 static unsigned int                             Pipelines;
 
 /*{{{  DisplayInit*/
-int DisplayInit(void)
+int DisplayInit (void)
 {
     int i;
 
     Pipelines   = 0;
-
     for (i = 0; i < MAX_PIPELINES; i++)
     {
-        if (stmcore_get_display_pipeline(i, &PipelineData[i]) == 0)
+        if (stmcore_get_display_pipeline (i, &PipelineData[i]) == 0)
             PLAYER_TRACE("Pipeline %d Device %p, Name = %s, Preferred video plane = %x\n", i, PipelineData[i].device, PipelineData[i].name, PipelineData[i].preferred_video_plane);
         else
             break;
     }
-
     Pipelines   = i;
     return 0;
 }
-/*}}}*/
+/*}}}  */
 /*{{{  GetDisplayInfo*/
-int GetDisplayInfo(unsigned int            Id,
-                   DeviceHandle_t*         Device,
-                   unsigned int*           DisplayPlaneId,
-                   unsigned int*           OutputId,
-                   BufferLocation_t*       BufferLocation)
+int GetDisplayInfo     (unsigned int            Id,
+                        DeviceHandle_t*         Device,
+                        unsigned int*           DisplayPlaneId,
+                        unsigned int*           OutputId,
+                        BufferLocation_t*       BufferLocation)
 {
     int                                         i;
     struct stmcore_display_pipeline_data*       Pipeline;
@@ -85,12 +83,10 @@ int GetDisplayInfo(unsigned int            Id,
 #if defined (CONFIG_DUAL_DISPLAY)
     Pipeline            = &PipelineData[Id];
 #else
-
     if (Id == DISPLAY_ID_PIP)
         Pipeline        = &PipelineData[DISPLAY_ID_MAIN];
     else
         Pipeline        = &PipelineData[Id];
-
 #endif
 
     for (i = 0; i < STMCORE_MAX_PLANES; i++)
@@ -103,15 +99,14 @@ int GetDisplayInfo(unsigned int            Id,
                 *BufferLocation = BufferLocationEither;
             else if ((Pipeline->planes[i].flags & STMCORE_PLANE_MEM_SYS) == STMCORE_PLANE_MEM_SYS)
                 *BufferLocation = BufferLocationSystemMemory;
-
             break;
         }
     }
 
     *Device     = Pipeline->device;
     *OutputId   = Pipeline->main_output_id;
-    PLAYER_TRACE("Device %p, DisplayPlaneId %x, OutputId %d, Pipeline %d\n", *Device, *DisplayPlaneId, *OutputId, Id);
+    PLAYER_TRACE ("Device %p, DisplayPlaneId %x, OutputId %d, Pipeline %d\n", *Device, *DisplayPlaneId, *OutputId, Id);
 
     return  0;
 }
-/*}}}*/
+/*}}}  */

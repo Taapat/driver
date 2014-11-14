@@ -90,50 +90,50 @@ Date        Modification                                    Name
 ///
 typedef enum
 {
-    TypeLpcmDVDVideo,       ///< frame is a DVD video lpcm
-    TypeLpcmDVDAudio,       ///< frame is a DVD audio lpcm
-    TypeLpcmDVDHD,          ///< frame is a DVD HD lpcm
-    TypeLpcmDVDBD,          ///< frame is a DVD BD lpcm
-    TypeLpcmSPDIFIN,        ///< frame is a SPDIFIN frame.
-    TypeLpcmInvalid = 16    ///< invalid frame type.
+  TypeLpcmDVDVideo,       ///< frame is a DVD video lpcm
+  TypeLpcmDVDAudio,       ///< frame is a DVD audio lpcm
+  TypeLpcmDVDHD,          ///< frame is a DVD HD lpcm
+  TypeLpcmDVDBD,          ///< frame is a DVD BD lpcm
+  TypeLpcmSPDIFIN,        ///< frame is a SPDIFIN frame.
+  TypeLpcmInvalid = 16    ///< invalid frame type.
 } LpcmStreamType_t;
 
 typedef enum
 {
-    LpcmWordSize16,                   ///< sample is 16-bit long
-    LpcmWordSize20,                   ///< sample is 20-bit long
-    LpcmWordSize24,                   ///< sample is 24-bit long
-    LpcmWordSize32,                   ///< sample is 32-bit long (only for SPDIFIN or Wav file standards)
-    LpcmWordSizeNone = LpcmWordSize32 ///< undefined sample size (for (HD)DVD standards)
+  LpcmWordSize16,                   ///< sample is 16-bit long
+  LpcmWordSize20,                   ///< sample is 20-bit long
+  LpcmWordSize24,                   ///< sample is 24-bit long
+  LpcmWordSize32,                   ///< sample is 32-bit long (only for SPDIFIN or Wav file standards)
+  LpcmWordSizeNone = LpcmWordSize32 ///< undefined sample size (for (HD)DVD standards)
 } LpcmWordSize_t;
 
 typedef enum
 {
-    /// Used by DVD-audio secondary streams (means no CH_GR2). This value is larger than LpcmSamplingFreqLast.
-    /// This is safe only because it is never used to index lookup tables.
-    LpcmSamplingFreqNotSpecififed = 15,
+  /// Used by DVD-audio secondary streams (means no CH_GR2). This value is larger than LpcmSamplingFreqLast.
+  /// This is safe only because it is never used to index lookup tables.
+  LpcmSamplingFreqNotSpecififed = 15,
+  
+  // Common Lpcm formats frequencies
+  LpcmSamplingFreq48 = 0,   ///< 48 kHz 
+  LpcmSamplingFreq96,       ///< 96 kHz
+  LpcmSamplingFreq192,      ///< 192 kHz
 
-    // Common Lpcm formats frequencies
-    LpcmSamplingFreq48 = 0,   ///< 48 kHz
-    LpcmSamplingFreq96,       ///< 96 kHz
-    LpcmSamplingFreq192,      ///< 192 kHz
+  // Spdifin additional frequencies :
+  LpcmSamplingFreq32   = 4, ///< 32    kHz
+  LpcmSamplingFreq16      , ///< 16    kHz
+  LpcmSamplingFreq22p05,    ///< 22.05 kHz
+  LpcmSamplingFreq24,       ///< 24    kHz
 
-    // Spdifin additional frequencies :
-    LpcmSamplingFreq32   = 4, ///< 32    kHz
-    LpcmSamplingFreq16      , ///< 16    kHz
-    LpcmSamplingFreq22p05,    ///< 22.05 kHz
-    LpcmSamplingFreq24,       ///< 24    kHz
+  
+  // DvdAudio additional frequencies :
+  LpcmSamplingFreq44p1 = 8, ///< 44.1 kHz
+  LpcmSamplingFreq88p2,     ///< 88.2 kHz
+  LpcmSamplingFreq176p4,    ///< 176.4 kHz
+  LpcmSamplingFreqNone,     ///< undefined sampling frequncy
 
-
-    // DvdAudio additional frequencies :
-    LpcmSamplingFreq44p1 = 8, ///< 44.1 kHz
-    LpcmSamplingFreq88p2,     ///< 88.2 kHz
-    LpcmSamplingFreq176p4,    ///< 176.4 kHz
-    LpcmSamplingFreqNone,     ///< undefined sampling frequncy
-
-    // Do not edit beyond this point
-    LpcmSamplingFreqLast
-
+  // Do not edit beyond this point
+  LpcmSamplingFreqLast
+  
 } LpcmSamplingFreq_t;
 
 ////////////////////////////////////////////////////////////////////
@@ -142,28 +142,28 @@ typedef enum
 ///
 typedef struct LpcmAudioParsedFrameHeader_s
 {
-    // These fields contain all these required by the audio mme codec
-    LpcmStreamType_t    Type;
-    bool                MuteFlag;                 ///< Mute to be activated
-    bool                EmphasisFlag;             ///< Empahsis to be activated
-    LpcmWordSize_t      WordSize1;                ///< Sample Size.
-    LpcmWordSize_t      WordSize2;                ///< Sample Size for channel group 2 (DVD audio specific).
-    unsigned char       SamplingFrequency1;       ///< Sampling frequency in Hz.
-    unsigned char       SamplingFrequency2;       ///< Sampling frequency in Hz for channel group 2 (DVD audio specific).
+  // These fields contain all these required by the audio mme codec
+  LpcmStreamType_t    Type;
+  bool                MuteFlag;                 ///< Mute to be activated
+  bool                EmphasisFlag;             ///< Empahsis to be activated
+  LpcmWordSize_t      WordSize1;                ///< Sample Size.
+  LpcmWordSize_t      WordSize2;                ///< Sample Size for channel group 2 (DVD audio specific).
+  unsigned char       SamplingFrequency1;       ///< Sampling frequency in Hz.
+  unsigned char       SamplingFrequency2;       ///< Sampling frequency in Hz for channel group 2 (DVD audio specific).
 
-    unsigned char       NumberOfChannels;         ///< Number of channels within the frame.
-    unsigned char       BitShiftChannel2;         ///< BitShift for group channel 2 (DVD audio specific)
-    unsigned char       ChannelAssignment;        ///< Channel Assignement
-    unsigned char       NbAccessUnits;            ///< Number of audio frames in this packet.
-    unsigned char       DrcCode;                  ///< Drc Coefficient.
-    unsigned int        NumberOfSamples;          ///< Number of samples per channel within the frame.
-    //
-    unsigned int        Length;                   ///< Length of frame in bytes (including header).
-    unsigned int        FirstAccessUnitPointer;   ///< Pointer to the first access unit.
-    unsigned int        PrivateHeaderLength;      ///< Length of private data area
-    unsigned int        AudioFrameNumber;         ///< Identifier of the first audio frame in this packet
-    unsigned char       SubStreamId;              ///< Substream identifier for this pes
-    unsigned int        AudioFrameSize;           ///< Size of one access unit
+  unsigned char       NumberOfChannels;         ///< Number of channels within the frame.
+  unsigned char       BitShiftChannel2;         ///< BitShift for group channel 2 (DVD audio specific)
+  unsigned char       ChannelAssignment;        ///< Channel Assignement
+  unsigned char       NbAccessUnits;            ///< Number of audio frames in this packet.
+  unsigned char       DrcCode;                  ///< Drc Coefficient.
+  unsigned int        NumberOfSamples;          ///< Number of samples per channel within the frame.
+  //
+  unsigned int        Length;                   ///< Length of frame in bytes (including header).
+  unsigned int        FirstAccessUnitPointer;   ///< Pointer to the first access unit.
+  unsigned int        PrivateHeaderLength;      ///< Length of private data area
+  unsigned int        AudioFrameNumber;         ///< Identifier of the first audio frame in this packet
+  unsigned char       SubStreamId;              ///< Substream identifier for this pes
+  unsigned int        AudioFrameSize;           ///< Size of one access unit
 } LpcmAudioParsedFrameHeader_t;
 
 ////////////////////////////////////////////////////////////////
@@ -178,13 +178,13 @@ typedef struct LpcmAudioParsedFrameHeader_s
 ////////////////////////////////////////////////////////////////
 ///
 /// Meta-data unique to LPCM audio.
-/// We already know from the collator all the codec parameters from the collator,
+/// We already know from the collator all the codec parameters from the collator, 
 /// pass them from the collator to the codec
 ///
 typedef struct LpcmAudioFrameParameters_s
 {
-    unsigned char       DrcCode;                  ///< Drc Coefficient.
-    unsigned int        NumberOfSamples;          ///< Number of samples per channel within the frame.
+  unsigned char       DrcCode;                  ///< Drc Coefficient.
+  unsigned int        NumberOfSamples;          ///< Number of samples per channel within the frame.
 } LpcmAudioFrameParameters_t;
 
 #define BUFFER_LPCM_AUDIO_FRAME_PARAMETERS        "LpcmAudioFrameParameters"

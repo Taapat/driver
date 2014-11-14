@@ -22,7 +22,7 @@ license from ST.
 Source file name : avs_audio.h
 Author :           Andy
 
-Definition of the constants/macros that define useful things associated with
+Definition of the constants/macros that define useful things associated with 
 AVS audio streams.
 
 

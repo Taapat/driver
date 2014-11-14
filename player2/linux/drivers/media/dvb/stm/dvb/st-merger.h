@@ -16,9 +16,9 @@
 
 #include <linux/stm/stm-frontend.h>
 
-void stm_tsm_init(int cfg);
-void stm_tsm_release(void);
-void stm_tsm_interrupt(void);
+void stm_tsm_init ( int cfg );
+void stm_tsm_release (void );
+void stm_tsm_interrupt ( void );
 
 #endif
 

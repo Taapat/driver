@@ -7,12 +7,12 @@ Player2 is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License version 2 as published by the
 Free Software Foundation.
 
-Player2 is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Player2 is distributed in the hope that it will be useful, 
+but WITHOUT ANY WARRANTY; without even the implied warranty of 
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
 See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along
+You should have received a copy of the GNU General Public License along 
 with player2; see the file COPYING.  If not, write to the Free Software
 Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
@@ -30,15 +30,23 @@ Date        Modification                                    Name
 
 #include <linux/io.h>
 #include <linux/init.h>
+#include <linux/autoconf.h>
 
 static __init int stm_init(void)
 {
-    return 0;
+	return 0;
 }
 
 static __exit void stm_exit(void)
 {
 
 }
-initcall_t  __initcall_stm_end6 __used __attribute__((__section__(".initcall6.init"))) = stm_init;
-exitcall_t  __exitcall_stm_end __used __attribute__((__section__(".exitcall.exit"))) = stm_exit;
+
+#ifdef __TDT__
+// __attribute_used__ was declared deprecated
+initcall_t  __initcall_stm_end6 __attribute__((__section__(".initcall6.init"))) = stm_init;
+exitcall_t  __exitcall_stm_end __attribute__((__section__(".exitcall.exit"))) = stm_exit;
+#else
+initcall_t  __initcall_stm_end6 __attribute_used__ __attribute__((__section__(".initcall6.init"))) = stm_init;
+exitcall_t  __exitcall_stm_end __attribute_used__ __attribute__((__section__(".exitcall.exit"))) = stm_exit;
+#endif

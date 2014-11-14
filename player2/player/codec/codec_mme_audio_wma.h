@@ -62,25 +62,25 @@ Date        Modification                                    Name
 class Codec_MmeAudioWma_c : public Codec_MmeAudioStream_c
 {
 
-    private:
+private:
 
 
-    protected:
+protected:
 
-        // Data
+    // Data
 
-        // Functions
+    // Functions
 
-    public:
+public:
 
-        // Constructor/Destructor methods
-        Codec_MmeAudioWma_c(void);
-        ~Codec_MmeAudioWma_c(void);
+    // Constructor/Destructor methods
+    Codec_MmeAudioWma_c(                void );
+    ~Codec_MmeAudioWma_c(               void );
 
-    protected:
+protected:
 
-        // Stream specific functions
-        CodecStatus_t   FillOutTransformerGlobalParameters(MME_LxAudioDecoderGlobalParams_t *GlobalParams);
+    // Stream specific functions
+    CodecStatus_t   FillOutTransformerGlobalParameters        ( MME_LxAudioDecoderGlobalParams_t *GlobalParams );
 
 };
 #endif

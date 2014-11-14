@@ -1,7 +1,7 @@
 CCFLAGSY += -I$(TREE_ROOT)/linux/include/linux/stm/ 
 CCFLAGSY += -I$(TREE_ROOT)/linux/drivers/media/video/stm/
 CCFLAGSY += -I$(TREE_ROOT)/linux/drivers/sound/pseudocard
-CCFLAGSY += -I$(CONFIG_STGFB_PATH)/include
+CCFLAGSY += -I$(CONFIG_STGFB_PATH)/include 
 CCFLAGSY += -DDEBUG_DVB -D__TDT__
 
 # workaround for stlinux24

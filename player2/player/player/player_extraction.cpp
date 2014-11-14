@@ -45,9 +45,9 @@ Date        Modification                                    Name
 //
 
 PlayerStatus_t   Player_Generic_c::RequestDecodeBufferReference(
-    PlayerStream_t        Stream,
-    unsigned long long    NativeTime,
-    void             *EventUserData)
+						PlayerStream_t		  Stream,
+						unsigned long long	  NativeTime,
+						void			 *EventUserData )
 {
     return PlayerNoError;
 }
@@ -59,7 +59,7 @@ PlayerStatus_t   Player_Generic_c::RequestDecodeBufferReference(
 //
 
 PlayerStatus_t   Player_Generic_c::ReleaseDecodeBufferReference(
-    PlayerEventRecord_t  *Record)
+						PlayerEventRecord_t	 *Record )
 {
     return PlayerNoError;
 }

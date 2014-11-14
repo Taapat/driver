@@ -80,11 +80,11 @@ Collator_PesAudioDvd_c::Collator_PesAudioDvd_c()
 ///
 /// Iniitialize members.
 ///
-CollatorStatus_t   Collator_PesAudioDvd_c::Reset(void)
+CollatorStatus_t   Collator_PesAudioDvd_c::Reset(			void )
 {
     CollatorStatus_t Status = Collator_PesAudio_c::Reset();
 
-    MakeDvdSyncWordPrediction(INVALID_PREDICTION);
+    MakeDvdSyncWordPrediction( INVALID_PREDICTION );
     ResetDvdSyncWordHeuristics();
 
     // reprocessing it typically unsafe for DVD-style streams (unless the sub-class carefully
@@ -103,22 +103,22 @@ CollatorStatus_t   Collator_PesAudioDvd_c::Reset(void)
 ///
 void Collator_PesAudioDvd_c::AdjustDvdSyncWordPredictionAfterConsumingData(int Adjustment)
 {
-    if (Adjustment > 0)
-        COLLATOR_ERROR("Probably implementation error - positive adjustment requested (%d)\n",
-                       Adjustment);
+    if( Adjustment > 0)
+	COLLATOR_ERROR( "Probably implementation error - positive adjustment requested (%d)\n",
+		        Adjustment);
 
-    if (-Adjustment > SyncWordPrediction)
-        SyncWordPrediction = INVALID_PREDICTION;
+    if( -Adjustment > SyncWordPrediction )
+	SyncWordPrediction = INVALID_PREDICTION;
 
-    if (SyncWordPrediction != WILDCARD_PREDICTION && SyncWordPrediction != INVALID_PREDICTION)
+    if( SyncWordPrediction != WILDCARD_PREDICTION && SyncWordPrediction != INVALID_PREDICTION )
     {
-        COLLATOR_DEBUG("Adjusting prediction from %d to %d\n",
-                       SyncWordPrediction, SyncWordPrediction + Adjustment);
-        SyncWordPrediction += Adjustment;
+	COLLATOR_DEBUG( "Adjusting prediction from %d to %d\n",
+			SyncWordPrediction, SyncWordPrediction + Adjustment );
+	SyncWordPrediction += Adjustment;
     }
     else
-        COLLATOR_DEBUG("Prediciton is %s - no adjustment made\n",
-                       (SyncWordPrediction == WILDCARD_PREDICTION ? "wildcarded" : "invalid"));
+	COLLATOR_DEBUG( "Prediciton is %s - no adjustment made\n",
+			(SyncWordPrediction == WILDCARD_PREDICTION ? "wildcarded" : "invalid") );
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -132,16 +132,16 @@ void Collator_PesAudioDvd_c::MakeDvdSyncWordPrediction(int Prediction)
     // to allow us to play DVD-style streams with broken first access unit pointers where the
     // pointers don't, in fact, point to the an access unit at all. Such streams have been
     // observed in the wild - see https://bugzilla.stlinux.com/show_bug.cgi?id=5051
-    if (0 == RemainingMispredictionsBeforeAutomaticWildcard)
+    if( 0 == RemainingMispredictionsBeforeAutomaticWildcard )
     {
-        COLLATOR_TRACE("Deploying bad first access unit pointer workaround.\n");
+	COLLATOR_TRACE( "Deploying bad first access unit pointer workaround.\n" );
 
-        Prediction = WILDCARD_PREDICTION;
-        PassPesPrivateDataToElementaryStreamHandler = false;
-        RemainingMispredictionsBeforeAutomaticWildcard = MaxMispredictionsBeforeAutomaticWildcard;
+	Prediction = WILDCARD_PREDICTION;
+	PassPesPrivateDataToElementaryStreamHandler = false;
+	RemainingMispredictionsBeforeAutomaticWildcard = MaxMispredictionsBeforeAutomaticWildcard;
     }
 
-    COLLATOR_DEBUG("Making prediction of %d\n", Prediction);
+    COLLATOR_DEBUG( "Making prediction of %d\n", Prediction );
     SyncWordPrediction = Prediction;
 }
 
@@ -167,42 +167,42 @@ void Collator_PesAudioDvd_c::ResetDvdSyncWordHeuristics()
 ///
 void Collator_PesAudioDvd_c::VerifyDvdSyncWordPrediction(int Offset)
 {
-    if (SyncWordPrediction != WILDCARD_PREDICTION)
+    if( SyncWordPrediction != WILDCARD_PREDICTION )
     {
-        // If SyncWordPrediction != Offset then we are *not* a DVD-style PES stream
-        // and need to ensure the DVD PES private data *is* processed as elementary
+	// If SyncWordPrediction != Offset then we are *not* a DVD-style PES stream
+	// and need to ensure the DVD PES private data *is* processed as elementary
         // stream.
-        PassPesPrivateDataToElementaryStreamHandler = (SyncWordPrediction != Offset);
+	PassPesPrivateDataToElementaryStreamHandler = (SyncWordPrediction != Offset);
 
-        // If we badly predicted the location of the sync word then record this. This
-        // counter is used as part of a heuristic workaround in other parts of the code.
-        if ((SyncWordPrediction != Offset) &&
-                (SyncWordPrediction != INVALID_PREDICTION) &&
-                (RemainingMispredictionsBeforeAutomaticWildcard > 0))
-            RemainingMispredictionsBeforeAutomaticWildcard--;
+	// If we badly predicted the location of the sync word then record this. This
+	// counter is used as part of a heuristic workaround in other parts of the code.
+	if( (SyncWordPrediction != Offset) &&
+            (SyncWordPrediction != INVALID_PREDICTION) &&
+            (RemainingMispredictionsBeforeAutomaticWildcard > 0) )
+	    RemainingMispredictionsBeforeAutomaticWildcard--;
 
-        // Having consumed the prediction enter a wildcard mode. This causes
-        // PassPesPrivateDataToElementaryStreamHandler to hold the same
-        // value until we process a PES private data area whilst SeekingFrameHeader.
-        // This is very important for DVD streams which can have sync words located
-        // such that we never process a PES private data area in this mode. This this
+	// Having consumed the prediction enter a wildcard mode. This causes
+	// PassPesPrivateDataToElementaryStreamHandler to hold the same
+	// value until we process a PES private data area whilst SeekingFrameHeader.
+	// This is very important for DVD streams which can have sync words located
+	// such that we never process a PES private data area in this mode. This this
         // case we would never regain lock on the stream.
-        MakeDvdSyncWordPrediction(WILDCARD_PREDICTION);
+	MakeDvdSyncWordPrediction( WILDCARD_PREDICTION );
     }
     else
     {
-        // Apply a wildcard (this is not a 'match all'; it means 'do not change state').
-        // However we can only apply a wildcard a limited number of times. After this
-        // point we assume the current state (PassPesPrivateDataToElementaryStreamHandler) is
-        // impeeding regain of sync and force a change of state.
-        if (--RemainingWildcardsPermitted < 0)
-        {
-            COLLATOR_TRACE("Having trouble re-locking, %s DVD wildcard mode.\n",
-                           (PassPesPrivateDataToElementaryStreamHandler ? "entering" : "leaving"));
-            PassPesPrivateDataToElementaryStreamHandler = !PassPesPrivateDataToElementaryStreamHandler;
+	// Apply a wildcard (this is not a 'match all'; it means 'do not change state').
+	// However we can only apply a wildcard a limited number of times. After this
+	// point we assume the current state (PassPesPrivateDataToElementaryStreamHandler) is
+	// impeeding regain of sync and force a change of state.
+	if( --RemainingWildcardsPermitted < 0 )
+	{
+	    COLLATOR_TRACE( "Having trouble re-locking, %s DVD wildcard mode.\n",
+                            (PassPesPrivateDataToElementaryStreamHandler ? "entering" : "leaving") );
+	    PassPesPrivateDataToElementaryStreamHandler = !PassPesPrivateDataToElementaryStreamHandler;
 
-            // having switched modes we can reset our counter.
-            RemainingWildcardsPermitted = MaxWildcardsPermitted;
-        }
+	    // having switched modes we can reset our counter.
+	    RemainingWildcardsPermitted = MaxWildcardsPermitted;
+	}
     }
 }

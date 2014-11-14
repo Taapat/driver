@@ -19,9 +19,9 @@ Date        Modification                                    Name
 // ------------------------------------------------------------------------
 // Constructor function
 
-StackGeneric_c::StackGeneric_c(unsigned int MaxEntries)
+StackGeneric_c::StackGeneric_c( unsigned int MaxEntries )
 {
-    OS_InitializeMutex(&Lock);
+    OS_InitializeMutex( &Lock );
 
     Limit       = MaxEntries;
     Level       = 0;
@@ -33,29 +33,28 @@ StackGeneric_c::StackGeneric_c(unsigned int MaxEntries)
 // ------------------------------------------------------------------------
 // Destructor function
 
-StackGeneric_c::~StackGeneric_c(void)
+StackGeneric_c::~StackGeneric_c( void )
 {
-    OS_TerminateMutex(&Lock);
+    OS_TerminateMutex( &Lock );
 
-    if (Storage != NULL)
-        delete Storage;
+    if( Storage != NULL )
+	delete Storage;
 }
 
 // ------------------------------------------------------------------------
 // Insert function
 
-StackStatus_t   StackGeneric_c::Push(unsigned int       Value)
+StackStatus_t   StackGeneric_c::Push( unsigned int       Value )
 {
-    OS_LockMutex(&Lock);
-
-    if (Level == Limit)
+    OS_LockMutex( &Lock );
+    if( Level == Limit )
     {
-        OS_UnLockMutex(&Lock);
-        return StackTooManyEntries;
+	OS_UnLockMutex( &Lock );
+	return StackTooManyEntries;
     }
 
     Storage[Level++]    = Value;
-    OS_UnLockMutex(&Lock);
+    OS_UnLockMutex( &Lock );
 
     return StackNoError;
 }
@@ -63,19 +62,19 @@ StackStatus_t   StackGeneric_c::Push(unsigned int       Value)
 // ------------------------------------------------------------------------
 // Extract function
 
-StackStatus_t   StackGeneric_c::Pop(unsigned int    *Value)
+StackStatus_t   StackGeneric_c::Pop(    unsigned int    *Value )
 {
     //
     // If there is nothing in the Stack we return
     //
 
-    if (Level != 0)
+    if( Level != 0 )
     {
-        OS_LockMutex(&Lock);
-        *Value = Storage[--Level];
-        OS_UnLockMutex(&Lock);
+	OS_LockMutex( &Lock );
+	*Value = Storage[--Level];
+	OS_UnLockMutex( &Lock );
 
-        return StackNoError;
+	return StackNoError;
     }
 
     return StackNothingToGet;
@@ -85,9 +84,9 @@ StackStatus_t   StackGeneric_c::Pop(unsigned int    *Value)
 // ------------------------------------------------------------------------
 // Flush function
 
-StackStatus_t   StackGeneric_c::Flush(void)
+StackStatus_t   StackGeneric_c::Flush( void )
 {
-    Level   = 0;
+    Level	= 0;
     return StackNoError;
 }
 
@@ -95,7 +94,7 @@ StackStatus_t   StackGeneric_c::Flush(void)
 // ------------------------------------------------------------------------
 // Non-empty function
 
-bool   StackGeneric_c::NonEmpty(void)
+bool   StackGeneric_c::NonEmpty( void )
 {
     return (Level != 0);
 }

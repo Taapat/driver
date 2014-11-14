@@ -36,7 +36,7 @@ Date        Modification                                    Name
 
 // /////////////////////////////////////////////////////////////////////
 //
-//  Include any component headers
+//	Include any component headers
 
 #include "eac3_audio.h"
 #include "frame_parser_audio.h"
@@ -53,64 +53,64 @@ Date        Modification                                    Name
 
 class FrameParser_AudioEAc3_c : public FrameParser_Audio_c
 {
-    private:
+private:
 
-        // Data
+    // Data
+    
+    EAc3AudioParsedFrameHeader_t ParsedFrameHeader;
+    bool FirstTime;
+    
+    EAc3AudioStreamParameters_t	*StreamParameters;
+    EAc3AudioStreamParameters_t CurrentStreamParameters;
+    EAc3AudioFrameParameters_t *FrameParameters;
 
-        EAc3AudioParsedFrameHeader_t ParsedFrameHeader;
-        bool FirstTime;
+    // Functions
+public:
 
-        EAc3AudioStreamParameters_t *StreamParameters;
-        EAc3AudioStreamParameters_t CurrentStreamParameters;
-        EAc3AudioFrameParameters_t *FrameParameters;
+    //
+    // Constructor function
+    //
 
-        // Functions
-    public:
+    FrameParser_AudioEAc3_c( void );
+    ~FrameParser_AudioEAc3_c( void );
 
-        //
-        // Constructor function
-        //
+    //
+    // Overrides for component base class functions
+    //
 
-        FrameParser_AudioEAc3_c(void);
-        ~FrameParser_AudioEAc3_c(void);
+    FrameParserStatus_t   Reset(		void );
 
-        //
-        // Overrides for component base class functions
-        //
+    //
+    // FrameParser class functions
+    //
 
-        FrameParserStatus_t   Reset(void);
+    FrameParserStatus_t   RegisterOutputBufferRing(	Ring_t		Ring );
 
-        //
-        // FrameParser class functions
-        //
+    //
+    // Stream specific functions
+    //
 
-        FrameParserStatus_t   RegisterOutputBufferRing(Ring_t       Ring);
+    FrameParserStatus_t   ReadHeaders( 					void );
+    FrameParserStatus_t   ResetReferenceFrameList(			void );
+    FrameParserStatus_t   PurgeQueuedPostDecodeParameterSettings(	void );
+    FrameParserStatus_t   PrepareReferenceFrameList(			void );
+    FrameParserStatus_t   ProcessQueuedPostDecodeParameterSettings(	void );
+    FrameParserStatus_t   GeneratePostDecodeParameterSettings(		void );
+    FrameParserStatus_t   UpdateReferenceFrameList(			void );
 
-        //
-        // Stream specific functions
-        //
+    FrameParserStatus_t   ProcessReverseDecodeUnsatisfiedReferenceStack(void );
+    FrameParserStatus_t   ProcessReverseDecodeStack(			void );
+    FrameParserStatus_t   PurgeReverseDecodeUnsatisfiedReferenceStack(	void );
+    FrameParserStatus_t   PurgeReverseDecodeStack(			void );
+    FrameParserStatus_t   TestForTrickModeFrameDrop(			void );
 
-        FrameParserStatus_t   ReadHeaders(void);
-        FrameParserStatus_t   ResetReferenceFrameList(void);
-        FrameParserStatus_t   PurgeQueuedPostDecodeParameterSettings(void);
-        FrameParserStatus_t   PrepareReferenceFrameList(void);
-        FrameParserStatus_t   ProcessQueuedPostDecodeParameterSettings(void);
-        FrameParserStatus_t   GeneratePostDecodeParameterSettings(void);
-        FrameParserStatus_t   UpdateReferenceFrameList(void);
+    FrameParserStatus_t ParseFrameHeader( unsigned char *FrameHeader, 
+                                          EAc3AudioParsedFrameHeader_t *ParsedFrameHeader,
+                                          int RemainingElementaryLength );
 
-        FrameParserStatus_t   ProcessReverseDecodeUnsatisfiedReferenceStack(void);
-        FrameParserStatus_t   ProcessReverseDecodeStack(void);
-        FrameParserStatus_t   PurgeReverseDecodeUnsatisfiedReferenceStack(void);
-        FrameParserStatus_t   PurgeReverseDecodeStack(void);
-        FrameParserStatus_t   TestForTrickModeFrameDrop(void);
-
-        FrameParserStatus_t ParseFrameHeader(unsigned char *FrameHeader,
-                                             EAc3AudioParsedFrameHeader_t *ParsedFrameHeader,
-                                             int RemainingElementaryLength);
-
-        static FrameParserStatus_t ParseSingleFrameHeader(unsigned char *FrameHeaderBytes,
-                EAc3AudioParsedFrameHeader_t *ParsedFrameHeader,
-                bool SearchForConvSync);
+	static FrameParserStatus_t ParseSingleFrameHeader( unsigned char *FrameHeaderBytes, 
+													   EAc3AudioParsedFrameHeader_t *ParsedFrameHeader,
+													   bool SearchForConvSync);
 };
 
 #endif /* H_FRAME_PARSER_AUDIO_EAC3 */

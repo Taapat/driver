@@ -37,7 +37,7 @@ Date        Modification                                    Name
 
 enum
 {
-    IdentifierGetInjectBuffer   = 1,
+    IdentifierGetInjectBuffer	= 1,
     IdentifierInSequenceCall,
     IdentifierDrain,
 

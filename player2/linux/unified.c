@@ -7,12 +7,12 @@ Player2 is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License version 2 as published by the
 Free Software Foundation.
 
-Player2 is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Player2 is distributed in the hope that it will be useful, 
+but WITHOUT ANY WARRANTY; without even the implied warranty of 
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
 See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along
+You should have received a copy of the GNU General Public License along 
 with player2; see the file COPYING.  If not, write to the Free Software
 Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
@@ -30,36 +30,35 @@ Date        Modification                                    Name
 
 #include <linux/io.h>
 #include <linux/init.h>
-#include <linux/module.h>
 #include <linux/platform_device.h>
+#include <linux/autoconf.h>
 
 extern initcall_t  __initcall_stm_start6[], __initcall_stm_end6[];
 extern exitcall_t  __exitcall_stm_start[], __exitcall_stm_end[];
 
 static __init int stm_load_player2_unified(void)
 {
-    initcall_t *call;
+	initcall_t *call;
 
-    for (call = __initcall_stm_start6; call < __initcall_stm_end6; call++)
-    {
-        int ret;
-        ret = (*call)();
-
-        if (ret)
-            printk("The modules at %p failed to load\n", call);
-    }
-
-    return 0;
+        for (call = __initcall_stm_start6; call < __initcall_stm_end6; call++)
+	{
+		int ret;
+		ret = (*call)();
+		if (ret)
+			printk("The modules at %p failed to load\n",call);
+	}
+	
+	return 0;
 }
 
 static __init void stm_unload_player2_unified(void)
 {
-    exitcall_t *call;
+	exitcall_t *call;
 
-    for (call = __exitcall_stm_end; call >= __exitcall_stm_start; call--)
-    {
-        (*call)();
-    }
+        for (call = __exitcall_stm_end; call >= __exitcall_stm_start; call--)
+	{
+		(*call)();
+	}
 }
 
 module_init(stm_load_player2_unified);

@@ -60,8 +60,8 @@ Date        Modification                                    Name
 ///
 typedef enum
 {
-    TypeSpdifIn,  ///< frame is coming from SPDIF-IN
-    TypeHdmiIn,   ///< frame is coming from HDMI-IN
+  TypeSpdifIn,  ///< frame is coming from SPDIF-IN
+  TypeHdmiIn,   ///< frame is coming from HDMI-IN
 } SpdifinStreamType_t;
 
 
@@ -71,26 +71,26 @@ typedef enum
 ///
 typedef struct SpdifinAudioParsedFrameHeader_s
 {
-    // Directly interpretted values
-    SpdifinStreamType_t Type;
-    unsigned char   SubStreamId;
-    unsigned int    SamplingFrequency; ///< Sampling frequency in Hz.
-
-    // Derived values
-    unsigned int    NumberOfSamples; ///< Number of samples per channel within the frame.
-    unsigned int    Length; ///< Length of frame in bytes (including header).
+  // Directly interpretted values
+  SpdifinStreamType_t Type;
+  unsigned char   SubStreamId;
+  unsigned int    SamplingFrequency; ///< Sampling frequency in Hz.
+  
+  // Derived values
+  unsigned int    NumberOfSamples; ///< Number of samples per channel within the frame.
+  unsigned int    Length; ///< Length of frame in bytes (including header).
 } SpdifinAudioParsedFrameHeader_t;
 
 ////////////////////////////////////////////////////////////////
 
 typedef struct SpdifinAudioStreamParameters_s
 {
-    /// SPDIFIN to be decoded.
-    ///
-    /// The ACC firmware requires different configuration parameters information extracted from the
-    /// PES headers to properly process the spdifin input buffers.
-    unsigned int SamplingFreq;
-    unsigned int NbSamples;
+  /// SPDIFIN to be decoded.
+  ///
+  /// The ACC firmware requires different configuration parameters information extracted from the 
+  /// PES headers to properly process the spdifin input buffers.
+  unsigned int SamplingFreq;
+  unsigned int NbSamples;
 } SpdifinAudioStreamParameters_t;
 
 
@@ -106,7 +106,7 @@ typedef struct SpdifinAudioStreamParameters_s
 /// We already know from collator all codec params
 /// just transmit them from collator to codec
 
-#define SpdifinAudioFrameParameters_t SpdifinAudioParsedFrameHeader_t
+#define SpdifinAudioFrameParameters_t SpdifinAudioParsedFrameHeader_t 
 
 #define BUFFER_SPDIFIN_AUDIO_FRAME_PARAMETERS        "SpdifinAudioFrameParameters"
 #define BUFFER_SPDIFIN_AUDIO_FRAME_PARAMETERS_TYPE   {BUFFER_SPDIFIN_AUDIO_FRAME_PARAMETERS, BufferDataTypeBase, AllocateFromOSMemory, 4, 0, true, true, sizeof(SpdifinAudioFrameParameters_t)}

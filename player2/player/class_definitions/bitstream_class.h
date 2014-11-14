@@ -44,226 +44,224 @@ Date        Modification                                    Name
 
 class BitStreamClass_c
 {
-    protected:
+protected:
 
-        unsigned int          BitsAvailable;
-        unsigned long long        BitsWord;
-        unsigned int         *BitsData;
-
-//
-
-    public:
-
-        // ////////////////////////////////////////////////////////////////////////
-        //
-        // Initialize
-        //
-
-        BitStreamClass_c(void)
-        {
-            BitsAvailable   = 0;
-            BitsData    = NULL;
-        }
-
-        // ////////////////////////////////////////////////////////////////////////
-        //
-        // Set the pointer
-        //
-
-        void    SetPointer(unsigned char     *Pointer)
-        {
-            unsigned int    Ptr = (unsigned int)Pointer;
-
-            BitsData    = (unsigned int *)(Ptr & 0xfffffffc);
-            BitsAvailable   = 32 - ((Ptr & 0x3) * 8);
-            BitsWord    = __swapbw(*(BitsData++));
-        }
-
-        // ////////////////////////////////////////////////////////////////////////
-        //
-        // Get and flush some bits
-        //
-
-        unsigned int   Get(unsigned int   N)
-        {
-            //
-            // Ensure we have enough data
-            //
-
-            if (BitsAvailable < N)
-            {
-                BitsWord        = (BitsWord << 32) | __swapbw(*(BitsData++));
-                BitsAvailable  += 32;
-            }
-
-            //
-            // return the appropriate field
-            //
-
-            BitsAvailable -= N;
-            return (BitsWord >> BitsAvailable) & ((1ULL << N) - 1);
-        }
-
-        // ////////////////////////////////////////////////////////////////////////
-        //
-        // Get and flush some bits
-        //
-
-        int   SignedGet(unsigned int   N)
-        {
-            unsigned int    Value;
-
-            Value   = Get(N);
-
-            if (inrange(N, 2, 31) &&
-                    (Value >= (1u << (N - 1))))
-                Value |= (0xffffffff << (N - 1));
-
-            return (int)Value;
-        }
-
-        // ////////////////////////////////////////////////////////////////////////
-        //
-        // Get but do not flush some bits
-        //
-
-        unsigned int   Show(unsigned int  N)
-        {
-            //
-            // Ensure we have enough data
-            //
-
-            if (BitsAvailable < N)
-            {
-                BitsWord        = (BitsWord << 32) | __swapbw(*(BitsData++));
-                BitsAvailable  += 32;
-            }
-
-            //
-            // return the appropriate field
-            //
-
-            return (BitsWord >> (BitsAvailable - N)) & ((1ULL << N) - 1);
-        }
-
-        // ////////////////////////////////////////////////////////////////////////
-        //
-        // Get but do not flush some bits
-        //
-
-        int   SignedShow(unsigned int   N)
-        {
-            unsigned int    Value;
-
-            Value   = Show(N);
-
-            if (inrange(N, 2, 31) &&
-                    (Value >= (1u << (N - 1))))
-                Value |= (0xffffffffu << (N - 1));
-
-            return (int)Value;
-        }
-
-        // ////////////////////////////////////////////////////////////////////////
-        //
-        // Flush previously shown bits
-        //
-
-        void   Flush(unsigned int   N)
-        {
-            BitsAvailable -= N;
-        }
-
-        // ////////////////////////////////////////////////////////////////////////
-        //
-        // Flush bits not previously seen
-        //
-
-        void   FlushUnseen(unsigned int N)
-        {
-            //
-            // Ensure we have enough data
-            //
-
-            while (N > 32)
-            {
-                BitsWord        = (BitsWord << 32) | __swapbw(*(BitsData++));
-                N          -= 32;
-            }
+    unsigned int		  BitsAvailable;
+    unsigned long long		  BitsWord;
+    unsigned int		 *BitsData;
 
 //
 
-            if (BitsAvailable < N)
-            {
-                BitsWord        = (BitsWord << 32) | __swapbw(*(BitsData++));
-                BitsAvailable  += 32;
-            }
+public:
 
-            //
-            // Discard the bits
-            //
+    // ////////////////////////////////////////////////////////////////////////
+    //
+    // Initialize
+    //
 
-            BitsAvailable -= N;
-        }
+    BitStreamClass_c( void )
+    {
+	BitsAvailable	= 0;
+	BitsData	= NULL;
+    }
 
-        // ////////////////////////////////////////////////////////////////////////
-        //
-        // Retrieve the bit position
-        //
+    // ////////////////////////////////////////////////////////////////////////
+    //
+    // Set the pointer
+    //
 
-        void  GetPosition(unsigned char         **Pointer,
-                          unsigned int           *BitsInByte)
-        {
-            *Pointer    = (unsigned char *)BitsData - ((BitsAvailable + 7) / 8);
-            *BitsInByte = (BitsAvailable & 7) ? (BitsAvailable & 7) : 8;
-        }
+    void	SetPointer(	unsigned char	 *Pointer )
+    {
+    unsigned int	Ptr = (unsigned int)Pointer;
 
-        // ////////////////////////////////////////////////////////////////////////
-        //
-        // H264 extension - standard described function for "MoreRsbpData"
-        //
+	BitsData	= (unsigned int *)(Ptr & 0xfffffffc);
+	BitsAvailable	= 32 - ((Ptr & 0x3) * 8);
+	BitsWord	= __swapbw( *(BitsData++) );
+    }
 
-        bool  MoreRsbpData(void)
-        {
-            unsigned char   *Pointer;
-            unsigned int     BitsInByte;
+    // ////////////////////////////////////////////////////////////////////////
+    //
+    // Get and flush some bits
+    //
 
-            GetPosition(&Pointer, &BitsInByte);
-            BitsInByte  += 8;           // We know there should be a zero byte after the body
-            // because we insert one in the collation phase
-            return (Show(BitsInByte) != (1U << (BitsInByte - 1)));
-        }
+    unsigned int   Get( unsigned int   N )
+    {
+	//
+	// Ensure we have enough data
+	//
 
-        // ////////////////////////////////////////////////////////////////////////
-        //
-        // H264 extension - standard described functions for reading
-        //          unsigned and signed coded numbers.
-        //
+	if( BitsAvailable < N )
+	{
+	    BitsWord        = (BitsWord << 32) | __swapbw( *(BitsData++) );
+	    BitsAvailable  += 32;
+	}
 
-        unsigned int   GetUe(void)
-        {
-            unsigned int    LeadingZeros;
+	//
+	// return the appropriate field
+	//
 
-            LeadingZeros    = __lzcntw(Show(32));
+	BitsAvailable -= N;
+	return (BitsWord >> BitsAvailable) & ((1ULL << N) - 1);
+    }
 
-            Flush(LeadingZeros + 1);
+    // ////////////////////////////////////////////////////////////////////////
+    //
+    // Get and flush some bits
+    //
 
-            return ((LeadingZeros != 0) ? ((1 << LeadingZeros) - 1 + Get(LeadingZeros)) : 0);
-        }
+    int   SignedGet( unsigned int   N )
+    {
+    unsigned int	Value;
+
+	Value	= Get(N);
+	if( inrange(N, 2, 31) && 
+	    (Value >= (1u << (N-1))) )
+	    Value |= (0xffffffff << (N - 1));
+
+	return (int)Value;
+    }
+
+    // ////////////////////////////////////////////////////////////////////////
+    //
+    // Get but do not flush some bits
+    //
+
+    unsigned int   Show( unsigned int  N )
+    {
+	//
+	// Ensure we have enough data
+	//
+
+	if( BitsAvailable < N )
+	{
+	    BitsWord        = (BitsWord << 32) | __swapbw( *(BitsData++) );
+	    BitsAvailable  += 32;
+	}
+
+	//
+	// return the appropriate field
+	//
+
+	return (BitsWord >> (BitsAvailable - N)) & ((1ULL << N) - 1);
+    }
+
+    // ////////////////////////////////////////////////////////////////////////
+    //
+    // Get but do not flush some bits
+    //
+
+    int   SignedShow( unsigned int   N )
+    {
+    unsigned int	Value;
+
+	Value	= Show(N);
+	if( inrange(N, 2, 31) && 
+	    (Value >= (1u << (N-1))) )
+	    Value |= (0xffffffffu << (N - 1));
+
+	return (int)Value;
+    }
+
+    // ////////////////////////////////////////////////////////////////////////
+    //
+    // Flush previously shown bits
+    //
+
+    void   Flush(	 	unsigned int	N )
+    {
+	BitsAvailable -= N;
+    }
+
+    // ////////////////////////////////////////////////////////////////////////
+    //
+    // Flush bits not previously seen
+    //
+
+    void   FlushUnseen( 	unsigned int	N )
+    {
+	//
+	// Ensure we have enough data
+	//
+
+        while( N > 32 )
+	{
+	    BitsWord        = (BitsWord << 32) | __swapbw( *(BitsData++) );
+	    N		   -= 32;
+	}
 
 //
 
-        int   GetSe(void)
-        {
-            unsigned int    Code;
+	if( BitsAvailable < N )
+	{
+	    BitsWord        = (BitsWord << 32) | __swapbw( *(BitsData++) );
+	    BitsAvailable  += 32;
+	}
 
-            //
-            // Code is a local GetUe, this is then mapped to an Se in the return.
-            //
+	//
+	// Discard the bits
+	//
 
-            Code    = GetUe();
-            return ((Code & 1) != 0) ? ((Code >> 1) + 1) : -(Code >> 1);
-        }
+	BitsAvailable -= N;
+    }
+
+    // ////////////////////////////////////////////////////////////////////////
+    //
+    // Retrieve the bit position
+    //
+
+    void  GetPosition( unsigned char         **Pointer,
+	               unsigned int           *BitsInByte )
+    {
+	*Pointer    = (unsigned char *)BitsData - ((BitsAvailable + 7) / 8);
+	*BitsInByte = (BitsAvailable & 7) ? (BitsAvailable & 7) : 8;
+    }
+
+    // ////////////////////////////////////////////////////////////////////////
+    //
+    // H264 extension - standard described function for "MoreRsbpData"
+    //
+
+    bool  MoreRsbpData( void )
+    {
+    unsigned char   *Pointer;
+    unsigned int     BitsInByte;
+
+	GetPosition( &Pointer, &BitsInByte );
+	BitsInByte	+= 8;			// We know there should be a zero byte after the body
+						// because we insert one in the collation phase
+	return ( Show(BitsInByte) != (1U<<(BitsInByte-1)) );
+    }
+
+    // ////////////////////////////////////////////////////////////////////////
+    //
+    // H264 extension - standard described functions for reading 
+    //			unsigned and signed coded numbers.
+    //
+
+    unsigned int   GetUe( void )
+    {
+    unsigned int	LeadingZeros;
+
+	LeadingZeros	= __lzcntw( Show(32) );
+
+	Flush( LeadingZeros + 1 );
+
+	return ((LeadingZeros != 0) ? ((1 << LeadingZeros) - 1 + Get(LeadingZeros)) : 0);
+    }
+
+//
+
+    int   GetSe( void )
+    {
+    unsigned int	Code;
+
+	//
+	// Code is a local GetUe, this is then mapped to an Se in the return.
+	//
+
+	Code	= GetUe();
+	return ((Code & 1) != 0) ? ((Code >> 1) + 1) : -(Code >> 1);
+    }
 
 };
 

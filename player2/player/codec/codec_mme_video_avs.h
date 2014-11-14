@@ -76,52 +76,53 @@ Date        Modification                                    Name
 /// The AVS video codec proxy.
 class Codec_MmeVideoAvs_c : public Codec_MmeVideo_c
 {
-    protected:
+protected:
 
-        // Data
+    // Data
 
-        unsigned int                                DecodingWidth;
-        unsigned int                                DecodingHeight;
+    unsigned int                                DecodingWidth;
+    unsigned int                                DecodingHeight;
 
-        MME_AVSVideoDecodeCapabilityParams_t        AvsTransformCapability;
-        MME_AVSVideoDecodeInitParams_t              AvsInitializationParameters;
+    MME_AVSVideoDecodeCapabilityParams_t        AvsTransformCapability;
+    MME_AVSVideoDecodeInitParams_t              AvsInitializationParameters;
 
-        allocator_device_t                          IntraMbStructMemoryDevice;
-        allocator_device_t                          MbStructMemoryDevice;
+    allocator_device_t                          IntraMbStructMemoryDevice;
+    allocator_device_t                          MbStructMemoryDevice;
 
 #if defined (AVS_MBSTRUCT)
-        BufferDataDescriptor_t*                     AvsMbStructDescriptor;
-        BufferType_t                                AvsMbStructType;
-        BufferPool_t                                AvsMbStructPool;
+    BufferDataDescriptor_t*                     AvsMbStructDescriptor;
+    BufferType_t                                AvsMbStructType;
+    BufferPool_t                                AvsMbStructPool;
 #endif
 
-        // Functions
+    // Functions
 
-    public:
+public:
 
-        //
-        // Constructor/Destructor methods
-        //
+    //
+    // Constructor/Destructor methods
+    //
 
-        Codec_MmeVideoAvs_c(void);
-        ~Codec_MmeVideoAvs_c(void);
+    Codec_MmeVideoAvs_c(              void );
+    ~Codec_MmeVideoAvs_c(             void );
 
-        //
-        // Stream specific functions
-        //
+    //
+    // Stream specific functions
+    //
 
-    protected:
-        CodecStatus_t   Reset(void);
-        CodecStatus_t   HandleCapabilities(void);
+protected:
+
+    CodecStatus_t   Reset(                                      void );
+    CodecStatus_t   HandleCapabilities(                         void );
 #if defined (AVS_MBSTRUCT)
-        CodecStatus_t   RegisterOutputBufferRing(Ring_t                    Ring);
+    CodecStatus_t   RegisterOutputBufferRing(   Ring_t                    Ring );
 #endif
 
-        CodecStatus_t   FillOutTransformerInitializationParameters(void);
-        CodecStatus_t   FillOutSetStreamParametersCommand(void);
-        CodecStatus_t   FillOutDecodeCommand(void);
-        CodecStatus_t   ValidateDecodeContext(CodecBaseDecodeContext_t *Context);
-        CodecStatus_t   DumpSetStreamParameters(void    *Parameters);
-        CodecStatus_t   DumpDecodeParameters(void    *Parameters);
+    CodecStatus_t   FillOutTransformerInitializationParameters( void );
+    CodecStatus_t   FillOutSetStreamParametersCommand(          void );
+    CodecStatus_t   FillOutDecodeCommand(                       void );
+    CodecStatus_t   ValidateDecodeContext( CodecBaseDecodeContext_t *Context );
+    CodecStatus_t   DumpSetStreamParameters(                    void    *Parameters );
+    CodecStatus_t   DumpDecodeParameters(                       void    *Parameters );
 };
 #endif

@@ -33,6 +33,6 @@ Date        Modification                                    Name
 #ifndef __DVB_V4L2
 #define __DVB_V4L2
 
-void* stm_v4l2_findbuffer(unsigned long userptr, unsigned int size, int device);
+void* stm_v4l2_findbuffer(unsigned long userptr, unsigned int size,int device);
 
 #endif

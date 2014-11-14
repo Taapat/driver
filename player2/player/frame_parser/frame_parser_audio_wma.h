@@ -53,61 +53,61 @@ Date        Modification                                    Name
 
 class FrameParser_AudioWma_c : public FrameParser_Audio_c
 {
-    private:
+private:
 
-        // Data
+    // Data
 
-        /*WmaAudioParsedFrameHeader_t ParsedFrameHeader;*/
-        WmaAudioStreamParameters_t*         StreamParameters;
-        WmaAudioFrameParameters_t*          FrameParameters;
+    /*WmaAudioParsedFrameHeader_t ParsedFrameHeader;*/
+    WmaAudioStreamParameters_t*         StreamParameters;
+    WmaAudioFrameParameters_t*          FrameParameters;
 
-        WmaAudioStreamParameters_t          CurrentStreamParameters;
+    WmaAudioStreamParameters_t          CurrentStreamParameters;
 
-        unsigned long long                  LastNormalizedDecodeTime;
-        // Functions
+    unsigned long long                  LastNormalizedDecodeTime;
+    // Functions
 
-    public:
+public:
 
-        //
-        // Constructor function
-        //
+    //
+    // Constructor function
+    //
 
-        FrameParser_AudioWma_c(void);
-        ~FrameParser_AudioWma_c(void);
+    FrameParser_AudioWma_c( void );
+    ~FrameParser_AudioWma_c( void );
 
-        //
-        // Overrides for component base class functions
-        //
+    //
+    // Overrides for component base class functions
+    //
 
-        FrameParserStatus_t   Reset(void);
+    FrameParserStatus_t   Reset(                void );
 
-        //
-        // FrameParser class functions
-        //
+    //
+    // FrameParser class functions
+    //
 
-        FrameParserStatus_t   RegisterOutputBufferRing(Ring_t          Ring);
+    FrameParserStatus_t   RegisterOutputBufferRing(     Ring_t          Ring );
 
-        //
-        // Stream specific functions
-        //
+    //
+    // Stream specific functions
+    //
 
-        static FrameParserStatus_t ParseStreamHeader(unsigned char*                  FrameHeaderBytes,
-                WmaAudioStreamParameters_t*     StreamParameters,
-                bool                            Verbose = true);
+    static FrameParserStatus_t ParseStreamHeader(unsigned char*                  FrameHeaderBytes,
+						 WmaAudioStreamParameters_t*     StreamParameters,
+						 bool                            Verbose = true);
 
-        FrameParserStatus_t   ReadHeaders(void);
-        FrameParserStatus_t   ResetReferenceFrameList(void);
-        FrameParserStatus_t   PurgeQueuedPostDecodeParameterSettings(void);
-        FrameParserStatus_t   PrepareReferenceFrameList(void);
-        FrameParserStatus_t   ProcessQueuedPostDecodeParameterSettings(void);
-        FrameParserStatus_t   GeneratePostDecodeParameterSettings(void);
-        FrameParserStatus_t   UpdateReferenceFrameList(void);
+    FrameParserStatus_t   ReadHeaders(                                  void );
+    FrameParserStatus_t   ResetReferenceFrameList(                      void );
+    FrameParserStatus_t   PurgeQueuedPostDecodeParameterSettings(       void );
+    FrameParserStatus_t   PrepareReferenceFrameList(                    void );
+    FrameParserStatus_t   ProcessQueuedPostDecodeParameterSettings(     void );
+    FrameParserStatus_t   GeneratePostDecodeParameterSettings(          void );
+    FrameParserStatus_t   UpdateReferenceFrameList(                     void );
 
-        FrameParserStatus_t   ProcessReverseDecodeUnsatisfiedReferenceStack(void);
-        FrameParserStatus_t   ProcessReverseDecodeStack(void);
-        FrameParserStatus_t   PurgeReverseDecodeUnsatisfiedReferenceStack(void);
-        FrameParserStatus_t   PurgeReverseDecodeStack(void);
-        FrameParserStatus_t   TestForTrickModeFrameDrop(void);
+    FrameParserStatus_t   ProcessReverseDecodeUnsatisfiedReferenceStack(void );
+    FrameParserStatus_t   ProcessReverseDecodeStack(                    void );
+    FrameParserStatus_t   PurgeReverseDecodeUnsatisfiedReferenceStack(  void );
+    FrameParserStatus_t   PurgeReverseDecodeStack(                      void );
+    FrameParserStatus_t   TestForTrickModeFrameDrop(                    void );
 
 };
 

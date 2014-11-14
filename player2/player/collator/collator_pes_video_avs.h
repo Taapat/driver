@@ -52,13 +52,13 @@ Date        Modification                                    Name
 
 class Collator_PesVideoAvs_c : public Collator_PesVideo_c
 {
-    protected:
+protected:
 
-    public:
+public:
 
-        Collator_PesVideoAvs_c();
+    Collator_PesVideoAvs_c();
 
-        CollatorStatus_t   Reset(void);
+    CollatorStatus_t   Reset(                   void );
 };
 
 #endif // H_COLLATOR_PES_VIDEO_AVS

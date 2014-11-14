@@ -48,64 +48,64 @@ Date        Modification                                    Name
 
 class OutputTimer_Video_c : public OutputTimer_Base_c
 {
-    protected:
+protected:
 
-        // Data
+    // Data
 
-        VideoOutputSurfaceDescriptor_t   *VideoOutputSurfaceDescriptor;
+    VideoOutputSurfaceDescriptor_t	 *VideoOutputSurfaceDescriptor;
 
-        bool                  ThreeTwoPulldownDetected;
+    bool				  ThreeTwoPulldownDetected;
 
-        bool                  SeenInterlacedContentOnInterlacedDisplay;
-        unsigned int              LoseFramesForSynchronization;
+    bool				  SeenInterlacedContentOnInterlacedDisplay;
+    unsigned int			  LoseFramesForSynchronization;
 
-        Rational_t                LastAdjustedSpeedAfterFrameDrop;
+    Rational_t				  LastAdjustedSpeedAfterFrameDrop;
 
-        Rational_t                FrameRate;
-        Rational_t                PreviousFrameRate;
-        Rational_t                DisplayFrameRate;
-        Rational_t                PreviousDisplayFrameRate;
-        bool                  PreviousContentProgressive;
+    Rational_t				  FrameRate;
+    Rational_t				  PreviousFrameRate;
+    Rational_t				  DisplayFrameRate;
+    Rational_t				  PreviousDisplayFrameRate;
+    bool				  PreviousContentProgressive;
 
-        Rational_t                CountMultiplier;
-        unsigned long long            FrameDurationTime;
-        unsigned long long            SourceFrameDurationTime;
-        Rational_t                AccumulatedError;
+    Rational_t				  CountMultiplier;
+    unsigned long long			  FrameDurationTime;
+    unsigned long long			  SourceFrameDurationTime;
+    Rational_t				  AccumulatedError;
 
-        // Functions
+    // Functions
 
-    public:
+public:
 
-        //
-        // Constructor/Destructor methods
-        //
+    //
+    // Constructor/Destructor methods
+    //
 
-        OutputTimer_Video_c(void);
-        ~OutputTimer_Video_c(void);
+    OutputTimer_Video_c(		void );
+    ~OutputTimer_Video_c(		void );
 
-        //
-        // Base component class overrides
-        //
+    //
+    // Base component class overrides
+    //
 
-        OutputTimerStatus_t   Halt(void);
-        OutputTimerStatus_t   Reset(void);
+    OutputTimerStatus_t   Halt(		void );
+    OutputTimerStatus_t   Reset(	void );
 
-        //
-        // Video specific functions
-        //
+    //
+    // Video specific functions
+    //
 
-    protected:
+protected:
 
-        OutputTimerStatus_t   InitializeConfiguration(void);
+    OutputTimerStatus_t   InitializeConfiguration(	void );
 
-        OutputTimerStatus_t   FrameDuration(void             *ParsedAudioVideoDataParameters,
-                                            unsigned long long   *Duration);
+    OutputTimerStatus_t   FrameDuration(		void			 *ParsedAudioVideoDataParameters,
+							unsigned long long	 *Duration );
 
-        OutputTimerStatus_t   FillOutFrameTimingRecord(unsigned long long     SystemTime,
-                void             *ParsedAudioVideoDataParameters,
-                void             *AudioVideoDataOutputTiming);
+    OutputTimerStatus_t   FillOutFrameTimingRecord(	unsigned long long	  SystemTime,
+							void			 *ParsedAudioVideoDataParameters,
+							void			 *AudioVideoDataOutputTiming );
 
-        OutputTimerStatus_t   CorrectSynchronizationError(void);
+    OutputTimerStatus_t   CorrectSynchronizationError(	void );
 };
 #endif
 

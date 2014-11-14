@@ -43,25 +43,26 @@ Date        Modification                                    Name
 #endif
 
 #define INTERFACE_DEBUG(fmt, args...)  ((void) (ENABLE_INTERFACE_DEBUG && \
-                                        (printk("Interface:%s: " fmt, __FUNCTION__, ##args), 0)))
+                                            (printk("Interface:%s: " fmt, __FUNCTION__, ##args), 0)))
 
 /* Output trace information off the critical path */
 #define INTERFACE_TRACE(fmt, args...)  (printk("Interface:%s: " fmt, __FUNCTION__, ##args))
 /* Output errors, should never be output in 'normal' operation */
 #define INTERFACE_ERROR(fmt, args...)  (printk("ERROR:Interface:%s: " fmt, __FUNCTION__, ##args))
 
+
 /* Entry point list */
 
-int PlayerInterfaceInit(void);
-int PlayerInterfaceDelete(void);
+int PlayerInterfaceInit                (void);
+int PlayerInterfaceDelete              (void);
 
-int ComponentGetAttribute(player_component_handle_t       Component,
-                          const char*                     Attribute,
-                          union attribute_descriptor_u*   Value);
-int ComponentSetAttribute(player_component_handle_t       Component,
-                          const char*                     Attribute,
-                          union attribute_descriptor_u*   Value);
+int ComponentGetAttribute              (player_component_handle_t       Component,
+                                        const char*                     Attribute,
+                                        union attribute_descriptor_u*   Value);
+int ComponentSetAttribute              (player_component_handle_t       Component,
+                                        const char*                     Attribute,
+                                        union attribute_descriptor_u*   Value);
 
-player_event_signal_callback PlayerRegisterEventSignalCallback(player_event_signal_callback  Callback);
+player_event_signal_callback PlayerRegisterEventSignalCallback         (player_event_signal_callback  Callback);
 
 #endif

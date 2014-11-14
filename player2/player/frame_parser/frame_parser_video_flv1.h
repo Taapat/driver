@@ -55,15 +55,15 @@ Date        Modification                                    Name
 /// Frame parser for Flv1
 class FrameParser_VideoFlv1_c : public FrameParser_VideoH263_c
 {
-    private:
+private:
 
-        FrameParserStatus_t         FlvReadPictureHeader(void);
+    FrameParserStatus_t         FlvReadPictureHeader(           void );
 
-    public:
+public:
 
-        FrameParser_VideoFlv1_c(void);
+    FrameParser_VideoFlv1_c(                                    void );
 
-        FrameParserStatus_t         ReadHeaders(void);
+    FrameParserStatus_t         ReadHeaders(                    void );
 
 };
 

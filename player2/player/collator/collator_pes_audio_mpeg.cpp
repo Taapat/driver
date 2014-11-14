@@ -65,10 +65,10 @@ Date        Modification                                    Name
 /// ::Reset again because the calls made by the sub-constructors will not have called
 /// our reset method.
 ///
-Collator_PesAudioMpeg_c::Collator_PesAudioMpeg_c(void)
+Collator_PesAudioMpeg_c::Collator_PesAudioMpeg_c( void )
 {
-    if (InitializationStatus != CollatorNoError)
-        return;
+    if( InitializationStatus != CollatorNoError )
+	return;
 
     Collator_PesAudioMpeg_c::Reset();
 }
@@ -81,35 +81,34 @@ Collator_PesAudioMpeg_c::Collator_PesAudioMpeg_c(void)
 /// set bits (starting on a byte boundary).
 ///
 /// Weak start codes are, in fact, the primary reason we have
-/// to verify the header of the subsequent frame before emitting the preceding one.
+/// to verify the header of the subsequent frame before emitting the preceeding one.
 ///
 /// \return Collator status code, CollatorNoError indicates success.
 ///
-CollatorStatus_t Collator_PesAudioMpeg_c::FindNextSyncWord(int *CodeOffset)
+CollatorStatus_t Collator_PesAudioMpeg_c::FindNextSyncWord( int *CodeOffset )
 {
-    unsigned int i;
+unsigned int i;
 
     // check the last byte of any previous blocks
-    if (PotentialFrameHeaderLength)
+    if( PotentialFrameHeaderLength )
     {
-        if (PotentialFrameHeader[PotentialFrameHeaderLength - 1] == 0xff &&
-                (RemainingElementaryData[0] & 0xe0) == 0xe0)
-        {
-            *CodeOffset = -1;
-            return CollatorNoError;
+	if( PotentialFrameHeader[PotentialFrameHeaderLength - 1] == 0xff &&
+	    (RemainingElementaryData[0] & 0xe0) == 0xe0 )
+	{
+	    *CodeOffset = -1;
+	    return CollatorNoError;
 
-        }
+	}
     }
 
     // do the most naive possible search. there is no obvious need for performance here
-    for (i = 0; i < RemainingElementaryLength - 1; i++)
-    {
-        if (RemainingElementaryData[i] == 0xff &&
-                (RemainingElementaryData[i + 1] & 0xe0) == 0xe0)
-        {
-            *CodeOffset = i;
-            return CollatorNoError;
-        }
+    for( i=0; i<RemainingElementaryLength-1; i++) {
+	if( RemainingElementaryData[i] == 0xff &&
+	    (RemainingElementaryData[i+1] & 0xe0) == 0xe0 )
+	{
+	    *CodeOffset = i;
+	    return CollatorNoError;
+	}
     }
 
     return CollatorError;
@@ -122,52 +121,52 @@ CollatorStatus_t Collator_PesAudioMpeg_c::FindNextSyncWord(int *CodeOffset)
 ///
 /// \return Collator status code, CollatorNoError indicates success.
 ///
-CollatorStatus_t Collator_PesAudioMpeg_c::DecideCollatorNextStateAndGetLength(unsigned int *FrameLength)
+CollatorStatus_t Collator_PesAudioMpeg_c::DecideCollatorNextStateAndGetLength( unsigned int *FrameLength )
 {
-    FrameParserStatus_t FPStatus;
-    CollatorStatus_t Status;
-    unsigned int ExtensionLength;
-    MpegAudioParsedFrameHeader_t ParsedFrameHeader;
+  FrameParserStatus_t FPStatus;
+  CollatorStatus_t Status;
+  unsigned int ExtensionLength;
+  MpegAudioParsedFrameHeader_t ParsedFrameHeader;
 
-    //
-    // Check to see if the frame has a valid extension header
-    //
+  //
+  // Check to see if the frame has a valid extension header
+  //
 
-    if (CollatorState == SeekingFrameEnd)
+  if( CollatorState == SeekingFrameEnd )
+  {
+      FPStatus = FrameParser_AudioMpeg_c::ParseExtensionHeader( StoredFrameHeader, &ExtensionLength );
+
+      if (FPStatus == FrameParserNoError )
+      {
+	  *FrameLength = ExtensionLength;
+	  
+	  CollatorState = ReadSubFrame;
+	  
+	  return CollatorNoError;
+      }
+  }
+  
+  //
+  // Having handled extension headers we can handle headers.
+  //
+  
+  FPStatus = FrameParser_AudioMpeg_c::ParseFrameHeader( StoredFrameHeader,
+							&ParsedFrameHeader );
+
+  if( FPStatus == FrameParserNoError )
     {
-        FPStatus = FrameParser_AudioMpeg_c::ParseExtensionHeader(StoredFrameHeader, &ExtensionLength);
+      *FrameLength     = ParsedFrameHeader.Length;
 
-        if (FPStatus == FrameParserNoError)
-        {
-            *FrameLength = ExtensionLength;
+      CollatorState = (CollatorState == SeekingFrameEnd)?GotCompleteFrame:ReadSubFrame;
 
-            CollatorState = ReadSubFrame;
-
-            return CollatorNoError;
-        }
+      Status = CollatorNoError;
+    }
+  else
+    {
+      Status = CollatorError;
     }
 
-    //
-    // Having handled extension headers we can handle headers.
-    //
-
-    FPStatus = FrameParser_AudioMpeg_c::ParseFrameHeader(StoredFrameHeader,
-               &ParsedFrameHeader);
-
-    if (FPStatus == FrameParserNoError)
-    {
-        *FrameLength     = ParsedFrameHeader.Length;
-
-        CollatorState = (CollatorState == SeekingFrameEnd) ? GotCompleteFrame : ReadSubFrame;
-
-        Status = CollatorNoError;
-    }
-    else
-    {
-        Status = CollatorError;
-    }
-
-    return Status;
+  return Status;
 }
 
 
@@ -179,24 +178,23 @@ CollatorStatus_t Collator_PesAudioMpeg_c::DecideCollatorNextStateAndGetLength(un
 ///
 void  Collator_PesAudioMpeg_c::SetPesPrivateDataLength(unsigned char SpecificCode)
 {
-    /* do nothing, configuration already set to the right value... */
+  /* do nothing, configuration already set to the right value... */
 }
 
 
-CollatorStatus_t Collator_PesAudioMpeg_c::Reset(void)
+CollatorStatus_t Collator_PesAudioMpeg_c::Reset( void )
 {
-    CollatorStatus_t Status;
+CollatorStatus_t Status;
 
 //
 
     COLLATOR_DEBUG(">><<\n");
 
     Status = Collator_PesAudio_c::Reset();
+    if( Status != CollatorNoError )
+	return Status;
 
-    if (Status != CollatorNoError)
-        return Status;
-
-    // FrameHeaderLength belongs to Collator_PesAudio_c so we must set it after the class has been reset
+    // FrameHeaderLength belongs to Collator_PesAudio_c so we must set it after the class has been reset    
     FrameHeaderLength = MPEG_HEADER_SIZE;
 
     Configuration.StreamIdentifierMask       = PES_START_CODE_MASK;

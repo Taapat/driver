@@ -99,34 +99,34 @@ Date        Modification                                    Name
 /* Definition of macro function to calculate bit field size for time increments */
 
 #define INCREMENT_BITS(N)               ((N >  0x100) ?                                 \
-        ((N > 0x1000) ?                             \
-         ((N > 0x4000) ?                         \
-          (( N > 0x8000) ? 16 : 15)          \
-              :                         \
-              (( N > 0x2000) ? 14 : 13)          \
-             )                                       \
-             :                             \
-             ((N >  0x400) ?                         \
-              (( N >  0x800) ? 12 : 11)          \
-              :                         \
-              (( N >  0x200) ? 10 :  9)          \
-             )                                       \
-            )                                           \
-            :                                 \
-            ((N >   0x10) ?                             \
-             ((N >   0x40) ?                         \
-              (( N >   0x80) ?  8 :  7)          \
-              :                         \
-              (( N >   0x20) ?  6 :  5)          \
-             )                                       \
-             :                             \
-             ((N >    0x4) ?                         \
-              (( N >    0x8) ?  4 :  3)          \
-              :                         \
-              (( N >    0x2) ?  2 :  1)          \
-             )                                       \
-            )                                           \
-                                            )
+					    ((N > 0x1000) ?                             \
+						((N > 0x4000) ?                         \
+						     (( N > 0x8000) ? 16 : 15)          \
+							      :                         \
+						     (( N > 0x2000) ? 14 : 13)          \
+						)                                       \
+							  :                             \
+						((N >  0x400) ?                         \
+						     (( N >  0x800) ? 12 : 11)          \
+							      :                         \
+						     (( N >  0x200) ? 10 :  9)          \
+						)                                       \
+					    )                                           \
+						      :                                 \
+					    ((N >   0x10) ?                             \
+						((N >   0x40) ?                         \
+						     (( N >   0x80) ?  8 :  7)          \
+							      :                         \
+						     (( N >   0x20) ?  6 :  5)          \
+						)                                       \
+							  :                             \
+						((N >    0x4) ?                         \
+						     (( N >    0x8) ?  4 :  3)          \
+							      :                         \
+						     (( N >    0x2) ?  2 :  1)          \
+						)                                       \
+					    )                                           \
+					)
 
 
 // ////////////////////////////////////////////////////////////////////////////
@@ -136,7 +136,7 @@ Date        Modification                                    Name
 
 typedef struct Mpeg4VolHeader_s
 {
-    // Bits         Needed for decode
+								// Bits         Needed for decode
     unsigned int        random_accessible_vol;                  //  1                   No
     unsigned int        type_indication;                        //  8                   No
     unsigned int        is_object_layer_identifier;             //  1                   No
@@ -159,16 +159,16 @@ typedef struct Mpeg4VolHeader_s
     unsigned int        first_half_vbv_occupancy;               //  11                  No
     unsigned int        latter_half_vbv_occupancy;              //  15                  No
     unsigned int        shape;                                  //  2                   Yes
-    unsigned int        sprite_warping_accuracy;
+    unsigned int        sprite_warping_accuracy;                
     unsigned int        no_of_sprite_warping_points;            //  6
     unsigned int        sprite_brightness_change;               //  2
-
+   
     unsigned int        time_increment_resolution;              //  16                  No
     unsigned int        fixed_vop_rate;                         //  1                   No
     unsigned int        fixed_vop_time_increment;               // Variable             No
-    // Only of fixed_vop_rate, N bits where
-    // N is the number of bits needed to represent
-    // a number modulo time_increment_resolution
+								// Only of fixed_vop_rate, N bits where
+								// N is the number of bits needed to represent
+								// a number modulo time_increment_resolution
     unsigned int        width;                                  //  13                  Yes
     unsigned int        height;                                 //  13                  Yes
     unsigned int        interlaced;                             //  1                   Yes
@@ -192,7 +192,7 @@ typedef struct Mpeg4VolHeader_s
     unsigned int        newpred_segment_type;                   //  1                   No
     unsigned int        reduced_resolution_vop_enable;          //  1                   No
     unsigned int        scalability;                            //  1                   Yes
-
+   
 } Mpeg4VolHeader_t;
 
 /*
@@ -206,9 +206,9 @@ typedef struct Mpeg4VolHeader_s
     unsigned int fcode_for;
     unsigned int vop_coded;
     unsigned int use_intra_dc_vlc;
-
-
-*/
+                   
+                           
+*/   
 
 
 
@@ -216,7 +216,7 @@ typedef struct Mpeg4VolHeader_s
 
 typedef struct Mpeg4VopHeader_s
 {
-    // Bits         Needed for decode
+								// Bits         Needed for decode
     unsigned int        prediction_type;                        //  2                   Yes
     unsigned int        time_base;                              //  Variable            No
     unsigned int        time_inc;                               //  Variable            No
@@ -229,8 +229,8 @@ typedef struct Mpeg4VopHeader_s
     unsigned int        fcode_forward;                          //  3                   Yes
     unsigned int        fcode_backward;                         //  3                   Yes
     unsigned int        divx_nvop;                              //  0                   No (calculated in frame parser)
-
-
+	
+	
     int trbi;
     int trdi;
     int trb_trd;
@@ -238,12 +238,12 @@ typedef struct Mpeg4VopHeader_s
     int trd; // temporal diff. between current B-VOP and previous reference VOP
     int trb; // temporal diff. between next and previous reference VOP
     unsigned int bit_skip_no;
-
+    
     unsigned int display_time_prev;
     unsigned int display_time_next;
     unsigned int time_increment_resolution;
-    int tframe;
-
+             int tframe;
+	
 } Mpeg4VopHeader_t;
 
 // ////////////////////////////////////////////////////////////////////////////

@@ -61,8 +61,14 @@ typedef struct MpegAudioCodecStreamParameterContext_s
     MME_LxAudioDecoderGlobalParams_t StreamParameters;
 } MpegAudioCodecStreamParameterContext_t;
 
+//#if __KERNEL__
+#if 0
+#define BUFFER_MPEG_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT                "MpegAudioCodecStreamParameterContext"
+#define BUFFER_MPEG_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT_TYPE   {BUFFER_MPEG_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT, BufferDataTypeBase, AllocateFromDeviceMemory, 32, 0, true, true, sizeof(MpegAudioCodecStreamParameterContext_t)}
+#else
 #define BUFFER_MPEG_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT                "MpegAudioCodecStreamParameterContext"
 #define BUFFER_MPEG_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT_TYPE   {BUFFER_MPEG_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT, BufferDataTypeBase, AllocateFromOSMemory, 32, 0, true, true, sizeof(MpegAudioCodecStreamParameterContext_t)}
+#endif
 
 static BufferDataDescriptor_t            MpegAudioCodecStreamParameterContextDescriptor = BUFFER_MPEG_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT_TYPE;
 
@@ -76,8 +82,14 @@ typedef struct MpegAudioCodecDecodeContext_s
     MME_LxAudioDecoderFrameStatus_t     DecodeStatus;
 } MpegAudioCodecDecodeContext_t;
 
+//#if __KERNEL__
+#if 0
+#define BUFFER_MPEG_AUDIO_CODEC_DECODE_CONTEXT  "MpegAudioCodecDecodeContext"
+#define BUFFER_MPEG_AUDIO_CODEC_DECODE_CONTEXT_TYPE     {BUFFER_MPEG_AUDIO_CODEC_DECODE_CONTEXT, BufferDataTypeBase, AllocateFromDeviceMemory, 32, 0, true, true, sizeof(MpegAudioCodecDecodeContext_t)}
+#else
 #define BUFFER_MPEG_AUDIO_CODEC_DECODE_CONTEXT  "MpegAudioCodecDecodeContext"
 #define BUFFER_MPEG_AUDIO_CODEC_DECODE_CONTEXT_TYPE     {BUFFER_MPEG_AUDIO_CODEC_DECODE_CONTEXT, BufferDataTypeBase, AllocateFromOSMemory, 32, 0, true, true, sizeof(MpegAudioCodecDecodeContext_t)}
+#endif
 
 static BufferDataDescriptor_t            MpegAudioCodecDecodeContextDescriptor = BUFFER_MPEG_AUDIO_CODEC_DECODE_CONTEXT_TYPE;
 
@@ -87,7 +99,7 @@ static BufferDataDescriptor_t            MpegAudioCodecDecodeContextDescriptor =
 ///
 /// Fill in the configuration parameters used by the super-class and reset everything.
 ///
-Codec_MmeAudioMpeg_c::Codec_MmeAudioMpeg_c(void)
+Codec_MmeAudioMpeg_c::Codec_MmeAudioMpeg_c( void )
 {
     Configuration.CodecName                             = "MPEG audio";
 
@@ -109,10 +121,10 @@ Codec_MmeAudioMpeg_c::Codec_MmeAudioMpeg_c(void)
 
 ////////////////////////////////////////////////////////////////////////////
 ///
-///     Destructor function, ensures a full halt and reset
+///     Destructor function, ensures a full halt and reset 
 ///     are executed for all levels of the class.
 ///
-Codec_MmeAudioMpeg_c::~Codec_MmeAudioMpeg_c(void)
+Codec_MmeAudioMpeg_c::~Codec_MmeAudioMpeg_c( void )
 {
     Halt();
     Reset();
@@ -126,31 +138,30 @@ Codec_MmeAudioMpeg_c::~Codec_MmeAudioMpeg_c(void)
 ///       to hide some bugs in the audio firmware. The problem was originally
 ///       observed in BL012_5 and may have long since been fixed...
 ///
-CodecStatus_t Codec_MmeAudioMpeg_c::FillOutTransformerGlobalParameters(MME_LxAudioDecoderGlobalParams_t *GlobalParams_p)
+CodecStatus_t Codec_MmeAudioMpeg_c::FillOutTransformerGlobalParameters( MME_LxAudioDecoderGlobalParams_t *GlobalParams_p )
 {
 
 //
 
     CODEC_TRACE("Initializing MPEG layer %s audio decoder\n",
-                (DecoderId == ACC_MP2A_ID ? "I/II" :
-                 DecoderId == ACC_MP3_ID  ? "III" :
-                 "unknown"));
+		(DecoderId == ACC_MP2A_ID ? "I/II" :
+		 DecoderId == ACC_MP3_ID  ? "III" :
+					    "unknown"));
 
-    // check for firmware decoder existence in case of SET_GLOBAL only
-    // (we don't know the frame type at init time)
+	// check for firmware decoder existence in case of SET_GLOBAL only
+	// (we dont't know the frame type at init time)
 
     if (ParsedFrameParameters)
     {
         MpegAudioStreamParameters_t *Parsed = (MpegAudioStreamParameters_t *)ParsedFrameParameters->StreamParameterStructure;
-
         if (Parsed && Parsed->Layer)
-        {
-            int mask = (DecoderId == ACC_MP2A_ID) ? ACC_MP2a : ACC_MP3;
-
+        {	
+            int mask = (DecoderId == ACC_MP2A_ID) ? ACC_MP2a:ACC_MP3;
+            
             if (!(AudioDecoderTransformCapability.DecoderCapabilityFlags & (1 << mask)))
             {
                 CODEC_ERROR("This type of MPEG Layer is not supported by the firmware!\n");
-                Player->MarkStreamUnPlayable(Stream);
+                Player->MarkStreamUnPlayable( Stream );
                 return (CodecError);
             }
         }
@@ -183,7 +194,7 @@ CodecStatus_t Codec_MmeAudioMpeg_c::FillOutTransformerGlobalParameters(MME_LxAud
 
 //
 
-    return Codec_MmeAudio_c::FillOutTransformerGlobalParameters(GlobalParams_p);
+    return Codec_MmeAudio_c::FillOutTransformerGlobalParameters( GlobalParams_p );
 }
 
 
@@ -196,10 +207,10 @@ CodecStatus_t Codec_MmeAudioMpeg_c::FillOutTransformerGlobalParameters(MME_LxAud
 /// MPEG audio decoder (defaults to MPEG Layer II but can be updated by new
 /// stream parameters).
 ///
-CodecStatus_t   Codec_MmeAudioMpeg_c::FillOutTransformerInitializationParameters(void)
+CodecStatus_t   Codec_MmeAudioMpeg_c::FillOutTransformerInitializationParameters( void )
 {
-    CodecStatus_t Status;
-    MME_LxAudioDecoderInitParams_t &Params = AudioDecoderInitializationParameters;
+CodecStatus_t Status;
+MME_LxAudioDecoderInitParams_t &Params = AudioDecoderInitializationParameters;
 
 //
 
@@ -209,13 +220,12 @@ CodecStatus_t   Codec_MmeAudioMpeg_c::FillOutTransformerInitializationParameters
 //
 
     Status = Codec_MmeAudio_c::FillOutTransformerInitializationParameters();
-
     if (Status != CodecNoError)
-        return Status;
+	return Status;
 
 //
 
-    return FillOutTransformerGlobalParameters(&Params.GlobalParams);
+    return FillOutTransformerGlobalParameters( &Params.GlobalParams );
 }
 
 
@@ -223,34 +233,33 @@ CodecStatus_t   Codec_MmeAudioMpeg_c::FillOutTransformerInitializationParameters
 ///
 /// Populate the AUDIO_DECODER's MME_SET_GLOBAL_TRANSFORMER_PARAMS parameters for MPEG audio.
 ///
-CodecStatus_t   Codec_MmeAudioMpeg_c::FillOutSetStreamParametersCommand(void)
+CodecStatus_t   Codec_MmeAudioMpeg_c::FillOutSetStreamParametersCommand( void )
 {
-    CodecStatus_t Status;
-    MpegAudioStreamParameters_t *Parsed = (MpegAudioStreamParameters_t *)ParsedFrameParameters->StreamParameterStructure;
-    MpegAudioCodecStreamParameterContext_t  *Context = (MpegAudioCodecStreamParameterContext_t *)StreamParameterContext;
+CodecStatus_t Status;
+MpegAudioStreamParameters_t *Parsed = (MpegAudioStreamParameters_t *)ParsedFrameParameters->StreamParameterStructure;
+MpegAudioCodecStreamParameterContext_t  *Context = (MpegAudioCodecStreamParameterContext_t *)StreamParameterContext;
 
 //Parsed may be NULL if call to this function results from an ALSA parameter update.
     if (Parsed)
     {
-        //
-        // Examine the parsed stream parameters and determine what type of codec to instanciate
-        //
+	//
+	// Examine the parsed stream parameters and determine what type of codec to instanciate
+	//
 
-        DecoderId = Parsed->Layer == 3 ? ACC_MP3_ID : ACC_MP2A_ID;
+	DecoderId = Parsed->Layer == 3 ? ACC_MP3_ID : ACC_MP2A_ID;
     }
-
+    
     //
     // Now fill out the actual structure
+    //     
+
+    memset( &(Context->StreamParameters), 0, sizeof(Context->StreamParameters) );
+    Status = FillOutTransformerGlobalParameters( &(Context->StreamParameters) );
+    if( Status != CodecNoError )
+	return Status;
+
     //
-
-    memset(&(Context->StreamParameters), 0, sizeof(Context->StreamParameters));
-    Status = FillOutTransformerGlobalParameters(&(Context->StreamParameters));
-
-    if (Status != CodecNoError)
-        return Status;
-
-    //
-    // Fill out the actual command
+    // Fillout the actual command
     //
 
     Context->BaseContext.MMECommand.CmdStatus.AdditionalInfoSize        = 0;
@@ -267,25 +276,25 @@ CodecStatus_t   Codec_MmeAudioMpeg_c::FillOutSetStreamParametersCommand(void)
 ///
 /// Populate the AUDIO_DECODER's MME_TRANSFORM parameters for MPEG audio.
 ///
-CodecStatus_t   Codec_MmeAudioMpeg_c::FillOutDecodeCommand(void)
+CodecStatus_t   Codec_MmeAudioMpeg_c::FillOutDecodeCommand(       void )
 {
-    MpegAudioCodecDecodeContext_t   *Context        = (MpegAudioCodecDecodeContext_t *)DecodeContext;
+MpegAudioCodecDecodeContext_t   *Context        = (MpegAudioCodecDecodeContext_t *)DecodeContext;
 //MpegAudioFrameParameters_t    *Parsed         = (MpegAudioFrameParameters_t *)ParsedFrameParameters->FrameParameterStructure;
 
     //
     // Initialize the frame parameters (we don't actually have much to say here)
     //
 
-    memset(&Context->DecodeParameters, 0, sizeof(Context->DecodeParameters));
+    memset( &Context->DecodeParameters, 0, sizeof(Context->DecodeParameters) );
 
     //
     // Zero the reply structure
     //
 
-    memset(&Context->DecodeStatus, 0, sizeof(Context->DecodeStatus));
+    memset( &Context->DecodeStatus, 0, sizeof(Context->DecodeStatus) );
 
     //
-    // Fill out the actual command
+    // Fillout the actual command
     //
 
     Context->BaseContext.MMECommand.CmdStatus.AdditionalInfoSize        = sizeof(Context->DecodeStatus);
@@ -299,46 +308,42 @@ CodecStatus_t   Codec_MmeAudioMpeg_c::FillOutDecodeCommand(void)
 ////////////////////////////////////////////////////////////////////////////
 ///
 /// Validate the ACC status structure and squawk loudly if problems are found.
-///
+/// 
 /// Dispite the squawking this method unconditionally returns success. This is
 /// because the firmware will already have concealed the decode problems by
 /// performing a soft mute.
 ///
 /// \return CodecSuccess
 ///
-CodecStatus_t   Codec_MmeAudioMpeg_c::ValidateDecodeContext(CodecBaseDecodeContext_t *Context)
+CodecStatus_t   Codec_MmeAudioMpeg_c::ValidateDecodeContext( CodecBaseDecodeContext_t *Context )
 {
-    MpegAudioCodecDecodeContext_t *DecodeContext = (MpegAudioCodecDecodeContext_t *) Context;
-    MME_LxAudioDecoderFrameStatus_t &Status      = DecodeContext->DecodeStatus;
-    ParsedAudioParameters_t *AudioParameters;
+MpegAudioCodecDecodeContext_t *DecodeContext = (MpegAudioCodecDecodeContext_t *) Context;
+MME_LxAudioDecoderFrameStatus_t &Status = DecodeContext->DecodeStatus;
+ParsedAudioParameters_t *AudioParameters;
 
 
     CODEC_DEBUG(">><<\n");
 
-    if (ENABLE_CODEC_DEBUG)
-    {
-        //DumpCommand(bufferIndex);
+    if (ENABLE_CODEC_DEBUG) {
+	//DumpCommand(bufferIndex);
     }
 
-    if (Status.DecStatus != ACC_MPEG2_OK && Status.DecStatus != ACC_MPEG_MC_CRC_ERROR)
-    {
-        CODEC_ERROR("MPEG audio decode error (muted frame): %d\n", Status.DecStatus);
-        //DumpCommand(bufferIndex);
-        // don't report an error to the higher levels (because the frame is muted)
+    if (Status.DecStatus != ACC_MPEG2_OK && Status.DecStatus != ACC_MPEG_MC_CRC_ERROR) {
+	CODEC_ERROR("MPEG audio decode error (muted frame): %d\n", Status.DecStatus);
+	//DumpCommand(bufferIndex);
+	// don't report an error to the higher levels (because the frame is muted)
     }
 
-    if (Status.NbOutSamples != 1152 && Status.NbOutSamples != 576)   // TODO: manifest constant
-    {
+    if (Status.NbOutSamples != 1152 && Status.NbOutSamples != 576) { // TODO: manifest constant
         // 288/144 aren't valid values (but testing showed that it was emited for some
         // of the MPEG2 streams for example WrenTesting/MPEG2_LIII/MPEG2_LIII_80kbps_24khz_s.mp3)
         // so we continue to output a message if this is observed but only if diagnostics are
         // enabled.
-        if (Status.NbOutSamples == 288 || Status.NbOutSamples == 144)
+        if( Status.NbOutSamples == 288 || Status.NbOutSamples == 144)
             CODEC_DEBUG("Unexpected number of output samples (%d)\n", Status.NbOutSamples);
         else
-            CODEC_ERROR("Unexpected number of output samples (%d)\n", Status.NbOutSamples);
-
-        //DumpCommand(bufferIndex);
+	    CODEC_ERROR("Unexpected number of output samples (%d)\n", Status.NbOutSamples);
+	//DumpCommand(bufferIndex);
     }
 
     // SYSFS
@@ -361,27 +366,27 @@ CodecStatus_t   Codec_MmeAudioMpeg_c::ValidateDecodeContext(CodecBaseDecodeConte
     int SamplingFreqCode = Status.SamplingFreq;
 
     if (SamplingFreqCode < ACC_FS_reserved)
-    {
-        AudioParameters->Source.SampleRateHz = ACC_SamplingFreqLUT[SamplingFreqCode];
-    }
+	{
+		AudioParameters->Source.SampleRateHz = ACC_SamplingFreqLUT[SamplingFreqCode];
+	}
     else
-    {
-        AudioParameters->Source.SampleRateHz = 0;
-        CODEC_ERROR("MPEG audio decode bad sampling freq returned: 0x%x\n", SamplingFreqCode);
-    }
+	{
+		AudioParameters->Source.SampleRateHz = 0;
+        CODEC_ERROR("DTSHD audio decode bad sampling freq returned: 0x%x\n", SamplingFreqCode);
+	}
 
     return CodecNoError;
 }
 
 // /////////////////////////////////////////////////////////////////////////
 //
-//      Function to dump out the set stream
+//      Function to dump out the set stream 
 //      parameters from an mme command.
 //
 
-CodecStatus_t   Codec_MmeAudioMpeg_c::DumpSetStreamParameters(void    *Parameters)
+CodecStatus_t   Codec_MmeAudioMpeg_c::DumpSetStreamParameters(          void    *Parameters )
 {
-    CODEC_ERROR("Not implemented\n");
+    CODEC_ERROR("Not implemented\n");  
     return CodecNoError;
 }
 
@@ -392,8 +397,8 @@ CodecStatus_t   Codec_MmeAudioMpeg_c::DumpSetStreamParameters(void    *Parameter
 //      parameters from an mme command.
 //
 
-CodecStatus_t   Codec_MmeAudioMpeg_c::DumpDecodeParameters(void    *Parameters)
+CodecStatus_t   Codec_MmeAudioMpeg_c::DumpDecodeParameters(             void    *Parameters )
 {
-    CODEC_ERROR("Not implemented\n");
+    CODEC_ERROR("Not implemented\n");  
     return CodecNoError;
 }

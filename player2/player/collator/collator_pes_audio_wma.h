@@ -36,7 +36,7 @@ Date        Modification                                    Name
 
 // /////////////////////////////////////////////////////////////////////
 //
-//  Include any component headers
+//	Include any component headers
 
 #include "collator_pes_audio.h"
 #include "wma_audio.h"
@@ -54,20 +54,20 @@ Date        Modification                                    Name
 class Collator_PesAudioWma_c : public Collator_PesAudio_c
 {
 
-    protected:
+protected:
 
-        unsigned int WMADataBlockSize;
+    unsigned int WMADataBlockSize;
 
-        CollatorStatus_t FindNextSyncWord(int *CodeOffset);
-        CollatorStatus_t DecideCollatorNextStateAndGetLength(unsigned int *FrameLength);
-        void             SetPesPrivateDataLength(unsigned char SpecificCode);
-        CollatorStatus_t HandlePesPrivateData(unsigned char *PesPrivateData);
+    CollatorStatus_t FindNextSyncWord( int *CodeOffset );
+    CollatorStatus_t DecideCollatorNextStateAndGetLength( unsigned int *FrameLength );
+    void             SetPesPrivateDataLength(unsigned char SpecificCode);
+    CollatorStatus_t HandlePesPrivateData(unsigned char *PesPrivateData);
+    
+public:
 
-    public:
+    Collator_PesAudioWma_c();
 
-        Collator_PesAudioWma_c();
-
-        CollatorStatus_t   Reset(void);
+    CollatorStatus_t   Reset(			void );
 };
 
 #endif // H_COLLATOR_PES_AUDIO_WMA

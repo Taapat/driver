@@ -35,16 +35,16 @@ Date        Modification                                    Name
 #ifndef __DVP_H
 #define __DVP_H
 
-#define DVP_COLOUR_MODE_DEFAULT     0
-#define DVP_COLOUR_MODE_601     1
-#define DVP_COLOUR_MODE_709     2
+#define DVP_COLOUR_MODE_DEFAULT		0
+#define DVP_COLOUR_MODE_601		1
+#define DVP_COLOUR_MODE_709		2
 
 typedef struct DvpRectangle_s
 {
-    unsigned int     X;
-    unsigned int     Y;
-    unsigned int     Width;
-    unsigned int     Height;
+    unsigned int	 X;
+    unsigned int	 Y;
+    unsigned int	 Width;
+    unsigned int	 Height;
 } DvpRectangle_t;
 
 //
@@ -57,11 +57,10 @@ struct Ratio_s
 
 //
 
-typedef struct StreamInfo_s
-{
+typedef struct StreamInfo_s {
     unsigned int width;
     unsigned int height;
-    unsigned int interlaced;
+    unsigned int interlaced;	
     unsigned int top_field_first;
     unsigned int h_offset;
     unsigned int v_offset;
@@ -69,16 +68,16 @@ typedef struct StreamInfo_s
     unsigned int* buffer_class;
 
     struct Ratio_s pixel_aspect_ratio;
-
+    
     // Nicks additions
-    unsigned long long      FrameRateNumerator;
-    unsigned long long      FrameRateDenominator;
+    unsigned long long		FrameRateNumerator;
+    unsigned long long		FrameRateDenominator;
 
-    unsigned int        VideoFullRange;
-    unsigned int        ColourMode;
+    unsigned int		VideoFullRange;
+    unsigned int		ColourMode;
 
-    DvpRectangle_t      InputWindow;
-    DvpRectangle_t      OutputWindow;
-}  __attribute__((packed)) StreamInfo_t;
+    DvpRectangle_t		InputWindow;
+    DvpRectangle_t		OutputWindow;
+}  __attribute__ ((packed)) StreamInfo_t;
 
 #endif // __DVP_H

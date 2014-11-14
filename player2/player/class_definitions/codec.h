@@ -43,19 +43,19 @@ Date        Modification                                    Name
 
 enum
 {
-    CodecNoError                = PlayerNoError,
-    CodecError                  = PlayerError,
+    CodecNoError				= PlayerNoError,
+    CodecError					= PlayerError,
 
-    CodecUnknownFrame               = BASE_CODEC
+    CodecUnknownFrame				= BASE_CODEC
 };
 
-typedef PlayerStatus_t  CodecStatus_t;
+typedef PlayerStatus_t	CodecStatus_t;
 
 //
 
 enum
 {
-    CodecFnRegisterOutputBufferRing = BASE_CODEC,
+    CodecFnRegisterOutputBufferRing	= BASE_CODEC,
     CodecFnOutputPartialDecodeBuffers,
     CodecFnReleaseReferenceFrame,
     CodecFnReleaseDecodeBuffer,
@@ -70,45 +70,45 @@ enum
 // Class definition
 //
 
-#define CODEC_RELEASE_ALL       INVALID_INDEX
+#define	CODEC_RELEASE_ALL		INVALID_INDEX
 
 class Codec_c : public BaseComponentClass_c
 {
-    public:
+public:
 
-        virtual CodecStatus_t   GetTrickModeParameters(CodecTrickModeParameters_t   *TrickModeParameters) = 0;
+    virtual CodecStatus_t   GetTrickModeParameters(	CodecTrickModeParameters_t	*TrickModeParameters ) = 0;
 
-        virtual CodecStatus_t   RegisterOutputBufferRing(Ring_t           Ring) = 0;
+    virtual CodecStatus_t   RegisterOutputBufferRing(	Ring_t			  Ring ) = 0;
 
-        virtual CodecStatus_t   OutputPartialDecodeBuffers(void) = 0;
+    virtual CodecStatus_t   OutputPartialDecodeBuffers(	void ) = 0;
 
-        virtual CodecStatus_t   DiscardQueuedDecodes(void) = 0;
+    virtual CodecStatus_t   DiscardQueuedDecodes( 	void ) = 0;
 
-        virtual CodecStatus_t   ReleaseReferenceFrame(unsigned int        ReferenceFrameDecodeIndex) = 0;
+    virtual CodecStatus_t   ReleaseReferenceFrame(	unsigned int		  ReferenceFrameDecodeIndex ) = 0;
 
-        virtual CodecStatus_t   CheckReferenceFrameList(unsigned int          NumberOfReferenceFrameLists,
-                ReferenceFrameList_t      ReferenceFrameList[]) = 0;
+    virtual CodecStatus_t   CheckReferenceFrameList(	unsigned int		  NumberOfReferenceFrameLists,
+							ReferenceFrameList_t	  ReferenceFrameList[] ) = 0;
 
-        virtual CodecStatus_t   ReleaseDecodeBuffer(Buffer_t          Buffer) = 0;
+    virtual CodecStatus_t   ReleaseDecodeBuffer(	Buffer_t		  Buffer ) = 0;
 
-        virtual CodecStatus_t   Input(Buffer_t        CodedBuffer) = 0;
+    virtual CodecStatus_t   Input(			Buffer_t		  CodedBuffer ) = 0;
 };
 
 // ---------------------------------------------------------------------
 //
-// Documentation
+// Docuentation
 //
 
 /*! \class Codec_c
 \brief Responsible for taking individual parsed coded frames and decoding them.
 
-The codec class is responsible for taking individual parsed coded
-frames and decoding them. It manages the decode buffers, and when
-decode buffer is complete (all fields + all slices) it places the
-decode buffer on its output ring. This is a list of its entrypoints,
-and a partial list of the calls it makes, and the data structures it
-accesses, these are in addition to the standard component class
-entrypoints, and the complete list of support entrypoints in the Player
+The codec class is responsible for taking individual parsed coded 
+frames and decoding them. It manages the decode buffers, and when 
+decode buffer is complete (all fields + all slices) it places the 
+decode buffer on its output ring. This is a list of its entrypoints, 
+and a partial list of the calls it makes, and the data structures it 
+accesses, these are in addition to the standard component class 
+entrypoints, and the complete list of support entrypoints in the Player 
 class.
 
 The partial list of entrypoints used by this class:
@@ -131,9 +131,9 @@ The partial list of meta data types used by this class:
 /*! \fn CodecStatus_t   GetTrickModeParameters(     CodecTrickModeParameters_t      *TrickModeParameters )
 \brief Gain access to parameters describing trick mode capabilities.
 
-This function gains a copy of a datastructuture held within the codec, that
-describes the abilities, of the codec, with respect to supporting trick modes.
-In particular it supplies information that will be used by the player to select
+This function gains a copy of a datastructuture held within the codec, that 
+describes the abilities, of the codec, with respect to supporting trick modes. 
+In particular it supplies information that will be used by the player to select 
 the ranges in which particular fast forward algorithms operate.
 
 \param TrickModeParameters A pointer to a variable to hold the parameter structure.
@@ -141,7 +141,7 @@ the ranges in which particular fast forward algorithms operate.
 \return Codec status code, CodecNoError indicates success.
 */
 
-/*! \fn CodecStatus_t Codec_c::RegisterOutputBufferRing(Ring_t Ring)
+/*! \fn CodecStatus_t Codec_c::RegisterOutputBufferRing(Ring_t Ring) 
 \brief Register a ring on which decoded frames are to be placed.
 
 \param Ring Pointer to a Ring_c instance
@@ -153,9 +153,9 @@ the ranges in which particular fast forward algorithms operate.
 \brief Request for incompletely decoded buffers to be immediately output.
 
 Passes onto the output ring any decode buffers that are partially
-filled, this includes buffers with only one field decoded, or a number
-of slices. In the event that several slices have been queued but not
-decoded, they should be decoded and the relevant buffer passed on.
+filled, this includes buffers with only one field decoded, or a number 
+of slices. In the event that several slices have been queued but not 
+decoded, they should be decoded and the relevent buffer passed on.
 
 \return Codec status code, CodecNoError indicates success.
 */
@@ -179,13 +179,13 @@ This function is non-blocking.
 */
 
 /*! \fn CodecStatus_t Codec_c::CheckReferenceFrameList(
-                        unsigned int          NumberOfReferenceFrameLists,
-                        ReferenceFrameList_t      ReferenceFrameList[] )
+						unsigned int		  NumberOfReferenceFrameLists,
+						ReferenceFrameList_t	  ReferenceFrameList[] )
 
 \brief Check a reference frame list
 
-This function checks that all the frames mentioned in the supplied lists are available
-for use as reference frames. It is used, when frames are being discarded due to trick modes,
+This function checks that all the frames mentioned in the supplied lists are available 
+for use as reference frames. It is used, when frames are being discarded due to trick modes, 
 to ensure that a frame can be decoded.
 
 \param NumberOfReferenceFrameLists, Number of reference frame lists (one for mpeg2 et al, two for H264)

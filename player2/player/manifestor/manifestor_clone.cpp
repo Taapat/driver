@@ -47,9 +47,9 @@ Date        Modification                                    Name
 //  Thread entry stub
 //
 
-static OS_TaskEntry(BufferReleaseThreadStub)
+static OS_TaskEntry (BufferReleaseThreadStub)
 {
-    Manifestor_Clone_c  *CloneManifestor    = (Manifestor_Clone_c*)Parameter;
+    Manifestor_Clone_c  *CloneManifestor	= (Manifestor_Clone_c*)Parameter;
 
     CloneManifestor->BufferReleaseThread();
     OS_TerminateThread();
@@ -61,17 +61,17 @@ static OS_TaskEntry(BufferReleaseThreadStub)
 //      Class Constructor
 //
 
-Manifestor_Clone_c::Manifestor_Clone_c(Manifestor_t Original)
+Manifestor_Clone_c::Manifestor_Clone_c( Manifestor_t	Original )
 {
     InitializationStatus                = ManifestorError;
 
-    this->Original          = Original;
+    this->Original			= Original;
 
-    CloneTo             = NULL;
-    CloneOutputRing         = NULL;
-    OriginalOutputRing          = NULL;
+    CloneTo				= NULL;
+    CloneOutputRing			= NULL;
+    OriginalOutputRing			= NULL;
     BufferReleaseThreadId               = OS_INVALID_THREAD;
-    BufferReleaseThreadRunning      = false;
+    BufferReleaseThreadRunning		= false;
 
     InitializationStatus                = ManifestorNoError;
 }
@@ -82,10 +82,10 @@ Manifestor_Clone_c::Manifestor_Clone_c(Manifestor_t Original)
 //      Class Destructor
 //
 
-Manifestor_Clone_c::~Manifestor_Clone_c(void)
+Manifestor_Clone_c::~Manifestor_Clone_c( void )
 {
-    if (CloneTo != NULL)
-        SetCloneTo(NULL);
+    if( CloneTo != NULL )
+	SetCloneTo( NULL );
 }
 
 
@@ -94,54 +94,54 @@ Manifestor_Clone_c::~Manifestor_Clone_c(void)
 //      Component base class clones
 //
 
-PlayerStatus_t   Manifestor_Clone_c::Halt(void)
+PlayerStatus_t   Manifestor_Clone_c::Halt( 			void )
 {
-    OriginalOutputRing  = NULL;
+    OriginalOutputRing	= NULL;
 
-    if (CloneTo != NULL)
-        CloneTo->Halt();
+    if( CloneTo != NULL )
+	CloneTo->Halt();
 
     return Original->Halt();
 }
 
 //
 
-PlayerStatus_t   Manifestor_Clone_c::Reset(void)
+PlayerStatus_t   Manifestor_Clone_c::Reset(			void )
 {
-    if (CloneTo != NULL)
-        CloneTo->Reset();
+    if( CloneTo != NULL )
+	CloneTo->Reset();
 
     return Original->Reset();
 }
 
 //
 
-PlayerStatus_t   Manifestor_Clone_c::SetModuleParameters(unsigned int        ParameterBlockSize,
-        void            *ParameterBlock)
+PlayerStatus_t   Manifestor_Clone_c::SetModuleParameters(	unsigned int		 ParameterBlockSize,
+								void			*ParameterBlock)
 {
-    if (CloneTo != NULL)
-        CloneTo->SetModuleParameters(ParameterBlockSize, ParameterBlock);
+    if( CloneTo != NULL )
+	CloneTo->SetModuleParameters( ParameterBlockSize, ParameterBlock );
 
-    return Original->SetModuleParameters(ParameterBlockSize, ParameterBlock);
+    return Original->SetModuleParameters( ParameterBlockSize, ParameterBlock );
 }
 
 //
 
-PlayerStatus_t   Manifestor_Clone_c::RegisterPlayer(Player_t         Player,
-        PlayerPlayback_t     Playback,
-        PlayerStream_t       Stream,
-        Collator_t       Collator,
-        FrameParser_t        FrameParser,
-        Codec_t          Codec,
-        OutputTimer_t        OutputTimer,
-        Manifestor_t         Manifestor)
+PlayerStatus_t   Manifestor_Clone_c::RegisterPlayer(		Player_t		 Player,
+								PlayerPlayback_t	 Playback,
+								PlayerStream_t		 Stream,
+								Collator_t		 Collator,
+								FrameParser_t		 FrameParser,
+								Codec_t			 Codec,
+								OutputTimer_t		 OutputTimer,
+								Manifestor_t		 Manifestor )
 {
-    BaseComponentClass_c::RegisterPlayer(Player, Playback, Stream, Collator, FrameParser, Codec, OutputTimer, Manifestor);
+    BaseComponentClass_c::RegisterPlayer( Player, Playback, Stream, Collator, FrameParser, Codec, OutputTimer, Manifestor );
 
-    if (CloneTo != NULL)
-        CloneTo->RegisterPlayer(Player, Playback, Stream, Collator, FrameParser, Codec, OutputTimer, Manifestor);
+    if( CloneTo != NULL )
+	CloneTo->RegisterPlayer( Player, Playback, Stream, Collator, FrameParser, Codec, OutputTimer, Manifestor );
 
-    return Original->RegisterPlayer(Player, Playback, Stream, Collator, FrameParser, Codec, OutputTimer, Manifestor);
+    return Original->RegisterPlayer( Player, Playback, Stream, Collator, FrameParser, Codec, OutputTimer, Manifestor );
 }
 
 
@@ -151,9 +151,9 @@ PlayerStatus_t   Manifestor_Clone_c::RegisterPlayer(Player_t         Player,
 //
 
 
-ManifestorStatus_t   Manifestor_Clone_c::GetDecodeBufferPool(BufferPool_t             *Pool)
+ManifestorStatus_t   Manifestor_Clone_c::GetDecodeBufferPool(           BufferPool_t             *Pool )
 {
-    return Original->GetDecodeBufferPool(Pool);
+    return Original->GetDecodeBufferPool( Pool );
 }
 
 // /////////////////////////////////////////////////////////////////////////
@@ -162,26 +162,26 @@ ManifestorStatus_t   Manifestor_Clone_c::GetDecodeBufferPool(BufferPool_t       
 //
 
 
-ManifestorStatus_t   Manifestor_Clone_c::GetPostProcessControlBufferPool(BufferPool_t            *Pool)
+ManifestorStatus_t   Manifestor_Clone_c::GetPostProcessControlBufferPool(BufferPool_t            *Pool )
 {
-    return Original->GetPostProcessControlBufferPool(Pool);
+    return Original->GetPostProcessControlBufferPool( Pool );
 }
 
 // /////////////////////////////////////////////////////////////////////////
 //
-//  RegisterOutputBufferRing - we use a different ring for the clone,
-//                 as allocated when the clone was registered.
+//	RegisterOutputBufferRing - we use a different ring for the clone,
+//				   as allocated when the clone was registered.
 //
 
 
-ManifestorStatus_t   Manifestor_Clone_c::RegisterOutputBufferRing(Ring_t                    Ring)
+ManifestorStatus_t   Manifestor_Clone_c::RegisterOutputBufferRing(      Ring_t                    Ring )
 {
-    OriginalOutputRing  = Ring;
+    OriginalOutputRing	= Ring;
 
-    if (CloneTo != NULL)
-        CloneTo->RegisterOutputBufferRing(CloneOutputRing);
+    if( CloneTo != NULL )
+	CloneTo->RegisterOutputBufferRing( CloneOutputRing );
 
-    return Original->RegisterOutputBufferRing(Ring);
+    return Original->RegisterOutputBufferRing( Ring );
 }
 
 // /////////////////////////////////////////////////////////////////////////
@@ -190,9 +190,9 @@ ManifestorStatus_t   Manifestor_Clone_c::RegisterOutputBufferRing(Ring_t        
 //
 
 
-ManifestorStatus_t   Manifestor_Clone_c::GetSurfaceParameters(void                    **SurfaceParameters)
+ManifestorStatus_t   Manifestor_Clone_c::GetSurfaceParameters(          void                    **SurfaceParameters )
 {
-    return Original->GetSurfaceParameters(SurfaceParameters);
+    return Original->GetSurfaceParameters( SurfaceParameters );
 }
 
 // /////////////////////////////////////////////////////////////////////////
@@ -203,7 +203,7 @@ ManifestorStatus_t   Manifestor_Clone_c::GetSurfaceParameters(void              
 
 ManifestorStatus_t   Manifestor_Clone_c::GetNextQueuedManifestationTime(unsigned long long       *Time)
 {
-    return Original->GetNextQueuedManifestationTime(Time);
+    return Original->GetNextQueuedManifestationTime( Time );
 }
 
 // /////////////////////////////////////////////////////////////////////////
@@ -212,10 +212,10 @@ ManifestorStatus_t   Manifestor_Clone_c::GetNextQueuedManifestationTime(unsigned
 //
 
 
-ManifestorStatus_t   Manifestor_Clone_c::ReleaseQueuedDecodeBuffers(void)
+ManifestorStatus_t   Manifestor_Clone_c::ReleaseQueuedDecodeBuffers(    void )
 {
-    if (CloneTo != NULL)
-        CloneTo->ReleaseQueuedDecodeBuffers();
+    if( CloneTo != NULL )
+	CloneTo->ReleaseQueuedDecodeBuffers();
 
     return Original->ReleaseQueuedDecodeBuffers();
 }
@@ -226,21 +226,21 @@ ManifestorStatus_t   Manifestor_Clone_c::ReleaseQueuedDecodeBuffers(void)
 //
 
 
-ManifestorStatus_t   Manifestor_Clone_c::InitialFrame(Buffer_t                  Buffer)
+ManifestorStatus_t   Manifestor_Clone_c::InitialFrame(                  Buffer_t                  Buffer )
 {
-    ManifestorStatus_t  Status;
+ManifestorStatus_t	Status;
 
-    if (CloneTo != NULL)
+    if( CloneTo != NULL )
     {
-        Buffer->IncrementReferenceCount(IdentifierManifestorClone);
+	Buffer->IncrementReferenceCount( IdentifierManifestorClone );
 
-        Status  = CloneTo->InitialFrame(Buffer);
+	Status	= CloneTo->InitialFrame( Buffer );
 
-        if (Status != ManifestorNoError)
-            Buffer->DecrementReferenceCount(IdentifierManifestorClone);
+	if( Status != ManifestorNoError )
+	    Buffer->DecrementReferenceCount( IdentifierManifestorClone );
     }
 
-    return Original->InitialFrame(Buffer);
+    return Original->InitialFrame( Buffer );
 }
 
 // /////////////////////////////////////////////////////////////////////////
@@ -249,21 +249,21 @@ ManifestorStatus_t   Manifestor_Clone_c::InitialFrame(Buffer_t                  
 //
 
 
-ManifestorStatus_t   Manifestor_Clone_c::QueueDecodeBuffer(Buffer_t                  Buffer)
+ManifestorStatus_t   Manifestor_Clone_c::QueueDecodeBuffer(             Buffer_t                  Buffer )
 {
-    ManifestorStatus_t  Status;
+ManifestorStatus_t	Status;
 
-    if (CloneTo != NULL)
+    if( CloneTo != NULL )
     {
-        Buffer->IncrementReferenceCount(IdentifierManifestorClone);
+	Buffer->IncrementReferenceCount( IdentifierManifestorClone );
 
-        Status  = CloneTo->QueueDecodeBuffer(Buffer);
+	Status	= CloneTo->QueueDecodeBuffer( Buffer );
 
-        if (Status != ManifestorNoError)
-            Buffer->DecrementReferenceCount(IdentifierManifestorClone);
+	if( Status != ManifestorNoError )
+	    Buffer->DecrementReferenceCount( IdentifierManifestorClone );
     }
 
-    return Original->QueueDecodeBuffer(Buffer);
+    return Original->QueueDecodeBuffer( Buffer );
 }
 
 // /////////////////////////////////////////////////////////////////////////
@@ -272,24 +272,24 @@ ManifestorStatus_t   Manifestor_Clone_c::QueueDecodeBuffer(Buffer_t             
 //
 
 
-ManifestorStatus_t   Manifestor_Clone_c::QueueNullManifestation(void)
+ManifestorStatus_t   Manifestor_Clone_c::QueueNullManifestation(        void )
 {
-    if (CloneTo != NULL)
-        CloneTo->QueueNullManifestation();
+    if( CloneTo != NULL )
+	CloneTo->QueueNullManifestation();
 
     return Original->QueueNullManifestation();
 }
 
 // /////////////////////////////////////////////////////////////////////////
 //
-//      QueueEventSignal - we do not want the clone to do this, it would
-//             interfere with the correct functioning of the player
+//      QueueEventSignal - we do not want the clone to do this, it would 
+//			   interfere with the correct functioning of the player
 //
 
 
-ManifestorStatus_t   Manifestor_Clone_c::QueueEventSignal(PlayerEventRecord_t      *Event)
+ManifestorStatus_t   Manifestor_Clone_c::QueueEventSignal(              PlayerEventRecord_t      *Event )
 {
-    return Original->QueueEventSignal(Event);
+    return Original->QueueEventSignal( Event );
 }
 
 // /////////////////////////////////////////////////////////////////////////
@@ -300,7 +300,7 @@ ManifestorStatus_t   Manifestor_Clone_c::QueueEventSignal(PlayerEventRecord_t   
 
 ManifestorStatus_t   Manifestor_Clone_c::GetNativeTimeOfCurrentlyManifestedFrame(unsigned long long *Time)
 {
-    return Original->GetNativeTimeOfCurrentlyManifestedFrame(Time);
+    return Original->GetNativeTimeOfCurrentlyManifestedFrame( Time );
 }
 
 // /////////////////////////////////////////////////////////////////////////
@@ -309,11 +309,11 @@ ManifestorStatus_t   Manifestor_Clone_c::GetNativeTimeOfCurrentlyManifestedFrame
 //
 
 
-ManifestorStatus_t   Manifestor_Clone_c::GetDecodeBuffer(
-    BufferStructure_t    *RequestedStructure,
-    Buffer_t         *Buffer)
+ManifestorStatus_t   Manifestor_Clone_c::GetDecodeBuffer( 
+							BufferStructure_t	 *RequestedStructure,
+							Buffer_t		 *Buffer )
 {
-    return Original->GetDecodeBuffer(RequestedStructure, Buffer);
+    return Original->GetDecodeBuffer( RequestedStructure, Buffer );
 }
 
 // /////////////////////////////////////////////////////////////////////////
@@ -322,9 +322,9 @@ ManifestorStatus_t   Manifestor_Clone_c::GetDecodeBuffer(
 //
 
 
-ManifestorStatus_t   Manifestor_Clone_c::GetDecodeBufferCount(unsigned int             *Count)
+ManifestorStatus_t   Manifestor_Clone_c::GetDecodeBufferCount(          unsigned int             *Count )
 {
-    return Original->GetDecodeBufferCount(Count);
+    return Original->GetDecodeBufferCount( Count );
 }
 
 // /////////////////////////////////////////////////////////////////////////
@@ -333,10 +333,10 @@ ManifestorStatus_t   Manifestor_Clone_c::GetDecodeBufferCount(unsigned int      
 //
 
 
-ManifestorStatus_t   Manifestor_Clone_c::SynchronizeOutput(void)
+ManifestorStatus_t   Manifestor_Clone_c::SynchronizeOutput(             void )
 {
-    if (CloneTo != NULL)
-        CloneTo->SynchronizeOutput();
+    if( CloneTo != NULL )
+	CloneTo->SynchronizeOutput();
 
     return Original->SynchronizeOutput();
 }
@@ -347,9 +347,9 @@ ManifestorStatus_t   Manifestor_Clone_c::SynchronizeOutput(void)
 //
 
 
-ManifestorStatus_t   Manifestor_Clone_c::GetFrameCount(unsigned long long       *FrameCount)
+ManifestorStatus_t   Manifestor_Clone_c::GetFrameCount(                 unsigned long long       *FrameCount)
 {
-    return Original->GetFrameCount(FrameCount);
+    return Original->GetFrameCount( FrameCount );
 }
 
 
@@ -358,74 +358,73 @@ ManifestorStatus_t   Manifestor_Clone_c::GetFrameCount(unsigned long long       
 //      The clone management function responsible for attaching a clone
 //
 
-ManifestorStatus_t   Manifestor_Clone_c::SetCloneTo(Manifestor_t          CloneTo)
+ManifestorStatus_t   Manifestor_Clone_c::SetCloneTo(			Manifestor_t		  CloneTo )
 {
-    OS_Status_t OSStatus;
+OS_Status_t	OSStatus;
 
     //
     // Shutdown any running clone
     //
 
-    if (this->CloneTo != NULL)
+    if( this->CloneTo != NULL )
     {
-        this->CloneTo->ReleaseQueuedDecodeBuffers();
+	this->CloneTo->ReleaseQueuedDecodeBuffers();
 
-        this->CloneTo       = NULL;
-        CloneOutputRing->Insert(NULL);
+	this->CloneTo		= NULL;
+	CloneOutputRing->Insert( NULL );
 
-        while (BufferReleaseThreadRunning)
-            OS_SleepMilliSeconds(5);
+	while( BufferReleaseThreadRunning )
+	    OS_SleepMilliSeconds( 5 );
 
-        delete CloneOutputRing;
-        CloneOutputRing     = NULL;
-        BufferReleaseThreadId   = OS_INVALID_THREAD;
+	delete CloneOutputRing;
+	CloneOutputRing		= NULL;
+	BufferReleaseThreadId	= OS_INVALID_THREAD;
     }
 
     //
     // Switch to the new clone
     //
 
-    if (CloneTo != NULL)
+    if( CloneTo != NULL )
     {
-        //
-        // Create the output ring and the process to handle it
-        //
+	//
+	// Create the output ring and the process to handle it
+	//
 
-        CloneOutputRing     = new RingGeneric_c;        // Default ring size is plenty large enough
+	CloneOutputRing		= new RingGeneric_c;		// Default ring size is plenty large enough
+	if( (CloneOutputRing == NULL) || (CloneOutputRing->InitializationStatus != RingNoError) )
+	{
+	    report( severity_error, "Manifestor_Clone_c::SetCloneTo - Unable to create clone output ring\n" );
+	    return PlayerInsufficientMemory;
+	}
 
-        if ((CloneOutputRing == NULL) || (CloneOutputRing->InitializationStatus != RingNoError))
-        {
-            report(severity_error, "Manifestor_Clone_c::SetCloneTo - Unable to create clone output ring\n");
-            return PlayerInsufficientMemory;
-        }
+	OSStatus	= OS_CreateThread( &BufferReleaseThreadId, BufferReleaseThreadStub, this, "Manifestor Clone Buffer Release Thread", OS_MID_PRIORITY+16 );
 
-        OSStatus    = OS_CreateThread(&BufferReleaseThreadId, BufferReleaseThreadStub, this, "Manifestor Clone Buffer Release Thread", OS_MID_PRIORITY + 16);
+	if( (OSStatus == OS_NO_ERROR) && !BufferReleaseThreadRunning )		// Given priority should run immediately but you never can tell
+	    OS_SleepMilliSeconds( 5 );
 
-        if ((OSStatus == OS_NO_ERROR) && !BufferReleaseThreadRunning)        // Given priority should run immediately but you never can tell
-            OS_SleepMilliSeconds(5);
+	if( (OSStatus != OS_NO_ERROR) || !BufferReleaseThreadRunning )
+	{
+	    report( severity_error, "Manifestor_Clone_c::SetCloneTo - Failed to start buffer release thread\n" );
 
-        if ((OSStatus != OS_NO_ERROR) || !BufferReleaseThreadRunning)
-        {
-            report(severity_error, "Manifestor_Clone_c::SetCloneTo - Failed to start buffer release thread\n");
+	    delete CloneOutputRing;
+	    CloneOutputRing	= NULL;
 
-            delete CloneOutputRing;
-            CloneOutputRing = NULL;
+	    return ManifestorError;
+	}
 
-            return ManifestorError;
-        }
+	//
+	// Catch up with any initialization
+	//
 
-        //
-        // Catch up with any initialization
-        //
+	CloneTo->RegisterPlayer( Player, Playback, Stream, Collator, FrameParser, Codec, OutputTimer, Manifestor );
 
-        CloneTo->RegisterPlayer(Player, Playback, Stream, Collator, FrameParser, Codec, OutputTimer, Manifestor);
-
-        if (OriginalOutputRing != NULL)
-            CloneTo->RegisterOutputBufferRing(CloneOutputRing);
+	if( OriginalOutputRing != NULL )
+	    CloneTo->RegisterOutputBufferRing( CloneOutputRing );
 
 //
 
-        this->CloneTo       = CloneTo;
+	this->CloneTo		= CloneTo;
     }
 
 //
@@ -439,14 +438,14 @@ ManifestorStatus_t   Manifestor_Clone_c::SetCloneTo(Manifestor_t          CloneT
 //      The clone management function responsible for attaching a clone
 //
 
-ManifestorStatus_t   Manifestor_Clone_c::GetManifestors(Manifestor_t          *Original,
-        Manifestor_t          *CloneTo)
+ManifestorStatus_t   Manifestor_Clone_c::GetManifestors(	Manifestor_t		  *Original,
+								Manifestor_t		  *CloneTo )
 {
-    if (Original != NULL)
-        *Original   = this->Original;
+    if( Original != NULL )
+	*Original	= this->Original;
 
-    if (CloneTo != NULL)
-        *CloneTo    = this->CloneTo;
+    if( CloneTo != NULL )
+	*CloneTo	= this->CloneTo;
 
     return ManifestorNoError;
 }
@@ -457,25 +456,25 @@ ManifestorStatus_t   Manifestor_Clone_c::GetManifestors(Manifestor_t          *O
 //      The clone buffer release process
 //
 
-void   Manifestor_Clone_c::BufferReleaseThread(void)
+void   Manifestor_Clone_c::BufferReleaseThread(	void )
 {
-    RingStatus_t    Status;
-    Buffer_t    Buffer;
+RingStatus_t	Status;
+Buffer_t	Buffer;
 
 //
 
-    BufferReleaseThreadRunning      = true;
+    BufferReleaseThreadRunning		= true;
 
-    while (true)
+    while( true )
     {
-        Status  = CloneOutputRing->Extract((uintptr_t *)(&Buffer), OS_INFINITE);
+	Status	= CloneOutputRing->Extract( (unsigned int *)(&Buffer), OS_INFINITE );
 
-        if (Buffer == NULL)
-            break;
+	if( Buffer == NULL )
+	    break;
 
-        Codec->ReleaseDecodeBuffer(Buffer);
+	Codec->ReleaseDecodeBuffer( Buffer );
     }
 
-    BufferReleaseThreadRunning      = false;
+    BufferReleaseThreadRunning		= false;
 }
 

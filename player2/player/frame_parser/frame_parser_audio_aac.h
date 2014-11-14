@@ -36,7 +36,7 @@ Date        Modification                                    Name
 
 // /////////////////////////////////////////////////////////////////////
 //
-//  Include any component headers
+//	Include any component headers
 
 #include "aac_audio.h"
 #include "frame_parser_audio.h"
@@ -53,71 +53,71 @@ Date        Modification                                    Name
 
 class FrameParser_AudioAac_c : public FrameParser_Audio_c
 {
-    private:
+private:
 
-        // Data
+    // Data
+    
+    AacAudioParsedFrameHeader_t ParsedFrameHeader;
+    
+    AacAudioStreamParameters_t	*StreamParameters;
+    AacAudioStreamParameters_t CurrentStreamParameters;
+    AacAudioFrameParameters_t *FrameParameters;
+    
+    unsigned int NumHeaderUnplayableErrors; ///< Number of *consecutive* header unplaybable errors.
+    bool isFirstFrame;
 
-        AacAudioParsedFrameHeader_t ParsedFrameHeader;
+    // Functions
 
-        AacAudioStreamParameters_t  *StreamParameters;
-        AacAudioStreamParameters_t CurrentStreamParameters;
-        AacAudioFrameParameters_t *FrameParameters;
+public:
 
-        unsigned int NumHeaderUnplayableErrors; ///< Number of *consecutive* header unplaybable errors.
-        bool isFirstFrame;
+    //
+    // Constructor function
+    //
 
-        // Functions
+    FrameParser_AudioAac_c( void );
+    ~FrameParser_AudioAac_c( void );
 
-    public:
+    //
+    // Overrides for component base class functions
+    //
 
-        //
-        // Constructor function
-        //
+    FrameParserStatus_t   Reset(		void );
 
-        FrameParser_AudioAac_c(void);
-        ~FrameParser_AudioAac_c(void);
+    //
+    // FrameParser class functions
+    //
 
-        //
-        // Overrides for component base class functions
-        //
+    FrameParserStatus_t   RegisterOutputBufferRing(	Ring_t		Ring );
 
-        FrameParserStatus_t   Reset(void);
+    //
+    // Stream specific functions
+    //
 
-        //
-        // FrameParser class functions
-        //
+    FrameParserStatus_t   ReadHeaders( 					void );
+    FrameParserStatus_t   ResetReferenceFrameList(			void );
+    FrameParserStatus_t   PurgeQueuedPostDecodeParameterSettings(	void );
+    FrameParserStatus_t   PrepareReferenceFrameList(			void );
+    FrameParserStatus_t   ProcessQueuedPostDecodeParameterSettings(	void );
+    FrameParserStatus_t   GeneratePostDecodeParameterSettings(		void );
+    FrameParserStatus_t   UpdateReferenceFrameList(			void );
 
-        FrameParserStatus_t   RegisterOutputBufferRing(Ring_t       Ring);
+    FrameParserStatus_t   ProcessReverseDecodeUnsatisfiedReferenceStack(void );
+    FrameParserStatus_t   ProcessReverseDecodeStack(			void );
+    FrameParserStatus_t   PurgeReverseDecodeUnsatisfiedReferenceStack(	void );
+    FrameParserStatus_t   PurgeReverseDecodeStack(			void );
+    FrameParserStatus_t   TestForTrickModeFrameDrop(			void );
 
-        //
-        // Stream specific functions
-        //
-
-        FrameParserStatus_t   ReadHeaders(void);
-        FrameParserStatus_t   ResetReferenceFrameList(void);
-        FrameParserStatus_t   PurgeQueuedPostDecodeParameterSettings(void);
-        FrameParserStatus_t   PrepareReferenceFrameList(void);
-        FrameParserStatus_t   ProcessQueuedPostDecodeParameterSettings(void);
-        FrameParserStatus_t   GeneratePostDecodeParameterSettings(void);
-        FrameParserStatus_t   UpdateReferenceFrameList(void);
-
-        FrameParserStatus_t   ProcessReverseDecodeUnsatisfiedReferenceStack(void);
-        FrameParserStatus_t   ProcessReverseDecodeStack(void);
-        FrameParserStatus_t   PurgeReverseDecodeUnsatisfiedReferenceStack(void);
-        FrameParserStatus_t   PurgeReverseDecodeStack(void);
-        FrameParserStatus_t   TestForTrickModeFrameDrop(void);
-
-        static FrameParserStatus_t ParseFrameHeader(unsigned char *FrameHeader,
-                AacAudioParsedFrameHeader_t *ParsedFrameHeader,
-                int AvailableBytes,
-                AacFrameParsingPurpose_t Action,
-                bool EnableHeaderUnplayableErrors = false);
-
-        static FrameParserStatus_t ParseAudioMuxElementConfig(BitStreamClass_c * Bits,
-                unsigned int *     SamplingFrequency,
-                unsigned int *     SampleCount,
-                int                AvailableBytes,
-                AacFrameParsingPurpose_t Action);
+    static FrameParserStatus_t ParseFrameHeader( unsigned char *FrameHeader,
+                                                 AacAudioParsedFrameHeader_t *ParsedFrameHeader,
+                                                 int AvailableBytes, 
+                                                 AacFrameParsingPurpose_t Action,
+                                                 bool EnableHeaderUnplayableErrors = false );
+    
+    static FrameParserStatus_t ParseAudioMuxElementConfig( BitStreamClass_c * Bits,
+                                                           unsigned int *     SamplingFrequency,
+                                                           unsigned int *     SampleCount,
+                                                           int                AvailableBytes,
+                                                           AacFrameParsingPurpose_t Action );
 };
 
 #endif /* H_FRAME_PARSER_AUDIO_AAC */

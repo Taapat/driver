@@ -32,6 +32,6 @@ Date        Modification                                    Name
 #define H_PLAYER_FACTORY
 
 
-HavanaStatus_t RegisterBuiltInFactories(class   HavanaPlayer_c* HavanaPlayer);
+HavanaStatus_t RegisterBuiltInFactories   (class   HavanaPlayer_c* HavanaPlayer);
 
 #endif

@@ -43,7 +43,7 @@ Date        Modification                                    Name
 
 typedef struct OutputTimerConfiguration_Audio_s
 {
-    unsigned int          MinimumManifestorLatencyInSamples;
+    unsigned int		  MinimumManifestorLatencyInSamples;
     unsigned int                  MinimumManifestorSamplingFrequency;
 } OutputTimerConfiguration_Audio_t;
 
@@ -55,70 +55,70 @@ typedef struct OutputTimerConfiguration_Audio_s
 /// Audio specific output timer.
 class OutputTimer_Audio_c : public OutputTimer_Base_c
 {
-    protected:
+protected:
 
-        // Data
+    // Data
 
-        OutputTimerConfiguration_Audio_t      AudioConfiguration;
+    OutputTimerConfiguration_Audio_t	  AudioConfiguration;
+    
+    AudioOutputSurfaceDescriptor_t	 *AudioOutputSurfaceDescriptor;
 
-        AudioOutputSurfaceDescriptor_t   *AudioOutputSurfaceDescriptor;
+    unsigned int			  SamplesInLastFrame;
+    unsigned int			  LastSampleRate;
 
-        unsigned int              SamplesInLastFrame;
-        unsigned int              LastSampleRate;
+    Rational_t				  LastAdjustedSpeedAfterFrameDrop;
 
-        Rational_t                LastAdjustedSpeedAfterFrameDrop;
+    Rational_t				  CountMultiplier;
+    Rational_t				  SampleDurationTime;
+    Rational_t				  AccumulatedError;
 
-        Rational_t                CountMultiplier;
-        Rational_t                SampleDurationTime;
-        Rational_t                AccumulatedError;
+    unsigned int			  ExtendSamplesForSynchronization;
+    unsigned int			  SynchronizationCorrectionUnits;
+    unsigned int			  SynchronizationOneTenthCorrectionUnits;
 
-        unsigned int              ExtendSamplesForSynchronization;
-        unsigned int              SynchronizationCorrectionUnits;
-        unsigned int              SynchronizationOneTenthCorrectionUnits;
+    unsigned int			  LastSeenDecodeIndex;				// Counters used to determing coded frame : decoded frame ratio in audio streaming codecs
+    unsigned int			  LastSeenDisplayIndex;
+    unsigned int			  DecodeFrameCount;
+    unsigned int			  DisplayFrameCount;
 
-        unsigned int              LastSeenDecodeIndex;              // Counters used to determing coded frame : decoded frame ratio in audio streaming codecs
-        unsigned int              LastSeenDisplayIndex;
-        unsigned int              DecodeFrameCount;
-        unsigned int              DisplayFrameCount;
+public:
 
-    public:
+    //
+    // Constructor/Destructor methods
+    //
 
-        //
-        // Constructor/Destructor methods
-        //
+    OutputTimer_Audio_c(		void );
+    ~OutputTimer_Audio_c(		void );
 
-        OutputTimer_Audio_c(void);
-        ~OutputTimer_Audio_c(void);
+    //
+    // Base component class overrides
+    //
 
-        //
-        // Base component class overrides
-        //
+    OutputTimerStatus_t   Halt(		void );
+    OutputTimerStatus_t   Reset(	void );
 
-        OutputTimerStatus_t   Halt(void);
-        OutputTimerStatus_t   Reset(void);
+    //
+    // Audio specific functions
+    //
 
-        //
-        // Audio specific functions
-        //
+protected:
 
-    protected:
+    OutputTimerStatus_t   InitializeConfiguration(	void );
 
-        OutputTimerStatus_t   InitializeConfiguration(void);
+    OutputTimerStatus_t   FrameDuration(		void			 *ParsedAudioVideoDataParameters,
+							unsigned long long	 *Duration );
 
-        OutputTimerStatus_t   FrameDuration(void             *ParsedAudioVideoDataParameters,
-                                            unsigned long long   *Duration);
+    OutputTimerStatus_t   FillOutFrameTimingRecord(	unsigned long long	  SystemTime,
+							void			 *ParsedAudioVideoDataParameters,
+							void			 *AudioVideoDataOutputTiming );
 
-        OutputTimerStatus_t   FillOutFrameTimingRecord(unsigned long long     SystemTime,
-                void             *ParsedAudioVideoDataParameters,
-                void             *AudioVideoDataOutputTiming);
+    OutputTimerStatus_t   CorrectSynchronizationError(	void );
 
-        OutputTimerStatus_t   CorrectSynchronizationError(void);
-
-        //
-        // Audio specific functions
-        //
-
-        unsigned int      LookupMinimumManifestorLatency(unsigned int SamplingFreqency);
+    //
+    // Audio specific functions
+    //
+    
+    unsigned int	  LookupMinimumManifestorLatency(unsigned int SamplingFreqency);
 };
 #endif
 

@@ -46,22 +46,22 @@ Date            Modification            Name
 #define PCM_LITTLE_ENDIAN               0
 #define PCM_BIG_ENDIAN                  1
 
-typedef struct
+typedef struct 
 {
-    enum eAccDecoderId   DecoderId;
-    unsigned int         StructSize;
-    unsigned int         ChannelCount;
-    unsigned int         SampleRate;
-    unsigned int         BytesPerSecond;
-    unsigned int         BlockAlign;
-    unsigned int         BitsPerSample;
-    unsigned int         DataEndianness;
-} MME_LxPcmAudioConfig_t;
+        enum eAccDecoderId   DecoderId;
+        unsigned int         StructSize;
+        unsigned int         ChannelCount;
+        unsigned int         SampleRate;
+        unsigned int         BytesPerSecond;
+        unsigned int         BlockAlign;
+        unsigned int         BitsPerSample;
+        unsigned int         DataEndianness;
+}MME_LxPcmAudioConfig_t;
 
 typedef struct
 {
-    unsigned int                       StructSize; //!< Size of this structure
-    MME_LxPcmAudioConfig_t             PcmAudioConfig;  //!< Private Config of Pcm transcoder
+        unsigned int                       StructSize; //!< Size of this structure
+        MME_LxPcmAudioConfig_t             PcmAudioConfig;  //!< Private Config of Pcm transcoder
 } MME_LxPcmAudioTransformerGlobalParams_t;
 
 

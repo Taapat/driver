@@ -36,7 +36,7 @@ Date        Modification                                    Name
 
 // /////////////////////////////////////////////////////////////////////
 //
-//  Include any component headers
+//	Include any component headers
 
 #include "codec_mme_audio.h"
 
@@ -58,35 +58,35 @@ Date        Modification                                    Name
 
 class Codec_MmeAudioMlp_c : public Codec_MmeAudio_c
 {
-    protected:
+protected:
 
-        // Data
+    // Data
+    
+    eAccDecoderId DecoderId;
 
-        eAccDecoderId DecoderId;
+    // Functions
 
-        // Functions
+public:
 
-    public:
+    //
+    // Constructor/Destructor methods
+    //
 
-        //
-        // Constructor/Destructor methods
-        //
+    Codec_MmeAudioMlp_c(		void );
+    ~Codec_MmeAudioMlp_c(		void );
 
-        Codec_MmeAudioMlp_c(void);
-        ~Codec_MmeAudioMlp_c(void);
+    //
+    // Stream specific functions
+    //
 
-        //
-        // Stream specific functions
-        //
+protected:
 
-    protected:
-
-        CodecStatus_t   FillOutTransformerGlobalParameters(MME_LxAudioDecoderGlobalParams_t *GlobalParams);
-        CodecStatus_t   FillOutTransformerInitializationParameters(void);
-        CodecStatus_t   FillOutSetStreamParametersCommand(void);
-        CodecStatus_t   FillOutDecodeCommand(void);
-        CodecStatus_t   ValidateDecodeContext(CodecBaseDecodeContext_t *Context);
-        CodecStatus_t   DumpSetStreamParameters(void    *Parameters);
-        CodecStatus_t   DumpDecodeParameters(void   *Parameters);
+    CodecStatus_t   FillOutTransformerGlobalParameters        ( MME_LxAudioDecoderGlobalParams_t *GlobalParams );
+    CodecStatus_t   FillOutTransformerInitializationParameters( void );
+    CodecStatus_t   FillOutSetStreamParametersCommand( 		void );
+    CodecStatus_t   FillOutDecodeCommand(       		void );
+    CodecStatus_t   ValidateDecodeContext( CodecBaseDecodeContext_t *Context );
+    CodecStatus_t   DumpSetStreamParameters( 			void	*Parameters );
+    CodecStatus_t   DumpDecodeParameters( 			void	*Parameters );
 };
 #endif

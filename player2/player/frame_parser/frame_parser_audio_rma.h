@@ -61,54 +61,54 @@ Date        Modification                                Name
 /// Frame parser for Real Media Rma audio
 class FrameParser_AudioRma_c : public FrameParser_Audio_c
 {
-    private:
+private:
 
-        // Data
+    // Data
 
-        RmaAudioParsedFrameHeader_t         ParsedFrameHeader;
+    RmaAudioParsedFrameHeader_t         ParsedFrameHeader;
 
-        RmaAudioStreamParameters_t*         StreamParameters;
-        RmaAudioStreamParameters_t          CurrentStreamParameters;
-        RmaAudioFrameParameters_t*          FrameParameters;
+    RmaAudioStreamParameters_t*         StreamParameters;
+    RmaAudioStreamParameters_t          CurrentStreamParameters;
+    RmaAudioFrameParameters_t*          FrameParameters;
 
-        bool                                StreamFormatInfoValid;
-        unsigned int                        DataOffset;
+    bool                                StreamFormatInfoValid;
+    unsigned int                        DataOffset;
 
-        // Functions
+    // Functions
 
-        FrameParserStatus_t         ReadStreamParameters(void);
+    FrameParserStatus_t         ReadStreamParameters(                   void );
 
-    public:
+public:
 
-        // Constructor function
+    // Constructor function
 
-        FrameParser_AudioRma_c(void);
-        ~FrameParser_AudioRma_c(void);
+    FrameParser_AudioRma_c( void );
+    ~FrameParser_AudioRma_c( void );
 
-        // Overrides for component base class functions
+    // Overrides for component base class functions
 
-        FrameParserStatus_t   Reset(void);
+    FrameParserStatus_t   Reset(                                        void );
 
-        // FrameParser class functions
+    // FrameParser class functions
 
-        FrameParserStatus_t   RegisterOutputBufferRing(Ring_t          Ring);
+    FrameParserStatus_t   RegisterOutputBufferRing(     Ring_t          Ring );
 
-        // Stream specific functions
+    // Stream specific functions
 
-        FrameParserStatus_t   ReadHeaders(void);
+    FrameParserStatus_t   ReadHeaders(                                  void );
 
-        FrameParserStatus_t   ResetReferenceFrameList(void);
-        FrameParserStatus_t   PurgeQueuedPostDecodeParameterSettings(void);
-        FrameParserStatus_t   PrepareReferenceFrameList(void);
-        FrameParserStatus_t   ProcessQueuedPostDecodeParameterSettings(void);
-        FrameParserStatus_t   GeneratePostDecodeParameterSettings(void);
-        FrameParserStatus_t   UpdateReferenceFrameList(void);
+    FrameParserStatus_t   ResetReferenceFrameList(                      void );
+    FrameParserStatus_t   PurgeQueuedPostDecodeParameterSettings(       void );
+    FrameParserStatus_t   PrepareReferenceFrameList(                    void );
+    FrameParserStatus_t   ProcessQueuedPostDecodeParameterSettings(     void );
+    FrameParserStatus_t   GeneratePostDecodeParameterSettings(          void );
+    FrameParserStatus_t   UpdateReferenceFrameList(                     void );
 
-        FrameParserStatus_t   ProcessReverseDecodeUnsatisfiedReferenceStack(void);
-        FrameParserStatus_t   ProcessReverseDecodeStack(void);
-        FrameParserStatus_t   PurgeReverseDecodeUnsatisfiedReferenceStack(void);
-        FrameParserStatus_t   PurgeReverseDecodeStack(void);
-        FrameParserStatus_t   TestForTrickModeFrameDrop(void);
+    FrameParserStatus_t   ProcessReverseDecodeUnsatisfiedReferenceStack(void );
+    FrameParserStatus_t   ProcessReverseDecodeStack(                    void );
+    FrameParserStatus_t   PurgeReverseDecodeUnsatisfiedReferenceStack(  void );
+    FrameParserStatus_t   PurgeReverseDecodeStack(                      void );
+    FrameParserStatus_t   TestForTrickModeFrameDrop(                    void );
 };
 
 #endif

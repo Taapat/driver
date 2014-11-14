@@ -21,82 +21,68 @@ ksnd_pcm_streaming_t streaming;
 
 static ksnd_pcm_t *open(int card, int capture_not_playback)
 {
-    ksnd_pcm_t *handle = NULL;
-    int res;
+	ksnd_pcm_t *handle = NULL;
+	int res;
 
-    do
-    {
-        res = ksnd_pcm_open(&handle, card, 0, capture_not_playback ? SND_PCM_STREAM_CAPTURE : SND_PCM_STREAM_PLAYBACK);
+	do {
+		res = ksnd_pcm_open(&handle, card, 0, capture_not_playback ? SND_PCM_STREAM_CAPTURE : SND_PCM_STREAM_PLAYBACK);
+		if (res < 0) {
+			printk("Cannot open ALSA card %d\n", card);
+			break;
+		}
 
-        if (res < 0)
-        {
-            printk("Cannot open ALSA card %d\n", card);
-            break;
-        }
+		res = ksnd_pcm_set_params(handle, nr_channels, sample_depth, sample_rate, 4410, 44100);
+		if (res < 0) {
+			printk("Cannot initialize parameters on ALSA card %d\n", card);
+			break;
+		}
+	} while (0);
 
-        res = ksnd_pcm_set_params(handle, nr_channels, sample_depth, sample_rate, 4410, 44100);
+	if (res < 0) {
+		if (handle)
+			ksnd_pcm_close(handle);
+		handle = NULL;
+	}
 
-        if (res < 0)
-        {
-            printk("Cannot initialize parameters on ALSA card %d\n", card);
-            break;
-        }
-    }
-    while (0);
-
-    if (res < 0)
-    {
-        if (handle)
-            ksnd_pcm_close(handle);
-
-        handle = NULL;
-    }
-
-    return handle;
+	return handle;
 }
 
 static int __init kst_module_init(void)
 {
-    int result;
+	int result;
 
-    playback_handle = open(playback_card, 0);
+	playback_handle = open(playback_card, 0);
+	if (playback_handle == NULL) {
+		printk(KERN_ERR "open(playback_card, 0) == NULL\n");
+		return -1;
+	}
 
-    if (playback_handle == NULL)
-    {
-        printk(KERN_ERR "open(playback_card, 0) == NULL\n");
-        return -1;
-    }
+	capture_handle = open(capture_card, 1);
+	if (capture_handle == NULL)	{
+		printk(KERN_ERR "open(capture_card, 1) == NULL\n");
+		ksnd_pcm_close(playback_handle);
+		return -2;
+	}
 
-    capture_handle = open(capture_card, 1);
+	result = ksnd_pcm_streaming_start(&streaming, capture_handle, playback_handle);
+	if (result != 0) {
+		printk(KERN_ERR "ksnd_pcm_streaming_start() == %d\n", result);
+		ksnd_pcm_close(capture_handle);
+		ksnd_pcm_close(playback_handle);
+		return result;
+	}
 
-    if (capture_handle == NULL)
-    {
-        printk(KERN_ERR "open(capture_card, 1) == NULL\n");
-        ksnd_pcm_close(playback_handle);
-        return -2;
-    }
+	printk(KERN_INFO "Streaming started...\n");
 
-    result = ksnd_pcm_streaming_start(&streaming, capture_handle, playback_handle);
-
-    if (result != 0)
-    {
-        printk(KERN_ERR "ksnd_pcm_streaming_start() == %d\n", result);
-        ksnd_pcm_close(capture_handle);
-        ksnd_pcm_close(playback_handle);
-        return result;
-    }
-
-    printk(KERN_INFO "Streaming started...\n");
-
-    return 0;
+	return 0;
 }
 
 static void __exit kst_module_exit(void)
 {
-    ksnd_pcm_streaming_stop(streaming);
-    ksnd_pcm_close(capture_handle);
-    ksnd_pcm_close(playback_handle);
-    printk(KERN_INFO "Streaming stopped...\n");
+	ksnd_pcm_streaming_stop(streaming);
+	ksnd_pcm_close(capture_handle);
+	ksnd_pcm_close(playback_handle);
+	printk(KERN_INFO "Streaming stopped...\n");
 }
 
 module_init(kst_module_init);

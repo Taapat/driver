@@ -27,7 +27,7 @@ Definition of the base collator pes class implementation for player 2.
 
 Date        Modification                                    Name
 ----        ------------                                    --------
-26-Jul-07   Created from existing mpeg2 version         Nick
+26-Jul-07   Created from existing mpeg2 version		    Nick
 
 ************************************************************************/
 
@@ -52,13 +52,13 @@ Date        Modification                                    Name
 
 class Collator_PesVideoH264_c : public Collator_PesVideo_c
 {
-    protected:
+protected:
 
-    public:
+public:
 
-        Collator_PesVideoH264_c();
+    Collator_PesVideoH264_c();
 
-        CollatorStatus_t   Reset(void);
+    CollatorStatus_t   Reset(                   void );
 };
 
 #endif // H_COLLATOR_PES_VIDEO_H264

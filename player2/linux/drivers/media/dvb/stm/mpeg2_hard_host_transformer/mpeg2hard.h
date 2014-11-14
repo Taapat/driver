@@ -48,9 +48,9 @@ Date        Modification                                    Name
 #define INTRA_VLC_FORMAT            (1 << 4)
 #define ALTERNATE_SCAN              (1 << 5)
 #define PROGRESSIVE                 (1 << 6)
-/*
+/* 
 Semaphore isn't used as there is a bug in the HW cell which
-can mean it doesn't return you an interrupt causing some
+can mean it doesn't return you an interrupt causing some 
 'interesting' glitches.
 */
 #define USE_SEMAPHORE 0
@@ -85,10 +85,10 @@ typedef void    *Mpeg2HardHandle_t;
 
 typedef enum MpegStreamType_e
 {
-    MpegStreamTypeMpeg1 = 0,
-    MpegStreamTypeMpeg2 = 1
+	MpegStreamTypeMpeg1 = 0,
+	MpegStreamTypeMpeg2 = 1
 } MpegStreamType_t;
-
+ 
 typedef struct Mpeg2HardSequenceParams_s
 {
     MpegStreamType_t             mpegStreamType;
@@ -101,13 +101,13 @@ typedef struct Mpeg2HardSequenceParams_s
 
 typedef struct Mpeg2HardCodecContext_s
 {
-    MpegStreamType_t    MpegStreamType;
-    unsigned int        IntraQuantizerMatrix[QUANTISER_MATRIX_SIZE / sizeof(unsigned int)];
-    unsigned int        NonIntraQuantizerMatrix[QUANTISER_MATRIX_SIZE / sizeof(unsigned int)];
-    unsigned int        WidthInMacroBlocks;
-    unsigned int        HeightInMacroBlocks;
-    unsigned char      *LumaDecodeFrameBuffer;
-
+	    MpegStreamType_t    MpegStreamType;
+	    unsigned int        IntraQuantizerMatrix[QUANTISER_MATRIX_SIZE/sizeof(unsigned int)];
+	    unsigned int        NonIntraQuantizerMatrix[QUANTISER_MATRIX_SIZE/sizeof(unsigned int)];
+	    unsigned int        WidthInMacroBlocks;
+	    unsigned int        HeightInMacroBlocks;
+	    unsigned char      *LumaDecodeFrameBuffer;
+	
 } Mpeg2HardCodecContext_t;
 
 typedef struct Mpeg2HardFrameParams_s
@@ -131,7 +131,7 @@ typedef struct Mpeg2HardFrameParams_s
     unsigned char                pictureStructure;                      // 2 bits
     unsigned char                decodingFlags;                         // 5 bits
     unsigned char                horizontalDecimationFactor;
-    unsigned char                verticalDecimationFactor;
+    unsigned char                verticalDecimationFactor;	
 } Mpeg2HardFrameParams_t;
 
 typedef struct Mpeg2HardInitParams_s
@@ -142,23 +142,23 @@ typedef struct Mpeg2HardInitParams_s
 #ifdef __cplusplus
 extern "C" {
 #endif
+	
+Mpeg2HardStatus_t Mpeg2HardInit( char *Name,
+				 Mpeg2HardInitParams_t            *InitParams,
+				 Mpeg2HardHandle_t                *Handle );
 
-Mpeg2HardStatus_t Mpeg2HardInit(char *Name,
-                                Mpeg2HardInitParams_t            *InitParams,
-                                Mpeg2HardHandle_t                *Handle);
+Mpeg2HardStatus_t Mpeg2HardSetSequenceParams( Mpeg2HardHandle_t                 Handle,
+					      Mpeg2HardSequenceParams_t        *SequenceParams );
+                                        
+Mpeg2HardStatus_t Mpeg2HardDecodeFrame( Mpeg2HardHandle_t Handle,
+					Mpeg2HardFrameParams_t *FrameParams );
 
-Mpeg2HardStatus_t Mpeg2HardSetSequenceParams(Mpeg2HardHandle_t                 Handle,
-        Mpeg2HardSequenceParams_t        *SequenceParams);
+Mpeg2HardStatus_t Mpeg2HardTerminate(   Mpeg2HardHandle_t Handle );
 
-Mpeg2HardStatus_t Mpeg2HardDecodeFrame(Mpeg2HardHandle_t Handle,
-                                       Mpeg2HardFrameParams_t *FrameParams);
-
-Mpeg2HardStatus_t Mpeg2HardTerminate(Mpeg2HardHandle_t Handle);
-
-Mpeg2HardStatus_t Mpeg2InterruptUninstall(void);
-Mpeg2HardStatus_t Mpeg2InterruptInstall(void);
-
-/*
+Mpeg2HardStatus_t Mpeg2InterruptUninstall( void );
+Mpeg2HardStatus_t Mpeg2InterruptInstall( void );
+	
+	/*
 static bool                      SharedContextInitialized       = false;
 static OSDEV_Semaphore_t         DecoderLock;
 static Mpeg2HardCodecContext_t  *LastStreamContextLoaded        = NULL;
@@ -167,11 +167,11 @@ static Mpeg2HardCodecContext_t  *LastStreamContextLoaded        = NULL;
 static OSDEV_Semaphore_t         DecodeDone;
 #else
 static wait_queue_head_t         DecodeDone;
-static bool                      DecodeComplete = false;
+static bool                      DecodeComplete = false;	
 #endif
-*/
+*/	
 #ifdef __cplusplus
-}
-#endif
-
+}       
+#endif 
+	
 #endif // H_MPEG2HARD

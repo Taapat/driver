@@ -26,7 +26,7 @@ Date        Modification                                    Name
 #include "display.h"
 
 //{{{  HavanaDisplay_c
-HavanaDisplay_c::HavanaDisplay_c(void)
+HavanaDisplay_c::HavanaDisplay_c (void)
 {
     //DISPLAY_DEBUG("\n");
 
@@ -36,14 +36,14 @@ HavanaDisplay_c::HavanaDisplay_c(void)
 }
 //}}}
 //{{{  ~HavanaDisplay_c
-HavanaDisplay_c::~HavanaDisplay_c(void)
+HavanaDisplay_c::~HavanaDisplay_c (void)
 {
     //DISPLAY_DEBUG("\n");
 
     if ((Manifestor != NULL) && (PlayerStreamType == StreamTypeVideo))
     {
         class Manifestor_Video_c*       VideoManifestor = (class Manifestor_Video_c*)Manifestor;
-        VideoManifestor->CloseOutputSurface();
+        VideoManifestor->CloseOutputSurface ();
     }
 
     if (Manifestor != NULL)
@@ -59,25 +59,23 @@ HavanaDisplay_c::~HavanaDisplay_c(void)
 /// \brief  access a manifestor - or create a new one if it doesn't exist
 /// \return Havana status code, HavanaNoError indicates success.
 //}}}
-HavanaStatus_t HavanaDisplay_c::GetManifestor(class HavanaPlayer_c*           HavanaPlayer,
-        char*                           Media,
-        char*                           Encoding,
-        unsigned int                    SurfaceId,
-        class Manifestor_c**            Manifestor)
+HavanaStatus_t HavanaDisplay_c::GetManifestor  (class HavanaPlayer_c*           HavanaPlayer,
+                                                char*                           Media,
+                                                char*                           Encoding,
+                                                unsigned int                    SurfaceId,
+                                                class Manifestor_c**            Manifestor)
 {
     HavanaStatus_t      Status  = HavanaNoError;
 
     //DISPLAY_DEBUG("%p\n", this->Manifestor);
 
-    if (strcmp(Media, BACKEND_AUDIO_ID) == 0)
+    if (strcmp (Media, BACKEND_AUDIO_ID) == 0)
     {
         PlayerStreamType        = StreamTypeAudio;
-
         if (this->Manifestor == NULL)
-            Status  = HavanaPlayer->CallFactory(Media, FACTORY_ANY_ID, StreamTypeAudio, ComponentManifestor, (void**)&this->Manifestor);
-
+            Status  = HavanaPlayer->CallFactory (Media, FACTORY_ANY_ID, StreamTypeAudio, ComponentManifestor, (void**)&this->Manifestor);
         if (Status == HavanaNoError)
-            //{{{  Init audio manifestor
+        //{{{  Init audio manifestor
         {
             class Manifestor_Audio_c*               AudioManifestor = (class Manifestor_Audio_c*)this->Manifestor;
             const char*                             BackendMixer;
@@ -86,29 +84,27 @@ HavanaStatus_t HavanaDisplay_c::GetManifestor(class HavanaPlayer_c*           Ha
             ManifestorAudioParameterBlock_t         ManifestorParameters;
             class Mixer_Mme_c*                      AudioMixer;
 
-            //
+            //         
             // find a mixer instance and register it with the manifestor
             //
 
-#ifndef CONFIG_DUAL_DISPLAY
+        #ifndef CONFIG_DUAL_DISPLAY
             // we must unconditionally use mixer0 until SurfaceId has been split into a Stream and Substream
             // (e.g. /dev/dvb/adapter<Stream>/audio<Substream> )...
             BackendMixer = BACKEND_MIXER0_ID;
-#else
+        #else
             // ... unless we are running with the (temporary) dual display hacks
             BackendMixer = (DISPLAY_ID_REMOTE != SurfaceId ? BACKEND_MIXER0_ID : BACKEND_MIXER1_ID);
-#endif
-            Status  = HavanaPlayer->CallFactory(Media, BackendMixer, StreamTypeAudio, ComponentExternal, (void**)&AudioMixer);
-
+        #endif
+            Status  = HavanaPlayer->CallFactory (Media, BackendMixer, StreamTypeAudio, ComponentExternal, (void**)&AudioMixer);
             if (Status != HavanaNoError)
                 return Status;
 
             ManifestorParameters.ParameterType                      = ManifestorAudioMixerConfiguration;
             ManifestorParameters.Mixer                              = AudioMixer;
 
-            ManifestorStatus        = AudioManifestor->SetModuleParameters(sizeof(ManifestorParameters), &ManifestorParameters);
-
-            if (ManifestorStatus != ManifestorNoError)
+            ManifestorStatus        = AudioManifestor->SetModuleParameters (sizeof(ManifestorParameters), &ManifestorParameters);
+            if (ManifestorStatus != ManifestorNoError )
             {
                 HAVANA_ERROR("Failed to set manifestor mixer parameters (%08x)\n", ManifestorStatus);
                 return HavanaNoMemory;
@@ -123,28 +119,25 @@ HavanaStatus_t HavanaDisplay_c::GetManifestor(class HavanaPlayer_c*           Ha
             DecodeBufferParameters.BufferConfiguration.MaxBufferCount           = 32;
             DecodeBufferParameters.BufferConfiguration.TotalBufferMemory        = AUDIO_BUFFER_MEMORY;
 
-            strcpy(DecodeBufferParameters.BufferConfiguration.PartitionName, "BPA2_Region1");
+            strcpy( DecodeBufferParameters.BufferConfiguration.PartitionName, "BPA2_Region1" );
 
-            ManifestorStatus        = AudioManifestor->SetModuleParameters(sizeof(DecodeBufferParameters), &DecodeBufferParameters);
-
-            if (ManifestorStatus != ManifestorNoError)
+            ManifestorStatus        = AudioManifestor->SetModuleParameters (sizeof(DecodeBufferParameters), &DecodeBufferParameters);
+            if (ManifestorStatus != ManifestorNoError )
             {
                 HAVANA_ERROR("Failed to set manifestor parameters (%08x)\n", ManifestorStatus);
                 return HavanaNoMemory;
             }
 
-            ManifestorStatus        = AudioManifestor->OpenOutputSurface();
-
+            ManifestorStatus        = AudioManifestor->OpenOutputSurface ();
             if (ManifestorStatus != ManifestorNoError)
             {
                 HAVANA_ERROR("Failed to create audio output surface\n");
                 return HavanaNoMemory;
             }
         }
-
         //}}}
     }
-    else if (strcmp(Media, BACKEND_VIDEO_ID) == 0)
+    else if (strcmp (Media, BACKEND_VIDEO_ID) == 0)
     {
         class Manifestor_Video_c*                VideoManifestor;
         ManifestorStatus_t                       ManifestorStatus;
@@ -155,8 +148,7 @@ HavanaStatus_t HavanaDisplay_c::GetManifestor(class HavanaPlayer_c*           Ha
         unsigned int                             OutputId;
 
         PlayerStreamType        = StreamTypeVideo;
-
-        if (GetDisplayInfo(SurfaceId, &DisplayDevice, &PlaneId, &OutputId, &BufferLocation) != 0)
+        if (GetDisplayInfo (SurfaceId, &DisplayDevice, &PlaneId, &OutputId, &BufferLocation) != 0)
         {
             HAVANA_ERROR("Failed to access display info\n");
             return HavanaError;
@@ -164,14 +156,12 @@ HavanaStatus_t HavanaDisplay_c::GetManifestor(class HavanaPlayer_c*           Ha
 
         if (this->Manifestor == NULL)
         {
-            Status  = HavanaPlayer->CallFactory(Media, FACTORY_ANY_ID, StreamTypeVideo, ComponentManifestor, (void**)&this->Manifestor);
+            Status  = HavanaPlayer->CallFactory (Media, FACTORY_ANY_ID, StreamTypeVideo, ComponentManifestor, (void**)&this->Manifestor);
             VideoManifestor             = (class Manifestor_Video_c*)this->Manifestor;
-
             if (Status == HavanaNoError)
-                //{{{  Open display surface
+            //{{{  Open display surface
             {
-                ManifestorStatus        = VideoManifestor->OpenOutputSurface(DisplayDevice, PlaneId, OutputId);
-
+                ManifestorStatus        = VideoManifestor->OpenOutputSurface (DisplayDevice, PlaneId, OutputId);
                 if (ManifestorStatus != ManifestorNoError)
                 {
                     HAVANA_ERROR("Failed to create video output surface\n");
@@ -196,56 +186,65 @@ HavanaStatus_t HavanaDisplay_c::GetManifestor(class HavanaPlayer_c*           Ha
         DecodeBufferParameters.ParameterType                                    = ManifestorBufferConfiguration;
         DecodeBufferParameters.BufferConfiguration.MaxBufferCount               = MAX_VIDEO_DECODE_BUFFERS;
 
-        if (strcmp(Encoding, "dvp") == 0)
+        if( strcmp(Encoding,"dvp") == 0 )
             DecodeBufferParameters.BufferConfiguration.DecodedBufferFormat      = FormatVideo422_Raster;
-
-        if (strcmp(Encoding, "cap") == 0)
+        if( strcmp(Encoding,"cap") == 0 )
             DecodeBufferParameters.BufferConfiguration.DecodedBufferFormat      = FormatVideo565_RGB;
 
-        else if (strcmp(Encoding, "mpeg4p2") == 0)   // Divx
+        else if( strcmp (Encoding, "mpeg4p2") == 0 ) // Divx
             DecodeBufferParameters.BufferConfiguration.DecodedBufferFormat      = FormatVideo420_PairedMacroBlock;
         else
             DecodeBufferParameters.BufferConfiguration.DecodedBufferFormat      = FormatVideo420_MacroBlock;
 
-#if defined(UFS922) || defined(UFC960) || defined(TF7700)  || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55)
+#if defined(__TDT__)
 
+#if defined(UFS922) || defined(TF7700)  || defined(CUBEREVO) || defined(CUBEREVO_MINI2) || defined(CUBEREVO_MINI) || defined(CUBEREVO_250HD) || defined(CUBEREVO_2000HD) || defined(CUBEREVO_9500HD) || defined(CUBEREVO_MINI_FTA) || defined(IPBOX9900) || defined(IPBOX99) || defined(IPBOX55)
 //Dagobert: lmi_vid isn't available for pip :(
         if (SurfaceId != DISPLAY_ID_MAIN)
             Partition   = "BPA2_Region0";
-        else if (BufferLocation == BufferLocationVideoMemory)
+        else
+        if (BufferLocation == BufferLocationVideoMemory)
             Partition   = "BPA2_Region1";
         else if (BufferLocation == BufferLocationSystemMemory)
             Partition   = "BPA2_Region0";
         else
             Partition   = (SurfaceId == DISPLAY_ID_MAIN) ? "BPA2_Region1" : "BPA2_Region0";
-
 #else
         Partition   = "BPA2_Region1";
 #endif
 
-        DecodeBufferParameters.BufferConfiguration.TotalBufferMemory    = (SurfaceId == DISPLAY_ID_MAIN) ?
-                PRIMARY_VIDEO_BUFFER_MEMORY :
-                SECONDARY_VIDEO_BUFFER_MEMORY;
+#else /* not __TDT__ */
+        if (BufferLocation == BufferLocationVideoMemory)
+            Partition   = "BPA2_Region1";
+        else if (BufferLocation == BufferLocationSystemMemory)
+            Partition   = "BPA2_Region0";
+        else
+            Partition   = (SurfaceId == DISPLAY_ID_MAIN) ? "BPA2_Region1" : "BPA2_Region0";
+#endif
 
-        if (strcmp(Encoding, "dvp") == 0)
+        DecodeBufferParameters.BufferConfiguration.TotalBufferMemory    = (SurfaceId == DISPLAY_ID_MAIN) ?
+                                                                                PRIMARY_VIDEO_BUFFER_MEMORY : 
+                                                                                SECONDARY_VIDEO_BUFFER_MEMORY;
+
+        if( strcmp (Encoding, "dvp") == 0 ) 
         {
             DecodeBufferParameters.BufferConfiguration.TotalBufferMemory = AVR_VIDEO_BUFFER_MEMORY;
         }
 
-        if (strcmp(Encoding, "cap") == 0)
+        if ( strcmp (Encoding, "cap") == 0 )
         {
             Partition   = "BPA2_Region1";
             DecodeBufferParameters.BufferConfiguration.TotalBufferMemory = AVR_VIDEO_BUFFER_MEMORY;
         }
 
-        strcpy(DecodeBufferParameters.BufferConfiguration.PartitionName, Partition);
+        strcpy( DecodeBufferParameters.BufferConfiguration.PartitionName, Partition );
 
-        if (strcmp(Encoding, "mpeg4p2") == 0)   // Divx
+        if( strcmp (Encoding, "mpeg4p2") == 0 ) // Divx
         {
             //
             // Nick fudge, because divx currently doubles up the buffers,
             // and allocates full size raster buffers, we halve the memory,
-            // and restrict them to 12 buffers. This stays in effect until the
+            // and restrict them to 12 buffers. This stays in effect until the 
             // manifestor handles their native format.
 
             DecodeBufferParameters.BufferConfiguration.MaxBufferCount           /= 2;
@@ -253,34 +252,31 @@ HavanaStatus_t HavanaDisplay_c::GetManifestor(class HavanaPlayer_c*           Ha
         }
 
         HAVANA_DEBUG("Will allocate upto %d buffers of type %d out of %08x bytes from the %s partition\n",
-                     DecodeBufferParameters.BufferConfiguration.MaxBufferCount,
-                     DecodeBufferParameters.BufferConfiguration.DecodedBufferFormat,
-                     DecodeBufferParameters.BufferConfiguration.TotalBufferMemory,
-                     Partition);
+                      DecodeBufferParameters.BufferConfiguration.MaxBufferCount,
+                      DecodeBufferParameters.BufferConfiguration.DecodedBufferFormat,
+                      DecodeBufferParameters.BufferConfiguration.TotalBufferMemory,
+                      Partition );
 
-        ManifestorStatus    = VideoManifestor->SetModuleParameters(sizeof(ManifestorParameterBlock_t), &DecodeBufferParameters);
-
+        ManifestorStatus    = VideoManifestor->SetModuleParameters (sizeof(ManifestorParameterBlock_t), &DecodeBufferParameters);
         if (ManifestorStatus != ManifestorNoError)
         {
             HAVANA_ERROR("Failed to set manifestor parameters (%08x)\n", ManifestorStatus);
             return HavanaNoMemory;
         }
 
-        ManifestorStatus    = VideoManifestor->Enable();
-
+        ManifestorStatus    = VideoManifestor->Enable ();
         if (ManifestorStatus != ManifestorNoError)
         {
             HAVANA_ERROR("Failed to enable video output\n");
             return HavanaError;
         }
-
         //}}}
+
     }
     else
         PlayerStreamType        = StreamTypeOther;
-
-    if (this->Manifestor == NULL)
-        Status  = HavanaPlayer->CallFactory(Media, FACTORY_ANY_ID, StreamTypeOther, ComponentManifestor, (void**)&this->Manifestor);
+        if (this->Manifestor == NULL)
+            Status  = HavanaPlayer->CallFactory (Media, FACTORY_ANY_ID, StreamTypeOther, ComponentManifestor, (void**)&this->Manifestor);
 
     *Manifestor     = this->Manifestor;
     return Status;

@@ -56,18 +56,18 @@ typedef signed int   S32;
 #ifndef DEFINED_ERRORCODE
 #define DEFINED_ERRORCODE
 typedef int ST_ErrorCode_t;
-#endif
-
+#endif	
+	
 /* Boolean type (values should be among TRUE and FALSE constants only) */
 #ifndef DEFINED_BOOL
 #define DEFINED_BOOL
 typedef int BOOL;
 /* BOOL type constant values */
 #ifndef TRUE
-#define TRUE (1 == 1)
+    #define TRUE (1 == 1)
 #endif
 #ifndef FALSE
-#define FALSE (!TRUE)
+    #define FALSE (!TRUE)
 #endif
 #endif
 

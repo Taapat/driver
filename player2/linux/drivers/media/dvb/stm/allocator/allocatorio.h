@@ -35,7 +35,7 @@ Date        Modification                                    Name
 #ifndef H_ALLOCATORIO
 #define H_ALLOCATORIO
 
-#define ALLOCATOR_MAX_PARTITION_NAME_SIZE   64
+#define ALLOCATOR_MAX_PARTITION_NAME_SIZE	64
 
 #define ALLOCATOR_IOCTL_ALLOCATE_DATA           1
 
@@ -46,9 +46,9 @@ Date        Modification                                    Name
 typedef struct allocator_ioctl_allocate_s
 {
     unsigned int         RequiredSize;
-    char         PartitionName[ALLOCATOR_MAX_PARTITION_NAME_SIZE];
-    unsigned char   *CachedAddress;
-    unsigned char   *UnCachedAddress;
+    char		 PartitionName[ALLOCATOR_MAX_PARTITION_NAME_SIZE];
+    unsigned char	*CachedAddress;
+    unsigned char	*UnCachedAddress;
     unsigned char       *PhysicalAddress;
 } allocator_ioctl_allocate_t;
 

@@ -86,8 +86,8 @@ static BufferDataDescriptor_t     WmaAudioFrameParametersBuffer = BUFFER_WMA_AUD
 /// \return Frame parser status code, FrameParserNoError indicates success.
 ///
 FrameParserStatus_t FrameParser_AudioWma_c::ParseStreamHeader(unsigned char*               FrameHeaderBytes,
-        WmaAudioStreamParameters_t*  StreamParameters,
-        bool                         Verbose)
+							      WmaAudioStreamParameters_t*  StreamParameters,
+							      bool                         Verbose)
 {
     unsigned int                         FrameDataLength;
     unsigned int*                        FrameDataU32           = (unsigned int*)FrameHeaderBytes;
@@ -97,36 +97,30 @@ FrameParserStatus_t FrameParser_AudioWma_c::ParseStreamHeader(unsigned char*    
     WMA_TypeSpecificData_c               TypeSpecificData;
 
     FrameDataLength     = FrameDataU32[4];
-    FrameData           = StreamPropertiesObject.decode(FrameData, FrameDataLength);
-
+    FrameData           = StreamPropertiesObject.decode (FrameData, FrameDataLength);
     if (Verbose)
-        StreamPropertiesObject.dump(true);
-
+	StreamPropertiesObject.dump(true);
     if (!FrameData)
     {
         FRAME_ERROR("Failed to decode ASF stream properties object\n");
         return FrameParserError;
     }
 
-    FrameData            = WaveFormatEx.decode(StreamPropertiesObject.type_specific_data,
-                           StreamPropertiesObject.type_specific_data_length);
-
+    FrameData            = WaveFormatEx.decode         (StreamPropertiesObject.type_specific_data,
+                                                        StreamPropertiesObject.type_specific_data_length);
     if (Verbose)
-        WaveFormatEx.dump(true);
-
+	WaveFormatEx.dump(true);
     if (!FrameData)
     {
         FRAME_ERROR("Failed to decode audio stream's type specific data (WaveFormatEx)\n");
         return FrameParserError;
     }
 
-    FrameData           = TypeSpecificData.decode(WaveFormatEx.codec_id,
-                          WaveFormatEx.codec_specific_data,
-                          WaveFormatEx.codec_specific_data_size);
-
+    FrameData           = TypeSpecificData.decode      (WaveFormatEx.codec_id,
+                                                        WaveFormatEx.codec_specific_data,
+                                                        WaveFormatEx.codec_specific_data_size);
     if (Verbose)
-        TypeSpecificData.dump(true);
-
+	TypeSpecificData.dump(true);
     if (!FrameData)
     {
         FRAME_ERROR("Failed to decode audio stream's type specific data (WMA)\n");
@@ -135,7 +129,6 @@ FrameParserStatus_t FrameParser_AudioWma_c::ParseStreamHeader(unsigned char*    
 
     // calculate the frame length
     StreamParameters->SamplingFrequency                 = WaveFormatEx.samples_per_second;
-
     if (StreamParameters->SamplingFrequency <= 16000)
         StreamParameters->SamplesPerFrame               = 512;
     else if (StreamParameters->SamplingFrequency <= 22050)
@@ -158,7 +151,6 @@ FrameParserStatus_t FrameParser_AudioWma_c::ParseStreamHeader(unsigned char*    
     {
         // Samples per block can be modified based on encode options
         unsigned int    Mode    = (TypeSpecificData.encode_options & 0x0006);
-
         if (Mode == 2)                  // Twice the number of samples
             StreamParameters->SamplesPerFrame         <<= 1;
         else if (Mode == 4)             // Half the number of samples
@@ -166,9 +158,8 @@ FrameParserStatus_t FrameParser_AudioWma_c::ParseStreamHeader(unsigned char*    
         else if (Mode == 6)             // One-fourth the number of samples
             StreamParameters->SamplesPerFrame         >>= 2;
     }
-
     if (Verbose)
-        FRAME_TRACE("SamplesPerFrame = %d\n", StreamParameters->SamplesPerFrame);
+	FRAME_TRACE ("SamplesPerFrame = %d\n", StreamParameters->SamplesPerFrame);
 
     // calculate the average frame length
     // calculate the average frame duration
@@ -191,28 +182,26 @@ FrameParserStatus_t FrameParser_AudioWma_c::ParseStreamHeader(unsigned char*    
 
     // Set valit bits per sample.  If type Specific data sets the value use that, otherwise set same as bits per sample
     StreamParameters->ValidBitsPerSample                = (TypeSpecificData.valid_bits_per_sample == 0) ?
-            WaveFormatEx.bits_per_sample :
-            TypeSpecificData.valid_bits_per_sample;
+                                                                    WaveFormatEx.bits_per_sample :
+                                                                    TypeSpecificData.valid_bits_per_sample;
     StreamParameters->ChannelMask                       = TypeSpecificData.channel_mask;
 
     StreamParameters->SamplesPerBlock                   = TypeSpecificData.samples_per_block;
-
     if (Verbose)
-        FRAME_TRACE("SamplesPerBlock = %d\n", StreamParameters->SamplesPerBlock);
-
+	FRAME_TRACE ("SamplesPerBlock = %d\n", StreamParameters->SamplesPerBlock);
     StreamParameters->EncodeOptions                     = TypeSpecificData.encode_options;
     StreamParameters->SuperBlockAlign                   = TypeSpecificData.super_block_align;
 
-    return FrameParserNoError;
+  return FrameParserNoError;
 }
-//}}}
+//}}}  
 
 
 ////////////////////////////////////////////////////////////////////////////
 ///
 ///     Constructor
 ///
-FrameParser_AudioWma_c::FrameParser_AudioWma_c(void)
+FrameParser_AudioWma_c::FrameParser_AudioWma_c( void )
 {
     Configuration.FrameParserName               = "AudioWma";
 
@@ -231,7 +220,7 @@ FrameParser_AudioWma_c::FrameParser_AudioWma_c(void)
 ///
 ///     Destructor
 ///
-FrameParser_AudioWma_c::~FrameParser_AudioWma_c(void)
+FrameParser_AudioWma_c::~FrameParser_AudioWma_c( void )
 {
     Halt();
     Reset();
@@ -241,7 +230,7 @@ FrameParser_AudioWma_c::~FrameParser_AudioWma_c(void)
 ///
 ///     The Reset function release any resources, and reset all variable
 ///
-FrameParserStatus_t   FrameParser_AudioWma_c::Reset(void)
+FrameParserStatus_t   FrameParser_AudioWma_c::Reset(  void )
 {
     // CurrentStreamParameters is initialized in RegisterOutputBufferRing()
     LastNormalizedDecodeTime = 0; // must *not* be INVALID_TIME
@@ -254,7 +243,7 @@ FrameParserStatus_t   FrameParser_AudioWma_c::Reset(void)
 ///
 ///     The register output ring function
 ///
-FrameParserStatus_t   FrameParser_AudioWma_c::RegisterOutputBufferRing(Ring_t          Ring)
+FrameParserStatus_t   FrameParser_AudioWma_c::RegisterOutputBufferRing(       Ring_t          Ring )
 {
 
     //
@@ -268,13 +257,13 @@ FrameParserStatus_t   FrameParser_AudioWma_c::RegisterOutputBufferRing(Ring_t   
     // Set illegal state forcing a parameter update on the first frame
     //
 
-    memset(&CurrentStreamParameters, 0, sizeof(CurrentStreamParameters));
+    memset( &CurrentStreamParameters, 0, sizeof(CurrentStreamParameters) );
 
     //
     // Pass the call down the line
     //
 
-    return FrameParser_Audio_c::RegisterOutputBufferRing(Ring);
+    return FrameParser_Audio_c::RegisterOutputBufferRing( Ring );
 }
 
 
@@ -282,7 +271,7 @@ FrameParserStatus_t   FrameParser_AudioWma_c::RegisterOutputBufferRing(Ring_t   
 ///
 /// Parse the frame header and store the results for when we emit the frame.
 ///
-FrameParserStatus_t   FrameParser_AudioWma_c::ReadHeaders(void)
+FrameParserStatus_t   FrameParser_AudioWma_c::ReadHeaders( void )
 {
     FrameParserStatus_t Status;
 
@@ -302,41 +291,37 @@ FrameParserStatus_t   FrameParser_AudioWma_c::ReadHeaders(void)
     //}
     //well, either there was no header, or there is and we need to sort out the stream parameters
 
-    if (0 == memcmp(BufferData, asf_guid_lookup[ASF_GUID_STREAM_PROPERTIES_OBJECT], sizeof(asf_guid_t)))
+    if( 0 == memcmp(BufferData, asf_guid_lookup[ASF_GUID_STREAM_PROPERTIES_OBJECT], sizeof(asf_guid_t)))
     {
-        Status          = GetNewStreamParameters((void**)&StreamParameters);
-
+        Status          = GetNewStreamParameters ((void**)&StreamParameters);
         if (Status != FrameParserNoError)
         {
-            FRAME_ERROR("Cannot get new stream parameters\n");
+            FRAME_ERROR( "Cannot get new stream parameters\n" );
+            return Status;
+        }
+        Status = ParseStreamHeader (BufferData, StreamParameters);
+        if (Status != FrameParserNoError)
+        {
+            FRAME_ERROR ("Failed to parse stream parameters\n" );
             return Status;
         }
 
-        Status = ParseStreamHeader(BufferData, StreamParameters);
-
-        if (Status != FrameParserNoError)
-        {
-            FRAME_ERROR("Failed to parse stream parameters\n");
-            return Status;
-        }
-
-        memcpy(&CurrentStreamParameters, StreamParameters, sizeof(CurrentStreamParameters));
+        memcpy (&CurrentStreamParameters, StreamParameters, sizeof(CurrentStreamParameters));
 
         UpdateStreamParameters  = true;
         FrameToDecode           = false;        // throw away the stream properties object - the new stream parameters will
-        // be sent to the codec attached to the next data block
+                                                // be sent to the codec attached to the next data block
 
-        LastNormalizedDecodeTime = 0; // reset the last observed decode time whenever we get new parameters
+	LastNormalizedDecodeTime = 0; // reset the last observed decode time whenever we get new parameters
     }
     else
     {
         FrameToDecode = true;
 
-        Status = GetNewFrameParameters((void **) &FrameParameters);
-
-        if (Status != FrameParserNoError)
+        Status = GetNewFrameParameters( (void **) &FrameParameters );
+        if( Status != FrameParserNoError )
         {
-            FRAME_ERROR("Cannot get new frame parameters\n");
+            FRAME_ERROR( "Cannot get new frame parameters\n" );
             return Status;
         }
 
@@ -377,10 +362,10 @@ FrameParserStatus_t   FrameParser_AudioWma_c::ReadHeaders(void)
 ///
 ///     The reset reference frame list function
 ///
-FrameParserStatus_t   FrameParser_AudioWma_c::ResetReferenceFrameList(void)
+FrameParserStatus_t   FrameParser_AudioWma_c::ResetReferenceFrameList( void )
 {
     FRAME_DEBUG(">><<");
-    Player->CallInSequence(Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, CODEC_RELEASE_ALL);
+    Player->CallInSequence( Stream, SequenceTypeImmediate, TIME_NOT_APPLICABLE, CodecFnReleaseReferenceFrame, CODEC_RELEASE_ALL );
 
     return FrameParserNoError;
 }
@@ -392,7 +377,7 @@ FrameParserStatus_t   FrameParser_AudioWma_c::ResetReferenceFrameList(void)
 ///
 /// \copydoc FrameParser_Audio_c::PurgeQueuedPostDecodeParameterSettings()
 ///
-FrameParserStatus_t   FrameParser_AudioWma_c::PurgeQueuedPostDecodeParameterSettings(void)
+FrameParserStatus_t   FrameParser_AudioWma_c::PurgeQueuedPostDecodeParameterSettings( void )
 {
     return FrameParserNoError;
 }
@@ -404,7 +389,7 @@ FrameParserStatus_t   FrameParser_AudioWma_c::PurgeQueuedPostDecodeParameterSett
 ///
 /// \copydoc FrameParser_Audio_c::ProcessQueuedPostDecodeParameterSettings()
 ///
-FrameParserStatus_t   FrameParser_AudioWma_c::ProcessQueuedPostDecodeParameterSettings(void)
+FrameParserStatus_t   FrameParser_AudioWma_c::ProcessQueuedPostDecodeParameterSettings( void )
 {
     return FrameParserNoError;
 }
@@ -417,9 +402,9 @@ FrameParserStatus_t   FrameParser_AudioWma_c::ProcessQueuedPostDecodeParameterSe
 /// For WMA audio these can be determined immediately (although it the first
 /// frame for decode does not contain a PTS we must synthesize one).
 ///
-FrameParserStatus_t   FrameParser_AudioWma_c::GeneratePostDecodeParameterSettings(void)
+FrameParserStatus_t   FrameParser_AudioWma_c::GeneratePostDecodeParameterSettings( void )
 {
-    FrameParserStatus_t Status;
+FrameParserStatus_t Status;
 
 //
 
@@ -437,11 +422,11 @@ FrameParserStatus_t   FrameParser_AudioWma_c::GeneratePostDecodeParameterSetting
     // Record in the structure the decode and presentation times if specified
     //
 
-    if (CodedFrameParameters->PlaybackTimeValid)
+    if( CodedFrameParameters->PlaybackTimeValid )
     {
 
         ParsedFrameParameters->NativePlaybackTime       = CodedFrameParameters->PlaybackTime;
-        TranslatePlaybackTimeNativeToNormalized(CodedFrameParameters->PlaybackTime, &ParsedFrameParameters->NormalizedPlaybackTime);
+        TranslatePlaybackTimeNativeToNormalized( CodedFrameParameters->PlaybackTime, &ParsedFrameParameters->NormalizedPlaybackTime );
 
     }
     else
@@ -449,22 +434,21 @@ FrameParserStatus_t   FrameParser_AudioWma_c::GeneratePostDecodeParameterSetting
         FRAME_DEBUG("No timestamp (collator did not provide one)\n");
     }
 
-    if (CodedFrameParameters->DecodeTimeValid)
+    if( CodedFrameParameters->DecodeTimeValid )
     {
         ParsedFrameParameters->NativeDecodeTime         = CodedFrameParameters->DecodeTime;
-        TranslatePlaybackTimeNativeToNormalized(CodedFrameParameters->DecodeTime, &ParsedFrameParameters->NormalizedDecodeTime);
+        TranslatePlaybackTimeNativeToNormalized( CodedFrameParameters->DecodeTime, &ParsedFrameParameters->NormalizedDecodeTime );
     }
 
     //
-    // Synthesize the presentation time if required
+    // Sythesize the presentation time if required
     //
 
 
     Status = HandleCurrentFrameNormalizedPlaybackTime();
-
-    if (Status != FrameParserNoError)
+    if( Status != FrameParserNoError )
     {
-        report(severity_info, "POSTDECODE: HandleCurrentFrameNormalizedPlaybackTime failed \n");
+        report( severity_info, "POSTDECODE: HandleCurrentFrameNormalizedPlaybackTime failed \n");
         FRAME_ERROR("POSTDECODE: HandleCurrentFrameNormalizedPlaybackTime failed \n");
         return Status;
     }
@@ -481,31 +465,31 @@ FrameParserStatus_t   FrameParser_AudioWma_c::GeneratePostDecodeParameterSetting
     // To avoid underflow the WMA decoder needs a generous 'float' of data
     // before it attempts to decode a frame. The maninitude of this float
     // must be encoded into the DTS otherwise the output timer will delay
-    // issuing data for decode.
+    // issuing data for decode. 
     //
 
     const unsigned long long VeryEarlyDecodePorch = 250000;
 
-    if (ParsedFrameParameters->NormalizedDecodeTime == INVALID_TIME)
-        ParsedFrameParameters->NormalizedDecodeTime = ParsedFrameParameters->NormalizedPlaybackTime;
+    if( ParsedFrameParameters->NormalizedDecodeTime == INVALID_TIME )
+	    ParsedFrameParameters->NormalizedDecodeTime = ParsedFrameParameters->NormalizedPlaybackTime;
 
-    if (ParsedFrameParameters->NormalizedDecodeTime > ParsedFrameParameters->NormalizedPlaybackTime)
+    if( ParsedFrameParameters->NormalizedDecodeTime > ParsedFrameParameters->NormalizedPlaybackTime )
     {
-        FRAME_ERROR("DTS(%lldus) > PTS(%lldus)!!!\n",
-                    ParsedFrameParameters->NormalizedDecodeTime,
-                    ParsedFrameParameters->NormalizedPlaybackTime);
-        ParsedFrameParameters->NormalizedDecodeTime = ParsedFrameParameters->NormalizedPlaybackTime;
+	FRAME_ERROR("DTS(%lldus) > PTS(%lldus)!!!\n",
+		    ParsedFrameParameters->NormalizedDecodeTime,
+		    ParsedFrameParameters->NormalizedPlaybackTime);
+	ParsedFrameParameters->NormalizedDecodeTime = ParsedFrameParameters->NormalizedPlaybackTime;
     }
 
-    if (ValidTime(ParsedFrameParameters->NormalizedDecodeTime) &&
-            (ParsedFrameParameters->NormalizedDecodeTime > VeryEarlyDecodePorch))
+    if( ValidTime ( ParsedFrameParameters->NormalizedDecodeTime ) &&
+	( ParsedFrameParameters->NormalizedDecodeTime > VeryEarlyDecodePorch ) )
     {
-        ParsedFrameParameters->NormalizedDecodeTime -= VeryEarlyDecodePorch;
-        LastNormalizedDecodeTime = ParsedFrameParameters->NormalizedDecodeTime;
+	ParsedFrameParameters->NormalizedDecodeTime -= VeryEarlyDecodePorch;
+	LastNormalizedDecodeTime = ParsedFrameParameters->NormalizedDecodeTime;
     }
     else
     {
-        ParsedFrameParameters->NormalizedDecodeTime = LastNormalizedDecodeTime;
+	ParsedFrameParameters->NormalizedDecodeTime = LastNormalizedDecodeTime;
     }
 
     //
@@ -518,7 +502,7 @@ FrameParserStatus_t   FrameParser_AudioWma_c::GeneratePostDecodeParameterSetting
     // *Don't* call GenerateNextFrameNormalizedPlaybackTime() here since it is meaningless
     // for WMA streams. This means that LastNormalizedPlaybackTime and
     // NextFrameNormalizedPlaybackTime will always be UNSPECIFIED_TIME.
-    //
+    // 
 
     return FrameParserNoError;
 }
@@ -530,7 +514,7 @@ FrameParserStatus_t   FrameParser_AudioWma_c::GeneratePostDecodeParameterSetting
 ///
 /// \copydoc FrameParser_Audio_c::PrepareReferenceFrameList()
 ///
-FrameParserStatus_t   FrameParser_AudioWma_c::PrepareReferenceFrameList(void)
+FrameParserStatus_t   FrameParser_AudioWma_c::PrepareReferenceFrameList( void )
 {
     return FrameParserNoError;
 }
@@ -542,7 +526,7 @@ FrameParserStatus_t   FrameParser_AudioWma_c::PrepareReferenceFrameList(void)
 ///
 /// \copydoc FrameParser_Audio_c::PrepareReferenceFrameList()
 ///
-FrameParserStatus_t   FrameParser_AudioWma_c::UpdateReferenceFrameList(void)
+FrameParserStatus_t   FrameParser_AudioWma_c::UpdateReferenceFrameList( void )
 {
     return FrameParserNoError;
 }
@@ -553,7 +537,7 @@ FrameParserStatus_t   FrameParser_AudioWma_c::UpdateReferenceFrameList(void)
 ///
 /// \copydoc FrameParser_Audio_c::ProcessReverseDecodeUnsatisfiedReferenceStack()
 ///
-FrameParserStatus_t   FrameParser_AudioWma_c::ProcessReverseDecodeUnsatisfiedReferenceStack(void)
+FrameParserStatus_t   FrameParser_AudioWma_c::ProcessReverseDecodeUnsatisfiedReferenceStack( void )
 {
     return FrameParserNoError;
 }
@@ -564,7 +548,7 @@ FrameParserStatus_t   FrameParser_AudioWma_c::ProcessReverseDecodeUnsatisfiedRef
 ///
 /// \copydoc FrameParser_Audio_c::ProcessReverseDecodeStack()
 ///
-FrameParserStatus_t   FrameParser_AudioWma_c::ProcessReverseDecodeStack(void)
+FrameParserStatus_t   FrameParser_AudioWma_c::ProcessReverseDecodeStack(                        void )
 {
     return FrameParserNoError;
 }
@@ -575,7 +559,7 @@ FrameParserStatus_t   FrameParser_AudioWma_c::ProcessReverseDecodeStack(void)
 ///
 /// \copydoc FrameParser_Audio_c::PurgeReverseDecodeUnsatisfiedReferenceStack()
 ///
-FrameParserStatus_t   FrameParser_AudioWma_c::PurgeReverseDecodeUnsatisfiedReferenceStack(void)
+FrameParserStatus_t   FrameParser_AudioWma_c::PurgeReverseDecodeUnsatisfiedReferenceStack(      void )
 {
 
     return FrameParserNoError;
@@ -587,7 +571,7 @@ FrameParserStatus_t   FrameParser_AudioWma_c::PurgeReverseDecodeUnsatisfiedRefer
 ///
 /// \copydoc FrameParser_Audio_c::PurgeReverseDecodeStack()
 ///
-FrameParserStatus_t   FrameParser_AudioWma_c::PurgeReverseDecodeStack(void)
+FrameParserStatus_t   FrameParser_AudioWma_c::PurgeReverseDecodeStack(                  void )
 {
     return FrameParserNoError;
 }
@@ -598,7 +582,7 @@ FrameParserStatus_t   FrameParser_AudioWma_c::PurgeReverseDecodeStack(void)
 ///
 /// \copydoc FrameParser_Audio_c::TestForTrickModeFrameDrop()
 ///
-FrameParserStatus_t   FrameParser_AudioWma_c::TestForTrickModeFrameDrop(void)
+FrameParserStatus_t   FrameParser_AudioWma_c::TestForTrickModeFrameDrop(                        void )
 {
     return FrameParserNoError;
 }

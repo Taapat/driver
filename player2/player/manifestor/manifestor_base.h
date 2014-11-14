@@ -67,7 +67,7 @@ Date        Modification                                    Name
 
 /* Output debug information (which may be on the critical path) but is usually turned off */
 #define MANIFESTOR_DEBUG(fmt, args...) ((void)(ENABLE_MANIFESTOR_DEBUG && \
-                                        (report(severity_note, "%s%s: " fmt, MANIFESTOR_TAG, MANIFESTOR_FUNCTION, ##args), 0)))
+                                          (report(severity_note, "%s%s: " fmt, MANIFESTOR_TAG, MANIFESTOR_FUNCTION, ##args), 0)))
 
 /* Output trace information off the critical path */
 #define MANIFESTOR_TRACE(fmt, args...) (report(severity_note, "%s%s: " fmt, MANIFESTOR_TAG, MANIFESTOR_FUNCTION, ##args))
@@ -78,16 +78,16 @@ Date        Modification                                    Name
 #define MANIFESTOR_FATAL(fmt, args...) (report(severity_fatal, "%s%s: " fmt, MANIFESTOR_TAG, MANIFESTOR_FUNCTION, ##args))
 
 #define MANIFESTOR_ASSERT(x) do if(!(x)) report(severity_error, "%s: Assertion '%s' failed at %s:%d\n", \
-                MANIFESTOR_FUNCTION, #x, __FILE__, __LINE__); while(0)
+                                               MANIFESTOR_FUNCTION, #x, __FILE__, __LINE__); while(0)
 
 // ---------------------------------------------------------------------
 //
 // Local type definitions
 //
 
-//
-// The internal configuration for the manifestor base
-//
+    //
+    // The internal configuration for the manifestor base
+    //
 
 typedef struct ManifestorConfiguration_s
 {
@@ -100,9 +100,9 @@ typedef struct ManifestorConfiguration_s
     unsigned int                  OutputRateSmoothingFramesBetweenReCalculate;
 } ManifestorConfiguration_t;
 
-//
-// The set parameters definitions for defining decode buffer memory
-//
+    //
+    // The set parameters definitions for defining decode buffer memory
+    //
 
 typedef enum
 {
@@ -149,101 +149,97 @@ struct EventRecord_s
 /// Framework for implementing manifestors.
 class Manifestor_Base_c : public Manifestor_c
 {
-    protected:
+protected:
 
-        // Data
+    // Data
 
-        ManifestorConfiguration_t             Configuration;
+    ManifestorConfiguration_t             Configuration;
 
-        BufferManager_t                       BufferManager;
-        ManifestorBufferConfiguration_t       BufferConfiguration;
+    BufferManager_t                       BufferManager;
+    ManifestorBufferConfiguration_t       BufferConfiguration;
 
-        // Buffers
-        BufferDataDescriptor_t               *DecodeBufferDescriptor;
-        BufferType_t                          DecodeBufferType;
-        allocator_device_t                    DecodeMemoryDevice;
-        void                                 *DecodeBufferMemory[3];
-        BufferPool_t                          DecodeBufferPool;
-        unsigned int                          LastDecodeBufferSize;
+    // Buffers
+    BufferDataDescriptor_t               *DecodeBufferDescriptor;
+    BufferType_t                          DecodeBufferType;
+    allocator_device_t                    DecodeMemoryDevice;
+    void                                 *DecodeBufferMemory[3];
+    BufferPool_t                          DecodeBufferPool;
+    unsigned int                          LastDecodeBufferSize;
 
-        BufferPool_t                          PostProcessControlBufferPool;
+    BufferPool_t                          PostProcessControlBufferPool;
 
-        //  Output ring for used buffers
-        Ring_t                      OutputRing;
+    //  Output ring for used buffers
+    Ring_t                      OutputRing;
 
-        /* Output rate smoothing data */
+    /* Output rate smoothing data */
 
-        unsigned int                         OutputRateSmoothingFramesSinceLastCalculation;
-        unsigned int                         OutputRateSmoothingIndex;
-        Rational_t                           OutputRateSmoothingLastRate;
-        Rational_t                           OutputRateSmoothingSubPPMPart;
-        unsigned int                         OutputRateSmoothingBaseValue;
-        unsigned int                         OutputRateSmoothingLastValue;
-        bool                                 OutputRateMovingTo;
+    unsigned int                         OutputRateSmoothingFramesSinceLastCalculation;
+    unsigned int                         OutputRateSmoothingIndex;
+    Rational_t                           OutputRateSmoothingLastRate;
+    Rational_t                           OutputRateSmoothingSubPPMPart;
+    unsigned int                         OutputRateSmoothingBaseValue;
+    unsigned int                         OutputRateSmoothingLastValue;
+    bool				 OutputRateMovingTo;
 
-        /* Event control */
-        bool                        EventPending;
-        struct EventRecord_s        EventList[MAXIMUM_WAITING_EVENTS];
-        OS_Mutex_t                  EventLock;
-        bool                        EventLockValid;
-        unsigned int                NextEvent;
-        unsigned int                LastEvent;
+    /* Event control */
+    bool                        EventPending;
+    struct EventRecord_s        EventList[MAXIMUM_WAITING_EVENTS];
+    OS_Mutex_t                  EventLock;
+    bool                        EventLockValid;
+    unsigned int                NextEvent;
+    unsigned int                LastEvent;
 
-        ManifestorStatus_t   ServiceEventQueue(unsigned int           Id);
-        ManifestorStatus_t   FlushEventQueue(void);
+    ManifestorStatus_t   ServiceEventQueue              (unsigned int           Id);
+    ManifestorStatus_t   FlushEventQueue                (void);
 
-        virtual unsigned int GetBufferId(void) = 0;
-        virtual ManifestorStatus_t FlushDisplayQueue(void) = 0;
+    virtual unsigned int GetBufferId                    (void) = 0;
+    virtual ManifestorStatus_t FlushDisplayQueue        (void) = 0;
 
-    public:
+public:
 
-        // Constructor/Destructor methods
-        Manifestor_Base_c(void);
-        ~Manifestor_Base_c(void);
+    // Constructor/Destructor methods
+    Manifestor_Base_c                                   (void);
+    ~Manifestor_Base_c                                  (void);
 
-        // Overrides for component base class functions
-        ManifestorStatus_t   Halt(void);
-        ManifestorStatus_t   Reset(void);
-        ManifestorStatus_t   SetModuleParameters(unsigned int           ParameterBlockSize,
-                void*                  ParameterBlock);
+    // Overrides for component base class functions
+    ManifestorStatus_t   Halt                           (void);
+    ManifestorStatus_t   Reset                          (void);
+    ManifestorStatus_t   SetModuleParameters            (unsigned int           ParameterBlockSize,
+                                                         void*                  ParameterBlock);
 
-        // Manifestor class functions
-        ManifestorStatus_t   GetDecodeBufferPool(BufferPool_t          *Pool);
-        ManifestorStatus_t   GetPostProcessControlBufferPool(BufferPool_t          *Pool);
-        ManifestorStatus_t   RegisterOutputBufferRing(Ring_t                 Ring);
-        ManifestorStatus_t   GetSurfaceParameters(void**                 SurfaceParameters);
-        ManifestorStatus_t   GetNextQueuedManifestTime(unsigned long long*    Time);
-        ManifestorStatus_t   ReleaseQueuedDecodeBuffers(void);
-        ManifestorStatus_t   QueueNullManifestation(void);
-        ManifestorStatus_t   QueueEventSignal(PlayerEventRecord_t*   Event);
+    // Manifestor class functions
+    ManifestorStatus_t   GetDecodeBufferPool            (BufferPool_t          *Pool);
+    ManifestorStatus_t   GetPostProcessControlBufferPool(BufferPool_t          *Pool);
+    ManifestorStatus_t   RegisterOutputBufferRing       (Ring_t                 Ring);
+    ManifestorStatus_t   GetSurfaceParameters           (void**                 SurfaceParameters);
+    ManifestorStatus_t   GetNextQueuedManifestTime      (unsigned long long*    Time);
+    ManifestorStatus_t   ReleaseQueuedDecodeBuffers     (void);
+    ManifestorStatus_t   QueueNullManifestation         (void);
+    ManifestorStatus_t   QueueEventSignal               (PlayerEventRecord_t*   Event);
 
-        ManifestorStatus_t   GetDecodeBuffer(BufferStructure_t        *RequestedStructure,
-                                             Buffer_t                 *Buffer);
+    ManifestorStatus_t   GetDecodeBuffer(               BufferStructure_t        *RequestedStructure,
+                                                        Buffer_t                 *Buffer );
 
-        ManifestorStatus_t   GetDecodeBufferCount(unsigned int             *Count);
+    ManifestorStatus_t   GetDecodeBufferCount(          unsigned int             *Count );
 
-        ManifestorStatus_t   SynchronizeOutput(void);
+    ManifestorStatus_t   SynchronizeOutput(             void );
 
-        // Support functions for derived classes
+    // Support functions for derived classes
 
-        ManifestorStatus_t   DerivePPMValueFromOutputRateAdjustment(
-            Rational_t               OutputRateAdjustment,
-            int                     *PPMValue);
+    ManifestorStatus_t   DerivePPMValueFromOutputRateAdjustment(
+                                                        Rational_t               OutputRateAdjustment,
+                                                        int                     *PPMValue );
 
-        ManifestorStatus_t   ValidatePhysicalDecodeBufferAddress(
-            unsigned int         Address);
+    ManifestorStatus_t   ValidatePhysicalDecodeBufferAddress( 
+							unsigned int		 Address );
 
-        // Methods to be supplied by the derived classes
+    // Methods to be supplied by the derived classes
 
-        virtual ManifestorStatus_t   FillOutBufferStructure(BufferStructure_t        *RequestedStructure)
-        {
-            return ManifestorError;
-        }
-        virtual bool         BufferAvailable(unsigned char          *Start,
-                                             unsigned int            Size)
-        {
-            return true;
-        }
+    virtual ManifestorStatus_t   FillOutBufferStructure(BufferStructure_t        *RequestedStructure )
+        { return ManifestorError; }
+    virtual bool         BufferAvailable(               unsigned char          *Start,
+                                                        unsigned int            Size)
+        { return true; }
 
 };
 #endif

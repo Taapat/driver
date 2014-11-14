@@ -44,90 +44,90 @@ Date        Modification                                    Name
 //
 
 #ifndef NOT_SPECIFIED
-#define NOT_SPECIFIED           0xffffffff
+#define NOT_SPECIFIED 			0xffffffff
 #endif
 
-#define UNRESTRICTED_NUMBER_OF_BUFFERS  NOT_SPECIFIED
-#define UNSPECIFIED_SIZE        NOT_SPECIFIED
-#define UNSPECIFIED_OWNER       NOT_SPECIFIED
+#define UNRESTRICTED_NUMBER_OF_BUFFERS	NOT_SPECIFIED
+#define UNSPECIFIED_SIZE		NOT_SPECIFIED
+#define UNSPECIFIED_OWNER		NOT_SPECIFIED
 
 //
 
 enum
 {
-    BufferNoError               = PlayerNoError,
-    BufferError                 = PlayerError,
+    BufferNoError				= PlayerNoError,
+    BufferError					= PlayerError,
 
-    // GetBuffer
-    BufferBlockingCallAborted           = BASE_BUFFER,
+						// GetBuffer
+    BufferBlockingCallAborted			= BASE_BUFFER,
 
     BufferInsufficientMemoryGeneral,
     BufferInsufficientMemoryForPool,
     BufferInsufficientMemoryForBuffer,
     BufferInsufficientMemoryForMetaData,
 
-    BufferUnsupportedAllocationSource,      // CreateBufferDataType
-    BufferInvalidDescriptor,            // CreateBufferDataType
+    BufferUnsupportedAllocationSource,		// CreateBufferDataType
+    BufferInvalidDescriptor,			// CreateBufferDataType
 
-    BufferNoDataAttached,           // ObtainDataReference
+    BufferNoDataAttached,			// ObtainDataReference
 
-    BufferTooManyDataTypes,         // CreateBufferDataType
-    BufferDataTypeNotFound,         // FindBufferDataType - CreatePool
-    BufferMetaDataTypeNotFound,         // AttachMetaData - DetachMetaData - ObtainMetaDataReference
+    BufferTooManyDataTypes,			// CreateBufferDataType
+    BufferDataTypeNotFound,			// FindBufferDataType - CreatePool
+    BufferMetaDataTypeNotFound,			// AttachMetaData - DetachMetaData - ObtainMetaDataReference
 
     BufferParametersIncompatibleWithAllocationSource,
     BufferOperationNotSupportedByThisDescriptor,
 
-    BufferSizeIncompatibleWithDescriptor,   // CreatePool - AttachMetaData - GetBuffer - ShrinkBuffer - ExpandBuffer
-    BufferPoolNotFound,             // DestroyPool
+    BufferSizeIncompatibleWithDescriptor,	// CreatePool - AttachMetaData - GetBuffer - ShrinkBuffer - ExpandBuffer
+    BufferPoolNotFound,				// DestroyPool
 
-    BufferFailedToCreateBuffer,         // GetBuffer - PartitionBuffer
-    BufferNoFreeBufferAvailable,        // GetBuffer - PartitionBuffer
+    BufferFailedToCreateBuffer,			// GetBuffer - PartitionBuffer
+    BufferNoFreeBufferAvailable,		// GetBuffer - PartitionBuffer
 
-    BufferNonZeroReferenceCount,        // ReleaseBuffer
+    BufferNonZeroReferenceCount,		// ReleaseBuffer
 
-    BufferNotInUse,             // AttachMetaData - DetachMetaData - ShrinkBuffer - ExpandBuffer - PartitionBuffer - ObtainDataReference - IncrementReferenceCount - DecrementReferenceCount
+    BufferNotInUse,				// AttachMetaData - DetachMetaData - ShrinkBuffer - ExpandBuffer - PartitionBuffer - ObtainDataReference - IncrementReferenceCount - DecrementReferenceCount
 
-    BufferTooManyAttachments,           // AttachBuffer
-    BufferAttachmentNotFound            // DetachBuffer
+    BufferTooManyAttachments,			// AttachBuffer
+    BufferAttachmentNotFound			// DetachBuffer
 };
 
-typedef PlayerStatus_t  BufferStatus_t;
+typedef PlayerStatus_t	BufferStatus_t;
 
 //
 
 typedef enum
 {
-    CachedAddress   = 0,
-    UnCachedAddress = 1,
-    PhysicalAddress = 2
+    CachedAddress	= 0,
+    UnCachedAddress	= 1,
+    PhysicalAddress	= 2
 } AddressType_t;
 
 //
 
 typedef enum
 {
-    DumpBufferTypes = 1,
-    DumpMetaDataTypes   = 2,
-    DumpListPools   = 4,
-    DumpPoolStates  = 8,
-    DumpBufferStates    = 16
+    DumpBufferTypes	= 1,
+    DumpMetaDataTypes	= 2,
+    DumpListPools	= 4,
+    DumpPoolStates	= 8,
+    DumpBufferStates	= 16
 } DumpTypeMask_t;
 
-#define DumpAll     0xffffffff
+#define DumpAll		0xffffffff
 
 //
 // Buffer types
 //
 
-typedef unsigned int    BufferType_t;
-#define MetaDataType_t  BufferType_t
+typedef unsigned int	BufferType_t;
+#define MetaDataType_t	BufferType_t
 
 //
 
-typedef  class Buffer_c     *Buffer_t;
-typedef  class BufferPool_c *BufferPool_t;
-typedef  class BufferManager_c  *BufferManager_t;
+typedef  class Buffer_c		*Buffer_t;
+typedef  class BufferPool_c	*BufferPool_t;
+typedef  class BufferManager_c	*BufferManager_t;
 
 //
 

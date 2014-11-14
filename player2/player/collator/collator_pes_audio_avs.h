@@ -52,17 +52,17 @@ Date        Modification                                    Name
 
 class Collator_PesAudioAvs_c : public Collator_PesAudio_c
 {
-    protected:
+protected:
 
-        CollatorStatus_t FindNextSyncWord(int *CodeOffset);
-        CollatorStatus_t DecideCollatorNextStateAndGetLength(unsigned int *FrameLength);
-        void             SetPesPrivateDataLength(unsigned char SpecificCode);
+    CollatorStatus_t FindNextSyncWord( int *CodeOffset );
+    CollatorStatus_t DecideCollatorNextStateAndGetLength( unsigned int *FrameLength );
+    void             SetPesPrivateDataLength(unsigned char SpecificCode);
 
-    public:
+public:
 
-        Collator_PesAudioAvs_c();
+    Collator_PesAudioAvs_c();
 
-        CollatorStatus_t   Reset(void);
+    CollatorStatus_t   Reset(                   void );
 };
 
 #endif // H_COLLATOR_PES_AUDIO_AVS

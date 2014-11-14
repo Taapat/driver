@@ -44,7 +44,7 @@ Date        Modification                                    Name
 #endif
 
 #define SYSFS_DEBUG(fmt, args...)       ((void) (ENABLE_SYSFS_DEBUG && \
-        (printk("%s: " fmt, __FUNCTION__, ##args), 0)))
+                                            (printk("%s: " fmt, __FUNCTION__, ##args), 0)))
 
 /* Output trace information off the critical path */
 #define SYSFS_TRACE(fmt, args...)       (printk("%s: " fmt, __FUNCTION__, ##args))

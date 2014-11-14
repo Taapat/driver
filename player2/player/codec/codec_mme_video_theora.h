@@ -73,56 +73,56 @@ Date        Modification                                    Name
 /// The Theora video codec proxy.
 class Codec_MmeVideoTheora_c : public Codec_MmeVideo_c
 {
-    private:
+private:
 
-        // Data
+    // Data
 
-        unsigned int                        CodedWidth;
-        unsigned int                        CodedHeight;
+    unsigned int                        CodedWidth;
+    unsigned int                        CodedHeight;
 
-        THEORA_InitTransformerParam_t       TheoraInitializationParameters;
-        THEORA_CapabilityParams_t           TheoraTransformCapability;
+    THEORA_InitTransformerParam_t       TheoraInitializationParameters;
+    THEORA_CapabilityParams_t           TheoraTransformCapability;
 
 #if (THEORADEC_MME_VERSION >= 20)
-        allocator_device_t                  InfoHeaderMemoryDevice;
-        allocator_device_t                  CommentHeaderMemoryDevice;
-        allocator_device_t                  SetupHeaderMemoryDevice;
-        allocator_device_t                  BufferMemoryDevice;
+    allocator_device_t                  InfoHeaderMemoryDevice;
+    allocator_device_t                  CommentHeaderMemoryDevice;
+    allocator_device_t                  SetupHeaderMemoryDevice;
+    allocator_device_t                  BufferMemoryDevice;
 #endif
 
-        bool                                RestartTransformer;
+    bool                                RestartTransformer;
 
-        // Functions
+    // Functions
 
-    public:
+public:
 
-        //
-        // Constructor/Destructor methods
-        //
+    //
+    // Constructor/Destructor methods
+    //
 
-        Codec_MmeVideoTheora_c(void);
-        ~Codec_MmeVideoTheora_c(void);
+    Codec_MmeVideoTheora_c(             void );
+    ~Codec_MmeVideoTheora_c(            void );
 
-        //
-        // Stream specific functions
-        //
+    //
+    // Stream specific functions
+    //
 
-    protected:
+protected:
 
-        CodecStatus_t   Reset(void);
-        CodecStatus_t   HandleCapabilities(void);
-        CodecStatus_t   InitializeMMETransformer(void);
+    CodecStatus_t   Reset(                                      void );
+    CodecStatus_t   HandleCapabilities(                         void );
+    CodecStatus_t   InitializeMMETransformer(                   void );
 
-        CodecStatus_t   FillOutTransformerInitializationParameters(void);
-        CodecStatus_t   FillOutSetStreamParametersCommand(void);
-        CodecStatus_t   FillOutDecodeCommand(void);
-        CodecStatus_t   FillOutDecodeBufferRequest(BufferStructure_t              *Request);
+    CodecStatus_t   FillOutTransformerInitializationParameters( void );
+    CodecStatus_t   FillOutSetStreamParametersCommand(          void );
+    CodecStatus_t   FillOutDecodeCommand(                       void );
+    CodecStatus_t   FillOutDecodeBufferRequest(                 BufferStructure_t              *Request );
 
-        CodecStatus_t   ValidateDecodeContext(CodecBaseDecodeContext_t       *Context);
-        CodecStatus_t   DumpSetStreamParameters(void                           *Parameters);
-        CodecStatus_t   DumpDecodeParameters(void                           *Parameters);
+    CodecStatus_t   ValidateDecodeContext(                      CodecBaseDecodeContext_t       *Context );
+    CodecStatus_t   DumpSetStreamParameters(                    void                           *Parameters );
+    CodecStatus_t   DumpDecodeParameters(                       void                           *Parameters );
 
-        CodecStatus_t   SendMMEStreamParameters(void);
+    CodecStatus_t   SendMMEStreamParameters(                    void );
 
 
 };

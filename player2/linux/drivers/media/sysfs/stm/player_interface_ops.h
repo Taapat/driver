@@ -50,7 +50,7 @@ typedef void           *player_stream_handle_t;
 #define PLAYER_EVENT_INPUT_FORMAT_CREATED               (PLAYER_EVENT_DECODE_BUFFER_AVAILABLE + 1)
 #define PLAYER_EVENT_SUPPORTED_INPUT_FORMAT_CREATED     (PLAYER_EVENT_INPUT_FORMAT_CREATED + 1)
 #define PLAYER_EVENT_DECODE_ERRORS_CREATED              (PLAYER_EVENT_SUPPORTED_INPUT_FORMAT_CREATED + 1)
-#define PLAYER_EVENT_SAMPLE_FREQUENCY_CREATED           (PLAYER_EVENT_DECODE_ERRORS_CREATED + 1)
+#define PLAYER_EVENT_SAMPLE_FREQUENCY_CREATED           (PLAYER_EVENT_DECODE_ERRORS_CREATED + 1)        
 #define PLAYER_EVENT_NUMBER_CHANNELS_CREATED            (PLAYER_EVENT_SAMPLE_FREQUENCY_CREATED + 1)
 #define PLAYER_EVENT_NUMBER_OF_SAMPLES_PROCESSED        (PLAYER_EVENT_NUMBER_CHANNELS_CREATED + 1)
 
@@ -88,23 +88,23 @@ union attribute_descriptor_u
     int                         Bool;
 };
 
-typedef int (*player_event_signal_callback)(struct player_event_s* event);
+typedef int (*player_event_signal_callback)             (struct player_event_s* event);
 
 struct player_interface_operations
 {
     struct module                      *owner;
 
-    int (*component_get_attribute)(player_component_handle_t       Component,
-                                   const char*                     Attribute,
-                                   union attribute_descriptor_u*   Value);
-    int (*component_set_attribute)(player_component_handle_t       Component,
-                                   const char*                     Attribute,
-                                   union attribute_descriptor_u*   Value);
+    int (*component_get_attribute)    (player_component_handle_t       Component,
+                                       const char*                     Attribute,
+                                       union attribute_descriptor_u*   Value);
+    int (*component_set_attribute)    (player_component_handle_t       Component,
+                                       const char*                     Attribute,
+                                       union attribute_descriptor_u*   Value);
 
-    player_event_signal_callback(*player_register_event_signal_callback)(player_event_signal_callback    Callback);
+    player_event_signal_callback (*player_register_event_signal_callback)      (player_event_signal_callback    Callback);
 
 };
 
-int register_player_interface(char                                   *name,
-                              struct player_interface_operations     *player_ops);
+int register_player_interface  (char                                   *name,
+                                struct player_interface_operations     *player_ops);
 #endif

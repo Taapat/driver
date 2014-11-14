@@ -51,80 +51,78 @@ Date        Modification                                    Name
 /* Range code class for accessing arithmetically coded parts of the bitstream */
 class RangeCoder_c
 {
-    protected:
-        unsigned int                Data;
-        int                         High;
-        int                         Bits;
-        unsigned char*              Buffer;
+protected:
+    unsigned int                Data;
+    int                         High;
+    int                         Bits;
+    unsigned char*              Buffer;
 
-    public:
+public:
 
-        /* Initialise the pointer */
-        void Init(unsigned char* Pointer)
+    /* Initialise the pointer */
+    void Init (unsigned char* Pointer)
+    {
+        High            = 0xff;
+        Bits            = 8;
+        Buffer          = Pointer;
+        Data            = *Buffer++ << 8;
+        Data           |= *Buffer++;
+    }
+
+    /* Retrive a single bit */
+    int GetBit (void)
+    {
+        int                 Low             = (High + 1) >> 1;
+        unsigned int        LowShift        = Low << 8;
+        int                 Bit             = Data >= LowShift;
+
+        if (Bit)
         {
-            High            = 0xff;
+            High            = (High - Low) << 1;
+            Data           -= LowShift;
+        }
+        else
+            High            = Low << 1;
+
+        /* normalize */
+        Data              <<= 1;
+        if (--Bits == 0)
+        {
             Bits            = 8;
-            Buffer          = Pointer;
-            Data            = *Buffer++ << 8;
             Data           |= *Buffer++;
         }
+        return Bit;
+    }
 
-        /* Retrieve a single bit */
-        int GetBit(void)
-        {
-            int                 Low             = (High + 1) >> 1;
-            unsigned int        LowShift        = Low << 8;
-            int                 Bit             = Data >= LowShift;
+    int GetBits (int Bits)
+    {
+        int Value   = 0;
 
-            if (Bit)
-            {
-                High            = (High - Low) << 1;
-                Data           -= LowShift;
-            }
-            else
-                High            = Low << 1;
+        while (Bits--)
+            Value   = (Value << 1) | GetBit();
 
-            /* normalize */
-            Data              <<= 1;
+        return Value;
+    }
 
-            if (--Bits == 0)
-            {
-                Bits            = 8;
-                Data           |= *Buffer++;
-            }
+    int HighVal (void)
+    {
+        return High;
+    }
 
-            return Bit;
-        }
+    int BitsVal (void)
+    {
+        return Bits;
+    }
 
-        int GetBits(int Bits)
-        {
-            int Value   = 0;
+    unsigned int DataVal (void)
+    {
+        return Data;
+    }
 
-            while (Bits--)
-                Value   = (Value << 1) | GetBit();
-
-            return Value;
-        }
-
-        int HighVal(void)
-        {
-            return High;
-        }
-
-        int BitsVal(void)
-        {
-            return Bits;
-        }
-
-        unsigned int DataVal(void)
-        {
-            return Data;
-        }
-
-        unsigned char* BufferVal(void)
-        {
-            return Buffer;
-        }
+    unsigned char* BufferVal (void)
+    {
+        return Buffer;
+    }
 };
 
 
@@ -136,51 +134,51 @@ class RangeCoder_c
 /// Frame parser for Vp6
 class FrameParser_VideoVp6_c : public FrameParser_Video_c
 {
-    private:
-        class RangeCoder_c          RangeDecoder;
+private:
+    class RangeCoder_c          RangeDecoder;
 
-        Vp6StreamParameters_t*      StreamParameters;
-        Vp6FrameParameters_t*       FrameParameters;
-        Vp6StreamParameters_t       CopyOfStreamParameters;
+    Vp6StreamParameters_t*      StreamParameters;
+    Vp6FrameParameters_t*       FrameParameters;
+    Vp6StreamParameters_t       CopyOfStreamParameters;
 
-        struct Vp6MetaData_s        MetaData;
-        bool                        StreamMetadataValid;
-        Rational_t                  FrameRate;
+    struct Vp6MetaData_s        MetaData;
+    bool                        StreamMetadataValid;
+    Rational_t                  FrameRate;
 
-        FrameParserStatus_t         ReadStreamMetadata(void);
-        FrameParserStatus_t         ReadPictureHeader(void);
+    FrameParserStatus_t         ReadStreamMetadata(                             void );
+    FrameParserStatus_t         ReadPictureHeader(                              void );
 
-        FrameParserStatus_t         CommitFrameForDecode(void);
-        bool                        NewStreamParametersCheck(void);
+    FrameParserStatus_t         CommitFrameForDecode(                           void );
+    bool                        NewStreamParametersCheck(                       void );
 
-    public:
+public:
 
-        FrameParser_VideoVp6_c(void);
-        ~FrameParser_VideoVp6_c(void);
+    FrameParser_VideoVp6_c(                                                     void );
+    ~FrameParser_VideoVp6_c(                                                    void );
 
-        //
-        // Overrides for component base class functions
-        //
+    //
+    // Overrides for component base class functions
+    //
 
-        FrameParserStatus_t         Reset(void);
+    FrameParserStatus_t         Reset(                                          void );
 
-        //
-        // FrameParser class functions
-        //
+    //
+    // FrameParser class functions
+    //
 
-        FrameParserStatus_t         RegisterOutputBufferRing(Ring_t          Ring);
+    FrameParserStatus_t         RegisterOutputBufferRing(                       Ring_t          Ring );
 
-        //
-        // Stream specific functions
-        //
+    //
+    // Stream specific functions
+    //
 
-        FrameParserStatus_t         ReadHeaders(void);
+    FrameParserStatus_t         ReadHeaders(                                    void );
 
-        FrameParserStatus_t         PrepareReferenceFrameList(void);
+    FrameParserStatus_t         PrepareReferenceFrameList(                      void );
 
-        FrameParserStatus_t         ForPlayUpdateReferenceFrameList(void);
+    FrameParserStatus_t         ForPlayUpdateReferenceFrameList(                void );
 
-        FrameParserStatus_t         RevPlayProcessDecodeStacks(void);
+    FrameParserStatus_t         RevPlayProcessDecodeStacks(                     void );
 };
 
 #endif

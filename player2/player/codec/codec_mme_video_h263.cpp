@@ -74,12 +74,12 @@ static BufferDataDescriptor_t                   H263CodecDecodeContextDescriptor
 //{{{  Constructor
 // /////////////////////////////////////////////////////////////////////////
 //
-//      Constructor function, fills in the codec specific parameter values
+//      Cosntructor function, fills in the codec specific parameter values
 //
 
-Codec_MmeVideoH263_c::Codec_MmeVideoH263_c(void)
+Codec_MmeVideoH263_c::Codec_MmeVideoH263_c( void )
 {
-    //printf( "Codec_MmeVideoH263_c::Codec_MmeVideoH263_c - decode context coming from system memory - needs fixing inbox\n" );
+        //printf( "Codec_MmeVideoH263_c::Codec_MmeVideoH263_c - decode context coming from system memory - needs fixing inbox\n" );
 
     Configuration.CodecName                             = "H263 video";
 
@@ -120,11 +120,11 @@ Codec_MmeVideoH263_c::Codec_MmeVideoH263_c(void)
 //{{{  Destructor
 // /////////////////////////////////////////////////////////////////////////
 //
-//      Destructor function, ensures a full halt and reset
+//      Destructor function, ensures a full halt and reset 
 //      are executed for all levels of the class.
 //
 
-Codec_MmeVideoH263_c::~Codec_MmeVideoH263_c(void)
+Codec_MmeVideoH263_c::~Codec_MmeVideoH263_c( void )
 {
     Halt();
     Reset();
@@ -134,10 +134,10 @@ Codec_MmeVideoH263_c::~Codec_MmeVideoH263_c(void)
 // /////////////////////////////////////////////////////////////////////////
 //
 //      Reset function for H263 specific members.
-//
+//      
 //
 
-CodecStatus_t   Codec_MmeVideoH263_c::Reset(void)
+CodecStatus_t   Codec_MmeVideoH263_c::Reset( void )
 {
     return Codec_MmeVideo_c::Reset();
 }
@@ -149,7 +149,7 @@ CodecStatus_t   Codec_MmeVideoH263_c::Reset(void)
 //      Function to deal with the returned capabilities
 //      structure for an H263 mme transformer.
 //
-CodecStatus_t   Codec_MmeVideoH263_c::HandleCapabilities(void)
+CodecStatus_t   Codec_MmeVideoH263_c::HandleCapabilities( void )
 {
     CODEC_TRACE("'%s' capabilities are :-\n", H263_MME_TRANSFORMER_NAME);
     CODEC_TRACE("    caps len                          = %d bytes\n", H263TransformerCapability.caps_len);
@@ -160,15 +160,15 @@ CodecStatus_t   Codec_MmeVideoH263_c::HandleCapabilities(void)
 //{{{  FillOutTransformerInitializationParameters
 // /////////////////////////////////////////////////////////////////////////
 //
-//      Function to deal with the returned capabilities
+//      Function to deal with the returned capabilities 
 //      structure for an H263 mme transformer.
 //
-CodecStatus_t   Codec_MmeVideoH263_c::FillOutTransformerInitializationParameters(void)
+CodecStatus_t   Codec_MmeVideoH263_c::FillOutTransformerInitializationParameters( void )
 {
 
-    report(severity_info, "Codec_MmeVideoH263_c::%s\n", __FUNCTION__);
+    report (severity_info, "Codec_MmeVideoH263_c::%s\n", __FUNCTION__);
     //
-    // Fill out the command parameters
+    // Fillout the command parameters
     //
 
     H263InitializationParameters.PictureWidhth                  = H263_WIDTH_CIF;
@@ -181,7 +181,7 @@ CodecStatus_t   Codec_MmeVideoH263_c::FillOutTransformerInitializationParameters
     CODEC_TRACE("  PictureHeight             %6u\n", H263_HEIGHT_CIF);
 
     //
-    // Fill out the actual command
+    // Fillout the actual command
     //
 
     MMEInitializationParameters.TransformerInitParamsSize       = sizeof(H263D_GlobalParams_t);
@@ -196,25 +196,25 @@ CodecStatus_t   Codec_MmeVideoH263_c::FillOutTransformerInitializationParameters
 //      Function to fill out the stream parameters
 //      structure for an H263 mme transformer.
 //
-CodecStatus_t   Codec_MmeVideoH263_c::FillOutSetStreamParametersCommand(void)
+CodecStatus_t   Codec_MmeVideoH263_c::FillOutSetStreamParametersCommand( void )
 {
     H263CodecStreamParameterContext_t*          Context = (H263CodecStreamParameterContext_t*)StreamParameterContext;
     H263StreamParameters_t*                     Parsed  = (H263StreamParameters_t*)ParsedFrameParameters->StreamParameterStructure;
 
-    report(severity_info, "Codec_MmeVideoH263_c::FillOutSetStreamParametersCommand (%dx%d)\n", Parsed->SequenceHeader.width, Parsed->SequenceHeader.height);
+    report (severity_info, "Codec_MmeVideoH263_c::FillOutSetStreamParametersCommand (%dx%d)\n", Parsed->SequenceHeader.width, Parsed->SequenceHeader.height);
 
     //
-    // Fill out the command parameters
+    // Fillout the command parameters
     //
 
     Context->StreamParameters.PictureWidhth             = Parsed->SequenceHeader.width;
     Context->StreamParameters.PictureHeight             = Parsed->SequenceHeader.height;
 
     //
-    // Fill out the actual command
+    // Fillout the actual command
     //
 
-    memset(&Context->BaseContext.MMECommand, 0x00, sizeof(MME_Command_t));
+    memset( &Context->BaseContext.MMECommand, 0x00, sizeof(MME_Command_t) );
 
     Context->BaseContext.MMECommand.CmdStatus.AdditionalInfoSize        = 0;
     Context->BaseContext.MMECommand.CmdStatus.AdditionalInfo_p          = NULL;
@@ -233,7 +233,7 @@ CodecStatus_t   Codec_MmeVideoH263_c::FillOutSetStreamParametersCommand(void)
 //      structure for an H263 mme transformer.
 //
 
-CodecStatus_t   Codec_MmeVideoH263_c::FillOutDecodeCommand(void)
+CodecStatus_t   Codec_MmeVideoH263_c::FillOutDecodeCommand (void)
 {
     H263CodecDecodeContext_t*           Context        = (H263CodecDecodeContext_t*)DecodeContext;
     H263FrameParameters_t*              Frame          = (H263FrameParameters_t*)ParsedFrameParameters->FrameParameterStructure;
@@ -242,7 +242,7 @@ CodecStatus_t   Codec_MmeVideoH263_c::FillOutDecodeCommand(void)
     H263D_TransformParams_t*            Param;
     unsigned int                        i;
 
-    report(severity_info, "Codec_MmeVideoH263_c::%s\n", __FUNCTION__);
+    report (severity_info, "Codec_MmeVideoH263_c::%s\n", __FUNCTION__);
 
     //
     // For H263 we do not do slice decodes.
@@ -251,7 +251,7 @@ CodecStatus_t   Codec_MmeVideoH263_c::FillOutDecodeCommand(void)
     KnownLastSliceInFieldFrame                  = true;
 
     //
-    // Fill out the straight forward command parameters
+    // Fillout the straight forward command parameters
     //
 
     Param                                       = &Context->DecodeParameters;
@@ -262,14 +262,14 @@ CodecStatus_t   Codec_MmeVideoH263_c::FillOutDecodeCommand(void)
 
 
     //
-    // Fill out the actual command
+    // Fillout the actual command
     //
 
-    memset(&Context->BaseContext.MMECommand, 0x00, sizeof(MME_Command_t));
+    memset (&Context->BaseContext.MMECommand, 0x00, sizeof(MME_Command_t));
 
     DecodeContext->MMECommand.CmdStatus.AdditionalInfoSize      = sizeof(H263D_DecodeReturnParams_t);
     DecodeContext->MMECommand.CmdStatus.AdditionalInfo_p        = (MME_GenericParams_t*)&Context->DecodeStatus;
-    DecodeContext->MMECommand.StructSize                        = sizeof(MME_Command_t);
+    DecodeContext->MMECommand.StructSize                        = sizeof (MME_Command_t);
     DecodeContext->MMECommand.CmdCode                           = MME_TRANSFORM;
     DecodeContext->MMECommand.CmdEnd                            = MME_COMMAND_END_RETURN_NOTIFY;
     DecodeContext->MMECommand.DueTime                           = (MME_Time_t)0;
@@ -285,13 +285,13 @@ CodecStatus_t   Codec_MmeVideoH263_c::FillOutDecodeCommand(void)
     for (i = 0; i < H263_NUM_MME_BUFFERS; i++)
     {
         DecodeContext->MMEBufferList[i]                             = &DecodeContext->MMEBuffers[i];
-        DecodeContext->MMEBuffers[i].StructSize                     = sizeof(MME_DataBuffer_t);
+        DecodeContext->MMEBuffers[i].StructSize                     = sizeof (MME_DataBuffer_t);
         DecodeContext->MMEBuffers[i].UserData_p                     = NULL;
         DecodeContext->MMEBuffers[i].Flags                          = 0;
         DecodeContext->MMEBuffers[i].StreamNumber                   = 0;
         DecodeContext->MMEBuffers[i].NumberOfScatterPages           = 1;
         DecodeContext->MMEBuffers[i].ScatterPages_p                 = &DecodeContext->MMEPages[i];
-        DecodeContext->MMEBuffers[i].TotalSize                      = ((ParsedVideoParameters->Content.Width * ParsedVideoParameters->Content.Height) * 3) / 2;
+        DecodeContext->MMEBuffers[i].TotalSize                      = ((ParsedVideoParameters->Content.Width * ParsedVideoParameters->Content.Height) * 3) /2;
         DecodeContext->MMEBuffers[i].StartOffset                    = 0;
 
         DecodeContext->MMEBuffers[i].ScatterPages_p[0].Page_p       = (void*)(void*)BufferState[CurrentDecodeBufferIndex].BufferLumaPointer;
@@ -301,7 +301,6 @@ CodecStatus_t   Codec_MmeVideoH263_c::FillOutDecodeCommand(void)
         DecodeContext->MMEBuffers[i].ScatterPages_p[0].FlagsOut     = 0;
 
     }
-
     // Then overwrite bits specific to coded data buffer
     DecodeContext->MMEBuffers[H263_MME_CODED_DATA_BUFFER].TotalSize                      = CodedDataLength;
     DecodeContext->MMEBuffers[H263_MME_CODED_DATA_BUFFER].ScatterPages_p[0].Page_p       = (void*)CodedData;
@@ -316,26 +315,26 @@ CodecStatus_t   Codec_MmeVideoH263_c::FillOutDecodeCommand(void)
 
 #if 0
 
-    for (i = 0; i < H263_NUM_MME_BUFFERS; i++)
+    for(i = 0; i < H263_NUM_MME_BUFFERS; i++)
     {
-        report(severity_info, "Buffer List      (%d)  %x\n", i, DecodeContext->MMEBufferList[i]);
-        report(severity_info, "Struct Size      (%d)  %x\n", i, DecodeContext->MMEBuffers[i].StructSize);
-        report(severity_info, "User Data p      (%d)  %x\n", i, DecodeContext->MMEBuffers[i].UserData_p);
-        report(severity_info, "Flags            (%d)  %x\n", i, DecodeContext->MMEBuffers[i].Flags);
-        report(severity_info, "Stream Number    (%d)  %x\n", i, DecodeContext->MMEBuffers[i].StreamNumber);
-        report(severity_info, "No Scatter Pages (%d)  %x\n", i, DecodeContext->MMEBuffers[i].NumberOfScatterPages);
-        report(severity_info, "Scatter Pages p  (%d)  %x\n", i, DecodeContext->MMEBuffers[i].ScatterPages_p[0].Page_p);
-        report(severity_info, "Start Offset     (%d)  %x\n\n", i, DecodeContext->MMEBuffers[i].StartOffset);
+        report(severity_info, "Buffer List      (%d)  %x\n",i,DecodeContext->MMEBufferList[i]);
+        report(severity_info, "Struct Size      (%d)  %x\n",i,DecodeContext->MMEBuffers[i].StructSize);
+        report(severity_info, "User Data p      (%d)  %x\n",i,DecodeContext->MMEBuffers[i].UserData_p);
+        report(severity_info, "Flags            (%d)  %x\n",i,DecodeContext->MMEBuffers[i].Flags);
+        report(severity_info, "Stream Number    (%d)  %x\n",i,DecodeContext->MMEBuffers[i].StreamNumber);
+        report(severity_info, "No Scatter Pages (%d)  %x\n",i,DecodeContext->MMEBuffers[i].NumberOfScatterPages);
+        report(severity_info, "Scatter Pages p  (%d)  %x\n",i,DecodeContext->MMEBuffers[i].ScatterPages_p[0].Page_p);
+        report(severity_info, "Start Offset     (%d)  %x\n\n",i,DecodeContext->MMEBuffers[i].StartOffset);
     }
 
-    report(severity_info, "Additional Size  %x\n", DecodeContext->MMECommand.CmdStatus.AdditionalInfoSize);
-    report(severity_info, "Additional p     %x\n", DecodeContext->MMECommand.CmdStatus.AdditionalInfo_p);
-    report(severity_info, "Param Size       %x\n", DecodeContext->MMECommand.ParamSize);
-    report(severity_info, "Param p          %x\n", DecodeContext->MMECommand.Param_p);
-    report(severity_info, "DataBuffer p     %x\n", DecodeContext->MMECommand.DataBuffers_p);
+    report(severity_info, "Additional Size  %x\n",DecodeContext->MMECommand.CmdStatus.AdditionalInfoSize);
+    report(severity_info, "Additional p     %x\n",DecodeContext->MMECommand.CmdStatus.AdditionalInfo_p);
+    report(severity_info, "Param Size       %x\n",DecodeContext->MMECommand.ParamSize);
+    report(severity_info, "Param p          %x\n",DecodeContext->MMECommand.Param_p);
+    report(severity_info, "DataBuffer p     %x\n",DecodeContext->MMECommand.DataBuffers_p);
 
 
-#endif
+#endif  
 
     Context->BaseContext.MMECommand.ParamSize                       = sizeof(H263D_TransformParams_t);
     Context->BaseContext.MMECommand.Param_p                         = (MME_GenericParams_t)(&Context->DecodeParameters);
@@ -348,14 +347,14 @@ CodecStatus_t   Codec_MmeVideoH263_c::FillOutDecodeCommand(void)
 ////////////////////////////////////////////////////////////////////////////
 ///
 /// Unconditionally return success.
-///
+/// 
 /// Success and failure codes are located entirely in the generic MME structures
 /// allowing the super-class to determine whether the decode was successful. This
 /// means that we have no work to do here.
 ///
 /// \return CodecNoError
 ///
-CodecStatus_t   Codec_MmeVideoH263_c::ValidateDecodeContext(CodecBaseDecodeContext_t *Context)
+CodecStatus_t   Codec_MmeVideoH263_c::ValidateDecodeContext( CodecBaseDecodeContext_t *Context )
 {
     return CodecNoError;
 }
@@ -366,7 +365,7 @@ CodecStatus_t   Codec_MmeVideoH263_c::ValidateDecodeContext(CodecBaseDecodeConte
 //      Function to dump out the set stream
 //      parameters from an mme command.
 //
-CodecStatus_t   Codec_MmeVideoH263_c::DumpSetStreamParameters(void    *Parameters)
+CodecStatus_t   Codec_MmeVideoH263_c::DumpSetStreamParameters(         void    *Parameters )
 {
     return CodecNoError;
 }
@@ -379,7 +378,7 @@ CodecStatus_t   Codec_MmeVideoH263_c::DumpSetStreamParameters(void    *Parameter
 //
 
 unsigned int H263StaticPicture;
-CodecStatus_t   Codec_MmeVideoH263_c::DumpDecodeParameters(void    *Parameters)
+CodecStatus_t   Codec_MmeVideoH263_c::DumpDecodeParameters(            void    *Parameters )
 {
     H263D_TransformParams_t*            FrameParams;
 
@@ -387,7 +386,7 @@ CodecStatus_t   Codec_MmeVideoH263_c::DumpDecodeParameters(void    *Parameters)
 
     H263StaticPicture++;
 
-    report(severity_info, "********** Picture %d *********\n", H263StaticPicture - 1);
+    report (severity_info, "********** Picture %d *********\n", H263StaticPicture-1);
 
     return CodecNoError;
 }

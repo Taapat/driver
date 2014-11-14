@@ -1,11 +1,11 @@
-/*
+/* 
  * e2_proc_progress.c
  */
 
-#include <linux/proc_fs.h>      /* proc fs */
-#include <asm/uaccess.h>        /* copy_from_user */
+#include <linux/proc_fs.h>  	/* proc fs */ 
+#include <asm/uaccess.h>    	/* copy_from_user */
 
-#include <linux/dvb/video.h>    /* Video Format etc */
+#include <linux/dvb/video.h>	/* Video Format etc */
 
 #include <linux/dvb/audio.h>
 #include <linux/smp_lock.h>
@@ -17,49 +17,51 @@
 
 extern struct DeviceContext_s* DeviceContext;
 static int progress = 0;
-int proc_progress_write(struct file *file, const char __user *buf, unsigned long count, void *data)
+int proc_progress_write(struct file *file, const char __user *buf,
+                           unsigned long count, void *data)
 {
-    char *page;
-    char *myString;
-    ssize_t ret = -ENOMEM;
-    /* int result; */
-#if !defined(IPBOX9900) && !defined(IPBOX99) && !defined(IPBOX55)
-    //printk("%s %ld - ", __FUNCTION__, count);
+	char 		*page;
+	char		*myString;
+	ssize_t 	ret = -ENOMEM;
+	/* int		result; */
+#if !defined(IPBOX9900) && !defined(IPBOX99) && !defined(IPBOX55) && !defined(SPARK) && !defined(SPARK7162)
+	printk("%s %ld - ", __FUNCTION__, count);
 #endif
-    page = (char *)__get_free_page(GFP_KERNEL);
+	page = (char *)__get_free_page(GFP_KERNEL);
+	if (page) 
+	{
+		ret = -EFAULT;
+		if (copy_from_user(page, buf, count))
+			goto out;
 
-    if (page)
-    {
-        ret = -EFAULT;
-
-        if (copy_from_user(page, buf, count))
-            goto out;
-
-        myString = (char *) kmalloc(count + 1, GFP_KERNEL);
-        strncpy(myString, page, count);
-        myString[count] = '\0';
-#if !defined(IPBOX9900) && !defined(IPBOX99) && !defined(IPBOX55)
-        //printk("%s\n", myString);
+		myString = (char *) kmalloc(count + 1, GFP_KERNEL);
+		strncpy(myString, page, count);
+		myString[count] = '\0';
+#if !defined(IPBOX9900) && !defined(IPBOX99) && !defined(IPBOX55)	
+		printk("%s\n", myString);
 #endif
-        sscanf(myString, "%d", &progress);
+		sscanf(myString, "%d", &progress);	
 
-        kfree(myString);
-        //result = sscanf(page, "%3s %3s %3s %3s %3s", s1, s2, s3, s4, s5);
-    }
-
-    ret = count;
+		kfree(myString);
+		//result = sscanf(page, "%3s %3s %3s %3s %3s", s1, s2, s3, s4, s5);
+	}
+	
+	ret = count;
 out:
-    free_page((unsigned long)page);
-    return ret;
+	
+	free_page((unsigned long)page);
+	return ret;
 }
 
-int proc_progress_read(char *page, char **start, off_t off, int count, int *eof, void *data_unused)
-{
-    int len = 0;
-#if !defined(IPBOX9900) && !defined(IPBOX99) && !defined(IPBOX55)
-    //printk("%s %d\n", __FUNCTION__, count);
-#endif
-    len = sprintf(page, "%d\n", progress);
 
-    return len;
+int proc_progress_read (char *page, char **start, off_t off, int count,
+			  int *eof, void *data_unused)
+{
+	int len = 0;
+#if !defined(IPBOX9900) && !defined(IPBOX99) && !defined(IPBOX55) && !defined(SPARK) && !defined(SPARK7162)
+	printk("%s %d\n", __FUNCTION__, count);
+#endif
+	len = sprintf(page, "%d\n", progress);
+
+        return len;
 }

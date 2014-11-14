@@ -49,7 +49,7 @@ Date        Modification                                    Name
 #endif
 
 #define PLAYER_DEBUG(fmt, args...)      ((void) (ENABLE_PLAYER_DEBUG && \
-        (report(severity_note, "Player:%s: " fmt, __FUNCTION__, ##args), 0)))
+                                            (report(severity_note, "Player:%s: " fmt, __FUNCTION__, ##args), 0)))
 
 /* Output trace information off the critical path */
 #define PLAYER_TRACE(fmt, args...)      (report(severity_note, "Player:%s: " fmt, __FUNCTION__, ##args))

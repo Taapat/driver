@@ -22,7 +22,7 @@ license from ST.
 Source file name ; mpeg2.h
 Author ;           Nick
 
-Definition of the constants/macros that define useful things associated with
+Definition of the constants/macros that define useful things associated with 
 Mpeg2 streams.
 
 
@@ -39,7 +39,7 @@ Date        Modification                                    Name
 #define MPEG2_PES_START_CODE_MASK                       0xf0
 #define MPEG2_VIDEO_PES_START_CODE                      0xe0
 
-// Definition of start code values
+// Definition of start code values 
 #define MPEG2_PICTURE_START_CODE                        0x00
 #define MPEG2_FIRST_SLICE_START_CODE                    0x01
 #define MPEG2_GREATEST_SLICE_START_CODE                 0xAF
@@ -92,14 +92,14 @@ Date        Modification                                    Name
 
 // Definition of matrix coefficient values
 
-#define  MPEG2_MATRIX_COEFFICIENTS_FORBIDDEN        0
-#define  MPEG2_MATRIX_COEFFICIENTS_BT709        1
-#define  MPEG2_MATRIX_COEFFICIENTS_UNSPECIFIED      2
-#define  MPEG2_MATRIX_COEFFICIENTS_RESERVED     3
-#define  MPEG2_MATRIX_COEFFICIENTS_FCC          4
-#define  MPEG2_MATRIX_COEFFICIENTS_BT470_BGI        5
-#define  MPEG2_MATRIX_COEFFICIENTS_SMPTE_170M       6
-#define  MPEG2_MATRIX_COEFFICIENTS_SMPTE_240M       7
+#define  MPEG2_MATRIX_COEFFICIENTS_FORBIDDEN		0
+#define  MPEG2_MATRIX_COEFFICIENTS_BT709		1
+#define  MPEG2_MATRIX_COEFFICIENTS_UNSPECIFIED		2
+#define  MPEG2_MATRIX_COEFFICIENTS_RESERVED		3
+#define  MPEG2_MATRIX_COEFFICIENTS_FCC			4
+#define  MPEG2_MATRIX_COEFFICIENTS_BT470_BGI		5
+#define  MPEG2_MATRIX_COEFFICIENTS_SMPTE_170M		6
+#define  MPEG2_MATRIX_COEFFICIENTS_SMPTE_240M		7
 
 // ////////////////////////////////////////////////////////////////////////////////////
 //
@@ -183,14 +183,13 @@ typedef struct Mpeg2VideoSequenceScalableExtension_s
 
 typedef struct Mpeg2VideoGOP_s
 {
-    struct
-    {
-        unsigned        drop_frame_flag;                                /*  1 bit  */
-        unsigned        hours;                                          /*  5 bits */
-        unsigned        minutes;                                        /*  6 bits */
-        //unsigned      marker_bit;                                     /*  1 bit  */
-        unsigned        seconds;                                        /*  6 bits */
-        unsigned        pictures;                                       /*  6 bits */
+    struct {
+	unsigned        drop_frame_flag;                                /*  1 bit  */
+	unsigned        hours;                                          /*  5 bits */
+	unsigned        minutes;                                        /*  6 bits */
+	//unsigned      marker_bit;                                     /*  1 bit  */
+	unsigned        seconds;                                        /*  6 bits */
+	unsigned        pictures;                                       /*  6 bits */
     }  time_code;
 
     unsigned            closed_gop;                                     /*  1 bit  */
@@ -202,7 +201,7 @@ typedef struct Mpeg2VideoGOP_s
 typedef struct Mpeg2VideoPicture_s
 {
     unsigned            temporal_reference;                             /*  10 bits */
-    unsigned            picture_coding_type;                            /*   3 bits */ /* D pictures only allowed in MPEG1 */
+    unsigned            picture_coding_type;                            /*   3 bits */ /* D pictures only allowed in MPEG1 */ 
     unsigned            vbv_delay;                                      /*  16 bits */
     unsigned            full_pel_forward_vector;                        /*   1 bit  */ /* 0   in MPEG2 */
     unsigned            forward_f_code;                                 /*   3 bits */ /* 0x7 in MPEG2 */
@@ -254,10 +253,10 @@ typedef struct Mpeg2VideoPictureDisplayExtension_s
 {
     struct
     {
-        int             horizontal_offset;                              /* 16 bits */
-        //unsigned      marker_bit;                                     /*  1 bit  */
-        int             vertical_offset;                                /* 16 bits */
-        //unsigned      marker_bit;                                     /*  1 bit  */
+	int             horizontal_offset;                              /* 16 bits */
+	//unsigned      marker_bit;                                     /*  1 bit  */
+	int             vertical_offset;                                /* 16 bits */
+	//unsigned      marker_bit;                                     /*  1 bit  */
     } frame_centre[3];
 } Mpeg2VideoPictureDisplayExtension_t;
 

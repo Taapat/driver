@@ -74,62 +74,62 @@ typedef struct Codec_SpdifinStatus_s
 
 class Codec_MmeAudioSpdifin_c : public Codec_MmeAudio_c
 {
-    protected:
+protected:
 
-        // Data
-        eAccDecoderId              DecoderId;
+    // Data    
+    eAccDecoderId              DecoderId;
 
-        // AutoDetect SPDIFIN decoding Status
-        Codec_SpdifinStatus_t      SpdifStatus;
+    // AutoDetect SPDIFIN decoding Status
+    Codec_SpdifinStatus_t      SpdifStatus;
 
-        // Memory allocation for sending an EOF command.
-        Codec_SpdifinEOF_t         EOF;
+    // Memory allocation for sending an EOF command.
+    Codec_SpdifinEOF_t         EOF;
 
-        // Externally useful information
-        int                                 DecodeErrors;
-        unsigned long long int              NumberOfSamplesProcessed;
+    // Externally useful information
+    int                                 DecodeErrors;
+    unsigned long long int              NumberOfSamplesProcessed;
 
-        // Functions
+    // Functions
 
-    public:
+public:
 
-        //
-        // Constructor/Destructor methods
-        //
+    //
+    // Constructor/Destructor methods
+    //
 
-        Codec_MmeAudioSpdifin_c(void);
-        ~Codec_MmeAudioSpdifin_c(void);
+    Codec_MmeAudioSpdifin_c(            void );
+    ~Codec_MmeAudioSpdifin_c(           void );
 
-        //
-        // Override Base Component class method
-        //
+    //
+    // Override Base Component class method
+    //
 
-        CodecStatus_t   Reset(void);
+    CodecStatus_t   Reset(      void );
+    
+    CodecStatus_t   CreateAttributeEvents(                      void );
+    CodecStatus_t   GetAttribute(                               const char                     *Attribute,
+								PlayerAttributeDescriptor_t    *Value );
+    CodecStatus_t   SetAttribute(                               const char                     *Attribute,
+								PlayerAttributeDescriptor_t    *Value );
 
-        CodecStatus_t   CreateAttributeEvents(void);
-        CodecStatus_t   GetAttribute(const char                     *Attribute,
-                                     PlayerAttributeDescriptor_t    *Value);
-        CodecStatus_t   SetAttribute(const char                     *Attribute,
-                                     PlayerAttributeDescriptor_t    *Value);
+    //
+    // Stream specific functions
+    //
 
-        //
-        // Stream specific functions
-        //
+protected:
 
-    protected:
-
-        CodecStatus_t   FillOutTransformerGlobalParameters(MME_LxAudioDecoderGlobalParams_t *GlobalParams);
-        CodecStatus_t   FillOutTransformerInitializationParameters(void);
-        CodecStatus_t   FillOutSetStreamParametersCommand(void);
-        CodecStatus_t   FillOutDecodeCommand(void);
-        CodecStatus_t   FillOutSendBufferCommand(void);
-        CodecStatus_t   ValidateDecodeContext(CodecBaseDecodeContext_t *Context);
-        CodecStatus_t   DumpSetStreamParameters(void                     *Parameters);
-        CodecStatus_t   DumpDecodeParameters(void                     *Parameters);
-        CodecStatus_t   TerminateMMETransformer(void);
-        void            SetCommandIO(void);
-
-        CodecStatus_t   SendEofCommand(void);
-        CodecStatus_t   DiscardQueuedDecodes(void);
+    CodecStatus_t   FillOutTransformerGlobalParameters        ( MME_LxAudioDecoderGlobalParams_t *GlobalParams );
+    CodecStatus_t   FillOutTransformerInitializationParameters( void );
+    CodecStatus_t   FillOutSetStreamParametersCommand(          void );
+    CodecStatus_t   FillOutDecodeCommand(                       void );
+    CodecStatus_t   FillOutSendBufferCommand(                   void );
+    CodecStatus_t   ValidateDecodeContext(                      CodecBaseDecodeContext_t *Context );
+    CodecStatus_t   DumpSetStreamParameters(                    void                     *Parameters );
+    CodecStatus_t   DumpDecodeParameters(                       void                     *Parameters );
+    CodecStatus_t   TerminateMMETransformer(                    void );
+    void            SetCommandIO(void);
+    
+    CodecStatus_t   SendEofCommand(                             void );
+    CodecStatus_t   DiscardQueuedDecodes(                       void );
 };
 #endif //H_CODEC_MME_AUDIO_SPDIFIN

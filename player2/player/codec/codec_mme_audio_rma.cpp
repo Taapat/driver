@@ -49,9 +49,9 @@ Date            Modification            Name
 // Locally defined constants
 //
 
-static inline unsigned int BE2LE(unsigned int Value)
+static inline unsigned int BE2LE (unsigned int Value)
 {
-    return (((Value & 0xff) << 24) | ((Value & 0xff00) << 8) | ((Value >> 8) & 0xff00) | ((Value >> 24) & 0xff));
+    return (((Value&0xff)<<24) | ((Value&0xff00)<<8) | ((Value>>8)&0xff00) | ((Value>>24)&0xff));
 }
 
 
@@ -92,7 +92,7 @@ static BufferDataDescriptor_t           RmaAudioCodecDecodeContextDescriptor    
 ///
 /// Fill in the configuration parameters used by the super-class and reset everything.
 ///
-Codec_MmeAudioRma_c::Codec_MmeAudioRma_c(void)
+Codec_MmeAudioRma_c::Codec_MmeAudioRma_c( void )
 {
     Configuration.CodecName                             = "Rma audio";
 
@@ -109,30 +109,30 @@ Codec_MmeAudioRma_c::Codec_MmeAudioRma_c(void)
 
     Reset();
 }
-//}}}
+//}}}  
 //{{{  Destructor
 ////////////////////////////////////////////////////////////////////////////
 ///
-///     Destructor function, ensures a full halt and reset
+///     Destructor function, ensures a full halt and reset 
 ///     are executed for all levels of the class.
 ///
-Codec_MmeAudioRma_c::~Codec_MmeAudioRma_c(void)
+Codec_MmeAudioRma_c::~Codec_MmeAudioRma_c( void )
 {
     Halt();
     Reset();
 }
-//}}}
+//}}}  
 //{{{  FillOutTransformerGlobalParameters
 ////////////////////////////////////////////////////////////////////////////
 ///
 /// Populate the supplied structure with parameters for RMA audio.
 ///
 ///
-CodecStatus_t Codec_MmeAudioRma_c::FillOutTransformerGlobalParameters(MME_LxAudioDecoderGlobalParams_t *GlobalParams_p)
+CodecStatus_t Codec_MmeAudioRma_c::FillOutTransformerGlobalParameters( MME_LxAudioDecoderGlobalParams_t *GlobalParams_p )
 {
     MME_LxAudioDecoderGlobalParams_t   &GlobalParams    = *GlobalParams_p;
 
-    CODEC_TRACE("Initializing RMA audio decoder\n");
+    CODEC_TRACE ("Initializing RMA audio decoder\n");
 
     GlobalParams.StructSize             = sizeof(MME_LxAudioDecoderGlobalParams_t);
 
@@ -157,7 +157,6 @@ CodecStatus_t Codec_MmeAudioRma_c::FillOutTransformerGlobalParameters(MME_LxAudi
         Config.ulOpaqueDataSize         = StreamParams->CodecOpaqueDataLength;
 
     }
-
     Config.NbSample2Conceal             = 0;
     Config.Features                     = 0;
     RestartTransformer                  = ACC_MME_TRUE;
@@ -176,9 +175,9 @@ CodecStatus_t Codec_MmeAudioRma_c::FillOutTransformerGlobalParameters(MME_LxAudi
 
 #endif // DRV_MULTICOM_AUDIO_DECODER_VERSION >= 0x090128
 
-    return Codec_MmeAudio_c::FillOutTransformerGlobalParameters(GlobalParams_p);
+    return Codec_MmeAudio_c::FillOutTransformerGlobalParameters (GlobalParams_p);
 }
-//}}}
+//}}}  
 //{{{  FillOutTransformerInitializationParameters
 ////////////////////////////////////////////////////////////////////////////
 ///
@@ -189,7 +188,7 @@ CodecStatus_t Codec_MmeAudioRma_c::FillOutTransformerGlobalParameters(MME_LxAudi
 /// MPEG audio decoder (defaults to MPEG Layer II but can be updated by new
 /// stream parameters).
 ///
-CodecStatus_t   Codec_MmeAudioRma_c::FillOutTransformerInitializationParameters(void)
+CodecStatus_t   Codec_MmeAudioRma_c::FillOutTransformerInitializationParameters( void )
 {
     CodecStatus_t                       Status;
     MME_LxAudioDecoderInitParams_t     &Params                  = AudioDecoderInitializationParameters;
@@ -198,19 +197,18 @@ CodecStatus_t   Codec_MmeAudioRma_c::FillOutTransformerInitializationParameters(
     MMEInitializationParameters.TransformerInitParams_p         = &Params;
 
     Status                                                      = Codec_MmeAudio_c::FillOutTransformerInitializationParameters();
-
     if (Status != CodecNoError)
         return Status;
 
-    return FillOutTransformerGlobalParameters(&Params.GlobalParams);
+    return FillOutTransformerGlobalParameters (&Params.GlobalParams);
 }
-//}}}
+//}}}  
 //{{{  FillOutSetStreamParametersCommand
 ////////////////////////////////////////////////////////////////////////////
 ///
 /// Populate the AUDIO_DECODER's MME_SET_GLOBAL_TRANSFORMER_PARAMS parameters for RMA audio.
 ///
-CodecStatus_t   Codec_MmeAudioRma_c::FillOutSetStreamParametersCommand(void)
+CodecStatus_t   Codec_MmeAudioRma_c::FillOutSetStreamParametersCommand( void )
 {
     CodecStatus_t                               Status;
     RmaAudioCodecStreamParameterContext_t*      Context = (RmaAudioCodecStreamParameterContext_t *)StreamParameterContext;
@@ -218,13 +216,12 @@ CodecStatus_t   Codec_MmeAudioRma_c::FillOutSetStreamParametersCommand(void)
     DecoderId           = ACC_REALAUDIO_ID;
 
     // Fill out the structure
-    memset(&(Context->StreamParameters), 0, sizeof(Context->StreamParameters));
-    Status              = FillOutTransformerGlobalParameters(&(Context->StreamParameters));
-
+    memset (&(Context->StreamParameters), 0, sizeof(Context->StreamParameters));
+    Status              = FillOutTransformerGlobalParameters (&(Context->StreamParameters));
     if (Status != CodecNoError)
         return Status;
 
-    // Fill out the actual command
+    // Fillout the actual command
     Context->BaseContext.MMECommand.CmdStatus.AdditionalInfoSize        = 0;
     Context->BaseContext.MMECommand.CmdStatus.AdditionalInfo_p          = NULL;
     Context->BaseContext.MMECommand.ParamSize                           = sizeof(Context->StreamParameters);
@@ -232,28 +229,28 @@ CodecStatus_t   Codec_MmeAudioRma_c::FillOutSetStreamParametersCommand(void)
 
     return CodecNoError;
 }
-//}}}
+//}}}  
 //{{{  FillOutDecodeCommand
 ////////////////////////////////////////////////////////////////////////////
 ///
 /// Populate the AUDIO_DECODER's MME_TRANSFORM parameters for Real audio.
 ///
-CodecStatus_t   Codec_MmeAudioRma_c::FillOutDecodeCommand(void)
+CodecStatus_t   Codec_MmeAudioRma_c::FillOutDecodeCommand(       void )
 {
     RmaAudioCodecDecodeContext_t    *Context                            = (RmaAudioCodecDecodeContext_t *)DecodeContext;
 
-    CODEC_DEBUG("%s: Initializing decode params\n", __FUNCTION__);
+    CODEC_DEBUG ("%s: Initializing decode params\n", __FUNCTION__);
 
     // Initialize the frame parameters
-    memset(&Context->DecodeParameters, 0, sizeof(Context->DecodeParameters));
+    memset (&Context->DecodeParameters, 0, sizeof(Context->DecodeParameters));
     Context->DecodeParameters.Restart           = RestartTransformer;
 
     RestartTransformer                          = ACC_MME_FALSE;
 
     // Zero the reply structure
-    memset(&Context->DecodeStatus, 0, sizeof(Context->DecodeStatus));
+    memset( &Context->DecodeStatus, 0, sizeof(Context->DecodeStatus) );
 
-    // Fill out the actual command
+    // Fillout the actual command
     Context->BaseContext.MMECommand.CmdStatus.AdditionalInfoSize        = sizeof(Context->DecodeStatus);
     Context->BaseContext.MMECommand.CmdStatus.AdditionalInfo_p          = (MME_GenericParams_t)(&Context->DecodeStatus);
     Context->BaseContext.MMECommand.ParamSize                           = sizeof(Context->DecodeParameters);
@@ -264,15 +261,15 @@ CodecStatus_t   Codec_MmeAudioRma_c::FillOutDecodeCommand(void)
 
     return CodecNoError;
 }
-//}}}
+//}}}  
 //{{{  ValidateDecodeContext
 ////////////////////////////////////////////////////////////////////////////
 ///
 /// Validate the ACC status structure and squawk loudly if problems are found.
-///
+/// 
 /// \return CodecSuccess
 ///
-CodecStatus_t   Codec_MmeAudioRma_c::ValidateDecodeContext(CodecBaseDecodeContext_t *Context)
+CodecStatus_t   Codec_MmeAudioRma_c::ValidateDecodeContext( CodecBaseDecodeContext_t *Context )
 {
     RmaAudioCodecDecodeContext_t*       DecodeContext   = (RmaAudioCodecDecodeContext_t*)Context;
     MME_LxAudioDecoderFrameStatus_t    &Status          = DecodeContext->DecodeStatus;
@@ -311,7 +308,6 @@ CodecStatus_t   Codec_MmeAudioRma_c::ValidateDecodeContext(CodecBaseDecodeContex
     AudioParameters->SampleCount                = Status.NbOutSamples;
 
     int SamplingFreqCode                        = Status.SamplingFreq;
-
     if (SamplingFreqCode < ACC_FS_reserved)
     {
         AudioParameters->Source.SampleRateHz    = ACC_SamplingFreqLUT[SamplingFreqCode];
@@ -330,20 +326,20 @@ CodecStatus_t   Codec_MmeAudioRma_c::ValidateDecodeContext(CodecBaseDecodeContex
 
     return CodecNoError;
 }
-//}}}
+//}}}  
 //{{{  DumpSetStreamParameters
 // /////////////////////////////////////////////////////////////////////////
 //
-//      Function to dump out the set stream
+//      Function to dump out the set stream 
 //      parameters from an mme command.
 //
 
-CodecStatus_t   Codec_MmeAudioRma_c::DumpSetStreamParameters(void    *Parameters)
+CodecStatus_t   Codec_MmeAudioRma_c::DumpSetStreamParameters(           void    *Parameters )
 {
     CODEC_ERROR("Not implemented\n");
     return CodecNoError;
 }
-//}}}
+//}}}  
 //{{{  DumpDecodeParameters
 // /////////////////////////////////////////////////////////////////////////
 //
@@ -351,7 +347,7 @@ CodecStatus_t   Codec_MmeAudioRma_c::DumpSetStreamParameters(void    *Parameters
 //      parameters from an mme command.
 //
 
-CodecStatus_t   Codec_MmeAudioRma_c::DumpDecodeParameters(void    *Parameters)
+CodecStatus_t   Codec_MmeAudioRma_c::DumpDecodeParameters(              void    *Parameters )
 {
     CODEC_TRACE("%s: TotalSize[0]                  %d\n", __FUNCTION__, DecodeContext->MMEBuffers[0].TotalSize);
     CODEC_TRACE("%s: Page_p[0]                     %p\n", __FUNCTION__, DecodeContext->MMEPages[0].Page_p);
@@ -360,4 +356,4 @@ CodecStatus_t   Codec_MmeAudioRma_c::DumpDecodeParameters(void    *Parameters)
 
     return CodecNoError;
 }
-//}}}
+//}}}  

@@ -63,15 +63,27 @@ typedef struct DtshdAudioCodecStreamParameterContext_s
     MME_LxAudioDecoderGlobalParams_t StreamParameters;
 } DtshdAudioCodecStreamParameterContext_t;
 
+//#if __KERNEL__
+#if 0
+#define BUFFER_DTSHD_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT               "DtshdAudioCodecStreamParameterContext"
+#define BUFFER_DTSHD_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT_TYPE  {BUFFER_DTSHD_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT, BufferDataTypeBase, AllocateFromDeviceMemory, 32, 0, true, true, sizeof(DtshdAudioCodecStreamParameterContext_t)}
+#else
 #define BUFFER_DTSHD_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT               "DtshdAudioCodecStreamParameterContext"
 #define BUFFER_DTSHD_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT_TYPE  {BUFFER_DTSHD_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT, BufferDataTypeBase, AllocateFromOSMemory, 32, 0, true, true, sizeof(DtshdAudioCodecStreamParameterContext_t)}
+#endif
 
 static BufferDataDescriptor_t            DtshdAudioCodecStreamParameterContextDescriptor = BUFFER_DTSHD_AUDIO_CODEC_STREAM_PARAMETER_CONTEXT_TYPE;
 
 // --------
 
+//#if __KERNEL__
+#if 0
+#define BUFFER_DTSHD_AUDIO_CODEC_DECODE_CONTEXT "DtshdAudioCodecDecodeContext"
+#define BUFFER_DTSHD_AUDIO_CODEC_DECODE_CONTEXT_TYPE    {BUFFER_DTSHD_AUDIO_CODEC_DECODE_CONTEXT, BufferDataTypeBase, AllocateFromDeviceMemory, 32, 0, true, true, sizeof(DtshdAudioCodecDecodeContext_t)}
+#else
 #define BUFFER_DTSHD_AUDIO_CODEC_DECODE_CONTEXT "DtshdAudioCodecDecodeContext"
 #define BUFFER_DTSHD_AUDIO_CODEC_DECODE_CONTEXT_TYPE    {BUFFER_DTSHD_AUDIO_CODEC_DECODE_CONTEXT, BufferDataTypeBase, AllocateFromOSMemory, 32, 0, true, true, sizeof(DtshdAudioCodecDecodeContext_t)}
+#endif
 
 static BufferDataDescriptor_t            DtshdAudioCodecDecodeContextDescriptor = BUFFER_DTSHD_AUDIO_CODEC_DECODE_CONTEXT_TYPE;
 
@@ -84,7 +96,7 @@ static BufferDataDescriptor_t            InitialTranscodedFrameBufferDescriptor 
 ///
 /// Fill in the configuration parameters used by the super-class and reset everything.
 ///
-Codec_MmeAudioDtshd_c::Codec_MmeAudioDtshd_c(bool isLbrStream) : IsLbrStream(isLbrStream)
+Codec_MmeAudioDtshd_c::Codec_MmeAudioDtshd_c( bool isLbrStream) : IsLbrStream(isLbrStream)
 {
     CodecStatus_t Status;
 
@@ -101,18 +113,18 @@ Codec_MmeAudioDtshd_c::Codec_MmeAudioDtshd_c(bool isLbrStream) : IsLbrStream(isL
 
 //
 
-    AudioDecoderTransformCapabilityMask.DecoderCapabilityFlags = (1 << (isLbrStream ? ACC_DTS_LBR : ACC_DTS));
+    AudioDecoderTransformCapabilityMask.DecoderCapabilityFlags = (1 << (isLbrStream?ACC_DTS_LBR:ACC_DTS));
 
     DecoderId                                                  = ACC_DTS_ID;
 
     CurrentTranscodeBufferIndex = 0;
-
+    
     TranscodedFramePool = NULL;
-
+    
     TranscodedFrameMemory[CachedAddress]      = NULL;
     TranscodedFrameMemory[UnCachedAddress]    = NULL;
     TranscodedFrameMemory[PhysicalAddress]    = NULL;
-
+    
     Reset();
 
 //
@@ -125,17 +137,15 @@ Codec_MmeAudioDtshd_c::Codec_MmeAudioDtshd_c(bool isLbrStream) : IsLbrStream(isL
     // Our solution is to temporarily change the transformer names to allow the codec to initialize. We then
     // switch them back again in order to prevent the system breaking during a later call to
     // SetModuleParameters(CodecSpecifyTransformerPostFix...).
-    strcat(TransformName[1], "3");
-    strcat(TransformName[2], "4");
+    strcat(TransformName[1],"3");
+    strcat(TransformName[2],"4");
 #endif
     Status = GloballyVerifyMMECapabilities();
-
-    if (CodecNoError != Status)
+    if( CodecNoError != Status )
     {
-        InitializationStatus = PlayerNotSupported;
-        return;
+	InitializationStatus = PlayerNotSupported;
+	return;
     }
-
 #ifdef CONFIG_CPU_SUBTYPE_STX7200
     strcpy(TransformName[1], AUDIO_DECODER_TRANSFORMER_NAME);
     strcpy(TransformName[2], AUDIO_DECODER_TRANSFORMER_NAME);
@@ -147,44 +157,44 @@ Codec_MmeAudioDtshd_c::Codec_MmeAudioDtshd_c(bool isLbrStream) : IsLbrStream(isL
 ///
 /// Reset method to manage the transcoded frame pool
 ///
-CodecStatus_t Codec_MmeAudioDtshd_c::Reset(void)
+CodecStatus_t Codec_MmeAudioDtshd_c::Reset( void )
 {
     //
     // Release the coded frame buffer pool
     //
-
-    if (TranscodedFramePool != NULL)
+    
+    if( TranscodedFramePool != NULL )
     {
-        BufferManager->DestroyPool(TranscodedFramePool);
+        BufferManager->DestroyPool( TranscodedFramePool );
         TranscodedFramePool  = NULL;
     }
-
-    if (TranscodedFrameMemory[CachedAddress] != NULL)
+    
+    if( TranscodedFrameMemory[CachedAddress] != NULL )
     {
 #if __KERNEL__
-        AllocatorClose(TranscodedFrameMemoryDevice);
+        AllocatorClose( TranscodedFrameMemoryDevice );
 #endif
-
+	
         TranscodedFrameMemory[CachedAddress]      = NULL;
         TranscodedFrameMemory[UnCachedAddress]    = NULL;
         TranscodedFrameMemory[PhysicalAddress]    = NULL;
     }
-
-    //  PreviousTranscodeBuffer = NULL;
+    
+    //	PreviousTranscodeBuffer = NULL;
     CurrentTranscodeBuffer = NULL;
-
+    
     TranscodeEnable = false;
 
-    //!
+    //!     
     return Codec_MmeAudio_c::Reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////
 ///
-///     Destructor function, ensures a full halt and reset
+///     Destructor function, ensures a full halt and reset 
 ///     are executed for all levels of the class.
 ///
-Codec_MmeAudioDtshd_c::~Codec_MmeAudioDtshd_c(void)
+Codec_MmeAudioDtshd_c::~Codec_MmeAudioDtshd_c( void )
 {
     Halt();
     Reset();
@@ -194,9 +204,9 @@ Codec_MmeAudioDtshd_c::~Codec_MmeAudioDtshd_c(void)
 ///
 /// Populate the supplied structure with parameters for DTSHD audio.
 ///
-CodecStatus_t Codec_MmeAudioDtshd_c::FillOutTransformerGlobalParameters(MME_LxAudioDecoderGlobalParams_t *GlobalParams_p)
+CodecStatus_t Codec_MmeAudioDtshd_c::FillOutTransformerGlobalParameters( MME_LxAudioDecoderGlobalParams_t *GlobalParams_p )
 {
-    CodecStatus_t Status;
+CodecStatus_t Status;
 
 //
 
@@ -207,9 +217,9 @@ CodecStatus_t Codec_MmeAudioDtshd_c::FillOutTransformerGlobalParameters(MME_LxAu
 
 
     MME_LxDtsConfig_t &Config = *((MME_LxDtsConfig_t *) GlobalParams.DecConfig);
-    memset(&Config.Config, 0, sizeof(MME_LxDtsConfig_t));
     Config.DecoderId = ACC_DTS_ID;
     Config.StructSize = sizeof(MME_LxDtsConfig_t);
+    memset(&Config.Config, 0, sizeof(MME_LxDtsConfig_t));
     // set the common fields
     Config.Config[DTS_CRC_ENABLE] = ACC_MME_FALSE;
     Config.Config[DTS_LFE_ENABLE] = ACC_MME_TRUE;
@@ -217,11 +227,11 @@ CodecStatus_t Codec_MmeAudioDtshd_c::FillOutTransformerGlobalParameters(MME_LxAu
     Config.Config[DTS_ES_ENABLE]  = ACC_MME_TRUE;
     Config.Config[DTS_96K_ENABLE] = ACC_MME_TRUE;
     Config.Config[DTS_NBBLOCKS_PER_TRANSFORM] = ACC_MME_TRUE;
-    // DTS HD specific parameters... (no impact on dts decoder)
+    // DTS HD specifc parameters... (no impact on dts decoder)
     Config.Config[DTS_XBR_ENABLE] = ACC_MME_TRUE;
     Config.Config[DTS_XLL_ENABLE] = ACC_MME_TRUE;
     Config.Config[DTS_MIX_LFE]    = ACC_MME_FALSE;
-    Config.Config[DTS_LBR_ENABLE] = (IsLbrStream) ? ACC_MME_TRUE : ACC_MME_FALSE;
+    Config.Config[DTS_LBR_ENABLE] = (IsLbrStream)?ACC_MME_TRUE:ACC_MME_FALSE;
 #define DTSHD_DRC_PERCENT 0 // set to 0 due to a bug in BL_25_10, normally to be set to 100...
     Config.PostProcessing.DRC = DTSHD_DRC_PERCENT;
     // In case of LBR, don't do any resampling
@@ -234,18 +244,17 @@ CodecStatus_t Codec_MmeAudioDtshd_c::FillOutTransformerGlobalParameters(MME_LxAu
 
 //
 
-    Status = Codec_MmeAudio_c::FillOutTransformerGlobalParameters(GlobalParams_p);
-
-    if (Status != CodecNoError)
+    Status = Codec_MmeAudio_c::FillOutTransformerGlobalParameters( GlobalParams_p );
+    if( Status != CodecNoError )
     {
-        return Status;
+	return Status;
     }
 
 //
 
     unsigned char *PcmParams_p = ((unsigned char *) &Config) + Config.StructSize;
     MME_LxPcmProcessingGlobalParams_Subset_t &PcmParams =
-        *((MME_LxPcmProcessingGlobalParams_Subset_t *) PcmParams_p);
+	*((MME_LxPcmProcessingGlobalParams_Subset_t *) PcmParams_p);
 
     // downmix must be disabled for DTSHD
     MME_DMixGlobalParams_t DMix = PcmParams.DMix;
@@ -263,10 +272,10 @@ CodecStatus_t Codec_MmeAudioDtshd_c::FillOutTransformerGlobalParameters(MME_LxAu
 /// will have been filled out with valid values sufficient to initialize an
 /// DTSHD audio decoder.
 ///
-CodecStatus_t   Codec_MmeAudioDtshd_c::FillOutTransformerInitializationParameters(void)
+CodecStatus_t   Codec_MmeAudioDtshd_c::FillOutTransformerInitializationParameters( void )
 {
-    CodecStatus_t Status;
-    MME_LxAudioDecoderInitParams_t &Params = AudioDecoderInitializationParameters;
+CodecStatus_t Status;
+MME_LxAudioDecoderInitParams_t &Params = AudioDecoderInitializationParameters;
 
 //
 
@@ -276,13 +285,12 @@ CodecStatus_t   Codec_MmeAudioDtshd_c::FillOutTransformerInitializationParameter
 //
 
     Status = Codec_MmeAudio_c::FillOutTransformerInitializationParameters();
-
     if (Status != CodecNoError)
-        return Status;
+	return Status;
 
 //
 
-    return FillOutTransformerGlobalParameters(&Params.GlobalParams);
+    return FillOutTransformerGlobalParameters( &Params.GlobalParams );
 }
 
 
@@ -290,11 +298,11 @@ CodecStatus_t   Codec_MmeAudioDtshd_c::FillOutTransformerInitializationParameter
 ///
 /// Populate the AUDIO_DECODER's MME_SET_GLOBAL_TRANSFORMER_PARAMS parameters for DTSHD audio.
 ///
-CodecStatus_t   Codec_MmeAudioDtshd_c::FillOutSetStreamParametersCommand(void)
+CodecStatus_t   Codec_MmeAudioDtshd_c::FillOutSetStreamParametersCommand( void )
 {
-    CodecStatus_t Status;
+CodecStatus_t Status;
 //DtshdAudioStreamParameters_t *Parsed = (DtshdAudioStreamParameters_t *)ParsedFrameParameters->StreamParameterStructure;
-    DtshdAudioCodecStreamParameterContext_t *Context = (DtshdAudioCodecStreamParameterContext_t *)StreamParameterContext;
+DtshdAudioCodecStreamParameterContext_t *Context = (DtshdAudioCodecStreamParameterContext_t *)StreamParameterContext;
 
     if ((ParsedAudioParameters->OriginalEncoding != AudioOriginalEncodingDtshdLBR) && IsLbrStream)
     {
@@ -303,8 +311,8 @@ CodecStatus_t   Codec_MmeAudioDtshd_c::FillOutSetStreamParametersCommand(void)
     }
 
     // if the stream is dtshd, then the "transcoding" might be required
-    if ((ParsedAudioParameters->OriginalEncoding == AudioOriginalEncodingDtshdMA) ||
-            (ParsedAudioParameters->OriginalEncoding == AudioOriginalEncodingDtshd))
+    if ( (ParsedAudioParameters->OriginalEncoding == AudioOriginalEncodingDtshdMA) || 
+         (ParsedAudioParameters->OriginalEncoding == AudioOriginalEncodingDtshd) )
     {
         if (ParsedAudioParameters->BackwardCompatibleProperties.SampleRateHz && ParsedAudioParameters->BackwardCompatibleProperties.SampleCount)
         {
@@ -320,7 +328,6 @@ CodecStatus_t   Codec_MmeAudioDtshd_c::FillOutSetStreamParametersCommand(void)
     {
         TranscodeEnable = false;
     }
-
     //
     // Examine the parsed stream parameters and determine what type of codec to instanciate
     //
@@ -329,16 +336,15 @@ CodecStatus_t   Codec_MmeAudioDtshd_c::FillOutSetStreamParametersCommand(void)
 
     //
     // Now fill out the actual structure
+    //     
+
+    memset( &(Context->StreamParameters), 0, sizeof(Context->StreamParameters) );
+    Status = FillOutTransformerGlobalParameters( &(Context->StreamParameters) );
+    if( Status != CodecNoError )
+	return Status;
+
     //
-
-    memset(&(Context->StreamParameters), 0, sizeof(Context->StreamParameters));
-    Status = FillOutTransformerGlobalParameters(&(Context->StreamParameters));
-
-    if (Status != CodecNoError)
-        return Status;
-
-    //
-    // Fill out the actual command
+    // Fillout the actual command
     //
 
     Context->BaseContext.MMECommand.CmdStatus.AdditionalInfoSize        = 0;
@@ -355,22 +361,22 @@ CodecStatus_t   Codec_MmeAudioDtshd_c::FillOutSetStreamParametersCommand(void)
 ///
 /// Populate the AUDIO_DECODER's MME_TRANSFORM parameters for MPEG audio.
 ///
-CodecStatus_t   Codec_MmeAudioDtshd_c::FillOutDecodeCommand(void)
+CodecStatus_t   Codec_MmeAudioDtshd_c::FillOutDecodeCommand(       void )
 {
-    DtshdAudioCodecDecodeContext_t  *Context        = (DtshdAudioCodecDecodeContext_t *)DecodeContext;
+DtshdAudioCodecDecodeContext_t  *Context        = (DtshdAudioCodecDecodeContext_t *)DecodeContext;
 //DtshdAudioFrameParameters_t   *Parsed         = (DtshdAudioFrameParameters_t *)ParsedFrameParameters->FrameParameterStructure;
 
     //
     // Initialize the frame parameters (we don't actually have much to say here)
     //
 
-    memset(&Context->DecodeParameters, 0, sizeof(Context->DecodeParameters));
+    memset( &Context->DecodeParameters, 0, sizeof(Context->DecodeParameters) );
 
     //
     // Zero the reply structure
     //
 
-    memset(&Context->DecodeStatus, 0, sizeof(Context->DecodeStatus));
+    memset( &Context->DecodeStatus, 0, sizeof(Context->DecodeStatus) );
 
     // report this CoreSize value
     DecodeContext->MMEPages[0].FlagsIn = ((DtshdAudioFrameParameters_t *)ParsedFrameParameters->FrameParameterStructure)->CoreSize;
@@ -379,7 +385,7 @@ CodecStatus_t   Codec_MmeAudioDtshd_c::FillOutDecodeCommand(void)
     memcpy(&Context->ContextFrameParameters, ParsedFrameParameters->FrameParameterStructure, sizeof(DtshdAudioFrameParameters_t));
 
     //
-    // Fill out the actual command
+    // Fillout the actual command
     //
 
     Context->BaseContext.MMECommand.CmdStatus.AdditionalInfoSize        = sizeof(Context->DecodeStatus);
@@ -393,30 +399,30 @@ CodecStatus_t   Codec_MmeAudioDtshd_c::FillOutDecodeCommand(void)
 ////////////////////////////////////////////////////////////////////////////
 ///
 /// Validate the ACC status structure and squawk loudly if problems are found.
-///
+/// 
 /// Dispite the squawking this method unconditionally returns success. This is
 /// because the firmware will already have concealed the decode problems by
 /// performing a soft mute.
 ///
 /// \return CodecSuccess
 ///
-CodecStatus_t   Codec_MmeAudioDtshd_c::ValidateDecodeContext(CodecBaseDecodeContext_t *Context)
+CodecStatus_t   Codec_MmeAudioDtshd_c::ValidateDecodeContext( CodecBaseDecodeContext_t *Context )
 {
-    DtshdAudioCodecDecodeContext_t *LocalDecodeContext = (DtshdAudioCodecDecodeContext_t *) Context;
-    MME_LxAudioDecoderFrameStatus_t &Status       = LocalDecodeContext->DecodeStatus.DecStatus;
-    ParsedAudioParameters_t *AudioParameters;
+DtshdAudioCodecDecodeContext_t *LocalDecodeContext = (DtshdAudioCodecDecodeContext_t *) Context;
+MME_LxAudioDecoderFrameStatus_t &Status       = LocalDecodeContext->DecodeStatus.DecStatus;
+ParsedAudioParameters_t *AudioParameters;
 
 //MME_LxAudioDecoderInitParams_t &Params = AudioDecoderInitializationParameters;
 
 
     CODEC_DEBUG(">><<\n");
 
-    if (ENABLE_CODEC_DEBUG)
+    if (ENABLE_CODEC_DEBUG) 
     {
         //DumpCommand(bufferIndex);
     }
 
-    if (Status.DecStatus != MME_SUCCESS)
+    if (Status.DecStatus != MME_SUCCESS) 
     {
         CODEC_ERROR("DTSHD audio decode error (muted frame): 0x%x\n", Status.DecStatus);
         //DumpCommand(bufferIndex);
@@ -435,10 +441,10 @@ CodecStatus_t   Codec_MmeAudioDtshd_c::ValidateDecodeContext(CodecBaseDecodeCont
     AudioParameters = BufferState[LocalDecodeContext->BaseContext.BufferIndex].ParsedAudioParameters;
 
     AudioParameters->Source.BitsPerSample = AudioOutputSurface->BitsPerSample; /*(((Params.BlockWise >> 4) & 0xF) == ACC_WS32)?32:16;*/
-    AudioParameters->Source.ChannelCount =  AudioOutputSurface->ChannelCount; /* ACC_AcMode2ChannelCount(Status.AudioMode) */
+    AudioParameters->Source.ChannelCount =  AudioOutputSurface->ChannelCount; /* ACC_AcMode2ChannelCount(Status.AudioMode) */ 
     AudioParameters->Organisation = Status.AudioMode;
 
-
+    
     {
         int expected_spl = AudioParameters->SampleCount, firmware_spl = Status.NbOutSamples;
         int ratio_spl = 1, ratio_freq = 1;
@@ -447,25 +453,25 @@ CodecStatus_t   Codec_MmeAudioDtshd_c::ValidateDecodeContext(CodecBaseDecodeCont
         // check the firmware status against what we parsed
         if (expected_spl != firmware_spl)
         {
-            ratio_spl = (expected_spl > firmware_spl) ? (expected_spl / firmware_spl) : (firmware_spl / expected_spl);
+            ratio_spl = (expected_spl > firmware_spl)?(expected_spl/firmware_spl):(firmware_spl/expected_spl);
         }
-
+        
         if (Status.SamplingFreq > ACC_FS_reserved)
         {
-            CODEC_ERROR("DTSHD audio decode wrong sampling freq returned: %d\n",
+            CODEC_ERROR("DTSHD audio decode wrong sampling freq returned: %d\n", 
                         firmware_freq);
         }
-
+        
         if (firmware_freq != expected_freq)
         {
-            ratio_freq = (expected_freq > firmware_freq) ? (expected_freq / firmware_freq) : (firmware_freq / expected_freq);
+            ratio_freq = (expected_freq > firmware_freq)?(expected_freq/firmware_freq):(firmware_freq/expected_freq);
         }
 
-        // the ratio between the sampling freq and the number of samples should be the same
+        // the ratio between the sampling freq and the number of samples should be the same 
         // (a core substream can contain extension such a DTS96)
         if ((ratio_freq != ratio_spl) && (Status.DecStatus == MME_SUCCESS))
         {
-            CODEC_ERROR("DTSHD: Wrong ratio between expected and parsed frame porperties: nb samples: %d (expected %d), freq %d (expected %d)\n",
+            CODEC_ERROR("DTSHD: Wrong ratio between expected and parsed frame porperties: nb samples: %d (expected %d), freq %d (expected %d)\n", 
                         firmware_spl, expected_spl, firmware_freq, expected_freq);
         }
         else
@@ -474,13 +480,13 @@ CodecStatus_t   Codec_MmeAudioDtshd_c::ValidateDecodeContext(CodecBaseDecodeCont
             AudioParameters->SampleCount = firmware_spl;
             AudioParameters->Source.SampleRateHz = firmware_freq;
         }
-
+        
         unsigned int period = (AudioParameters->SampleCount * 1000) / AudioParameters->Source.SampleRateHz;
-
-        if ((Status.ElapsedTime / 1000) > period)
+        
+        if( (Status.ElapsedTime/1000) > period )
         {
-            CODEC_TRACE("MME command took a lot of time (%d vs %d)\n",
-                        Status.ElapsedTime, period);
+            CODEC_TRACE( "MME command took a lot of time (%d vs %d)\n",
+                         Status.ElapsedTime, period );
         }
     }
 
@@ -489,15 +495,15 @@ CodecStatus_t   Codec_MmeAudioDtshd_c::ValidateDecodeContext(CodecBaseDecodeCont
 
     // Validate the extended status (without propagating errors)
     (void) ValidatePcmProcessingExtendedStatus(Context,
-            (MME_PcmProcessingFrameExtStatus_t *) &LocalDecodeContext->DecodeStatus.PcmStatus);
+	    (MME_PcmProcessingFrameExtStatus_t *) &LocalDecodeContext->DecodeStatus.PcmStatus);
 
     if (TranscodeEnable)
     {
-        TranscodeDtshdToDts(&LocalDecodeContext->BaseContext,
+        TranscodeDtshdToDts(&LocalDecodeContext->BaseContext, 
                             LocalDecodeContext->TranscodeBufferIndex,
                             &LocalDecodeContext->ContextFrameParameters,
                             TranscodedBuffers);
-    }
+    }		
 
     return CodecNoError;
 }
@@ -509,28 +515,26 @@ CodecStatus_t   Codec_MmeAudioDtshd_c::ValidateDecodeContext(CodecBaseDecodeCont
 ///
 /// \todo Can we make this code common between EAC3 and DTSHD handling.
 ///
-void Codec_MmeAudioDtshd_c::HandleMixingMetadata(CodecBaseDecodeContext_t *Context,
-        MME_PcmProcessingStatusTemplate_t *PcmStatus)
+void Codec_MmeAudioDtshd_c::HandleMixingMetadata( CodecBaseDecodeContext_t *Context,
+	                                          MME_PcmProcessingStatusTemplate_t *PcmStatus )
 {
     ParsedAudioParameters_t *AudioParameters = BufferState[Context->BufferIndex].ParsedAudioParameters;
     MME_LxAudioDecoderMixingMetadata_t *MixingMetadata = (MME_LxAudioDecoderMixingMetadata_t *) PcmStatus;
     int NbMixConfigurations;
-
+    
     //
     // Validation
     //
-
-    CODEC_ASSERT(MixingMetadata->MinStruct.Id == ACC_MIX_METADATA_ID);   // already checked by framework
-
-    if (MixingMetadata->MinStruct.StructSize < DTSHD_MIN_MIXING_METADATA_SIZE)
+    
+    CODEC_ASSERT( MixingMetadata->MinStruct.Id == ACC_MIX_METADATA_ID ); // already checked by framework
+    if( MixingMetadata->MinStruct.StructSize < DTSHD_MIN_MIXING_METADATA_SIZE )
     {
-        CODEC_ERROR("Mixing metadata is too small (%d)\n", MixingMetadata->MinStruct.StructSize);
-        return;
+	CODEC_ERROR("Mixing metadata is too small (%d)\n", MixingMetadata->MinStruct.StructSize);
+	return;
     }
 
     NbMixConfigurations = MixingMetadata->MinStruct.NbOutMixConfig;
-
-    if (NbMixConfigurations > MAX_MIXING_OUTPUT_CONFIGURATION)
+    if( NbMixConfigurations > MAX_MIXING_OUTPUT_CONFIGURATION )
     {
         CODEC_TRACE("Number of mix out configs is gt 3 (%d)!\n", NbMixConfigurations);
         NbMixConfigurations = MAX_MIXING_OUTPUT_CONFIGURATION;
@@ -539,26 +543,24 @@ void Codec_MmeAudioDtshd_c::HandleMixingMetadata(CodecBaseDecodeContext_t *Conte
     //
     // Action
     //
-
+    
     memset(&AudioParameters->MixingMetadata, 0, sizeof(AudioParameters->MixingMetadata));
 
     AudioParameters->MixingMetadata.IsMixingMetadataPresent = true;
-
+    
     AudioParameters->MixingMetadata.PostMixGain = MixingMetadata->MinStruct.PostMixGain;
     AudioParameters->MixingMetadata.NbOutMixConfig = MixingMetadata->MinStruct.NbOutMixConfig;
 
-    for (int i = 0; i < NbMixConfigurations; i++)
-    {
+    for (int i=0; i<NbMixConfigurations; i++) {
         MME_MixingOutputConfiguration_t &In  = MixingMetadata->MixOutConfig[i];
-        MixingOutputConfiguration_t &Out = AudioParameters->MixingMetadata.MixOutConfig[i];
-
-        Out.AudioMode = In.AudioMode;
-
-        for (int j = 0; j < MAX_NB_CHANNEL_COEFF; j++)
-        {
-            Out.PrimaryAudioGain[j] = In.PrimaryAudioGain[j];
-            Out.SecondaryAudioPanCoeff[j] = In.SecondaryAudioPanCoeff[j];
-        }
+	MixingOutputConfiguration_t &Out = AudioParameters->MixingMetadata.MixOutConfig[i];
+        
+	Out.AudioMode = In.AudioMode;
+        
+        for (int j=0; j<MAX_NB_CHANNEL_COEFF; j++) {
+	    Out.PrimaryAudioGain[j] = In.PrimaryAudioGain[j];
+	    Out.SecondaryAudioPanCoeff[j] = In.SecondaryAudioPanCoeff[j];
+	}
     }
 }
 
@@ -566,29 +568,29 @@ void Codec_MmeAudioDtshd_c::HandleMixingMetadata(CodecBaseDecodeContext_t *Conte
 ////////////////////////////////////////////////////////////////////////////
 ///
 /// Static method that "transcodes" dtshd to dts
-///
-/// The transcoding consists in copying the dts core compatible substream
+/// 
+/// The transcoding consists in copying the dts core compatible substream 
 /// the the transcoded buffer.
 ///
-void    Codec_MmeAudioDtshd_c::TranscodeDtshdToDts(CodecBaseDecodeContext_t *    BaseContext,
-        unsigned int                  TranscodeBufferIndex,
-        DtshdAudioFrameParameters_t * FrameParameters,
-        CodecBufferState_t *          TranscodedBuffers)
+void    Codec_MmeAudioDtshd_c::TranscodeDtshdToDts( CodecBaseDecodeContext_t *    BaseContext,
+                                                    unsigned int                  TranscodeBufferIndex,
+                                                    DtshdAudioFrameParameters_t * FrameParameters,
+                                                    CodecBufferState_t *          TranscodedBuffers )
 {
     MME_Command_t * Cmd     = &BaseContext->MMECommand;
     unsigned char * SrcPtr  = (unsigned char *)Cmd->DataBuffers_p[0]->ScatterPages_p[0].Page_p;
     unsigned char * DestPtr = TranscodedBuffers[TranscodeBufferIndex].BufferPointer;
     unsigned int CoreSize   = FrameParameters->CoreSize;
     memcpy(DestPtr, SrcPtr + FrameParameters->BcCoreOffset, CoreSize);
-
+    
     TranscodedBuffers[TranscodeBufferIndex].Buffer->SetUsedDataSize(CoreSize);
-
+    
     // revert the substream core sync to the backward dts core sync
     if (FrameParameters->IsSubStreamCore && CoreSize)
     {
         unsigned int * SyncPtr = (unsigned int *) DestPtr;
         unsigned int SyncWord = *SyncPtr;
-
+        
         // it is possible at this point that the firmware has already modified the input buffer
         // and done the conversion...
         if (SyncWord == __swapbw(DTSHD_START_CODE_SUBSTREAM_CORE))
@@ -604,13 +606,13 @@ void    Codec_MmeAudioDtshd_c::TranscodeDtshdToDts(CodecBaseDecodeContext_t *   
 
 // /////////////////////////////////////////////////////////////////////////
 //
-//      Function to dump out the set stream
+//      Function to dump out the set stream 
 //      parameters from an mme command.
 //
 
-CodecStatus_t   Codec_MmeAudioDtshd_c::DumpSetStreamParameters(void    *Parameters)
+CodecStatus_t   Codec_MmeAudioDtshd_c::DumpSetStreamParameters(         void    *Parameters )
 {
-    CODEC_ERROR("Not implemented\n");
+    CODEC_ERROR("Not implemented\n");  
     return CodecNoError;
 }
 
@@ -620,9 +622,9 @@ CodecStatus_t   Codec_MmeAudioDtshd_c::DumpSetStreamParameters(void    *Paramete
 //      parameters from an mme command.
 //
 
-CodecStatus_t   Codec_MmeAudioDtshd_c::DumpDecodeParameters(void    *Parameters)
+CodecStatus_t   Codec_MmeAudioDtshd_c::DumpDecodeParameters(            void    *Parameters )
 {
-    CODEC_ERROR("Not implemented\n");
+    CODEC_ERROR("Not implemented\n");  
     return CodecNoError;
 }
 
@@ -631,18 +633,17 @@ CodecStatus_t   Codec_MmeAudioDtshd_c::DumpDecodeParameters(void    *Parameters)
 ///  Set Default FrameBase style TRANSFORM command for AudioDecoder MT
 ///  with 1 Input Buffer and 1 Output Buffer.
 
-void Codec_MmeAudioDtshd_c::SetCommandIO(void)
-{
+void Codec_MmeAudioDtshd_c::SetCommandIO( void )
+{	
     if (TranscodeEnable)
     {
         CodecStatus_t Status = GetTranscodeBuffer();
-
+	
         if (Status != CodecNoError)
-        {
+        {            
             CODEC_ERROR("Error while requesting Transcoded buffer: %d. Disabling transcoding...\n", Status);
             TranscodeEnable = false;
         }
-
         ((DtshdAudioCodecDecodeContext_t *)DecodeContext)->TranscodeBufferIndex = CurrentTranscodeBufferIndex;
     }
 
@@ -654,30 +655,30 @@ void Codec_MmeAudioDtshd_c::SetCommandIO(void)
 //      Function to obtain a new decode buffer.
 //
 
-CodecStatus_t   Codec_MmeAudioDtshd_c::GetTranscodeBuffer(void)
+CodecStatus_t   Codec_MmeAudioDtshd_c::GetTranscodeBuffer( void )
 {
     PlayerStatus_t           Status;
     BufferPool_t             Tfp;
-
+    
     //
     // Get a buffer
     //
-
-    Status = GetTranscodedFrameBufferPool(&Tfp);
-
-    if (Status != CodecNoError)
+    
+    Status = GetTranscodedFrameBufferPool( &Tfp );
+    
+    if( Status != CodecNoError )
     {
-        CODEC_ERROR("GetTranscodeBuffer(%s) - Failed to obtain the transcoded buffer pool instance.\n", Configuration.CodecName);
+        CODEC_ERROR("GetTranscodeBuffer(%s) - Failed to obtain the transcoded buffer pool instance.\n", Configuration.CodecName );
         return Status;
     }
-
+    
     Status  = Tfp->GetBuffer(&CurrentTranscodeBuffer, IdentifierCodec, DTSHD_FRAME_MAX_SIZE, false);
-
-    if (Status != BufferNoError)
+    
+    if( Status != BufferNoError )
     {
-        CODEC_ERROR("GetTranscodeBuffer(%s) - Failed to obtain a transcode buffer from the transcoded buffer pool.\n", Configuration.CodecName);
+        CODEC_ERROR("GetTranscodeBuffer(%s) - Failed to obtain a transcode buffer from the transcoded buffer pool.\n", Configuration.CodecName );
         Tfp->Dump(DumpPoolStates | DumpBufferStates);
-
+        
         return Status;
     }
 
@@ -685,25 +686,25 @@ CodecStatus_t   Codec_MmeAudioDtshd_c::GetTranscodeBuffer(void)
     // Map it and initialize the mapped entry.
     //
 
-    CurrentTranscodeBuffer->GetIndex(&CurrentTranscodeBufferIndex);
+    CurrentTranscodeBuffer->GetIndex( &CurrentTranscodeBufferIndex );
 
-    if (CurrentTranscodeBufferIndex >= DTSHD_TRANSCODE_BUFFER_COUNT)
-        CODEC_ERROR("GetTranscodeBuffer(%s) - Transcode buffer index >= DTSHD_TRANSCODE_BUFFER_COUNT - Implementation error.\n", Configuration.CodecName);
-
-    memset(&TranscodedBuffers[CurrentTranscodeBufferIndex], 0x00, sizeof(CodecBufferState_t));
-
+    if( CurrentTranscodeBufferIndex >= DTSHD_TRANSCODE_BUFFER_COUNT )
+        CODEC_ERROR("GetTranscodeBuffer(%s) - Transcode buffer index >= DTSHD_TRANSCODE_BUFFER_COUNT - Implementation error.\n", Configuration.CodecName );
+    
+    memset( &TranscodedBuffers[CurrentTranscodeBufferIndex], 0x00, sizeof(CodecBufferState_t) );
+    
     TranscodedBuffers[CurrentTranscodeBufferIndex].Buffer                        = CurrentTranscodeBuffer;
     TranscodedBuffers[CurrentTranscodeBufferIndex].OutputOnDecodesComplete       = false;
     TranscodedBuffers[CurrentTranscodeBufferIndex].DecodesInProgress             = 0;
-
+    
     //
     // Obtain the interesting references to the buffer
     //
-
-    CurrentTranscodeBuffer->ObtainDataReference(&TranscodedBuffers[CurrentTranscodeBufferIndex].BufferLength,
-            NULL,
-            (void **)(&TranscodedBuffers[CurrentTranscodeBufferIndex].BufferPointer),
-            Configuration.AddressingMode);
+    
+    CurrentTranscodeBuffer->ObtainDataReference( &TranscodedBuffers[CurrentTranscodeBufferIndex].BufferLength,
+                                                 NULL,
+                                                 (void **)(&TranscodedBuffers[CurrentTranscodeBufferIndex].BufferPointer),
+                                                 Configuration.AddressingMode );
 //
 
     return CodecNoError;
@@ -715,7 +716,7 @@ CodecStatus_t   Codec_MmeAudioDtshd_c::GetTranscodeBuffer(void)
 /// In case of transcoding is required, attach also
 /// the transcoded buffer to the original coded buffer
 ///
-void Codec_MmeAudioDtshd_c::AttachCodedFrameBuffer(void)
+void Codec_MmeAudioDtshd_c::AttachCodedFrameBuffer( void )
 {
     Codec_MmeAudio_c::AttachCodedFrameBuffer();
 
@@ -723,16 +724,16 @@ void Codec_MmeAudioDtshd_c::AttachCodedFrameBuffer(void)
     {
         Buffer_t CodedDataBuffer;
         BufferStatus_t Status;
-
-        Status = CurrentDecodeBuffer->ObtainAttachedBufferReference(CodedFrameBufferType, &CodedDataBuffer);
-
+	
+        Status = CurrentDecodeBuffer->ObtainAttachedBufferReference( CodedFrameBufferType, &CodedDataBuffer );
+	
         if (Status != BufferNoError)
         {
             CODEC_ERROR("Could not get the attached coded data buffer (%d)\n", Status);
             return;
         }
-
-        CodedDataBuffer->AttachBuffer(CurrentTranscodeBuffer);
+        
+        CodedDataBuffer->AttachBuffer( CurrentTranscodeBuffer );
         CurrentTranscodeBuffer->DecrementReferenceCount();
         // the transcoded buffer is now only referenced by its attachement to the coded buffer
     }
@@ -743,80 +744,77 @@ void Codec_MmeAudioDtshd_c::AttachCodedFrameBuffer(void)
 //      The get coded frame buffer pool fn
 //
 
-CodecStatus_t   Codec_MmeAudioDtshd_c::GetTranscodedFrameBufferPool(BufferPool_t * Tfp)
+CodecStatus_t   Codec_MmeAudioDtshd_c::GetTranscodedFrameBufferPool( BufferPool_t * Tfp )
 {
-    PlayerStatus_t          Status;
+	PlayerStatus_t          Status;
 #ifdef __KERNEL__
-    allocator_status_t      AStatus;
+	allocator_status_t      AStatus;
 #endif
 
     //
     // If we haven't already created the buffer pool, do it now.
     //
 
-    if (TranscodedFramePool == NULL)
+    if( TranscodedFramePool == NULL )
     {
 
         //
         // Coded frame buffer type
-        //
-        Status      = InitializeDataType(&InitialTranscodedFrameBufferDescriptor, &TranscodedFrameBufferType, &TranscodedFrameBufferDescriptor);
-
-        if (Status != PlayerNoError)
+        //  
+        Status      = InitializeDataType( &InitialTranscodedFrameBufferDescriptor, &TranscodedFrameBufferType, &TranscodedFrameBufferDescriptor );
+        if( Status != PlayerNoError )
             return Status;
-
+         
         //
         // Get the memory and Create the pool with it
         //
-
-        Player->GetBufferManager(&BufferManager);
-
+	
+        Player->GetBufferManager( &BufferManager );
+        
 #if __KERNEL__
-        AStatus = PartitionAllocatorOpen(&TranscodedFrameMemoryDevice, Configuration.TranscodedMemoryPartitionName, DTSHD_FRAME_MAX_SIZE * DTSHD_TRANSCODE_BUFFER_COUNT, true);
-
-        if (AStatus != allocator_ok)
+        AStatus = PartitionAllocatorOpen( &TranscodedFrameMemoryDevice, Configuration.TranscodedMemoryPartitionName, DTSHD_FRAME_MAX_SIZE * DTSHD_TRANSCODE_BUFFER_COUNT, true );
+        if( AStatus != allocator_ok )
         {
-            CODEC_ERROR("Failed to allocate memory\n", Configuration.CodecName);
+            CODEC_ERROR("Failed to allocate memory\n", Configuration.CodecName );
             return PlayerInsufficientMemory;
         }
-
-        TranscodedFrameMemory[CachedAddress]         = AllocatorUserAddress(TranscodedFrameMemoryDevice);
-        TranscodedFrameMemory[UnCachedAddress]       = AllocatorUncachedUserAddress(TranscodedFrameMemoryDevice);
-        TranscodedFrameMemory[PhysicalAddress]       = AllocatorPhysicalAddress(TranscodedFrameMemoryDevice);
+	
+        TranscodedFrameMemory[CachedAddress]         = AllocatorUserAddress( TranscodedFrameMemoryDevice );
+        TranscodedFrameMemory[UnCachedAddress]       = AllocatorUncachedUserAddress( TranscodedFrameMemoryDevice );
+        TranscodedFrameMemory[PhysicalAddress]       = AllocatorPhysicalAddress( TranscodedFrameMemoryDevice );
 #else
-        static unsigned char    Memory[4 * 1024 * 1024];
-
+        static unsigned char    Memory[4*1024*1024];
+	
         TranscodedFrameMemory[CachedAddress]         = Memory;
         TranscodedFrameMemory[UnCachedAddress]       = NULL;
         TranscodedFrameMemory[PhysicalAddress]       = Memory;
         //Configuration.CodedMemorySize           = 4*1024*1024;
 #endif
-
+        
         //
-
-        Status  = BufferManager->CreatePool(&TranscodedFramePool,
-                                            TranscodedFrameBufferType,
-                                            DTSHD_TRANSCODE_BUFFER_COUNT,
-                                            DTSHD_FRAME_MAX_SIZE * DTSHD_TRANSCODE_BUFFER_COUNT,
-                                            TranscodedFrameMemory);
-
-        if (Status != BufferNoError)
+        
+        Status  = BufferManager->CreatePool( &TranscodedFramePool, 
+                                             TranscodedFrameBufferType, 
+                                             DTSHD_TRANSCODE_BUFFER_COUNT, 
+                                             DTSHD_FRAME_MAX_SIZE * DTSHD_TRANSCODE_BUFFER_COUNT, 
+                                             TranscodedFrameMemory );
+        if( Status != BufferNoError )
         {
-            CODEC_ERROR("GetTranscodedFrameBufferPool(%s) - Failed to create the pool.\n", Configuration.CodecName);
+            CODEC_ERROR( "GetTranscodedFrameBufferPool(%s) - Failed to create the pool.\n", Configuration.CodecName );
             return PlayerInsufficientMemory;
         }
 
         ((PlayerStream_s *)Stream)->TranscodedFrameBufferType = TranscodedFrameBufferType;
     }
-
+    
     *Tfp = TranscodedFramePool;
-
+    
     return CodecNoError;
 }
 
 // /////////////////////////////////////////////////////////////////////////
 //
-//      Function to set the stream metadata according to what is contained
+//      Function to set the stream metadata according to what is contained 
 //      in the steam bitstream (returned by the codec firmware status)
 //
 
@@ -840,14 +838,14 @@ void Codec_MmeAudioDtshd_c::FillStreamMetadata(ParsedAudioParameters_t * AudioPa
     {
         Temp = 0;
     }
-
+        
     Metadata->FrontMatrixEncoded = Temp;
     // the rearmatrix ecncoded flags from the status returns in fact the DTS ES flag...
-    Metadata->RearMatrixEncoded  = Flags->RearMatrixEncoded ? 2 : 1;
+    Metadata->RearMatrixEncoded  = Flags->RearMatrixEncoded?2:1;
     // according to fatpipe specs
     Metadata->MixLevel  = 0;
     // surely 0
     Metadata->DialogNorm  = Flags->DialogNorm;
-
+    
     Metadata->LfeGain = 10;
 }
