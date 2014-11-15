@@ -43,10 +43,12 @@ obj-y	+= e2_proc/
 obj-y	+= encrypt/
 obj-y	+= frontends/
 obj-y	+= frontcontroller/
-obj-y	+= wireless/
 obj-y	+= compcache/
 obj-y	+= bpamem/
 
+ifndef  MINIMAL
+obj-y	+= wireless/
+endif
 
 ifdef  HL101
 obj-y	+= smartcard/
