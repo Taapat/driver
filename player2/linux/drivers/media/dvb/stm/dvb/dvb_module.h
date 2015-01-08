@@ -79,7 +79,7 @@ struct DeviceContext_s;
 #define DVB_ASSERT(x) do if(!(x)) printk(KERN_CRIT "%s: Assertion '%s' failed at %s:%d\n", \
                                          __FUNCTION__, #x, __FILE__, __LINE__); while(0)
 
-#define DVB_MAX_DEVICES_PER_ADAPTER     4
+#define DVB_MAX_DEVICES_PER_ADAPTER     2
 
 struct DemuxBuffer_s
 {
