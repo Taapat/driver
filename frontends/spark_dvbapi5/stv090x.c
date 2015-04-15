@@ -5295,7 +5295,7 @@ static int stv090x_read_cnr(struct dvb_frontend *fe, u16 *cnr)
 		if (lock_f)
 		{
 			msleep(5);
-			for (i = 0; i < 16; i++)
+			for (i = 0; i < 4; i++)
 			{
 				reg_1 = STV090x_READ_DEMOD(state, NNOSPLHT1);
 				val_1 = STV090x_GETFIELD_Px(reg_1, NOSPLHT_NORMED_FIELD);
@@ -5304,7 +5304,7 @@ static int stv090x_read_cnr(struct dvb_frontend *fe, u16 *cnr)
 				val += MAKEWORD16(val_1, val_0);
 				msleep(1);
 			}
-			val /= 16;
+			val /= 4;
 			snr = stv090x_table_lookup(stv090x_s2cn_tab, ARRAY_SIZE(stv090x_s2cn_tab) - 1, val);
 			if (snr < 0) snr = 0;
 			if (snr > 200) snr = 200;
@@ -5319,7 +5319,7 @@ static int stv090x_read_cnr(struct dvb_frontend *fe, u16 *cnr)
 		if (lock_f)
 		{
 			msleep(5);
-			for (i = 0; i < 16; i++)
+			for (i = 0; i < 4; i++)
 			{
 				reg_1 = STV090x_READ_DEMOD(state, NOSDATAT1);
 				val_1 = STV090x_GETFIELD_Px(reg_1, NOSDATAT_UNNORMED_FIELD);
@@ -5328,7 +5328,7 @@ static int stv090x_read_cnr(struct dvb_frontend *fe, u16 *cnr)
 				val += MAKEWORD16(val_1, val_0);
 				msleep(1);
 			}
-			val /= 16;
+			val /= 4;
 			snr = stv090x_table_lookup(stv090x_s1cn_tab, ARRAY_SIZE(stv090x_s1cn_tab) - 1, val);
 			if (snr < 0) snr = 0;
 			if (snr > 200) snr = 200;
