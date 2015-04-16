@@ -2016,13 +2016,21 @@ PcmPlayerSurfaceParameters_t NewSurfaceParameters[MIXER_AUDIO_MAX_OUTPUT_BUFFERS
 ///
 PlayerStatus_t Mixer_Mme_c::InitializeMMETransformer( void )
 {
-PlayerStatus_t Status;
-MME_ERROR MMEStatus;
-MME_TransformerCapability_t Capability = { 0 };
-MME_LxMixerTransformerInfo_t MixerInfo = { 0 };
-MME_TransformerInitParams_t InitParams = { 0 };
-MME_LxMixerTransformerInitBDParams_Extended_t MixerParams = { 0 };
-ParsedAudioParameters_t &PrimaryAudioParameters = Clients[PrimaryClient].Parameters;
+	PlayerStatus_t Status;
+	MME_ERROR MMEStatus;
+	MME_TransformerCapability_t Capability = { 0 };
+	MME_LxMixerTransformerInfo_t MixerInfo = { 0 };
+	// Ensure that we clear down the MMEInitParams
+	MMEInitParams = (MME_TransformerInitParams_t)
+	{
+		0
+	};
+	// Ensure that we clear down the MixerParams
+	MixerParams = (MME_LxMixerTransformerInitBDParams_Extended_t)
+	{
+		0
+    };
+	ParsedAudioParameters_t &PrimaryAudioParameters = Clients[PrimaryClient].Parameters;
 
     //
     // Obtain the capabilities of the mixer
@@ -2083,12 +2091,12 @@ ParsedAudioParameters_t &PrimaryAudioParameters = Clients[PrimaryClient].Paramet
     // Initialize the transformer
     //
 
-    InitParams.StructSize = sizeof( InitParams );
-    InitParams.Priority = MME_PRIORITY_ABOVE_NORMAL;	// we are more important than a decode...
-    InitParams.Callback = MMECallbackStub;
-    InitParams.CallbackUserData = ( void * ) this;
-    InitParams.TransformerInitParamsSize = sizeof( MixerParams );
-    InitParams.TransformerInitParams_p = &MixerParams;
+	MMEInitParams.StructSize = sizeof(MMEInitParams);
+	MMEInitParams.Priority = MME_PRIORITY_ABOVE_NORMAL; // we are more important than a decode...
+	MMEInitParams.Callback = MMECallbackStub;
+	MMEInitParams.CallbackUserData = static_cast<void*>(this);
+	MMEInitParams.TransformerInitParamsSize = sizeof(MixerParams);
+	MMEInitParams.TransformerInitParams_p = &MixerParams;
 
     MixerParams.StructSize = sizeof( MixerParams );
     MixerParams.CacheFlush = ACC_MME_ENABLED;
@@ -2128,9 +2136,8 @@ ParsedAudioParameters_t &PrimaryAudioParameters = Clients[PrimaryClient].Paramet
 
     //As dynamic, we need to fixup the sizes we've declared
     MixerParams.StructSize -= (sizeof(MixerParams.GlobalParams) - MixerParams.GlobalParams.StructSize);
-    InitParams.TransformerInitParamsSize = MixerParams.StructSize;
-
-    MMEStatus = MME_InitTransformer( AudioConfiguration.TransformName, &InitParams, &MMEHandle );
+	MMEInitParams.TransformerInitParamsSize = MixerParams.StructSize;
+	MMEStatus = MME_InitTransformer(AudioConfiguration.TransformName, &MMEInitParams, &MMEHandle);
     if( MMEStatus != MME_SUCCESS )
     {
 	MIXER_ERROR( "Failed to initialize %s (%08x).\n", AudioConfiguration.TransformName, MMEStatus );
@@ -2158,18 +2165,13 @@ ParsedAudioParameters_t &PrimaryAudioParameters = Clients[PrimaryClient].Paramet
 PlayerStatus_t Mixer_Mme_c::TerminateMMETransformer( void )
 {
     MME_ERROR Status;
-    int TimeToWait;
-
-//
-
     if( MMEInitialized )
     {
 	//
 	// Wait a reasonable time for all mme transactions to terminate
 	//
-
-	TimeToWait = MIXER_MAX_WAIT_FOR_MME_COMMAND_COMPLETION;
-
+	// CAUTION about signed int !!
+	int32_t TimeToWait(MIXER_MAX_WAIT_FOR_MME_COMMAND_COMPLETION);
 	for( ;; )
 	{
 	    Status = MME_TermTransformer( MMEHandle );
