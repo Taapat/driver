@@ -229,7 +229,7 @@ ManifestorStatus_t      Manifestor_AudioKsound_c::SetModuleParameters (unsigned 
         
         if( ManifestorParameters->ParameterType == ManifestorAudioMixerConfiguration )
         {
-            Mixer = static_cast<Mixer_Mme_c*>(ManifestorParameters->Mixer);
+            Mixer = (Mixer_Mme_c *) ManifestorParameters->Mixer;
             return ManifestorNoError;
         }
         else if( ManifestorParameters->ParameterType == ManifestorAudioSetEmergencyMuteState )
