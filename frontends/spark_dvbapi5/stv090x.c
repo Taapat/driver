@@ -6113,12 +6113,12 @@ static int stv090x_init(struct dvb_frontend *fe)
 	dprintk(10, "%s >\n", __FUNCTION__);
 
 	if (state->device == STX7111) {
-		printk("%s demodulator Cut=0x%02x\n",
+		dprintk(10, "%s demodulator Cut=0x%02x\n",
 			"STV090x(STX711x)",
 			state->dev_ver);
 	}
 	else {
-		printk(10, "%s demodulator Cut=0x%02x\n",
+		dprintk(10, "%s demodulator Cut=0x%02x\n",
 			state->device == STV0900 ? "STV0900" : "STV0903",
 			state->dev_ver);
 	}
