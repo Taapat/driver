@@ -4199,6 +4199,12 @@ static int stv090x_optimize_track(struct stv090x_state *state)
 	case STV090x_DSS:
 
 		dprintk(50, "STV090x_DVBS1\n");
+
+		reg = stv090x_read_reg(state, STV090x_P1_TSSTATEM);
+		STV090x_SETFIELD_Px(reg, TSOUT_NOSYNC, 0);
+		if (stv090x_write_reg(state, STV090x_P1_TSSTATEM, reg) < 0)
+			goto err;
+
 		if (state->algo == (enum stv090x_algo)STV090x_SEARCH_AUTO)
 		{
 			reg = STV090x_READ_DEMOD(state, DMDCFGMD);
@@ -4239,6 +4245,16 @@ static int stv090x_optimize_track(struct stv090x_state *state)
 
 	case STV090x_DVBS2:
 		dprintk(50, "STV090x_DVBS2\n");
+
+		reg = stv090x_read_reg(state, STV090x_P1_TSSTATEM);
+		STV090x_SETFIELD_Px(reg, TSOUT_NOSYNC, 1);
+		if (stv090x_write_reg(state, STV090x_P1_TSSTATEM, reg) < 0)
+			goto err;
+
+		reg = stv090x_read_reg(state, STV090x_P1_TSSYNC);
+		STV090x_SETFIELD_Px(reg, TSFIFO_SYNCMODE, 2);
+		if (stv090x_write_reg(state, STV090x_P1_TSSYNC, reg) < 0)
+			goto err;
 
 		reg = STV090x_READ_DEMOD(state, DMDCFGMD);
 		STV090x_SETFIELD_Px(reg, DVBS1_ENABLE_FIELD, 0);
@@ -5839,10 +5855,6 @@ static int stv090x_set_tspath(struct stv090x_state *state)
 			case STV090x_TSMODE_DVBCI:
 				if (stv090x_write_reg(state, STV090x_TSGENERAL, 0x06) < 0) /* Mux'd stream mode */
 					goto err;
-				reg = stv090x_read_reg(state, STV090x_P1_TSCFGM);
-				STV090x_SETFIELD_Px(reg, TSFIFO_MANSPEED_FIELD, 3);
-				if (stv090x_write_reg(state, STV090x_P1_TSCFGM, reg) < 0)
-					goto err;
 				reg = stv090x_read_reg(state, STV090x_P2_TSCFGM);
 				STV090x_SETFIELD_Px(reg, TSFIFO_MANSPEED_FIELD, 3);
 				if (stv090x_write_reg(state, STV090x_P2_TSCFGM, reg) < 0)
@@ -6099,6 +6111,18 @@ static int stv090x_init(struct dvb_frontend *fe)
 	u32 reg;
 
 	dprintk(10, "%s >\n", __FUNCTION__);
+
+	if (state->device == STX7111) {
+		printk("%s demodulator Cut=0x%02x\n",
+			"STV090x(STX711x)",
+			state->dev_ver);
+	}
+	else {
+		printk(10, "%s demodulator Cut=0x%02x\n",
+			state->device == STV0900 ? "STV0900" : "STV0903",
+			state->dev_ver);
+	}
+
 
 	if (state->mclk == 0)
 	{
