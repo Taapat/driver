@@ -4193,17 +4193,39 @@ static int stv090x_optimize_track(struct stv090x_state *state)
 	srate = stv090x_get_srate(state, state->mclk);
 	srate += stv090x_get_tmgoffst(state, srate);
 
+	if (state->delsys == STV090x_DVBS2 && srate > 10000000)
+	{
+		dprintk(50, "STV090x_NOTSSYNC\n");
+		reg = stv090x_read_reg(state, STV090x_P1_TSSTATEM);
+		STV090x_SETFIELD_Px(reg, TSOUT_NOSYNC, 1);
+		if (stv090x_write_reg(state, STV090x_P1_TSSTATEM, reg) < 0)
+			goto err;
+
+		reg = stv090x_read_reg(state, STV090x_P1_TSSYNC);
+		STV090x_SETFIELD_Px(reg, TSFIFO_SYNCMODE, 2);
+		if (stv090x_write_reg(state, STV090x_P1_TSSYNC, reg) < 0)
+			goto err;
+	}
+	else
+	{
+		dprintk(50, "STV090x_TSSYNC\n");
+		reg = stv090x_read_reg(state, STV090x_P1_TSSTATEM);
+		STV090x_SETFIELD_Px(reg, TSOUT_NOSYNC, 0);
+		if (stv090x_write_reg(state, STV090x_P1_TSSTATEM, reg) < 0)
+			goto err;
+
+		reg = stv090x_read_reg(state, STV090x_P1_TSSYNC);
+		STV090x_SETFIELD_Px(reg, TSFIFO_SYNCMODE, 0);
+		if (stv090x_write_reg(state, STV090x_P1_TSSYNC, reg) < 0)
+			goto err;
+	}
+
 	switch (state->delsys)
 	{
 	case STV090x_DVBS1:
 	case STV090x_DSS:
 
 		dprintk(50, "STV090x_DVBS1\n");
-
-		reg = stv090x_read_reg(state, STV090x_P1_TSSTATEM);
-		STV090x_SETFIELD_Px(reg, TSOUT_NOSYNC, 0);
-		if (stv090x_write_reg(state, STV090x_P1_TSSTATEM, reg) < 0)
-			goto err;
 
 		if (state->algo == (enum stv090x_algo)STV090x_SEARCH_AUTO)
 		{
@@ -4245,16 +4267,6 @@ static int stv090x_optimize_track(struct stv090x_state *state)
 
 	case STV090x_DVBS2:
 		dprintk(50, "STV090x_DVBS2\n");
-
-		reg = stv090x_read_reg(state, STV090x_P1_TSSTATEM);
-		STV090x_SETFIELD_Px(reg, TSOUT_NOSYNC, 1);
-		if (stv090x_write_reg(state, STV090x_P1_TSSTATEM, reg) < 0)
-			goto err;
-
-		reg = stv090x_read_reg(state, STV090x_P1_TSSYNC);
-		STV090x_SETFIELD_Px(reg, TSFIFO_SYNCMODE, 2);
-		if (stv090x_write_reg(state, STV090x_P1_TSSYNC, reg) < 0)
-			goto err;
 
 		reg = STV090x_READ_DEMOD(state, DMDCFGMD);
 		STV090x_SETFIELD_Px(reg, DVBS1_ENABLE_FIELD, 0);
