@@ -1,3 +1,4 @@
+obj-y	+= mt7601u/
 obj-y	+= rt2870sta/
 obj-y	+= rt3070sta/
 obj-y	+= rt5370sta/
