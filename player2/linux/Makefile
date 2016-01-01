@@ -134,7 +134,6 @@ endif
 
 CCFLAGSY+=-I$(CONFIG_KERNEL_BUILD)/include2 \
 	-I$(CONFIG_KERNEL_BUILD)/include \
-	-include $(KERNEL_LOCATION)/include/linux/autoconf.h \
 	-I$(CONFIG_KERNEL_PATH)/include -D__KERNEL__ \
 	-I$(DRIVER_TOPDIR)/include \
 	-I$(DRIVER_TOPDIR)/include/stmfb \
