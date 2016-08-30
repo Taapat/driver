@@ -663,3 +663,97 @@ int proc_avs_0_standby_read (char *page, char **start, off_t off, int count,
 
         return len;
 }
+
+int proc_video_hdmi_colorspace_write(struct file* file, const char __user* buf, unsigned long count, void* data)
+{
+	char* page;
+	char* myString;
+	ssize_t ret = -ENOMEM;
+
+	printk("%s %ld - ", __FUNCTION__, count);
+
+	page = (char*)__get_free_page(GFP_KERNEL);
+	if (page)
+	{
+		struct stmfb_info* info = stmfb_get_fbinfo_ptr();
+		struct stmfbio_output_configuration outputConfig;
+		int err = 0;
+		//int alpha = 0;
+		int hdmi_colour = 0;
+		ret = -EFAULT;
+		if (copy_from_user(page, buf, count))
+			goto out;
+		myString = (char*) kmalloc(count + 1, GFP_KERNEL);
+		strncpy(myString, page, count);
+		myString[count] = '\0';
+		printk("%s\n", myString);
+		//sscanf(myString, "%d", &alpha);
+		//0rgb 1yuv 2422
+		if (strncmp("hdmi_rgb", page, count - 1) == 0)
+		{
+			hdmi_colour = 0;
+		}
+		else if (strncmp("hdmi_yuv", page, count - 1) == 0)
+		{
+			hdmi_colour = 1;
+		}
+		else if (strncmp("hdmi_422", page, count - 1) == 0)
+		{
+			hdmi_colour = 2;
+		}
+		outputConfig.outputid = 1;
+		stmfb_get_output_configuration(&outputConfig, info);
+		outputConfig.caps = 0;
+		outputConfig.activate = 0; //STMFBIO_ACTIVATE_IMMEDIATE;
+		outputConfig.caps |= STMFBIO_OUTPUT_CAPS_HDMI_CONFIG;
+		outputConfig.hdmi_config &= ~(STMFBIO_OUTPUT_HDMI_YUV | STMFBIO_OUTPUT_HDMI_422);
+		switch (hdmi_colour)
+		{
+			case 1:
+				outputConfig.hdmi_config |= STMFBIO_OUTPUT_HDMI_YUV;
+				break;
+			case 2:
+				outputConfig.hdmi_config |= (STMFBIO_OUTPUT_HDMI_YUV | STMFBIO_OUTPUT_HDMI_422);
+				break;
+			default:
+				break;
+		}
+		err = stmfb_set_output_configuration(&outputConfig, info);
+		//if(ioctl(fbfd, STMFBIO_SET_OUTPUT_CONFIG, &outputConfig)<0)
+		//perror("setting output configuration failed");
+		kfree(myString);
+	}
+	ret = count;
+out:
+	free_page((unsigned long)page);
+	return ret;
+}
+
+int proc_video_hdmi_colorspace_read(char* page, char** start, off_t off, int count, int* eof, void* data_unused)
+{
+	struct stmfb_info* info = stmfb_get_fbinfo_ptr();
+	struct stmfbio_output_configuration outputConfig;
+	int len = 0;
+
+	printk("%s %d\n", __FUNCTION__, count);
+
+	outputConfig.outputid = 1;
+	stmfb_get_output_configuration(&outputConfig, info);
+	if (outputConfig.hdmi_config & STMFBIO_OUTPUT_HDMI_422)
+		len = sprintf(page, "hdmi_422\n");
+	else if (outputConfig.hdmi_config & STMFBIO_OUTPUT_HDMI_YUV)
+		len = sprintf(page, "hdmi_yuv\n");
+	else
+		len = sprintf(page, "hdmi_rgb\n");
+	return len;
+}
+
+int proc_video_hdmi_colorspace_choices_read(char* page, char** start, off_t off, int count, int* eof, void* data_unused)
+{
+	int len = 0;
+
+	printk("%s\n", __FUNCTION__);
+
+	len = sprintf(page, "hdmi_rgb hdmi_yuv hdmi_422\n");
+	return len;
+}

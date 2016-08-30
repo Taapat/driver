@@ -37,6 +37,10 @@
  *  |             |
  *  |             --------- force_dvi
  *  |             |
+ *  |             --------- hdmi_colorspace
+ *  |             |
+ *  |             --------- hdmi_colorspace_choices
+ *  |             |
  *  |             --------- policy
  *  |             |
  *  |             --------- policy_choices
@@ -211,6 +215,9 @@ extern int proc_audio_j1_mute_write(struct file *file, const char __user *buf, u
 extern int proc_video_aspect_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
 extern int proc_video_aspect_write(struct file *file, const char __user *buf, unsigned long count, void *data);
 extern int proc_video_aspect_choices_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
+extern int proc_video_hdmi_colorspace_read(char* page, char** start, off_t off, int count, int* eof, void* data_unused);
+extern int proc_video_hdmi_colorspace_write(struct file* file, const char __user* buf, unsigned long count, void* data);
+extern int proc_video_hdmi_colorspace_choices_read(char* page, char** start, off_t off, int count, int* eof, void* data_unused);
 extern int proc_video_policy_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
 extern int proc_video_policy_write(struct file *file, const char __user *buf, unsigned long count, void *data);
 extern int proc_video_policy_choices_read(char *page, char **start, off_t off, int count,int *eof, void *data_unused);
@@ -366,6 +373,8 @@ struct e2_procs
 /*
   {"stb/video/force_dvi", NULL, NULL, 0},
 */
+  {"stb/video/hdmi_colorspace",         proc_video_hdmi_colorspace_read,        proc_video_hdmi_colorspace_write, 0},
+  {"stb/video/hdmi_colorspace_choices", proc_video_hdmi_colorspace_choices_read,NULL, 0},
   {"stb/video/policy",                  proc_video_policy_read,                 proc_video_policy_write, 0},
   {"stb/video/policy_choices",          proc_video_policy_choices_read,         NULL, 0},
   {"stb/video/videomode",               proc_video_videomode_read,              proc_video_videomode_write, 0},
